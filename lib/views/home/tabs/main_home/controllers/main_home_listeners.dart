@@ -123,6 +123,13 @@ extension _MainHomeListeners on _MainHomeTabState {
           final right = (b['ts'] as num?)?.toInt() ?? 0;
           return right.compareTo(left);
         });
+      // Cập nhật ts tin nhắn gần nhất (dùng để tính banner "lâu không nhắn")
+      final latestTs = items.isNotEmpty
+          ? (items.first['ts'] as num?)?.toInt() ?? 0
+          : 0;
+      if (latestTs > 0 && latestTs != _lastChatMessageTs) {
+        _safeSetState(() => _lastChatMessageTs = latestTs);
+      }
       final partnerSenderId = _currentRole == 'user1' ? 'U2' : 'U1';
       final nextSignals = items
           .where((item) => (item['type'] ?? 'text').toString() == 'text')

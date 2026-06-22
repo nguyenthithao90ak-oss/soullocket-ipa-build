@@ -22,6 +22,7 @@ import '../../utils/app_error_mapper.dart';
 import '../relationship/video_call_screen.dart';
 import 'chat_message_preview.dart';
 import 'watch_together_screen.dart';
+import '../../utils/services/purchase_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/services/admob_service.dart';
@@ -97,6 +98,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   bool _isAuthenticated = false;
   bool _isCheckingAuth = true;
   bool _isUploading = false;
+  bool _isSendingMessage = false;
   bool _isUpdatingChatBackground = false;
   bool _isInitialMessagesLoading = true;
   bool _isLoadingOlderMessages = false;

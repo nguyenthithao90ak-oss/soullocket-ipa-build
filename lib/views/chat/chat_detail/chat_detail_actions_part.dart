@@ -33,7 +33,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
 
   Future<void> _sendMsg() async {
     final text = _msgController.text.trim();
-    if (text.isEmpty) {
+    if (text.isEmpty || _isSendingMessage) {
       return;
     }
 
@@ -41,12 +41,15 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       return;
     }
 
+    _isSendingMessage = true;
     try {
       await _sendChatMessage(text);
       _msgController.clear();
     } catch (e) {
       if (!mounted) return;
       _showChatError(e);
+    } finally {
+      _isSendingMessage = false;
     }
   }
 
@@ -204,6 +207,26 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       return;
     }
 
+    try {
+      final vipAccess = await PurchaseService().getVipAccessInfo();
+      final limit = vipAccess.isVip ? 50 : 20;
+
+      final prefs = await SharedPreferences.getInstance();
+      final todayStr = DateFormat('yyyyMMdd').format(DateTime.now());
+      final countKey = 'chat_sent_images_count_$todayStr';
+      final sentCount = prefs.getInt(countKey) ?? 0;
+
+      if (sentCount >= limit) {
+        final noticeMsg = vipAccess.isVip
+            ? 'Bạn đã đạt giới hạn gửi 50 ảnh/ngày cho tài khoản Pro.'
+            : 'Bạn đã đạt giới hạn gửi 20 ảnh/ngày. Hãy nâng cấp Pro để gửi tối đa 50 ảnh!';
+        _showNotice(noticeMsg, error: true);
+        return;
+      }
+    } catch (e) {
+      debugPrint('Error checking chat image limit: $e');
+    }
+
     final XFile? image = presetImage ??
         await AppLifecyclePresenceGuard.guard(
           () => ImagePickerRecoveryService.instance.pickImage(
@@ -237,6 +260,16 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
           senderRole: _currentRole,
         );
         await PendingUploadService.instance.clear(_pendingChatImageUploadKey);
+
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          final todayStr = DateFormat('yyyyMMdd').format(DateTime.now());
+          final countKey = 'chat_sent_images_count_$todayStr';
+          final sentCount = prefs.getInt(countKey) ?? 0;
+          await prefs.setInt(countKey, sentCount + 1);
+        } catch (e) {
+          debugPrint('Error incrementing sent image count: $e');
+        }
       }
     } catch (e) {
       if (!mounted) return;
@@ -301,16 +334,22 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
   }
 
   Future<bool> _sendSticker(String sticker) async {
+    if (_isSendingMessage) {
+      return false;
+    }
     if (!await SecurityService().guardAction(context, 'chat_send_sticker')) {
       return false;
     }
 
+    _isSendingMessage = true;
     try {
       await _sendChatMessage(sticker, type: 'sticker');
       return true;
     } catch (e) {
       _showChatError(e);
       return false;
+    } finally {
+      _isSendingMessage = false;
     }
   }
 

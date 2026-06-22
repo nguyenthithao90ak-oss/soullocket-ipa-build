@@ -915,78 +915,133 @@ class SlAvatarFrame extends StatelessWidget {
       case 'rounded':
         decorations.addAll([
           Positioned(
-            top: -size * 0.05,
-            right: -size * 0.05,
-            child: Text('🌸', style: TextStyle(fontSize: (size * 0.26).clamp(12.0, 36.0))),
+            top: -size * 0.08,
+            right: -size * 0.08,
+            child: Image.asset(
+              'assets/images/interaction_stickers/custom/numbered/sticker_029.png',
+              width: size * 0.35,
+              height: size * 0.35,
+              fit: BoxFit.contain,
+            ),
           ),
           Positioned(
-            bottom: -size * 0.05,
-            left: -size * 0.05,
-            child: Text('💖', style: TextStyle(fontSize: (size * 0.26).clamp(12.0, 36.0))),
+            bottom: -size * 0.08,
+            left: -size * 0.08,
+            child: Image.asset(
+              'assets/images/interaction_stickers/custom/numbered/sticker_003.png',
+              width: size * 0.35,
+              height: size * 0.35,
+              fit: BoxFit.contain,
+            ),
           ),
         ]);
         break;
       case 'squircle':
         decorations.addAll([
           Positioned(
-            top: -size * 0.05,
-            left: -size * 0.05,
-            child: Text('🎀', style: TextStyle(fontSize: (size * 0.26).clamp(12.0, 36.0))),
+            top: -size * 0.08,
+            left: -size * 0.08,
+            child: Image.asset(
+              'assets/images/interaction_stickers/custom/numbered/sticker_012.png',
+              width: size * 0.35,
+              height: size * 0.35,
+              fit: BoxFit.contain,
+            ),
           ),
           Positioned(
-            bottom: -size * 0.05,
-            right: -size * 0.05,
-            child: Text('✨', style: TextStyle(fontSize: (size * 0.26).clamp(12.0, 36.0))),
+            bottom: -size * 0.08,
+            right: -size * 0.08,
+            child: Image.asset(
+              'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
+              width: size * 0.35,
+              height: size * 0.35,
+              fit: BoxFit.contain,
+            ),
           ),
         ]);
         break;
       case 'pearl':
         decorations.addAll([
           Positioned(
-            top: -size * 0.05,
-            right: -size * 0.05,
-            child: Text('✨', style: TextStyle(fontSize: (size * 0.26).clamp(12.0, 36.0))),
+            top: -size * 0.08,
+            right: -size * 0.08,
+            child: Image.asset(
+              'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
+              width: size * 0.35,
+              height: size * 0.35,
+              fit: BoxFit.contain,
+            ),
           ),
           Positioned(
-            bottom: -size * 0.05,
-            left: -size * 0.05,
-            child: Text('🤍', style: TextStyle(fontSize: (size * 0.24).clamp(12.0, 34.0))),
+            bottom: -size * 0.08,
+            left: -size * 0.08,
+            child: Image.asset(
+              'assets/images/interaction_stickers/custom/numbered/sticker_085.png',
+              width: size * 0.35,
+              height: size * 0.35,
+              fit: BoxFit.contain,
+            ),
           ),
         ]);
         break;
       case 'glass':
         decorations.addAll([
           Positioned(
-            top: -size * 0.05,
-            left: -size * 0.05,
-            child: Text('🫧', style: TextStyle(fontSize: (size * 0.28).clamp(12.0, 38.0))),
+            top: -size * 0.08,
+            left: -size * 0.08,
+            child: Image.asset(
+              'assets/images/interaction_stickers/custom/numbered/sticker_061.png',
+              width: size * 0.35,
+              height: size * 0.35,
+              fit: BoxFit.contain,
+            ),
           ),
           Positioned(
-            bottom: -size * 0.05,
-            right: -size * 0.05,
-            child: Text('☁️', style: TextStyle(fontSize: (size * 0.26).clamp(12.0, 36.0))),
+            bottom: -size * 0.08,
+            right: -size * 0.08,
+            child: Image.asset(
+              'assets/images/interaction_stickers/custom/numbered/sticker_065.png',
+              width: size * 0.35,
+              height: size * 0.35,
+              fit: BoxFit.contain,
+            ),
           ),
         ]);
         break;
       case 'vip':
         decorations.addAll([
           Positioned(
-            top: -size * 0.20,
+            top: -size * 0.22,
             left: 0,
             right: 0,
             child: Center(
-              child: Text('👑', style: TextStyle(fontSize: (size * 0.32).clamp(14.0, 44.0))),
+              child: Image.asset(
+                'assets/images/interaction_stickers/custom/numbered/sticker_001.png',
+                width: size * 0.45,
+                height: size * 0.45,
+                fit: BoxFit.contain,
+              ),
             ),
           ),
           Positioned(
-            bottom: -size * 0.04,
-            left: -size * 0.04,
-            child: Text('⭐', style: TextStyle(fontSize: (size * 0.22).clamp(10.0, 30.0))),
+            bottom: -size * 0.08,
+            left: -size * 0.08,
+            child: Image.asset(
+              'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
+              width: size * 0.3,
+              height: size * 0.3,
+              fit: BoxFit.contain,
+            ),
           ),
           Positioned(
-            bottom: -size * 0.04,
-            right: -size * 0.04,
-            child: Text('⭐', style: TextStyle(fontSize: (size * 0.22).clamp(10.0, 30.0))),
+            bottom: -size * 0.08,
+            right: -size * 0.08,
+            child: Image.asset(
+              'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
+              width: size * 0.3,
+              height: size * 0.3,
+              fit: BoxFit.contain,
+            ),
           ),
         ]);
         break;
@@ -994,17 +1049,42 @@ class SlAvatarFrame extends StatelessWidget {
       default:
         decorations.addAll([
           Positioned(
-            top: -size * 0.04,
-            left: -size * 0.04,
-            child: Text('✨', style: TextStyle(fontSize: (size * 0.24).clamp(10.0, 32.0))),
+            top: -size * 0.08,
+            left: -size * 0.08,
+            child: Image.asset(
+              'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
+              width: size * 0.32,
+              height: size * 0.32,
+              fit: BoxFit.contain,
+            ),
           ),
           Positioned(
-            bottom: -size * 0.04,
-            right: -size * 0.04,
-            child: Text(isUser1 ? '💙' : '❤️', style: TextStyle(fontSize: (size * 0.24).clamp(10.0, 32.0))),
+            bottom: -size * 0.08,
+            right: -size * 0.08,
+            child: Image.asset(
+              'assets/images/interaction_stickers/custom/numbered/sticker_003.png',
+              width: size * 0.32,
+              height: size * 0.32,
+              fit: BoxFit.contain,
+            ),
           ),
         ]);
         break;
+    }
+
+    if (frameKey.startsWith('sticker_')) {
+      decorations.add(
+        Positioned(
+          bottom: -size * 0.1,
+          right: -size * 0.15,
+          child: Image.asset(
+            'assets/images/interaction_stickers/custom/numbered/$frameKey.png',
+            width: size * 0.65,
+            height: size * 0.65,
+            fit: BoxFit.contain,
+          ),
+        ),
+      );
     }
 
     return Stack(

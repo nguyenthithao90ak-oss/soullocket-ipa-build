@@ -70,4 +70,39 @@ extension _MainHomeRouting on _MainHomeTabState {
       _fetchHouseData(preserveVisibleState: true);
     });
   }
+
+  Future<void> _openDirectChat() async {
+    final houseId = _houseId;
+    if (houseId == null || houseId.isEmpty) return;
+
+    final currentRole = _currentRole;
+    final targetRole = currentRole == 'user1' ? 'user2' : 'user1';
+    var targetName = targetRole == 'user1' ? 'Bạn nam' : 'Bạn nữ';
+    var targetAvatar = '';
+
+    final data = _houseSettings;
+    if (data != null) {
+      final nameKey = targetRole == 'user1' ? 'nameU1' : 'nameU2';
+      final avatarKey = targetRole == 'user1' ? 'avtUser1' : 'avtUser2';
+      final name = data[nameKey]?.toString().trim() ?? '';
+      final avatar = data[avatarKey]?.toString().trim() ?? '';
+      if (name.isNotEmpty) targetName = name;
+      if (avatar.isNotEmpty) targetAvatar = avatar;
+    }
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatDetailScreen(
+          myHouseId: houseId,
+          targetHouseId: houseId,
+          targetName: targetName,
+          targetAvatar: targetAvatar,
+          isInternal: true,
+          currentRole: currentRole,
+          targetRole: targetRole,
+        ),
+      ),
+    );
+  }
 }

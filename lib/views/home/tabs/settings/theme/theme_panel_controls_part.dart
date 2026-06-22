@@ -906,13 +906,24 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
   }
 
   Widget _buildAvatarFrameStrip(String selectedKey) {
-    final items = <(String, String, IconData, Color)>[
+    final defaultKeys = {'off', 'circle', 'sticker_092', 'sticker_086', 'sticker_048', 'sticker_052', 'vip'};
+    final isCustomStickerSelected = selectedKey.startsWith('sticker_') && !defaultKeys.contains(selectedKey);
+
+    final items = <(String, String, dynamic, Color)>[
       ('Không', 'off', Icons.block_rounded, const Color(0xFFBDBDBD)),
       ('Tròn', 'circle', Icons.circle_rounded, const Color(0xFF2563EB)),
-      ('Bo góc', 'rounded', Icons.rounded_corner_rounded, const Color(0xFFEC4899)),
-      ('Squircle', 'squircle', Icons.crop_square_rounded, const Color(0xFF8B5CF6)),
-      ('Ngọc trai', 'pearl', Icons.blur_circular_rounded, const Color(0xFFD4A520)),
-      ('Thủy tinh', 'glass', Icons.water_drop_rounded, const Color(0xFF06B6D4)),
+      ('Mèo tim', 'sticker_092', 'assets/images/interaction_stickers/custom/numbered/sticker_092.png', const Color(0xFFEC4899)),
+      ('Mèo xám', 'sticker_086', 'assets/images/interaction_stickers/custom/numbered/sticker_086.png', const Color(0xFF8B5CF6)),
+      ('Thỏ ôm', 'sticker_048', 'assets/images/interaction_stickers/custom/numbered/sticker_048.png', const Color(0xFFD4A520)),
+      ('Ngầu', 'sticker_052', 'assets/images/interaction_stickers/custom/numbered/sticker_052.png', const Color(0xFF06B6D4)),
+      if (isCustomStickerSelected)
+        (
+          'Đang chọn',
+          selectedKey,
+          'assets/images/interaction_stickers/custom/numbered/$selectedKey.png',
+          const Color(0xFF10B981),
+        ),
+      ('Tự chọn 🎨', 'custom_picker', Icons.palette_outlined, const Color(0xFF10B981)),
       if (AppConfig.isPurchaseEnabled)
         (
           _isVipActive ? 'VIP ✨' : 'VIP 🔒',
@@ -928,12 +939,18 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
       children: items.map((item) {
         final key = item.$2;
         final locked = key == 'vip' && !_isVipActive;
-        final selected = selectedKey == key;
+        final selected = selectedKey == key || (key == 'custom_picker' && isCustomStickerSelected);
         final color = item.$4;
         final previewRadius = _avatarFramePreviewRadius(key);
 
         return GestureDetector(
-          onTap: () => _handleAvatarFrameSelection(key),
+          onTap: () {
+            if (key == 'custom_picker') {
+              _showAvatarStickerPicker();
+            } else {
+              _handleAvatarFrameSelection(key);
+            }
+          },
           child: AnimatedScale(
             scale: selected ? 1.08 : 1.0,
             duration: const Duration(milliseconds: 220),
@@ -973,15 +990,20 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
                               ),
                             ],
                     ),
-                    child: Icon(
-                      item.$3,
-                      size: 22,
-                      color: locked
-                          ? color.withValues(alpha: 0.5)
-                          : selected
-                              ? color
-                              : const Color(0xFF9CA3AF),
-                    ),
+                    child: item.$3 is IconData
+                        ? Icon(
+                            item.$3 as IconData,
+                            size: 22,
+                            color: locked
+                                ? color.withValues(alpha: 0.5)
+                                : selected
+                                    ? color
+                                    : const Color(0xFF9CA3AF),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Image.asset(item.$3 as String),
+                          ),
                   ),
                   const SizedBox(height: 5),
                   Text(
@@ -1001,6 +1023,70 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
           ),
         );
       }).toList(),
+    );
+  }
+
+  void _showAvatarStickerPicker() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                'Tự chọn Sticker Khung Avatar',
+                style: SLTheme.quicksand(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF24324A),
+                ),
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.all(16),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                ),
+                itemCount: 164,
+                itemBuilder: (context, index) {
+                  final stickerNum = (index + 1).toString().padLeft(3, '0');
+                  final stickerKey = 'sticker_$stickerNum';
+                  final assetPath = 'assets/images/interaction_stickers/custom/numbered/$stickerKey.png';
+
+                  return GestureDetector(
+                    onTap: () {
+                      _handleAvatarFrameSelection(stickerKey);
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: Image.asset(
+                        assetPath,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.grey),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

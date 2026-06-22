@@ -673,9 +673,9 @@ class SLTheme {
 
   // ─── Background Mesh Pattern ──────────────────────────────────
   static Widget meshPattern() {
-    return Container(
-      decoration: BoxDecoration(
-        color: SLColors.bgElevated.withValues(alpha: 0.02),
+    return const RepaintBoundary(
+      child: CustomPaint(
+        painter: _CuteMeshPatternPainter(),
       ),
     );
   }
@@ -1661,3 +1661,71 @@ class SLTextStyles {
     );
   }
 }
+
+class _CuteMeshPatternPainter extends CustomPainter {
+  const _CuteMeshPatternPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double w = size.width;
+    final double h = size.height;
+    if (w <= 0 || h <= 0) return;
+
+    // 1. Vẽ lưới chấm tròn nhỏ siêu nhẹ phong cách pastel kute
+    final Paint dotPaint = Paint()..color = const Color(0xFFFFB7D1).withValues(alpha: 0.12);
+    const double spacing = 32.0;
+    for (double x = spacing / 2; x < w; x += spacing) {
+      for (double y = spacing / 2; y < h; y += spacing) {
+        canvas.drawCircle(Offset(x, y), 0.7, dotPaint);
+      }
+    }
+
+    // 2. Vẽ các icon dễ thương rải rác cố định vị trí (deterministic pseudo-random)
+    final textPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+    );
+
+    final List<Map<String, dynamic>> icons = [
+      {'text': '✨', 'color': const Color(0xFFFFD54F)},
+      {'text': '🌸', 'color': const Color(0xFFFF8A80)},
+      {'text': '🧸', 'color': const Color(0xFFD7CCC8)},
+      {'text': '☁️', 'color': const Color(0xFFE3F2FD)},
+      {'text': '🎈', 'color': const Color(0xFFFF8A80)},
+      {'text': '⭐', 'color': const Color(0xFFFFE082)},
+      {'text': '🎀', 'color': const Color(0xFFFF80AB)},
+      {'text': '🧁', 'color': const Color(0xFFF8BBD0)},
+      {'text': '🐾', 'color': const Color(0xFFFFCC80)},
+      {'text': '🍿', 'color': const Color(0xFFFFF59D)},
+    ];
+
+    int seed = 42;
+    int nextRand() {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return seed;
+    }
+
+    // Khoảng 35 họa tiết xinh xắn nổi bật
+    final int count = ((w * h) / 14000).clamp(15, 60).toInt();
+    for (int i = 0; i < count; i++) {
+      final double x = (nextRand() % w.toInt()).toDouble();
+      final double y = (nextRand() % h.toInt()).toDouble();
+      final double sizeVal = (nextRand() % 8) + 12.0; // font size 12-20
+      final icon = icons[nextRand() % icons.length];
+
+      textPainter.text = TextSpan(
+        text: icon['text'] as String,
+        style: TextStyle(
+          fontSize: sizeVal,
+          color: (icon['color'] as Color).withValues(alpha: 0.16),
+          fontFamily: 'Segoe UI Emoji',
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(x - textPainter.width / 2, y - textPainter.height / 2));
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CuteMeshPatternPainter oldDelegate) => false;
+}
+

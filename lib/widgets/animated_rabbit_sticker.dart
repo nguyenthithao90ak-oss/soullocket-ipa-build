@@ -21,7 +21,7 @@ class AnimatedRabbitSticker extends StatelessWidget {
     this.height,
     this.fit = BoxFit.contain,
     this.isAntiAlias = true,
-    this.filterQuality = FilterQuality.high,
+    this.filterQuality = FilterQuality.low,
     this.errorBuilder,
   });
 
@@ -51,7 +51,7 @@ class AnimatedRabbitSticker extends StatelessWidget {
     }
     return _RabbitStickerMotion(
       assetPath: assetPath,
-      child: image,
+      child: RepaintBoundary(child: image),
     );
   }
 }
@@ -123,17 +123,15 @@ class _RabbitStickerMotionState extends State<_RabbitStickerMotion>
           _cutoutStickerPrefix,
         );
 
-        return RepaintBoundary(
-          child: _buildMotion(
-            childWidget,
-            primary: primary,
-            secondary: secondary,
-            tertiary: tertiary,
-            lift: lift,
-            alignment:
-                isNumberedSticker ? Alignment.bottomCenter : Alignment.center,
-            keepAspectRatio: keepAspectRatio,
-          ),
+        return _buildMotion(
+          childWidget,
+          primary: primary,
+          secondary: secondary,
+          tertiary: tertiary,
+          lift: lift,
+          alignment:
+              isNumberedSticker ? Alignment.bottomCenter : Alignment.center,
+          keepAspectRatio: keepAspectRatio,
         );
       },
     );

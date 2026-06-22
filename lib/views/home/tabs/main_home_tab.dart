@@ -19,6 +19,7 @@ import 'package:latlong2/latlong.dart' as ll;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/sl_theme.dart';
 import '../../chat/messenger_screen.dart';
+import '../../chat/chat_detail_screen.dart';
 import '../../map/map_screen.dart';
 import '../../relationship/couple_connect_screen.dart';
 import '../../single_match/single_match_hub_screen.dart';
@@ -256,6 +257,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   int _liveWorkSessionId = 0;
   List<String> _cachedWidgetDiaryImageUrls = const <String>[];
   List<String> _recentChatSignals = [];
+  int _lastChatMessageTs = 0; // timestamp ms của tin nhắn chat cuối cùng
   late final ValueNotifier<_PartnerInteractionPreset> _smartInteractionPresetNotifier;
   _PartnerInteractionPreset get _smartInteractionPreset =>
       _smartInteractionPresetNotifier.value;

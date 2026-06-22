@@ -278,18 +278,35 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
     }
   }
 
-  Color _statusColor(String? status) {
+
+
+  Color _statusTextColor(String? status) {
     switch (status) {
       case 'approved':
-        return const Color(0xFF4CAF50);
+        return const Color(0xFF1B5E20);
       case 'blocked':
-        return Colors.red;
+        return const Color(0xFFC62828);
       case 'pending':
-        return Colors.orange;
+        return const Color(0xFFE65100);
       case 'local_only':
-        return Colors.blueGrey;
+        return SLColors.textPrimary;
       default:
         return Colors.grey;
+    }
+  }
+
+  Color _statusBgColor(String? status) {
+    switch (status) {
+      case 'approved':
+        return SLColors.successLight;
+      case 'blocked':
+        return SLColors.dangerLight;
+      case 'pending':
+        return SLColors.warningLight;
+      case 'local_only':
+        return SLColors.primaryLight;
+      default:
+        return const Color(0xFFF5F5F5);
     }
   }
 
@@ -347,37 +364,20 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(
-          context.tr('util_qunlthitb_983ee3'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w900,
-            fontSize: 18,
-            letterSpacing: 0.5,
-          ),
-        ),
-        backgroundColor: const Color(0xFFD81B60),
-        foregroundColor: Colors.white,
-        elevation: 0,
+      appBar: SLTheme.appBar(
+        context,
+        context.tr('util_qunlthitb_983ee3'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded, color: SLColors.primary),
             onPressed: _loadDevices,
           ),
         ],
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFF8F0FF), Color(0xFFFFE4EE)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+      body: SLTheme.background(
         child: _isLoading
             ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFFD81B60)))
+                child: CircularProgressIndicator(color: SLColors.primary))
             : _devices.isEmpty
                 ? _buildEmpty()
                 : _buildList(),
@@ -392,17 +392,16 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
     final isSyncing = _isSyncingDevices;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(18),
-        border:
-            Border.all(color: const Color(0xFFD81B60).withValues(alpha: 0.18)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: SLColors.primary.withValues(alpha: 0.16)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFD81B60).withValues(alpha: 0.08),
-            blurRadius: 14,
+            color: SLColors.primary.withValues(alpha: 0.04),
+            blurRadius: 16,
             offset: const Offset(0, 6),
           ),
         ],
@@ -410,8 +409,8 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_rounded, color: Color(0xFFD81B60)),
-          SLSpacing.w8,
+          const Icon(Icons.info_outline_rounded, color: SLColors.primary),
+          SLSpacing.w10,
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -421,20 +420,20 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
                       ? 'Đang tải danh sách thiết bị từ máy chủ. Thiết bị bên dưới chỉ là máy hiện tại tạm thời.'
                       : message,
                   style: SLTheme.quicksand(
-                    fontSize: 12.5,
+                    fontSize: 13,
                     height: 1.45,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF475569),
+                    color: SLColors.textPrimary,
                   ),
                 ),
                 if (isSyncing) ...[
-                  SLSpacing.h8,
+                  SLSpacing.h10,
                   ClipRRect(
                     borderRadius: BorderRadius.circular(999),
                     child: const LinearProgressIndicator(
                       minHeight: 4,
-                      color: Color(0xFFD81B60),
-                      backgroundColor: Color(0xFFFFD6E5),
+                      color: SLColors.primary,
+                      backgroundColor: SLColors.primaryLight,
                     ),
                   ),
                 ],
@@ -467,7 +466,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
 
   Widget _buildList() {
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 100, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       itemCount: _devices.length + 1,
       itemBuilder: (context, i) {
         if (i == 0) {
@@ -476,14 +475,14 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
             children: [
               _buildNoticeCard(),
               Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 10),
+                padding: const EdgeInsets.only(left: 4, bottom: 12),
                 child: Text(
                   L10nService().format(
                       'util_device_showing_count', {'count': _devices.length}),
                   style: SLTheme.quicksand(
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: FontWeight.w900,
-                    color: const Color(0xFF475569),
+                    color: SLColors.textSecond,
                   ),
                 ),
               ),
@@ -497,224 +496,242 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
         final isAdmin = device['is_admin'] == true;
         final canTakeAction = !isMe && _currentDeviceCanManageDevices;
 
+        final statusBg = _statusBgColor(status);
+        final statusText = _statusTextColor(status);
+
         return Container(
-          margin: const EdgeInsets.only(bottom: 14),
+          margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
-            color: isMe ? const Color(0xFFE3F2FD) : Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(
-                color: isMe
-                    ? Colors.blue
-                    : _statusColor(status).withValues(alpha: 0.4),
-                width: 2),
+              color: isMe 
+                  ? const Color(0xFF007AFF).withValues(alpha: 0.24) 
+                  : Colors.black.withValues(alpha: 0.04),
+              width: isMe ? 1.5 : 1,
+            ),
             boxShadow: [
               BoxShadow(
-                  color: _statusColor(status).withValues(alpha: 0.08),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6)),
+                color: isMe 
+                    ? const Color(0xFF007AFF).withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.03),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
             ],
           ),
-          child: ExpansionTile(
-            tilePadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [
-                  _statusColor(status).withValues(alpha: 0.2),
-                  _statusColor(status).withValues(alpha: 0.05)
-                ]),
-                shape: BoxShape.circle,
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              dividerColor: Colors.transparent,
+            ),
+            child: ExpansionTile(
+              tilePadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              leading: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: isMe 
+                      ? const Color(0xFF007AFF).withValues(alpha: 0.08)
+                      : statusBg,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  _platformIcon(device['platform']),
+                  color: isMe ? const Color(0xFF007AFF) : statusText,
+                  size: 24,
+                ),
               ),
-              child: Icon(_platformIcon(device['platform']),
-                  color: _statusColor(status), size: 28),
-            ),
-            title: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    device['model'] ?? context.tr('util_thitbkhngr_671ddb'),
-                    style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w900, fontSize: 15),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (isMe)
-                  Container(
-                    margin: const EdgeInsets.only(left: 8),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+              title: Row(
+                children: [
+                  Expanded(
                     child: Text(
-                      context.tr('util_bn_1fd75b'),
+                      device['model'] ?? context.tr('util_thitbkhngr_671ddb'),
                       style: SLTheme.quicksand(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                          fontWeight: FontWeight.w900, fontSize: 15),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (isMe)
+                    Container(
+                      margin: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF007AFF).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'Thiết bị này',
+                        style: SLTheme.quicksand(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF007AFF),
+                        ),
                       ),
                     ),
-                  ),
-                if (isAdmin && !isMe)
-                  Container(
-                    margin: const EdgeInsets.only(left: 8),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.amber[700],
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      'Admin',
-                      style: SLTheme.quicksand(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                  if (isAdmin && !isMe)
+                    Container(
+                      margin: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF9800).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'Quản trị viên',
+                        style: SLTheme.quicksand(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFFE65100),
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SLSpacing.h4,
-                Text(device['os'] ?? '',
-                    style:
-                        SLTheme.quicksand(fontSize: 12, color: Colors.black54)),
-                SLSpacing.gapH(2),
-                Text(
-                    L10nService().format('util_device_last_seen',
-                        {'time': _formatTs(device['last_seen'])}),
-                    style:
-                        SLTheme.quicksand(fontSize: 11, color: Colors.black45)),
-                if (device['ip'] != null && device['ip'] != 'unknown') ...[
-                  SLSpacing.gapH(2),
-                  Text('IP: ${device['ip']}',
-                      style: SLTheme.quicksand(
-                          fontSize: 11, color: Colors.black45)),
                 ],
-                if (device['location'] != null &&
-                    device['location'] != 'unknown') ...[
-                  SLSpacing.gapH(2),
-                  Text(
-                      L10nService().format('util_device_location',
-                          {'location': device['location']}),
-                      style: SLTheme.quicksand(
-                          fontSize: 11, color: Colors.black45)),
-                ],
-                if (device['ipSource'] != null &&
-                    device['ipSource'] != 'unknown') ...[
-                  SLSpacing.gapH(2),
-                  Text(
-                      L10nService().format('util_device_ip_source',
-                          {'source': device['ipSource']}),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SLSpacing.h4,
+                  Text(device['os'] ?? '',
                       style:
-                          SLTheme.quicksand(fontSize: 10, color: Colors.grey)),
+                          SLTheme.quicksand(fontSize: 12, color: Colors.black54)),
+                  SLSpacing.gapH(2),
+                  Text(
+                      L10nService().format('util_device_last_seen',
+                          {'time': _formatTs(device['last_seen'])}),
+                      style:
+                          SLTheme.quicksand(fontSize: 11, color: Colors.black45)),
+                  if (device['ip'] != null && device['ip'] != 'unknown') ...[
+                    SLSpacing.gapH(2),
+                    Text('IP: ${device['ip']}',
+                        style: SLTheme.quicksand(
+                            fontSize: 11, color: Colors.black45)),
+                  ],
+                  if (device['location'] != null &&
+                      device['location'] != 'unknown') ...[
+                    SLSpacing.gapH(2),
+                    Text(
+                        L10nService().format('util_device_location',
+                            {'location': device['location']}),
+                        style: SLTheme.quicksand(
+                            fontSize: 11, color: Colors.black45)),
+                  ],
+                  SLSpacing.h8,
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: statusBg,
+                      borderRadius: SLRadius.mdAll,
+                    ),
+                    child: Text(
+                      _statusLabelForTile(status, device, isMe),
+                      style: SLTheme.quicksand(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          color: statusText),
+                    ),
+                  ),
                 ],
-                SLSpacing.h8,
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: _statusColor(status).withValues(alpha: 0.12),
-                    borderRadius: SLRadius.mdAll,
+              ),
+              children: [
+                if (canTakeAction)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.02),
+                      borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(24),
+                          bottomRight: Radius.circular(24)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        if (status != 'approved')
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => _approve(id),
+                              icon: const Icon(Icons.check_circle_outline,
+                                  size: 16),
+                              label: Text(
+                                context.tr('util_duyt_a4db4d'),
+                                style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 13),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2E7D32),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                          ),
+                        if (status != 'approved') SLSpacing.w8,
+                        if (status != 'blocked')
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => _block(id),
+                              icon: const Icon(Icons.block_outlined, size: 16),
+                              label: Text(
+                                context.tr('util_chn_483b6f'),
+                                style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 13),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFEF6C00),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                          ),
+                        if (status != 'blocked') SLSpacing.w8,
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _delete(id),
+                            icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                            label: Text(
+                              context.tr('util_xa_4ed187'),
+                              style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 13),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFC62828),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Text(
-                    _statusLabelForTile(status, device, isMe),
-                    style: SLTheme.quicksand(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        color: _statusColor(status)),
+                if (!canTakeAction)
+                  Container(
+                    width: double.infinity,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.015),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(24),
+                        bottomRight: Radius.circular(24),
+                      ),
+                    ),
+                    child: Text(
+                      isMe
+                          ? context.tr('util_ylthitbbna_af3295')
+                          : context.tr('util_thitbhinti_7d3436'),
+                      style: SLTheme.quicksand(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black45,
+                      ),
+                    ),
                   ),
-                ),
               ],
             ),
-            children: [
-              if (canTakeAction)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.05),
-                    borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(20),
-                        bottomRight: Radius.circular(20)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      if (status != 'approved')
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => _approve(id),
-                            icon: const Icon(Icons.check_circle_outline,
-                                size: 18),
-                            label: Text(context.tr('util_duyt_a4db4d')),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                            ),
-                          ),
-                        ),
-                      if (status != 'approved') SLSpacing.w8,
-                      if (status != 'blocked')
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => _block(id),
-                            icon: const Icon(Icons.block, size: 18),
-                            label: Text(context.tr('util_chn_483b6f')),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                            ),
-                          ),
-                        ),
-                      if (status != 'blocked') SLSpacing.w8,
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () => _delete(id),
-                          icon: const Icon(Icons.delete_outline, size: 18),
-                          label: Text(context.tr('util_xa_4ed187')),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              if (!canTakeAction)
-                Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.05),
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(20),
-                      bottomRight: Radius.circular(20),
-                    ),
-                  ),
-                  child: Text(
-                    isMe
-                        ? context.tr('util_ylthitbbna_af3295')
-                        : context.tr('util_thitbhinti_7d3436'),
-                    style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black54,
-                    ),
-                  ),
-                ),
-            ],
           ),
         );
       },
