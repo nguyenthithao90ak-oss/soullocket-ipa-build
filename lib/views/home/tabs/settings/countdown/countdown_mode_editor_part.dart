@@ -1331,7 +1331,7 @@ class _CountdownModeEditorScreenState
                                         ),
                                         Align(
                                           alignment: Alignment.centerRight,
-                                          child: TextButton.icon(
+                                          child: ElevatedButton.icon(
                                             onPressed: () => Navigator.of(context).pop(
                                               _buildResult(
                                                 _CountdownModeSettingsAction.save,
@@ -1344,10 +1344,11 @@ class _CountdownModeEditorScreenState
                                                 fontWeight: FontWeight.w800,
                                               ),
                                             ),
-                                            style: TextButton.styleFrom(
-                                              foregroundColor: const Color(0xFFD81B60),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: const Color(0xFFD81B60),
+                                              foregroundColor: Colors.white,
                                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                              backgroundColor: const Color(0xFFD81B60).withValues(alpha: 0.1),
+                                              elevation: 0,
                                               shape: RoundedRectangleBorder(
                                                 borderRadius: BorderRadius.circular(12),
                                               ),

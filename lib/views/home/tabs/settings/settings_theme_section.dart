@@ -223,9 +223,9 @@ extension _SettingsTabThemeSection on _SettingsTabState {
             .any((item) => item.$2 == (_draftEffectKey ?? ui.fallingEffectKey))
         ? (_draftEffectKey ?? ui.fallingEffectKey)
         : config.effects.first.$2;
-    final rawAvatarFrameKey = config.avatarFrames.any(
-            (item) => item.$2 == (_draftAvatarFrameKey ?? ui.avatarFrameKey))
-        ? (_draftAvatarFrameKey ?? ui.avatarFrameKey)
+    final currentFrameKey = _draftAvatarFrameKey ?? ui.avatarFrameKey;
+    final rawAvatarFrameKey = (config.avatarFrames.any((item) => item.$2 == currentFrameKey) || currentFrameKey.startsWith('sticker_'))
+        ? currentFrameKey
         : config.avatarFrames.first.$2;
     final countdownStyleKey = config.countdownStyles.any((item) =>
             item.$2 == (_draftCountdownStyleKey ?? ui.countdownStyleKey))
