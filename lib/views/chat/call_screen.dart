@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../utils/services/ad_suppression_guard.dart';
@@ -122,7 +122,7 @@ class _IncomingCallOverlayState extends State<IncomingCallOverlay>
                             memCacheWidth: 720,
                             imageUrl: widget.callerAvatar,
                             fit: BoxFit.cover,
-                            filterQuality: FilterQuality.high,
+                            filterQuality: FilterQuality.medium,
                             placeholder: (context, url) => const Center(
                                 child: CircularProgressIndicator()),
                             errorWidget: (context, url, error) =>
@@ -476,7 +476,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                       memCacheWidth: 720,
                       imageUrl: widget.partnerAvatar,
                       fit: BoxFit.cover,
-                      filterQuality: FilterQuality.high,
+                      filterQuality: FilterQuality.medium,
                       placeholder: (context, url) =>
                           const Center(child: CircularProgressIndicator()),
                       errorWidget: (context, url, error) => _defaultAvatar(),

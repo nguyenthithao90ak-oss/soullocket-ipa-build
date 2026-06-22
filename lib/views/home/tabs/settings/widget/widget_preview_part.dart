@@ -1,4 +1,4 @@
-part of '../../settings_tab.dart';
+﻿part of '../../settings_tab.dart';
 
 extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
   ({List<Color> colors, Color textColor, Color borderColor, bool premium})
@@ -1372,7 +1372,7 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
               child: CachedNetworkImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
-                filterQuality: FilterQuality.high,
+                filterQuality: FilterQuality.medium,
                 memCacheWidth: tileWidth.ceil(),
                 memCacheHeight: tileHeight.ceil(),
                 errorWidget: (_, __, ___) {

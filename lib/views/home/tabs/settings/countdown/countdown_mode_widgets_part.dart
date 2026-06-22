@@ -1,4 +1,4 @@
-part of '../../settings_tab.dart';
+﻿part of '../../settings_tab.dart';
 // ignore_for_file: dead_code, unused_element
 
 class _CountdownModeCenterIconPreset {
@@ -128,7 +128,7 @@ Widget _buildCountdownModeCenterIconVisual({
       width: size,
       height: size,
       fit: BoxFit.contain,
-      filterQuality: FilterQuality.high,
+      filterQuality: FilterQuality.medium,
       errorBuilder: (_, __, ___) => _buildCountdownModeCenterIconVisual(
         preset: preset,
         size: size,
@@ -779,7 +779,7 @@ class _CountdownModeAvatarFrame extends StatelessWidget {
       return CachedNetworkImage(
         imageUrl: avatarUrl.trim(),
         fit: BoxFit.cover,
-        filterQuality: FilterQuality.high,
+        filterQuality: FilterQuality.medium,
         errorWidget: (_, __, ___) => _buildFallback(),
       );
     }

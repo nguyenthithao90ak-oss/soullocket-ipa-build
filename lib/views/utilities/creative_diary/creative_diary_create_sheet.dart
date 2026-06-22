@@ -1,4 +1,4 @@
-part of '../creative_diary_screen.dart';
+﻿part of '../creative_diary_screen.dart';
 // ignore_for_file: invalid_use_of_protected_member
 
 extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
@@ -227,7 +227,7 @@ class _DiaryImagePickerTile extends StatelessWidget {
                     : Image.file(
                         File(image!.path),
                         fit: BoxFit.cover,
-                        filterQuality: FilterQuality.high,
+                        filterQuality: FilterQuality.medium,
                       ),
               ),
             ),

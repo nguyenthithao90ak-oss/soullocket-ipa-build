@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
@@ -801,7 +801,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return CachedNetworkImage(
         imageUrl: item.remoteUrl!,
         fit: fit,
-        filterQuality: FilterQuality.high,
+        filterQuality: FilterQuality.medium,
         imageBuilder: (context, imageProvider) => Container(
           decoration: BoxDecoration(
             image: DecorationImage(image: imageProvider, fit: fit),
@@ -818,7 +818,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return Image.memory(
         base64Decode(item.inlineBase64!),
         fit: fit,
-        filterQuality: FilterQuality.high,
+        filterQuality: FilterQuality.medium,
         gaplessPlayback: true,
       );
     }
@@ -827,7 +827,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return Image.file(
         File(item.path),
         fit: fit,
-        filterQuality: FilterQuality.high,
+        filterQuality: FilterQuality.medium,
         gaplessPlayback: true,
         errorBuilder: (_, __, ___) => _brokenImagePlaceholder(),
       );

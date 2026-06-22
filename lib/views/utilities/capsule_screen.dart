@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:ui' as ui;
 import 'dart:io';
@@ -370,7 +370,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                     imageUrl: updated['image_url'],
                                     width: double.infinity,
                                     fit: BoxFit.cover,
-                                    filterQuality: FilterQuality.high,
+                                    filterQuality: FilterQuality.medium,
                                     placeholder: (_, __) => const Center(
                                       child: CircularProgressIndicator(strokeWidth: 2),
                                     ),
@@ -701,7 +701,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                       child: Image.file(
                         File(_selectedImage!.path),
                         fit: BoxFit.cover,
-                        filterQuality: FilterQuality.high,
+                        filterQuality: FilterQuality.medium,
                       ),
                     ),
                   ),

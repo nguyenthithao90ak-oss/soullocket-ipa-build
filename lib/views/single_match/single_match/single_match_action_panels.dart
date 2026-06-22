@@ -1,4 +1,4 @@
-part of '../single_match_hub_screen.dart';
+﻿part of '../single_match_hub_screen.dart';
 
 class _SingleMatchWarningCard extends StatelessWidget {
   const _SingleMatchWarningCard({
@@ -456,7 +456,7 @@ class _SingleMatchAvatarVisual extends StatelessWidget {
                   imageUrl: avatarUrl,
                   fit: BoxFit.cover,
                   memCacheWidth: 720,
-                  filterQuality: FilterQuality.high,
+                  filterQuality: FilterQuality.medium,
                   errorWidget: (_, __, ___) => Container(
                     color: Colors.white,
                     alignment: Alignment.center,

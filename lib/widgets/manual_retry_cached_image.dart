@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import 'cute_loading_indicator.dart';
@@ -100,7 +100,7 @@ class _ManualRetryCachedImageState extends State<ManualRetryCachedImage> {
       fadeInDuration: Duration.zero,
       fadeOutDuration: Duration.zero,
       placeholderFadeInDuration: Duration.zero,
-      filterQuality: FilterQuality.high,
+      filterQuality: FilterQuality.medium,
       placeholder: (context, url) => Container(
         width: widget.width,
         height: widget.height,

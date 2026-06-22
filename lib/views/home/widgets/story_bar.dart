@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -164,7 +164,7 @@ class _StoryBarState extends State<StoryBar> {
                     width: 58,
                     height: 58,
                     fit: BoxFit.cover,
-                    filterQuality: FilterQuality.high,
+                    filterQuality: FilterQuality.medium,
                     placeholder: (context, url) => story['blurHash'] != null
                         ? BlurHash(hash: story['blurHash'])
                         : Container(color: Colors.white24),
@@ -201,7 +201,7 @@ class _StoryBarState extends State<StoryBar> {
             child: CachedNetworkImage(
               imageUrl: story['url'],
               fit: BoxFit.contain,
-              filterQuality: FilterQuality.high,
+              filterQuality: FilterQuality.medium,
               placeholder: (context, url) => story['blurHash'] != null
                   ? BlurHash(hash: story['blurHash'])
                   : const Center(child: CircularProgressIndicator()),

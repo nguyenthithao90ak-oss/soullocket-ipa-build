@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -822,7 +822,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                         child: Image(
                           image: imageProvider,
                           fit: BoxFit.cover,
-                          filterQuality: FilterQuality.high,
+                          filterQuality: FilterQuality.medium,
                           gaplessPlayback: true,
                           frameBuilder:
                               (context, child, frame, wasSynchronouslyLoaded) =>

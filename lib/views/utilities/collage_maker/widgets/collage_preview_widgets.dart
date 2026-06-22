@@ -1,4 +1,4 @@
-part of '../../collage_maker_screen.dart';
+﻿part of '../../collage_maker_screen.dart';
 
 extension _CollagePreviewWidgets on _CollageMakerScreenState {
   Widget _buildSelectedImagesPreview() {
@@ -293,7 +293,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
             memCacheWidth: cacheWidth,
             imageUrl: photo.source,
             fit: BoxFit.cover,
-            filterQuality: FilterQuality.high,
+            filterQuality: FilterQuality.medium,
             fadeInDuration: Duration.zero,
             fadeOutDuration: Duration.zero,
             placeholder: (context, url) => const Center(
@@ -332,7 +332,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
             File(photo.source),
             fit: BoxFit.cover,
             cacheWidth: cacheWidth,
-            filterQuality: FilterQuality.high,
+            filterQuality: FilterQuality.medium,
           );
 
     return ClipRect(

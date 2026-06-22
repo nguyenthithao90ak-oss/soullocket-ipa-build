@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+﻿// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -1212,7 +1212,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                 ? CachedNetworkImage(
                                     imageUrl: avatarUrl,
                                     fit: BoxFit.cover,
-                                    filterQuality: FilterQuality.high,
+                                    filterQuality: FilterQuality.medium,
                                     errorWidget: (_, __, ___) => Icon(
                                       icon,
                                       color: accentColor,

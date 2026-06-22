@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -1229,7 +1229,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                       child: Image.file(
                         _selectedImage!,
                         fit: BoxFit.cover,
-                        filterQuality: FilterQuality.high,
+                        filterQuality: FilterQuality.medium,
                       ),
                     )
                   : const Icon(Icons.image_outlined, color: Color(0xFFD81B60)),

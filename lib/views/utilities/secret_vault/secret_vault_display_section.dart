@@ -1,4 +1,4 @@
-part of '../secret_vault_screen.dart';
+﻿part of '../secret_vault_screen.dart';
 
 extension _SecretVaultDisplayPart on SecretVaultScreenState {
   void _showFullImage(String url, String? caption) {
@@ -38,7 +38,7 @@ extension _SecretVaultDisplayPart on SecretVaultScreenState {
                                 memCacheWidth: 900,
                                 imageUrl: url,
                                 fit: BoxFit.contain,
-                                filterQuality: FilterQuality.high,
+                                filterQuality: FilterQuality.medium,
                                 width: double.infinity,
                                 height: imageMaxHeight,
                                 placeholder: (context, url) => const Center(

@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use, use_build_context_synchronously
+﻿// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'dart:async';
 
@@ -1813,7 +1813,7 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                         fit: BoxFit.contain,
                         width: double.infinity,
                         height: double.infinity,
-                        filterQuality: FilterQuality.high,
+                        filterQuality: FilterQuality.medium,
                         gaplessPlayback: true,
                         errorBuilder: (context, error, stackTrace) =>
                             const Icon(

@@ -396,6 +396,6 @@
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSUserTrackingUsageDescription</key>
-	<string>Dữ liệu của bạn được ẩn danh và dùng để cải thiện trải nghiệm ứng dụng, hiển thị quảng cáo phù hợp mà không bán cho bên thứ ba.</string>
+	<string>Your data is used to deliver personalized ads and measure ad performance. This includes sharing the device's advertising identifier with ad networks to provide relevant ads and prevent fraud.</string>
 </dict>
 </plist>

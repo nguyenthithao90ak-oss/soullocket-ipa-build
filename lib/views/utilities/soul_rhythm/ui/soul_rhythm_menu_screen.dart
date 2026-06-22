@@ -1,4 +1,4 @@
-// ignore_for_file: invalid_use_of_protected_member
+﻿// ignore_for_file: invalid_use_of_protected_member
 
 part of '../../soul_rhythm_game.dart';
 
@@ -291,7 +291,7 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
                 width: compact ? 48 : 54,
                 height: compact ? 48 : 54,
                 fit: BoxFit.cover,
-                filterQuality: FilterQuality.high,
+                filterQuality: FilterQuality.medium,
               ),
             ),
           ),

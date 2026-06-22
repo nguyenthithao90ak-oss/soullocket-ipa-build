@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+﻿// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -1397,7 +1397,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
               memCacheWidth: 720,
               imageUrl: img,
               fit: BoxFit.cover,
-              filterQuality: FilterQuality.high,
+              filterQuality: FilterQuality.medium,
               placeholder: (_, __) => Container(color: SLColors.borderLight),
               errorWidget: (_, __, ___) => Container(color: SLColors.border))
         else

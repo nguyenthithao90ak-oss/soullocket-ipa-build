@@ -1,4 +1,4 @@
-part of '../cinema_screen.dart';
+﻿part of '../cinema_screen.dart';
 
 extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
 
@@ -926,7 +926,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
         memCacheWidth: 1440,
         imageUrl: url,
         fit: BoxFit.cover,
-        filterQuality: FilterQuality.high,
+        filterQuality: FilterQuality.medium,
         placeholder: (_, __) => Container(
           color: const Color(0xFF182334),
           alignment: Alignment.center,
@@ -950,7 +950,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
         File(url),
         cacheWidth: 1440,
         fit: BoxFit.cover,
-        filterQuality: FilterQuality.high,
+        filterQuality: FilterQuality.medium,
         errorBuilder: (_, __, ___) => Container(
           color: const Color(0xFF182334),
           alignment: Alignment.center,
@@ -979,7 +979,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                 memCacheWidth: memCacheWidth,
                 imageUrl: url,
                 fit: BoxFit.scaleDown,
-                filterQuality: FilterQuality.high,
+                filterQuality: FilterQuality.medium,
                 alignment: Alignment.center,
                 placeholder: (_, __) => const SizedBox(
                   width: 34,
@@ -999,7 +999,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                 File(url),
                 cacheWidth: memCacheWidth,
                 fit: BoxFit.scaleDown,
-                filterQuality: FilterQuality.high,
+                filterQuality: FilterQuality.medium,
                 alignment: Alignment.center,
                 errorBuilder: (_, __, ___) => Icon(
                   Icons.broken_image_outlined,

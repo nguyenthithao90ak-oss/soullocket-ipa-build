@@ -1,4 +1,4 @@
-import 'dart:math';
+﻿import 'dart:math';
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
@@ -575,7 +575,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                                       CachedNetworkImage(
                                         imageUrl: imageUrl,
                                         fit: BoxFit.cover,
-                                        filterQuality: FilterQuality.high,
+                                        filterQuality: FilterQuality.medium,
                                         errorWidget: (context, error, stackTrace) {
                                           return Container(
                                             color: palette.envelopeLight,

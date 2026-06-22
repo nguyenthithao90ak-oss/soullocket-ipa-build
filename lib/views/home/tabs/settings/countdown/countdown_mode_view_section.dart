@@ -1,4 +1,4 @@
-part of '../../settings_tab.dart';
+﻿part of '../../settings_tab.dart';
 // ignore_for_file: dead_code, unused_element
 
 extension _CountdownModeIndependentScreenViewPart
@@ -1496,7 +1496,7 @@ extension _CountdownModeIndependentScreenViewPart
                               child: CachedNetworkImage(
                                 imageUrl: bgUrl,
                                 fit: BoxFit.cover,
-                                filterQuality: FilterQuality.high,
+                                filterQuality: FilterQuality.medium,
                                 fadeInDuration:
                                     const Duration(milliseconds: 180),
                                 memCacheWidth: 720,

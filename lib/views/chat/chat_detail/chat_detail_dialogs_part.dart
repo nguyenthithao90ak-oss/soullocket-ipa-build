@@ -1,4 +1,4 @@
-// ignore_for_file: invalid_use_of_protected_member
+﻿// ignore_for_file: invalid_use_of_protected_member
 
 part of '../chat_detail_screen.dart';
 
@@ -79,7 +79,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                             CachedNetworkImage(
                               imageUrl: currentBackgroundUrl,
                               fit: BoxFit.cover,
-                              filterQuality: FilterQuality.high,
+                              filterQuality: FilterQuality.medium,
                             ),
                             DecoratedBox(
                               decoration: BoxDecoration(

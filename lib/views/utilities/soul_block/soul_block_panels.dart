@@ -1,4 +1,4 @@
-part of '../soul_block_game.dart';
+﻿part of '../soul_block_game.dart';
 
 const LinearGradient _kSoulSplashProgressGradient = LinearGradient(
   colors: <Color>[
@@ -1497,7 +1497,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                       memCacheWidth: cacheSize.width,
                       memCacheHeight: cacheSize.height,
                       fadeInDuration: Duration.zero,
-                      filterQuality: FilterQuality.high,
+                      filterQuality: FilterQuality.medium,
                       imageBuilder: (context, imageProvider) {
                         return FittedBox(
                           fit: BoxFit.cover,
@@ -1510,7 +1510,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                             child: Image(
                               image: imageProvider,
                               fit: BoxFit.cover,
-                              filterQuality: FilterQuality.high,
+                              filterQuality: FilterQuality.medium,
                               alignment: Alignment.center,
                             ),
                           ),

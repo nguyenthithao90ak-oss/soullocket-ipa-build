@@ -1,4 +1,4 @@
-part of '../../main_home_tab.dart';
+﻿part of '../../main_home_tab.dart';
 
 class _PartnerInteractionPreset {
   final String type;
@@ -266,7 +266,7 @@ Widget _buildInteractionVisual({
       height: size,
       fit: fit,
       isAntiAlias: true,
-      filterQuality: FilterQuality.high,
+      filterQuality: FilterQuality.medium,
       errorBuilder: (_, __, ___) => _buildInteractionVisual(
         visual: visual,
         size: size,

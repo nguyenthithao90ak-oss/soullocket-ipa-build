@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/sl_theme.dart';
@@ -699,7 +699,7 @@ class CommunitySettingsAvatarPreview extends StatelessWidget {
               ? CachedNetworkImage(
                   imageUrl: avatarUrl,
                   fit: BoxFit.cover,
-                  filterQuality: FilterQuality.high,
+                  filterQuality: FilterQuality.medium,
                   errorWidget: (_, __, ___) =>
                       _CommunitySettingsAvatarFallback(text: fallbackText),
                 )

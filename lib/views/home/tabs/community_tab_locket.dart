@@ -1,4 +1,4 @@
-part of 'community_tab.dart';
+﻿part of 'community_tab.dart';
 
 extension _CommunityTabLocket on _CommunityTabState {
   Widget _buildLocketFeedView(List<Map<String, dynamic>> allPosts) {
@@ -512,7 +512,7 @@ extension _CommunityTabLocket on _CommunityTabState {
                   height: MediaQuery.sizeOf(context).height * 0.45,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  filterQuality: FilterQuality.high,
+                  filterQuality: FilterQuality.medium,
                 ),
               ),
               Padding(

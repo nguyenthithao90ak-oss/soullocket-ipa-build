@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../core/sl_theme.dart';
 
 class StickerLibraryScreen extends StatelessWidget {
@@ -407,7 +407,7 @@ class _StickerArt extends StatelessWidget {
         assetPath,
         fit: fit,
         isAntiAlias: true,
-        filterQuality: FilterQuality.high,
+        filterQuality: FilterQuality.medium,
         errorBuilder: (_, __, ___) => const Center(
           child: Icon(
             Icons.broken_image_rounded,

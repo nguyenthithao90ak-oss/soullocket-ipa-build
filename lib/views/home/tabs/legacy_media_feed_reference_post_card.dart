@@ -1,4 +1,4 @@
-part of 'legacy_media_feed_reference_screen.dart';
+﻿part of 'legacy_media_feed_reference_screen.dart';
 
 // ─── Single Legacy Media Feed Post ────────────────────────────
 class _LegacyMediaFeedReferencePostCard extends StatefulWidget {
@@ -470,7 +470,7 @@ class _LegacyMediaFeedReferencePostCardState
           memCacheWidth: 1800,
           imageUrl: _mediaUrl,
           fit: BoxFit.cover,
-          filterQuality: FilterQuality.high,
+          filterQuality: FilterQuality.medium,
           fadeInDuration: Duration.zero,
           placeholder: (_, __) => Container(color: const Color(0xFF120716)),
           errorWidget: (_, __, ___) =>
@@ -488,7 +488,7 @@ class _LegacyMediaFeedReferencePostCardState
                     memCacheWidth: 1800,
                     imageUrl: _mediaUrl,
                     fit: BoxFit.cover,
-                    filterQuality: FilterQuality.high,
+                    filterQuality: FilterQuality.medium,
                     fadeInDuration: Duration.zero,
                     placeholder: (_, __) =>
                         Container(color: const Color(0xFF120716)),
@@ -630,7 +630,7 @@ class _LegacyMediaFeedReferencePostCardState
                                           imageUrl: _mediaUrl,
                                           fit: BoxFit.contain,
                                           alignment: Alignment.center,
-                                          filterQuality: FilterQuality.high,
+                                          filterQuality: FilterQuality.medium,
                                           placeholder: (_, __) => const Center(
                                             child: CircularProgressIndicator(
                                               color: Color(0xFFFF7EA8),

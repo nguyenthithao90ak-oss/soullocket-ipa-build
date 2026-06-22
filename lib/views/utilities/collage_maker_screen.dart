@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element, unused_element_parameter, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+﻿// ignore_for_file: unused_element, unused_element_parameter, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -1084,7 +1084,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
       child: Image.memory(
         bytes,
         fit: BoxFit.contain,
-        filterQuality: FilterQuality.high,
+        filterQuality: FilterQuality.medium,
       ),
       title: L10nService().translate('util_xemnhghp_6b6673'),
       fullScreen: true,
@@ -1098,7 +1098,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
               memCacheWidth: 1440,
               imageUrl: url,
               fit: BoxFit.contain,
-              filterQuality: FilterQuality.high,
+              filterQuality: FilterQuality.medium,
               placeholder: (context, url) =>
                   const Center(child: CircularProgressIndicator()),
               errorWidget: (context, url, error) => const Icon(
@@ -1110,7 +1110,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
           : Image.file(
               File(url),
               fit: BoxFit.contain,
-              filterQuality: FilterQuality.high,
+              filterQuality: FilterQuality.medium,
             ),
       title: L10nService().translate('util_xemnh_e34862'),
     );
@@ -1740,7 +1740,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                                               width: double.infinity,
                                               fit: BoxFit.contain,
                                               alignment: Alignment.topCenter,
-                                              filterQuality: FilterQuality.high,
+                                              filterQuality: FilterQuality.medium,
                                             ),
                                           ),
                                           Positioned(

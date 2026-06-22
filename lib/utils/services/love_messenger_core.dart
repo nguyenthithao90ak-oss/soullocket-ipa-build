@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -615,7 +615,7 @@ class SuperLoveMessengerViewState extends State<SuperLoveMessengerView>
                                 borderRadius: SLRadius.smAll,
                                 child: CachedNetworkImage(
                                   imageUrl: msg.imageUrl!,
-                                  filterQuality: FilterQuality.high,
+                                  filterQuality: FilterQuality.medium,
                                 )),
                           if (msg.text.isNotEmpty)
                             Padding(

@@ -1,4 +1,4 @@
-// ignore_for_file: invalid_use_of_protected_member
+﻿// ignore_for_file: invalid_use_of_protected_member
 
 part of '../chat_detail_screen.dart';
 
@@ -16,7 +16,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
           key: ValueKey<String>(normalizedUrl),
           imageUrl: normalizedUrl,
           fit: BoxFit.cover,
-          filterQuality: FilterQuality.high,
+          filterQuality: FilterQuality.medium,
           placeholder: (context, url) =>
               const ColoredBox(color: Color(0xFFF8FAFC)),
           errorWidget: (context, url, error) =>

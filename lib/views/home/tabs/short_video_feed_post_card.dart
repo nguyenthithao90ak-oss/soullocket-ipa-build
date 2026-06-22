@@ -1,4 +1,4 @@
-part of 'short_video_feed_screen.dart';
+﻿part of 'short_video_feed_screen.dart';
 
 // ─── Single Short Video Post ──────────────────────────────────
 class _ShortVideoFeedPostCard extends StatefulWidget {
@@ -630,7 +630,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                                           imageUrl: _mediaUrl,
                                           fit: BoxFit.contain,
                                           alignment: Alignment.center,
-                                          filterQuality: FilterQuality.high,
+                                          filterQuality: FilterQuality.medium,
                                           placeholder: (_, __) => const Center(
                                             child: CircularProgressIndicator(
                                               color: Color(0xFFFF7EA8),

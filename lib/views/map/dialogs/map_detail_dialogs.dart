@@ -1,4 +1,4 @@
-part of '../map_screen.dart';
+﻿part of '../map_screen.dart';
 
 extension _MapDetailDialogsExt on _MapScreenState {
   Future<void> _maybeShowFirstMapNotice() async {
@@ -308,7 +308,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
                   child: CachedNetworkImage(
                     imageUrl: checkin.imageUrl,
                     fit: BoxFit.cover,
-                    filterQuality: FilterQuality.high,
+                    filterQuality: FilterQuality.medium,
                     errorWidget: (_, __, ___) => const SizedBox.shrink(),
                   ),
                 ),
@@ -395,7 +395,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
                   child: CachedNetworkImage(
                     imageUrl: memory.imageUrl,
                     fit: BoxFit.cover,
-                    filterQuality: FilterQuality.high,
+                    filterQuality: FilterQuality.medium,
                     errorWidget: (_, __, ___) => const SizedBox.shrink(),
                   ),
                 ),

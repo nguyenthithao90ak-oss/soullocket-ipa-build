@@ -1,4 +1,4 @@
-part of '../../settings_tab.dart';
+﻿part of '../../settings_tab.dart';
 // ignore_for_file: dead_code, unused_element
 
 class _SettingsCountdownModeScreen extends StatelessWidget {
@@ -173,7 +173,7 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                     child: CachedNetworkImage(
                       imageUrl: uiState.customBackgroundUrl,
                       fit: BoxFit.cover,
-                      filterQuality: FilterQuality.high,
+                      filterQuality: FilterQuality.medium,
                       errorWidget: (_, __, ___) => const SizedBox.shrink(),
                     ),
                   ),

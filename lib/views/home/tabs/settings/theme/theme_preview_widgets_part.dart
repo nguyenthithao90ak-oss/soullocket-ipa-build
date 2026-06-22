@@ -1,4 +1,4 @@
-part of '../../settings_tab.dart';
+﻿part of '../../settings_tab.dart';
 // ignore_for_file: unused_element
 
 extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
@@ -876,7 +876,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
       return CachedNetworkImage(
         imageUrl: avatarUrl.trim(),
         fit: BoxFit.cover,
-        filterQuality: FilterQuality.high,
+        filterQuality: FilterQuality.medium,
         errorWidget: (_, __, ___) =>
             _buildThemePreviewAvatarFallback(accent, name),
       );

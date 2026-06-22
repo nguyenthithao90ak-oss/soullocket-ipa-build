@@ -1,4 +1,4 @@
-import 'dart:ui';
+﻿import 'dart:ui';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -764,7 +764,7 @@ class SLTheme {
                 memCacheWidth: 1440,
                 imageUrl: customBackgroundUrl,
                 fit: BoxFit.cover,
-                filterQuality: FilterQuality.high,
+                filterQuality: FilterQuality.medium,
                 errorWidget: (context, url, error) => const SizedBox.shrink(),
               ),
             ),

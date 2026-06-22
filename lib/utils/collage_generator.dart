@@ -1,4 +1,4 @@
-import 'dart:math';
+﻿import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -1236,7 +1236,7 @@ class CollageGenerator {
           rect: rect,
           image: stickerImage,
           fit: BoxFit.contain,
-          filterQuality: FilterQuality.high,
+          filterQuality: FilterQuality.medium,
         );
       } else {
         _drawText(

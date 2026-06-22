@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element
+﻿// ignore_for_file: unused_element
 part of '../../settings_tab.dart';
 
 extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
@@ -315,7 +315,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
     return CachedNetworkImage(
       imageUrl: imageUrl,
       fit: BoxFit.cover,
-      filterQuality: FilterQuality.high,
+      filterQuality: FilterQuality.medium,
       fadeInDuration: const Duration(milliseconds: 180),
       memCacheWidth: 1080,
       placeholder: (_, __) => const DecoratedBox(

@@ -461,6 +461,57 @@ class _LoveCardScreenState extends State<LoveCardScreen>
     }
   }
 
+  void _showFullScreenPreview(BuildContext context, _LoveThemeData theme, List<Color> colors) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        barrierDismissible: true,
+        opaque: false,
+        pageBuilder: (context, _, __) => Scaffold(
+          backgroundColor: Colors.black.withValues(alpha: 0.88),
+          body: Stack(
+            children: [
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: RepaintBoundary(
+                    child: _LoveCardPreviewPanel(
+                      state: this,
+                      theme: theme,
+                      colors: colors,
+                      fullBleed: true,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 48,
+                right: 20,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.of(context).pop(),
+                    borderRadius: BorderRadius.circular(999),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.close_rounded, color: Colors.white, size: 22),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        transitionsBuilder: (context, a, _, child) => FadeTransition(opacity: a, child: ScaleTransition(scale: a, child: child)),
+        transitionDuration: const Duration(milliseconds: 280),
+      ),
+    );
+  }
+
   void _showCreateTab() {
     setState(() {
       _currentIndex = 0;
@@ -490,6 +541,8 @@ class _LoveCardScreenState extends State<LoveCardScreen>
       if (shouldSyncSignature) {
         _setControllerText(_signatureCtrl, nextTheme.signature);
       }
+      // Clear theme color cache on selection
+      _themeColorsCache.clear();
     });
   }
 
@@ -877,11 +930,16 @@ class _LoveCardScreenState extends State<LoveCardScreen>
     );
   }
 
+  final Map<String, List<Color>> _themeColorsCache = {};
+
   _LoveThemeData _themeOf(String key) => _themes[key] ?? _themes['love']!;
 
   List<Color> _themeColors(String key) {
-    final theme = _themeOf(key);
-    return theme.colors.map(Color.new).toList(growable: false);
+    if (!_themeColorsCache.containsKey(key)) {
+      final theme = _themeOf(key);
+      _themeColorsCache[key] = theme.colors.map(Color.new).toList(growable: false);
+    }
+    return _themeColorsCache[key]!;
   }
 
   String _previewContent() {

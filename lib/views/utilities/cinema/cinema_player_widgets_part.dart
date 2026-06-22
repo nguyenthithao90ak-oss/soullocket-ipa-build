@@ -1,4 +1,4 @@
-part of '../cinema_screen.dart';
+﻿part of '../cinema_screen.dart';
 
 extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
   Widget _buildContainedImage(
@@ -16,7 +16,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                 memCacheWidth: memCacheWidth,
                 imageUrl: url,
                 fit: BoxFit.scaleDown,
-                filterQuality: FilterQuality.high,
+                filterQuality: FilterQuality.medium,
                 alignment: Alignment.center,
                 placeholder: (_, __) => const SizedBox(
                   width: 36,
@@ -36,7 +36,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                 File(url),
                 cacheWidth: memCacheWidth,
                 fit: BoxFit.scaleDown,
-                filterQuality: FilterQuality.high,
+                filterQuality: FilterQuality.medium,
                 alignment: Alignment.center,
                 errorBuilder: (_, __, ___) => Icon(
                   Icons.broken_image_outlined,

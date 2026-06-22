@@ -1,4 +1,4 @@
-part of '../gift_maker_screen.dart';
+﻿part of '../gift_maker_screen.dart';
 
 enum _GiftStage { bubble, box, letterClosed, letterOpen, scratch, finalStage }
 
@@ -517,7 +517,7 @@ class _GiftPreviewDialogState extends State<GiftPreviewDialog> {
                           memCacheWidth: 900,
                           imageUrl: widget.gift.imageUrl,
                           fit: BoxFit.cover,
-                          filterQuality: FilterQuality.high,
+                          filterQuality: FilterQuality.medium,
                           height: imageHeight,
                           width: double.infinity,
                           placeholder: (context, url) => const Center(
@@ -534,7 +534,7 @@ class _GiftPreviewDialogState extends State<GiftPreviewDialog> {
                       : Image.file(
                           File(widget.gift.imageUrl),
                           fit: BoxFit.cover,
-                          filterQuality: FilterQuality.high,
+                          filterQuality: FilterQuality.medium,
                           height: imageHeight,
                           width: double.infinity,
                         ),

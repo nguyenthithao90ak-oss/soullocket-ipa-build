@@ -1,4 +1,4 @@
-import 'dart:ui' as ui;
+﻿import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -385,7 +385,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   child: CachedNetworkImage(
                     imageUrl: entry.previewUrl,
                     fit: BoxFit.cover,
-                    filterQuality: FilterQuality.high,
+                    filterQuality: FilterQuality.medium,
                     placeholder: (_, __) => const Center(
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),

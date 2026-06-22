@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -765,7 +765,7 @@ class _DiaryAttachmentStrip extends StatelessWidget {
               CachedNetworkImage(
                 imageUrl: firstImage,
                 fit: BoxFit.cover,
-                filterQuality: FilterQuality.high,
+                filterQuality: FilterQuality.medium,
                 errorWidget: (_, __, ___) => Container(
                   color: page.surface,
                   alignment: Alignment.center,
@@ -828,7 +828,7 @@ class _DiaryAttachmentStrip extends StatelessWidget {
             child: CachedNetworkImage(
               imageUrl: imageUrl,
               fit: BoxFit.contain,
-              filterQuality: FilterQuality.high,
+              filterQuality: FilterQuality.medium,
               errorWidget: (_, __, ___) => Container(
                 height: 260,
                 color: Colors.white,

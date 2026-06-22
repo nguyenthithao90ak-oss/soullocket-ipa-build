@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/sl_theme.dart';
@@ -78,7 +78,7 @@ class VisitorProfileHeaderSection extends StatelessWidget {
             memCacheWidth: 2160,
             imageUrl: headerImageUrl,
             fit: BoxFit.cover,
-            filterQuality: FilterQuality.high,
+            filterQuality: FilterQuality.medium,
             fadeInDuration: const Duration(milliseconds: 180),
             errorWidget: (_, __, ___) => const SizedBox.shrink(),
           ),
@@ -182,7 +182,7 @@ class VisitorProfileHeaderSection extends StatelessWidget {
                                       memCacheWidth: 720,
                                       imageUrl: trimmedAvatar,
                                       fit: BoxFit.cover,
-                                      filterQuality: FilterQuality.high,
+                                      filterQuality: FilterQuality.medium,
                                       errorWidget: (_, __, ___) =>
                                           SLTheme.avatarPlaceholder(
                                         name,
@@ -334,7 +334,7 @@ class _VisitorProfileSmallHouseAvatarBadge extends StatelessWidget {
                 memCacheWidth: 720,
                 imageUrl: avatarUrl,
                 fit: BoxFit.cover,
-                filterQuality: FilterQuality.high,
+                filterQuality: FilterQuality.medium,
                 errorWidget: (_, __, ___) =>
                     SLTheme.avatarPlaceholder(fallbackLabel, size: 32),
               )
