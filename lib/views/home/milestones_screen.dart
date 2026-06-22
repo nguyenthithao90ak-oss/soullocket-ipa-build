@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/sl_theme.dart';
+import '../../utils/services/l10n_service.dart';
 import '../utilities/calendar_screen.dart';
 
 class MilestoneEvent {
@@ -78,7 +79,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
         final milestoneDate = startDtMidnight.add(Duration(days: m - 1));
         final diff = milestoneDate.difference(todayMidnight).inDays;
         allEvents.add(MilestoneEvent(
-          title: 'Kỷ niệm $m ngày yêu nhau 💖',
+          title: L10nService().format('milestone_anniversary_days', {'days': m.toString()}),
           date: milestoneDate,
           type: 'anniversary',
           diffDays: diff,
@@ -90,7 +91,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
         final annivDate = DateTime(startDtMidnight.year + y, startDtMidnight.month, startDtMidnight.day);
         final diff = annivDate.difference(todayMidnight).inDays;
         allEvents.add(MilestoneEvent(
-          title: 'Kỷ niệm $y năm yêu nhau 🎉',
+          title: L10nService().format('milestone_anniversary_years', {'years': y.toString()}),
           date: annivDate,
           type: 'anniversary',
           diffDays: diff,
@@ -119,7 +120,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
           final bdayDate = DateTime(targetYear, bday.month, day);
           final diff = bdayDate.difference(todayMidnight).inDays;
           allEvents.add(MilestoneEvent(
-            title: 'Sinh nhật $name 🎂',
+            title: L10nService().format('milestone_birthday', {'name': name}),
             date: bdayDate,
             type: 'birthday',
             diffDays: diff,
@@ -132,19 +133,19 @@ class _MilestonesScreenState extends State<MilestonesScreen>
 
     // 3. Ngày lễ lớn đầy đủ (năm trước, năm nay, năm sau)
     final holidaysList = [
-      {'month': 1, 'day': 1, 'name': 'Tết Dương Lịch 🎆'},
-      {'month': 2, 'day': 14, 'name': 'Lễ Tình Nhân (Valentine) 💝'},
-      {'month': 3, 'day': 8, 'name': 'Quốc tế Phụ nữ 💐'},
-      {'month': 3, 'day': 14, 'name': 'Valentine Trắng 🤍'},
-      {'month': 4, 'day': 1, 'name': 'Cá tháng Tư 🃏'},
-      {'month': 4, 'day': 14, 'name': 'Valentine Đen 🖤'},
-      {'month': 6, 'day': 1, 'name': 'Quốc tế Thiếu nhi 🧸'},
-      {'month': 6, 'day': 28, 'name': 'Ngày Gia đình Việt Nam 👨‍👩‍👧‍👦'},
-      {'month': 10, 'day': 20, 'name': 'Ngày Phụ nữ Việt Nam 🌸'},
-      {'month': 10, 'day': 31, 'name': 'Lễ Halloween 🎃'},
-      {'month': 12, 'day': 24, 'name': 'Đêm Giáng sinh 🎄'},
-      {'month': 12, 'day': 25, 'name': 'Lễ Giáng sinh ❄️'},
-      {'month': 12, 'day': 31, 'name': 'Đêm Giao thừa ✨'},
+      {'month': 1, 'day': 1, 'name': L10nService().translate('holiday_new_year')},
+      {'month': 2, 'day': 14, 'name': L10nService().translate('holiday_valentine')},
+      {'month': 3, 'day': 8, 'name': L10nService().translate('holiday_womens_day')},
+      {'month': 3, 'day': 14, 'name': L10nService().translate('holiday_white_valentine')},
+      {'month': 4, 'day': 1, 'name': L10nService().translate('holiday_april_fools')},
+      {'month': 4, 'day': 14, 'name': L10nService().translate('holiday_black_valentine')},
+      {'month': 6, 'day': 1, 'name': L10nService().translate('holiday_childrens_day')},
+      {'month': 6, 'day': 28, 'name': L10nService().translate('holiday_vietnamese_family_day')},
+      {'month': 10, 'day': 20, 'name': L10nService().translate('holiday_vietnamese_womens_day')},
+      {'month': 10, 'day': 31, 'name': L10nService().translate('holiday_halloween')},
+      {'month': 12, 'day': 24, 'name': L10nService().translate('holiday_christmas_eve')},
+      {'month': 12, 'day': 25, 'name': L10nService().translate('holiday_christmas')},
+      {'month': 12, 'day': 31, 'name': L10nService().translate('holiday_new_years_eve')},
     ];
     for (final h in holidaysList) {
       for (int yearOffset = -1; yearOffset <= 1; yearOffset++) {
@@ -321,7 +322,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Sự kiện & Kỷ niệm 🌸',
+                        L10nService().translate('milestone_title'),
                         style: SLTheme.quicksand(
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
@@ -343,7 +344,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                           ),
                         ),
                         onPressed: _openCalendar,
-                        tooltip: 'Quản lý lịch',
+                        tooltip: L10nService().translate('milestone_manage_calendar'),
                       ),
                     ],
                   ),
@@ -419,7 +420,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      'Hai bạn đã bên nhau',
+                                      L10nService().translate('milestone_together_for'),
                                       style: SLTheme.quicksand(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
@@ -428,7 +429,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      '$daysLove ngày yêu thương 💖',
+                                      L10nService().format('milestone_love_days', {'days': daysLove.toString()}),
                                       style: SLTheme.quicksand(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w900,
@@ -481,14 +482,14 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                         ),
                       ],
                     ),
-                    tabs: const [
+                    tabs: [
                       Tab(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.hourglass_empty_rounded, size: 16),
-                            SizedBox(width: 6),
-                            Text('Sắp tới ⏳'),
+                            const Icon(Icons.hourglass_empty_rounded, size: 16),
+                            const SizedBox(width: 6),
+                            Text(L10nService().translate('milestone_tab_upcoming')),
                           ],
                         ),
                       ),
@@ -496,9 +497,9 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.favorite_rounded, size: 16),
-                            SizedBox(width: 6),
-                            Text('Đã qua 💖'),
+                            const Icon(Icons.favorite_rounded, size: 16),
+                            const SizedBox(width: 6),
+                            Text(L10nService().translate('milestone_tab_past')),
                           ],
                         ),
                       ),
@@ -548,9 +549,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                isUpcoming
-                    ? 'Không có sự kiện sắp tới nào.\nHãy lên kế hoạch hẹn hò mới nhé! ✨'
-                    : 'Chưa có kỷ niệm nào trôi qua.',
+                isUpcoming ? L10nService().translate('milestone_empty_upcoming') : L10nService().translate('milestone_empty_past'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontSize: 14,
@@ -564,7 +563,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                 ElevatedButton.icon(
                   onPressed: _openCalendar,
                   icon: const Icon(Icons.add_rounded, size: 18),
-                  label: Text('Lên kế hoạch ngay 📅', style: SLTheme.quicksand(fontWeight: FontWeight.w800, fontSize: 13)),
+                  label: Text(L10nService().translate('milestone_plan_now'), style: SLTheme.quicksand(fontWeight: FontWeight.w800, fontSize: 13)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFF6D97),
                     foregroundColor: Colors.white,
@@ -599,26 +598,26 @@ class _MilestonesScreenState extends State<MilestonesScreen>
 
     if (isUpcoming) {
       if (event.diffDays == 0) {
-        countdownText = '📍 Hôm nay';
+        countdownText = L10nService().translate('milestone_today');
         badgeBgColor = const Color(0xFFDCFCE7);
         badgeTextColor = const Color(0xFF166534);
       } else if (event.diffDays == 1) {
-        countdownText = '📅 Ngày mai';
+        countdownText = L10nService().translate('milestone_tomorrow');
         badgeBgColor = const Color(0xFFECFEFF);
         badgeTextColor = const Color(0xFF155E75);
       } else {
-        countdownText = '🌸 Còn ${event.diffDays} ngày';
+        countdownText = L10nService().format('milestone_days_left', {'days': event.diffDays.toString()});
         badgeBgColor = const Color(0xFFFCE7F3);
         badgeTextColor = const Color(0xFF9D174D);
       }
     } else {
       final passedDays = event.diffDays.abs();
       if (passedDays == 1) {
-        countdownText = '🕒 Hôm qua';
+        countdownText = L10nService().translate('milestone_yesterday');
         badgeBgColor = const Color(0xFFF1F5F9);
         badgeTextColor = const Color(0xFF475569);
       } else {
-        countdownText = '✨ Đã qua $passedDays ngày';
+        countdownText = L10nService().format('milestone_days_passed', {'days': passedDays.toString()});
         badgeBgColor = const Color(0xFFF1F5F9);
         badgeTextColor = const Color(0xFF475569);
       }
@@ -652,13 +651,13 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     }
 
     final weekdays = [
-      'Thứ Hai',
-      'Thứ Ba',
-      'Thứ Tư',
-      'Thứ Năm',
-      'Thứ Sáu',
-      'Thứ Bảy',
-      'Chủ Nhật'
+      L10nService().translate('milestone_weekday_1'),
+      L10nService().translate('milestone_weekday_2'),
+      L10nService().translate('milestone_weekday_3'),
+      L10nService().translate('milestone_weekday_4'),
+      L10nService().translate('milestone_weekday_5'),
+      L10nService().translate('milestone_weekday_6'),
+      L10nService().translate('milestone_weekday_7')
     ];
     final weekdayStr = weekdays[event.date.weekday - 1];
     final formattedDate = '$weekdayStr, ${event.date.day.toString().padLeft(2, '0')}/${event.date.month.toString().padLeft(2, '0')}/${event.date.year}';

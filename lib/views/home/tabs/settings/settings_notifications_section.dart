@@ -413,7 +413,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Nhắc nhở thông minh',
+                  context.tr('smart_reminders'),
                   style: SLTextStyles.quicksand(
                     fontSize: 15,
                     fontWeight: FontWeight.w900,
@@ -422,37 +422,37 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                 ),
                 SLSpacing.h8,
                 _buildSwitchRow(
-                  'Nhắc ngày kỷ niệm',
+                  context.tr('smart_reminders_anniversary'),
                   _notifAnniversary,
                   (v) {
                     setState(() => _notifAnniversary = v);
                     SoundService().playClick();
                     unawaited(_persistNotificationPrefs());
                   },
-                  helperText: 'Nhắc trước và trong ngày đặc biệt của hai bạn.',
+                  helperText: context.tr('smart_reminders_anniversary_desc'),
                 ),
                 _buildSwitchRow(
-                  'Nhắc viết nhật ký',
+                  context.tr('smart_reminders_diary'),
                   _smartDiaryReminder,
                   (v) {
                     setState(() => _smartDiaryReminder = v);
                     SoundService().playClick();
                     unawaited(_persistNotificationPrefs());
                   },
-                  helperText: 'Gợi ý ghi lại cảm xúc khi lâu chưa viết.',
+                  helperText: context.tr('smart_reminders_diary_desc'),
                 ),
                 _buildSwitchRow(
-                  'Nhắc mở time capsule',
+                  context.tr('smart_reminders_capsule'),
                   _smartCapsuleReminder,
                   (v) {
                     setState(() => _smartCapsuleReminder = v);
                     SoundService().playClick();
                     unawaited(_persistNotificationPrefs());
                   },
-                  helperText: 'Báo khi hộp thư tương lai đã đến ngày mở.',
+                  helperText: context.tr('smart_reminders_capsule_desc'),
                 ),
                 _buildSwitchRow(
-                  'Lời yêu thương mỗi ngày',
+                  context.tr('smart_reminders_love_note'),
                   _smartLoveNoteReminder,
                   (v) {
                     setState(() => _smartLoveNoteReminder = v);
@@ -460,10 +460,10 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     unawaited(_persistNotificationPrefs());
                   },
                   helperText:
-                      'Tự động gửi lời chúc sáng/tối ngọt ngào cho đối phương khi bạn mở app.',
+                      context.tr('smart_reminders_love_note_desc'),
                 ),
                 _buildSwitchRow(
-                  'Nhắc ngủ ngoan',
+                  context.tr('smart_reminders_sleep'),
                   _smartSleepReminder,
                   (v) {
                     setState(() => _smartSleepReminder = v);
@@ -476,7 +476,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                       }
                     }));
                   },
-                  helperText: 'Nhắc nhở người thương đi ngủ đúng giờ vào mỗi tối.',
+                  helperText: context.tr('smart_reminders_sleep_desc'),
                 ),
                 if (_smartLoveNoteReminder || _smartSleepReminder) ...[
                   const SizedBox(height: 8),
@@ -486,7 +486,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                   ),
                   const SizedBox(height: 8),
                   _buildTimePickerRow(
-                    'Giờ chúc buổi sáng',
+                    context.tr('smart_reminders_morning_time'),
                     _goodMorningTime,
                     (newTime) {
                       setState(() => _goodMorningTime = newTime);
@@ -497,7 +497,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     },
                   ),
                   _buildTimePickerRow(
-                    'Giờ chúc buổi tối',
+                    context.tr('smart_reminders_night_time'),
                     _goodNightTime,
                     (newTime) {
                       setState(() => _goodNightTime = newTime);

@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -539,7 +540,7 @@ class _MessengerScreenState extends State<MessengerScreen>
       return repairMojibakeText(name);
     }
     return repairMojibakeText(
-      _partnerRole == 'user1' ? 'Bạn nam' : 'Bạn nữ',
+      _partnerRole == 'user1' ? L10nService().translate('male_role_default') : L10nService().translate('female_role_default'),
     );
   }
 

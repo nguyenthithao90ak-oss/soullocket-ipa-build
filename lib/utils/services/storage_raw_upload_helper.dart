@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart' as p;
@@ -18,8 +17,6 @@ typedef StorageVideoUploadRejector = void Function({
 
 typedef StorageUploadCachePurger = Future<void> Function();
 
-typedef StorageRefBuilder = Reference Function(String storagePath);
-
 class StorageRawUploadHelper {
   const StorageRawUploadHelper();
 
@@ -29,7 +26,6 @@ class StorageRawUploadHelper {
     required String resolvedContentType,
     required StorageVideoUploadRejector rejectVideoUpload,
     required StorageUploadCachePurger purgeLegacyCache,
-    required StorageRefBuilder buildStorageRef,
     ValueChanged<double>? onProgress,
   }) async {
     final originalFileName = file.name.isNotEmpty ? file.name : file.path;
@@ -39,20 +35,19 @@ class StorageRawUploadHelper {
       originalFileName:
           originalFileName.isNotEmpty ? originalFileName : storagePath,
     );
-    final metadata = SettableMetadata(
-      contentType: resolvedContentType,
-      cacheControl: storageImmutableCacheControl,
-    );
 
     await purgeLegacyCache();
 
     try {
+      if (!CloudflareR2Service.instance.isConfigured) {
+        throw Exception('Chưa cấu hình R2. Thêm --dart-define R2 keys vào lệnh build.');
+      }
       CloudflareR2Service.instance.init();
-      
+
       final tempDir = await getTemporaryDirectory();
       final tempPath = p.join(tempDir.path, 'r2_upload_${DateTime.now().microsecondsSinceEpoch}.tmp');
       final tempFile = File(tempPath);
-      
+
       try {
         if (!kIsWeb && file.path.isNotEmpty) {
           if (_isImageContentType(resolvedContentType)) {
@@ -68,10 +63,10 @@ class StorageRawUploadHelper {
               : fileBytes;
           await tempFile.writeAsBytes(dataToUpload);
         }
-        
+
         final r2Url = await CloudflareR2Service.instance.uploadFile(tempFile, folderPath: 'media');
         if (r2Url == null || r2Url.isEmpty) {
-          throw Exception('R2 upload failed.');
+          throw Exception('Máy chủ ảnh (R2) không phản hồi. Vui lòng thử lại sau.');
         }
         return r2Url;
       } finally {
@@ -80,13 +75,9 @@ class StorageRawUploadHelper {
         }
       }
     } catch (e) {
-      debugPrint('Lỗi khi upload tệp $storagePath: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không tải tệp lên đám mây được.',
-      ).message}');
-      throw Exception(
-        'Không tải tệp lên đám mây được: hãy kiểm tra kết nối mạng, đăng nhập và quyền truy cập tệp.',
-      );
+      final msg = e is Exception ? e.toString().replaceFirst('Exception: ', '') : null;
+      debugPrint('Lỗi upload ảnh: $e');
+      throw Exception(msg ?? 'Lỗi tải ảnh lên máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.');
     }
   }
 
@@ -166,55 +157,12 @@ class StorageRawUploadHelper {
     }
   }
 
-  bool _shouldRetryUploadError(Object error) {
-    if (error is FirebaseException) {
-      final code = error.code.trim().toLowerCase();
-      return code == 'retry-limit-exceeded' ||
-          code == 'unknown' ||
-          code == 'unavailable';
-    }
-    if (error is SocketException) return true;
-    final text = error.toString().toLowerCase();
-    return text.contains('timeout') ||
-        text.contains('timed out') ||
-        text.contains('network') ||
-        text.contains('unavailable') ||
-        text.contains('deadline') ||
-        text.contains('connection') ||
-        text.contains('kết nối') ||
-        text.contains('mạng');
-  }
-
-  static const Duration _uploadAttemptTimeout = Duration(seconds: 45);
-
-  Future<T> _retryUpload<T>(Future<T> Function() action) async {
-    Object? lastError;
-    for (var attempt = 0; attempt < 3; attempt++) {
-      try {
-        return await action().timeout(
-          _uploadAttemptTimeout,
-          onTimeout: () {
-            throw TimeoutException('Storage upload attempt timed out.');
-          },
-        );
-      } catch (error) {
-        lastError = error;
-        if (attempt >= 2 || !_shouldRetryUploadError(error)) {
-          rethrow;
-        }
-        await Future.delayed(Duration(milliseconds: 420 * (attempt + 1)));
-      }
-    }
-    throw lastError ?? Exception('Upload failed.');
-  }
-
   Future<String> uploadMusicFileToPath({
     required String storagePath,
     required XFile file,
     required String resolvedContentType,
     required bool Function(String fileNameOrPath) isSupportedMusicFileName,
     required StorageUploadCachePurger purgeLegacyCache,
-    required StorageRefBuilder buildStorageRef,
   }) async {
     final originalFileName = file.name.isNotEmpty ? file.name : file.path;
     final sourceName =
@@ -227,11 +175,6 @@ class StorageRawUploadHelper {
     if (fileSize > storageMaxMusicUploadBytes) {
       throw Exception('File nhạc vượt quá 20MB. Hãy chọn file nhỏ hơn.');
     }
-
-    final metadata = SettableMetadata(
-      contentType: resolvedContentType,
-      cacheControl: storageImmutableCacheControl,
-    );
 
     await purgeLegacyCache();
 
@@ -329,7 +272,6 @@ class StorageRawUploadHelper {
     required String originalFileName,
     required StorageVideoUploadRejector rejectVideoUpload,
     required StorageUploadCachePurger purgeLegacyCache,
-    required StorageRefBuilder buildStorageRef,
   }) async {
     rejectVideoUpload(
       storagePath: storagePath,

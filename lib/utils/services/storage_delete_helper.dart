@@ -4,6 +4,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'cloudflare_r2_service.dart';
 typedef StorageRefPathNormalizer = String Function(String storagePath);
 
 class StorageDeleteHelper {
@@ -19,6 +20,7 @@ class StorageDeleteHelper {
       return true;
     }
 
+    // Thử xóa trên Firebase Storage (các file upload legacy)
     try {
       await storage.ref().child(normalizedPath).delete();
       return true;
@@ -66,6 +68,7 @@ class StorageDeleteHelper {
     }
   }
 
+  /// Xóa file trên Cloudflare R2 nếu URL thuộc R2, fallback Firebase Storage.
   Future<bool> deleteImageByUrl({
     required FirebaseStorage storage,
     required String url,
@@ -75,6 +78,17 @@ class StorageDeleteHelper {
       return true;
     }
 
+    // Nếu là URL của R2 → xóa qua R2 service
+    try {
+      CloudflareR2Service.instance.init();
+      if (CloudflareR2Service.instance.isR2Url(normalizedUrl)) {
+        return await CloudflareR2Service.instance.deleteFile(normalizedUrl);
+      }
+    } catch (r2Error) {
+      debugPrint('R2 delete failed, fallback Firebase: $r2Error');
+    }
+
+    // Fallback: xóa qua Firebase Storage
     try {
       final ref = storage.refFromURL(normalizedUrl);
       await ref.delete();

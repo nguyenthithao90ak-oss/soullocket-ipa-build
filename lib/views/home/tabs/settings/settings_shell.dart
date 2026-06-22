@@ -142,9 +142,7 @@ extension _SettingsTabShell on _SettingsTabState {
     Widget? screen;
     switch (utilityId) {
       case 'store':
-        screen = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
-            ? null
-            : const RewardStoreScreen();
+        screen = const RewardStoreScreen();
         break;
       case 'calculator':
         screen = const CalculatorScreen();
@@ -219,10 +217,7 @@ extension _SettingsTabShell on _SettingsTabState {
             : GiftMakerScreen(houseId: houseId, myName: myName);
         break;
       case 'giftcode':
-        screen = houseId.isEmpty ||
-                (!kDebugMode &&
-                    !kIsWeb &&
-                    defaultTargetPlatform == TargetPlatform.iOS)
+        screen = houseId.isEmpty
             ? null
             : GiftcodeScreen(houseId: houseId, myName: myName);
         break;
@@ -771,12 +766,9 @@ extension _SettingsTabShell on _SettingsTabState {
     }
     switch (sectionId) {
       case 'account':
-        final hideVipPanelOnIos = !kIsWeb &&
-            defaultTargetPlatform == TargetPlatform.iOS;
         return _buildSectionStack([
-          if (!hideVipPanelOnIos)
-            _buildVipPanel(hideBackButton: false),
-          _buildIdentityPanel(hideBackButton: hideVipPanelOnIos ? false : true),
+          _buildVipPanel(hideBackButton: false),
+          _buildIdentityPanel(hideBackButton: true),
           _buildLanguagePanel(hideBackButton: true),
         ]);
       case 'security':

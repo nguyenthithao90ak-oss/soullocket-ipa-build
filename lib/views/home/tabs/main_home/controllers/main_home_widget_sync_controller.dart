@@ -218,12 +218,15 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         settings['dayUnit']?.toString(),
         L10nService().translate('home_ngy_b9474a'),
       );
-      final nameU1 = (settings['nameU1']?.toString().trim().isNotEmpty ?? false)
+      final rawNameU1 = (settings['nameU1']?.toString().trim().isNotEmpty ?? false)
           ? settings['nameU1'].toString().trim()
           : L10nService().translate('home_bn_1fd75b');
-      final nameU2 = (settings['nameU2']?.toString().trim().isNotEmpty ?? false)
+      final rawNameU2 = (settings['nameU2']?.toString().trim().isNotEmpty ?? false)
           ? settings['nameU2'].toString().trim()
           : L10nService().translate('home_ngiy_5bab37');
+          
+      final nameU1 = rawNameU1.toLowerCase() == 'bạn nam' ? L10nService().translate('male_role_default') : (rawNameU1.toLowerCase() == 'bạn nữ' ? L10nService().translate('female_role_default') : rawNameU1);
+      final nameU2 = rawNameU2.toLowerCase() == 'bạn nữ' ? L10nService().translate('female_role_default') : (rawNameU2.toLowerCase() == 'bạn nam' ? L10nService().translate('male_role_default') : rawNameU2);
 
       final configuredBucket = AppConfig.firebaseStorageBucket.trim();
       final defaultMaleAvatarUrl = configuredBucket.isEmpty

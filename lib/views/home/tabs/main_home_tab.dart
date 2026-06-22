@@ -1197,10 +1197,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
             kind: _HomeHighlightKind.photo,
             title: item.caption.trim().isNotEmpty
                 ? item.caption.trim()
-                : 'áº¢nh ká»· niá»‡m',
+                : context.tr('home_anhkynim_8e7a3c'),
             subtitle: item.authorName.trim().isNotEmpty
                 ? item.authorName.trim()
-                : 'Kho ảnh chung',
+                : context.tr('home_khonchung_6f7bcf'),
             imageUrl: item.thumbUrl.trim().isNotEmpty
                 ? item.thumbUrl.trim()
                 : item.url.trim(),
@@ -2888,28 +2888,6 @@ class _CountdownQuickCustomizeSheetContentState
     if (houseId.isEmpty) {
       homeState._showLatestSnackBar('Vui lòng đăng nhập hoặc tham gia nhà để đổi ảnh nền.');
       return;
-    }
-
-    final isVipActive = widget.isVip;
-    final prefs = await SharedPreferences.getInstance();
-    final lastAdStr = prefs.getString('last_bg_ad_time');
-    bool shouldShowAd = !isVipActive;
-    if (shouldShowAd && lastAdStr != null) {
-      final lastAd = DateTime.tryParse(lastAdStr);
-      if (lastAd != null && DateTime.now().difference(lastAd).inMinutes < 20) {
-        shouldShowAd = false;
-      }
-    }
-
-    if (shouldShowAd) {
-      final adMob = AdMobService();
-      final adSuccess = await adMob.showRewardedAd();
-      if (!mounted) return;
-      if (!adSuccess) {
-        homeState._showLatestSnackBar('Bạn cần xem hết quảng cáo để tải ảnh nền.');
-        return;
-      }
-      await prefs.setString('last_bg_ad_time', DateTime.now().toIso8601String());
     }
 
     try {

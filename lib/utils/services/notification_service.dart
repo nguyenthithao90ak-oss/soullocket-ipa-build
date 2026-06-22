@@ -23,6 +23,7 @@ import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'house_service.dart';
 import 'offline_cache_service.dart';
 import 'role_utils.dart';
+import 'l10n_service.dart';
 
 /// NotificationService — Gra (Logic/Data) chịu trách nhiệm toàn bộ
 /// Chức năng:
@@ -703,7 +704,7 @@ class NotificationService {
     SharedPreferences prefs,
     String role,
   ) async {
-    final fallback = role == 'user2' ? 'bạn nữ' : 'bạn nam';
+    final fallback = role == 'user2' ? L10nService().translate('female_role_default') : L10nService().translate('male_role_default');
     final cachedAuthUid = (prefs.getString('il_auth_uid') ?? '').trim();
     final currentUid = FirebaseAuth.instance.currentUser?.uid.trim() ?? '';
     final canUseSessionCache =

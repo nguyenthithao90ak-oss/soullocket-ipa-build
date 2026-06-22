@@ -1395,13 +1395,13 @@ extension _MapLocationLogicExt on _MapScreenState {
       if (!partnerHasHistory) {
         distanceText = context.tr('map_ngiychabtg_defe08');
         mapInsightText =
-            '${widget.partnerName} chưa bật vị trí nên bản đồ chưa thể đo khoảng cách của hai bạn.';
+            L10nService().format('partner_location_not_enabled_map', {'partnerName': widget.partnerName});
         mapAlert =
-            '${widget.partnerName} chưa bật GPS. Chờ người ấy bật để xem khoảng cách.';
+            L10nService().format('partner_gps_not_enabled_map', {'partnerName': widget.partnerName});
       } else if (!myHasHistory) {
         distanceText = context.tr('map_bnchabtgps_fc6f46');
         mapInsightText =
-            'Bạn chưa bật vị trí nên bản đồ chưa đủ dữ liệu để đo khoảng cách với ${widget.partnerName}.';
+            L10nService().format('you_location_not_enabled_map', {'partnerName': widget.partnerName});
         mapAlert = context.tr('map_bnchabtgps_2de829');
       } else if (!partnerLive) {
         distanceText = context.tr('map_vtrcuilu_b4c8ee');

@@ -404,11 +404,10 @@ class LoveInsightService {
     ).millisecondsSinceEpoch;
 
     final isSingle = relationshipMode == 'single';
-    final nameU1 = _string(settings['nameU1'], fallback: 'Bạn Nam');
-    final nameU2 = _string(
-      settings['nameU2'],
-      fallback: isSingle ? 'Mình' : 'Bạn Nữ',
-    );
+    final rawNameU1 = _string(settings['nameU1'], fallback: L10nService().translate('home_bn_1fd75b'));
+    final rawNameU2 = _string(settings['nameU2'], fallback: L10nService().translate('home_ngiy_5bab37'));
+    final nameU1 = rawNameU1.toLowerCase() == 'bạn nam' ? L10nService().translate('male_role_default') : (rawNameU1.toLowerCase() == 'bạn nữ' ? L10nService().translate('female_role_default') : rawNameU1);
+    final nameU2 = rawNameU2.toLowerCase() == 'bạn nữ' ? L10nService().translate('female_role_default') : (rawNameU2.toLowerCase() == 'bạn nam' ? L10nService().translate('male_role_default') : rawNameU2);
 
     var diaryTotal = 0;
     var diaryMonth = 0;

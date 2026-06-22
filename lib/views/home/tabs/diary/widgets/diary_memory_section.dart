@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -419,21 +420,18 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 24, bottom: 12, left: 10, right: 10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.70),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.86)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF7C8BFF).withValues(alpha: 0.08),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
+      padding: const EdgeInsets.only(top: 24, bottom: 12, left: 16, right: 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.45),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.7), width: 1.2),
             ),
-          ],
-        ),
         child: Row(
           children: [
             Container(
@@ -501,7 +499,7 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
             ),
           ],
         ),
-      ),
+      ))),
     );
   }
 }
@@ -883,7 +881,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                     final isSelected =
                         widget.selectedMemories.containsKey(photoId);
 
-                    return GestureDetector(
+                    return _BounceGestureDetector(
                       onLongPress: () => widget.onToggleSelection(photo),
                       onTap: () async {
                         if (widget.isSelectionMode) {
@@ -1096,19 +1094,8 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 14),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withValues(alpha: 0.96),
-            const Color(0xFFFFF0F7).withValues(alpha: 0.94),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
         borderRadius: BorderRadius.circular(28),
-        border:
-            Border.all(color: Colors.white.withValues(alpha: 0.86), width: 1.4),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFFF7FB2).withValues(alpha: 0.16),
@@ -1122,7 +1109,21 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Stack(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.8),
+                width: 1.2,
+              ),
+            ),
+            child: Stack(
         children: [
           Positioned(
             right: -4,
@@ -1291,7 +1292,7 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ))));
   }
 
   IconData get _statusIcon {
@@ -1585,6 +1586,61 @@ class _DiaryMemoryInlineLoading extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BounceGestureDetector extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  const _BounceGestureDetector({
+    required this.child,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  @override
+  State<_BounceGestureDetector> createState() => _BounceGestureDetectorState();
+}
+
+class _BounceGestureDetectorState extends State<_BounceGestureDetector> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.94).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) {
+        _controller.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _controller.reverse(),
+      onLongPress: widget.onLongPress,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: widget.child,
       ),
     );
   }

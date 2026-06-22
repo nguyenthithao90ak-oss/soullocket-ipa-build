@@ -77,7 +77,7 @@ extension _MainHomeRouting on _MainHomeTabState {
 
     final currentRole = _currentRole;
     final targetRole = currentRole == 'user1' ? 'user2' : 'user1';
-    var targetName = targetRole == 'user1' ? 'Bạn nam' : 'Bạn nữ';
+    var targetName = targetRole == 'user1' ? L10nService().translate('male_role_default') : L10nService().translate('female_role_default');
     var targetAvatar = '';
 
     final data = _houseSettings;

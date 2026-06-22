@@ -11,12 +11,14 @@ class CloudflareR2Service {
   factory CloudflareR2Service() => instance;
   CloudflareR2Service._internal();
 
-  // Các biến môi trường này sẽ được cấu hình khi build app (hoặc cấu hình thẳng trong AppConfig)
-  static const String accessKey = String.fromEnvironment('R2_ACCESS_KEY_ID', defaultValue: '064d1866e0790f09783f0b99e50c1394');
-  static const String secretKey = String.fromEnvironment('R2_SECRET_ACCESS_KEY', defaultValue: '851a055aa0b3a01927e0bac830084fffcbce6deb9ab367458c845d1c161b4ffd');
-  static const String endpoint = String.fromEnvironment('R2_ENDPOINT_URL', defaultValue: 'https://cb19b30ef636ede2f9d6083c61cd67fa.r2.cloudflarestorage.com');
+  // Chỉ dùng --dart-define khi build. Không có defaultValue.
+  // Key được lưu trong file keys_r2.json (đã thêm .gitignore).
+  // Dùng build_aab.bat hoặc flutter_run.bat để build/chạy tự động.
+  static const String accessKey = String.fromEnvironment('R2_ACCESS_KEY_ID');
+  static const String secretKey = String.fromEnvironment('R2_SECRET_ACCESS_KEY');
+  static const String endpoint = String.fromEnvironment('R2_ENDPOINT_URL');
   static const String bucketName = String.fromEnvironment('R2_BUCKET_NAME', defaultValue: 'soullocket-media');
-  static const String publicDomain = String.fromEnvironment('R2_PUBLIC_DOMAIN', defaultValue: 'https://pub-e3f21ed5012d4c02ba42d23dd6d01dfa.r2.dev'); // Link pub-xxx.r2.dev
+  static const String publicDomain = String.fromEnvironment('R2_PUBLIC_DOMAIN');
 
   Minio? _minio;
 
@@ -104,5 +106,39 @@ class CloudflareR2Service {
       debugPrint('[CloudflareR2] Lỗi khi upload: $e');
       return null;
     }
+  }
+
+  /// Kiểm tra URL có phải của R2 hay không
+  bool isR2Url(String url) {
+    return publicDomain.isNotEmpty && url.trim().startsWith(publicDomain);
+  }
+
+  /// Xoá object trên R2 từ public URL
+  /// URL format: https://pub-xxx.r2.dev/media/1234567890_filename.jpg
+  Future<bool> deleteFile(String url) async {
+    if (!isConfigured || _minio == null) return false;
+
+    try {
+      final objectName = _extractObjectName(url);
+      if (objectName == null || objectName.isEmpty) return false;
+
+      await _minio!.removeObject(bucketName, objectName);
+      debugPrint('[CloudflareR2] Đã xoá: $objectName');
+      return true;
+    } catch (e) {
+      debugPrint('[CloudflareR2] Lỗi xoá file: $e');
+      return false;
+    }
+  }
+
+  /// Lấy object name từ public URL
+  String? _extractObjectName(String url) {
+    final normalized = url.trim();
+    if (publicDomain.isEmpty || !normalized.startsWith(publicDomain)) return null;
+
+    const prefix = '$publicDomain/';
+    if (!normalized.startsWith(prefix)) return null;
+
+    return normalized.substring(prefix.length);
   }
 }

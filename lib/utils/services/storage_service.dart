@@ -426,6 +426,8 @@ class StorageService {
           throw Exception('Thiếu thông tin tải ảnh Kỷ niệm.');
         case 'permission-denied':
           throw Exception('Bạn không có quyền tải ảnh vào Kỷ niệm này.');
+        case 'resource-exhausted':
+          throw Exception('Bạn đã đạt giới hạn đăng ảnh Kỷ niệm hôm nay (10 ảnh/ngày). Nâng cấp Pro để tăng lên 30 ảnh/ngày.');
         case 'deadline-exceeded':
         case 'unavailable':
           throw Exception(
@@ -1242,7 +1244,6 @@ class StorageService {
       resolvedContentType: resolvedContentType,
       rejectVideoUpload: _rejectVideoUpload,
       purgeLegacyCache: _purgeLegacyImgBBKeyCache,
-      buildStorageRef: (path) => _storage.ref().child(path),
       onProgress: onProgress,
     );
   }
@@ -1267,7 +1268,6 @@ class StorageService {
       resolvedContentType: resolvedContentType,
       isSupportedMusicFileName: isSupportedMusicFileName,
       purgeLegacyCache: _purgeLegacyImgBBKeyCache,
-      buildStorageRef: (path) => _storage.ref().child(path),
     );
   }
 
@@ -1297,7 +1297,6 @@ class StorageService {
       originalFileName: originalFileName ?? storagePath,
       rejectVideoUpload: _rejectVideoUpload,
       purgeLegacyCache: _purgeLegacyImgBBKeyCache,
-      buildStorageRef: (path) => _storage.ref().child(path),
     );
   }
 

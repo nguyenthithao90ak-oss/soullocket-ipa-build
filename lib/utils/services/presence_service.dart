@@ -17,7 +17,9 @@ class PresenceService {
   PresenceService._internal();
 
   static const Duration onlineFreshness = Duration(minutes: 5);
-  static const Duration heartbeatInterval = Duration(seconds: 120);
+  // Tối ưu: tăng heartbeat lên 180s thay vì 120s → giảm 33% lượng writes presence
+  // local grace period cho phép presence vẫn "online" thêm 2 phút sau heartbeat cuối
+  static const Duration heartbeatInterval = Duration(seconds: 180);
   static const Duration staleSessionThreshold = Duration(minutes: 5);
   static const Duration justDisconnectedThreshold = Duration(minutes: 1);
 
@@ -321,7 +323,7 @@ class PresenceService {
         if (_activeDeviceType != null) 'device': _activeDeviceType,
       }).timeout(const Duration(seconds: 3));
 
-      final shouldRunFull = _heartbeatCount == 0 || _heartbeatCount % 3 == 0;
+      final shouldRunFull = _heartbeatCount == 0 || _heartbeatCount % 5 == 0;
       _heartbeatCount++;
 
       if (shouldRunFull) {

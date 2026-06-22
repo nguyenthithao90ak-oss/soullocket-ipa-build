@@ -95,14 +95,14 @@ class SoulMergeService {
       final snap = await ref.orderByChild('timestamp').get();
       if (snap.exists && snap.value is Map) {
         final messages = Map<dynamic, dynamic>.from(snap.value as Map);
-        if (messages.length > 20) {
+        if (messages.length > 50) {
           final sortedKeys = messages.keys.toList()
             ..sort((a, b) {
               final t1 = messages[a]['timestamp'] as int? ?? 0;
               final t2 = messages[b]['timestamp'] as int? ?? 0;
               return t1.compareTo(t2);
             });
-          final keysToDelete = sortedKeys.sublist(0, sortedKeys.length - 20);
+          final keysToDelete = sortedKeys.sublist(0, sortedKeys.length - 50);
           for (final key in keysToDelete) {
             await ref.child(key.toString()).remove();
           }
@@ -120,7 +120,7 @@ class SoulMergeService {
       return _db
           .ref('houses/$houseId/soul_merge/chat')
           .orderByChild('timestamp')
-          .limitToLast(20)
+          .limitToLast(50)
           .onValue
           .asBroadcastStream()
           .map((event) {

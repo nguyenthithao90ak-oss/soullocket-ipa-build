@@ -894,7 +894,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         } else if (!myHasHistory) {
           nextDistance = context.tr('home_bnchabt_4d6ead');
           nextAlert =
-              'Bạn chưa bật vị trí. Mở bản đồ và bấm ${context.tr('home_btvtr_4d948b')} để chia sẻ.';
+              L10nService().format('home_location_not_enabled_action', {'button': context.tr('home_btvtr_4d948b')});
         } else if (!myLive || !partnerLive) {
           nextDistance = context.tr('home_vtrcuilu_b4c8ee');
           nextAlert = context.tr('home_cpnhtvtran_6aea3c');

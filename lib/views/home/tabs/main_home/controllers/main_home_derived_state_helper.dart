@@ -48,14 +48,17 @@ extension _MainHomeDerivedStateHelper on _MainHomeTabState {
 
     final houseName = _houseSettings?['houseName'] ??
         (isSingle ? context.tr('home_nginhcati_dd5d98') : context.tr('home_nginhtnhyu_dbebce'));
-    final nameU1 =
+    final rawNameU1 =
         (_houseSettings?['nameU1']?.toString().trim().isNotEmpty ?? false)
             ? _houseSettings!['nameU1'].toString().trim()
             : context.tr('home_bn_1fd75b');
-    final nameU2 =
+    final rawNameU2 =
         (_houseSettings?['nameU2']?.toString().trim().isNotEmpty ?? false)
             ? _houseSettings!['nameU2'].toString().trim()
             : context.tr('home_ngiy_5bab37');
+            
+    final nameU1 = rawNameU1.toLowerCase() == 'bạn nam' ? context.tr('male_role_default') : (rawNameU1.toLowerCase() == 'bạn nữ' ? context.tr('female_role_default') : rawNameU1);
+    final nameU2 = rawNameU2.toLowerCase() == 'bạn nữ' ? context.tr('female_role_default') : (rawNameU2.toLowerCase() == 'bạn nam' ? context.tr('male_role_default') : rawNameU2);
     final avtUser1 = _houseSettings?['avtUser1']?.toString().trim() ?? '';
     final avtUser2 = _houseSettings?['avtUser2']?.toString().trim() ?? '';
     final dobU1 = _houseSettings?['dobU1']?.toString() ?? '';

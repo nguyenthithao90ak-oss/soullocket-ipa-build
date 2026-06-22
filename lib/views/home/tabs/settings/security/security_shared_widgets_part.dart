@@ -314,7 +314,11 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
               gradient: const [Color(0xFF8E24AA), Color(0xFF6A1B9A)],
               onTap: () {
                 Navigator.pop(context);
-                _saveSecondaryEmail();
+                Future.delayed(const Duration(milliseconds: 300), () {
+                  if (mounted) {
+                    _saveSecondaryEmail();
+                  }
+                });
               },
             ),
           ],

@@ -1,8 +1,5 @@
-import 'dart:io';
-
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'security_service.dart';
 
@@ -43,14 +40,6 @@ class GiftcodeService {
     required String houseId,
     required String code,
   }) async {
-    if (!kIsWeb && (Platform.isIOS || Platform.isMacOS)) {
-      return GiftcodeResult(
-        success: false,
-        error: GiftcodeError.permissionDenied,
-        message: 'Giftcode không khả dụng trên iOS. Vui lòng sử dụng thanh toán trong ứng dụng.',
-      );
-    }
-
     final normalizedHouseId = houseId.trim();
     final sanitized = code.trim().toUpperCase();
     if (normalizedHouseId.isEmpty) {

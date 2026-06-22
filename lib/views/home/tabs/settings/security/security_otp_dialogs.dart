@@ -178,7 +178,9 @@ Future<bool> showSettingsEmailOtpDialog({
     },
   );
 
-  otpCtrl.dispose();
+  Future.delayed(const Duration(milliseconds: 300), () {
+    otpCtrl.dispose();
+  });
   return result ?? false;
 }
 
@@ -354,7 +356,9 @@ Future<bool> showSettingsPasswordResetOtpDialog({
     },
   );
 
-  otpCtrl.dispose();
-  passwordCtrl.dispose();
+  Future.delayed(const Duration(milliseconds: 300), () {
+    otpCtrl.dispose();
+    passwordCtrl.dispose();
+  });
   return result ?? false;
 }

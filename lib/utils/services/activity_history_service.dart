@@ -13,6 +13,7 @@ import 'presence_service.dart';
 import 'house_service.dart';
 import 'storage_service.dart';
 import 'offline_cache_service.dart';
+import 'l10n_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 class ActivityHistoryEntry {
@@ -181,7 +182,7 @@ class ActivityHistoryEntry {
   }
 
   String get displayLine {
-    final who = role == 'user2' ? 'Bạn nữ' : 'Bạn nam';
+    final who = role == 'user2' ? L10nService().translate('female_role_default') : L10nService().translate('male_role_default');
     if (isPrivate && !revealed) {
       return '$who ${placeholder.isNotEmpty ? placeholder : "đã thực hiện 1 thao tác (đang ẩn)"}';
     }

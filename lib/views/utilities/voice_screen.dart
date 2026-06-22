@@ -213,28 +213,30 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, 
         extension: safeExtension,
       );
 
-      if (mounted) {
-        setState(() => _isUploading = true);
-      }
-
-      await _queueAndUploadVoiceFile(
-        localPath: persistedPath,
-        extension: safeExtension,
-        fileName: file.name,
-        mimeType: mimeType,
-        durationMs: durationMs,
+      // Bỏ block UI: chạy ngầm
+      unawaited(
+        _queueAndUploadVoiceFile(
+          localPath: persistedPath,
+          extension: safeExtension,
+          fileName: file.name,
+          mimeType: mimeType,
+          durationMs: durationMs,
+        ).then((_) {
+          _showMessage(successMsg);
+        }).catchError((e) {
+          final errorInfo = AppErrorMapper.resolve(
+            e,
+            fallbackMessage: fallbackErrMsg,
+          );
+          _showMessage(errorInfo.message);
+        })
       );
-      _showMessage(successMsg);
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(
         e,
         fallbackMessage: fallbackErrMsg,
       );
       _showMessage(errorInfo.message);
-    } finally {
-      if (mounted) {
-        setState(() => _isUploading = false);
-      }
     }
   }
 
@@ -353,7 +355,7 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, 
     if (mounted) {
       setState(() {
         _isRecording = false;
-        _isUploading = true;
+        // Bỏ khóa UI khi upload
         _recordElapsed = safeElapsed;
       });
     }
@@ -384,18 +386,24 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, 
         bytes: await recordFile.readAsBytes(),
         extension: 'm4a',
       );
-      await _queueAndUploadVoiceFile(
-        localPath: persistedPath,
-        extension: 'm4a',
-        fileName: p.basename(recordPath),
-        mimeType: _detectMimeType('m4a'),
-        durationMs: durationMs,
-      );
-
-      _showMessage(
-        reachedLimit
-            ? limitReachedMsg
-            : successMsg,
+      unawaited(
+        _queueAndUploadVoiceFile(
+          localPath: persistedPath,
+          extension: 'm4a',
+          fileName: p.basename(recordPath),
+          mimeType: _detectMimeType('m4a'),
+          durationMs: durationMs,
+        ).then((_) {
+          _showMessage(
+            reachedLimit ? limitReachedMsg : successMsg,
+          );
+        }).catchError((e) {
+          final errorInfo = AppErrorMapper.resolve(
+            e,
+            fallbackMessage: fallbackErrMsg,
+          );
+          _showMessage(errorInfo.message);
+        })
       );
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(
@@ -412,9 +420,6 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, 
             await recordFile.delete();
           }
         } catch (_) {}
-      }
-      if (mounted) {
-        setState(() => _isUploading = false);
       }
     }
   }

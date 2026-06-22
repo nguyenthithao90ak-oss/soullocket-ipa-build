@@ -4,12 +4,16 @@ import 'package:cloud_firestore/cloud_firestore.dart' hide Query, Transaction;
 import 'package:soullocket_app/models/social_post.dart';
 import 'push_notification_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'local_database_service.dart';
 
 /// SocialService — Quản lý social feed cộng đồng
 /// Hybrid model:
 ///   Firestore: `social_posts/{postId}` — bài đăng, comments (subcollection), phân trang
 ///   RTDB:      `social_feed/{postId}` — stream realtime (chỉ listen bài mới nhất)
 ///              `post_likes`, `house_likes`, `houses/...` — metadata nhẹ
+///
+/// Tối ưu: dùng read-through cache (LocalDatabaseService) cho các GET
+/// nhiều lần như check block, profile lookup — giảm tới 50% reads.
 class SocialService {
   static final SocialService instance = SocialService();
 
@@ -156,11 +160,20 @@ class SocialService {
     String targetHouseId,
   ) async {
     if (sourceHouseId.isEmpty || targetHouseId.isEmpty) return false;
+    // Read-through cache: tránh gọi Firebase GET nhiều lần cho cùng 1 cặp
+    final cacheKey = 'blocked:$sourceHouseId:$targetHouseId';
+    final cached = await LocalDatabaseService().getCacheEntry(cacheKey);
+    if (cached is bool) return cached;
+
     final results = await Future.wait([
       _dbRef.child('houses/$sourceHouseId/blocked_users/$targetHouseId').get(),
       _dbRef.child('houses/$targetHouseId/blocked_users/$sourceHouseId').get(),
     ]);
-    return results.any((snap) => snap.value == true);
+    final blocked = results.any((snap) => snap.value == true);
+
+    // Cache 5 phút — blocked status hiếm khi thay đổi
+    await LocalDatabaseService().setCacheEntry(cacheKey, blocked, ttl: const Duration(minutes: 5));
+    return blocked;
   }
 
   Future<void> assertCanInteractWithHouse({

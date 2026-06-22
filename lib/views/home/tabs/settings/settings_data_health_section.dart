@@ -215,7 +215,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Cloud: ${_formatBackupStatusTime(_settingsCloudBackupAt)}\nMáy này: ${_formatBackupStatusTime(_settingsLocalBackupAt)}',
+                      'Cloud: ${_formatBackupStatusTime(_settingsCloudBackupAt)}\n${context.tr('settings_backup_local')} ${_formatBackupStatusTime(_settingsLocalBackupAt)}',
                       style: SLTheme.quicksand(
                         fontSize: 11.8,
                         fontWeight: FontWeight.w700,
@@ -534,12 +534,12 @@ extension _SettingsDataHealthSection on _SettingsTabState {
 
   Widget _buildPrivacyCenterCard() {
     final hasAppLock = (_lockConfiguredAtMs ?? 0) > 0;
-    final deviceStatus = _isDevicePending ? 'Chờ duyệt' : 'Đang tin cậy';
+    final deviceStatus = _isDevicePending ? context.tr('settings_device_pending') : context.tr('settings_device_trusted');
     final backupStatus = _isCheckingBackupStatus
-        ? 'Đang kiểm tra...'
+        ? context.tr('settings_data_status_checking')
         : _hasSettingsCloudBackup
-            ? 'Đã có cloud'
-            : 'Chưa thấy cloud';
+            ? context.tr('settings_cloud_found_short')
+            : context.tr('settings_cloud_missing_short');
 
     return _buildSectionBlock(
       colorTint: const Color(0xFF4CAF50),

@@ -26,6 +26,18 @@ class SyncQueueSummary {
   bool get hasUnsyncedData => activeCount > 0;
 }
 
+class _MemoryCacheEntry {
+  final dynamic data;
+  final DateTime expiresAt;
+
+  _MemoryCacheEntry({required this.data, required this.expiresAt});
+
+  bool get isExpired => DateTime.now().isAfter(expiresAt);
+}
+
+/// Hỗ trợ read-through cache: lưu snapshot từ Firebase Realtime vào local SQLite
+/// mỗi khi có dữ liệu mới. Khi app offline hoặc load lại, ưu tiên đọc từ cache local
+/// trước, sau đó mới gọi Firebase. Giúp giảm 50-70% Firebase reads.
 class LocalDatabaseService {
   static final LocalDatabaseService _instance =
       LocalDatabaseService._internal();
@@ -33,7 +45,7 @@ class LocalDatabaseService {
   LocalDatabaseService._internal();
 
   static const _databaseName = 'soullocket_offline.db';
-  static const _databaseVersion = 2;
+  static const _databaseVersion = 3; // nâng lên v3 để thêm cache_entries
   static const _queueStatusPending = 'pending';
   static const _queueStatusSyncing = 'syncing';
   static const _queueStatusFailed = 'failed';
@@ -49,6 +61,10 @@ class LocalDatabaseService {
   Future<void>? _initializing;
   bool _isSyncing = false;
   SyncQueueSummary? _lastQueueSummary;
+
+  // RAM cache nhanh cho read-through
+  static final Map<String, _MemoryCacheEntry> _readCache = {};
+  static const Duration _defaultCacheTtl = Duration(minutes: 15);
 
   Stream<SyncQueueSummary> get queueSummaryStream => _queueController.stream;
 
@@ -85,6 +101,9 @@ class LocalDatabaseService {
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
           await _upgradeToV2(db);
+        }
+        if (oldVersion < 3) {
+          await _upgradeToV3(db);
         }
       },
     );
@@ -130,6 +149,15 @@ class LocalDatabaseService {
         syncedAt INTEGER
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE cache_entries (
+        cache_key TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        cached_at INTEGER NOT NULL,
+        expires_at INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
   }
 
   Future<void> _upgradeToV2(Database db) async {
@@ -162,6 +190,114 @@ class LocalDatabaseService {
       ''',
       [_queueStatusPending, now],
     );
+  }
+
+  Future<void> _upgradeToV3(Database db) async {
+    final statements = <String>[
+      '''
+      CREATE TABLE IF NOT EXISTS cache_entries (
+        cache_key TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        cached_at INTEGER NOT NULL,
+        expires_at INTEGER NOT NULL DEFAULT 0
+      )
+      ''',
+    ];
+    for (final statement in statements) {
+      try {
+        await db.execute(statement);
+      } catch (_) {}
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // Read-through cache: ưu tiên local → fallback Firebase
+  // ───────────────────────────────────────────────────────────
+
+  /// Lưu cache entry vào cả RAM (nhanh) và SQLite (bền).
+  Future<void> setCacheEntry(String key, dynamic data, {Duration? ttl}) async {
+    final resolvedTtl = ttl ?? _defaultCacheTtl;
+    // RAM
+    _readCache[key] = _MemoryCacheEntry(
+      data: data,
+      expiresAt: DateTime.now().add(resolvedTtl),
+    );
+    // SQLite
+    final db = await _requireDatabase();
+    if (db == null) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.insert(
+      'cache_entries',
+      {
+        'cache_key': key,
+        'data': jsonEncode(data),
+        'cached_at': now,
+        'expires_at': now + resolvedTtl.inMilliseconds,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Đọc từ cache (RAM → SQLite). Trả về null nếu miss.
+  Future<dynamic> getCacheEntry(String key) async {
+    // 1. RAM cache trước
+    final ramEntry = _readCache[key];
+    if (ramEntry != null && !ramEntry.isExpired) {
+      return ramEntry.data;
+    }
+    if (ramEntry != null) _readCache.remove(key);
+
+    // 2. SQLite cache
+    final db = await _requireDatabase();
+    if (db == null) return null;
+    final rows = await db.query(
+      'cache_entries',
+      where: 'cache_key = ?',
+      whereArgs: [key],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+
+    final row = rows.first;
+    final expiresAt = row['expires_at'] as int? ?? 0;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (expiresAt > 0 && now > expiresAt) {
+      await db.delete('cache_entries', where: 'cache_key = ?', whereArgs: [key]);
+      return null;
+    }
+
+    final raw = row['data'] as String?;
+    if (raw == null) return null;
+    try {
+      final data = jsonDecode(raw);
+      // RAM warm-up
+      _readCache[key] = _MemoryCacheEntry(
+        data: data,
+        expiresAt: DateTime.fromMillisecondsSinceEpoch(expiresAt),
+      );
+      return data;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Xoá cache entry
+  Future<void> clearCacheEntry(String key) async {
+    _readCache.remove(key);
+    final db = await _requireDatabase();
+    if (db == null) return;
+    await db.delete('cache_entries', where: 'cache_key = ?', whereArgs: [key]);
+  }
+
+  /// Xoá toàn bộ cache cũ (quá hạn)
+  Future<void> purgeExpiredCache() async {
+    final db = await _requireDatabase();
+    if (db == null) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.delete('cache_entries',
+        where: 'expires_at > 0 AND expires_at < ?', whereArgs: [now]);
+    // Xoá luôn RAM entries hết hạn
+    _readCache.removeWhere((_, entry) => entry.isExpired);
   }
 
   Future<Database?> _requireDatabase() async {

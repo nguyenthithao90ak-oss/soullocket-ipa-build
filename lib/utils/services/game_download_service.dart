@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../utils/app_error_mapper.dart';
+import 'cloudflare_r2_service.dart';
 import 'offline_cache_service.dart';
 
 class GameAssetInfo {
@@ -171,26 +172,17 @@ class GameDownloadService extends ChangeNotifier {
             continue;
           }
 
-          // Sử dụng SDK để lấy URL download chính xác
+          // Ưu tiên tải từ Cloudflare R2 (public domain)
           final fullStoragePath = '${config.storagePath}/$fileName';
           String remoteUrl;
           try {
+            CloudflareR2Service.instance.init();
+            remoteUrl = '${CloudflareR2Service.publicDomain}/$fullStoragePath';
+          } catch (_) {
+            // Fallback: Firebase Storage URL
             remoteUrl = await FirebaseStorage.instance
                 .ref(fullStoragePath)
                 .getDownloadURL();
-          } catch (storageError) {
-            final errStr = storageError.toString().toLowerCase();
-            if (errStr.contains('object-not-found')) {
-              debugPrint(
-                  'Game asset missing on Storage, fallback to bundled asset: $fullStoragePath');
-              downloadedFiles++;
-              continue;
-            }
-            if (errStr.contains('unauthorized') ||
-                errStr.contains('permission-denied')) {
-              throw 'Lỗi phân quyền: Bạn cần cập nhật Storage Rules trên Firebase Console để cho phép đọc thư mục game_assets.';
-            }
-            rethrow;
           }
 
           await _dio.download(

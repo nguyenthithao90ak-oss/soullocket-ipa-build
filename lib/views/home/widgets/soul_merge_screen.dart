@@ -19,6 +19,7 @@ import '../../../utils/services/soul_merge_service.dart';
 import '../../../utils/services/house_service.dart';
 import '../../../utils/services/notification_service.dart';
 import '../../../core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
 import 'package:soullocket_app/views/premium/premium_store_screen.dart';
 
@@ -199,8 +200,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         final myRole = prefs.getString('il_role') ?? 'user1';
         final partnerRole = myRole == 'user2' ? 'user1' : 'user2';
         
-        final defaultMyName = myRole == 'user2' ? 'bạn nữ' : 'bạn nam';
-        final defaultPartnerName = partnerRole == 'user2' ? 'bạn nữ' : 'bạn nam';
+        final defaultMyName = myRole == 'user2' ? L10nService().translate('female_role_default') : L10nService().translate('male_role_default');
+        final defaultPartnerName = partnerRole == 'user2' ? L10nService().translate('female_role_default') : L10nService().translate('male_role_default');
         
         final localLastSeen = prefs.getInt('soul_merge_last_seen_msg_ts') ?? 0;
         final remoteLastSeen = await _mergeService.getLastSeenTimestamp();
@@ -255,7 +256,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     if (_houseId == null || _houseId!.isEmpty) return;
     
     final size = MediaQuery.of(context).size;
-    _heartsOverlayKey.currentState?.spawnExplosion(Offset(size.width / 2, size.height / 2), count: 12);
+    _heartsOverlayKey.currentState?.spawnExplosion(Offset(size.width / 2, size.height / 2), count: 8);
     
     await NotificationService().sendPartnerNotification(
       houseId: _houseId!,
@@ -819,7 +820,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
           if (!_isMerged)
             Align(
-              alignment: const Alignment(0, -0.88),
+              alignment: const Alignment(0, -0.96),
               child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -849,16 +850,16 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                           child: ScaleTransition(
                             scale: _pulseAnim,
                             child: SizedBox(
-                              width: 220,
-                              height: 220,
+                              width: 160,
+                              height: 160,
                               child: Stack(
                                 alignment: Alignment.center,
                                 children: [
                                   // Cute sticker heart
                                   Image.asset(
                                     'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
-                                    width: 180,
-                                    height: 180,
+                                    width: 130,
+                                    height: 130,
                                     fit: BoxFit.contain,
                                     filterQuality: FilterQuality.medium,
                                     errorBuilder: (_, __, ___) => const Icon(
@@ -945,8 +946,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           // Message / Preset Chat Input Bar at the bottom
           Positioned(
             bottom: MediaQuery.of(context).padding.bottom + 16,
-            left: 16,
-            right: 16,
+            left: 4,
+            right: 4,
             child: _buildChatInputBar(),
           ),
         ],
@@ -1306,12 +1307,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             constraints: const BoxConstraints(maxHeight: 500),
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.25),
+              color: Colors.transparent,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
-                width: 1.0,
-              ),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
@@ -2394,61 +2391,48 @@ class _HeartsPainter extends CustomPainter {
       final mainPaint = Paint()..style = PaintingStyle.fill;
 
       if (heart.style == 'cosmic') {
-        drawSize = heart.size * (1.0 + 0.25 * math.sin(progress * 18.0));
+        drawSize = heart.size * (1.0 + 0.15 * math.sin(progress * 18.0));
+        
+        // Vẽ 1 sao bay quanh (giảm từ 2 xuống 1 để chống lag)
+        final double orbitAngle = progress * 8.0;
+        final double orbitRadius = drawSize * 0.8;
+        final double sx = heart.x + math.cos(orbitAngle) * orbitRadius;
+        final double sy = heart.y + math.sin(orbitAngle) * orbitRadius;
         
         final trailPaint = Paint()
           ..style = PaintingStyle.fill
           ..color = const Color(0xFFFFD700).withValues(alpha: heart.opacity * 0.4);
-        
-        for (int j = 0; j < 2; j++) {
-          final double orbitAngle = progress * 8.0 + (j * math.pi);
-          final double orbitRadius = drawSize * 0.8;
-          final double sx = heart.x + math.cos(orbitAngle) * orbitRadius;
-          final double sy = heart.y + math.sin(orbitAngle) * orbitRadius;
-          _drawStar(canvas, trailPaint, sx, sy, drawSize * 0.25);
-        }
+        _drawStar(canvas, trailPaint, sx, sy, drawSize * 0.25);
 
-        final glowColor = const Color(0xFFBF55EC).withValues(alpha: heart.opacity * 0.12);
+        // Chỉ vẽ 1 lớp Glow thay vì 2 lớp
+        final glowColor = const Color(0xFFBF55EC).withValues(alpha: heart.opacity * 0.15);
         final glowPaint = Paint()
           ..style = PaintingStyle.fill
           ..color = glowColor;
-        _drawHeartShape(canvas, glowPaint, heart.x, heart.y, drawSize * 1.5);
-        _drawHeartShape(canvas, glowPaint, heart.x, heart.y, drawSize * 1.25);
+        _drawHeartShape(canvas, glowPaint, heart.x, heart.y, drawSize * 1.3);
         
         mainPaint.color = heart.color.withValues(alpha: heart.opacity);
         _drawHeartShape(canvas, mainPaint, heart.x, heart.y, drawSize);
 
-        final corePaint = Paint()
-          ..style = PaintingStyle.fill
-          ..color = Colors.white.withValues(alpha: heart.opacity * 0.8);
-        _drawHeartShape(canvas, corePaint, heart.x, heart.y - (drawSize * 0.05), drawSize * 0.4);
-
       } else if (heart.style == 'aurora') {
-        // Reduced trails for aurora performance
-        for (int j = 0; j < heart.trail.length; j += 3) {
-          final double trailProgress = j / heart.trail.length;
-          final Offset pos = heart.trail[j];
+        // Rút gọn Trail của Aurora (chỉ vẽ 1 điểm đuôi dài nhất để chống lag)
+        if (heart.trail.isNotEmpty) {
+          final Offset pos = heart.trail.first;
           final trailPaint = Paint()
             ..style = PaintingStyle.fill
-            ..color = heart.color.withValues(alpha: heart.opacity * 0.25 * trailProgress);
-          
-          _drawStar(canvas, trailPaint, pos.dx, pos.dy, drawSize * 0.35 * trailProgress);
+            ..color = heart.color.withValues(alpha: heart.opacity * 0.2);
+          _drawStar(canvas, trailPaint, pos.dx, pos.dy, drawSize * 0.2);
         }
 
+        // Chỉ vẽ 1 lớp Glow thay vì 2
         final glowColor = heart.color.withValues(alpha: heart.opacity * 0.15);
         final glowPaint = Paint()
           ..style = PaintingStyle.fill
           ..color = glowColor;
-        _drawHeartShape(canvas, glowPaint, heart.x, heart.y, drawSize * 1.4);
-        _drawHeartShape(canvas, glowPaint, heart.x, heart.y, drawSize * 1.2);
+        _drawHeartShape(canvas, glowPaint, heart.x, heart.y, drawSize * 1.25);
 
         mainPaint.color = heart.color.withValues(alpha: heart.opacity);
         _drawHeartShape(canvas, mainPaint, heart.x, heart.y, drawSize);
-
-        final corePaint = Paint()
-          ..style = PaintingStyle.fill
-          ..color = Colors.white.withValues(alpha: heart.opacity * 0.85);
-        _drawHeartShape(canvas, corePaint, heart.x, heart.y, drawSize * 0.35);
 
       } else {
         mainPaint.color = heart.color.withValues(alpha: heart.opacity);

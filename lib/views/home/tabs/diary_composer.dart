@@ -82,21 +82,7 @@ class DiaryComposer extends StatelessWidget {
                               ),
                             ),
                           ),
-                          SLSpacing.h4,
-                          Text(
-                            mood['label'],
-                            maxLines: 2,
-                            overflow: TextOverflow.fade,
-                            textAlign: TextAlign.center,
-                            style: SLTheme.quicksand(
-                              fontSize: 11,
-                              fontWeight:
-                                  active ? FontWeight.w900 : FontWeight.w700,
-                              color: active
-                                  ? mood['color'] as Color
-                                  : const Color(0xFF9EABB5),
-                            ),
-                          ),
+                          // Removed text label per user request
                         ],
                       ),
                     ),

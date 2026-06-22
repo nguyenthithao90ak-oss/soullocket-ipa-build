@@ -2,7 +2,7 @@ import 'widgets/utilities_tab_body.dart';
 // ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 import 'package:flutter/foundation.dart'
-    show kDebugMode, kIsWeb, listEquals, TargetPlatform, defaultTargetPlatform;
+    show kIsWeb, listEquals, TargetPlatform, defaultTargetPlatform;
 
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -536,10 +536,7 @@ class _UtilitiesTabState extends State<UtilitiesTab>
         screen = GiftMakerScreen(houseId: houseId, myName: _myName);
         break;
       case 'giftcode':
-        screen = houseId.isEmpty ||
-                (!kDebugMode &&
-                    !kIsWeb &&
-                    defaultTargetPlatform == TargetPlatform.iOS)
+        screen = houseId.isEmpty
             ? null
             : GiftcodeScreen(houseId: houseId, myName: _myName);
         break;

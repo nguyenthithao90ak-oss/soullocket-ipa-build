@@ -110,10 +110,15 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
         _roomStream = _caroService.streamRoom(_houseId!);
       }
       _myRole = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
-      _user1Name =
-          settings.nameU1.trim().isEmpty ? context.tr('util_bnnam_694d9e') : settings.nameU1.trim();
-      _user2Name =
-          settings.nameU2.trim().isEmpty ? context.tr('util_bnn_14cea6') : settings.nameU2.trim();
+      final fallbackNameU1 = settings.nameU1.trim();
+      _user1Name = fallbackNameU1.isEmpty || fallbackNameU1.toLowerCase() == 'bạn nam'
+          ? context.tr('male_role_default')
+          : fallbackNameU1;
+
+      final fallbackNameU2 = settings.nameU2.trim();
+      _user2Name = fallbackNameU2.isEmpty || fallbackNameU2.toLowerCase() == 'bạn nữ'
+          ? context.tr('female_role_default')
+          : fallbackNameU2;
       _soundEnabled = UiPrefs.notifier.value.touchSound;
       _isLoading = false;
     });
