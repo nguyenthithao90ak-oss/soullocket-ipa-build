@@ -245,7 +245,7 @@ extension _CommunityFeedSurface on _CommunityTabState {
       onRefresh: () async => _init(),
       color: const Color(0xFFD81B60),
       child: ListView.builder(
-        scrollCacheExtent: ScrollCacheExtent.pixels(feedCacheExtent), controller: _scrollController,
+        cacheExtent: feedCacheExtent, controller: _scrollController,
         addAutomaticKeepAlives: false,
         addRepaintBoundaries: true,
         addSemanticIndexes: false,
