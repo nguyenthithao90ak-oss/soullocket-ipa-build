@@ -31,7 +31,7 @@ concurrency:
 jobs:
   build:
     name: Build signed IPA
-    runs-on: macos-15
+    runs-on: macos-latest
     timeout-minutes: 60
     env:
       IOS_EXPORT_METHOD: ${{ inputs.export_method }}
@@ -58,6 +58,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2

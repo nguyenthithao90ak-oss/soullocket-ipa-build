@@ -265,12 +265,12 @@ class SecurityService {
       }
 
       final storedId =
-          (await _secureStorage.read(key: _deviceIdStorageKey).timeout(const Duration(seconds: 1), onTimeout: () => null))?.trim() ?? '';
+          (await _secureStorage.read(key: _deviceIdStorageKey).timeout(const Duration(seconds: 3), onTimeout: () => null))?.trim() ?? '';
       if (storedId.isNotEmpty) {
         final sanitizedStoredId = _sanitizeDeviceId(storedId);
         if (await _shouldRotateStoredPlatformDeviceId(sanitizedStoredId)) {
           final deviceId = _sanitizeDeviceId(_generateFallbackDeviceId());
-          await _secureStorage.write(key: _deviceIdStorageKey, value: deviceId).timeout(const Duration(seconds: 1), onTimeout: () => null);
+          await _secureStorage.write(key: _deviceIdStorageKey, value: deviceId).timeout(const Duration(seconds: 3), onTimeout: () => null);
           final prefs = OfflineCacheService.getPrefsSync() ??
               await SharedPreferences.getInstance();
           await prefs.remove(_deviceIdStorageKey);
@@ -281,7 +281,7 @@ class SecurityService {
           await _secureStorage.write(
             key: _deviceIdStorageKey,
             value: sanitizedStoredId,
-          ).timeout(const Duration(seconds: 1), onTimeout: () => null);
+          ).timeout(const Duration(seconds: 3), onTimeout: () => null);
         }
         _cachedDeviceId = sanitizedStoredId;
         return sanitizedStoredId;
@@ -291,7 +291,7 @@ class SecurityService {
       final deviceId = _sanitizeDeviceId(
         resolvedId.isNotEmpty ? resolvedId : _generateFallbackDeviceId(),
       );
-      await _secureStorage.write(key: _deviceIdStorageKey, value: deviceId).timeout(const Duration(seconds: 1), onTimeout: () => null);
+      await _secureStorage.write(key: _deviceIdStorageKey, value: deviceId).timeout(const Duration(seconds: 3), onTimeout: () => null);
 
       final prefs = OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
