@@ -327,6 +327,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                       final bodySlivers = <Widget>[];
                       var visiblePhotoCount = 0;
                       var showingCache = false;
+                      var filteredCount = 0;
 
                       final waitingForLive = !isOffline &&
                           snapshot.connectionState == ConnectionState.waiting;
@@ -381,7 +382,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                           // Apply month filter
                           final filteredItems = _filterByMonth(flattenedItems);
                           final filteredPhotos = _filterPhotosByMonth(photos);
-                          final filteredCount = _selectedMonth == null
+                          filteredCount = _selectedMonth == null
                               ? visiblePhotoCount
                               : filteredPhotos.length;
 
