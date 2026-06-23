@@ -309,7 +309,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    'Tất cả kiểu trái tim',
+                                    L10nService().translate('home_tat_ca_kieu_trai_tim'),
                                     style: SLTheme.quicksand(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w900,
@@ -400,7 +400,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
               },
               icon: const Icon(Icons.more_horiz_rounded),
               label: Text(
-                'Xem thêm $hiddenCount',
+                L10nService().translate('home_xem_them').replaceAll('{count}', hiddenCount.toString()),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w800,
                   color: const Color(0xFFD81B60),
@@ -859,7 +859,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
     required bool compact,
   }) {
     return Text(
-      '$days ngày',
+      L10nService().format('home_days_count', {'days': days}),
       style: SLTheme.quicksand(
         color: textColor,
         fontWeight: FontWeight.w900,
@@ -1060,7 +1060,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'ngày',
+                              L10nService().translate('home_days_label'),
                               style: SLTheme.quicksand(
                                 color: daysColor.withValues(alpha: 0.78),
                                 fontSize: isCompact ? 13 : 14,

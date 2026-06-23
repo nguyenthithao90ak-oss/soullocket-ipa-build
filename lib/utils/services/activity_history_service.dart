@@ -184,7 +184,7 @@ class ActivityHistoryEntry {
   String get displayLine {
     final who = role == 'user2' ? L10nService().translate('female_role_default') : L10nService().translate('male_role_default');
     if (isPrivate && !revealed) {
-      return '$who ${placeholder.isNotEmpty ? placeholder : "đã thực hiện 1 thao tác (đang ẩn)"}';
+      return '$who ${placeholder.isNotEmpty ? placeholder : L10nService().translate('home_activity_performed')}';
     }
     final base = title.trim().isNotEmpty ? title.trim() : text.trim();
     return base.isEmpty ? who : '$who $base';
@@ -257,7 +257,7 @@ class ActivityHistoryService {
     } catch (e) {
       debugPrint('ActivityHistory remote load failed: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể tải lịch sử hoạt động từ máy chủ.',
+        fallbackMessage: L10nService().translate('home_activity_history_load_error'),
       ).message}');
     }
 
@@ -311,7 +311,7 @@ class ActivityHistoryService {
         : restorePayload;
     final safeIsPrivate = isPrivate || isSecretVaultEntry;
     final safePlaceholder = isSecretVaultEntry && placeholder.trim().isEmpty
-        ? 'đã thao tác với Kho bí mật'
+        ? L10nService().translate('home_activity_vault_interaction')
         : placeholder;
     final entry = ActivityHistoryEntry(
       id: entryId,
@@ -375,7 +375,7 @@ class ActivityHistoryService {
         debugPrint(
             'ActivityHistory direct sync failed: ${AppErrorMapper.resolve(
           e,
-          fallbackMessage: 'Không thể đồng bộ lịch sử hoạt động.',
+          fallbackMessage: L10nService().translate('home_activity_sync_error'),
         ).message}');
       }
     }
@@ -405,16 +405,16 @@ class ActivityHistoryService {
         debugPrint(
             'ActivityHistory album restore failed: ${AppErrorMapper.resolve(
           e,
-          fallbackMessage: 'Không thể khôi phục album.',
+          fallbackMessage: L10nService().translate('home_activity_album_restore_error'),
         ).message}');
         return false;
       }
 
       await add(
-        'đã khôi phục ${entry.effectiveSourceLabel.toLowerCase()}',
+        L10nService().format('home_activity_restored', {'label': entry.effectiveSourceLabel.toLowerCase()}),
         houseId: entry.houseId,
         role: entry.role,
-        title: 'Đã khôi phục',
+        title: L10nService().translate('home_activity_restored_title'),
         subtitle: entry.title.isNotEmpty ? entry.title : entry.text,
         action: 'restore',
         module: entry.module,
@@ -438,7 +438,7 @@ class ActivityHistoryService {
         final isNotFound = errorText.contains('firebase_functions/not-found') ||
             errorText.contains('not-found') ||
             errorText.contains('NOT_FOUND') ||
-            errorText.contains('Ảnh Kỷ niệm không còn trong thùng rác');
+            errorText.contains(L10nService().translate('home_activity_memory_not_found'));
         final payload = Map<String, dynamic>.from(entry.restorePayload);
         final payloadPurgeAt = (payload['purgeAt'] as num?)?.toInt() ?? 0;
         final effectiveExpiry = entry.restoreExpiresAt > 0
@@ -453,7 +453,7 @@ class ActivityHistoryService {
           debugPrint(
               'ActivityHistory diary memory restore failed: ${AppErrorMapper.resolve(
             e,
-            fallbackMessage: 'Không thể khôi phục kỷ niệm.',
+            fallbackMessage: L10nService().translate('home_activity_memory_restore_error'),
           ).message}');
           return false;
         }
@@ -477,7 +477,7 @@ class ActivityHistoryService {
             'ActivityHistory diary memory fallback restore failed: ${AppErrorMapper.resolve(
               fallbackError,
               fallbackMessage:
-                  'Không thể khôi phục kỷ niệm bằng dữ liệu dự phòng.',
+                  L10nService().translate('home_activity_backup_restore_error'),
             ).message}',
           );
           return false;
@@ -485,10 +485,10 @@ class ActivityHistoryService {
       }
 
       await add(
-        'đã khôi phục ${entry.effectiveSourceLabel.toLowerCase()}',
+        L10nService().format('home_activity_restored', {'label': entry.effectiveSourceLabel.toLowerCase()}),
         houseId: entry.houseId,
         role: entry.role,
-        title: 'Đã khôi phục',
+        title: L10nService().translate('home_activity_restored_title'),
         subtitle: entry.title.isNotEmpty ? entry.title : entry.text,
         action: 'restore',
         module: entry.module,
@@ -509,10 +509,10 @@ class ActivityHistoryService {
     await _db.ref(entry.restorePath).set(payload);
 
     await add(
-      'đã khôi phục ${entry.effectiveSourceLabel.toLowerCase()}',
+      L10nService().format('home_activity_restored', {'label': entry.effectiveSourceLabel.toLowerCase()}),
       houseId: entry.houseId,
       role: entry.role,
-      title: 'Đã khôi phục',
+      title: L10nService().translate('home_activity_restored_title'),
       subtitle: entry.title.isNotEmpty ? entry.title : entry.text,
       action: 'restore',
       module: entry.module,
@@ -796,7 +796,7 @@ $rows
     } catch (e) {
       debugPrint('ActivityHistory trim failed: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'Không thể rút gọn lịch sử hoạt động.',
+        fallbackMessage: 'Cannot compress activity history.',
       ).message}');
     }
   }

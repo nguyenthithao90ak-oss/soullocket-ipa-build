@@ -2040,6 +2040,10 @@ class CollageGenerator {
     final double size =
         min<double>(200.0, 2000.0 / sqrt(n)) * options.safePhotoScale;
     final random = _layoutRandom(options, 0x1541);
+    // Phân bố đều dọc đường cong trái tim để giữ rõ hình
+    final steps = max(n, 24);
+    final double stepSize = (pi * 2.0) / steps;
+    final double startOffset = random.nextDouble() * stepSize;
 
     Offset getHeartPoint(
         double t, double scale, double offsetX, double offsetY) {
@@ -2051,17 +2055,21 @@ class CollageGenerator {
 
     for (int i = 0; i < n; i++) {
       canvas.save();
-      final double t = random.nextDouble() * pi * 2;
-      final double scale = 30.0 + random.nextDouble() * 10.0;
+      // Phân bố đều theo i, thêm nhiễu nhẹ cho tự nhiên
+      final double baseT = startOffset + i * stepSize;
+      final double t = baseT + (random.nextDouble() - 0.5) * stepSize * 0.3;
+      // Ảnh phía dưới (đáy tim) to hơn, phía trên nhỏ hơn
+      final double normalizedPos = (sin(t) + 1.0) / 2.0;
+      final double photoScale = 28.0 + normalizedPos * 10.0;
       final Offset pt = getHeartPoint(
         t,
-        scale,
+        photoScale,
         contentWidth / 2,
         contentHeight / 2 + 180,
       );
 
-      final double jx = (random.nextDouble() - 0.5) * 50;
-      final double jy = (random.nextDouble() - 0.5) * 50;
+      final double jx = (random.nextDouble() - 0.5) * 16;
+      final double jy = (random.nextDouble() - 0.5) * 16;
 
       canvas.translate(pt.dx + jx, pt.dy + jy);
       canvas.rotate((random.nextDouble() - 0.5) * 0.5);

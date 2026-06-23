@@ -47,7 +47,7 @@ class HouseOnboardingScreen extends StatefulWidget {
 }
 
 class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
-  static const String _defaultHouseName = 'Chúng mình';
+  String _defaultHouseName() => L10nService().translate('onboarding_default_house_name');
   static const String _savedGenderPrefsKey = 'il_saved_gender';
   static const String _pendingSignupRecoveryQuestionPrefsKey =
       'il_pending_signup_recovery_question';
@@ -107,7 +107,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     if (houseName.isNotEmpty) {
       _houseNameCtrl.text = houseName;
     } else if (widget.autoCreateOnly) {
-      _houseNameCtrl.text = _defaultHouseName;
+      _houseNameCtrl.text = _defaultHouseName();
     }
 
     final question = (widget.initialRecoveryQuestion ?? '').trim();
@@ -221,7 +221,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     }
 
     if (_houseNameCtrl.text.trim().isEmpty) {
-      _houseNameCtrl.text = _defaultHouseName;
+      _houseNameCtrl.text = _defaultHouseName();
     }
 
     _didQueueAutoCreate = true;
@@ -528,29 +528,29 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       return null;
     }
     if (relationshipMode == null && role == null) {
-      return 'Thiếu lựa chọn Độc thân/Có người yêu và vai trò tài khoản. Hãy chọn để tiếp tục tạo nhà.';
+      return L10nService().translate('onboarding_missing_role_and_mode');
     }
     if (relationshipMode == null) {
-      return 'Thiếu lựa chọn Độc thân/Có người yêu. Hãy chọn để tiếp tục tạo nhà.';
+      return L10nService().translate('onboarding_missing_mode');
     }
-    return 'Thiếu vai trò tài khoản. Hãy chọn để tiếp tục tạo nhà.';
+    return L10nService().translate('onboarding_missing_role');
 
     if (relationshipMode != null && role != null) {
       return null;
     }
     if (relationshipMode == null && role == null) {
-      return 'Thiếu lựa chọn Độc thân/Có người yêu và vai trò tài khoản. Vui lòng đăng xuất rồi đăng nhập lại để chọn đúng trước khi tạo nhà.';
+      return L10nService().translate('onboarding_missing_role_and_mode_logout');
     }
     if (relationshipMode == null) {
-      return 'Thiếu lựa chọn Độc thân/Có người yêu. Vui lòng đăng xuất rồi đăng nhập lại để chọn đúng trước khi tạo nhà.';
+      return L10nService().translate('onboarding_missing_mode_logout');
     }
-    return 'Thiếu vai trò tài khoản. Vui lòng đăng xuất rồi đăng nhập lại để chọn đúng trước khi tạo nhà.';
+    return L10nService().translate('onboarding_missing_role_logout');
   }
 
   String _technicalFailureDetail(Object error) {
     final raw = error.toString().trim();
     if (raw.isEmpty) {
-      return 'Không có mã lỗi kỹ thuật.';
+      return L10nService().translate('onboarding_no_error_code');
     }
     return raw.length > 260 ? '${raw.substring(0, 260)}...' : raw;
   }
@@ -871,7 +871,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     const defaultNameU2 = 'Bạn Nữ';
     final houseName = _houseNameCtrl.text.trim().isNotEmpty
         ? _houseNameCtrl.text.trim()
-        : _defaultHouseName;
+        : _defaultHouseName();
     final myDisplayName = myRole == 'user2' ? defaultNameU2 : defaultNameU1;
 
     final recoveryQuestion = _enableRecovery ? _selectedSecurityQuestion : '';

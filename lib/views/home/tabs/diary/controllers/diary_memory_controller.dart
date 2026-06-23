@@ -298,7 +298,7 @@ class DiaryMemoryController extends ChangeNotifier {
       houseId: houseId,
       paths: remaining,
       message:
-          'Còn ${remaining.length} ảnh Kỷ niệm chưa tải xong. Bạn có thể thử lại.',
+          L10nService().format('home_memory_remaining_upload', {'count': remaining.length}),
     );
   }
 
@@ -1375,7 +1375,7 @@ class DiaryMemoryController extends ChangeNotifier {
         final memoryRef = _dbRef.child('houses/$houseId/memories').push();
         final memoryId = memoryRef.key ?? '';
         if (memoryId.isEmpty) {
-          return 'Không thể tạo ID cho kỷ niệm.';
+          return L10nService().translate('home_cannot_create_memory_id');
         }
         await memoryRef.set({
           'url': imageUrl,
@@ -1394,7 +1394,7 @@ class DiaryMemoryController extends ChangeNotifier {
         return null; // Success
       } catch (dbError) {
         debugPrint('Lỗi ghi memory vào Firebase: $dbError');
-        return 'Không thể lưu kỷ niệm. Vui lòng thử lại.';
+        return L10nService().translate('home_cannot_save_memory');
       }
     } catch (e) {
       debugPrint(
@@ -1686,8 +1686,6 @@ class DiaryMemoryController extends ChangeNotifier {
       }
 
       final failedCount = images.length - uploadedCount;
-      final errorMessageStr =
-          errorMessages.isNotEmpty ? '\nLỗi: ${errorMessages.first}' : '';
 
       if (failedCount <= 0) {
         await _clearPendingUploadState(notify: false);
@@ -1717,8 +1715,8 @@ class DiaryMemoryController extends ChangeNotifier {
                         'count': uploadedCount,
                       })
                 : skippedMapPinBecauseLimit
-                    ? 'Đã thêm $uploadedCount/${images.length} kỷ niệm. Một phần ảnh không ghim vị trí mới.$errorMessageStr'
-                    : 'Đã thêm $uploadedCount/${images.length} kỷ niệm. $failedCount ảnh lỗi.$errorMessageStr',
+                    ? L10nService().translate('home_memory_added_skip_location')
+                    : L10nService().translate('home_memory_added_with_errors'),
           ),
         ),
       );

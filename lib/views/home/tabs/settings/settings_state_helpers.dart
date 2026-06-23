@@ -110,14 +110,14 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
               children: [
                 Text(
                   isSending
-                      ? 'Đang gửi mã xác nhận 6 số đến $email...\nBạn có thể chờ ngay tại bảng này.'
+                      ? L10nService().format('home_sending_otp_email', {'email': email})
                       : isVerifying
                           ? context.tr('home_angkimtram_b80b59')
                           : sendError != null
-                              ? 'Không gửi được mã:\n$sendError'
+                              ? L10nService().format('home_send_otp_failed', {'error': sendError!})
                               : verifyError != null
-                                  ? 'Mã không đúng hoặc đã hết hạn:\n$verifyError'
-                                  : 'Mã xác nhận 6 số đã được gửi đến $email. Nhập mã để tiếp tục.',
+                                  ? L10nService().format('home_otp_invalid_or_expired', {'error': verifyError!})
+                                  : L10nService().format('home_otp_sent_to_email', {'email': email}),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -326,14 +326,14 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                 children: [
                   Text(
                     isSending
-                        ? 'Đang gửi mã đặt lại mật khẩu đến $email...\nBảng nhập mã đã mở sẵn để bạn không phải chờ.'
+                        ? L10nService().format('home_sending_reset_password_email', {'email': email})
                         : isVerifying
                             ? context.tr('home_angkimtram_9b5339')
                             : sendError != null
-                                ? 'Không gửi được mã:\n$sendError'
+                                ? L10nService().format('home_send_otp_failed', {'error': sendError!})
                                 : verifyError != null
-                                    ? 'Không thể đổi mật khẩu:\n$verifyError'
-                                    : 'Mã 6 số đã được gửi đến $email. Nhập mã và mật khẩu mới để đổi ngay trong app.',
+                                    ? L10nService().format('home_reset_password_failed', {'error': verifyError!})
+                                    : L10nService().format('home_reset_otp_sent', {'email': email}),
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,

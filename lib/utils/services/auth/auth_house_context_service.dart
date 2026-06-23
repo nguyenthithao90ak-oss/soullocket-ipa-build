@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:soullocket_app/utils/services/consent_service.dart';
 import 'package:soullocket_app/utils/services/presence_service.dart';
+import 'package:soullocket_app/utils/services/secure_storage_service.dart';
 import 'package:soullocket_app/utils/services/security_service.dart';
 import 'auth_support.dart';
 
@@ -306,6 +307,7 @@ class AuthHouseContextService {
           final role = data['role']?.toString().trim();
           if (role == 'user1' || role == 'user2') {
             await prefs.setString('il_role', role!);
+            await SecureStorageService.instance.write(SecureStorageService.keyRole, role);
             return;
           }
         }
@@ -318,6 +320,7 @@ class AuthHouseContextService {
               houseData['ownerUid']?.toString().trim();
           final resolvedRole = (ownerUid == uid) ? 'user1' : 'user2';
           await prefs.setString('il_role', resolvedRole);
+          await SecureStorageService.instance.write(SecureStorageService.keyRole, resolvedRole);
         }
       }
     } catch (_) {}
@@ -349,6 +352,8 @@ class AuthHouseContextService {
       if (primaryValue.isNotEmpty) {
         await prefs.setString('il_house_id', primaryValue);
         await prefs.setString(_authUidPrefsKey, resolvedUser.uid);
+        await SecureStorageService.instance.write(SecureStorageService.keyHouseId, primaryValue);
+        await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, resolvedUser.uid);
         await _restoreRoleFromDatabase(primaryValue, resolvedUser.uid, prefs);
         return primaryValue;
       }
@@ -364,6 +369,8 @@ class AuthHouseContextService {
             .update({'houseId': legacyValue});
         await prefs.setString('il_house_id', legacyValue);
         await prefs.setString(_authUidPrefsKey, resolvedUser.uid);
+        await SecureStorageService.instance.write(SecureStorageService.keyHouseId, legacyValue);
+        await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, resolvedUser.uid);
         await _restoreRoleFromDatabase(legacyValue, resolvedUser.uid, prefs);
         return legacyValue;
       }

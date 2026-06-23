@@ -17,6 +17,7 @@ import 'package:tiktok_business_sdk/tiktok_business_sdk_platform_interface.dart'
 
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/services/secure_storage_service.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/utils/services/critical_data_sync_service.dart';
 import 'package:soullocket_app/utils/services/device_manager_service.dart';
@@ -1397,11 +1398,16 @@ class AuthSignInService {
     if (houseId != null && houseId.isNotEmpty) {
       await prefs.setString('il_house_id', houseId);
       await prefs.setString('il_auth_uid', user.uid);
+      await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
+      await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, user.uid);
       existingRole = prefs.getString('il_role');
     } else {
       await prefs.remove('il_house_id');
       await prefs.remove('il_auth_uid');
       await prefs.remove('il_role');
+      await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
+      await SecureStorageService.instance.delete(SecureStorageService.keyAuthUid);
+      await SecureStorageService.instance.delete(SecureStorageService.keyRole);
     }
 
     await prefs.setString(

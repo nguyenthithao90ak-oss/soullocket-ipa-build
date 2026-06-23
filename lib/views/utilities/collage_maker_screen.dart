@@ -162,7 +162,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
       accent: Color(0xFF9A6F74),
       background: Color(0xFFF2E4E1),
       minPhotos: 3,
-      maxPhotos: 13,
+      maxPhotos: 40,
     ),
   ];
   static final List<_CollageAspectPreset> _aspectPresets = [

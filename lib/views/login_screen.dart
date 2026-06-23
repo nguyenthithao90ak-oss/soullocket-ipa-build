@@ -14,6 +14,7 @@ import '../utils/services/l10n_service.dart';
 import '../utils/services/security_flow_guard.dart';
 import '../utils/services/security_service.dart';
 import '../utils/services/house_service.dart';
+import '../utils/services/secure_storage_service.dart';
 import '../utils/app_error_mapper.dart';
 import '../utils/flexible_date_input.dart';
 import '../utils/rapid_action_feedback_policy.dart';
@@ -252,6 +253,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (role == 'user1' || role == 'user2') {
       await prefs.setString('il_role', role!);
+      await SecureStorageService.instance.write(SecureStorageService.keyRole, role);
     }
 
     final shouldSaveRecovery = _showSecurityQuestion &&
@@ -323,6 +325,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('il_role', role);
+    await SecureStorageService.instance.write(SecureStorageService.keyRole, role);
     await _authService.savePendingRelationshipModeForCurrentUser(
       relationshipMode,
     );
@@ -486,6 +489,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (sessionRole == 'user1' || sessionRole == 'user2') {
           await prefs.setString('il_role', sessionRole!);
+          await SecureStorageService.instance.write(SecureStorageService.keyRole, sessionRole);
         }
 
         final user = FirebaseAuth.instance.currentUser;
@@ -497,6 +501,8 @@ class _LoginScreenState extends State<LoginScreen> {
             if (houseId != null && houseId.isNotEmpty) {
               await prefs.setString('il_house_id', houseId);
               await prefs.setString('il_auth_uid', user.uid);
+              await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
+              await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, user.uid);
             }
           } catch (_) {}
         }
@@ -737,6 +743,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final prefs = await SharedPreferences.getInstance();
       if (storedRole == 'user1' || storedRole == 'user2') {
         await prefs.setString('il_role', storedRole!);
+        await SecureStorageService.instance.write(SecureStorageService.keyRole, storedRole);
       }
 
       final user = result.user;
@@ -748,6 +755,8 @@ class _LoginScreenState extends State<LoginScreen> {
           if (houseId != null && houseId.isNotEmpty) {
             await prefs.setString('il_house_id', houseId);
             await prefs.setString('il_auth_uid', user.uid);
+            await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
+            await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, user.uid);
           }
         } catch (_) {}
       }
