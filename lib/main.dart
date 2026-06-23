@@ -13,6 +13,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:tiktok_business_sdk/tiktok_business_sdk.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/secure_storage_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -142,6 +143,7 @@ Future<void> _configureSystemUiForEdgeToEdge() async {
   );
 }
 
+@pragma('vm:entry-point')
 void main() {
   runZonedGuarded(() async {
     final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -511,9 +513,14 @@ Future<void> _initializeFirebaseAppCheck() async {
     }
     if (kDebugMode) {
       try {
+        const debugToken =
+            '8a3fcdfe-ea37-49f1-baf9-279463826649';
+        await SecureStorageService.instance.write(
+            'appcheck_debug_token', debugToken);
+        // Also write to SharedPreferences for AppCheck native plugin
         await SharedPreferences.getInstance().then((prefs) => prefs.setString(
             'com.google.firebase.appcheck.debug.DebugAppCheckProvider.SECRET_KEY',
-            '8a3fcdfe-ea37-49f1-baf9-279463826649'));
+            debugToken));
       } catch (_) {}
     }
     await FirebaseAppCheck.instance
@@ -735,8 +742,8 @@ void _configureRenderingDefaults() {
     imageCache.maximumSize = 120;
     imageCache.maximumSizeBytes = 64 << 20;
   } else {
-    imageCache.maximumSize = 220;
-    imageCache.maximumSizeBytes = 128 << 20;
+    imageCache.maximumSize = 150;
+    imageCache.maximumSizeBytes = 80 << 20;
   }
   SchedulerBinding.instance.scheduleWarmUpFrame();
 }

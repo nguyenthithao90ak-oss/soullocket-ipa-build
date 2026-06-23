@@ -572,6 +572,45 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
             color: const Color(0xFF00796B),
             onTap: _openAboutDocument,
           ),
+          /*
+          const SizedBox(height: 10),
+          _buildLegalBtn(
+            icon: Icons.verified_user_rounded,
+            label: 'Bản quyền và cảnh báo',
+            color: const Color(0xFFC62828),
+            onTap: _openAboutDocument,
+          ),
+          */
+          const SizedBox(height: 14),
+          /*
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF0F0),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE53935).withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.copyright_rounded, size: 16, color: Color(0xFFC62828)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'SoulLocket © ${DateTime.now().year} Tame Trương Việt Hoàng. '
+                    'Mọi hành vi crack, mod, can thiệp trái phép đều vi phạm bản quyền và sẽ bị xử lý.',
+                    style: SLTheme.quicksand(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF8E1B1B),
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          */
           TextButton.icon(
             onPressed: _openDeleteAccountRequestPage,
             icon: const Icon(Icons.open_in_new_rounded, size: 16),

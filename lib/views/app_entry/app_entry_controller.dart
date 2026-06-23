@@ -190,7 +190,7 @@ class AppEntryController {
           _currentHouseId ?? await _houseService.getCurrentHouseId();
       final effectiveLockSettings = await _militaryLockService
           .getEffectiveLockSettings(houseId: houseId)
-          .timeout(const Duration(seconds: 3));
+          .timeout(const Duration(seconds: 8));
       final isAppLockEnabled = effectiveLockSettings.enabled;
       final isScopeAppEnabled =
           effectiveLockSettings.isScopeEnabled(LockScope.app);

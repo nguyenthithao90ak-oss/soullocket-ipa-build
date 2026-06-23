@@ -1,0 +1,34 @@
+--- lib/views/home/home_screen.dart
++++ lib/views/home/home_screen.dart
+@@ -32,7 +32,6 @@
+ import '../activities/activity_tracker_manager.dart';
+ import '../relationship/video_call_screen.dart';
+-import 'widgets/home_shell/incoming_call_overlay.dart';
+ import 'tabs/main_home_tab.dart';
+ import 'tabs/memories_tab.dart';
+@@ -396,7 +395,6 @@
+   Timer? _heartbeatTimer;
+   
+-  Map<String, dynamic>? _incomingCall;
+   StreamSubscription<DatabaseEvent>? _callSub;
+ 
+@@ -1036,19 +1034,6 @@
+             TickerMode(
+               enabled: !_isUserTabSwiping,
+               child: _buildMusicButton(),
+             ),
+-            if (_incomingCall != null)
+-              Positioned.fill(
+-                child: IncomingCallOverlay(
+-                  callerName:
+-                      (_incomingCall!['callerName'] ?? 'Someone').toString(),
+-                  callerAvatar:
+-                      (_incomingCall!['callerAvatar'] ?? '').toString(),
+-                  roomId: (_incomingCall!['roomId'] ?? '').toString(),
+-                  isVideo: _incomingCall!['isVideo'] == true,
+-                  onAccept: _acceptCall,
+-                  onDecline: _declineCall,
+-                ),
+-              ),
+           ],
+         );

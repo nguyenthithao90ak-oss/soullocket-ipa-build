@@ -43,8 +43,6 @@ import '../../../utils/services/notification_service.dart';
 import '../../../utils/services/storage_service.dart';
 import '../../../utils/services/utilities/note_service.dart';
 import '../../../utils/services/pending_upload_service.dart';
-import '../../../utils/services/quote_service.dart';
-import '../../../utils/services/activity_service.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../models/album_item.dart';
 import '../../../models/house_settings.dart';
@@ -99,7 +97,6 @@ part '../widgets/main_home/main_home_hero_section.dart';
 part 'main_home/widgets/main_home_quick_actions.dart';
 part 'main_home/widgets/main_home_presence_section.dart';
 part 'main_home/widgets/main_home_status_cards.dart';
-part 'main_home/widgets/main_home_quote_activity_card.dart';
 part 'main_home/widgets/main_home_tool_slot_section.dart';
 part 'main_home/widgets/main_home_support.dart';
 part 'main_home/widgets/main_home_admin_badge.dart';
@@ -127,6 +124,7 @@ part '../widgets/main_home/hero/main_home_hero_countdown.dart';
 part '../widgets/main_home/hero/main_home_hero_counters.dart';
 part '../widgets/main_home/hero/main_home_hero_header.dart';
 part 'main_home/models/main_home_models.dart';
+part 'main_home/widgets/main_home_quote_activity_card.dart';
 
 class MainHomeTab extends StatefulWidget {
   final ValueNotifier<bool> isActiveListenable;

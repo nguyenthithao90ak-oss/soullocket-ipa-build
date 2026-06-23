@@ -604,6 +604,30 @@ extension _SettingsTabShell on _SettingsTabState {
               color: const Color(0xFF7B8794),
             ),
           ),
+          const SizedBox(height: 8),
+          /*
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFCE4EC).withValues(alpha: 0.45),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFFD81B60).withValues(alpha: 0.12),
+              ),
+            ),
+            child: Text(
+              '© ${DateTime.now().year} Tame Trương Việt Hoàng. SoulLocket có bản quyền. Mọi hành vi crack, mod, can thiệp trái phép đều bị nghiêm cấm.',
+              textAlign: TextAlign.center,
+              style: SLTheme.quicksand(
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFAD1457).withValues(alpha: 0.7),
+                height: 1.4,
+              ),
+            ),
+          ),
+          */
         ],
       ),
     );
