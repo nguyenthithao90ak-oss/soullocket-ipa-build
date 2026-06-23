@@ -808,4 +808,97 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
       ),
     );
   }
+
+  /// Đơn giản — 2 nút: chọn từ máy / chọn từ kỷ niệm
+  Widget _buildSimplePhotoSource({required bool compact}) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(compact ? 14 : 16),
+      decoration: _paperPanelDecoration(
+        color: const Color(0xFFFFF8F2),
+        borderColor: const Color(0xFFDCC9B8),
+        flipped: true,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            L10nService().translate('util_chnnh_ea3d0d'),
+            style: SLTheme.quicksand(
+              fontWeight: FontWeight.w800,
+              color: _paperInk,
+              fontSize: 15,
+            ),
+          ),
+          SLSpacing.h8,
+          Text(
+            'Thêm ảnh từ thư viện hoặc chọn từ kỷ niệm có sẵn.',
+            style: SLTheme.quicksand(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: _paperMuted,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _buildSourceButton(
+                  icon: Icons.photo_library_outlined,
+                  label: 'Chọn từ máy',
+                  onTap: _pickDevicePhotos,
+                  accent: _paperRoseDeep,
+                ),
+              ),
+              SizedBox(width: compact ? 10 : 12),
+              Expanded(
+                child: _buildSourceButton(
+                  icon: Icons.favorite_border_rounded,
+                  label: 'Chọn từ kỷ niệm',
+                  onTap: () => _showMemorySheet(context, compact),
+                  accent: _paperMistDeep,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSourceButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required Color accent,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 72,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.78),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _paperLine),
+        ),
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: accent, size: 24),
+            const SizedBox(height: 5),
+            Text(
+              label,
+              style: SLTheme.quicksand(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: _paperInk,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

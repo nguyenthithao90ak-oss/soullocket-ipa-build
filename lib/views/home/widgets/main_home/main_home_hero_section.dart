@@ -207,6 +207,10 @@ class _ModernHomeBody extends StatelessWidget {
                           ),
                         if (!isSingle) SLSpacing.h20,
                         RepaintBoundary(
+                          child: state._buildQuoteActivityCard(),
+                        ),
+                        if (!isSingle) SLSpacing.h20,
+                        RepaintBoundary(
                           child: state._buildModernMapCard(
                             nameU1: nameU1,
                             nameU2: nameU2,

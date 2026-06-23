@@ -1346,11 +1346,9 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                         _buildIntroCard(),
                         SLSpacing.h24,
 
-                        // Tabs
-                        _buildSourceModeTabs(compact: isPhoneWidth),
+                        // Photo source — đơn giản: 2 nút chọn ảnh
+                        _buildSimplePhotoSource(compact: isPhoneWidth),
                         SLSpacing.h24,
-
-                        if (_isFromMemory) ...[
                           Builder(
                             builder: (context) {
                               final availableCount = _getFilteredMemoryItems().length;
@@ -1581,52 +1579,6 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                               );
                             },
                           ),
-                        ] else ...[
-                          Text(
-                            L10nService().translate('util_chnbnhring_a4987f'),
-                            style: SLTheme.quicksand(
-                                fontWeight: FontWeight.w700,
-                                color: _paperInk,
-                                fontSize: 15),
-                          ),
-                          SLSpacing.h8,
-                          GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: _pickDevicePhotos,
-                            child: Container(
-                              height: 100,
-                              decoration: _paperPanelDecoration(
-                                color: const Color(0xFFFFF7EE),
-                                borderColor: const Color(0xFFD8C7B7),
-                              ),
-                              alignment: Alignment.center,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.cloud_upload,
-                                      color: _paperRoseDeep, size: 32),
-                                  SLSpacing.h8,
-                                  Text(L10nService().translate('util_chmchnnhyu_f0ebaa'),
-                                      style: SLTheme.quicksand(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: _paperMuted)),
-                                ],
-                              ),
-                            ),
-                          ),
-                          SLSpacing.h8,
-                          Text(
-                            L10nService().translate('util_bnhtchnvnc_698f43'),
-                            style: SLTheme.quicksand(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
-                              color: _paperMuted,
-                              height: 1.35,
-                            ),
-                          ),
-                        ],
-
                         SLSpacing.h24,
                         _buildSelectedImagesPreview(),
 

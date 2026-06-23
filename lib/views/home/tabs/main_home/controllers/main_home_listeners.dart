@@ -33,7 +33,7 @@ extension _MainHomeListeners on _MainHomeTabState {
         .child('houses/$houseId/calendar')
         .onValue
         .listen((event) {
-      if (!mounted) return;
+      if (!mounted || !_isTabActive) return;
       if (event.snapshot.value == null) {
         _safeSetState(() {
           _homeCalendarEvents = [];
@@ -66,7 +66,9 @@ extension _MainHomeListeners on _MainHomeTabState {
         });
         // Sync calendar widget ngay khi dữ liệu thay đổi
         unawaited(WidgetService.syncCalendarWidgetData(houseId: houseId));
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('[MainHomeListeners] Calendar events parse error: $e');
+      }
     }, onError: (Object error) {
       debugPrint('[MainHomeListeners] Calendar events stream failed: $error');
     });
@@ -78,7 +80,7 @@ extension _MainHomeListeners on _MainHomeTabState {
         .child('houses/$houseId/health_cycle')
         .onValue
         .listen((event) {
-      if (!mounted || !event.snapshot.exists) return;
+      if (!mounted || !_isTabActive || !event.snapshot.exists) return;
       // Sync cycle widget ngay khi dữ liệu thay đổi
       unawaited(WidgetService.syncCycleWidgetData(houseId: houseId));
     }, onError: (Object error) {
@@ -157,7 +159,7 @@ extension _MainHomeListeners on _MainHomeTabState {
         .limitToLast(40)
         .onChildAdded
         .listen((event) {
-      if (!mounted || event.snapshot.value == null) return;
+      if (!mounted || !_isTabActive || event.snapshot.value == null) return;
 
       final data = _toStringDynamicMap(event.snapshot.value);
       final sentAtMs = _readEpochMs(data['sentAt']) ?? 0;

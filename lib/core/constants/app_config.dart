@@ -117,7 +117,7 @@ class AppConfig {
   static const int diaryPageSize = 50;
 
   /// Số ảnh album lấy mỗi lần
-  static const int albumPageSize = 60;
+  static const int albumPageSize = 100;
 
   /// Số bài social feed lấy mỗi lần
   static const int feedPageSize = 30;

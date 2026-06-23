@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
@@ -771,6 +772,11 @@ class AuthSignInService {
           _isGoogleSignInInitialized = true;
         }
 
+        // Sign out trước để force hiện picker, tránh cached token expired
+        try {
+          await googleSignIn.signOut();
+        } catch (_) {}
+
         final authCompleter = Completer<dynamic>();
         googleSignIn.authenticate(
           scopeHint: const ['email'],
@@ -788,7 +794,8 @@ class AuthSignInService {
           const Duration(seconds: 10),
           onTimeout: () => throw 'Đăng nhập Google phản hồi lâu. Vui lòng kiểm tra kết nối mạng và Google Play Services.',
         );
-        final googleAuth = googleUser.authentication;
+        if (googleUser == null) return null;
+        final googleAuth = await googleUser.authentication;
         if ((googleAuth.idToken ?? '').isEmpty) {
           throw 'Google không trả về ID token hợp lệ. Hãy kiểm tra cấu hình Firebase Google Sign-In.';
         }
@@ -823,7 +830,11 @@ class AuthSignInService {
       throw handleFirebaseAuthError(error);
     } catch (error) {
       final errStr = error.toString().toLowerCase();
-      if (errStr.contains('sign_in_canceled') || errStr.contains('canceled')) {
+      bool isRealCancel = true;
+      if (error is PlatformException && error.code == 'sign_in_failed') {
+        isRealCancel = false;
+      }
+      if (isRealCancel && (errStr.contains('sign_in_canceled') || errStr.contains('canceled') || errStr.contains('cancelled'))) {
         return null;
       }
       if (isGoogleSignInConfigMismatch(error)) {

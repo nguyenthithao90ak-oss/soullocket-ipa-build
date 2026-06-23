@@ -313,7 +313,9 @@ class DiaryFeedController extends ChangeNotifier {
           _emailLocalPart(raw['email']?.toString()),
         ]);
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[DiaryFeed] resolveAuthorName fallback parse error: $e');
+    }
 
     candidates.addAll([
       if (authUser != null) _emailLocalPart(authUser.email),
@@ -363,7 +365,8 @@ class DiaryFeedController extends ChangeNotifier {
           }
         }
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[DiaryFeed] batch resolve user names error: $e');
       // Fallback: resolve từ auth cho current user
       for (final uid in uids) {
         if (currentUser?.uid == uid && currentUser?.displayName?.trim().isNotEmpty == true) {
@@ -437,7 +440,9 @@ class DiaryFeedController extends ChangeNotifier {
         _activeRoleKey = resolvedRole;
         _notifySafely();
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[DiaryFeed] hydrate member roles error: $e');
+    }
   }
 
   int _readCacheTs(Map<String, dynamic> item) {
@@ -660,7 +665,8 @@ class DiaryFeedController extends ChangeNotifier {
           _setLoading(false);
         },
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[DiaryFeed] fetchDiaryPosts error: $e');
       _setLoading(false);
     }
   }

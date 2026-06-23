@@ -65,7 +65,7 @@ class DiaryMemoryController extends ChangeNotifier {
   }
 
   static const int _webMemoryCacheLimit = 80;
-  static const int _appMemoryCacheLimit = 60;
+  static const int _appMemoryCacheLimit = 200;
   static const int _memoryUploadConcurrency = 3;
   static const Duration _memoryDownloadCacheTtl = Duration(hours: 18);
   static const Color _diaryPinkDeep = Color(0xFFD81B60);
@@ -166,7 +166,9 @@ class DiaryMemoryController extends ChangeNotifier {
         if (await XFile(path).length() > 0) {
           paths.add(path);
         }
-      } catch (_) {}
+      } catch (_) {
+        // skip unrecoverable files
+      }
     }
     return paths;
   }
@@ -258,7 +260,9 @@ class DiaryMemoryController extends ChangeNotifier {
           if (await XFile(path).length() > 0) {
             recoverablePaths.add(path);
           }
-        } catch (_) {}
+        } catch (_) {
+          // skip unrecoverable files
+        }
       }
 
       if (recoverablePaths.isEmpty) {
@@ -1483,12 +1487,10 @@ class DiaryMemoryController extends ChangeNotifier {
     final preCheckResults = await Future.wait([
       PurchaseService().getVipAccessInfo(),
       _getTotalMemoriesCount(houseId),
-      SharedPreferences.getInstance(),
     ]);
 
     final vipAccess = preCheckResults[0] as VipAccessInfo;
     final totalMemories = preCheckResults[1] as int;
-    final prefs = preCheckResults[2] as SharedPreferences;
 
     final maxMemories = (vipAccess.memoryVaultLimit ?? 365).toDouble();
 
@@ -1504,10 +1506,13 @@ class DiaryMemoryController extends ChangeNotifier {
     }
 
     final dailyLimit = vipAccess.dailyMemoryUploadLimit;
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? 'guest';
 
     final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final todayKey = 'il_memories_upload_count_$todayStr';
-    final uploadedToday = prefs.getInt(todayKey) ?? 0;
+    final uploadCountRef =
+        _dbRef.child('houses/$houseId/memoryUploadCounts/$todayStr/$uid');
+    final countSnap = await uploadCountRef.get();
+    final uploadedToday = (countSnap.value as num?)?.toInt() ?? 0;
 
     if (uploadedToday >= dailyLimit) {
       showSnackBar(
@@ -1670,7 +1675,7 @@ class DiaryMemoryController extends ChangeNotifier {
         }
       }
 
-      await prefs.setInt(todayKey, uploadedToday + uploadedCount);
+      await uploadCountRef.set(uploadedToday + uploadedCount);
 
       if (uploadedCount > 0) {
         await NotificationService().sendPartnerNotification(

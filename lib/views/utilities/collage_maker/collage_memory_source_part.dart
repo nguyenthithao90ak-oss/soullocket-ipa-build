@@ -211,4 +211,185 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
     }
     return 'tháng ${parts[1]}/${parts[0]}';
   }
+
+  /// Show bottom sheet chọn ảnh từ kỷ niệm — đơn giản, không lọc tháng
+  void _showMemorySheet(BuildContext context, bool compact) {
+    final items = _memoryPhotos;
+    if (items.isEmpty) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+        content: Text(L10nService().translate('util_khngcknimn_e17be4') ??
+            'Chưa có kỷ niệm nào.'),
+      ));
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFFFFF8F2),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      isScrollControlled: true,
+      builder: (ctx) {
+        final selectedUrls = <String>{};
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.7,
+              minChildSize: 0.4,
+              maxChildSize: 0.9,
+              expand: false,
+              builder: (ctx, scrollController) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 40, height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      SLSpacing.h16,
+                      Text(
+                        'Chọn ảnh từ kỷ niệm',
+                        style: SLTheme.quicksand(
+                          fontWeight: FontWeight.w900,
+                          color: _paperInk,
+                          fontSize: 17,
+                        ),
+                      ),
+                      SLSpacing.h4,
+                      Text(
+                        '${selectedUrls.length} / ${_maxPhotosForCurrentStyle()} ảnh đã chọn',
+                        style: SLTheme.quicksand(
+                          fontWeight: FontWeight.w600,
+                          color: _paperMuted,
+                          fontSize: 12,
+                        ),
+                      ),
+                      SLSpacing.h12,
+                      Expanded(
+                        child: GridView.builder(
+                          controller: scrollController,
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: compact ? 3 : 4,
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 8,
+                          ),
+                          itemCount: items.length,
+                          itemBuilder: (ctx, index) {
+                            final item = items[index];
+                            final url = _photoCollageUrl(item);
+                            final isSelected = selectedUrls.contains(url);
+                            return GestureDetector(
+                              onTap: () {
+                                setSheetState(() {
+                                  if (isSelected) {
+                                    selectedUrls.remove(url);
+                                  } else if (selectedUrls.length <
+                                      _maxPhotosForCurrentStyle()) {
+                                    selectedUrls.add(url);
+                                  }
+                                });
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 150),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: isSelected ? _paperRoseDeep : _paperLine,
+                                    width: isSelected ? 2.5 : 1,
+                                  ),
+                                  boxShadow: isSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: _paperRoseDeep.withValues(alpha: 0.25),
+                                            blurRadius: 12,
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      CachedNetworkImage(
+                                        imageUrl: url,
+                                        fit: BoxFit.cover,
+                                        memCacheWidth: 400,
+                                      ),
+                                      if (isSelected)
+                                        Positioned(
+                                          top: 4, right: 4,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFFD81B60),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(Icons.check,
+                                                color: Colors.white, size: 14),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      SLSpacing.h12,
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: selectedUrls.isEmpty
+                              ? null
+                              : () {
+                                  Navigator.pop(ctx);
+                                  for (final url in selectedUrls) {
+                                    final existing = _deviceFiles.any(
+                                        (f) => f.path == url);
+                                    if (!existing) {
+                                      _deviceFiles.add(XFile(url));
+                                    }
+                                  }
+                                  setState(() {
+                                    _generatedCollageBytes = null;
+                                    _hasFullQualityRender = false;
+                                  });
+                                  _scheduleAutoGenerate();
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _paperRoseDeep,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: Text(
+                            selectedUrls.isEmpty
+                                ? 'Chọn ảnh'
+                                : 'Thêm ${selectedUrls.length} ảnh',
+                            style: SLTheme.quicksand(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
 }

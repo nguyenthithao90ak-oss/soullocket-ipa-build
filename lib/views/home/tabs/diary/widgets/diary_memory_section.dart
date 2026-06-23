@@ -504,7 +504,6 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                               child: _DiaryMemoryHeroCard(
                                 totalPhotos: filteredCount,
                                 isOffline: isOffline,
-                                isSyncing: waitingForLive,
                                 showingCache: showingCache,
                                 onAdd: _handleAddMemory,
                                 hasPendingUploadRetry:
@@ -822,17 +821,26 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
     }
   }
 
+  bool _urlsRefreshing = false;
+
   Future<void> _refreshUrlsIfNeeded() async {
-    for (final photo in widget.rowPhotos) {
-      if (_needsSignedRefresh(photo)) {
-        await _refreshPhotoUrl(photo);
+    if (_urlsRefreshing) return;
+    _urlsRefreshing = true;
+    try {
+      for (final photo in widget.rowPhotos) {
+        if (_needsSignedRefresh(photo)) {
+          await _refreshPhotoUrl(photo);
+        }
       }
+    } finally {
+      _urlsRefreshing = false;
     }
   }
 
   Future<void> _refreshPhotoUrl(Map<String, dynamic> photo) async {
+    final oldUrl = photo['url']?.toString() ?? '';
     await widget.onEnsurePhotoUrl(photo);
-    if (mounted) {
+    if (mounted && photo['url']?.toString() != oldUrl) {
       setState(() {});
     }
   }
@@ -1207,7 +1215,6 @@ class _DiaryMemoryPatternPainter extends CustomPainter {
 class _DiaryMemoryHeroCard extends StatelessWidget {
   final int totalPhotos;
   final bool isOffline;
-  final bool isSyncing;
   final bool showingCache;
   final Future<void> Function() onAdd;
   final bool hasPendingUploadRetry;
@@ -1218,7 +1225,6 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
   const _DiaryMemoryHeroCard({
     required this.totalPhotos,
     required this.isOffline,
-    required this.isSyncing,
     required this.showingCache,
     required this.onAdd,
     required this.hasPendingUploadRetry,
@@ -1455,9 +1461,6 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
     if (showingCache) {
       return Icons.history_rounded;
     }
-    if (isSyncing) {
-      return Icons.sync_rounded;
-    }
     return Icons.cloud_done_rounded;
   }
 
@@ -1467,9 +1470,6 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
     }
     if (showingCache) {
       return L10nService().translate('home_dliutm_0004b5');
-    }
-    if (isSyncing) {
-      return L10nService().translate('home_angngb_3bb88c');
     }
     return L10nService().translate('home_ngb_85d905');
   }
@@ -1481,9 +1481,6 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
     if (showingCache) {
       return const Color(0xFF5C5A72);
     }
-    if (isSyncing) {
-      return const Color(0xFF2262C6);
-    }
     return const Color(0xFF1D8F62);
   }
 
@@ -1493,9 +1490,6 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
     }
     if (showingCache) {
       return const Color(0xFFF2F2F8);
-    }
-    if (isSyncing) {
-      return const Color(0xFFEAF3FF);
     }
     return const Color(0xFFEAF9F2);
   }

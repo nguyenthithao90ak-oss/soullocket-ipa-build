@@ -41,11 +41,8 @@ class NotificationService {
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotif =
       FlutterLocalNotificationsPlugin();
-  // ignore: cancel_subscriptions
   StreamSubscription<String>? _tokenRefreshSubscription;
-  // ignore: cancel_subscriptions
   StreamSubscription<RemoteMessage>? _foregroundSubscription;
-  // ignore: cancel_subscriptions
   StreamSubscription<RemoteMessage>? _messageOpenedSubscription;
   bool _isInitialized = false;
   Future<void>? _initializingTask;
@@ -1059,5 +1056,12 @@ class NotificationService {
         data: {'screen': 'home', 'type': 'anniversary'},
       );
     }
+  }
+
+  /// Dispose all subscriptions to prevent leaks.
+  void dispose() {
+    _tokenRefreshSubscription?.cancel();
+    _foregroundSubscription?.cancel();
+    _messageOpenedSubscription?.cancel();
   }
 }

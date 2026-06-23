@@ -741,4 +741,11 @@ class PresenceService {
       return false;
     }
   }
+
+  /// Cancel all subscriptions and timers to prevent leaks.
+  void dispose() {
+    _connectedSub?.cancel();
+    _heartbeatTimer?.cancel();
+    _shouldBeOnline = false;
+  }
 }

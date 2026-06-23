@@ -62,6 +62,11 @@ Future<void> linkGoogleToCurrentUser() async {
           AuthSignInService._isGoogleSignInInitialized = true;
         }
 
+        // Sign out trước để force hiện picker, tránh cached token expired
+        try {
+          await googleSignIn.signOut();
+        } catch (_) {}
+
         final authCompleter = Completer<dynamic>();
         googleSignIn.authenticate(
           scopeHint: const ['email'],
@@ -79,7 +84,8 @@ Future<void> linkGoogleToCurrentUser() async {
           const Duration(seconds: 10),
           onTimeout: () => throw 'Đăng nhập Google phản hồi lâu. Vui lòng kiểm tra kết nối mạng và Google Play Services.',
         );
-        final googleAuth = googleUser.authentication;
+        if (googleUser == null) return;
+        final googleAuth = await googleUser.authentication;
         if ((googleAuth.idToken ?? '').isEmpty) {
           throw 'Google không trả về ID token hợp lệ. Hãy kiểm tra kết nối mạng và thử lại.';
         }
@@ -115,14 +121,18 @@ Future<void> linkGoogleToCurrentUser() async {
       }
     } catch (error) {
       final errStr = error.toString().toLowerCase();
-      if (errStr.contains('sign_in_canceled') || errStr.contains('canceled')) {
+      bool isRealCancel = true;
+      if (error is PlatformException && error.code == 'sign_in_failed') {
+        isRealCancel = false;
+      }
+      if (isRealCancel && (errStr.contains('sign_in_canceled') || errStr.contains('canceled') || errStr.contains('cancelled'))) {
         throw 'Bạn đã huỷ đăng nhập Google.';
       }
       final raw = error.toString();
       if (raw.contains('10') ||
           raw.contains('sign_in_failed') ||
           raw.contains('ApiException')) {
-        throw 'Đăng nhập Google gặp sự cố ở bước xác thực tài khoản. Hãy kiểm tra tài khoản Google và kết nối mạng.';
+        throw 'Đăng nhập Google gặp sự cố ở bước xác thực tài khoản. Hãy kiểm tra cấu hình chữ ký SHA-1 và kết nối mạng.';
       }
       if (error is String) rethrow;
       throw AppErrorMapper.resolve(
@@ -322,6 +332,11 @@ Future<void> _reauthenticateCurrentUserWithGoogle(
         AuthSignInService._isGoogleSignInInitialized = true;
       }
 
+      // Sign out trước để force hiện picker, tránh cached token expired
+      try {
+        await googleSignIn.signOut();
+      } catch (_) {}
+
       final authCompleter = Completer<dynamic>();
       googleSignIn.authenticate(
         scopeHint: const ['email'],
@@ -339,7 +354,10 @@ Future<void> _reauthenticateCurrentUserWithGoogle(
         const Duration(seconds: 10),
         onTimeout: () => throw 'Đăng nhập Google phản hồi lâu. Vui lòng kiểm tra kết nối mạng và Google Play Services.',
       );
-      final googleAuth = googleUser.authentication;
+      if (googleUser == null) {
+        throw 'Bạn đã huỷ đăng nhập Google.';
+      }
+      final googleAuth = await googleUser.authentication;
       if ((googleAuth.idToken ?? '').isEmpty) {
         throw 'Google không trả về ID token hợp lệ để xác minh lại tài khoản.';
       }
@@ -364,14 +382,18 @@ Future<void> _reauthenticateCurrentUserWithGoogle(
       }
     } catch (error) {
       final errStr = error.toString().toLowerCase();
-      if (errStr.contains('sign_in_canceled') || errStr.contains('canceled')) {
+      bool isRealCancel = true;
+      if (error is PlatformException && error.code == 'sign_in_failed') {
+        isRealCancel = false;
+      }
+      if (isRealCancel && (errStr.contains('sign_in_canceled') || errStr.contains('canceled') || errStr.contains('cancelled'))) {
         throw 'Bạn đã huỷ đăng nhập Google.';
       }
       if (error is String) rethrow;
       throw AppErrorMapper.resolve(
         error,
         fallbackMessage:
-            'Không xác minh lại Google được: hãy chọn đúng tài khoản Google đang liên kết và kiểm tra mạng.',
+            'Không xác minh lại Google được: hãy chọn đúng tài khoản Google đang liên kết và kiểm tra cấu hình chữ ký SHA-1.',
       ).message;
     }
   }

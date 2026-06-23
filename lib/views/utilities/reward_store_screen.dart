@@ -888,7 +888,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                 builder: (context, pointSnapshot) {
                   final points = pointSnapshot.data ?? 0;
                   return ListView(
-                    scrollCacheExtent: ScrollCacheExtent.pixels(900.0), padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                    cacheExtent: 900.0, padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                     children: [
                       _buildWatchAdCard(proUntil),
                       SLSpacing.h20,
