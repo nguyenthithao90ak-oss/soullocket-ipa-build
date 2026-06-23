@@ -749,6 +749,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     final max = _maxPhotosForCurrentStyle();
     return count > max;
   }
+
+  int _nextCollageLayoutSeed() {
     final next = DateTime.now().microsecondsSinceEpoch & 0x7fffffff;
     return next == _collageLayoutSeed ? next + 1 : next;
   }
@@ -955,6 +957,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
       );
       return;
     }
+    _checkPhotoCountAndWarn(urls.length, silent: usePreviewQuality);
 
     final fingerprint =
         expectedFingerprint ?? _buildGenerationFingerprint(urls);
