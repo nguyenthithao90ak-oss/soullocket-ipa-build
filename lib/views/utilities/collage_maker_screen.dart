@@ -107,6 +107,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
       subtitle: L10nService().translate('util_cnu_f6a767'),
       accent: _paperRoseDeep,
       background: Color(0xFFF4E6DE),
+      minPhotos: 2,
+      maxPhotos: 20,
     ),
     _CollageStylePreset(
       id: 'masonry',
@@ -114,6 +116,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
       subtitle: L10nService().translate('util_nhplch_267cb3'),
       accent: Color(0xFFB4895B),
       background: Color(0xFFF7EEDD),
+      minPhotos: 2,
+      maxPhotos: 18,
     ),
     _CollageStylePreset(
       id: 'story',
@@ -121,6 +125,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
       subtitle: L10nService().translate('util_dcnibt_063192'),
       accent: _paperMistDeep,
       background: Color(0xFFEEF3ED),
+      minPhotos: 1,
+      maxPhotos: 6,
     ),
     _CollageStylePreset(
       id: 'poster',
@@ -128,6 +134,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
       subtitle: L10nService().translate('util_ngangtpch_1d78c7'),
       accent: Color(0xFF5E7B72),
       background: Color(0xFFE9F0EC),
+      minPhotos: 1,
+      maxPhotos: 8,
     ),
     _CollageStylePreset(
       id: 'polaroid',
@@ -135,6 +143,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
       subtitle: L10nService().translate('util_albumgiy_50e58e'),
       accent: _paperCocoa,
       background: Color(0xFFF5E8DB),
+      minPhotos: 1,
+      maxPhotos: 6,
     ),
     _CollageStylePreset(
       id: 'scatter',
@@ -142,6 +152,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
       subtitle: L10nService().translate('util_baytdo_06cb29'),
       accent: Color(0xFFC18B73),
       background: Color(0xFFF7EBE3),
+      minPhotos: 2,
+      maxPhotos: 9,
     ),
     _CollageStylePreset(
       id: 'heart',
@@ -149,6 +161,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
       subtitle: L10nService().translate('util_tritim_94c542'),
       accent: Color(0xFF9A6F74),
       background: Color(0xFFF2E4E1),
+      minPhotos: 3,
+      maxPhotos: 13,
     ),
   ];
   static final List<_CollageAspectPreset> _aspectPresets = [
@@ -625,6 +639,10 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
         ),
       );
       if (picked.isNotEmpty) {
+        final totalAfterAdd = _totalSelectedPhotos() + picked.length;
+        if (!_checkPhotoCountAndWarn(totalAfterAdd)) {
+          return;
+        }
         setState(() {
           _deviceFiles.addAll(picked);
           _markCollagePreviewDirty();
@@ -680,7 +698,57 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     ].join('|');
   }
 
-  int _nextCollageLayoutSeed() {
+  int _totalSelectedPhotos() {
+    return _getFilteredUrls().length;
+  }
+
+  bool _checkPhotoCountAndWarn(int newCount, {bool silent = false}) {
+    final maxPhotos = _maxPhotosForCurrentStyle();
+    final minPhotos = _minPhotosForCurrentStyle();
+
+    if (newCount < minPhotos && !silent) {
+      final presets = _stylePresets.where((s) => s.id == _selectedStyle);
+      final label = presets.isNotEmpty ? presets.first.label : _selectedStyle;
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+        content: Text('$label cần tối thiểu $minPhotos ảnh.'),
+        backgroundColor: const Color(0xFFFF8A65),
+      ));
+      return false;
+    }
+
+    if (newCount > maxPhotos) {
+      if (!silent) {
+        final presets = _stylePresets.where((s) => s.id == _selectedStyle);
+        final label = presets.isNotEmpty ? presets.first.label : _selectedStyle;
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+          content: Text('$label chỉ chứa tối đa $maxPhotos ảnh.'),
+          backgroundColor: const Color(0xFFFF8A65),
+        ));
+      }
+      return false;
+    }
+
+    return true;
+  }
+
+  int _maxPhotosForCurrentStyle() {
+    final stylePreset = _stylePresets
+        .where((s) => s.id == _selectedStyle)
+        .firstOrNull;
+    return stylePreset?.maxPhotos ?? 20;
+  }
+
+  int _minPhotosForCurrentStyle() {
+    final stylePreset = _stylePresets
+        .where((s) => s.id == _selectedStyle)
+        .firstOrNull;
+    return stylePreset?.minPhotos ?? 2;
+  }
+
+  bool _exceedsStyleLimit(int count) {
+    final max = _maxPhotosForCurrentStyle();
+    return count > max;
+  }
     final next = DateTime.now().microsecondsSinceEpoch & 0x7fffffff;
     return next == _collageLayoutSeed ? next + 1 : next;
   }

@@ -6,6 +6,8 @@ class _CollageStylePreset {
   final String subtitle;
   final Color accent;
   final Color background;
+  final int minPhotos;
+  final int maxPhotos;
 
   const _CollageStylePreset({
     required this.id,
@@ -13,6 +15,8 @@ class _CollageStylePreset {
     required this.subtitle,
     required this.accent,
     required this.background,
+    this.minPhotos = 2,
+    this.maxPhotos = 20,
   });
 }
 
