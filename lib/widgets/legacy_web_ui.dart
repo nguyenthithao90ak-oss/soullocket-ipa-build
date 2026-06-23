@@ -12,6 +12,9 @@ class LegacyWebUi {
   static const Color accentGold = Color(0xFFE1B968);
 
   static BorderRadius avatarBorderRadiusForKey(String frameKey, double size) {
+    if (frameKey.startsWith('sticker_')) {
+      return BorderRadius.circular(size * 0.16);
+    }
     switch (frameKey) {
       case 'rounded':
         return BorderRadius.circular(size * 0.36);
@@ -27,6 +30,9 @@ class LegacyWebUi {
   }
 
   static bool avatarFrameIsCircle(String frameKey) {
+    if (frameKey.startsWith('sticker_')) {
+      return false;
+    }
     switch (frameKey) {
       case 'rounded':
       case 'squircle':
@@ -40,6 +46,9 @@ class LegacyWebUi {
 
   static EdgeInsets avatarFramePaddingForKey(String frameKey, double size) {
     final base = (size * 0.06).clamp(4.0, 7.0).toDouble();
+    if (frameKey.startsWith('sticker_')) {
+      return EdgeInsets.all((base * 0.5).clamp(2.0, 3.5).toDouble());
+    }
     switch (frameKey) {
       case 'off':
         return EdgeInsets.zero;

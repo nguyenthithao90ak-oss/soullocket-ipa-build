@@ -32,7 +32,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
     });
 
     try {
-      final snap = await _db.child('admin_system/payment_history').get();
+      final snap = await _db.child('admin_system/payment_history').get().timeout(const Duration(seconds: 8));
       final history = <Map<String, dynamic>>[];
 
       if (snap.exists) {

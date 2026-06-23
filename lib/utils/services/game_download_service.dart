@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -172,18 +171,10 @@ class GameDownloadService extends ChangeNotifier {
             continue;
           }
 
-          // Ưu tiên tải từ Cloudflare R2 (public domain)
+          // Tải từ Cloudflare R2 (public domain)
           final fullStoragePath = '${config.storagePath}/$fileName';
-          String remoteUrl;
-          try {
-            CloudflareR2Service.instance.init();
-            remoteUrl = '${CloudflareR2Service.publicDomain}/$fullStoragePath';
-          } catch (_) {
-            // Fallback: Firebase Storage URL
-            remoteUrl = await FirebaseStorage.instance
-                .ref(fullStoragePath)
-                .getDownloadURL();
-          }
+          CloudflareR2Service.instance.init();
+          final remoteUrl = '${CloudflareR2Service.publicDomain}/$fullStoragePath';
 
           await _dio.download(
             remoteUrl,

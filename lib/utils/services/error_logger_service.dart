@@ -6,7 +6,7 @@ import 'package:soullocket_app/utils/app_error_mapper.dart';
 
 class ErrorLoggerService {
   static final ErrorLoggerService instance = ErrorLoggerService._internal();
-  
+
   ErrorLoggerService._internal();
 
   Future<void> initialize() async {
@@ -17,26 +17,14 @@ class ErrorLoggerService {
       return;
     }
 
-    // Pass all uncaught "fatal" errors from the framework to Crashlytics
-    FlutterError.onError = (errorDetails) {
-      final errStr = errorDetails.exception.toString().toLowerCase();
-      if (errStr.contains('unable to load asset') || errStr.contains('không thể tải')) {
-        debugPrint('Ignored fatal asset error in ErrorLoggerService: $errStr');
-        return;
-      }
-      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
-    };
-
-    // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
-    PlatformDispatcher.instance.onError = (error, stack) {
-      final errStr = error.toString().toLowerCase();
-      if (errStr.contains('unable to load asset') || errStr.contains('không thể tải')) {
-        debugPrint('Ignored async asset error in ErrorLoggerService: $errStr');
-        return true;
-      }
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      return true;
-    };
+    // NOTE: Error handlers are already set up in main.dart (FlutterError.onError &
+    // PlatformDispatcher.instance.onError). Those handlers filter asset errors,
+    // log via ErrorLoggerService.instance.logError() (which calls Crashlytics),
+    // AND send to RevenueSecurityTelemetryService. We do NOT replace them here
+    // to avoid losing the telemetry pipeline.
+    //
+    // We only enable Crashlytics collection so the main.dart error handlers'
+    // calls to logError() actually get forwarded to Crashlytics.
 
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
   }

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:soullocket_app/app.dart';
-import 'package:soullocket_app/views/home/widgets/floating_bubble_widget.dart';
-import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+import 'package:soullocket_app/utils/build_signature_service.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,6 +9,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:tiktok_business_sdk/tiktok_business_sdk.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +19,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/services/connectivity_service.dart';
@@ -41,25 +42,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       await _initializeFirebaseBootstrap();
     }
     FirebaseDatabase.instance.setPersistenceEnabled(true);
-
-    final type = message.data['type']?.toString() ?? '';
-    final screen = message.data['screen']?.toString() ?? '';
-    if (type == 'soul_merge' || screen == 'soul_merge' || type == 'chat' || screen == 'chat') {
-      final granted = await FlutterOverlayWindow.isPermissionGranted();
-      if (granted) {
-        final active = await FlutterOverlayWindow.isActive();
-        if (!active) {
-          await FlutterOverlayWindow.showOverlay(
-            enableDrag: true,
-            height: 80,
-            width: 80,
-            alignment: OverlayAlignment.centerRight,
-            overlayTitle: 'Bong bóng tâm hồn',
-            overlayContent: 'Lời thì thầm đang kết nối...',
-          );
-        }
-      }
-    }
   } catch (error, stackTrace) {
     debugPrint('FCM background bootstrap error: ${AppErrorMapper.resolve(
       error,
@@ -74,98 +56,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   }
 }
 
-@pragma('vm:entry-point')
-void overlayMain() {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: FloatingBubbleWidget(),
-  ));
-}
+/// Build signature verification đã chuyển sang BuildSignatureService (lib/utils/build_signature_service.dart)
 
 const MethodChannel _bootstrapChannel = MethodChannel('soul_locket/bootstrap');
-const String _signatureMethod = 'getAppSignatureStatus';
-const String _signatureMismatchReasonCode = 'UNOFFICIAL_BUILD';
-
-class _UnofficialBuildDetected implements Exception {
-  const _UnofficialBuildDetected({
-    required this.reasonCode,
-    required this.status,
-  });
-
-  final String reasonCode;
-  final String status;
-}
-
-class _AppSignatureStatus {
-  const _AppSignatureStatus({
-    required this.status,
-    required this.reasonCode,
-    required this.isTrusted,
-  });
-
-  final String status;
-  final String reasonCode;
-  final bool isTrusted;
-
-  bool get shouldBlock => !isTrusted;
-}
-
-Future<_AppSignatureStatus> _loadAppSignatureStatus() async {
-  if (kIsWeb) {
-    return const _AppSignatureStatus(
-      status: 'ok',
-      reasonCode: 'web',
-      isTrusted: true,
-    );
-  }
-
-  final raw = await _bootstrapChannel.invokeMapMethod<String, dynamic>(
-    _signatureMethod,
-  );
-  final status =
-      (raw?['status'] as String? ?? 'package_info_unavailable').trim();
-  final reasonCode =
-      (raw?['reasonCode'] as String? ?? _signatureMismatchReasonCode).trim();
-  final isTrusted = raw?['isTrusted'] == true;
-  return _AppSignatureStatus(
-    status: status,
-    reasonCode: reasonCode.isEmpty ? _signatureMismatchReasonCode : reasonCode,
-    isTrusted: isTrusted,
-  );
-}
-
-Future<void> _verifyOfficialBuildSignature() async {
-  if (kDebugMode || kIsWeb) {
-    return;
-  }
-  final signatureStatus = await _loadAppSignatureStatus();
-  if (signatureStatus.shouldBlock) {
-    throw _UnofficialBuildDetected(
-      reasonCode: signatureStatus.reasonCode,
-      status: signatureStatus.status,
-    );
-  }
-}
-
-String _messageForSignatureStatus(String status) {
-  switch (status) {
-    case 'signature_mismatch':
-      return L10nService().translate('core_err_signature_mismatch');
-    case 'package_info_unavailable':
-      return L10nService().translate('core_err_signature_verify_failed');
-    default:
-      return L10nService().translate('core_err_install_untrusted');
-  }
-}
-
-List<String> _detailsForSignatureStatus(_UnofficialBuildDetected error) {
-  return [
-    _messageForSignatureStatus(error.status),
-    L10nService().translate('core_err_reinstall_official'),
-    if (kDebugMode) 'reasonCode=${error.reasonCode}; status=${error.status}',
-  ];
-}
 
 Future<void> _purgeDeprecatedSecrets() async {
   await OfflineCacheService.initialize();
@@ -214,8 +107,7 @@ Future<void> _clearStaleIosAuthAfterFreshInstall() async {
     } catch (e) {
       debugPrint('Fresh install cleanup log skipped: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage:
-            L10nService().translate('core_err_log_fresh_install_failed'),
+        fallbackMessage: L10nService().translate('core_err_log_fresh_install_failed'),
       ).message}');
     }
   }
@@ -268,8 +160,7 @@ void main() {
 
     FlutterError.onError = (details) {
       final errStr = details.exception.toString().toLowerCase();
-      if (errStr.contains('unable to load asset') ||
-          errStr.contains('không thể tải')) {
+      if (errStr.contains('unable to load asset') || errStr.contains('không thể tải')) {
         debugPrint('Ignored fatal asset error in main: $errStr');
         return;
       }
@@ -295,8 +186,7 @@ void main() {
 
     PlatformDispatcher.instance.onError = (error, stackTrace) {
       final errStr = error.toString().toLowerCase();
-      if (errStr.contains('unable to load asset') ||
-          errStr.contains('không thể tải')) {
+      if (errStr.contains('unable to load asset') || errStr.contains('không thể tải')) {
         debugPrint('Ignored async asset error in main: $errStr');
         return true;
       }
@@ -320,22 +210,21 @@ void main() {
     };
 
     try {
-      await _verifyOfficialBuildSignature();
+      await BuildSignatureService.verifyOfficialBuildSignature();
       await _initializeFirebaseBootstrap();
+      await _initializeGoogleMobileAds();
       await _clearStaleIosAuthAfterFreshInstall();
-      unawaited(_initializeTikTokSdk());
+      await _requestIosTrackingAuthorization();
+      await _initializeTikTokSdk();
 
       if (!kIsWeb) {
         FirebaseMessaging.onBackgroundMessage(
             _firebaseMessagingBackgroundHandler);
       }
 
-      // Chạy song song 3 tác vụ độc lập trước khi render UI
-      await Future.wait([
-        UiPrefs.ensureLoaded(),
-        L10nService().init(),
-        PerformanceProfileService.instance.initialize(),
-      ]);
+      await UiPrefs.ensureLoaded();
+      await L10nService().init();
+      await PerformanceProfileService.instance.initialize();
       runApp(const MyApp());
       _scheduleDeferredBootstrap();
     } on _MissingBootstrapConfig {
@@ -348,24 +237,28 @@ void main() {
             ? L10nService().translate('core_err_missing_env_req')
             : L10nService().translate('core_err_app_not_ready'),
         details: [
-          if (kDebugMode) L10nService().translate('core_err_missing_vars'),
-          if (kDebugMode) L10nService().translate('core_err_pass_config_ci'),
-          if (!kDebugMode) L10nService().translate('core_err_update_app'),
+          if (kDebugMode)
+            L10nService().translate('core_err_missing_vars'),
+          if (kDebugMode)
+            L10nService().translate('core_err_pass_config_ci'),
+          if (!kDebugMode)
+            L10nService().translate('core_err_update_app'),
         ],
       ));
-    } on _UnofficialBuildDetected catch (error) {
+    } on UnofficialBuildDetected catch (error) {
       if (!kIsWeb) {
         FlutterNativeSplash.remove();
       }
       runApp(StartupErrorApp(
         title: L10nService().translate('core_err_invalid_install_title'),
         message: L10nService().translate('core_err_official_release_only'),
-        details: _detailsForSignatureStatus(error),
+        details: BuildSignatureService.detailsForError(error),
       ));
     } catch (error) {
       final bootstrapError = AppErrorMapper.resolve(
         error,
-        fallbackMessage: L10nService().translate('core_err_app_start_failed'),
+        fallbackMessage:
+            L10nService().translate('core_err_app_start_failed'),
       );
       debugPrint('Bootstrap error: ${bootstrapError.message}');
       unawaited(
@@ -421,7 +314,7 @@ Future<void> _initializeFirebaseBootstrap() async {
     _throwIfFirebaseEnvMissing();
     await Firebase.initializeApp(options: _firebaseOptionsFromEnv())
         .timeout(const Duration(seconds: 8));
-
+        
     try {
       FirebaseFirestore.instance.settings = const Settings(
         persistenceEnabled: true,
@@ -446,8 +339,7 @@ Future<void> _initializeFirebaseBootstrap() async {
     } catch (e) {
       debugPrint('Firebase persistence error: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage:
-            L10nService().translate('core_err_firebase_cache_failed'),
+        fallbackMessage: L10nService().translate('core_err_firebase_cache_failed'),
       ).message}');
     }
 
@@ -485,8 +377,7 @@ Future<void> _initializeNativeFirebaseBootstrap() async {
   } catch (nativeError) {
     debugPrint('Firebase native init error: ${AppErrorMapper.resolve(
       nativeError,
-      fallbackMessage:
-          L10nService().translate('core_err_firebase_native_failed'),
+      fallbackMessage: L10nService().translate('core_err_firebase_native_failed'),
     ).message}');
   }
 
@@ -599,8 +490,7 @@ Future<FirebaseOptions?> _loadNativeFirebaseOptions() async {
   } catch (error) {
     debugPrint('Native Firebase options load error: ${AppErrorMapper.resolve(
       error,
-      fallbackMessage:
-          L10nService().translate('core_err_firebase_read_config_failed'),
+      fallbackMessage: L10nService().translate('core_err_firebase_read_config_failed'),
     ).message}');
     return null;
   }
@@ -618,6 +508,13 @@ Future<void> _initializeFirebaseAppCheck() async {
           .activate(providerWeb: ReCaptchaV3Provider(webSiteKey))
           .timeout(const Duration(seconds: 3));
       return;
+    }
+    if (kDebugMode) {
+      try {
+        await SharedPreferences.getInstance().then((prefs) => prefs.setString(
+            'com.google.firebase.appcheck.debug.DebugAppCheckProvider.SECRET_KEY',
+            '8a3fcdfe-ea37-49f1-baf9-279463826649'));
+      } catch (_) {}
     }
     await FirebaseAppCheck.instance
         .activate(
@@ -658,15 +555,18 @@ Future<void> _initializeTikTokSdk() async {
   final bool isIos = defaultTargetPlatform == TargetPlatform.iOS ||
       defaultTargetPlatform == TargetPlatform.macOS;
 
-  final appId =
-      (isIos ? AppConfig.tiktokIosAppId : AppConfig.tiktokAndroidAppId).trim();
+  final appId = (isIos
+          ? AppConfig.tiktokIosAppId
+          : AppConfig.tiktokAndroidAppId)
+      .trim();
   final accessToken = (isIos
           ? AppConfig.tiktokIosAccessToken
           : AppConfig.tiktokAndroidAccessToken)
       .trim();
-  final ttAppId =
-      (isIos ? AppConfig.tiktokIosTtAppId : AppConfig.tiktokAndroidTtAppId)
-          .trim();
+  final ttAppId = (isIos
+          ? AppConfig.tiktokIosTtAppId
+          : AppConfig.tiktokAndroidTtAppId)
+      .trim();
 
   if (appId.isEmpty || accessToken.isEmpty || ttAppId.isEmpty) {
     debugPrint('TikTok Business SDK skipped: missing credentials in config');
@@ -681,10 +581,25 @@ Future<void> _initializeTikTokSdk() async {
       openDebug: kDebugMode,
       enableAutoIapTrack: true,
     );
-    debugPrint(
-        'TikTok Business SDK initialized successfully [${isIos ? "iOS" : "Android"}]');
+    debugPrint('TikTok Business SDK initialized successfully [${ isIos ? "iOS" : "Android"}]');
   } catch (e) {
     debugPrint('TikTok Business SDK init error: $e');
+  }
+}
+
+Future<void> _initializeGoogleMobileAds() async {
+  if (kIsWeb) {
+    return;
+  }
+
+  try {
+    await MobileAds.instance.initialize();
+    debugPrint('Google Mobile Ads initialized successfully');
+  } catch (e) {
+    debugPrint('Google Mobile Ads init error: ${AppErrorMapper.resolve(
+      e,
+      fallbackMessage: 'Could not initialize Google Mobile Ads',
+    ).message}');
   }
 }
 
@@ -717,7 +632,6 @@ void _scheduleDeferredBootstrap() {
           _warmUpOfflineCache(),
           _warmUpLocalDatabase(),
           _warmUpWidgetService(),
-          _requestIosTrackingAuthorization(),
         ]);
         unawaited(_warmUpBackgroundServices());
       } catch (error, stackTrace) {

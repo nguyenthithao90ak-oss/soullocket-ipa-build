@@ -88,7 +88,7 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
       houseService: _houseService,
       getPrefs: _appEntryController.getPrefs,
     );
-    _deeplinkHandler = AppEntryDeeplinkHandler(houseService: _houseService);
+    _deeplinkHandler = AppEntryDeeplinkHandler();
     _homeAssetPreparer = AppEntryHomeAssetPreparer();
     _authStream = FirebaseAuth.instance.authStateChanges();
 

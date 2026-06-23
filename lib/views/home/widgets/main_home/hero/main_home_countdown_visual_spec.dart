@@ -33,9 +33,9 @@ class _CountdownVisualSpec {
     final isBasicStyle = styleKey == 'default' || styleKey == 'glass' || styleKey == 'plain' || styleKey.isEmpty;
     if (transparentMode && isBasicStyle) {
       return _CountdownVisualSpec(
-        outerColor: null,
+        outerColor: Colors.white.withValues(alpha: 0.30),
         outerGradient: null,
-        outerBorder: null,
+        outerBorder: Border.all(color: Colors.white.withValues(alpha: 0.34), width: 2.2),
         shadows: const [],
         innerColor: Colors.white.withValues(alpha: 0.08),
         innerGradient: null,

@@ -19,6 +19,38 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
     return value;
   }
 
+  String _syncModeLabel() {
+    if (_bgMusicUrl.isEmpty) return 'Chưa có nhạc nền';
+    if (_isVipActive) return 'Âm nhạc đang được đồng bộ qua đám mây.';
+    return 'File nhạc chỉ được lưu trên thiết bị này. Dùng PRO để đồng bộ.';
+  }
+
+  void _showVipAccountDetail() {
+    // Mở panel VIP trong settings
+    _openPanel = 'account';
+    setState(() {});
+  }
+
+  /// Xoá file nhạc cũ trên R2 (dựa vào URL đã lưu trong Firebase)
+  Future<void> _deleteOldRemoteMusic() async {
+    final houseId = (_houseId ?? '').trim();
+    if (houseId.isEmpty) return;
+    try {
+      final snap = await _dbRef
+          .child('houses/$houseId/settings/musicUrl')
+          .get()
+          .timeout(const Duration(seconds: 3));
+      if (snap.exists && snap.value is String) {
+        final oldUrl = snap.value.toString().trim();
+        if (oldUrl.isNotEmpty && CloudflareR2Service.instance.isR2Url(oldUrl)) {
+          CloudflareR2Service.instance.init();
+          await CloudflareR2Service.instance.deleteFile(oldUrl);
+          debugPrint('Đã xoá file nhạc cũ trên R2: $oldUrl');
+        }
+      }
+    } catch (_) {}
+  }
+
   Future<void> _pickAndStoreMusicFileLocally() async {
     final picked = await _storageService.pickMusicFile();
     if (picked == null) {
@@ -52,7 +84,34 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
         await _storageService.deleteLocalFile(previousLocalPath);
       }
 
-      await _clearRemoteMusicSettings();
+      // Xoá file nhạc cũ trên R2 nếu có (cả khi thay nhạc)
+      if (_isVipActive) {
+        await _deleteOldRemoteMusic();
+      }
+
+      // Nếu là PRO → upload lên R2 để đồng bộ
+      String? remoteMusicUrl;
+      if (_isVipActive) {
+        try {
+          final localFile = File(localPath);
+          if (await localFile.exists()) {
+            CloudflareR2Service.instance.init();
+            remoteMusicUrl = await CloudflareR2Service.instance.uploadFile(
+              localFile,
+              folderPath: 'music/${_houseId ?? 'unknown'}',
+            );
+          }
+        } catch (e) {
+          debugPrint('Music R2 upload failed: $e');
+        }
+      }
+
+      await _saveMusicSettingsToFirebase(
+        localPath: localPath,
+        remoteUrl: remoteMusicUrl,
+        title: title,
+        type: type,
+      );
       await MusicService().stop();
 
       if (!mounted) return;
@@ -65,7 +124,9 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
         _musicLinkCtrl.text = localPath;
       });
       _showToast(
-        'Đã lưu file nhạc trên thiết bị này. Nếu xoá app và cài lại thì sẽ cần chọn lại nhạc.',
+        _isVipActive && remoteMusicUrl != null
+            ? 'Đã lưu và đồng bộ nhạc lên đám mây cho thiết bị khác.'
+            : 'Đã lưu file nhạc trên thiết bị này.',
         success: true,
       );
     } catch (e) {
@@ -73,6 +134,31 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
       setState(() => _isLoading = false);
       _showToast(context.tr('err_save_music'), success: false);
     }
+  }
+
+  Future<void> _saveMusicSettingsToFirebase({
+    required String localPath,
+    String? remoteUrl,
+    required String title,
+    required String type,
+  }) async {
+    final houseId = (_houseId ?? '').trim();
+    if (houseId.isEmpty) return;
+
+    final updates = <String, dynamic>{
+      'musicTitle': title,
+      'musicType': type,
+      'musicUpdatedAt': ServerValue.timestamp,
+    };
+    if (remoteUrl != null && remoteUrl.isNotEmpty) {
+      updates['musicUrl'] = remoteUrl;
+      updates['musicSyncMode'] = 'cloud';
+    } else {
+      updates['musicUrl'] = '';
+      updates['musicSyncMode'] = 'local';
+    }
+
+    await _dbRef.child('houses/$houseId/settings').update(updates).catchError((_) {});
   }
 
   Widget _buildMusicPanel({bool hideBackButton = false}) {
@@ -140,27 +226,67 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    musicLabel,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: SLTextStyles.quicksand(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF6A1B4D),
-                    ),
-                  ),
-                  SLSpacing.h4,
-                  Text(
-                    _bgMusicUrl.isEmpty
-                        ? context.tr('theme_music_no_music')
-                        : 'File nhạc chỉ được lưu trên thiết bị này.',
-                    style: SLTextStyles.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF6A1B4D),
-                      height: 1.45,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              musicLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: SLTextStyles.quicksand(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF6A1B4D),
+                              ),
+                            ),
+                            SLSpacing.h4,
+                            Text(
+                              _bgMusicUrl.isEmpty
+                                  ? context.tr('theme_music_no_music')
+                                  : _syncModeLabel(),
+                              style: SLTextStyles.quicksand(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF6A1B4D),
+                                height: 1.45,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (AppConfig.isPurchaseEnabled)
+                        GestureDetector(
+                          onTap: () => _showVipAccountDetail(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFFD54F), Color(0xFFFF8F00)],
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.star_rounded, size: 12, color: Color(0xFF3E2723)),
+                                const SizedBox(width: 3),
+                                Text(
+                                  'PRO',
+                                  style: SLTextStyles.quicksand(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFF3E2723),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -201,7 +327,21 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                 if (previousLocalPath.isNotEmpty) {
                   await _storageService.deleteLocalFile(previousLocalPath);
                 }
-                await _clearRemoteMusicSettings();
+
+                // Xoá file trên R2 nếu có
+                await _deleteOldRemoteMusic();
+
+                // Xoá cả remote settings nếu có
+                final houseId = (_houseId ?? '').trim();
+                if (houseId.isNotEmpty) {
+                  await _dbRef.child('houses/$houseId/settings').update({
+                    'musicUrl': '',
+                    'musicSyncMode': '',
+                    'musicTitle': '',
+                    'musicType': 'audio',
+                    'musicUpdatedAt': ServerValue.timestamp,
+                  }).catchError((_) {});
+                }
 
                 if (!mounted) return;
                 setState(() {

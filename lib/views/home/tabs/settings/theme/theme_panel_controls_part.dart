@@ -599,150 +599,38 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
   }) {
     final safeValue =
         options.any((item) => item.$2 == value) ? value : options.first.$2;
-    final selectedOption = options.firstWhere((item) => item.$2 == safeValue);
-
-    return GestureDetector(
-      onTap: () => _showSelectionBottomSheet(
-        title: 'Lựa chọn',
-        options: options,
-        selectedValue: safeValue,
-        onChanged: onChanged,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: LegacyWebUi.softPanelDecoration(
+        accent: const Color(0xFFF48FB1),
+        radius: 22,
+        colors: const [Color(0xFFFFFFFF), Color(0xFFFFFBFD), Color(0xFFFFFFFF)],
       ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: LegacyWebUi.softPanelDecoration(
-          accent: const Color(0xFFF48FB1),
-          radius: 22,
-          colors: const [Color(0xFFFFFFFF), Color(0xFFFFFBFD), Color(0xFFFFFFFF)],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                selectedOption.$1,
-                style: SLTheme.quicksand(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF575757),
-                ),
-              ),
-            ),
-            const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: Color(0xFF94A3B8),
-              size: 20,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showSelectionBottomSheet({
-    required String title,
-    required List<(String, String)> options,
-    required String selectedValue,
-    required ValueChanged<String> onChanged,
-  }) {
-    unawaited(SystemSound.play(SystemSoundType.click));
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.35),
-      builder: (context) {
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          child: BackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-            child: Container(
-              color: const Color(0xFFFFF6FA).withValues(alpha: 0.94),
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 38,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    title,
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: safeValue,
+          isExpanded: true,
+          borderRadius: BorderRadius.circular(18),
+          items: options
+              .map(
+                (item) => DropdownMenuItem<String>(
+                  value: item.$2,
+                  child: Text(
+                    item.$1,
                     style: SLTheme.quicksand(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF1E293B),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF575757),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Flexible(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: options.map((option) {
-                          final isSelected = option.$2 == selectedValue;
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            child: Material(
-                              color: isSelected
-                                  ? const Color(0xFFFFE4EC).withValues(alpha: 0.7)
-                                  : Colors.white.withValues(alpha: 0.85),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                side: BorderSide(
-                                  color: isSelected
-                                      ? const Color(0xFFFF77A8).withValues(alpha: 0.4)
-                                      : const Color(0xFFF1E4EC).withValues(alpha: 0.6),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(16),
-                                onTap: () {
-                                  Navigator.pop(context);
-                                  onChanged(option.$2);
-                                  unawaited(SystemSound.play(SystemSoundType.click));
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          option.$1,
-                                          style: SLTheme.quicksand(
-                                            fontSize: 14,
-                                            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w800,
-                                            color: isSelected
-                                                ? const Color(0xFFD81B60)
-                                                : const Color(0xFF475569),
-                                          ),
-                                        ),
-                                      ),
-                                      if (isSelected)
-                                        const Icon(
-                                          Icons.check_circle_rounded,
-                                          color: Color(0xFFD81B60),
-                                          size: 20,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+                ),
+              )
+              .toList(),
+          onChanged: (value) {
+            if (value != null) onChanged(value);
+          },
+        ),
+      ),
     );
   }
 
@@ -753,340 +641,44 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
   }) {
     final safeValue =
         fonts.any((font) => font.key == value) ? value : fonts.first.key;
-    final selectedFont = fonts.firstWhere((font) => font.key == safeValue);
-
-    return GestureDetector(
-      onTap: () => _showFontSelectionBottomSheet(
-        fonts: fonts,
-        selectedValue: safeValue,
-        onChanged: onChanged,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: LegacyWebUi.softPanelDecoration(
+        accent: const Color(0xFFF48FB1),
+        radius: 22,
+        colors: const [Color(0xFFFFFFFF), Color(0xFFFFFBFD), Color(0xFFFFFFFF)],
       ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: LegacyWebUi.softPanelDecoration(
-          accent: const Color(0xFFF48FB1),
-          radius: 22,
-          colors: const [Color(0xFFFFFFFF), Color(0xFFFFFBFD), Color(0xFFFFFFFF)],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: _buildThemeFontDropdownMenuItem(selectedFont, compact: true),
-            ),
-            const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: Color(0xFF94A3B8),
-              size: 20,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showFontSelectionBottomSheet({
-    required List<SLFontOption> fonts,
-    required String selectedValue,
-    required ValueChanged<String> onChanged,
-  }) {
-    unawaited(SystemSound.play(SystemSoundType.click));
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.35),
-      builder: (context) {
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          child: BackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-            child: Container(
-              color: const Color(0xFFFFF6FA).withValues(alpha: 0.94),
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 38,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: safeValue,
+          isExpanded: true,
+          itemHeight: null,
+          menuMaxHeight: 420,
+          borderRadius: BorderRadius.circular(18),
+          selectedItemBuilder: (context) => fonts
+              .map(
+                (font) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: _buildThemeFontDropdownMenuItem(font, compact: true),
+                ),
+              )
+              .toList(),
+          items: fonts
+              .map(
+                (font) => DropdownMenuItem<String>(
+                  value: font.key,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: _buildThemeFontDropdownMenuItem(font),
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Chọn phông chữ',
-                    style: SLTheme.quicksand(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF1E293B),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Flexible(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: fonts.map((font) {
-                          final isSelected = font.key == selectedValue;
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            child: Material(
-                              color: isSelected
-                                  ? const Color(0xFFFFE4EC).withValues(alpha: 0.7)
-                                  : Colors.white.withValues(alpha: 0.85),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                side: BorderSide(
-                                  color: isSelected
-                                      ? const Color(0xFFFF77A8).withValues(alpha: 0.4)
-                                      : const Color(0xFFF1E4EC).withValues(alpha: 0.6),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(16),
-                                onTap: () {
-                                  Navigator.pop(context);
-                                  onChanged(font.key);
-                                  unawaited(SystemSound.play(SystemSoundType.click));
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: _buildThemeFontDropdownMenuItem(font),
-                                      ),
-                                      if (isSelected)
-                                        const Icon(
-                                          Icons.check_circle_rounded,
-                                          color: Color(0xFFD81B60),
-                                          size: 20,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-
-  // --- Avatar frame visual strip ---
-  BorderRadius _avatarFramePreviewRadius(String frameKey) {
-    switch (frameKey) {
-      case 'off':
-        return BorderRadius.circular(6);
-      case 'circle':
-        return BorderRadius.circular(999);
-      case 'rounded':
-        return BorderRadius.circular(18);
-      case 'squircle':
-        return BorderRadius.circular(22);
-      case 'pearl':
-        return BorderRadius.circular(12);
-      case 'glass':
-        return BorderRadius.circular(14);
-      case 'vip':
-        return BorderRadius.circular(999);
-      default:
-        return BorderRadius.circular(999);
-    }
-  }
-
-  Widget _buildAvatarFrameStrip(String selectedKey) {
-    final defaultKeys = {'off', 'circle', 'sticker_092', 'sticker_086', 'sticker_048', 'sticker_052', 'vip'};
-    final isCustomStickerSelected = selectedKey.startsWith('sticker_') && !defaultKeys.contains(selectedKey);
-
-    final items = <(String, String, dynamic, Color)>[
-      ('Không', 'off', Icons.block_rounded, const Color(0xFFBDBDBD)),
-      ('Tròn', 'circle', Icons.circle_rounded, const Color(0xFF2563EB)),
-      ('Mèo tim', 'sticker_092', 'assets/images/interaction_stickers/custom/numbered/sticker_092.png', const Color(0xFFEC4899)),
-      ('Mèo xám', 'sticker_086', 'assets/images/interaction_stickers/custom/numbered/sticker_086.png', const Color(0xFF8B5CF6)),
-      ('Thỏ ôm', 'sticker_048', 'assets/images/interaction_stickers/custom/numbered/sticker_048.png', const Color(0xFFD4A520)),
-      ('Ngầu', 'sticker_052', 'assets/images/interaction_stickers/custom/numbered/sticker_052.png', const Color(0xFF06B6D4)),
-      if (isCustomStickerSelected)
-        (
-          'Đang chọn',
-          selectedKey,
-          'assets/images/interaction_stickers/custom/numbered/$selectedKey.png',
-          const Color(0xFF10B981),
-        ),
-      ('Tự chọn 🎨', 'custom_picker', Icons.palette_outlined, const Color(0xFF10B981)),
-      if (AppConfig.isPurchaseEnabled)
-        (
-          _isVipActive ? 'VIP ✨' : 'VIP 🔒',
-          'vip',
-          Icons.workspace_premium_rounded,
-          const Color(0xFFFF9800),
-        ),
-    ];
-
-    return Wrap(
-      spacing: 10,
-      runSpacing: 12,
-      children: items.map((item) {
-        final key = item.$2;
-        final locked = key == 'vip' && !_isVipActive;
-        final selected = selectedKey == key || (key == 'custom_picker' && isCustomStickerSelected);
-        final color = item.$4;
-        final previewRadius = _avatarFramePreviewRadius(key);
-
-        return GestureDetector(
-          onTap: () {
-            if (key == 'custom_picker') {
-              _showAvatarStickerPicker();
-            } else {
-              _handleAvatarFrameSelection(key);
-            }
+                ),
+              )
+              .toList(),
+          onChanged: (nextValue) {
+            if (nextValue != null) onChanged(nextValue);
           },
-          child: AnimatedScale(
-            scale: selected ? 1.08 : 1.0,
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutBack,
-            child: SizedBox(
-              width: 58,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeOut,
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? color.withValues(alpha: 0.14)
-                          : Colors.white.withValues(alpha: 0.92),
-                      borderRadius: previewRadius,
-                      border: Border.all(
-                        color: selected ? color : const Color(0xFFDDD0D6),
-                        width: selected ? 2.2 : 1.2,
-                      ),
-                      boxShadow: selected
-                          ? [
-                              BoxShadow(
-                                color: color.withValues(alpha: 0.30),
-                                blurRadius: 14,
-                                offset: const Offset(0, 4),
-                              ),
-                            ]
-                          : [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                    ),
-                    child: item.$3 is IconData
-                        ? Icon(
-                            item.$3 as IconData,
-                            size: 22,
-                            color: locked
-                                ? color.withValues(alpha: 0.5)
-                                : selected
-                                    ? color
-                                    : const Color(0xFF9CA3AF),
-                          )
-                        : Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Image.asset(item.$3 as String),
-                          ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    item.$1,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      color: selected ? color : const Color(0xFF6B7280),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  void _showAvatarStickerPicker() {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
       ),
-      builder: (context) {
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Text(
-                'Tự chọn Sticker Khung Avatar',
-                style: SLTheme.quicksand(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF24324A),
-                ),
-              ),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.all(16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                ),
-                itemCount: 164,
-                itemBuilder: (context, index) {
-                  final stickerNum = (index + 1).toString().padLeft(3, '0');
-                  final stickerKey = 'sticker_$stickerNum';
-                  final assetPath = 'assets/images/interaction_stickers/custom/numbered/$stickerKey.png';
-
-                  return GestureDetector(
-                    onTap: () {
-                      _handleAvatarFrameSelection(stickerKey);
-                      Navigator.pop(context);
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      padding: const EdgeInsets.all(8),
-                      child: Image.asset(
-                        assetPath,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.grey),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 

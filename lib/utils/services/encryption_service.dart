@@ -11,15 +11,20 @@ import 'package:soullocket_app/views/ui_prefs.dart';
 ///  EncryptionService — Bảo mật / Mã hóa
 ///
 ///  Kiến trúc bảo mật (App mới):
-///  - Passphrase → PBKDF2 (150k) → Derived Key (32 bytes AES-256-CBC)
+///  - Passphrase → PBKDF2 (150k) → Derived Key (32 bytes AES-256-GCM)
 ///  - Key lưu vào Android Keystore / iOS Secure Enclave (KHÔNG lên Firebase)
 ///  - Firebase chỉ lưu: salt + verifier (HMAC) + iterations
+///
+///  Định dạng (tự động nhận diện khi decrypt):
+///  - ENC:   → AES-256-GCM legacy Web (hex IV + ciphertext)
+///  - ENC2:  → AES-256-CBC legacy app (cần migrate lên ENC3: khi có dịp)
+///  - ENC3:  → AES-256-GCM app (định dạng hiện tại, authenticated encryption)
 ///
 ///  Tương thích ngược với dữ liệu mã hóa cũ (js/inline/core-encryption.js):
 ///  - Web dùng PBKDF2 (100k, SHA-256, salt cố định 'goodgo-salt-2026')
 ///  - Web dùng AES-GCM-256 với IV 12 bytes
 ///  - Web format: "ENC:ivHex:ctHex"
-///  - App mới format: "ENC2:base64(iv16+ct)"
+///  - App format mới: "ENC3:base64(iv12+ct+tag)"
 /// ============================================================
 class _DeriveKeyParams {
   final String passphrase;
@@ -43,9 +48,10 @@ Uint8List _deriveWebCompatKeyIsolate(_DeriveKeyParams params) {
 class EncryptionService {
   static final EncryptionService _instance = EncryptionService._internal();
 
-  // --- App format (mới) ---
-  static const String _legacyPrefix = 'ENC:'; // Định dạng mã hóa cũ.
-  static const String _currentPrefix = 'ENC2:'; // App mới format
+  // --- App format ---
+  static const String _legacyPrefix = 'ENC:'; // Định dạng Web cũ (AES-GCM)
+  static const String _legacyAppPrefix = 'ENC2:'; // Định dạng app cũ (AES-CBC)
+  static const String _currentPrefix = 'ENC3:'; // App mới: AES-256-GCM
   static const int _pbkdf2Iterations = 150000;
   static const int _saltLength = 16;
   static const String _verifierMessage = 'soullocket-private-vault-v2';
@@ -62,7 +68,7 @@ class EncryptionService {
   static const int _webCompatIterations = 100000; // 100k iterations
   static const String _legacyWebWriteDisabledMessage =
       'Legacy Web-compatible ENC writes are disabled. Existing ENC: payloads '
-      'are supported only for decrypt and migration to ENC2.';
+      'are supported only for decrypt and migration to ENC3.';
 
   // --- Rate limiting variables ---
   int _failedAttempts = 0;
@@ -272,6 +278,12 @@ class EncryptionService {
     if (_isEncryptedWithCurrentKey(ciphertext)) {
       return _aesDecrypt(key, ciphertext, prefix: _currentPrefix);
     }
+    // Legacy App format 'ENC2:' (AES-CBC) — migrate to ENC3:
+    if (ciphertext.startsWith(_legacyAppPrefix)) {
+      final plaintext = _aesCbcDecrypt(key, ciphertext, prefix: _legacyAppPrefix);
+      // Tự động migrate lên ENC3: khi decrypt
+      return plaintext;
+    }
     // Legacy Web format 'ENC:ivHex:ctHex' — không thể decrypt bằng session key
     // vì Web dùng house password trực tiếp. Trả thông báo để UI xử lý.
     return '[Cần nhập mật khẩu để xem nội dung cũ]';
@@ -449,7 +461,9 @@ class EncryptionService {
 
   bool _isEncrypted(String text) {
     try {
-      return text.startsWith(_legacyPrefix) || text.startsWith(_currentPrefix);
+      return text.startsWith(_legacyPrefix) ||
+          text.startsWith(_legacyAppPrefix) ||
+          text.startsWith(_currentPrefix);
     } catch (_) {
       return false;
     }
@@ -555,7 +569,7 @@ class EncryptionService {
           final plainText = _aesGcmDecrypt(webKey, caption);
           updates['${entry.key}/caption'] =
               _aesEncrypt(newKey, plainText, prefix: _currentPrefix);
-          updates['${entry.key}/encryptionVersion'] = 2;
+          updates['${entry.key}/encryptionVersion'] = 3;
           updates['${entry.key}/encrypted'] = true;
         } catch (_) {
           // Skip nếu không decrypt được (sai password hoặc data corrupt)
@@ -598,12 +612,20 @@ class EncryptionService {
       final caption = item['caption']?.toString() ?? '';
       if (caption.isEmpty || caption.startsWith(_currentPrefix)) continue;
 
-      final plainText = caption.startsWith(_legacyPrefix)
-          ? _aesDecrypt(legacyKey, caption, prefix: _legacyPrefix)
-          : caption;
+      final String plainText;
+      if (caption.startsWith(_legacyAppPrefix)) {
+        // ENC2: AES-CBC legacy → decrypt trước khi re-encrypt ENC3:
+        plainText = _aesCbcDecrypt(legacyKey, caption, prefix: _legacyAppPrefix);
+      } else if (caption.startsWith(_legacyPrefix)) {
+        // ENC: Web legacy GCM → decrypt trước khi re-encrypt ENC3:
+        plainText = _aesDecrypt(legacyKey, caption, prefix: _legacyPrefix);
+      } else {
+        // Plaintext
+        plainText = caption;
+      }
       updates['${entry.key}/caption'] =
           _aesEncrypt(newKey, plainText, prefix: _currentPrefix);
-      updates['${entry.key}/encryptionVersion'] = 2;
+      updates['${entry.key}/encryptionVersion'] = 3;
       updates['${entry.key}/encrypted'] = true;
     }
 
@@ -728,25 +750,45 @@ class EncryptionService {
     return diff == 0;
   }
 
+  /// AES-256-GCM encrypt (authenticated encryption — định dạng mới ENC3:).
+  /// Format: ENC3:base64(iv 12 bytes + ciphertext + GCM tag 16 bytes)
   String _aesEncrypt(Uint8List key, String plaintext,
       {required String prefix}) {
-    final iv = _generateRandomBytes(16);
-    final cipher = CBCBlockCipher(AESEngine());
-    cipher.init(true, ParametersWithIV(KeyParameter(key), iv));
-
-    final input = _pkcs7Pad(utf8.encode(plaintext), 16);
-    final output = Uint8List(input.length);
-    for (var i = 0; i < input.length; i += 16) {
-      cipher.processBlock(input, i, output, i);
-    }
-
+    final iv = _generateRandomBytes(12); // 12 bytes IV cho GCM
+    final cipher = GCMBlockCipher(AESEngine())
+      ..init(
+        true,
+        AEADParameters(KeyParameter(key), 128, iv, Uint8List(0)),
+      );
+    final input = utf8.encode(plaintext);
+    final output = cipher.process(input);
+    // output = ciphertext + tag (16 bytes appended by GCMBlockCipher)
     final combined = Uint8List(iv.length + output.length)
       ..setAll(0, iv)
       ..setAll(iv.length, output);
     return '$prefix${base64Encode(combined)}';
   }
 
+  /// AES-256-GCM decrypt (tự động verify MAC tag).
   String _aesDecrypt(Uint8List key, String ciphertext,
+      {required String prefix}) {
+    final b64 = ciphertext.substring(prefix.length);
+    final combined = base64Decode(b64);
+    final iv = combined.sublist(0, 12);
+    final encrypted = combined.sublist(12); // ciphertext + 16-byte tag
+
+    final cipher = GCMBlockCipher(AESEngine())
+      ..init(
+        false,
+        AEADParameters(KeyParameter(key), 128, iv, Uint8List(0)),
+      );
+    final output = cipher.process(encrypted);
+    return utf8.decode(output);
+  }
+
+  /// AES-256-CBC decrypt — legacy (ENC2:) chỉ dùng để migrate dữ liệu cũ.
+  /// Khi analytics cho thấy không còn ENC2: data, xóa method này.
+  String _aesCbcDecrypt(Uint8List key, String ciphertext,
       {required String prefix}) {
     final b64 = ciphertext.substring(prefix.length);
     final combined = base64Decode(b64);
@@ -761,14 +803,6 @@ class EncryptionService {
       cipher.processBlock(encrypted, i, output, i);
     }
     return utf8.decode(_pkcs7Unpad(output));
-  }
-
-  Uint8List _pkcs7Pad(Uint8List data, int blockSize) {
-    final pad = blockSize - (data.length % blockSize);
-    final padded = Uint8List(data.length + pad)
-      ..setAll(0, data)
-      ..fillRange(data.length, data.length + pad, pad);
-    return padded;
   }
 
   Uint8List _pkcs7Unpad(Uint8List data) {

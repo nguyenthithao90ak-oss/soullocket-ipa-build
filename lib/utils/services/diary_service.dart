@@ -170,9 +170,24 @@ class DiaryService {
 
   // ── SCRIPT MIGRATION TỰ ĐỘNG ──────────────────────────────────────────
   Future<void> migrateDiariesFromRTDB(String houseId) async {
+    // Chỉ migrate nếu chưa từng migrate — dùng flag nhẹ
+    final migrateFlag = await _firestore
+        .collection('houses').doc(houseId)
+        .collection('_meta').doc('diary_migration').get();
+    if (migrateFlag.exists && migrateFlag.data()?['done'] == true) return;
+
     final snap = await _rtdb.child('houses/$houseId/diary').get();
-    if (!snap.exists || snap.value == null) return;
-    
+    if (!snap.exists || snap.value == null) {
+      // Ghi flag để không gọi lại
+      try {
+        await _firestore
+            .collection('houses').doc(houseId)
+            .collection('_meta').doc('diary_migration')
+            .set({'done': true, 'ts': DateTime.now().millisecondsSinceEpoch});
+      } catch (_) {}
+      return;
+    }
+
     final raw = snap.value;
     if (raw is! Map) return;
 
@@ -189,8 +204,17 @@ class DiaryService {
 
     if (count > 0) {
       await batch.commit();
-      // Optional: Delete from RTDB after migration to save bandwidth
-      // await _rtdb.child('houses/$houseId/diary').remove();
+      // Xoá diary cũ trên RTDB để không tốn bandwidth nữa
+      try {
+        await _rtdb.child('houses/$houseId/diary').remove();
+      } catch (_) {}
     }
+    // Ghi flag
+    try {
+      await _firestore
+          .collection('houses').doc(houseId)
+          .collection('_meta').doc('diary_migration')
+          .set({'done': true, 'ts': DateTime.now().millisecondsSinceEpoch});
+    } catch (_) {}
   }
 }

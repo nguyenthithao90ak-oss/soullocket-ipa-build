@@ -499,19 +499,19 @@ extension _MainHomeLoadController on _MainHomeTabState {
           return;
         }
 
-        _listenHighlights(houseId);
-        _listenHomeCalendarEvents(houseId);
-        _listenHealthCycleForWidgetSync(houseId);
+        _wrapSetup(() => _listenHighlights(houseId), 'Highlights');
+        _wrapSetup(() => _listenHomeCalendarEvents(houseId), 'Calendar');
+        _wrapSetup(() => _listenHealthCycleForWidgetSync(houseId), 'HealthCycle');
         Future<void>.delayed(const Duration(seconds: 3), () {
           if (!mounted || isStale()) return;
-          _listenNewDeviceNotifications(houseId);
-          _listenInteractionSignals(houseId);
-          _listenReactionFlights(houseId);
+          _wrapSetup(() => _listenNewDeviceNotifications(houseId), 'NewDevice');
+          _wrapSetup(() => _listenInteractionSignals(houseId), 'Interactions');
+          _wrapSetup(() => _listenReactionFlights(houseId), 'Reactions');
           _startInteractionRotationLoop();
         });
         Future<void>.delayed(const Duration(seconds: 6), () {
           if (!mounted || isStale()) return;
-          _bindHomeMapPreview(houseId);
+          _wrapSetup(() => _bindHomeMapPreview(houseId), 'MapPreview');
           unawaited(_ensureAppWideLocationTracking(houseId));
           if (_showWeather) {
             _startWeatherRefreshLoop(houseId);

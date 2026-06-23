@@ -19,7 +19,8 @@ class PresenceService {
   static const Duration onlineFreshness = Duration(minutes: 5);
   // Tối ưu: tăng heartbeat lên 180s thay vì 120s → giảm 33% lượng writes presence
   // local grace period cho phép presence vẫn "online" thêm 2 phút sau heartbeat cuối
-  static const Duration heartbeatInterval = Duration(seconds: 180);
+  // ⚡ Tăng từ 180s lên 300s (5 phút) để giảm writes
+  static const Duration heartbeatInterval = Duration(seconds: 300);
   static const Duration staleSessionThreshold = Duration(minutes: 5);
   static const Duration justDisconnectedThreshold = Duration(minutes: 1);
 
@@ -305,13 +306,34 @@ class PresenceService {
     _heartbeatTimer?.cancel();
     _heartbeatTimer = Timer.periodic(heartbeatInterval, (_) {
       if (_shouldBeOnline) {
-        unawaited(_heartbeat());
+        unawaited(_lightweightHeartbeat());
       }
     });
   }
 
+  /// Chỉ heartbeat nhẹ — không prune + không refresh aggregate mỗi lần
+  Future<void> _lightweightHeartbeat() async {
+    if (!_shouldBeOnline || _myPresenceRef == null || _mySessionId == null) {
+      return;
+    }
+    try {
+      await _myPresenceRef!.child('sessions/$_mySessionId').update({
+        'ts': ServerValue.timestamp,
+      }).timeout(const Duration(seconds: 3));
+    } catch (_) {}
+  }
+
   Future<void> _heartbeat() async {
     if (!_shouldBeOnline || _myPresenceRef == null || _mySessionId == null) {
+      return;
+    }
+
+    // ⚡ Full heartbeat mỗi 10 lần (thay vì 5) = mỗi 50 phút thay vì 15 phút
+    final shouldRunFull = _heartbeatCount == 0 || _heartbeatCount % 10 == 0;
+    _heartbeatCount++;
+
+    if (!shouldRunFull) {
+      await _lightweightHeartbeat();
       return;
     }
 
@@ -323,39 +345,32 @@ class PresenceService {
         if (_activeDeviceType != null) 'device': _activeDeviceType,
       }).timeout(const Duration(seconds: 3));
 
-      final shouldRunFull = _heartbeatCount == 0 || _heartbeatCount % 5 == 0;
-      _heartbeatCount++;
-
-      if (shouldRunFull) {
-        // Prune stale sessions for BOTH roles to ensure accurate online statuses
-        final houseId = _activeHouseId ?? '';
-        if (houseId.isNotEmpty) {
-          await _pruneStaleSessions(_dbRef.child('houses/$houseId/presence/user1'), nowMs: now);
-          await _pruneStaleSessions(_dbRef.child('houses/$houseId/presence/user2'), nowMs: now);
-        }
-
-        await _refreshAggregatePresence(
-          _myPresenceRef!,
-          nowMs: now,
-          preferredDevice: _activeDeviceType,
-        );
-
-        // Also refresh the aggregate presence of the opposite role in case we pruned its sessions
-        if (houseId.isNotEmpty) {
-          final oppositeRole = _activeRole == 'user1' ? 'user2' : 'user1';
-          await _refreshAggregatePresence(
-            _dbRef.child('houses/$houseId/presence/$oppositeRole'),
-            nowMs: now,
-          );
-        }
-
-        // Phát hiện trùng vai: kiểm tra có session khác (không phải của mình) cùng vai đang online không.
-        await _checkDuplicateRole(nowMs: now);
-
-        debugPrint('Presence full heartbeat refreshed session $_mySessionId');
-      } else {
-        debugPrint('Presence lightweight heartbeat refreshed session $_mySessionId (count: $_heartbeatCount)');
+      // Prune stale sessions for BOTH roles to ensure accurate online statuses
+      final houseId = _activeHouseId ?? '';
+      if (houseId.isNotEmpty) {
+        await _pruneStaleSessions(_dbRef.child('houses/$houseId/presence/user1'), nowMs: now);
+        await _pruneStaleSessions(_dbRef.child('houses/$houseId/presence/user2'), nowMs: now);
       }
+
+      await _refreshAggregatePresence(
+        _myPresenceRef!,
+        nowMs: now,
+        preferredDevice: _activeDeviceType,
+      );
+
+      // Also refresh the aggregate presence of the opposite role in case we pruned its sessions
+      if (houseId.isNotEmpty) {
+        final oppositeRole = _activeRole == 'user1' ? 'user2' : 'user1';
+        await _refreshAggregatePresence(
+          _dbRef.child('houses/$houseId/presence/$oppositeRole'),
+          nowMs: now,
+        );
+      }
+
+      // Phát hiện trùng vai
+      await _checkDuplicateRole(nowMs: now);
+
+      debugPrint('Presence full heartbeat refreshed session $_mySessionId');
     } on TimeoutException {
       return;
     } catch (e) {

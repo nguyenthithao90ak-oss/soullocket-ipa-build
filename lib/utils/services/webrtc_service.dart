@@ -27,6 +27,12 @@ class WebRTCService {
   final _db = FirebaseDatabase.instance;
   String? _roomId; // ID của phòng gọi (giống houseId)
 
+  // ⚡ Lưu StreamSubscription để cancel khi hangUp, tránh listener leak
+  StreamSubscription<DatabaseEvent>? _answerSub;
+  StreamSubscription<DatabaseEvent>? _calleeCandidatesSub;
+  StreamSubscription<DatabaseEvent>? _callerCandidatesSub;
+  StreamSubscription<DatabaseEvent>? _incomingCallChangeSub;
+
   final Map<String, dynamic> _fallbackConfiguration = {
     'iceServers': [
       {
@@ -195,7 +201,8 @@ class WebRTCService {
     }).timeout(const Duration(seconds: 12));
 
     // Lắng nghe Answer từ B
-    roomRef.child('answer').onValue.listen(
+    _cancelRoomSubscriptions();
+    _answerSub = roomRef.child('answer').onValue.listen(
       (event) async {
         final val = event.snapshot.value as Map<dynamic, dynamic>?;
         if (val != null) {
@@ -217,7 +224,7 @@ class WebRTCService {
       },
     );
 
-    roomRef.child('calleeCandidates').onChildAdded.listen(
+    _calleeCandidatesSub = roomRef.child('calleeCandidates').onChildAdded.listen(
       (event) {
         final val = event.snapshot.value;
         if (val is! Map) return;
@@ -321,7 +328,7 @@ class WebRTCService {
         .update({'status': 'connected'}).timeout(const Duration(seconds: 8));
 
     // Lắng nghe ICE Candidate của A
-    roomRef.child('callerCandidates').onChildAdded.listen(
+    _callerCandidatesSub = roomRef.child('callerCandidates').onChildAdded.listen(
       (event) {
         final raw = event.snapshot.value;
         if (raw is! Map) return;
@@ -344,6 +351,16 @@ class WebRTCService {
     );
   }
 
+  /// Hủy tất cả StreamSubscription để tránh listener leak
+  void _cancelRoomSubscriptions() {
+    _answerSub?.cancel();
+    _answerSub = null;
+    _calleeCandidatesSub?.cancel();
+    _calleeCandidatesSub = null;
+    _callerCandidatesSub?.cancel();
+    _callerCandidatesSub = null;
+  }
+
   /// Cúp máy và dọn dẹp
   Future<void> hangUp() async {
     if (_roomId != null) {
@@ -356,6 +373,8 @@ class WebRTCService {
         _db.ref('calls/$endedRoomId').remove();
       });
     }
+
+    _cancelRoomSubscriptions();
 
     _localStream?.getTracks().forEach((track) => track.stop());
     await _localStream?.dispose();
@@ -413,7 +432,8 @@ class WebRTCService {
     final callsRef =
         _db.ref('calls').orderByChild('calleeId').equalTo(myHouseId);
 
-    callsRef.onChildChanged.listen((event) {
+    _incomingCallChangeSub?.cancel();
+    _incomingCallChangeSub = callsRef.onChildChanged.listen((event) {
       final raw = event.snapshot.value;
       if (raw is! Map) {
         return;

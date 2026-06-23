@@ -68,6 +68,7 @@ class _DiaryTabState extends State<DiaryTab>
   final MemoryShareAllowanceService _memoryShareAllowanceService =
       MemoryShareAllowanceService();
   final ScrollController _diaryScrollController = ScrollController();
+  Timer? _diaryScrollDebounce;
   bool _isTabActive = false;
   bool _isActivatingTab = false;
   bool _deferMemoryLoad = true;
@@ -694,7 +695,11 @@ class _DiaryTabState extends State<DiaryTab>
     final maxScroll = _diaryScrollController.position.maxScrollExtent;
     final currentScroll = _diaryScrollController.position.pixels;
     if (maxScroll - currentScroll <= 200) {
-      unawaited(_feedController.fetchNextDiaryPage());
+      _diaryScrollDebounce?.cancel();
+      _diaryScrollDebounce = Timer(const Duration(milliseconds: 200), () {
+        if (!mounted) return;
+        unawaited(_feedController.fetchNextDiaryPage());
+      });
     }
   }
 
@@ -747,6 +752,7 @@ class _DiaryTabState extends State<DiaryTab>
     _memoryController.removeListener(_handleControllerChange);
     _guardController.removeListener(_handleControllerChange);
     _diaryScrollController.removeListener(_onDiaryScroll);
+    _diaryScrollDebounce?.cancel();
     _diaryScrollController.dispose();
     _feedController.dispose();
     _memoryController.dispose();

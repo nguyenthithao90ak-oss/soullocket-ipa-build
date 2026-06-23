@@ -167,7 +167,7 @@ class DeeplinkService {
     // 3. Link trả về có cả id, h, g, và gift
     // Liên kết quà tặng cũ cần ?g=... &h=... và ?gift=... để mở không cần đăng nhập.
     return AppConfig.webUri(
-      '/gift-open-demo.html',
+      '/gift.html',
       queryParameters: {
         'id': gift.giftId,
         'h': gift.fromHouseId,
@@ -189,9 +189,8 @@ class DeeplinkService {
     final normalizedPath = uri.path.endsWith('/') && uri.path.length > 1
         ? uri.path.substring(0, uri.path.length - 1)
         : uri.path;
-    return normalizedPath == '/gift' ||
-        normalizedPath == '/gift.html' ||
-        normalizedPath == '/gift-open-demo.html';
+    return normalizedPath == '/gift.html' ||
+        normalizedPath == '/gift';
   }
 
   static bool isSupportedLoveCardUri(Uri uri) {

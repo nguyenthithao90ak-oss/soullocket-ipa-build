@@ -240,7 +240,7 @@ class _ModernHomeBody extends StatelessWidget {
                         RepaintBoundary(
                           child: state._buildHomeToolSlotSection(),
                         ),
-                        SLSpacing.gapH(148),
+                        SLSpacing.gapH(72),
                       ],
                     ),
                   ),

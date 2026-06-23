@@ -34,25 +34,26 @@ class _MainHomeStateView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!hasVisibleContent && isLoading) {
-      return const _MainHomeLoadingView();
-    }
-    if (child == null) {
-      return const _MainHomeLoadingView();
-    }
-    if (!isLoading) {
-      return child!;
-    }
+    // Luôn show loading khi chưa có dữ liệu
     if (!hasVisibleContent) {
       return const _MainHomeLoadingView();
     }
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        child!,
-        const _MainHomeLoadingOverlay(),
-      ],
-    );
+    // Đã có dữ liệu, đang load thêm → show content + overlay
+    if (isLoading && child != null) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          child!,
+          const _MainHomeLoadingOverlay(),
+        ],
+      );
+    }
+    // Đã có dữ liệu, không load → show content
+    if (child != null) {
+      return child!;
+    }
+    // Fallback an toàn
+    return const _MainHomeLoadingView();
   }
 }
 

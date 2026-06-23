@@ -1058,24 +1058,31 @@ class _LoveCardComposerPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      clipBehavior: Clip.antiAlias,
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            colors.first.withValues(alpha: 0.14),
-            colors.last.withValues(alpha: 0.06),
+            const Color(0xFF1E1E32).withValues(alpha: 0.85),
+            const Color(0xFF2A1A2E).withValues(alpha: 0.70),
           ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.16),
+          color: colors.first.withValues(alpha: 0.35),
+          width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: colors.first.withValues(alpha: 0.08),
-            blurRadius: 22,
+            color: colors.first.withValues(alpha: 0.15),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.20),
+            blurRadius: 40,
             offset: const Offset(0, 12),
           ),
         ],
@@ -1083,24 +1090,38 @@ class _LoveCardComposerPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Soạn thảo thiệp',
-            style: SLTheme.quicksand(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.w900,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [colors.first.withValues(alpha: 0.30), colors.last.withValues(alpha: 0.15)],
+                  ),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'Soạn thảo thiệp',
+                  style: SLTheme.quicksand(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(
             theme.subtitle,
             style: SLTheme.quicksand(
-              color: Colors.white.withValues(alpha: 0.72),
+              color: Colors.white.withValues(alpha: 0.82),
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
+              shadows: [Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 4)],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           _LoveCardMetaField(
             label: context.tr('util_tnhinth_6cccad'),
             hintText: state._defaultSenderName(),
@@ -1120,17 +1141,19 @@ class _LoveCardComposerPanel extends StatelessWidget {
             maxLines: 2,
             onChanged: (_) => state._refreshUi(),
           ),
-          _LoveCardContentEditor(
-            controller: state._contentCtrl,
-            theme: theme,
-            colors: colors,
-            onChanged: () => state._refreshUi(),
-            hintText: context.tr('util_vitiubnmun_f241e9'),
-            suggestions: theme.suggestions,
-            onSuggestionTap: (text) {
-              state._contentCtrl.text = text;
-              state._refreshUi();
-            },
+          RepaintBoundary(
+            child: _LoveCardContentEditor(
+              controller: state._contentCtrl,
+              theme: theme,
+              colors: colors,
+              onChanged: () => state._refreshUi(),
+              hintText: context.tr('util_vitiubnmun_f241e9'),
+              suggestions: theme.suggestions,
+              onSuggestionTap: (text) {
+                state._contentCtrl.text = text;
+                state._refreshUi();
+              },
+            ),
           ),
           const SizedBox(height: 12),
           _LoveCardImageAttachmentPanel(
@@ -1190,37 +1213,36 @@ class _LoveCardMetaFieldState extends State<_LoveCardMetaField> {
   Widget build(BuildContext context) {
     final primaryColor = widget.themeColors?.first ?? Colors.white;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOutCubic,
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withValues(alpha: _isFocused ? 0.14 : 0.08),
-            Colors.white.withValues(alpha: _isFocused ? 0.10 : 0.04),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: _isFocused
-              ? primaryColor.withValues(alpha: 0.60)
-              : Colors.white.withValues(alpha: 0.16),
-          width: _isFocused ? 1.8 : 1.0,
-        ),
-        boxShadow: _isFocused
-            ? [
-                BoxShadow(
-                  color: primaryColor.withValues(alpha: 0.18),
-                  blurRadius: 12,
-                  spreadRadius: 0.5,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : null,
-      ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+          decoration: BoxDecoration(
+            color: _isFocused
+                ? const Color(0xFF1E1E32).withValues(alpha: 0.80)
+                : const Color(0xFF151528).withValues(alpha: 0.65),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: _isFocused
+                  ? primaryColor.withValues(alpha: 0.55)
+                  : Colors.white.withValues(alpha: 0.10),
+              width: _isFocused ? 1.8 : 1.0,
+            ),
+            boxShadow: _isFocused
+                ? [
+                    BoxShadow(
+                      color: primaryColor.withValues(alpha: 0.15),
+                      blurRadius: 12,
+                      spreadRadius: 0.5,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
+          ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -1291,6 +1313,8 @@ class _LoveCardMetaFieldState extends State<_LoveCardMetaField> {
           ),
         ],
       ),
+      ),
+      ),
     );
   }
 }
@@ -1353,25 +1377,20 @@ class _LoveCardContentEditorState extends State<_LoveCardContentEditor>
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withValues(alpha: _isFocused ? 0.16 : 0.08),
-            Colors.white.withValues(alpha: _isFocused ? 0.10 : 0.04),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: _isFocused
+            ? const Color(0xFF2A1A2E).withValues(alpha: 0.75)
+            : const Color(0xFF1E1E32).withValues(alpha: 0.60),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: _isFocused
-              ? primary.withValues(alpha: 0.55)
-              : Colors.white.withValues(alpha: 0.14),
+              ? primary.withValues(alpha: 0.50)
+              : Colors.white.withValues(alpha: 0.12),
           width: _isFocused ? 1.8 : 1.0,
         ),
         boxShadow: _isFocused
             ? [
                 BoxShadow(
-                  color: primary.withValues(alpha: 0.10),
+                  color: primary.withValues(alpha: 0.12),
                   blurRadius: 16,
                   spreadRadius: 1,
                   offset: const Offset(0, 6),

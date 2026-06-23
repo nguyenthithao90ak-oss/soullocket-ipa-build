@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -26,7 +27,7 @@ class L10nService extends ChangeNotifier {
   L10nService._internal();
 
   final _L10nLocaleState _state = _L10nLocaleState();
-  final _L10nTranslationLookup _lookup = const _L10nTranslationLookup();
+  final _L10nTranslationLookup _lookup = _L10nTranslationLookup();
   final _L10nFormatHelper _formatHelper = const _L10nFormatHelper();
 
   Locale get locale => _state.currentLocale;

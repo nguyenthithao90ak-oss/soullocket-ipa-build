@@ -7,13 +7,26 @@ class OfflineCacheService {
   static SharedPreferences? _cachedPrefs;
   static Future<void>? _initializingPrefs;
 
-  // RAM Cache
+  // RAM Cache — giới hạn 50 entries tránh memory leak
   static final Map<String, _MemoryCacheEntry> _memoryCache = {};
+  static const int _memoryCacheMaxSize = 50;
 
   OfflineCacheService._internal();
 
   /// Đặt dữ liệu vào RAM Cache với thời gian sống (TTL).
   static void setMemoryCache(String key, dynamic data, Duration ttl) {
+    if (_memoryCache.length >= _memoryCacheMaxSize) {
+      // LRU eviction: xoá entry sắp hết hạn nhất
+      String? oldestKey;
+      DateTime? oldestTime;
+      for (final entry in _memoryCache.entries) {
+        if (oldestTime == null || entry.value.expiresAt.isBefore(oldestTime)) {
+          oldestTime = entry.value.expiresAt;
+          oldestKey = entry.key;
+        }
+      }
+      if (oldestKey != null) _memoryCache.remove(oldestKey);
+    }
     _memoryCache[key] = _MemoryCacheEntry(
       data: data,
       expiresAt: DateTime.now().add(ttl),

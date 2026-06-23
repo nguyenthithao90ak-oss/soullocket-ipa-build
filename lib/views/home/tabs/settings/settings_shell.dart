@@ -262,112 +262,7 @@ extension _SettingsTabShell on _SettingsTabState {
   }
 
   Widget _buildSettingsScaffold() {
-    if (MediaQuery.sizeOf(context).width >= 0) {
-      return _buildResponsiveSettingsScaffold();
-    }
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        const _SettingsBackgroundLayer(),
-        Scaffold(
-          backgroundColor: Colors.transparent,
-          body: SafeArea(
-            top: false,
-            bottom: false,
-            child: Column(
-              children: [
-                _buildSettingsHeader(),
-                Expanded(
-                  child: Material(
-                    color: Colors.transparent,
-                    child: ListView(
-                      physics: const ClampingScrollPhysics(),
-                      padding: const EdgeInsets.only(bottom: 120),
-                      children: [
-                        _buildSettingsSyncBanner(),
-                        _buildSettingsCategoryGrid(),
-                        const SizedBox(height: 2),
-                        _buildSectionTitle(
-                          context.tr('settings_other_features_title'),
-                          topPadding: 6,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
-                          child: Column(
-                            children: [
-                              if (_relationshipMode == 'couple') ...[
-                                _buildActionBtn(
-                                  icon: Icons.swap_horiz_rounded,
-                                  label: _activeRoleKey == 'user2'
-                                      ? context.tr('settings_swap_role_to_male')
-                                      : context.tr('settings_swap_role_to_female'),
-                                  gradient: const [
-                                    Color(0xFF42A5F5),
-                                    Color(0xFF1E88E5)
-                                  ],
-                                  textColor: const Color(0xFF1E88E5),
-                                  onTap: _swapUserRole,
-                                ),
-                                const SizedBox(height: 12),
-                              ],
-                              _buildActionBtn(
-                                icon: Icons.support_agent_rounded,
-                                label: context.tr('support_center'),
-                                gradient: const [
-                                  Color(0xFF4FC3F7),
-                                  Color(0xFF0288D1)
-                                ],
-                                textColor: const Color(0xFF0288D1),
-                                onTap: _openSupportContact,
-                              ),
-                              const SizedBox(height: 12),
-                              _buildActionBtn(
-                                icon: Icons.star_rate_rounded,
-                                label: context.tr('rate_app'),
-                                gradient: const [
-                                  Color(0xFFFFD54F),
-                                  Color(0xFFFF8F00)
-                                ],
-                                textColor: const Color(0xFFFF8F00),
-                                onTap: _rateApp,
-                              ),
-                              const SizedBox(height: 12),
-                              _buildActionBtn(
-                                icon: Icons.logout_rounded,
-                                label: context.tr('logout'),
-                                gradient: const [
-                                  Color(0xFFFF8A65),
-                                  Color(0xFFE64A19)
-                                ],
-                                textColor: const Color(0xFFE64A19),
-                                onTap: _logout,
-                              ),
-                              const SizedBox(height: 12),
-                              _buildActionBtn(
-                                icon: Icons.delete_forever_rounded,
-                                label: context.tr('settings_delete_account_data'),
-                                gradient: const [
-                                  Color(0xFFB71C1C),
-                                  Color(0xFF7F0000)
-                                ],
-                                textColor: const Color(0xFFB71C1C),
-                                onTap: _deleteAccount,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        _buildSettingsFooter(),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
+    return _buildResponsiveSettingsScaffold();
   }
 
   Widget _buildResponsiveSettingsScaffold() {
@@ -823,99 +718,6 @@ extension _SettingsTabShell on _SettingsTabState {
     required String title,
     required String message,
   }) {
-    if (DateTime.now().year >= 2000) {
-      return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.97),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: SLColors.primary.withValues(alpha: 0.18),
-            width: 1.6,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: SLColors.primary.withValues(alpha: 0.08),
-              blurRadius: 18,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    title
-                        .replaceAll(
-                            'Mục đang hoàn thiện', 'Mục đang hoàn thiện')
-                        .replaceAll('Tiện ích màn hình', 'Tiện ích màn hình'),
-                    style: SLTheme.quicksand(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
-                      color: SLColors.primaryActive,
-                    ),
-                  ),
-                ),
-                InkWell(
-                  onTap: () => Navigator.pop(context),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: SLColors.primarySoft,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          size: 12,
-                          color: SLColors.primaryActive,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          context.tr('settings_back_btn'),
-                          style: SLTheme.quicksand(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: SLColors.primaryActive,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              message
-                  .replaceAll(
-                    'Tiện ích màn hình chỉ hỗ trợ trên thiết bị thật. Phần cấu hình này nên thao tác trên app cài đặt.',
-                    'Tiện ích màn hình chỉ hỗ trợ trên thiết bị thật. Phần cấu hình này nên thao tác trên app cài đặt.',
-                  )
-                  .replaceAll(
-                    'Tính năng này đang được cập nhật trong phiên bản mới.',
-                    'Tính năng này đang được cập nhật trong phiên bản mới.',
-                  ),
-              style: SLTheme.quicksand(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF6B5563),
-                height: 1.45,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
       padding: const EdgeInsets.all(18),
@@ -923,9 +725,16 @@ extension _SettingsTabShell on _SettingsTabState {
         color: Colors.white.withValues(alpha: 0.97),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: const Color(0xFFD81B60).withValues(alpha: 0.25),
-          width: 2,
+          color: SLColors.primary.withValues(alpha: 0.18),
+          width: 1.6,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: SLColors.primary.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -939,7 +748,7 @@ extension _SettingsTabShell on _SettingsTabState {
                   style: SLTheme.quicksand(
                     fontSize: 15,
                     fontWeight: FontWeight.w900,
-                    color: const Color(0xFFD81B60),
+                    color: SLColors.primaryActive,
                   ),
                 ),
               ),
@@ -950,7 +759,7 @@ extension _SettingsTabShell on _SettingsTabState {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD81B60).withValues(alpha: 0.1),
+                    color: SLColors.primarySoft,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -959,7 +768,7 @@ extension _SettingsTabShell on _SettingsTabState {
                       const Icon(
                         Icons.arrow_back_ios_new_rounded,
                         size: 12,
-                        color: Color(0xFFD81B60),
+                        color: SLColors.primaryActive,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -967,7 +776,7 @@ extension _SettingsTabShell on _SettingsTabState {
                         style: SLTheme.quicksand(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFFD81B60),
+                          color: SLColors.primaryActive,
                         ),
                       ),
                     ],

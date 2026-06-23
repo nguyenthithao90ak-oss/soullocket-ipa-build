@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.0.1+55
+version: 2.1.0+56
 
 environment:
   sdk: ^3.5.3
@@ -37,11 +37,11 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   firebase_core: ^4.7.0
-  firebase_app_check: ^0.4.3
+  firebase_app_check: ^0.4.4+2
   firebase_auth: ^6.4.0
   in_app_review: ^2.0.9
   firebase_database: ^12.3.0
-  firebase_storage: ^13.3.0
+  firebase_storage: ^13.4.3
   provider: ^6.1.2
   shared_preferences: ^2.5.3
   url_launcher: ^6.3.1
@@ -67,21 +67,22 @@ dependencies:
   firebase_messaging: ^16.2.0
   flutter_local_notifications: ^22.0.1
   in_app_purchase: ^3.2.3
-  in_app_purchase_android: ^0.4.0
+  in_app_purchase_android: ^0.5.1
+  in_app_purchase_storekit: ^0.4.10
   sqflite: ^2.4.2
   path: ^1.9.1
   flutter_webrtc: ^1.4.1
   home_widget: ^0.9.1
   flutter_overlay_window: ^0.5.0
   crypto: ^3.0.7
-  connectivity_plus: ^6.0.5
+  connectivity_plus: ^7.1.1
   local_auth: ^3.0.1
   signature: ^6.3.0
   audioplayers: ^6.5.1
-  file_picker: ^11.0.2
+  file_picker: ^12.0.0-beta.7
   flutter_cube: ^0.1.1
-  device_info_plus: 12.3.0
-  package_info_plus: ^8.2.0
+  device_info_plus: ^13.1.0
+  package_info_plus: ^10.1.0
   video_player: ^2.10.1
   encrypt: ^5.0.3
   cached_network_image: ^3.4.1
@@ -93,7 +94,7 @@ dependencies:
   app_links: ^7.0.0
   pdf: ^3.11.3
   path_provider: ^2.1.5
-  share_plus: ^12.0.2
+  share_plus: ^13.1.0
   vision_gallery_saver: ^3.1.1
   google_mobile_ads: ^9.0.0
   image_cropper: ^12.2.1
@@ -110,12 +111,11 @@ dependencies:
   flutter_timezone: ^5.0.2
   timezone: ^0.11.0
   sign_in_with_apple: ^8.0.0
-  record: ^6.2.1
+  record: ^7.1.0
   dio: ^5.9.2
   flutter_blurhash: ^0.9.1
   firebase_crashlytics: ^5.2.0
   blurhash: ^1.2.0
-  freezed_annotation: ^3.1.0
   json_annotation: ^4.12.0
   app_tracking_transparency: ^2.0.7
   sensors_plus: ^7.0.0
@@ -139,8 +139,6 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
   build_runner: ^2.15.0
-  freezed: ^3.2.5
-  json_serializable: ^6.14.0
   very_good_analysis: ^10.2.0
   mockito: ^5.6.4
 

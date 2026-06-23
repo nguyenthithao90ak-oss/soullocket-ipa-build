@@ -253,6 +253,17 @@ class SLResponsive {
     );
     return math.min(available, max).toDouble();
   }
+
+  /// Scroll physics adaptive theo nền tảng:
+  /// - iOS: BouncingScrollPhysics (kéo over-scroll)
+  /// - Android/web: ClampingScrollPhysics (kẹt cứng)
+  static ScrollPhysics scrollPhysicsForPlatform() {
+    if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
+      return const BouncingScrollPhysics();
+    }
+    return const ClampingScrollPhysics();
+  }
 }
 
 @immutable

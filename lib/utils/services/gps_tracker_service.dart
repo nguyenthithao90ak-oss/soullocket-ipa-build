@@ -28,6 +28,11 @@ class GpsTrackerService {
 
   static const double nearbyThresholdMeters = 50.0;
 
+  /// Dispose tất cả resources. Gọi khi app tắt.
+  void dispose() {
+    stopPartnerGeofenceMonitoring();
+  }
+
   StreamSubscription<DatabaseEvent>? _partnerLocationSubscription;
   String? _monitoredHouseId;
   String? _partnerUid;

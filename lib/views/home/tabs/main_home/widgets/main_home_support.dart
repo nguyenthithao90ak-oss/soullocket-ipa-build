@@ -500,27 +500,7 @@ class _FallingItem {
       required this.rotationSpeed,
       required this.opacity})
       : rotation = 0.0;
-}
-
-enum _HomeHighlightKind { photo }
-
-class _HomeHighlightItem {
-  final _HomeHighlightKind kind;
-  final String title;
-  final String subtitle;
-  final String? imageUrl;
-  final DateTime timestamp;
-
-  const _HomeHighlightItem({
-    required this.kind,
-    required this.title,
-    required this.subtitle,
-    this.imageUrl,
-    required this.timestamp,
-  });
-}
-
-class _FallingPainter extends CustomPainter {
+}class _FallingPainter extends CustomPainter {
   final List<_FallingItem> items;
   final String type;
   final bool isDark;

@@ -45,7 +45,7 @@ class UtilitiesHubGrid extends StatelessWidget {
                 .clamp(64.0, 96.0);
 
         return CustomScrollView(
-          physics: const BouncingScrollPhysics(),
+          physics: SLResponsive.scrollPhysicsForPlatform(),
           slivers: [
             if (pinnedApps.isNotEmpty || recentApps.isNotEmpty)
               SliverPadding(

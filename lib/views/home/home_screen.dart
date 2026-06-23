@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+﻿// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 import 'dart:ui' as ui;
 
@@ -316,7 +316,7 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
     final axisDirection = _axisDirectionFor(context);
     // Render tab lân cận (cacheExtent = 1.0) để pre-render 1 tab kế tiếp,
     // giúp chuyển tab mượt nhưng không làm tràn RAM như khi để 2.0 (tải 5 tab cùng lúc).
-    const cacheExtent = 1.0;
+    const cacheExtent = 0.5;
 
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,

@@ -8,6 +8,7 @@ import 'package:soullocket_app/core/constants/app_config.dart';
 import 'daily_quest_service.dart';
 import 'offline_cache_service.dart';
 import 'purchase_service.dart';
+import 'storage_delete_helper.dart';
 
 class AlbumService {
   static final AlbumService _instance = AlbumService._internal();
@@ -239,6 +240,27 @@ class AlbumService {
     return docRef.id;
   }
 
+  static const StorageDeleteHelper _deleteHelper = StorageDeleteHelper();
+
+  /// Lấy URL ảnh từ Firestore doc và xoá file trên R2.
+  Future<void> _deleteR2Item(String houseId, String itemId, {String source = 'album'}) async {
+    try {
+      final docRef = FirebaseFirestore.instance
+          .collection('houses')
+          .doc(houseId)
+          .collection(source)
+          .doc(itemId);
+      final snap = await docRef.get();
+      if (!snap.exists) return;
+      final url = (snap.data()?['url'] ?? '').toString().trim();
+      if (url.isNotEmpty) {
+        await _deleteHelper.deleteImageByUrl(url: url);
+      }
+    } catch (_) {
+      // Lỗi xoá R2 không block luồng chính
+    }
+  }
+
   Future<void> moveToTrash({
     required String houseId,
     required String itemId,
@@ -276,6 +298,9 @@ class AlbumService {
     required String houseId,
     required String itemId,
   }) async {
+    // Xoá file trên R2 trước
+    await _deleteR2Item(houseId, itemId, source: 'album');
+    // Sau đó xoá Firestore
     await FirebaseFirestore.instance
         .collection('houses')
         .doc(houseId)
@@ -323,6 +348,11 @@ class AlbumService {
       for (var doc in snap.docs) {
         final purgeAt = doc.data()['purgeAt'] as int? ?? 0;
         if (purgeAt <= now) {
+          // Xoá file trên R2 trước
+          final url = (doc.data()['url'] ?? '').toString().trim();
+          if (url.isNotEmpty) {
+            await _deleteHelper.deleteImageByUrl(url: url);
+          }
           batch.delete(doc.reference);
           count++;
         }
@@ -372,6 +402,9 @@ class AlbumService {
     required String houseId,
     required String itemId,
   }) async {
+    // Xoá file trên R2 trước
+    await _deleteR2Item(houseId, itemId, source: 'album_trash');
+    // Sau đó xoá Firestore
     await FirebaseFirestore.instance
         .collection('houses')
         .doc(houseId)

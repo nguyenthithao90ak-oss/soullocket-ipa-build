@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+// ignore_for_file: deprecated_member_use, use_super_parameters, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, unused_field
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
@@ -20,7 +20,7 @@ import 'package:image_cropper/image_cropper.dart';
 
 import 'dart:io';
 import 'package:flutter/foundation.dart'
-    show kDebugMode, kIsWeb, defaultTargetPlatform, TargetPlatform;
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import '../../../utils/services/notification_service.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:permission_handler/permission_handler.dart' as app_permission;
@@ -34,6 +34,7 @@ import '../../../utils/services/purchase_service.dart';
 import '../../../utils/services/schedule_notif_service.dart';
 import '../../../utils/services/settings_sync_service.dart';
 import '../../../utils/services/storage_service.dart';
+import '../../../utils/services/cloudflare_r2_service.dart';
 import '../../../utils/services/countdown_space_service.dart';
 import '../../../models/data_export_result.dart';
 import '../../../utils/services/data_export_service.dart';
@@ -147,14 +148,12 @@ part 'settings/settings_support_legal_section.dart';
 part 'settings/settings_data_health_section.dart';
 part 'settings/settings_shell.dart';
 
-const Color _kSettingsBgBase = Color(0xFFDCE4EE);
 const Color _kSettingsBgTop = Color(0xFFEAF0F6);
 const Color _kSettingsBgMid = Color(0xFFDCE4EE);
 const Color _kSettingsBgBottom = Color(0xFFCDD8E6);
 const Color _kSettingsHeaderBg = Color(0xFFE7EDF4);
 const Color _kSettingsHeaderSurface = Color(0xFFF9FBFD);
 const Color _kSettingsHeaderBorder = Color(0xFFBEC9D7);
-const Color _kSettingsActionTileBg = Color(0xFFEAF0F5);
 const Color _kSettingsActionTileText = Color(0xFF243041);
 const List<String> _widgetHeartStyleKeys = <String>[
   '🤍',
@@ -195,10 +194,6 @@ const List<String> _widgetPreviewSizeKeys = <String>[
   'medium',
   'large',
 ];
-const List<String> _widgetStyleKeys = <String>[
-  'classic',
-  'countdown',
-];
 const List<String> _widgetDiaryLayoutKeys = <String>[
   'single',
   'duo',
@@ -226,72 +221,6 @@ String _normalizeWidgetHeartStyleKey(String? value) {
     case 'wing':
     default:
       return _defaultWidgetHeartStyleKey;
-  }
-}
-
-String _widgetHeartStyleLabel(String emoji) {
-  switch (emoji) {
-    case '🤍':
-      return L10nService().translate('home_timtrng_7d893d');
-    case '🤎':
-      return L10nService().translate('home_timnu_c4ace1');
-    case '♥️':
-      return L10nService().translate('home_timcin_e8ae03');
-    case '❣️':
-      return L10nService().translate('home_timnhnmnh_8b5a59');
-    case '❤️':
-      return L10nService().translate('home_tim_a30d1c');
-    case '💞':
-      return L10nService().translate('home_timxoayi_376711');
-    case '🖤':
-      return L10nService().translate('home_timen_cb49d1');
-    case '💟':
-      return L10nService().translate('home_timvin_0cd61a');
-    case '❤️‍🔥':
-      return L10nService().translate('home_timrcchy_747dfe');
-    case '🩷':
-      return L10nService().translate('home_timhng_5b8551');
-    case '🩶':
-      return L10nService().translate('home_timxm_ea7800');
-    case '🩵':
-      return '🩵 Tim xanh';
-    case '💘':
-      return L10nService().translate('home_timmitn_55f029');
-    case '❤️‍🩹':
-      return L10nService().translate('home_timchalnh_0adb4b');
-    case '💓':
-      return L10nService().translate('home_timp_211e69');
-    case '💗':
-      return L10nService().translate('home_timlndn_2b76d8');
-    case '💖':
-      return L10nService().translate('home_timlplnh_87b42a');
-    case '💝':
-      return L10nService().translate('home_timqutng_f0b62a');
-    case '💌':
-      return L10nService().translate('home_thtnh_cfc9f2');
-    case '💋':
-      return L10nService().translate('home_duhn_916bb0');
-    case '🫶':
-      return L10nService().translate('home_taytritim_38304a');
-    case '🫀':
-      return L10nService().translate('home_nhptimtht_c0a3b1');
-    case '💫💗':
-      return L10nService().translate('home_timsaobng_7d08bd');
-    case '♡✦':
-      return L10nService().translate('home_timtinht_f81e7c');
-    case '✧♥︎':
-      return L10nService().translate('home_timphal_79efa3');
-    case '❥∞':
-      return L10nService().translate('home_timvcc_c7663f');
-    case 'ღ♡':
-      return L10nService().translate('home_timctch_e60fcf');
-    case '☾♡':
-      return L10nService().translate('home_timnhtrng_b9226f');
-    case '♡🪽':
-      return L10nService().translate('home_timthinthn_5e0898');
-    case '✦💘':
-    default:
-      return L10nService().translate('home_mitnsao_b0531f');
   }
 }
 
@@ -422,8 +351,6 @@ class SettingsTab extends StatefulWidget {
 class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   static const int _emailVerifyResendCooldownSeconds = 5 * 60;
   static const int _emailVerifyPendingWindowSeconds = 30 * 60;
-  static const String countdownModePinnedLaunchPrefsKey =
-      'il_countdown_mode_pinned_launch_v1';
   static const String _emailVerifyPendingEmailKey =
       'email_verify_pending_email';
   static const String _emailVerifyPendingSentTimeKey =
@@ -475,6 +402,8 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   DateTime? _settingsCloudBackupAt;
   DateTime? _settingsLocalBackupAt;
   String _settingsBackupStatusError = '';
+  bool _isSavingAdvanced = false;
+  bool _isSavingTheme = false;
   bool _isSecurityLocked = false;
   bool _isCheckingSecurityLock = true;
   bool _isDevicePending = false;
@@ -487,7 +416,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _isMainEmailVerified = false;
   bool _hasRecoveryAnswer = false;
   bool _showHousePin = false;
-  final bool _showCustomLock = false;
   bool _showPasswordEditor = false;
   bool _isLinkingGoogle = false;
   bool _musicAutoplay = true;
@@ -505,15 +433,12 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _showWeather = true;
   bool _showStatus = true;
   bool _isGrantingPermissions = false;
-  bool _isSavingAdvanced = false;
-  bool _isSavingTheme = false;
   bool _isUploadingThemeBackground = false;
   double? _themeUploadProgress;
-  double? _avatarUploadProgress;
+  Set<String> _unlockedCountdownStyles = {};
   bool _didPromptPendingThemeBackgroundRetry = false;
   bool _isUnlockingStyle = false;
   int _countdownAdUnlockExpiryMs = 0;
-  Set<String> _unlockedCountdownStyles = {};
   final Set<String> _deletingCustomEventIds = <String>{};
   bool _isBreakupBusy = false;
   bool _isRefreshingEmailVerification = false;
@@ -528,7 +453,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   final GlobalKey _countdownGuideKey = GlobalKey();
   final GlobalKey _dataGuideKey = GlobalKey();
   final GlobalKey _supportGuideKey = GlobalKey();
-  final GlobalKey _vipPanelKey = GlobalKey();
   String _vipPlanLabel = L10nService().translate('home_giminph_5edaf7');
   String _vipExpiryLabel = L10nService().translate('home_chakchhot_27fec1');
   String _vipPlanCode = '';
@@ -778,10 +702,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     }
   }
 
-  // ignore: unused_element
-
-  // ignore: unused_element
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
@@ -791,16 +711,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       ));
     }
   }
-
-  // ignore: unused_element
-
-  // ignore: unused_element
-
-  // ignore: unused_element
-
-  // ignore: unused_element
-
-  // ignore: unused_element
 
   @override
   void dispose() {
@@ -836,8 +746,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     SettingsSyncService().backupSettingsToCloud();
     super.dispose();
   }
-
-  // ignore: unused_element
 
   // ignore: unused_element
 
@@ -1030,34 +938,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     );
   }
 
-  String _themeTitleForKey(String themeKey) {
-    switch (themeKey) {
-      case 'theme-night':
-        return L10nService().translate('theme_night_vi');
-      case 'theme-dark':
-        return L10nService().translate('theme_dark_vi');
-      case 'theme-true-black':
-        return L10nService().translate('home_oledtruebl_ca7703');
-      case 'theme-mystic-dark':
-        return L10nService().translate('theme_mystic_dark_vi');
-      case 'theme-ocean':
-        return L10nService().translate('theme_ocean_vi');
-      case 'theme-sunset':
-        return L10nService().translate('theme_sunset_vi');
-      case 'theme-crazy-party':
-        return L10nService().translate('theme_crazy_party_vi');
-      case 'theme-pink-glow':
-        return L10nService().translate('theme_pink_glow_vi');
-      default:
-        return L10nService().translate('theme_default_pink_vi');
-    }
-  }
-
-  // ignore: unused_element
-
   // ImgBB references removed to enhance security and transition to Supabase Storage.
-
-  // ignore: unused_element
 
   // ─── HELPERS ──────────────────────────────────────────────────────────────
   Widget _buildDevicePendingScreen(BuildContext context) {

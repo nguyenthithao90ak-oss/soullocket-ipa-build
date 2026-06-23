@@ -1,4 +1,4 @@
-﻿// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -12,15 +12,12 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/constants/app_config.dart';
 import '../../core/sl_theme.dart';
 import '../../models/social_post.dart';
-import 'dart:io';
 import '../../utils/services/friends_service.dart';
 import '../../utils/services/house_service.dart';
 import '../../utils/services/social_service.dart';
 import '../../utils/services/pending_upload_service.dart';
 import '../../utils/services/house_settings_service.dart';
-import 'package:soullocket_app/utils/services/cloudflare_r2_service.dart';
-import 'package:soullocket_app/utils/services/error_logger_service.dart';
-import 'package:soullocket_app/utils/services/storage_service.dart';
+import '../../utils/services/storage_service.dart';
 import '../../utils/app_error_mapper.dart';
 import 'profile/dialogs/profile_appearance_sheet.dart';
 import 'profile/dialogs/profile_confirm_dialog.dart';
@@ -463,8 +460,6 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     XFile? file = presetFile ?? await _storageService.pickImage();
     if (file == null) return;
 
-    final oldHeaderUrl = _profileHeaderImageUrl();
-
     try {
       if (presetFile == null) {
         file = await _cropProfileHeaderImage(file);
@@ -483,24 +478,11 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         minWidth: 1080,
         minHeight: 780,
       );
-      final sessionId = upload?.sessionId?.trim() ?? '';
       final url = upload?.downloadUrl.trim() ?? '';
-      if (sessionId.isEmpty || url.isEmpty) {
+      if (url.isEmpty) {
         throw 'Ảnh nền chưa tải lên được.';
       }
-      await _storageService.finalizePublicImageUpload(
-        houseId: houseId,
-        sessionId: sessionId,
-        target: 'profile_header',
-      );
       await PendingUploadService.instance.clear(_pendingProfileHeaderUploadKey);
-
-      if (oldHeaderUrl.isNotEmpty && oldHeaderUrl.startsWith('http')) {
-        try {
-          _storageService.deleteImageByUrl(oldHeaderUrl);
-        } catch (_) {}
-      }
-
       final refreshedUrl = _withRefreshToken(url);
       if (!mounted) return;
       setState(() {
@@ -522,8 +504,6 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     XFile? file = presetFile ?? await _storageService.pickImage();
     if (file == null) return;
 
-    final oldAvatarUrl = (_targetSettings['houseAvatar'] ?? _targetData['houseAvatar'] ?? '').toString().trim();
-
     try {
       if (presetFile == null) {
         file = await _cropHouseAvatarImage(file);
@@ -534,25 +514,19 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         <String, dynamic>{'filePath': file.path},
       );
 
-      // 🚀 SỬ DỤNG CLOUDFLARE R2 TẠI ĐÂY
-      final url = await CloudflareR2Service.instance.uploadFile(
-        File(file.path),
-        folderPath: 'avatars/$houseId',
+      final upload = await _storageService.uploadPublicImage(
+        houseId,
+        'house_avatar',
+        file,
+        quality: 88,
+        minWidth: 720,
+        minHeight: 720,
       );
-      
-      if (url == null || url.trim().isEmpty) {
-        throw 'Avatar chưa tải lên được lên R2.';
+      final url = upload?.downloadUrl.trim() ?? '';
+      if (url.isEmpty) {
+        throw 'Avatar chưa tải lên được.';
       }
-
-      // Xóa cache pending
       await PendingUploadService.instance.clear(_pendingHouseAvatarUploadKey);
-
-      // Cập nhật Database trực tiếp
-      await _saveHouseAvatar(url);
-      
-      // Không cần gọi finalize qua Cloud Functions nữa
-      // Bỏ qua bước Firebase Storage cũ
-
       final refreshedUrl = _withRefreshToken(url);
       if (!mounted) return;
       setState(
@@ -565,13 +539,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
   }
 
   Future<void> _removeProfileHeaderImage() async {
-    final oldHeaderUrl = _profileHeaderImageUrl();
     await _saveProfilePresentation(headerImageUrl: '');
-    if (oldHeaderUrl.isNotEmpty && oldHeaderUrl.startsWith('http')) {
-      try {
-        _storageService.deleteImageByUrl(oldHeaderUrl);
-      } catch (_) {}
-    }
     if (!mounted) return;
     _showSnack('Đã quay về nền mặc định của hồ sơ.');
   }
@@ -645,7 +613,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         debugPrint('Lỗi tải house_profiles: ${AppErrorMapper.resolve(e).message}');
       }
 
-      if (_targetData.isEmpty && _myHouseId == widget.targetHouseId) {
+      if (_targetData.isEmpty) {
         try {
           final targetSnap2 =
               await _db.ref('houses/${widget.targetHouseId}').get();
@@ -660,40 +628,6 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
                 : {};
           }
         } catch (_) {}
-      }
-
-      if (_targetData.isEmpty) {
-        if (_myHouseId == widget.targetHouseId) {
-          try {
-            final targetSettingsSnap =
-                await _db.ref('houses/${widget.targetHouseId}/settings').get();
-            if (targetSettingsSnap.exists && targetSettingsSnap.value is Map) {
-              _targetSettings = Map<String, dynamic>.from(
-                Map<dynamic, dynamic>.from(targetSettingsSnap.value as Map),
-              );
-            }
-            
-            final houseNameSnap = await _db.ref('houses/${widget.targetHouseId}/houseName').get();
-            final houseAvatarSnap = await _db.ref('houses/${widget.targetHouseId}/houseAvatar').get();
-            final avatarSnap = await _db.ref('houses/${widget.targetHouseId}/avatar').get();
-
-            _targetData = {
-              'settings': _targetSettings,
-              if (houseNameSnap.value != null) 'houseName': houseNameSnap.value,
-              if (houseAvatarSnap.value != null) 'houseAvatar': houseAvatarSnap.value,
-              if (avatarSnap.value != null) 'avatar': avatarSnap.value,
-            };
-          } catch (_) {}
-        } else {
-          try {
-            final houseNameSnap = await _db.ref('houses/${widget.targetHouseId}/houseName').get();
-            if (houseNameSnap.value != null) {
-              _targetData = {
-                'houseName': houseNameSnap.value,
-              };
-            }
-          } catch (_) {}
-        }
       }
 
       try {
@@ -1397,7 +1331,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
               memCacheWidth: 720,
               imageUrl: img,
               fit: BoxFit.cover,
-              filterQuality: FilterQuality.medium,
+              filterQuality: FilterQuality.high,
               placeholder: (_, __) => Container(color: SLColors.borderLight),
               errorWidget: (_, __, ___) => Container(color: SLColors.border))
         else

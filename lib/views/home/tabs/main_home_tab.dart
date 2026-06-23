@@ -105,7 +105,6 @@ part 'main_home/widgets/main_home_map_card.dart';
 part 'main_home/widgets/main_home_insight_card.dart';
 part 'main_home/widgets/main_home_header_button.dart';
 part 'main_home/widgets/main_home_avatar_section.dart';
-part 'main_home/widgets/main_home_highlights_section.dart';
 part 'main_home/widgets/main_home_shortcut_dock.dart';
 part 'main_home/controllers/main_home_formatters.dart';
 part 'main_home/controllers/main_home_interactions.dart';
@@ -156,12 +155,12 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       'il_first_setup_guide_pending_';
   static const String _firstSetupGuideSeenPrefsPrefix =
       'il_first_setup_guide_seen_';
+  static const List<String> _kHomeStickerAssets = <String>[
+    'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+  ];
 
   void _safeSetState(VoidCallback fn) {
-    if (!mounted) {
-      fn();
-      return;
-    }
+    if (!mounted) return;
     setState(fn);
   }
 
@@ -223,7 +222,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   List<UtilityApp> _pinnedApps = [];
   List<AlbumItem> _albumHighlights = [];
   List<SharedNote> _noteHighlights = [];
-  List<_HomeHighlightItem> _highlightItems = [];
   StreamSubscription<DatabaseEvent>? _homeCalendarSubscription;
   StreamSubscription<DatabaseEvent>? _healthCycleSyncSubscription;
   List<Map<String, dynamic>> _homeCalendarEvents = [];
@@ -537,6 +535,13 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         ]);
       } catch (_) {}
     }());
+    // Pre-cache sticker assets để tránh white flash
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      for (final path in _kHomeStickerAssets) {
+        precacheImage(AssetImage(path), context);
+      }
+    });
     unawaited(_syncHomeCardFirstTapHintState());
     _restoreWarmHomeCache();
     _warmHomeMedia(
@@ -636,6 +641,15 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     // Instead, we only pause non-critical active loops if any, but weather loop and presence check and update will
     // automatically adapt based on _isTabActive inside their respective timers/listeners.
     _invalidateLiveWorkSession();
+  }
+
+  /// Bọc setup listener trong try-catch để tránh crash dây chuyền nếu 1 listener fail
+  void _wrapSetup(VoidCallback fn, String label) {
+    try {
+      fn();
+    } catch (e, st) {
+      debugPrint('[HomeSetup] $label listener setup failed: $e\n$st');
+    }
   }
 
   Future<void> _syncHomeCardFirstTapHintState() async {
@@ -1164,59 +1178,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     return true;
   }
 
-  bool _sameHighlightItems(
-    List<_HomeHighlightItem> left,
-    List<_HomeHighlightItem> right,
-  ) {
-    if (identical(left, right)) return true;
-    if (left.length != right.length) return false;
-    for (var index = 0; index < left.length; index++) {
-      final l = left[index];
-      final r = right[index];
-      if (l.kind != r.kind ||
-          l.title != r.title ||
-          l.subtitle != r.subtitle ||
-          l.imageUrl != r.imageUrl ||
-          l.timestamp != r.timestamp) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  void _rebuildHighlightItems() {
-    final now = DateTime.now();
-    final nextItems = _albumHighlights
-        .where(
-          (item) =>
-              item.timestamp.year == now.year &&
-              item.timestamp.month == now.month,
-        )
-        .map(
-          (item) => _HomeHighlightItem(
-            kind: _HomeHighlightKind.photo,
-            title: item.caption.trim().isNotEmpty
-                ? item.caption.trim()
-                : context.tr('home_anhkynim_8e7a3c'),
-            subtitle: item.authorName.trim().isNotEmpty
-                ? item.authorName.trim()
-                : context.tr('home_khonchung_6f7bcf'),
-            imageUrl: item.thumbUrl.trim().isNotEmpty
-                ? item.thumbUrl.trim()
-                : item.url.trim(),
-            timestamp: item.timestamp,
-          ),
-        )
-        .toList(growable: false);
-    if (_sameHighlightItems(_highlightItems, nextItems)) {
-      return;
-    }
-    if (!mounted) return;
-    setState(() {
-      _highlightItems = nextItems;
-    });
-  }
-
   Map<String, dynamic> _toStringDynamicMap(dynamic raw) {
     if (raw is Map<String, dynamic>) return raw;
     if (raw is Map) {
@@ -1423,22 +1384,23 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
           }
         },
       );
-      final sessionId = upload?.sessionId?.trim() ?? '';
       final url = upload?.downloadUrl.trim() ?? '';
-      if (sessionId.isEmpty || url.isEmpty) {
-        throw 'Không lấy được phiên tải ảnh mới.';
+      if (url.isEmpty) {
+        throw 'Không lấy được ảnh mới.';
       }
 
       final oldAvatarUrl = (_houseSettings?[field] ?? '').toString().trim();
-
-      await _storageService.finalizePublicImageUpload(
-        houseId: houseId,
-        sessionId: sessionId,
-        target: 'home_avatar',
-        role: role,
-        blurHash: upload?.blurHash,
-      );
       await PendingUploadService.instance.clear(pendingKey);
+
+      // Lưu URL ảnh R2 vào Firebase Realtime Database để đồng bộ
+      try {
+        final hid = (_houseId ?? '').trim();
+        if (hid.isNotEmpty) {
+          await _dbRef.child('houses/$hid/settings').update({
+            field: url,
+          }).catchError((_) {});
+        }
+      } catch (_) {}
 
       if (oldAvatarUrl.isNotEmpty && oldAvatarUrl.startsWith('http')) {
         try {
@@ -2225,13 +2187,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
               valueListenable: widget.isActiveListenable,
               builder: (context, isActive, _) {
                 if (!isActive) return const SizedBox.shrink();
-                return ValueListenableBuilder<String>(
-                  valueListenable: _fallingEffectTypeNotifier,
-                  builder: (context, effectType, child) {
-                    // Tạm ngắt hoàn toàn hiệu ứng nền để giảm lag
-                    return const SizedBox.shrink();
-                  },
-                );
+                return const SizedBox.shrink();
               },
             ),
             _buildMainContent(
@@ -3482,14 +3438,14 @@ class _CountdownQuickCustomizeSheetContentState
                   onSave: () async {
                     if (_tempCountdownSize != null) {
                       final sizeToSave = _tempCountdownSize!;
-                      setState(() {
-                        _tempCountdownSize = null;
-                      });
                       await widget.homeState._saveCountdownQuickUiPrefs(
                         countdownSizePx: sizeToSave,
                         isVip: widget.isVip,
                       );
                       HapticFeedback.mediumImpact();
+                      if (mounted) {
+                        setState(() => _tempCountdownSize = null);
+                      }
                     }
                   },
                 ),

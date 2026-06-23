@@ -15,7 +15,6 @@ extension _MainHomeListeners on _MainHomeTabState {
         return;
       }
       _albumHighlights = nextAlbumHighlights;
-      _rebuildHighlightItems();
     });
 
     _noteSubscription = _noteService.streamNotes(houseId).listen((items) {
@@ -24,7 +23,6 @@ extension _MainHomeListeners on _MainHomeTabState {
         return;
       }
       _noteHighlights = nextNoteHighlights;
-      _rebuildHighlightItems();
       _refreshSmartInteraction();
     });
   }

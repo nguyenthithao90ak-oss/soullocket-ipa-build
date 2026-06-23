@@ -164,6 +164,16 @@ class ChatService {
   ChatService._internal();
 
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+  // ⚡ Gom các StreamSubscription có thể tồn tại sau khi stream kết thúc
+  final Set<StreamSubscription> _activeSubscriptions = {};
+
+  /// Hủy tất cả StreamSubscription đang active (gọi khi app tắt)
+  void dispose() {
+    for (final sub in _activeSubscriptions) {
+      sub.cancel();
+    }
+    _activeSubscriptions.clear();
+  }
 
   Map<String, dynamic>? _asStringDynamicMap(Object? raw) {
     if (raw is! Map) {
@@ -1148,7 +1158,6 @@ class ChatService {
     var deletedDisplayName = '';
     var backgroundUrl = '';
     var backgroundStoragePath = '';
-    var unreadCount = 0;
     Map<String, dynamic>? lastMessage;
     var current = const ChatRoomMeta();
 
@@ -1234,12 +1243,6 @@ class ChatService {
         subscriptions.add(
           roomRef.child(unreadCounterKey).onValue.listen(
             (event) {
-              final raw = event.snapshot.value;
-              if (raw is num) {
-                unreadCount = raw.toInt();
-              } else {
-                unreadCount = int.tryParse(raw?.toString() ?? '') ?? 0;
-              }
               emitIfChanged();
             },
             onError: (_) {},
@@ -1512,7 +1515,7 @@ class ChatService {
     }
 
     final deletedByClient =
-        await _storageService.deleteFileByPath(normalizedStoragePath);
+        await _storageService.deleteImageByUrl(normalizedStoragePath);
     if (deletedByClient) {
       return;
     }

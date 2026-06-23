@@ -5,6 +5,36 @@ import '../../../../core/sl_theme.dart';
 import '../../../../utils/services/utility_service.dart';
 import '../../../utilities/utilities_config.dart';
 
+/// Cache palette cho shortcut items — tránh lookup appConfig mỗi build.
+final Map<String, _ShortcutPalette> _shortcutPaletteCache = {};
+
+class _ShortcutPalette {
+  final List<Color> colors;
+  final IconData iconData;
+  final Color iconColor;
+
+  const _ShortcutPalette({
+    required this.colors,
+    required this.iconData,
+    required this.iconColor,
+  });
+}
+
+_ShortcutPalette _resolveShortcutPalette(UtilityApp app) {
+  return _shortcutPaletteCache.putIfAbsent(app.id, () {
+    final config = appConfig[app.id] ??
+        {
+          'icon': app.icon,
+          'colors': app.colors,
+        };
+    return _ShortcutPalette(
+      colors: List<Color>.from(config['colors'] as List),
+      iconData: config['icon'] as IconData? ?? app.icon,
+      iconColor: config['iconColor'] as Color? ?? SLColors.textInverse,
+    );
+  });
+}
+
 class UtilitiesHubShortcuts extends StatelessWidget {
   const UtilitiesHubShortcuts({
     super.key,
@@ -131,14 +161,10 @@ class _ShortcutIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = appConfig[app.id] ??
-        {
-          'icon': app.icon,
-          'colors': app.colors,
-        };
-    final colors = List<Color>.from(config['colors'] as List);
-    final iconData = config['icon'] as IconData? ?? app.icon;
-    final iconColor = config['iconColor'] as Color? ?? SLColors.textInverse;
+    final palette = _resolveShortcutPalette(app);
+    final colors = palette.colors;
+    final iconData = palette.iconData;
+    final iconColor = palette.iconColor;
 
     return Material(
       color: Colors.transparent,
@@ -180,14 +206,10 @@ class _ShortcutChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = appConfig[app.id] ??
-        {
-          'icon': app.icon,
-          'colors': app.colors,
-        };
-    final colors = List<Color>.from(config['colors'] as List);
-    final iconData = config['icon'] as IconData? ?? app.icon;
-    final iconColor = config['iconColor'] as Color? ?? SLColors.textInverse;
+    final palette = _resolveShortcutPalette(app);
+    final colors = palette.colors;
+    final iconData = palette.iconData;
+    final iconColor = palette.iconColor;
 
     return Material(
       color: Colors.transparent,

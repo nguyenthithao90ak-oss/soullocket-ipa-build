@@ -35,32 +35,28 @@ extension _SettingsTabPersistence on _SettingsTabState {
 
   void _updateThemeDraft(VoidCallback updateFn, {bool syncPreview = false}) {
     updateFn();
-    
-    // 1. Cập nhật giao diện nội bộ (các nút bấm, slider, ...)
+
+    // 1. Cập nhật giao diện nội bộ — gộp vào frame kế tiếp
     if (mounted) {
       setState(() {});
     }
 
-    // 2. Đồng bộ Preview
+    // 2. Đồng bộ Preview — luôn debounce để tránh rebuild home nhiều lần
     _uiPrefsDebounceTimer?.cancel();
-    if (syncPreview) {
-      // Cho các thao tác nhấp chuột (chọn effect/theme), cập nhật ngay lập tức 
-      // để Flutter gộp chung vào 1 frame render, xoá bỏ hiện tượng giật lag do render 2 lần.
-      if (mounted) _applyThemeDraftToUiPrefsPreview();
-    } else {
-      // Dành cho thao tác liên tục nếu cần
-      if (mounted) {
-        _uiPrefsDebounceTimer = Timer(const Duration(milliseconds: 150), () {
+    if (mounted) {
+      _uiPrefsDebounceTimer = Timer(
+        syncPreview ? const Duration(milliseconds: 1) : const Duration(milliseconds: 80),
+        () {
           if (!mounted) return;
           _applyThemeDraftToUiPrefsPreview();
-        });
-      }
+        },
+      );
     }
 
-    // 3. Debounce lưu lên Server ngầm sau 1.5s
+    // 3. Debounce lưu lên Server ngầm sau 800ms (giảm từ 1500ms)
     _autoSaveThemeTimer?.cancel();
     if (mounted) {
-      _autoSaveThemeTimer = Timer(const Duration(milliseconds: 1500), () {
+      _autoSaveThemeTimer = Timer(const Duration(milliseconds: 800), () {
         if (!mounted) return;
         unawaited(_saveThemeSettings(silent: true));
       });
@@ -1088,10 +1084,6 @@ extension _SettingsTabPersistence on _SettingsTabState {
         if (!silent) setState(() => _isSavingAdvanced = false);
       }
     }
-  }
-
-  Future<void> _clearRemoteMusicSettings() async {
-    // Background music is local-only now, so there is no remote music state to clear.
   }
 
   /*

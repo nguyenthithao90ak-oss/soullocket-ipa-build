@@ -1,9 +1,9 @@
-﻿import 'dart:async';
-import 'dart:ui';
+import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/material.dart';
 
@@ -92,10 +92,132 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
   bool _isUploadingMemory = false;
   final ScrollController _scrollController = ScrollController();
 
+  // Month filter state
+  DateTime? _selectedMonth; // only year/month used, day = 1
+  List<DateTime> _availableMonths = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+    if (maxScroll - currentScroll <= 400 && !widget.isLoadingMoreMemories) {
+      widget.onLoadMore();
+    }
+  }
+
+  /// Extract available months from photos list
+  void _updateAvailableMonths(List<Map<String, dynamic>> photos) {
+    final months = <DateTime>{};
+    for (final photo in photos) {
+      final ts = photo['ts'] as int? ?? DateTime.now().millisecondsSinceEpoch;
+      final date = DateTime.fromMillisecondsSinceEpoch(ts);
+      months.add(DateTime(date.year, date.month, 1));
+    }
+    final sorted = months.toList()..sort((a, b) => b.compareTo(a));
+    if (_availableMonths.length != sorted.length ||
+        !_availableMonths.every(sorted.contains)) {
+      setState(() => _availableMonths = sorted);
+    } else {
+      _availableMonths = sorted;
+    }
+  }
+
+  Widget _buildMonthFilter() {
+    final months = _availableMonths;
+    if (months.length <= 1) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Lọc theo tháng',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 36,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: months.length + 1,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final isAll = index == 0;
+                final isSelected = isAll
+                    ? _selectedMonth == null
+                    : _selectedMonth == months[index - 1];
+                final label = isAll
+                    ? 'Tất cả'
+                    : DateFormat('MM/yyyy').format(months[index - 1]);
+                return ChoiceChip(
+                  label: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: isSelected ? Colors.white : const Color(0xFF8A5B76),
+                    ),
+                  ),
+                  selected: isSelected,
+                  selectedColor: const Color(0xFFD81B60),
+                  backgroundColor: const Color(0xFFF8F8F8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  onSelected: (_) {
+                    setState(() {
+                      _selectedMonth = isAll ? null : months[index - 1];
+                    });
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Filter flattened items by selected month
+  List<DiaryMemoryFlattenedItem> _filterByMonth(
+    List<DiaryMemoryFlattenedItem> items,
+  ) {
+    if (_selectedMonth == null || _availableMonths.length <= 1) return items;
+    return items.where((item) {
+      if (!item.isHeader || item.date == null) return true;
+      final d = item.date!;
+      return d.year == _selectedMonth!.year && d.month == _selectedMonth!.month;
+    }).toList();
+  }
+
+  /// Filter raw photos list by selected month
+  List<Map<String, dynamic>> _filterPhotosByMonth(
+    List<Map<String, dynamic>> photos,
+  ) {
+    if (_selectedMonth == null || _availableMonths.length <= 1) return photos;
+    return photos.where((photo) {
+      final ts = photo['ts'] as int? ?? 0;
+      final d = DateTime.fromMillisecondsSinceEpoch(ts);
+      return d.year == _selectedMonth!.year && d.month == _selectedMonth!.month;
+    }).toList();
   }
 
   Future<void> _handleAddMemory() async {
@@ -251,6 +373,18 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                           showingCache = preparedFeed.showingCache;
                           _scheduleThumbnailWarmup(photos);
 
+                          // Update available months for filter
+                          if (photos.isNotEmpty && _availableMonths.isEmpty) {
+                            _updateAvailableMonths(photos);
+                          }
+
+                          // Apply month filter
+                          final filteredItems = _filterByMonth(flattenedItems);
+                          final filteredPhotos = _filterPhotosByMonth(photos);
+                          final filteredCount = _selectedMonth == null
+                              ? visiblePhotoCount
+                              : filteredPhotos.length;
+
                           if (photos.isEmpty) {
                             bodySlivers.add(
                               const SliverToBoxAdapter(
@@ -258,11 +392,19 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                               ),
                             );
                           } else {
+                            // Month filter bar
+                            if (_availableMonths.length > 1) {
+                              bodySlivers.add(
+                                SliverToBoxAdapter(
+                                  child: _buildMonthFilter(),
+                                ),
+                              );
+                            }
                             bodySlivers.add(
                               SliverList(
                                 delegate: SliverChildBuilderDelegate(
                                   (context, index) {
-                                    final item = flattenedItems[index];
+                                    final item = filteredItems[index];
 
                                     if (item.isHeader) {
                                       final highlights = item.highlights;
@@ -293,11 +435,11 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                       onToggleSelection:
                                           widget.onToggleSelection,
                                       onOpenMemory: widget.onOpenMemory,
-                                      allPhotos: photos,
+                                      allPhotos: filteredPhotos,
                                       onEnsurePhotoUrl: widget.onEnsurePhotoUrl,
                                     );
                                   },
-                                  childCount: flattenedItems.length,
+                                  childCount: filteredItems.length,
                                 ),
                               ),
                             );
@@ -305,10 +447,20 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                             if (preparedFeed.canLoadMore) {
                               bodySlivers.add(
                                 SliverToBoxAdapter(
-                                  child: _DiaryMemoryLoadMoreCard(
-                                    loadedCount: visiblePhotoCount,
-                                    isLoading: widget.isLoadingMoreMemories,
-                                    onTap: widget.onLoadMore,
+                                  child: SizedBox(
+                                    height: widget.isLoadingMoreMemories ? 60 : 40,
+                                    child: Center(
+                                      child: widget.isLoadingMoreMemories
+                                          ? const SizedBox(
+                                              width: 24,
+                                              height: 24,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2.5,
+                                                color: Color(0xFFD81B60),
+                                              ),
+                                            )
+                                          : const SizedBox.shrink(),
+                                    ),
                                   ),
                                 ),
                               );
@@ -349,7 +501,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                           slivers: [
                             SliverToBoxAdapter(
                               child: _DiaryMemoryHeroCard(
-                                totalPhotos: visiblePhotoCount,
+                                totalPhotos: filteredCount,
                                 isOffline: isOffline,
                                 isSyncing: waitingForLive,
                                 showingCache: showingCache,
@@ -420,18 +572,21 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 24, bottom: 12, left: 16, right: 16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.45),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.7), width: 1.2),
+      padding: const EdgeInsets.only(top: 24, bottom: 12, left: 10, right: 10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.70),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.86)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF7C8BFF).withValues(alpha: 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
             ),
+          ],
+        ),
         child: Row(
           children: [
             Container(
@@ -499,7 +654,7 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
             ),
           ],
         ),
-      ))),
+      ),
     );
   }
 }
@@ -822,7 +977,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                         child: Image(
                           image: imageProvider,
                           fit: BoxFit.cover,
-                          filterQuality: FilterQuality.medium,
+                          filterQuality: FilterQuality.high,
                           gaplessPlayback: true,
                           frameBuilder:
                               (context, child, frame, wasSynchronouslyLoaded) =>
@@ -881,7 +1036,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                     final isSelected =
                         widget.selectedMemories.containsKey(photoId);
 
-                    return _BounceGestureDetector(
+                    return GestureDetector(
                       onLongPress: () => widget.onToggleSelection(photo),
                       onTap: () async {
                         if (widget.isSelectionMode) {
@@ -1094,8 +1249,19 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withValues(alpha: 0.96),
+            const Color(0xFFFFF0F7).withValues(alpha: 0.94),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(28),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.86), width: 1.4),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFFF7FB2).withValues(alpha: 0.16),
@@ -1109,21 +1275,7 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.8),
-                width: 1.2,
-              ),
-            ),
-            child: Stack(
+      child: Stack(
         children: [
           Positioned(
             right: -4,
@@ -1292,7 +1444,7 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
           ),
         ],
       ),
-    ))));
+    );
   }
 
   IconData get _statusIcon {
@@ -1398,98 +1550,6 @@ class _DiaryMemoryHeroChip extends StatelessWidget {
   }
 }
 
-class _DiaryMemoryLoadMoreCard extends StatelessWidget {
-  final int loadedCount;
-  final bool isLoading;
-  final VoidCallback onTap;
-
-  const _DiaryMemoryLoadMoreCard({
-    required this.loadedCount,
-    required this.isLoading,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 18),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.90),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFF62C7B5).withValues(alpha: 0.22),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF5C71D8).withValues(alpha: 0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            L10nService().format(
-              'diary_showing_latest_photos',
-              {'count': loadedCount},
-            ),
-            style: SLTheme.quicksand(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF2E2740),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            context.tr('home_koxungcuim_61162c'),
-            style: SLTheme.quicksand(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF7C6D83),
-            ),
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: isLoading ? null : onTap,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4F6BD8),
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-              ),
-              icon: isLoading
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Icon(Icons.expand_more_rounded),
-              label: Text(
-                isLoading
-                    ? context.tr('home_angtithm_87de84')
-                    : context.tr('home_tithmnhchn_9cdfaf'),
-                style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _DiaryMemoryAddButton extends StatelessWidget {
   final Future<void> Function() onTap;
   final bool isLoading;
@@ -1586,61 +1646,6 @@ class _DiaryMemoryInlineLoading extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _BounceGestureDetector extends StatefulWidget {
-  final Widget child;
-  final VoidCallback onTap;
-  final VoidCallback onLongPress;
-
-  const _BounceGestureDetector({
-    required this.child,
-    required this.onTap,
-    required this.onLongPress,
-  });
-
-  @override
-  State<_BounceGestureDetector> createState() => _BounceGestureDetectorState();
-}
-
-class _BounceGestureDetectorState extends State<_BounceGestureDetector> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 150),
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.94).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => _controller.forward(),
-      onTapUp: (_) {
-        _controller.reverse();
-        widget.onTap();
-      },
-      onTapCancel: () => _controller.reverse(),
-      onLongPress: widget.onLongPress,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: widget.child,
       ),
     );
   }

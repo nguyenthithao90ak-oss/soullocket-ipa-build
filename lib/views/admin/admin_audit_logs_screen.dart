@@ -41,7 +41,7 @@ class _AdminAuditLogsScreenState extends State<AdminAuditLogsScreen> {
 
     try {
       final snapshot =
-          await _db.child('admin_system/audit_log').limitToLast(100).get();
+          await _db.child('admin_system/audit_log').limitToLast(100).get().timeout(const Duration(seconds: 8));
       final List<Map<String, dynamic>> loaded = [];
 
       if (snapshot.exists) {

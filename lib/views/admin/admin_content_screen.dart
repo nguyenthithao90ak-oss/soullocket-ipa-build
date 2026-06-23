@@ -43,7 +43,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
     }
 
     try {
-      final snapshot = await _db.child('reports').get();
+      final snapshot = await _db.child('reports').get().timeout(const Duration(seconds: 8));
       final List<Map<String, dynamic>> loaded = [];
 
       if (snapshot.exists) {

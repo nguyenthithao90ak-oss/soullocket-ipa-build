@@ -340,20 +340,34 @@ class DiaryFeedController extends ChangeNotifier {
 
     _hydratingAuthorUids.addAll(uids);
     final resolved = <String, String>{};
-    try {
-      final entries = await Future.wait(
-        uids.map((uid) async {
-          final name = await _resolveAccountNameByUid(
-            uid,
-            authUser: currentUser?.uid == uid ? currentUser : null,
-          );
-          return MapEntry(uid, name);
-        }),
-      );
 
-      for (final entry in entries) {
-        if (entry.value.isNotEmpty) {
-          resolved[entry.key] = entry.value;
+    try {
+      // Batch: 1 RTDB read lấy tất cả users cùng lúc thay vì N reads riêng lẻ
+      final batchRef = _dbRef.child('users');
+      final batchSnapshot = await batchRef.get().timeout(const Duration(seconds: 3));
+      final batchData = batchSnapshot.value;
+      if (batchData is Map) {
+        final allUsers = Map<dynamic, dynamic>.from(batchData);
+        for (final uid in uids) {
+          final userData = allUsers[uid];
+          if (userData is! Map) continue;
+          final name = _firstNameCandidate([
+            userData['displayName']?.toString(),
+            userData['name']?.toString(),
+            userData['fullName']?.toString(),
+            userData['username']?.toString(),
+            _emailLocalPart(userData['email']?.toString()),
+          ]);
+          if (name.isNotEmpty) {
+            resolved[uid] = name;
+          }
+        }
+      }
+    } catch (_) {
+      // Fallback: resolve từ auth cho current user
+      for (final uid in uids) {
+        if (currentUser?.uid == uid && currentUser?.displayName?.trim().isNotEmpty == true) {
+          resolved[uid] = currentUser!.displayName!.trim();
         }
       }
     } finally {
@@ -482,25 +496,44 @@ class DiaryFeedController extends ChangeNotifier {
   }
 
   void _updatePostsVN() {
+    final pinnedList = _pinnedPosts;
+    final latestList = _latestPosts;
+    final paginatedList = _paginatedPosts;
+
+    if (pinnedList.isEmpty && latestList.isEmpty && paginatedList.isEmpty) {
+      postsVN.value = const <DiaryPost>[];
+      return;
+    }
+
     final all = <DiaryPost>[];
 
-    all.addAll(_pinnedPosts);
+    all.addAll(pinnedList);
 
-    final pinnedIds = _pinnedPosts.map((p) => p.id).toSet();
-    for (final post in _latestPosts) {
+    final pinnedIds = pinnedList.map((p) => p.id).toSet();
+    for (final post in latestList) {
       if (!pinnedIds.contains(post.id)) {
         all.add(post);
       }
     }
 
-    final existingIds = {...pinnedIds, ..._latestPosts.map((p) => p.id)};
-    for (final post in _paginatedPosts) {
+    final latestIds = latestList.map((p) => p.id).toSet();
+    final existingIds = pinnedIds.length < latestIds.length
+        ? {...pinnedIds, ...latestIds}
+        : {...latestIds, ...pinnedIds};
+
+    for (final post in paginatedList) {
       if (!existingIds.contains(post.id)) {
         all.add(post);
       }
     }
 
-    _sortDiaryPosts(all);
+    all.sort((a, b) {
+      final pinnedCompare = (b.pinned ? 1 : 0).compareTo(a.pinned ? 1 : 0);
+      if (pinnedCompare != 0) return pinnedCompare;
+      final pinnedAtCompare = (b.pinnedAt ?? 0).compareTo(a.pinnedAt ?? 0);
+      if (pinnedAtCompare != 0) return pinnedAtCompare;
+      return b.timestamp.compareTo(a.timestamp);
+    });
     postsVN.value = all;
   }
 

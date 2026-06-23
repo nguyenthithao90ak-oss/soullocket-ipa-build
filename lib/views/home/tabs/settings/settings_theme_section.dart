@@ -432,69 +432,22 @@ extension _SettingsTabThemeSection on _SettingsTabState {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                StatefulBuilder(
-                  builder: (context, setStateSlider) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${context.tr('theme_countdown_size')}: ${_localCountdownSize!.round()}px',
-                          style: SLTheme.quicksand(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF8A5B76),
-                          ),
-                        ),
-                        Slider(
-                          value: _localCountdownSize!,
-                          min: 200,
-                          max: UiPrefs.maxCountdownSizePx,
-                          activeColor: const Color(0xFFD81B60),
-                          inactiveColor: const Color(0xFFE6E6E6),
-                          onChanged: (value) {
-                            setStateSlider(() {
-                              _localCountdownSize = value;
-                            });
-                            
-                            _draftCountdownSizePx = value;
-                            
-                            // Chỉ cập nhật nhẹ preview card trong settings, không gọi _applyThemeDraftToUiPrefsPreview
-                            // để tránh lag do rebuild toàn app khi kéo slider.
-                            _panelRebuildNotifier.value++;
-                          },
-                          onChangeEnd: (value) {
-                            // Khi thả tay ra mới cập nhật UiPrefs (sync) và đẩy lên mảng draft.
-                            _updateThemeDraft(() => _draftCountdownSizePx = value, syncPreview: true);
-                          },
-                        ),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton.icon(
-                            onPressed: () {
-                              // Lưu thủ công thay vì tự động lưu
-                              _saveThemeSettings(silent: false);
-                            },
-                            icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
-                            label: Text(
-                              context.tr('theme_save_size'),
-                              style: SLTheme.quicksand(
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFFD81B60),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
+                _SliderWithLabel(
+                  initialValue: _localCountdownSize ?? UiPrefs.notifier.value.countdownSizePx,
+                  min: 200,
+                  max: UiPrefs.maxCountdownSizePx,
+                  onChanged: (value) {
+                    _draftCountdownSizePx = value;
+                    _panelRebuildNotifier.value++;
+                  },
+                  onChangeEnd: (value) {
+                    _updateThemeDraft(() => _draftCountdownSizePx = value, syncPreview: true);
                   },
                 ),
                 const SizedBox(height: 8),
                 _buildLabel(context.tr('theme_frame_type')),
                 const SizedBox(height: 8),
-                _buildAvatarFrameStrip(selection.avatarFrameKey),
+                // _buildAvatarFrameStrip(selection.avatarFrameKey),
                 const SizedBox(height: 12),
                 _buildLabel(context.tr('theme_countdown_style')),
                 _buildThemeDropdownField(
@@ -1010,6 +963,90 @@ class _ThemeSectionCardState extends State<_ThemeSectionCard> with SingleTickerP
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Slider with label — tách riêng StatefulWidget để tránh rebuild toàn panel khi kéo.
+class _SliderWithLabel extends StatefulWidget {
+  final double initialValue;
+  final double min;
+  final double max;
+  final ValueChanged<double> onChanged;
+  final ValueChanged<double> onChangeEnd;
+
+  const _SliderWithLabel({
+    required this.initialValue,
+    required this.min,
+    required this.max,
+    required this.onChanged,
+    required this.onChangeEnd,
+  });
+
+  @override
+  State<_SliderWithLabel> createState() => _SliderWithLabelState();
+}
+
+class _SliderWithLabelState extends State<_SliderWithLabel> {
+  late double _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = widget.initialValue;
+  }
+
+  @override
+  void didUpdateWidget(_SliderWithLabel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialValue != widget.initialValue) {
+      _value = widget.initialValue;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${context.tr('theme_countdown_size')}: ${_value.round()}px',
+          style: SLTheme.quicksand(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: const Color(0xFF8A5B76),
+          ),
+        ),
+        Slider(
+          value: _value.clamp(widget.min, widget.max),
+          min: widget.min,
+          max: widget.max,
+          activeColor: const Color(0xFFD81B60),
+          inactiveColor: const Color(0xFFE6E6E6),
+          onChanged: (value) {
+            setState(() => _value = value);
+            widget.onChanged(value);
+          },
+          onChangeEnd: widget.onChangeEnd,
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: () => widget.onChangeEnd(_value),
+            icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+            label: Text(
+              context.tr('theme_save_size'),
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFD81B60),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

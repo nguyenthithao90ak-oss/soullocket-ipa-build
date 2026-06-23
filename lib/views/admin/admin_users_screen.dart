@@ -50,7 +50,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     }
 
     try {
-      final snapshot = await _db.child('houses').get();
+      final snapshot = await _db.child('houses').get().timeout(const Duration(seconds: 10));
       final List<Map<String, dynamic>> loaded = [];
 
       if (snapshot.exists) {

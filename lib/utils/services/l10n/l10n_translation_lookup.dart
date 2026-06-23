@@ -1,7 +1,14 @@
 part of '../l10n_service.dart';
 
 class _L10nTranslationLookup {
-  const _L10nTranslationLookup();
+  _L10nTranslationLookup();
+
+  /// LRU cache: key="lang|rawKey" → translation. Tránh lookup lặp.
+  static const int _cacheMax = 1024;
+  final LinkedHashMap<String, String> _resultCache =
+      LinkedHashMap<String, String>();
+
+  String _cacheKey(String lang, String rawKey) => '$lang|$rawKey';
 
   String translate(
     String key, {
@@ -19,11 +26,17 @@ class _L10nTranslationLookup {
           orElse: () => MapEntry(locale.languageCode, locale),
         )
         .key;
+
+    // ⚡ Cache hit
+    final ck = _cacheKey(lang, rawKey);
+    final cached = _resultCache[ck];
+    if (cached != null) return cached;
+
     final isVietnamese = lang == 'vi';
-    
+
     Map<String, String> map;
     Map<String, String>? webParity;
-    
+
     if (isVietnamese) {
       map = _resolvedVi(assetMaps['vi'] ?? const {});
       webParity = _L10nStaticData._viWebParity;
@@ -38,21 +51,33 @@ class _L10nTranslationLookup {
     final canonicalKey =
         assetViValueToKey[rawKey] ?? staticViValueToKey[rawKey] ?? rawKey;
 
-    if (webParity.containsKey(canonicalKey)) return webParity[canonicalKey]!;
-    if (map.containsKey(canonicalKey)) return map[canonicalKey]!;
-    if (webParity.containsKey(rawKey)) return webParity[rawKey]!;
-    if (map.containsKey(rawKey)) return map[rawKey]!;
+    String? result;
+    if (webParity.containsKey(canonicalKey)) result = webParity[canonicalKey];
+    if (result == null && map.containsKey(canonicalKey)) result = map[canonicalKey];
+    if (result == null && webParity.containsKey(rawKey)) result = webParity[rawKey];
+    if (result == null && map.containsKey(rawKey)) result = map[rawKey];
 
-    final commonMap = _commonTranslations[lang] ?? const {};
-    if (commonMap.containsKey(canonicalKey)) return commonMap[canonicalKey]!;
-    if (commonMap.containsKey(rawKey)) return commonMap[rawKey]!;
-    
-    // Fallback to English if key not found
-    final enMap = _resolvedEn(assetMaps['en'] ?? const {});
-    if (enMap.containsKey(canonicalKey)) return enMap[canonicalKey]!;
-    if (enMap.containsKey(rawKey)) return enMap[rawKey]!;
+    if (result == null) {
+      final commonMap = _commonTranslations[lang] ?? const {};
+      if (commonMap.containsKey(canonicalKey)) result = commonMap[canonicalKey];
+      if (result == null && commonMap.containsKey(rawKey)) result = commonMap[rawKey];
+    }
 
-    return rawKey;
+    if (result == null) {
+      final enMap = _resolvedEn(assetMaps['en'] ?? const {});
+      if (enMap.containsKey(canonicalKey)) result = enMap[canonicalKey];
+      if (result == null && enMap.containsKey(rawKey)) result = enMap[rawKey];
+    }
+
+    result ??= rawKey;
+
+    // ⚡ Lưu cache, LRU evict nếu quá ngưỡng
+    if (_resultCache.length >= _cacheMax) {
+      _resultCache.remove(_resultCache.keys.first);
+    }
+    _resultCache[ck] = result;
+
+    return result;
   }
 
   static const Map<String, Map<String, String>> _commonTranslations = {

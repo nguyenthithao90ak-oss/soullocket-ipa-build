@@ -144,29 +144,10 @@ extension _CommunityTabComposer on _CommunityTabState {
         minWidth: 800,
         minHeight: 800,
       );
-      final sessionId = upload?.sessionId?.trim() ?? '';
-      if (sessionId.isEmpty) {
+      final url = upload?.downloadUrl.trim() ?? '';
+      if (url.isEmpty) {
         throw Exception(errUploadFailed);
       }
-
-      await _storageService.finalizePublicImageUpload(
-        houseId: hid,
-        sessionId: sessionId,
-        target: 'social_post',
-        houseName: _houseName,
-        authorRole: authorUid,
-        authorName: _houseName,
-        authorAvt: _houseAvatar,
-        content: '',
-        privacy: 'friends',
-        mood: _ct(defaultMood, 'Proud'),
-        moodEmoji: 'âœ¨',
-        location: '',
-        postType: 'polaroid',
-        isAnon: false,
-        isLocket: true,
-        commentsEnabled: _houseSettings['settings']?['commentPolicy'] != 'none',
-      );
       if (pendingKey != null) {
         await PendingUploadService.instance.clear(pendingKey);
       }
@@ -298,30 +279,10 @@ extension _CommunityTabComposer on _CommunityTabState {
           minWidth: 1280,
           minHeight: 1280,
         );
-        final sessionId = upload?.sessionId?.trim() ?? '';
-        if (sessionId.isEmpty) {
+        final url = upload?.downloadUrl.trim() ?? '';
+        if (url.isEmpty) {
           throw Exception(errUploadFailed);
         }
-        await _storageService.finalizePublicImageUpload(
-          houseId: hid,
-          sessionId: sessionId,
-          target: 'social_post',
-          houseName: _houseName,
-          authorRole: authorUid,
-          authorName: _houseName,
-          authorAvt: _houseAvatar,
-          content: content,
-          privacy: resolvedVisibility,
-          mood: moodLabel,
-          moodEmoji: moodEmoji,
-          location: locationText,
-          postType: resolvedPostType,
-          isAnon: isAnon,
-          isLocket: isLocketPost,
-          commentsEnabled:
-              _houseSettings['settings']?['commentPolicy'] != 'none',
-          flagged: hasViolations,
-        );
         if (pendingKey != null) {
           await PendingUploadService.instance.clear(pendingKey);
         }

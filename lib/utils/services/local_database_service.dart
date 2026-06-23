@@ -62,8 +62,9 @@ class LocalDatabaseService {
   bool _isSyncing = false;
   SyncQueueSummary? _lastQueueSummary;
 
-  // RAM cache nhanh cho read-through
+  // RAM cache nhanh cho read-through — giới hạn 100 entries
   static final Map<String, _MemoryCacheEntry> _readCache = {};
+  static const int _readCacheMaxSize = 100;
   static const Duration _defaultCacheTtl = Duration(minutes: 15);
 
   Stream<SyncQueueSummary> get queueSummaryStream => _queueController.stream;
@@ -81,6 +82,9 @@ class LocalDatabaseService {
     _initializing = task;
     try {
       await task;
+      // Dọn 1 lần cache quá hạn khi khởi tạo (không cần timer —
+      // các lần get/set sau sẽ tự dọn entry hết hạn khi gặp)
+      await purgeExpiredCache();
     } finally {
       if (identical(_initializing, task)) {
         _initializing = null;
@@ -217,7 +221,18 @@ class LocalDatabaseService {
   /// Lưu cache entry vào cả RAM (nhanh) và SQLite (bền).
   Future<void> setCacheEntry(String key, dynamic data, {Duration? ttl}) async {
     final resolvedTtl = ttl ?? _defaultCacheTtl;
-    // RAM
+    // RAM — LRU eviction nếu quá tải
+    if (_readCache.length >= _readCacheMaxSize) {
+      String? oldestKey;
+      DateTime? oldestTime;
+      for (final entry in _readCache.entries) {
+        if (oldestTime == null || entry.value.expiresAt.isBefore(oldestTime)) {
+          oldestTime = entry.value.expiresAt;
+          oldestKey = entry.key;
+        }
+      }
+      if (oldestKey != null) _readCache.remove(oldestKey);
+    }
     _readCache[key] = _MemoryCacheEntry(
       data: data,
       expiresAt: DateTime.now().add(resolvedTtl),

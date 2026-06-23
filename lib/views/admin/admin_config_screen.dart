@@ -236,7 +236,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
         houseIds.add(targetId);
       } else {
         // 1. Fetch all active houses
-        final housesSnap = await _db.child('houses').get();
+        final housesSnap = await _db.child('houses').get().timeout(const Duration(seconds: 10));
         if (!housesSnap.exists) throw noHousesMsg;
 
         final houses = Map<dynamic, dynamic>.from(housesSnap.value as Map);

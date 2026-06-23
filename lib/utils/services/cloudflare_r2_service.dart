@@ -131,6 +131,24 @@ class CloudflareR2Service {
     }
   }
 
+  /// Xoá object trên R2 trực tiếp từ storage path
+  /// Không cần parse URL, dùng cho storage_path có sẵn
+  Future<bool> deleteByPath(String objectName) async {
+    if (!isConfigured || _minio == null) return false;
+
+    try {
+      final normalized = objectName.trim();
+      if (normalized.isEmpty) return false;
+
+      await _minio!.removeObject(bucketName, normalized);
+      debugPrint('[CloudflareR2] Đã xoá theo path: $normalized');
+      return true;
+    } catch (e) {
+      debugPrint('[CloudflareR2] Lỗi xoá theo path: $e');
+      return false;
+    }
+  }
+
   /// Lấy object name từ public URL
   String? _extractObjectName(String url) {
     final normalized = url.trim();

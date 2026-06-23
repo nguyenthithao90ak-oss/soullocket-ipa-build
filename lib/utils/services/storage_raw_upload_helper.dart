@@ -45,7 +45,8 @@ class StorageRawUploadHelper {
       CloudflareR2Service.instance.init();
 
       final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(tempDir.path, 'r2_upload_${DateTime.now().microsecondsSinceEpoch}.tmp');
+      final ext = _isImageContentType(resolvedContentType) ? _imageExtension(resolvedContentType) : '.bin';
+      final tempPath = p.join(tempDir.path, 'r2_upload_${DateTime.now().microsecondsSinceEpoch}$ext');
       final tempFile = File(tempPath);
 
       try {
@@ -94,6 +95,15 @@ class StorageRawUploadHelper {
             ct.contains('webp') ||
             ct.contains('heic') ||
             ct.contains('heif'));
+  }
+
+  String _imageExtension(String contentType) {
+    final ct = contentType.toLowerCase();
+    if (ct.contains('png')) return '.png';
+    if (ct.contains('webp')) return '.webp';
+    if (ct.contains('gif')) return '.gif';
+    if (ct.contains('heic') || ct.contains('heif')) return '.heic';
+    return '.jpg';
   }
 
   /// Nén file ảnh nếu > 500KB. Trả về bytes đã nén (hoặc bytes gốc nếu không cần/lỗi).
@@ -182,7 +192,7 @@ class StorageRawUploadHelper {
       CloudflareR2Service.instance.init();
       
       final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(tempDir.path, 'r2_music_upload_${DateTime.now().microsecondsSinceEpoch}.tmp');
+      final tempPath = p.join(tempDir.path, 'r2_music_upload_${DateTime.now().microsecondsSinceEpoch}.mp3');
       final tempFile = File(tempPath);
       
       try {
@@ -284,7 +294,8 @@ class StorageRawUploadHelper {
       CloudflareR2Service.instance.init();
       
       final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(tempDir.path, 'r2_bytes_upload_${DateTime.now().microsecondsSinceEpoch}.tmp');
+      final ext = _isImageContentType(resolvedContentType) ? _imageExtension(resolvedContentType) : '.bin';
+      final tempPath = p.join(tempDir.path, 'r2_upload_${DateTime.now().microsecondsSinceEpoch}$ext');
       final tempFile = File(tempPath);
       
       try {

@@ -532,6 +532,25 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         : StorageService.secretVaultDailyLimitFree;
     const enforceLocalDailyLimit = true;
 
+    // Total cap check
+    final vaultCountSnap = await _dbRef
+        .child('houses/${widget.houseId}/vaultCount')
+        .get();
+    final currentTotal = vaultCountSnap.value is num
+        ? (vaultCountSnap.value as num).toInt()
+        : 0;
+    if (currentTotal >= StorageService.secretVaultTotalCap) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+            'Kho mật đã đạt tối đa 365 ảnh. Hãy xóa bớt để thêm ảnh mới.',
+          ),
+          backgroundColor: SLColors.warning,
+        ));
+      }
+      return;
+    }
+
     if (enforceLocalDailyLimit && uploadedToday >= dailyLimit) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -797,16 +816,19 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       restorePayload: restorePayload,
     );
 
-    final storagePath = photo['storagePath']?.toString() ?? '';
     final url = photo['url']?.toString() ?? '';
+    final storagePath = photo['storagePath']?.toString() ?? '';
 
-    if (storagePath.isNotEmpty) {
-      await _storageService.deleteFileByPath(storagePath);
-    } else if (url.isNotEmpty) {
+    if (url.isNotEmpty) {
+      // deleteImageByUrl đã hỗ trợ R2
       await _storageService.deleteImageByUrl(url);
+    } else if (storagePath.isNotEmpty) {
+      await _storageService.deleteFileByPath(storagePath);
     }
 
     await _dbRef.child('houses/${widget.houseId}/private_secure/$id').remove();
+    await _dbRef.child('houses/${widget.houseId}/vaultCount')
+        .set(ServerValue.increment(-1));
   }
 
   Future<String?> _showPassphraseDialog({required bool hasSetup}) async {

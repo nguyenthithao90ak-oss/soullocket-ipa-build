@@ -101,7 +101,7 @@ extension _MainHomeDerivedStateHelper on _MainHomeTabState {
         (screenWidth - 20).clamp(280.0, UiPrefs.maxCountdownSizePx).toDouble();
     final circleSize = min(
       responsiveCircleMax,
-      uiPrefs.countdownSizePx.clamp(260.0, UiPrefs.maxCountdownSizePx),
+      uiPrefs.countdownSizePx.clamp(UiPrefs.minCountdownSizePx, UiPrefs.maxCountdownSizePx),
     ).toDouble();
 
     final homeShowHouseName =

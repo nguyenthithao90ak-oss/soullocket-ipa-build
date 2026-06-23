@@ -332,50 +332,38 @@ class _StableShellBackgroundImageState
       return const SizedBox.shrink();
     }
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        if (!_ready && fallback != null)
-          Image(
-            image: fallback,
-            fit: BoxFit.cover,
-            gaplessPlayback: true,
-            filterQuality: FilterQuality.medium,
-          ),
-        Image(
-          image: current,
-          fit: BoxFit.cover,
-          gaplessPlayback: true,
-          filterQuality: FilterQuality.medium,
-          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-            if (!_ready && (wasSynchronouslyLoaded || frame != null)) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted || _ready || _networkProvider != current) return;
-                setState(() {
-                  _ready = true;
-                  _retainedProvider = current;
-                });
-              });
-            }
-            return AnimatedOpacity(
-              opacity:
-                  (wasSynchronouslyLoaded || frame != null || _ready) ? 1 : 0,
-              duration: Duration.zero,
-              child: child,
-            );
-          },
-          errorBuilder: (_, __, ___) => fallback != null
-              ? Image(
-                  image: fallback,
-                  fit: BoxFit.cover,
-                  gaplessPlayback: true,
-                  filterQuality: FilterQuality.medium,
-                )
-              : const SizedBox.shrink(),
-        ),
-      ],
+    // Chỉ hiển thị 1 image tại 1 thời điểm để tránh GPU composite 2 full-screen
+    final showCurrent = _ready || !_hasFallback;
+    return Image(
+      image: showCurrent ? current : (fallback ?? current),
+      fit: BoxFit.cover,
+      gaplessPlayback: true,
+      filterQuality: FilterQuality.low,
+      isAntiAlias: false,
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (!_ready && (wasSynchronouslyLoaded || frame != null)) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted || _ready || _networkProvider != current) return;
+            setState(() {
+              _ready = true;
+              _retainedProvider = current;
+            });
+          });
+        }
+        return child;
+      },
+      errorBuilder: (_, __, ___) => fallback != null
+          ? Image(
+              image: fallback,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              filterQuality: FilterQuality.low,
+            )
+          : const SizedBox.shrink(),
     );
   }
+
+  bool get _hasFallback => _diskCachedProvider != null || _retainedProvider != null;
 }
 
 

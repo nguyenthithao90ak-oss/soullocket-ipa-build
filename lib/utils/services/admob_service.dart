@@ -20,6 +20,7 @@ import 'offline_cache_service.dart';
 import 'purchase_service.dart';
 import 'revenue_security_telemetry_service.dart';
 import 'ad_suppression_guard.dart';
+import 'texas_age_gate_service.dart';
 
 /// ============================================================
 ///  AdMobService — GRA (Phase Production)
@@ -382,6 +383,9 @@ class AdMobService {
       await MobileAds.instance.initialize();
       debugPrint('AdMobService: MobileAds SDK initialized.');
       _sdkInitialized = true;
+      // Áp dụng age gate từ Texas Age Signals API:
+      // nếu user là minor, giới hạn quảng cáo child-directed + nội dung G
+      unawaited(_applyAgeGateToAdSettings());
       _loadRewardedAd();
       _loadSoulGameRewardedAd();
       unawaited(loadInterstitialAd());
@@ -394,7 +398,30 @@ class AdMobService {
     }
   }
 
-  void _loadRewardedAd() {
+  /// Áp dụng age gate từ Texas Age Signals API cho AdMob.
+  /// Nếu user là minor (dưới 18 theo Texas SB 2420), set child-directed
+  /// treatment và giới hạn maxAdContentRating = G.
+  Future<void> _applyAgeGateToAdSettings() async {
+    try {
+      final ageGate = TexasAgeGateService();
+      final classification = await ageGate.resolveAgeSignal();
+      if (classification == AgeClassification.minor) {
+        debugPrint('AdMobService: minor detected, applying child-directed ad settings.');
+        await MobileAds.instance.updateRequestConfiguration(
+          RequestConfiguration(
+            tagForChildDirectedTreatment: TagForChildDirectedTreatment.yes,
+            maxAdContentRating: MaxAdContentRating.g,
+          ),
+        );
+      } else if (classification == AgeClassification.adult) {
+        debugPrint('AdMobService: adult confirmed, no ad restriction needed.');
+      }
+    } catch (e) {
+      debugPrint('AdMobService: failed to apply age gate: $e');
+    }
+  }
+
+  void _loadRewardedAd({int retryCount = 0}) {
     if (kIsWeb) return;
     if (!_sdkInitialized) return;
     if (_isRewardedAdLoading) return;
@@ -418,6 +445,12 @@ class AdMobService {
               'AdMobService: rewarded main failed to load: ${errorInfo.message}');
           _rewardedAd = null;
           _isRewardedAdLoading = false;
+          // Retry 2 lần, mỗi lần cách 10s
+          if (retryCount < 2) {
+            Future.delayed(const Duration(seconds: 10), () {
+              _loadRewardedAd(retryCount: retryCount + 1);
+            });
+          }
         },
       ),
     );
@@ -677,6 +710,7 @@ class AdMobService {
 
   // ─── REWARDED COOLDOWN ─────────────────────────────────────────
   int _lastRewardedShownMs = 0;
+  int _lastSoulGameRewardedShownMs = 0;
   static const int _rewardedCooldownMs = 45000; // 45 seconds
 
   /// Hiển thị quảng cáo rewarded. Trả về true nếu user xem đủ.
@@ -790,7 +824,7 @@ class AdMobService {
     if (await isProUser()) return false;
 
     final nowMs = DateTime.now().millisecondsSinceEpoch;
-    if (nowMs - _lastRewardedShownMs < _rewardedCooldownMs) {
+    if (nowMs - _lastSoulGameRewardedShownMs < _rewardedCooldownMs) {
       debugPrint(
           'AdMobService: Xem quảng cáo quá nhanh (Soul Game), đang chờ cooldown.');
       return false; // Chưa qua cooldown
@@ -813,7 +847,7 @@ class AdMobService {
     AppLifecyclePresenceGuard.arm();
     _soulGameRewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
-        _lastRewardedShownMs = DateTime.now().millisecondsSinceEpoch;
+        _lastSoulGameRewardedShownMs = DateTime.now().millisecondsSinceEpoch;
         _lastFullscreenAdShownMs = _lastRewardedShownMs;
         _sendAdImpressionPing('rewarded', rewardedSoulGameId);
       },
@@ -1452,8 +1486,8 @@ class AdMobService {
 
   Future<RewardClaimResult> claimRewardedAdPoints() async {
     // Kiểm tra xem đã đạt giới hạn hàng ngày chưa
-    await canWatchRewardedAdToday();
-    if (false) {
+    final canWatch = await canWatchRewardedAdToday();
+    if (!canWatch) {
       debugPrint(
           'AdMobService: Đã đạt giới hạn $dailyRewardedAdLimit quảng cáo/ngày.');
       return const RewardClaimResult(

@@ -2,18 +2,15 @@ import 'dart:io';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:path_provider/path_provider.dart';
 import 'cloudflare_r2_service.dart';
-import 'social_service.dart';
 import 'offline_cache_service.dart';
 import 'secret_vault_media_policy.dart' as secret_vault_policy;
 import 'storage_app_check_helper.dart';
@@ -44,8 +41,9 @@ class StorageService {
       secret_vault_policy.secretVaultDailyLimitFree;
   static const int secretVaultDailyLimitVip =
       secret_vault_policy.secretVaultDailyLimitVip;
+  static const int secretVaultTotalCap =
+      secret_vault_policy.secretVaultTotalCap;
 
-  final FirebaseStorage _storage = FirebaseStorage.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
   final StoragePickerService _pickerService = StoragePickerService();
@@ -426,8 +424,6 @@ class StorageService {
           throw Exception('Thiếu thông tin tải ảnh Kỷ niệm.');
         case 'permission-denied':
           throw Exception('Bạn không có quyền tải ảnh vào Kỷ niệm này.');
-        case 'resource-exhausted':
-          throw Exception('Bạn đã đạt giới hạn đăng ảnh Kỷ niệm hôm nay (10 ảnh/ngày). Nâng cấp Pro để tăng lên 30 ảnh/ngày.');
         case 'deadline-exceeded':
         case 'unavailable':
           throw Exception(
@@ -695,8 +691,6 @@ class StorageService {
     double? lng,
     String? blurHash,
   }) async {
-    // R2_BYPASS handled natively by Cloud Functions
-
     try {
       final response = await _finalizeHelper.finalizeUpload(
         invokeCallable: (name, payload) => _callWithAppCheckRetry(
@@ -958,106 +952,6 @@ class StorageService {
     bool flagged = false,
     String? blurHash,
   }) async {
-    if (sessionId.startsWith('R2_BYPASS|')) {
-      final url = sessionId.split('|')[1];
-      try {
-        if (target == 'profile_header') {
-          final dbRef = FirebaseDatabase.instance.ref();
-          final updates = <String, dynamic>{};
-          updates['houses/$houseId/settings/profileHeaderImageUrl'] = url;
-          updates['house_profiles/$houseId/profileHeaderImageUrl'] = url;
-          updates['house_profiles/$houseId/settings/profileHeaderImageUrl'] = url;
-          updates['houses_public/$houseId/profileHeaderImageUrl'] = url;
-          updates['houses_public/$houseId/settings/profileHeaderImageUrl'] = url;
-          
-          final now = DateTime.now().millisecondsSinceEpoch;
-          updates['houses/$houseId/updatedAt'] = now;
-          updates['house_profiles/$houseId/updatedAt'] = now;
-          updates['house_profiles/$houseId/updated_at'] = now;
-          updates['houses_public/$houseId/updatedAt'] = now;
-          updates['houses_public/$houseId/updated_at'] = now;
-
-          await dbRef.update(updates);
-          return {'ok': true, 'target': 'profile_header', 'downloadUrl': url};
-        } else if (target == 'home_avatar') {
-          final dbRef = FirebaseDatabase.instance.ref();
-          final updates = <String, dynamic>{};
-          final field = role.trim() == 'user2' ? 'avtUser2' : 'avtUser1';
-          updates['houses/$houseId/settings/$field'] = url;
-          updates['house_profiles/$houseId/$field'] = url;
-          updates['house_profiles/$houseId/settings/$field'] = url;
-          
-          final now = DateTime.now().millisecondsSinceEpoch;
-          updates['houses/$houseId/updatedAt'] = now;
-          updates['house_profiles/$houseId/updatedAt'] = now;
-          updates['house_profiles/$houseId/updated_at'] = now;
-          updates['houses_public/$houseId/updatedAt'] = now;
-          updates['houses_public/$houseId/updated_at'] = now;
-          
-          await dbRef.update(updates);
-          return {'ok': true, 'target': 'home_avatar', 'downloadUrl': url};
-        } else if (target == 'house_avatar') {
-          final dbRef = FirebaseDatabase.instance.ref();
-          final updates = <String, dynamic>{};
-          updates['houses/$houseId/settings/houseAvatar'] = url;
-          updates['houses/$houseId/avatar'] = url;
-          updates['houses/$houseId/houseAvatar'] = url;
-          updates['house_profiles/$houseId/avatar'] = url;
-          updates['house_profiles/$houseId/houseAvatar'] = url;
-          updates['house_profiles/$houseId/settings/houseAvatar'] = url;
-          updates['houses_public/$houseId/avatar'] = url;
-          updates['houses_public/$houseId/houseAvatar'] = url;
-          updates['houses_public/$houseId/settings/houseAvatar'] = url;
-          
-          final now = DateTime.now().millisecondsSinceEpoch;
-          updates['houses/$houseId/updatedAt'] = now;
-          updates['house_profiles/$houseId/updatedAt'] = now;
-          updates['house_profiles/$houseId/updated_at'] = now;
-          updates['houses_public/$houseId/updatedAt'] = now;
-          updates['houses_public/$houseId/updated_at'] = now;
-          
-          await dbRef.update(updates);
-          return {'ok': true, 'target': 'house_avatar', 'downloadUrl': url};
-        } else if (target == 'story') {
-          final dbRef = FirebaseDatabase.instance.ref();
-          final storyRef = dbRef.child('houses/$houseId/stories').push();
-          final storyId = storyRef.key ?? DateTime.now().millisecondsSinceEpoch.toString();
-          final now = DateTime.now().millisecondsSinceEpoch;
-          
-          await storyRef.set({
-            'url': url,
-            'author': authorName,
-            'ts': now,
-            'expiresAt': now + (24 * 60 * 60 * 1000),
-            'uploadSessionId': sessionId,
-          });
-          return {'ok': true, 'target': 'story', 'downloadUrl': url};
-        } else {
-          // social_post
-          await SocialService.instance.createPostUnified(
-            houseId: houseId,
-            houseName: houseName,
-            authorRole: authorRole,
-            authorName: authorName,
-            authorAvt: authorAvt,
-            content: content,
-            imageUrl: url,
-            privacy: privacy,
-            mood: mood,
-            moodEmoji: moodEmoji,
-            location: location,
-            postType: postType,
-            isAnon: isAnon,
-            isLocket: isLocket,
-            commentsEnabled: commentsEnabled,
-          );
-          return {'ok': true, 'target': target, 'downloadUrl': url};
-        }
-      } catch (e) {
-        throw Exception('Không thể hoàn tất ảnh công khai từ R2: $e');
-      }
-    }
-
     try {
       return _finalizeHelper.finalizeUpload(
         invokeCallable: (name, payload) => _callWithAppCheckRetry(
@@ -1268,6 +1162,7 @@ class StorageService {
       resolvedContentType: resolvedContentType,
       isSupportedMusicFileName: isSupportedMusicFileName,
       purgeLegacyCache: _purgeLegacyImgBBKeyCache,
+      // buildStorageRef removed — R2 không dùng ref
     );
   }
 
@@ -1297,6 +1192,7 @@ class StorageService {
       originalFileName: originalFileName ?? storagePath,
       rejectVideoUpload: _rejectVideoUpload,
       purgeLegacyCache: _purgeLegacyImgBBKeyCache,
+      // buildStorageRef removed — R2 không dùng ref
     );
   }
 
@@ -1309,50 +1205,36 @@ class StorageService {
     String caption = '',
   }) async {
     _requireCurrentUid();
-    final tempDir = await getTemporaryDirectory();
-    final tempUploadPath = p.join(
-      tempDir.path,
-      'r2_collage_temp_${DateTime.now().millisecondsSinceEpoch}_$fileName',
-    );
-    final tempUploadFile = File(tempUploadPath);
-    await tempUploadFile.writeAsBytes(bytes);
-    
-    String? r2Url;
     try {
-      CloudflareR2Service.instance.init();
-      r2Url = await CloudflareR2Service.instance.uploadFile(
-        tempUploadFile,
-        folderPath: 'media',
-      );
-    } finally {
-      if (await tempUploadFile.exists()) {
-        await tempUploadFile.delete();
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+      final ext = '.png';
+      final currentUid = _requireCurrentUid();
+      final path = 'uploads/$currentUid/collage/$nowMs$ext';
+      final normalizedStoragePath = _normalizeStorageWritePath(path);
+
+      final tempDir = await getTemporaryDirectory();
+      final tempPath = p.join(tempDir.path, 'collage_${nowMs}_$fileName');
+      final tempFile = File(tempPath);
+      try {
+        await tempFile.writeAsBytes(bytes, flush: true);
+        CloudflareR2Service.instance.init();
+        final r2Url = await CloudflareR2Service.instance.uploadFile(
+          tempFile,
+          folderPath: 'uploads/$currentUid/collage',
+        );
+        if (r2Url == null || r2Url.isEmpty) {
+          throw Exception('R2 upload thất bại.');
+        }
+        return <String, dynamic>{
+          'downloadUrl': r2Url,
+          'storagePath': normalizedStoragePath,
+        };
+      } finally {
+        if (await tempFile.exists()) await tempFile.delete();
       }
-    }
-
-    if (r2Url == null || r2Url.isEmpty) {
-      throw Exception('Không thể tải ảnh ghép lên R2.');
-    }
-
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      final houseSnapshot = await FirebaseDatabase.instance.ref('houses/$houseId/settings').get();
-      final houseName = (houseSnapshot.value as Map?)?['name']?.toString() ?? 'Gia đình';
-      
-      await SocialService.instance.createPostUnified(
-        houseId: houseId,
-        houseName: houseName,
-        authorRole: 'user1', // Not strictly needed
-        authorName: user?.displayName ?? 'Thành viên',
-        authorAvt: user?.photoURL ?? '',
-        content: caption,
-        imageUrl: r2Url,
-        privacy: 'public',
-        postType: 'collage',
-      );
-      return {'ok': true};
     } catch (e) {
-      throw Exception('Không thể tạo bài viết ảnh ghép từ R2: $e');
+      debugPrint('Collage R2 upload error: $e');
+      throw Exception('Không thể tải ảnh ghép lên đám mây.');
     }
   }
 
@@ -1561,6 +1443,96 @@ class StorageService {
     );
   }
 
+  /// Upload ảnh trực tiếp lên R2 thay vì dùng Signed URL (Cloud Function).
+  /// Dùng cho tất cả các loại ảnh: public, chat, memory, album, gift, love card, secret vault.
+  Future<StorageUploadResult?> _uploadDirectToR2({
+    required XFile file,
+    required String folderName,
+    int minWidth = 1080,
+    int minHeight = 1080,
+    int quality = 75,
+    ValueChanged<double>? onProgress,
+  }) async {
+    try {
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+      final originalFileName = file.name.isNotEmpty ? file.name : file.path;
+      String fileExtension = p.extension(originalFileName).toLowerCase();
+      XFile uploadFile = file;
+      String? tempCompressedPath;
+
+      if (!kIsWeb && file.path.isNotEmpty && fileExtension != '.gif') {
+        try {
+          if (onProgress != null) onProgress(0.05);
+          final tempDir = await getTemporaryDirectory();
+          tempCompressedPath = p.join(
+            tempDir.path,
+            'r2_${nowMs}_${DateTime.now().microsecondsSinceEpoch}.webp',
+          );
+          if (onProgress != null) onProgress(0.1);
+          final compressedFile = await FlutterImageCompress.compressAndGetFile(
+            file.path,
+            tempCompressedPath,
+            minWidth: minWidth,
+            minHeight: minHeight,
+            quality: quality,
+            format: CompressFormat.webp,
+          );
+          if (onProgress != null) onProgress(0.35);
+          if (compressedFile != null) {
+            uploadFile = compressedFile;
+            fileExtension = '.webp';
+          } else {
+            tempCompressedPath = null;
+          }
+        } catch (_) {
+          tempCompressedPath = null;
+        }
+      }
+
+      if (fileExtension.isEmpty) {
+        fileExtension = p.extension(uploadFile.name).toLowerCase();
+      }
+      if (fileExtension.isEmpty) {
+        fileExtension = '.jpg';
+      }
+
+      final currentUid = _requireCurrentUid();
+      final path = 'uploads/$currentUid/$folderName/$nowMs$fileExtension';
+      final normalizedStoragePath = _normalizeStorageWritePath(path);
+
+      if (onProgress != null) onProgress(0.4);
+
+      try {
+        final downloadUrl = _rawUploadHelper.uploadFileToPath(
+          storagePath: path,
+          file: uploadFile,
+          resolvedContentType: 'image/webp',
+          rejectVideoUpload: _rejectVideoUpload,
+          purgeLegacyCache: _purgeLegacyImgBBKeyCache,
+          onProgress: onProgress != null
+              ? (p) => onProgress(0.4 + (p * 0.6))
+              : null,
+        );
+
+        final url = await downloadUrl;
+        if (onProgress != null) onProgress(1.0);
+
+        return StorageUploadResult(
+          downloadUrl: url,
+          storagePath: normalizedStoragePath,
+        );
+      } finally {
+        if (tempCompressedPath != null) {
+          final f = File(tempCompressedPath);
+          if (await f.exists()) await f.delete();
+        }
+      }
+    } catch (e) {
+      debugPrint('R2 upload error ($folderName): $e');
+      throw 'Không thể tải ảnh lên đám mây, vui lòng kiểm tra kết nối mạng.';
+    }
+  }
+
   Future<StorageUploadResult?> _uploadSignedImageWithCompression({
     required XFile file,
     required Future<Map<String, dynamic>> Function(
@@ -1577,23 +1549,14 @@ class StorageService {
     required String errorMessage,
     ValueChanged<double>? onProgress,
   }) {
-    return _signedUploadHelper.uploadSignedImageWithCompression(
-      request: StorageSignedUploadRequest(
-        file: file,
-        sessionBuilder: sessionBuilder,
-        minWidth: minWidth,
-        minHeight: minHeight,
-        quality: quality,
-        tempPrefix: tempPrefix,
-        errorLabel: errorLabel,
-        errorMessage: errorMessage,
-        mapResult: mapResult,
-        onProgress: onProgress,
-      ),
-      requireCurrentUid: _requireCurrentUid,
-      detectContentType: detectContentType,
-      stringMapFromDynamicMap: _stringMapFromDynamicMap,
-      uploadBytesToSignedUrl: _uploadBytesToSignedUrl,
+    // CHUYỂN SANG R2: bỏ qua Signed URL, upload trực tiếp qua R2
+    return _uploadDirectToR2(
+      file: file,
+      folderName: tempPrefix,
+      minWidth: minWidth,
+      minHeight: minHeight,
+      quality: quality,
+      onProgress: onProgress,
     );
   }
 
@@ -1665,12 +1628,16 @@ class StorageService {
     return null;
   }
 
-  Future<bool> deleteFileByPath(String storagePath) {
-    return _deleteHelper.deleteFileByPath(
-      storage: _storage,
-      storagePath: storagePath,
-      normalizeStorageRefPath: _normalizeStorageRefPath,
-    );
+  Future<bool> deleteFileByPath(String storagePath) async {
+    final normalizedPath = storagePath.trim();
+    if (normalizedPath.isEmpty) return true;
+    try {
+      CloudflareR2Service.instance.init();
+      return await CloudflareR2Service.instance.deleteByPath(normalizedPath);
+    } catch (e) {
+      debugPrint('deleteFileByPath error: $e');
+      return false;
+    }
   }
 
   Future<bool> deleteLocalFile(String path) {
@@ -1678,9 +1645,6 @@ class StorageService {
   }
 
   Future<bool> deleteImageByUrl(String url) {
-    return _deleteHelper.deleteImageByUrl(
-      storage: _storage,
-      url: url,
-    );
+    return _deleteHelper.deleteImageByUrl(url: url);
   }
 }

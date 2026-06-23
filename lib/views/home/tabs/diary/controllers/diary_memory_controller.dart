@@ -65,7 +65,7 @@ class DiaryMemoryController extends ChangeNotifier {
   }
 
   static const int _webMemoryCacheLimit = 80;
-  static const int _appMemoryCacheLimit = 160;
+  static const int _appMemoryCacheLimit = 60;
   static const int _memoryUploadConcurrency = 3;
   static const Duration _memoryDownloadCacheTtl = Duration(hours: 18);
   static const Color _diaryPinkDeep = Color(0xFFD81B60);
@@ -1364,62 +1364,38 @@ class DiaryMemoryController extends ChangeNotifier {
         image,
         quality: uploadQuality,
       );
-      final sessionId = upload?.sessionId?.trim() ?? '';
-      if (upload == null || sessionId.isEmpty) {
+      final imageUrl = upload?.downloadUrl.trim() ?? '';
+      if (upload == null || imageUrl.isEmpty) {
         return L10nService().translate('home_khngthtoph_b49958');
       }
 
-      Map<String, dynamic>? finalized;
-      Object? lastError;
-      for (var attempt = 0; attempt < 3; attempt++) {
-        try {
-          finalized = await _storageService.finalizeMemoryImageUpload(
-            houseId: houseId,
-            sessionId: sessionId,
-            authorName: authorName,
-            authorEmail: authorEmail,
-            authorRole: authorRole,
-            lat: position?.latitude,
-            lng: position?.longitude,
-          );
-          break;
-        } catch (error) {
-          lastError = error;
-
-          final errStr = error.toString().toLowerCase();
-          final isUnauthenticated =
-              errStr.contains('unauthenticated') || errStr.contains('401');
-
-          if (isUnauthenticated) {
-            try {
-              final user = FirebaseAuth.instance.currentUser;
-              if (user != null) {
-                await user.getIdToken(true);
-                debugPrint(
-                    'Refreshed token after unauthenticated error in finalize.');
-              }
-            } catch (_) {}
-          }
-
-          if (attempt < 2) {
-            await Future<void>.delayed(
-                Duration(milliseconds: 500 * (attempt + 1)));
-            continue;
-          }
+      // R2 upload hoàn tất → tự ghi record vào Firebase
+      try {
+        final nowMs = DateTime.now().millisecondsSinceEpoch;
+        final memoryRef = _dbRef.child('houses/$houseId/memories').push();
+        final memoryId = memoryRef.key ?? '';
+        if (memoryId.isEmpty) {
+          return 'Không thể tạo ID cho kỷ niệm.';
         }
-      }
-
-      final isOk = finalized?['ok'] == true;
-      final memoryId = finalized?['memoryId']?.toString().trim() ?? '';
-      if (isOk && memoryId.isNotEmpty) {
+        await memoryRef.set({
+          'url': imageUrl,
+          'ts': nowMs,
+          'date': nowMs,
+          'author': authorName.trim(),
+          'authorId': FirebaseAuth.instance.currentUser?.uid ?? '',
+          'authorName': authorName.trim(),
+          'storagePath': upload?.storagePath ?? '',
+          'authorEmail': authorEmail.trim(),
+          'authorRole': authorRole.trim(),
+          if (position != null) 'lat': position.latitude,
+          if (position != null) 'lng': position.longitude,
+        });
+        debugPrint('✅ UPLOAD THÀNH CÔNG: Memory ID = $memoryId');
         return null; // Success
+      } catch (dbError) {
+        debugPrint('Lỗi ghi memory vào Firebase: $dbError');
+        return 'Không thể lưu kỷ niệm. Vui lòng thử lại.';
       }
-
-      if (lastError != null) {
-        debugPrint('Lỗi finalize ảnh kỷ niệm: $lastError');
-        return AppErrorMapper.resolve(lastError).message;
-      }
-      return L10nService().translate('home_khngnhncph_6fe2dc');
     } catch (e) {
       debugPrint(
         'Lỗi tải ảnh kỷ niệm: ${AppErrorMapper.resolve(e).message}',

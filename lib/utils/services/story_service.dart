@@ -47,18 +47,10 @@ class StoryService {
       'story',
       image,
     );
-    final sessionId = upload?.sessionId?.trim() ?? '';
-    if (sessionId.isEmpty) {
-      throw Exception('Không thể tạo phiên tải story.');
+    final url = upload?.downloadUrl.trim() ?? '';
+    if (url.isEmpty) {
+      throw Exception('Không thể tải story lên.');
     }
-
-    await _storageService.finalizePublicImageUpload(
-      houseId: normalizedHouseId,
-      sessionId: sessionId,
-      target: 'story',
-      authorName: normalizedAuthorName,
-      blurHash: upload?.blurHash,
-    );
     await PendingUploadService.instance.clear(pendingKey);
   }
 

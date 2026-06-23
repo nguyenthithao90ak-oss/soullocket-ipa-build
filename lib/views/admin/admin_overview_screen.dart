@@ -50,12 +50,12 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
 
     try {
       final results = await Future.wait([
-        _db.child('houses').get(),
-        _db.child('reports').get(),
-        _db.child('social_feed').get(),
-        _db.child('support_tickets').get(),
-        _db.child(AppConfig.maintenanceModePath).get(),
-        _db.child(AppConfig.communityMaintenanceModePath).get(),
+        _db.child('houses').get().timeout(const Duration(seconds: 8)),
+        _db.child('reports').get().timeout(const Duration(seconds: 8)),
+        _db.child('social_feed').get().timeout(const Duration(seconds: 8)),
+        _db.child('support_tickets').get().timeout(const Duration(seconds: 8)),
+        _db.child(AppConfig.maintenanceModePath).get().timeout(const Duration(seconds: 5)),
+        _db.child(AppConfig.communityMaintenanceModePath).get().timeout(const Duration(seconds: 5)),
       ]);
 
       final supportRaw = results[3].value;

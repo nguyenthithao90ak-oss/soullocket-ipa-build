@@ -10,6 +10,7 @@ import ActivityKit
   private let bootstrapChannelName = "soul_locket/bootstrap"
   private let appIconChannelName = "soullocket/app_icon"
   private let deviceInfoChannelName = "soul_locket/device_info"
+  private let attPrePromptChannelName = "soullocket/att_pre_prompt"
 
   override func application(
     _ application: UIApplication,
@@ -88,8 +89,59 @@ import ActivityKit
           result(FlutterMethodNotImplemented)
         }
       }
+
+      let attPrePromptChannel = FlutterMethodChannel(
+        name: attPrePromptChannelName,
+        binaryMessenger: controller.binaryMessenger
+      )
+      attPrePromptChannel.setMethodCallHandler { [weak self] call, result in
+        guard let self = self else {
+          result(false)
+          return
+        }
+        self.handleAttPrePrompt(call: call, result: result)
+      }
     }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  // MARK: - ATT Pre-Prompt (Apple guideline: explain before asking to track)
+
+  private func handleAttPrePrompt(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    switch call.method {
+    case "showPreAttPrompt":
+      showAttPrePromptAlert(result: result)
+    default:
+      result(FlutterMethodNotImplemented)
+    }
+  }
+
+  private func showAttPrePromptAlert(result: @escaping FlutterResult) {
+    guard let controller = window?.rootViewController else {
+      // Nếu không có view controller, cho phép ATT prompt hiện lên
+      result(true)
+      return
+    }
+
+    let alert = UIAlertController(
+      title: "Cá nhân hóa trải nghiệm",
+      message: "SoulLocket muốn theo dõi hoạt động của bạn để hiển thị quảng cáo phù hợp hơn và đo lường hiệu quả chiến dịch. Bạn có thể thay đổi lựa chọn này bất cứ lúc nào trong Cài đặt.",
+      preferredStyle: .alert
+    )
+
+    alert.addAction(UIAlertAction(
+      title: "Tiếp tục",
+      style: .default,
+      handler: { _ in result(true) }
+    ))
+
+    alert.addAction(UIAlertAction(
+      title: "Không",
+      style: .cancel,
+      handler: { _ in result(false) }
+    ))
+
+    controller.present(alert, animated: true, completion: nil)
   }
 
   private func handleBootstrap(call: FlutterMethodCall, result: @escaping FlutterResult) {
