@@ -169,7 +169,24 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }
 
   void _deleteWish(String key) {
-    _dbRef.child('houses/${widget.houseId}/wishlist/$key').remove();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xoá điều ước'),
+        content: const Text('Bạn có chắc chắn muốn xoá điều ước này?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _dbRef.child('houses/${widget.houseId}/wishlist/$key').remove();
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Xoá'),
+          ),
+        ],
+      ),
+    );
   }
 
   final _currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: L10nService().translate('util_txt_b5407d'));

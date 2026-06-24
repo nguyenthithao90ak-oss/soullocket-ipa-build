@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../screens/document_viewer_screen.dart';
 import '../screens/global_search_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -564,6 +565,70 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     }
   }
 
+  BannerAd? _bottomBannerAd;
+  bool _isBottomBannerReady = false;
+
+  void _loadBottomBanner() async {
+    if (kIsWeb) return;
+    final adMob = AdMobService();
+    await adMob.initialize();
+    if (!mounted) return;
+
+    if (await adMob.isProUser()) {
+      _bottomBannerAd?.dispose();
+      _bottomBannerAd = null;
+      if (!mounted) return;
+      setState(() => _isBottomBannerReady = false);
+      return;
+    }
+
+    _bottomBannerAd?.dispose();
+    _bottomBannerAd = null;
+    if (!mounted) return;
+    _bottomBannerAd = await adMob.createBannerAd(
+      onAdLoaded: (_) {
+        if (!mounted) return;
+        setState(() => _isBottomBannerReady = true);
+      },
+    );
+  }
+
+  Widget _buildBottomAdBanner(BannerAd bannerAd) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () {
+        AdMobService().showInterstitialAd();
+      },
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: SLColors.bgElevated.withValues(alpha: 0.72),
+              borderRadius: SLRadius.lgAll,
+              border: Border.all(
+                color: SLColors.bgElevated.withValues(alpha: 0.45),
+              ),
+              boxShadow: SLShadow.subtle,
+            ),
+            child: ClipRRect(
+              borderRadius: SLRadius.mdAll,
+              child: SizedBox(
+                width: bannerAd.size.width.toDouble(),
+                height: bannerAd.size.height.toDouble(),
+                child: AdWidget(ad: bannerAd),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -592,6 +657,10 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       unawaited(_initVipServices());
       unawaited(_loadSecurityWarningDismissState());
       unawaited(UiPrefs.ensureLoaded());
+      Future<void>.delayed(const Duration(seconds: 15), () {
+        if (!mounted) return;
+        _loadBottomBanner();
+      });
     });
   }
 
@@ -710,6 +779,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _bottomBannerAd?.dispose();
     // ✅ FIX: Cancel auto-save timer to ensure settings persist
     _autoSaveThemeTimer?.cancel();
     _uiPrefsDebounceTimer?.cancel();
@@ -754,9 +824,9 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     if (_isCheckingSecurityLock) {
-      return Stack(
+      return const Stack(
         fit: StackFit.expand,
-        children: const [
+        children: [
           _SettingsBackgroundLayer(),
           Center(
             child: CircularProgressIndicator(color: Color(0xFFFF78A8)),

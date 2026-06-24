@@ -306,6 +306,15 @@ class ScheduleNotifService {
       now: now,
       todayMs: todayMs,
     );
+    _addAdvanceNoticeBirthdayEvent(
+      events: events,
+      eventKey: 'sys:birthday:user1:pre7',
+      rawDate: identity.dobU1,
+      name: identity.nameU1.trim().isEmpty ? 'người thương' : identity.nameU1.trim(),
+      advanceDays: 7,
+      now: now,
+      todayMs: todayMs,
+    );
     _addRecurringMonthDayEvent(
       events: events,
       eventKey: 'sys:birthday:user2',
@@ -314,6 +323,15 @@ class ScheduleNotifService {
           ? 'Sinh nhật người thương'
           : 'Sinh nhật ${identity.nameU2.trim()}',
       source: 'system',
+      now: now,
+      todayMs: todayMs,
+    );
+    _addAdvanceNoticeBirthdayEvent(
+      events: events,
+      eventKey: 'sys:birthday:user2:pre7',
+      rawDate: identity.dobU2,
+      name: identity.nameU2.trim().isEmpty ? 'người thương' : identity.nameU2.trim(),
+      advanceDays: 7,
       now: now,
       todayMs: todayMs,
     );
@@ -370,6 +388,43 @@ class ScheduleNotifService {
         daysUntil: _daysUntil(dateMs, todayMs),
       ),
     );
+  }
+
+  static const List<String> _giftSuggestions = [
+    '🎁 Handmade viết tay lời yêu thương',
+    '💐 Một bó hoa tươi kèm thiệp nhỏ xinh',
+    '🎂 Bất ngờ với bánh kem và nến lung linh',
+    '🍫 Hộp socola tình yêu và một cái ôm thật chặt',
+    '💍 Trang sức nhỏ xinh đính tên 2 đứa',
+    '🧸 Thú bông ôm tay dễ thương to đùng',
+    '🎫 Vé xem phim đôi hoặc concert cả 2 thích',
+    '📸 Album ảnh kỷ niệm tự thiết kế',
+    '🌹 Một bữa tối lãng mạn với đèn nến và hoa',
+    '✈️ Chuyến đi chơi 2 ngày 1 đêm bất ngờ',
+    '🛍️ Set quà chăm sóc da hoặc nước hoa',
+    '🎧 Tai nghe bluetooth cùng playlist tặng riêng',
+    '🖼️ Khung ảnh điện tử quay vòng kỷ niệm',
+    '🌸 Cây cảnh nhỏ xinh để cùng chăm sóc',
+    '☕ Bộ ly sứ đôi khắc tên 2 đứa',
+    '🎮 Game hoặc boardgame có thể chơi cùng nhau',
+    '🧦 Đồ đôi: áo, mũ hoặc vớ dễ thương',
+    '📖 Cuốn sổ nhỏ ghi lại lời yêu mỗi ngày',
+    '🎵 Đàn hộp nhỏ (ukulele) và bài hát tặng riêng',
+    '🌟 Bộ đèn sao trần phòng ngủ lãng mạn',
+  ];
+
+  void _addAdvanceNoticeBirthdayEvent({required List<UpcomingEvent> events, required String eventKey, required String rawDate, required String name, required int advanceDays, required DateTime now, required int todayMs}) {
+    final parsed = _parseFlexibleDate(rawDate);
+    if (parsed == null) return;
+    var bd = DateTime(now.year, parsed.month, parsed.day);
+    final td = DateTime(now.year, now.month, now.day);
+    if (bd.isBefore(td)) bd = DateTime(now.year + 1, parsed.month, parsed.day);
+    final rd = bd.subtract(Duration(days: advanceDays));
+    final rk = _formatDateKey(rd);
+    final rms = rd.millisecondsSinceEpoch;
+    if (rms < todayMs) return;
+    final g = _giftSuggestions[(parsed.day + parsed.month + advanceDays) % _giftSuggestions.length];
+    events.add(UpcomingEvent(eventKey: '$eventKey:$rk', dateKey: rk, dateMs: rms, title: '🎂 Sinh nhật $name sắp tới! Gợi ý quà: $g', source: 'system', daysUntil: _daysUntil(rms, todayMs)));
   }
 
   DateTime _startOfDay(DateTime date) {

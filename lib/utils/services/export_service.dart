@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:io' as io;
+import 'package:archive/archive.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
@@ -24,6 +27,16 @@ class ExportService {
   ExportService._internal();
 
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+
+  /// Lưu file export vào thư mục documents để xem lại sau
+  Future<io.Directory> _getExportDir() async {
+    final docDir = await getApplicationDocumentsDirectory();
+    final exportDir = io.Directory('${docDir.path}/SoulLocket_Exports');
+    if (!await exportDir.exists()) {
+      await exportDir.create(recursive: true);
+    }
+    return exportDir;
+  }
 
   Future<String> resolveDiaryHouseName(
     String houseId, {
@@ -49,7 +62,7 @@ class ExportService {
     return fallbackName;
   }
 
-  Future<void> exportDiary({
+  Future<String?> exportDiary({
     required String houseId,
     required DiaryExportFormat format,
     String? houseName,
@@ -60,15 +73,13 @@ class ExportService {
 
     switch (format) {
       case DiaryExportFormat.pdf:
-        await exportDiaryToPdf(houseId, resolvedHouseName);
-        return;
+        return await exportDiaryToPdf(houseId, resolvedHouseName);
       case DiaryExportFormat.html:
-        await exportDiaryToHtml(houseId, resolvedHouseName);
-        return;
+        return await exportDiaryToHtml(houseId, resolvedHouseName);
     }
   }
 
-  Future<void> exportDiaryToPdf(String houseId, String houseName) async {
+  Future<String?> exportDiaryToPdf(String houseId, String houseName) async {
     final resolvedHouseId = houseId.trim();
     if (resolvedHouseId.isEmpty) {
       throw Exception('Chưa có mã nhà');
@@ -137,13 +148,12 @@ class ExportService {
 
     if (kIsWeb) {
       downloadWebFile(filename, bytes, 'application/pdf');
-      return;
+      return null;
     }
 
-    final file = await _writeTempFile(
-      filename: filename,
-      bytes: bytes,
-    );
+    final exportDir = await _getExportDir();
+    final file = io.File('${exportDir.path}/$filename');
+    await file.writeAsBytes(bytes);
 
     await SharePlus.instance.share(
       ShareParams(
@@ -151,9 +161,11 @@ class ExportService {
         text: 'Xuất Nhật ký của $resolvedHouseName',
       ),
     );
+
+    return file.path;
   }
 
-  Future<void> exportDiaryToHtml(String houseId, String houseName) async {
+  Future<String?> exportDiaryToHtml(String houseId, String houseName) async {
     final resolvedHouseId = houseId.trim();
     if (resolvedHouseId.isEmpty) {
       throw Exception('Chưa có mã nhà');
@@ -175,13 +187,12 @@ class ExportService {
 
     if (kIsWeb) {
       downloadWebFile(filename, utf8.encode(htmlContent), 'text/html');
-      return;
+      return null;
     }
 
-    final file = await _writeTempFile(
-      filename: filename,
-      content: htmlContent,
-    );
+    final exportDir = await _getExportDir();
+    final file = io.File('${exportDir.path}/$filename');
+    await file.writeAsString(htmlContent);
 
     await SharePlus.instance.share(
       ShareParams(
@@ -189,6 +200,8 @@ class ExportService {
         text: 'Xuất HTML Nhật ký của $resolvedHouseName',
       ),
     );
+
+    return file.path;
   }
 
   Future<List<Map<String, dynamic>>> _loadDiaryEntries(String houseId) async {
@@ -208,21 +221,6 @@ class ExportService {
     entries
         .sort((a, b) => (a['ts'] as int? ?? 0).compareTo(b['ts'] as int? ?? 0));
     return entries;
-  }
-
-  Future<io.File> _writeTempFile({
-    required String filename,
-    List<int>? bytes,
-    String? content,
-  }) async {
-    final output = await getTemporaryDirectory();
-    final file = io.File('${output.path}/$filename');
-    if (bytes != null) {
-      await file.writeAsBytes(bytes);
-    } else {
-      await file.writeAsString(content ?? '');
-    }
-    return file;
   }
 
   String _buildExportFilename({
@@ -298,5 +296,165 @@ class ExportService {
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#39;');
+  }
+
+  /// Export tat ca ky niem (diary + memories anh) thanh file ZIP
+  Future<String> exportAllMemories({
+    required String houseId,
+    required String houseName,
+    void Function(double progress, String status)? onProgress,
+  }) async {
+    final resolvedHouseId = houseId.trim();
+    if (resolvedHouseId.isEmpty) throw Exception('Chưa có mã nhà');
+
+    final resolvedHouseName =
+        houseName.trim().isNotEmpty ? houseName.trim() : 'SoulHouse';
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final exportDir = io.Directory(
+        '${(await getTemporaryDirectory()).path}/SoulLocket_Export_$timestamp');
+    if (await exportDir.exists()) {
+      await exportDir.delete(recursive: true);
+    }
+    await exportDir.create(recursive: true);
+
+    final memoriesDir = io.Directory('${exportDir.path}/memories');
+    await memoriesDir.create();
+
+    // 1. Load diary entries
+    onProgress?.call(0.05, 'Đang thu thập nhật ký...');
+    final entries = await _loadDiaryEntries(resolvedHouseId);
+
+    // 2. Write diary.json
+    final diaryFile = io.File('${exportDir.path}/diary.json');
+    await diaryFile.writeAsString(
+      const JsonEncoder.withIndent('  ').convert({
+        'houseName': resolvedHouseName,
+        'exportedAt': DateTime.now().toIso8601String(),
+        'entries': entries,
+      }),
+    );
+
+    // 3. Load memories
+    onProgress?.call(0.1, 'Đang thu thập ảnh kỷ niệm...');
+    final memoriesSnap =
+        await _dbRef.child('houses/$resolvedHouseId/memories').get();
+    final memoriesList = <Map<String, dynamic>>[];
+    if (memoriesSnap.exists && memoriesSnap.value is Map) {
+      final data = Map<dynamic, dynamic>.from(memoriesSnap.value as Map);
+      data.forEach((key, value) {
+        if (value is Map) {
+          final mem = Map<String, dynamic>.from(value);
+          mem['id'] = key.toString();
+          memoriesList.add(mem);
+        }
+      });
+      memoriesList.sort(
+          (a, b) => (a['ts'] as int? ?? 0).compareTo(b['ts'] as int? ?? 0));
+    }
+
+    if (memoriesList.isEmpty) {
+      throw Exception('Chưa có ảnh kỷ niệm để xuất');
+    }
+
+    // 4. Download memories images
+    final totalMemories = memoriesList.length;
+    onProgress?.call(0.2, 'Đang tải 0/$totalMemories ảnh...');
+
+    for (var i = 0; i < memoriesList.length; i++) {
+      final mem = memoriesList[i];
+      final memUrl = (mem['url'] as String?)?.trim() ?? '';
+      if (memUrl.isEmpty) continue;
+
+      final memFileName = 'memory_${i + 1}';
+      final memFile = io.File('${memoriesDir.path}/$memFileName.jpg');
+
+      try {
+        final response = await http.get(Uri.parse(memUrl))
+            .timeout(const Duration(seconds: 15));
+        if (response.statusCode == 200) {
+          await memFile.writeAsBytes(response.bodyBytes);
+        }
+      } catch (_) {
+        // Skip failed downloads
+      }
+
+      final progress = 0.2 + (0.7 * (i + 1) / totalMemories);
+      onProgress?.call(
+        progress.clamp(0.2, 0.9),
+        'Đang tải ${i + 1}/$totalMemories ảnh...',
+      );
+    }
+
+    // 5. Write memories metadata
+    final metaFile = io.File('${exportDir.path}/memories/metadata.json');
+    final metadataList = memoriesList.map((m) {
+      final ts = m['ts'] as int?;
+      return <String, dynamic>{
+        'id': m['id'],
+        'author': m['author'] ?? '',
+        'ts': ts,
+        'date': ts != null
+            ? DateFormat('dd/MM/yyyy HH:mm').format(
+                DateTime.fromMillisecondsSinceEpoch(ts))
+            : '',
+      };
+    }).toList();
+    await metaFile.writeAsString(
+      const JsonEncoder.withIndent('  ').convert(metadataList),
+    );
+
+    // 6. Create ZIP archive
+    onProgress?.call(0.92, 'Đang nén ZIP...');
+    final archive = Archive();
+    await _addDirectoryToArchive(archive, exportDir, '');
+
+    // Encode to ZIP bytes
+    final zipEncoder = ZipEncoder();
+    final zipData = zipEncoder.encode(archive);
+
+    final filename = _buildExportFilename(
+      prefix: 'SoulLocket_All',
+      houseName: resolvedHouseName,
+      extension: 'zip',
+    );
+
+    if (kIsWeb) {
+      downloadWebFile(filename, zipData, 'application/zip');
+      onProgress?.call(1.0, 'Hoàn tất!');
+      return '';
+    }
+
+    // Lưu vào thư mục exports lâu dài
+    final exportDirPerm = await _getExportDir();
+    final zipFile = io.File('${exportDirPerm.path}/$filename');
+    await zipFile.writeAsBytes(zipData);
+
+    // Cleanup temp export dir
+    try {
+      await exportDir.delete(recursive: true);
+    } catch (_) {}
+
+    onProgress?.call(1.0, 'Hoàn tất!');
+    return zipFile.path;
+  }
+
+  Future<void> _addDirectoryToArchive(
+    Archive archive,
+    io.Directory dir,
+    String basePath,
+  ) async {
+    await for (final entity in dir.list()) {
+      if (entity is io.File) {
+        final bytes = await entity.readAsBytes();
+        final relativePath = '$basePath${p.basename(entity.path)}';
+        archive.addFile(ArchiveFile(relativePath, bytes.length, bytes));
+      } else if (entity is io.Directory) {
+        await _addDirectoryToArchive(
+          archive,
+          entity,
+          '$basePath${p.basename(entity.path)}/',
+        );
+      }
+    }
   }
 }

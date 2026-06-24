@@ -104,7 +104,7 @@ class AdMobService {
   static const int _autoInterstitialMaxMinutes = 70;
   static const int _autoInterstitialRetryMinutes = 5;
   static const int _autoMandatoryRewardedChancePercent = 15;
-  static const int _appOpenMaxPerDay = 3;
+  static const int _appOpenMaxPerDay = 8;
   static const List<String> _debugTestDeviceIds = <String>[
     'D9B28AB8E1553E4F327420FC9896415C',
     '370D8C7AC6D4262893C393843B5727CA',
@@ -626,9 +626,9 @@ class AdMobService {
       return true; // Lần đầu tiên
     }
 
-    // 5 tiếng = 5 * 60 * 60 * 1000 = 18000000 ms
+    // 1 tiếng = 1 * 60 * 60 * 1000 ms
     final hoursDiff = (nowMs - lastShownMs) / (1000 * 60 * 60);
-    if (hoursDiff >= 5) {
+    if (hoursDiff >= 1) {
       return true;
     }
 
@@ -990,23 +990,23 @@ class AdMobService {
     );
   }
 
-  Future<void> showInterstitialAd() async {
-    if (kIsWeb) return;
-    if (await isProUser()) return;
+  Future<bool> showInterstitialAd() async {
+    if (kIsWeb) return false;
+    if (await isProUser()) return false;
     if (AdSuppressionGuard.instance.isSuppressed) {
       debugPrint('AdMobService: Interstitial ad suppressed by AdSuppressionGuard.');
-      return;
+      return false;
     }
     await initialize();
-    if (!_sdkInitialized) return;
+    if (!_sdkInitialized) return false;
     if (_interstitialAd == null) {
       await loadInterstitialAd();
     }
 
     // Nếu vẫn null (do tải lỗi), thì bỏ qua
-    if (_interstitialAd == null) return;
+    if (_interstitialAd == null) return false;
 
-    final completer = Completer<void>();
+    final completer = Completer<bool>();
     AppLifecyclePresenceGuard.arm();
     _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
@@ -1018,13 +1018,13 @@ class AdMobService {
         _interstitialAd = null;
         loadInterstitialAd(); // Nạp sẵn cái tiếp theo
         AppLifecyclePresenceGuard.settle();
-        if (!completer.isCompleted) completer.complete();
+        if (!completer.isCompleted) completer.complete(true);
       },
       onAdFailedToShowFullScreenContent: (ad, _) {
         ad.dispose();
         _interstitialAd = null;
         AppLifecyclePresenceGuard.settle();
-        if (!completer.isCompleted) completer.complete();
+        if (!completer.isCompleted) completer.complete(false);
       },
     );
     await _interstitialAd!.show();
@@ -1033,6 +1033,7 @@ class AdMobService {
       onTimeout: () {
         debugPrint('AdMobService: interstitial show timed out.');
         AppLifecyclePresenceGuard.settle();
+        return false;
       },
     );
   }
@@ -1130,6 +1131,8 @@ class AdMobService {
           if (earnedReward) {
             // Xem hết quảng cáo bắt buộc -> Đặt lại thời gian bình thường (30-60p)
             await _setNextAutoInterstitialAt(_generateNextAutoInterstitialAt());
+            // Cộng 50 điểm thưởng cho người dùng
+            unawaited(claimRewardedAdPoints());
           } else {
             // Thoát ngang quảng cáo bắt buộc -> Đặt thời gian hiện lại là 20 phút
             await _setNextAutoInterstitialAt(
@@ -1155,8 +1158,19 @@ class AdMobService {
           return;
         }
 
-        await showInterstitialAd();
-        await _setNextAutoInterstitialAt(_generateNextAutoInterstitialAt());
+        final shown = await showInterstitialAd();
+        if (shown) {
+          await _setNextAutoInterstitialAt(_generateNextAutoInterstitialAt());
+          // Cộng 50 điểm thưởng cho người dùng
+          unawaited(claimRewardedAdPoints());
+        } else {
+          // Lỗi hiển thị quảng cáo -> Thử lại sau 5 phút
+          await _setNextAutoInterstitialAt(
+            DateTime.now().add(
+              const Duration(minutes: _autoInterstitialRetryMinutes),
+            ),
+          );
+        }
       }
     } finally {
       _isShowingAutoInterstitial = false;

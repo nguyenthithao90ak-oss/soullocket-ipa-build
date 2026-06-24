@@ -96,7 +96,24 @@ class _HabitScreenState extends State<HabitScreen> {
   }
 
   void _deleteHabit(String key) {
-    _dbRef.child('houses/${widget.houseId}/habits/$key').remove();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xoá thói quen'),
+        content: const Text('Bạn có chắc chắn muốn xoá thói quen này? Dữ liệu điểm danh sẽ mất.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _dbRef.child('houses/${widget.houseId}/habits/$key').remove();
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Xoá'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _toggleHabitDay(String key, String dateStr, bool currentValue) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../../core/sl_theme.dart';
+import '../../../../utils/services/admob_service.dart';
 import '../../../../utils/services/utility_service.dart';
 import 'utilities_hub_item.dart';
 import 'utilities_hub_shortcuts.dart';
@@ -102,28 +103,35 @@ class UtilitiesHubGrid extends StatelessWidget {
     if (bannerAd == null) {
       return const SizedBox.shrink();
     }
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 22, 12, 0),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 8,
-          ),
-          decoration: BoxDecoration(
-            color: SLColors.bgElevated.withValues(alpha: 0.72),
-            borderRadius: SLRadius.lgAll,
-            border: Border.all(
-              color: SLColors.bgElevated.withValues(alpha: 0.45),
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () {
+        // Tap vùng ngoài ad → trigger interstitial (doanh thu cao hơn banner)
+        AdMobService().showInterstitialAd();
+      },
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 22, 12, 0),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 8,
             ),
-            boxShadow: SLShadow.subtle,
-          ),
-          child: ClipRRect(
-            borderRadius: SLRadius.mdAll,
-            child: SizedBox(
-              width: bannerAd.size.width.toDouble(),
-              height: bannerAd.size.height.toDouble(),
-              child: AdWidget(ad: bannerAd),
+            decoration: BoxDecoration(
+              color: SLColors.bgElevated.withValues(alpha: 0.72),
+              borderRadius: SLRadius.lgAll,
+              border: Border.all(
+                color: SLColors.bgElevated.withValues(alpha: 0.45),
+              ),
+              boxShadow: SLShadow.subtle,
+            ),
+            child: ClipRRect(
+              borderRadius: SLRadius.mdAll,
+              child: SizedBox(
+                width: bannerAd.size.width.toDouble(),
+                height: bannerAd.size.height.toDouble(),
+                child: AdWidget(ad: bannerAd),
+              ),
             ),
           ),
         ),

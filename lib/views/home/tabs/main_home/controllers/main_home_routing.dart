@@ -15,7 +15,7 @@ extension _MainHomeRouting on _MainHomeTabState {
 
     Navigator.push(
       context,
-      MaterialPageRoute(
+      SLRoute(
         builder: (_) => LoveInsightsScreen(
           houseId: _houseId!,
           nameU1: nameU1,
@@ -33,7 +33,7 @@ extension _MainHomeRouting on _MainHomeTabState {
     if (_houseId == null) return;
     Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      SLRoute<bool>(
         builder: (_) => CoupleConnectScreen(houseId: _houseId!),
       ),
     ).then((connected) {
@@ -48,7 +48,7 @@ extension _MainHomeRouting on _MainHomeTabState {
     if (houseId.isEmpty) return;
     Navigator.push(
       context,
-      MaterialPageRoute(
+      SLRoute(
         builder: (_) => SingleMatchHubScreen(houseId: houseId),
       ),
     );
@@ -58,7 +58,7 @@ extension _MainHomeRouting on _MainHomeTabState {
     if (_houseId == null) return;
     Navigator.push(
       context,
-      MaterialPageRoute(
+      SLRoute(
         builder: (_) => MilestonesScreen(
           houseId: _houseId!,
           startDate: _houseSettings?['startDate']?.toString(),
@@ -92,7 +92,7 @@ extension _MainHomeRouting on _MainHomeTabState {
 
     await Navigator.push(
       context,
-      MaterialPageRoute(
+      SLRoute(
         builder: (_) => ChatDetailScreen(
           myHouseId: houseId,
           targetHouseId: houseId,

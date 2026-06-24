@@ -367,7 +367,7 @@ class _LegacyFallingPainter extends CustomPainter {
   static final Path _baseStarPath = _createBaseStarPath();
 
   static Path _createBaseLeafPath() {
-    final size = 1.0;
+    const size = 1.0;
     return Path()
       ..moveTo(0, -size * 0.46)
       ..quadraticBezierTo(
@@ -397,7 +397,7 @@ class _LegacyFallingPainter extends CustomPainter {
   }
 
   static Path _createBaseHeartPath() {
-    final s = 1.0;
+    const s = 1.0;
     return Path()
       ..moveTo(0, s * 0.34)
       ..cubicTo(0, s * 0.08, -s * 0.42, -s * 0.04, -s * 0.46, s * 0.3)
@@ -407,9 +407,9 @@ class _LegacyFallingPainter extends CustomPainter {
   }
 
   static Path _createBaseSparklePath() {
-    final size = 1.0;
-    final outer = size * 0.34;
-    final inner = size * 0.12;
+    const size = 1.0;
+    const outer = size * 0.34;
+    const inner = size * 0.12;
     final path = Path();
     for (int i = 0; i < 8; i++) {
       final angle = (i * math.pi) / 4;
@@ -427,9 +427,9 @@ class _LegacyFallingPainter extends CustomPainter {
   }
 
   static Path _createBaseStarPath() {
-    final size = 1.0;
-    final outer = size * 0.38;
-    final inner = size * 0.16;
+    const size = 1.0;
+    const outer = size * 0.38;
+    const inner = size * 0.16;
     final path = Path();
     for (int i = 0; i < 10; i++) {
       final angle = (i * math.pi) / 5 - (math.pi / 2);
@@ -793,7 +793,7 @@ class _LegacyFallingPainter extends CustomPainter {
       ..strokeWidth = (0.03).clamp(0.8 / particle.size, 1.4 / particle.size);
     canvas.drawLine(
       Offset.zero,
-      Offset(0, 0.34),
+      const Offset(0, 0.34),
       paint,
     );
     canvas.restore();

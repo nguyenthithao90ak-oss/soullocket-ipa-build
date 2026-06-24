@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_config.dart';
 import '../../../core/sl_theme.dart';
+import 'package:soullocket_app/core/sl_route.dart';
 import '../../../utils/services/auth_service.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../utilities/user_support_chat_screen.dart';
@@ -130,7 +131,7 @@ class UpdateTab extends StatelessWidget {
     if (!context.mounted) return;
     Navigator.push(
       context,
-      MaterialPageRoute(
+      SLRoute(
         builder: (_) => DocumentViewerScreen(
           title: title,
           assetPath: assetPath,
@@ -143,7 +144,7 @@ class UpdateTab extends StatelessWidget {
     if (!context.mounted) return;
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const UserSupportChatScreen()),
+      SLRoute(builder: (_) => const UserSupportChatScreen()),
     );
   }
 
@@ -426,7 +427,7 @@ class UpdateTab extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const SettingsTab()),
+                      SLRoute(builder: (_) => const SettingsTab()),
                     );
                   },
                   icon: const Icon(Icons.settings_rounded, color: Color(0xFFE91E63)),

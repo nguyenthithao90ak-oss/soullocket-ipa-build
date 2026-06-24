@@ -367,6 +367,27 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _deleteEvent(String dateKey, String eventId) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xoá sự kiện'),
+        content: const Text('Bạn có chắc chắn muốn xoá sự kiện này?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _doDeleteEvent(dateKey, eventId);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Xoá'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _doDeleteEvent(String dateKey, String eventId) {
     _dbRef
         .child('houses/${widget.houseId}/calendar/$dateKey/$eventId')
         .remove()

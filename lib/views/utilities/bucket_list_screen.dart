@@ -164,6 +164,27 @@ class _BucketListScreenState extends State<BucketListScreen>
   }
 
   void _deleteItem(String key) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xoá mục bucket list'),
+        content: const Text('Bạn có chắc chắn muốn xoá mục này?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _doDeleteItem(key);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Xoá'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _doDeleteItem(String key) {
     final labelAction = context.tr('util_xamtmcbuck_d18916');
     final labelTitle = context.tr('util_xabucketli_47d0b4');
     final existing = _dbRef.child('houses/${widget.houseId}/bucket/$key');

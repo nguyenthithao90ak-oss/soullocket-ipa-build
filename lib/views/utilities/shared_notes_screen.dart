@@ -255,6 +255,27 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   }
 
   void _deleteNote(String key) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xoá ghi chú'),
+        content: const Text('Bạn có chắc chắn muốn xoá ghi chú này?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _doDeleteNote(key);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Xoá'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _doDeleteNote(String key) {
     final existing = _dbRef.child('houses/${widget.houseId}/note/$key');
     final deleteMessage = context.tr('util_xamtghich_c9693c');
     final deleteTitle = context.tr('util_xaghich_b9f90d');

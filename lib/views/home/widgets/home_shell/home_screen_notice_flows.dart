@@ -79,7 +79,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
 
     Navigator.push(
       context,
-      MaterialPageRoute(
+      SLRoute(
         builder: (_) => CoupleConnectScreen(houseId: houseId),
       ),
     );
@@ -458,7 +458,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     if (!mounted) return;
     Navigator.push(
       context,
-      MaterialPageRoute(
+      SLRoute(
         builder: (_) => SettingsTab(
           onReplayFirstSetupGuide: _replayFirstSetupGuideFromSettings,
         ),

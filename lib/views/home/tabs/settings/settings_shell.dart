@@ -381,6 +381,8 @@ extension _SettingsTabShell on _SettingsTabState {
                     ),
                   ),
                 ),
+                if (_isBottomBannerReady && _bottomBannerAd != null)
+                  _buildBottomAdBanner(_bottomBannerAd!),
               ],
             ),
           ),

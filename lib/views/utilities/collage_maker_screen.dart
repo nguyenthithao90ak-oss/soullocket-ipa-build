@@ -1,4 +1,4 @@
-﻿// ignore_for_file: unused_element, unused_element_parameter, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+// ignore_for_file: unused_element, unused_element_parameter, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -251,7 +251,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     ),
   ];
 
-  bool _isFromMemory = true;
+  final bool _isFromMemory = true;
   String _selectedStyle = 'grid';
   String _selectedBackgroundTheme = 'default';
   String _selectedAspectRatio = '4:5';

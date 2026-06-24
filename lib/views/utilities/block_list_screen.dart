@@ -106,7 +106,18 @@ class _BlockListScreenState extends State<BlockListScreen> {
   }
 
   Future<void> _unblock(String houseId) async {
-    if (_myHouseId == null || _isUnblocking) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Bỏ chặn người dùng'),
+        content: const Text('Bạn có chắc chắn muốn bỏ chặn người dùng này? Họ sẽ có thể xem và tương tác lại với bạn.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Huỷ')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), style: TextButton.styleFrom(foregroundColor: Colors.red), child: const Text('Bỏ chặn')),
+        ],
+      ),
+    );
+    if (confirmed != true || _myHouseId == null || _isUnblocking) return;
     setState(() => _isUnblocking = true);
     try {
       await _db.ref('houses/$_myHouseId/blocked_users/$houseId').remove();

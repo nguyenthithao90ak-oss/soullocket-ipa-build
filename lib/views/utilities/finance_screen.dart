@@ -220,8 +220,26 @@ class _FinanceScreenState extends State<FinanceScreen> {
     HapticFeedback.mediumImpact();
   }
 
-  void _deleteTransaction(String key) =>
-      _dbRef.child('houses/${widget.houseId}/budget/$key').remove();
+  void _deleteTransaction(String key) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xoá giao dịch'),
+        content: const Text('Bạn có chắc chắn muốn xoá giao dịch này?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _dbRef.child('houses/${widget.houseId}/budget/$key').remove();
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Xoá'),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showSplitBillDialog() {
     showDialog(

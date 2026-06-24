@@ -1207,7 +1207,7 @@ class StorageService {
     _requireCurrentUid();
     try {
       final nowMs = DateTime.now().millisecondsSinceEpoch;
-      final ext = '.png';
+      const ext = '.png';
       final currentUid = _requireCurrentUid();
       final path = 'uploads/$currentUid/collage/$nowMs$ext';
       final normalizedStoragePath = _normalizeStorageWritePath(path);

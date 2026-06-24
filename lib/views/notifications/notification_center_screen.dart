@@ -341,7 +341,24 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
   void _deleteOne(String id) {
     final target = _findNotif(id);
     if (target != null && _isLocked(target)) return;
-    _db.ref('notifications/$_houseId/$id').remove();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xoá thông báo'),
+        content: const Text('Bạn có chắc chắn muốn xoá thông báo này?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _db.ref('notifications/$_houseId/$id').remove();
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Xoá'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _clearAll() async {

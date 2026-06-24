@@ -142,8 +142,14 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
         if (nextBday.isBefore(todayMidnight)) {
           nextBday = DateTime(todayMidnight.year + 1, bday.month, bday.day);
         }
+        final daysUntil = nextBday.difference(todayMidnight).inDays;
+        final giftHint = daysUntil <= 7 && daysUntil >= 0
+            ? _MainHomeTabState._giftSuggestionsForBirthday(bday.month, bday.day)
+            : '';
         upcomingEvents.add(HomeUpcomingEvent(
-          title: 'Sinh nhật $name 🎂',
+          title: giftHint.isNotEmpty
+              ? 'Sinh nhật $name 🎂 $giftHint'
+              : 'Sinh nhật $name 🎂',
           date: nextBday,
           type: 'birthday',
         ));
@@ -315,14 +321,14 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                       _buildJourneyStat(
                         emoji: '🎂',
                         value: nameU1,
-                        label: '$myNameSetting',
+                        label: myNameSetting,
                         flex: 1,
                         isSmall: true,
                       ),
                       _buildJourneyStat(
                         emoji: '🎂',
                         value: nameU2,
-                        label: '$partnerNameSetting',
+                        label: partnerNameSetting,
                         flex: 1,
                         isSmall: true,
                       ),

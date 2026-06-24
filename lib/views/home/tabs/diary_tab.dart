@@ -1,4 +1,4 @@
-﻿// ignore_for_file: deprecated_member_use, use_build_context_synchronously
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'dart:async';
 
@@ -7,6 +7,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, ValueListenable;
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:soullocket_app/core/sl_page_physics.dart';
 import 'package:intl/intl.dart';
 
@@ -703,6 +704,70 @@ class _DiaryTabState extends State<DiaryTab>
     }
   }
 
+  BannerAd? _bottomBannerAd;
+  bool _isBottomBannerReady = false;
+
+  void _loadBottomBanner() async {
+    if (kIsWeb) return;
+    final adMob = AdMobService();
+    await adMob.initialize();
+    if (!mounted) return;
+
+    if (await adMob.isProUser()) {
+      _bottomBannerAd?.dispose();
+      _bottomBannerAd = null;
+      if (!mounted) return;
+      setState(() => _isBottomBannerReady = false);
+      return;
+    }
+
+    _bottomBannerAd?.dispose();
+    _bottomBannerAd = null;
+    if (!mounted) return;
+    _bottomBannerAd = await adMob.createBannerAd(
+      onAdLoaded: (_) {
+        if (!mounted) return;
+        setState(() => _isBottomBannerReady = true);
+      },
+    );
+  }
+
+  Widget _buildBottomAdBanner(BannerAd bannerAd) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () {
+        AdMobService().showInterstitialAd();
+      },
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: SLColors.bgElevated.withValues(alpha: 0.72),
+              borderRadius: SLRadius.lgAll,
+              border: Border.all(
+                color: SLColors.bgElevated.withValues(alpha: 0.45),
+              ),
+              boxShadow: SLShadow.subtle,
+            ),
+            child: ClipRRect(
+              borderRadius: SLRadius.mdAll,
+              child: SizedBox(
+                width: bannerAd.size.width.toDouble(),
+                height: bannerAd.size.height.toDouble(),
+                child: AdWidget(ad: bannerAd),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -716,6 +781,10 @@ class _DiaryTabState extends State<DiaryTab>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _syncSelectionOverlayVisibility();
       unawaited(_prepareDiaryOnMount());
+      Future<void>.delayed(const Duration(seconds: 15), () {
+        if (!mounted) return;
+        _loadBottomBanner();
+      });
     });
   }
 
@@ -746,6 +815,7 @@ class _DiaryTabState extends State<DiaryTab>
 
   @override
   void dispose() {
+    _bottomBannerAd?.dispose();
     widget.onSelectionOverlayChanged?.call(false);
     widget.isActiveListenable.removeListener(_onActiveChanged);
     _feedController.removeListener(_handleFeedControllerChange);

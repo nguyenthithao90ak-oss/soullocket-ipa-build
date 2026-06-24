@@ -292,7 +292,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
       child: Padding(
         key: const ValueKey('collapsed-nav'),
         padding:
-            EdgeInsets.fromLTRB(12, 0, 12, 0),
+            const EdgeInsets.fromLTRB(12, 0, 12, 0),
         child: Align(
           alignment: Alignment.bottomCenter,
           child: Material(

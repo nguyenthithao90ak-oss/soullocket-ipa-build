@@ -91,6 +91,7 @@ import 'dart:ui' as ui;
 
 import '../../../widgets/lottie_async_loader.dart';
 import '../../../core/fast_backdrop_filter.dart';
+import 'package:soullocket_app/core/sl_route.dart';
 
 part 'main_home/widgets/main_home_dialogs.dart';
 part '../widgets/main_home/main_home_hero_section.dart';
@@ -160,6 +161,33 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     final num = (i + 1).toString().padLeft(3, '0');
     return 'assets/images/interaction_stickers/custom/numbered/sticker_$num.png';
   });
+
+  static const List<String> _kGiftSuggestions = [
+    '🎁 Handmade viết tay lời yêu thương',
+    '💐 Một bó hoa tươi kèm thiệp nhỏ xinh',
+    '🎂 Bất ngờ với bánh kem và nến lung linh',
+    '🍫 Hộp socola tình yêu và một cái ôm thật chặt',
+    '💍 Trang sức nhỏ xinh đính tên 2 đứa',
+    '🧸 Thú bông ôm tay dễ thương to đùng',
+    '🎫 Vé xem phim đôi hoặc concert cả 2 thích',
+    '📸 Album ảnh kỷ niệm tự thiết kế',
+    '🌹 Một bữa tối lãng mạn với đèn nến và hoa',
+    '✈️ Chuyến đi chơi 2 ngày 1 đêm bất ngờ',
+    '🛍️ Set quà chăm sóc da hoặc nước hoa',
+    '🎧 Tai nghe bluetooth cùng playlist tặng riêng',
+    '🖼️ Khung ảnh điện tử quay vòng kỷ niệm',
+    '🌸 Cây cảnh nhỏ xinh để cùng chăm sóc',
+    '☕ Bộ ly sứ đôi khắc tên 2 đứa',
+    '🎮 Game hoặc boardgame có thể chơi cùng nhau',
+    '🧦 Đồ đôi: áo, mũ hoặc vớ dễ thương',
+    '📖 Cuốn sổ nhỏ ghi lại lời yêu mỗi ngày',
+    '🎵 Đàn hộp nhỏ (ukulele) và bài hát tặng riêng',
+    '🌟 Bộ đèn sao trần phòng ngủ lãng mạn',
+  ];
+
+  static String _giftSuggestionsForBirthday(int month, int day) {
+    return 'Gợi ý quà: ${_kGiftSuggestions[(month + day) % _kGiftSuggestions.length]}';
+  }
 
   void _safeSetState(VoidCallback fn) {
     if (!mounted) return;
@@ -732,7 +760,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     final action = result.actionId as String;
     if (action == 'history') {
       await Navigator.of(context).push(
-        MaterialPageRoute(
+        SLRoute(
           builder: (_) => HistoryScreen(houseId: _houseId ?? ''),
         ),
       );
@@ -746,7 +774,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         return;
       }
       await Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => tool),
+        SLRoute(builder: (_) => tool),
       );
     }
   }
@@ -764,7 +792,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
             : 'single';
 
     Navigator.of(context).push(
-      MaterialPageRoute(
+      SLRoute(
         builder: (_) => GlobalSearchScreen(
           houseId: houseId,
           relationshipMode: relationshipMode,
@@ -3574,7 +3602,7 @@ class _SoulMergeStickerState extends State<_SoulMergeSticker> {
             },
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const SoulMergeScreen()),
+              SLRoute(builder: (_) => const SoulMergeScreen()),
             ),
             child: Container(
               width: 52,

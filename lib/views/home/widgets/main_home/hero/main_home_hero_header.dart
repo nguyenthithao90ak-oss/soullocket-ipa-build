@@ -48,7 +48,7 @@ class _MainHomeHeroHeaderState extends State<_MainHomeHeroHeader> {
                       onTap: widget.onOpenSettings ??
                           () => Navigator.push(
                                 context,
-                                MaterialPageRoute(
+                                SLRoute(
                                   builder: (_) => const SettingsTab(
                                     showGuideOnOpen: true,
                                   ),
@@ -70,7 +70,7 @@ class _MainHomeHeroHeaderState extends State<_MainHomeHeroHeader> {
               color: const Color(0xFFD81B60),
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(
+                SLRoute(
                   builder: (_) => const MessengerScreen(),
                 ),
               ),

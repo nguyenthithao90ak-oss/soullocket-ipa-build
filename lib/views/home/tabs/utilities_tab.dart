@@ -47,6 +47,7 @@ import '../../utilities/sticker_library_screen.dart';
 import '../../utilities/utility_sticker_icon.dart';
 import '../../utilities/health_screen.dart';
 import '../../utilities/local_album_screen.dart';
+import 'package:soullocket_app/core/sl_route.dart';
 
 // import '../../utils/sl_notice.dart';
 
@@ -442,7 +443,7 @@ class _UtilitiesTabState extends State<UtilitiesTab>
     // LocalAlbumScreen khong can houseId
     if (id == 'local_album') {
       Navigator.push(
-          context, MaterialPageRoute(builder: (_) => const LocalAlbumScreen()));
+          context, SLRoute(builder: (_) => const LocalAlbumScreen()));
       return;
     }
 
