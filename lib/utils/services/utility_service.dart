@@ -43,7 +43,6 @@ class UtilityService {
     'cinema',
     'gift',
     'love_card',
-    'pet',
   };
   static const Set<String> _debugOnlyIds = {
     'sticker_library',
@@ -72,13 +71,6 @@ class UtilityService {
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       if (id == 'giftcode') return false;
       if (id == 'store') return false;
-    }
-    if (!kIsWeb &&
-        !kDebugMode &&
-        (defaultTargetPlatform == TargetPlatform.iOS ||
-            defaultTargetPlatform == TargetPlatform.android) &&
-        id == 'pet') {
-      return false;
     }
     return kDebugMode || !_debugOnlyIds.contains(id);
   }
@@ -110,6 +102,13 @@ class UtilityService {
   }
 
   static final List<UtilityApp> allApps = [
+    UtilityApp(
+      id: 'local_album',
+      title: 'util_luunhtbit_6f4b4a',
+      icon: Icons.photo_library_rounded,
+      colors: [const Color(0xFF7C4DFF), const Color(0xFF448AFF)],
+      isTool: true,
+    ),
     UtilityApp(
       id: 'giftcode',
       title: 'utility_title_giftcode',
@@ -271,12 +270,6 @@ class UtilityService {
       title: 'health',
       icon: Icons.health_and_safety_rounded,
       colors: [const Color(0xFFFF80AB), const Color(0xFFF06292)],
-    ),
-    UtilityApp(
-      id: 'pet',
-      title: 'utility_title_pet',
-      icon: Icons.pets_rounded,
-      colors: [const Color(0xFFFFB300), const Color(0xFFF57C00)],
     ),
   ];
 

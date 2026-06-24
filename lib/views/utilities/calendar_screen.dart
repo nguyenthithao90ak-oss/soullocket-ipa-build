@@ -42,6 +42,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Map<DateTime, List<dynamic>> _events = {};
   StreamSubscription<DatabaseEvent>? _calendarSubscription;
+  Timer? _debounceTimer;
   bool _isQuickAddSheetOpen = false;
 
   @override
@@ -54,47 +55,49 @@ class _CalendarScreenState extends State<CalendarScreen> {
     _loadEvents();
   }
 
+
+
   void _loadEvents() {
     _calendarSubscription = _dbRef
         .child('houses/${widget.houseId}/calendar')
         .onValue
         .listen((event) {
-      if (event.snapshot.value == null) {
-        if (mounted) {
+      _debounceTimer?.cancel();
+      _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+        if (!mounted) return;
+        if (event.snapshot.value == null) {
           setState(() {
             _events = {};
           });
+          return;
         }
-        return;
-      }
 
-      final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
-      final Map<DateTime, List<dynamic>> newEvents = {};
+        final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
+        final Map<DateTime, List<dynamic>> newEvents = {};
 
-      data.forEach((dateKey, dateEvents) {
-        final parts = dateKey.toString().split('-');
-        if (parts.length == 3) {
-          final year = int.tryParse(parts[0]);
-          final month = int.tryParse(parts[1]);
-          final day = int.tryParse(parts[2]);
-          if (year != null && month != null && day != null) {
-            final date = DateTime.utc(year, month, day);
-            final eventsMap = Map<dynamic, dynamic>.from(dateEvents as Map);
-            newEvents[date] = eventsMap.entries
-                .map((e) => {
-                      'key': e.key,
-                      ...Map<String, dynamic>.from(e.value as Map)
-                    })
-                .toList();
+        data.forEach((dateKey, dateEvents) {
+          final parts = dateKey.toString().split('-');
+          if (parts.length == 3) {
+            final year = int.tryParse(parts[0]);
+            final month = int.tryParse(parts[1]);
+            final day = int.tryParse(parts[2]);
+            if (year != null && month != null && day != null) {
+              final date = DateTime.utc(year, month, day);
+              final eventsMap = Map<dynamic, dynamic>.from(dateEvents as Map);
+              newEvents[date] = eventsMap.entries
+                  .map((e) => {
+                        'key': e.key,
+                        ...Map<String, dynamic>.from(e.value as Map)
+                      })
+                  .toList();
+            }
           }
-        }
-      });
+        });
 
-      if (mounted) {
         setState(() {
           _events = newEvents;
         });
-      }
+      });
     });
   }
 
@@ -516,6 +519,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   void dispose() {
     _calendarSubscription?.cancel();
+    _debounceTimer?.cancel();
     _eventController.dispose();
     super.dispose();
   }

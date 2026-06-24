@@ -316,6 +316,12 @@ class AppEntryController {
       'refresh widget shell on resume',
       () => WidgetService.refreshWidgetShell(),
     );
+    unawaited(
+      _runGuarded(
+        'show app open ad on resume',
+        () => _adMobService.showAppOpenAdIfEligible(),
+      ),
+    );
     await _adMobService.resumeAutoInterstitialScheduler();
     _lastPausedAt = null;
     return AppEntryResumeResult(authState: authState);
@@ -453,6 +459,16 @@ class AppEntryController {
         () => WidgetService.refreshWidgetShell(),
       ),
     );
+
+    if (!hasTriggeredInitialAppOpenAd) {
+      didScheduleInitialAppOpenAd = true;
+      Future<void>.delayed(const Duration(seconds: 4), () async {
+        await _runGuarded(
+          'show startup app open ad while loading',
+          () => _adMobService.showAppOpenAdIfEligible(),
+        );
+      });
+    }
 
     return AppEntryHouseSessionResult(
       didScheduleInitialAppOpenAd: didScheduleInitialAppOpenAd,

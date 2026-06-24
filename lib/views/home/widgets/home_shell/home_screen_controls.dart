@@ -282,7 +282,6 @@ extension _HomeScreenShellControls on _HomeScreenState {
     required bool isDark,
     required int currentIndex,
   }) {
-    final bottomInset = MediaQuery.of(context).padding.bottom;
     final accent = _HomeScreenState._navItems[currentIndex].activeColor;
     return GestureDetector(
       onVerticalDragEnd: (details) {

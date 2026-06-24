@@ -23,7 +23,6 @@ class StoryService {
     if (normalizedHouseId.isEmpty) {
       throw Exception('Thiếu mã nhà để tải story.');
     }
-    final normalizedAuthorName = authorName.trim();
     final picker = ImagePicker();
     final XFile? image = presetImage ??
         await AppLifecyclePresenceGuard.guard(

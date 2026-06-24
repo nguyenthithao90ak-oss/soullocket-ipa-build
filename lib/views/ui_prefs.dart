@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -271,15 +272,53 @@ class UiPrefs {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
       case TargetPlatform.iOS:
-        // Dùng 'balanced' để animation wave background hoạt động bình thường.
-        // User muốn tiết kiệm pin tối đa có thể chọn thủ công 'low' trong cài đặt.
-        return 'balanced';
+        return _detectDeviceTier();
       case TargetPlatform.macOS:
       case TargetPlatform.windows:
       case TargetPlatform.linux:
-        return 'balanced';
+        return 'high';
       case TargetPlatform.fuchsia:
         return 'balanced';
+    }
+  }
+
+  /// Phát hiện cấp hiệu năng thiết bị dựa trên RAM và CPU cores.
+  /// 'low' (< 3GB RAM hoặc <= 4 cores)
+  /// 'balanced' (3-6GB)
+  /// 'high' (>= 6GB RAM + >= 8 cores)
+  static String _detectDeviceTier() {
+    if (kIsWeb) return 'balanced';
+    try {
+      int totalMemoryMB = 0;
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        final file = File('/proc/meminfo');
+        if (file.existsSync()) {
+          for (final line in file.readAsLinesSync()) {
+            if (line.startsWith('MemTotal')) {
+              final parts = line.split(RegExp(r'\s+'));
+              if (parts.length >= 2) {
+                final kb = int.tryParse(parts[1]);
+                if (kb != null) {
+                  totalMemoryMB = kb ~/ 1024;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+      if (totalMemoryMB <= 0) {
+        totalMemoryMB = defaultTargetPlatform == TargetPlatform.iOS
+            ? 3072
+            : 4096;
+      }
+      final cpuCores = Platform.numberOfProcessors;
+
+      if (totalMemoryMB <= 3072 || cpuCores <= 4) return 'low';
+      if (totalMemoryMB >= 6144 && cpuCores >= 8) return 'high';
+      return 'balanced';
+    } catch (_) {
+      return 'balanced';
     }
   }
 

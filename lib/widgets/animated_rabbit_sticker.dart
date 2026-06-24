@@ -102,38 +102,42 @@ class _RabbitStickerMotionState extends State<_RabbitStickerMotion>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      child: widget.child,
-      builder: (context, child) {
-        final childWidget = child;
-        if (childWidget == null) {
-          return const SizedBox.shrink();
-        }
+    final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? true;
+    return TickerMode(
+      enabled: isCurrentRoute,
+      child: AnimatedBuilder(
+        animation: _controller,
+        child: widget.child,
+        builder: (context, child) {
+          final childWidget = child;
+          if (childWidget == null) {
+            return const SizedBox.shrink();
+          }
 
-        final cycle = (_controller.value * math.pi * 2) + _phase;
-        final primary = math.sin(cycle);
-        final secondary = math.sin((cycle * 2) + (_phase * 0.7));
-        final tertiary = math.sin((cycle * 3) - (_phase * 0.45));
-        final lift = (math.sin(cycle - (math.pi / 2)) + 1) / 2;
-        final isNumberedSticker = _normalizedPath.startsWith(
-          _numberedStickerPrefix,
-        );
-        final keepAspectRatio = _normalizedPath.startsWith(
-          _cutoutStickerPrefix,
-        );
+          final cycle = (_controller.value * math.pi * 2) + _phase;
+          final primary = math.sin(cycle);
+          final secondary = math.sin((cycle * 2) + (_phase * 0.7));
+          final tertiary = math.sin((cycle * 3) - (_phase * 0.45));
+          final lift = (math.sin(cycle - (math.pi / 2)) + 1) / 2;
+          final isNumberedSticker = _normalizedPath.startsWith(
+            _numberedStickerPrefix,
+          );
+          final keepAspectRatio = _normalizedPath.startsWith(
+            _cutoutStickerPrefix,
+          );
 
-        return _buildMotion(
-          childWidget,
-          primary: primary,
-          secondary: secondary,
-          tertiary: tertiary,
-          lift: lift,
-          alignment:
-              isNumberedSticker ? Alignment.bottomCenter : Alignment.center,
-          keepAspectRatio: keepAspectRatio,
-        );
-      },
+          return _buildMotion(
+            childWidget,
+            primary: primary,
+            secondary: secondary,
+            tertiary: tertiary,
+            lift: lift,
+            alignment:
+                isNumberedSticker ? Alignment.bottomCenter : Alignment.center,
+            keepAspectRatio: keepAspectRatio,
+          );
+        },
+      ),
     );
   }
 

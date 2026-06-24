@@ -258,25 +258,25 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Ứng dụng cần quyền camera để chụp ảnh kỷ niệm, quét mã QR kết nối hoặc đăng nhập và dùng cuộc gọi video khi bạn chủ động bật tính năng đó.</string>
+	<string>á»¨ng dá»¥ng cáº§n quyá»n camera Ä‘á»ƒ chá»¥p áº£nh ká»· niá»‡m, quÃ©t mÃ£ QR káº¿t ná»‘i hoáº·c Ä‘Äƒng nháº­p vÃ  dÃ¹ng cuá»™c gá»i video khi báº¡n chá»§ Ä‘á»™ng báº­t tÃ­nh nÄƒng Ä‘Ã³.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Ứng dụng cần quyền Face ID để mở khóa nhanh và bảo vệ nội dung riêng tư của bạn.</string>
+	<string>á»¨ng dá»¥ng cáº§n quyá»n Face ID Ä‘á»ƒ má»Ÿ khÃ³a nhanh vÃ  báº£o vá»‡ ná»™i dung riÃªng tÆ° cá»§a báº¡n.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Ứng dụng cần quyền vị trí khi đang sử dụng để hiển thị bản đồ đôi, vị trí hiện tại, nhật ký có gắn địa điểm và gợi ý địa điểm gần bạn.</string>
+	<string>á»¨ng dá»¥ng cáº§n quyá»n vá»‹ trÃ­ khi Ä‘ang sá»­ dá»¥ng Ä‘á»ƒ hiá»ƒn thá»‹ báº£n Ä‘á»“ Ä‘Ã´i, vá»‹ trÃ­ hiá»‡n táº¡i, nháº­t kÃ½ cÃ³ gáº¯n Ä‘á»‹a Ä‘iá»ƒm vÃ  gá»£i Ã½ Ä‘á»‹a Ä‘iá»ƒm gáº§n báº¡n.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>SoulLocket thu thập dữ liệu vị trí chạy ngầm để hiển thị bản đồ chung, khoảng cách giữa hai bạn và chia sẻ vị trí ngay cả khi đóng ứng dụng.</string>
+	<string>SoulLocket thu tháº­p dá»¯ liá»‡u vá»‹ trÃ­ cháº¡y ngáº§m Ä‘á»ƒ hiá»ƒn thá»‹ báº£n Ä‘á»“ chung, khoáº£ng cÃ¡ch giá»¯a hai báº¡n vÃ  chia sáº» vá»‹ trÃ­ ngay cáº£ khi Ä‘Ã³ng á»©ng dá»¥ng.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>SoulLocket thu thập dữ liệu vị trí chạy ngầm để hiển thị bản đồ chung, khoảng cách giữa hai bạn và chia sẻ vị trí ngay cả khi đóng ứng dụng.</string>
+	<string>SoulLocket thu tháº­p dá»¯ liá»‡u vá»‹ trÃ­ cháº¡y ngáº§m Ä‘á»ƒ hiá»ƒn thá»‹ báº£n Ä‘á»“ chung, khoáº£ng cÃ¡ch giá»¯a hai báº¡n vÃ  chia sáº» vá»‹ trÃ­ ngay cáº£ khi Ä‘Ã³ng á»©ng dá»¥ng.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Ứng dụng cần quyền microphone để tham gia cuộc gọi âm thanh hoặc video và ghi nội dung âm thanh khi bạn chủ động sử dụng các tính năng đó.</string>
+	<string>á»¨ng dá»¥ng cáº§n quyá»n microphone Ä‘á»ƒ tham gia cuá»™c gá»i Ã¢m thanh hoáº·c video vÃ  ghi ná»™i dung Ã¢m thanh khi báº¡n chá»§ Ä‘á»™ng sá»­ dá»¥ng cÃ¡c tÃ­nh nÄƒng Ä‘Ã³.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Ứng dụng cần quyền thêm ảnh vào thư viện để lưu ảnh kỷ niệm, ảnh ghép và nội dung bạn tạo từ ứng dụng về máy.</string>
+	<string>á»¨ng dá»¥ng cáº§n quyá»n thÃªm áº£nh vÃ o thÆ° viá»‡n Ä‘á»ƒ lÆ°u áº£nh ká»· niá»‡m, áº£nh ghÃ©p vÃ  ná»™i dung báº¡n táº¡o tá»« á»©ng dá»¥ng vá» mÃ¡y.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Ứng dụng cần quyền truy cập thư viện ảnh để chọn ảnh hoặc video cho hồ sơ, bài đăng, nhật ký, ảnh ghép và các kỷ niệm trong ứng dụng.</string>
+	<string>á»¨ng dá»¥ng cáº§n quyá»n truy cáº­p thÆ° viá»‡n áº£nh Ä‘á»ƒ chá»n áº£nh hoáº·c video cho há»“ sÆ¡, bÃ i Ä‘Äƒng, nháº­t kÃ½, áº£nh ghÃ©p vÃ  cÃ¡c ká»· niá»‡m trong á»©ng dá»¥ng.</string>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>
@@ -397,5 +397,10 @@
 	<true/>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>Your data is used to deliver personalized ads and measure ad performance. This includes sharing the device's advertising identifier with ad networks to provide relevant ads and prevent fraud.</string>
-</dict>
+<key>UIViewControllerBasedStatusBarAppearance</key>
+		<false/>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+		<false/>
+	</dict>
 </plist>
+

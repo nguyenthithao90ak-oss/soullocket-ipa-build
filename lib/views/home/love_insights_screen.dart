@@ -5,6 +5,7 @@ import '../../utils/services/love_insight_service.dart';
 import '../../utils/services/offline_cache_service.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../core/sl_theme.dart';
+import 'package:soullocket_app/views/home/widgets/love_insights/walking_sticker_overlay.dart';
 
 part 'widgets/love_insights/insight_header_cards.dart';
 part 'widgets/love_insights/insight_stats_grid.dart';
@@ -161,6 +162,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
             top: false,
             child: _buildContent(),
           ),
+          const WalkingStickerOverlay(),
         ],
       ),
     );

@@ -150,7 +150,7 @@ class AppConfig {
 
   // ── IMAGE QUALITY ─────────────────────────────────────────────────────
   /// Chất lượng nén ảnh khi upload (0-100)
-  static const int imageCompressQuality = 82;
+  static const int imageCompressQuality = 75;
 
   /// Chiều rộng tối đa ảnh sau khi nén (px)
   static const int imageMaxWidth = 1200;

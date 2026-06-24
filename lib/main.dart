@@ -739,11 +739,11 @@ Future<void> _runBackgroundWarmUpTask(
 void _configureRenderingDefaults() {
   final imageCache = PaintingBinding.instance.imageCache;
   if (kIsWeb) {
-    imageCache.maximumSize = 120;
-    imageCache.maximumSizeBytes = 64 << 20;
+    imageCache.maximumSize = 180;
+    imageCache.maximumSizeBytes = 120 << 20; // 120 MB
   } else {
-    imageCache.maximumSize = 150;
-    imageCache.maximumSizeBytes = 80 << 20;
+    imageCache.maximumSize = 400;
+    imageCache.maximumSizeBytes = 256 << 20; // 256 MB
   }
   SchedulerBinding.instance.scheduleWarmUpFrame();
 }

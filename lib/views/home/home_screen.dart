@@ -1,4 +1,4 @@
-﻿// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 import 'dart:ui' as ui;
 
@@ -398,6 +398,8 @@ class _HomeScreenState extends State<HomeScreen>
   Timer? _vipThemeRotateTimer;
   Timer? _startupTasksTimer;
   Timer? _startupAnimationTimer;
+  Timer? _prewarmMediaTimer;
+  Timer? _appUpdateTimer;
   String _prewarmedBackgroundUrl = '';
   bool _isPrewarmingShellMedia = false;
   bool _allowStartupAnimations = false;
@@ -495,22 +497,20 @@ class _HomeScreenState extends State<HomeScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       unawaited(_consumePendingWidgetAction());
       unawaited(WidgetService.checkAndProcessPendingWidgetActions());
-      unawaited(
-        Future<void>.delayed(
-          const Duration(seconds: 3),
-          _prewarmShellMedia,
-        ),
-      );
+      _prewarmMediaTimer = Timer(const Duration(seconds: 3), () {
+        if (mounted) {
+          unawaited(_prewarmShellMedia());
+        }
+      });
       _startupTasksTimer = Timer(_homeStartupTaskDelay, () {
         if (!mounted) return;
         unawaited(_runDeferredStartupTasks());
       });
-      unawaited(
-        Future<void>.delayed(
-          const Duration(seconds: 5),
-          _checkAndUpdateApp,
-        ),
-      );
+      _appUpdateTimer = Timer(const Duration(seconds: 5), () {
+        if (mounted) {
+          unawaited(_checkAndUpdateApp());
+        }
+      });
     });
     _widgetActionSub = WidgetActionService().actions.listen((action) {
       unawaited(_handleWidgetLaunchAction(action));
@@ -911,6 +911,8 @@ class _HomeScreenState extends State<HomeScreen>
     _detachNotificationBadgeListener(resetCounter: true);
     _startupTasksTimer?.cancel();
     _startupAnimationTimer?.cancel();
+    _prewarmMediaTimer?.cancel();
+    _appUpdateTimer?.cancel();
     final musicService = MusicService();
     musicService.isPlayingNotifier.removeListener(_handleMusicPlaybackChanged);
     musicService.isVisibleNotifier

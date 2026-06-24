@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 const List<String> utilitiesHubDefaultOrder = <String>[
+  'local_album',
   'bucket',
   'note',
   'friendly_chat',
@@ -30,6 +31,11 @@ const List<String> utilitiesHubDefaultOrder = <String>[
 ];
 
 final Map<String, Map<String, dynamic>> appConfig = {
+  'local_album': {
+    'icon': Icons.photo_library_rounded,
+    'colors': [const Color(0xFF7C4DFF), const Color(0xFF448AFF)],
+    'title': L10nService().translate('util_luunhtbit_6f4b4a'),
+  },
   'giftcode': {
     'icon': Icons.confirmation_number_rounded,
     'colors': [const Color(0xFFFF8A65), const Color(0xFFFF6F91)],

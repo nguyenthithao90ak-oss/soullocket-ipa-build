@@ -114,7 +114,6 @@ extension _CommunityTabComposer on _CommunityTabState {
   Future<void> _submitLocketPost(XFile capturedImage) async {
     if (_isLoading) return;
     final errUploadFailed = context.tr('home_khngthtinh_bfad65');
-    final defaultMood = context.tr('home_tho_ebaeb2');
     final successMsg = context.tr('home_gikhonhkhc_804cd1');
     final defaultErr = context.tr('home_khngthnglo_8f3faa');
     final errorTitle = context.tr('home_li_aaf377');

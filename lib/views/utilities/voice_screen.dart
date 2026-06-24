@@ -19,6 +19,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/app_lifecycle_presence_guard.dart';
+import 'package:soullocket_app/utils/services/error_logger_service.dart';
 import 'package:soullocket_app/utils/services/private_media_url_service.dart';
 import 'package:soullocket_app/utils/services/activity_history_service.dart';
 
@@ -220,7 +221,9 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, 
           durationMs: durationMs,
         ).then((_) {
           _showMessage(successMsg);
-        }).catchError((e) {
+        }).catchError((e, stackTrace) {
+          debugPrint('[VoiceScreen] _pickAndUploadVoice async catchError: $e');
+          unawaited(ErrorLoggerService.instance.logError(e, stackTrace as StackTrace?, reason: 'pickAndUploadVoice_async_error'));
           final errorInfo = AppErrorMapper.resolve(
             e,
             fallbackMessage: fallbackErrMsg,
@@ -228,7 +231,9 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, 
           _showMessage(errorInfo.message);
         })
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[VoiceScreen] _pickAndUploadVoice catch: $e');
+      unawaited(ErrorLoggerService.instance.logError(e, stackTrace, reason: 'pickAndUploadVoice_sync_error'));
       final errorInfo = AppErrorMapper.resolve(
         e,
         fallbackMessage: fallbackErrMsg,
@@ -316,7 +321,9 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, 
         if (!_isRecording) return;
         await _stopRecordingAndUpload(reachedLimit: true);
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[VoiceScreen] _toggleRecordAndUpload catch: $e');
+      unawaited(ErrorLoggerService.instance.logError(e, stackTrace, reason: 'toggleRecordAndUpload_error'));
       final errorInfo = AppErrorMapper.resolve(
         e,
         fallbackMessage: fallbackErrMsg,
@@ -394,7 +401,9 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, 
           _showMessage(
             reachedLimit ? limitReachedMsg : successMsg,
           );
-        }).catchError((e) {
+        }).catchError((e, stackTrace) {
+          debugPrint('[VoiceScreen] _stopRecordingAndUpload async catchError: $e');
+          unawaited(ErrorLoggerService.instance.logError(e, stackTrace as StackTrace?, reason: 'stopRecordingAndUpload_async_error'));
           final errorInfo = AppErrorMapper.resolve(
             e,
             fallbackMessage: fallbackErrMsg,
@@ -402,7 +411,9 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, 
           _showMessage(errorInfo.message);
         })
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[VoiceScreen] _stopRecordingAndUpload catch: $e');
+      unawaited(ErrorLoggerService.instance.logError(e, stackTrace, reason: 'stopRecordingAndUpload_sync_error'));
       final errorInfo = AppErrorMapper.resolve(
         e,
         fallbackMessage: fallbackErrMsg,
@@ -446,16 +457,25 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, 
     }
     headers.putIfAbsent('Content-Type', () => mimeType);
 
-    final uploadResponse = await http
-        .put(
-          Uri.parse(uploadUrl),
-          headers: headers,
-          body: bytes,
-        )
-        .timeout(const Duration(seconds: 20));
-    if (uploadResponse.statusCode < 200 || uploadResponse.statusCode >= 300) {
-      throw Exception(
-          'Tải audio lên máy chủ thất bại (${uploadResponse.statusCode}).');
+    debugPrint('[VoiceScreen] Uploading voice bytes to R2 signed URL: $uploadUrl');
+
+    try {
+      final uploadResponse = await http
+          .put(
+            Uri.parse(uploadUrl),
+            headers: headers,
+            body: bytes,
+          )
+          .timeout(const Duration(seconds: 20));
+      debugPrint('[VoiceScreen] R2 response status: ${uploadResponse.statusCode}');
+      if (uploadResponse.statusCode < 200 || uploadResponse.statusCode >= 300) {
+        throw Exception(
+            'Tải audio lên máy chủ thất bại (${uploadResponse.statusCode}). Response: ${uploadResponse.body}');
+      }
+    } catch (e, stackTrace) {
+      debugPrint('[VoiceScreen] HTTP put to R2 error: $e');
+      unawaited(ErrorLoggerService.instance.logError(e, stackTrace, reason: 'r2_upload_put_error'));
+      rethrow;
     }
 
     await _finalizeVoiceUpload(
@@ -486,10 +506,16 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, 
         throw Exception('Voice upload session is invalid.');
       }
       return Map<String, dynamic>.from(data);
-    } on FirebaseFunctionsException catch (error) {
+    } on FirebaseFunctionsException catch (error, stackTrace) {
+      debugPrint('[VoiceScreen] createVoiceUploadSession FirebaseFunctionsException: ${error.code} - ${error.message}');
+      unawaited(ErrorLoggerService.instance.logError(error, stackTrace, reason: 'createVoiceUploadSession_firebase_error'));
       throw Exception(error.message?.trim().isNotEmpty == true
           ? error.message!.trim()
           : errCreateSession);
+    } catch (error, stackTrace) {
+      debugPrint('[VoiceScreen] createVoiceUploadSession error: $error');
+      unawaited(ErrorLoggerService.instance.logError(error, stackTrace, reason: 'createVoiceUploadSession_unknown_error'));
+      rethrow;
     }
   }
 
@@ -514,10 +540,16 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, 
         'size': size,
       })
           .timeout(const Duration(seconds: 15));
-    } on FirebaseFunctionsException catch (error) {
+    } on FirebaseFunctionsException catch (error, stackTrace) {
+      debugPrint('[VoiceScreen] finalizeVoiceUpload FirebaseFunctionsException: ${error.code} - ${error.message}');
+      unawaited(ErrorLoggerService.instance.logError(error, stackTrace, reason: 'finalizeVoiceUpload_firebase_error'));
       throw Exception(error.message?.trim().isNotEmpty == true
           ? error.message!.trim()
           : errFinalize);
+    } catch (error, stackTrace) {
+      debugPrint('[VoiceScreen] finalizeVoiceUpload error: $error');
+      unawaited(ErrorLoggerService.instance.logError(error, stackTrace, reason: 'finalizeVoiceUpload_unknown_error'));
+      rethrow;
     }
   }
 
@@ -854,23 +886,40 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, 
     required String mimeType,
     required int durationMs,
   }) async {
-    await _savePendingUpload(<String, dynamic>{
-      'localPath': localPath,
-      'extension': extension,
-      'fileName': fileName,
-      'mimeType': mimeType,
-      'durationMs': durationMs,
-    });
-    final bytes = await File(localPath).readAsBytes();
-    await _uploadVoiceBytes(
-      bytes: bytes,
-      extension: extension,
-      fileName: fileName,
-      mimeType: mimeType,
-      durationMs: durationMs,
-    );
-    await _clearPendingUpload(deleteLocalFile: true);
-    _pendingRetryUpload = null;
+    if (mounted) {
+      setState(() {
+        _isUploading = true;
+      });
+    }
+    try {
+      await _savePendingUpload(<String, dynamic>{
+        'localPath': localPath,
+        'extension': extension,
+        'fileName': fileName,
+        'mimeType': mimeType,
+        'durationMs': durationMs,
+      });
+      final bytes = await File(localPath).readAsBytes();
+      await _uploadVoiceBytes(
+        bytes: bytes,
+        extension: extension,
+        fileName: fileName,
+        mimeType: mimeType,
+        durationMs: durationMs,
+      );
+      await _clearPendingUpload(deleteLocalFile: true);
+      _pendingRetryUpload = null;
+    } catch (e, stackTrace) {
+      debugPrint('[VoiceScreen] _queueAndUploadVoiceFile error: $e');
+      unawaited(ErrorLoggerService.instance.logError(e, stackTrace, reason: 'queueAndUploadVoiceFile_failed'));
+      rethrow;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
   }
 
   @override

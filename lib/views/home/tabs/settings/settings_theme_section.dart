@@ -108,24 +108,10 @@ extension _SettingsTabThemeSection on _SettingsTabState {
     return normalized;
   }
 
-  bool _isVipFrameLocked(String frameKey) {
-    return frameKey == 'vip' && !_isVipActive;
-  }
 
 
 
-  void _handleAvatarFrameSelection(String frameKey) {
-    if (_isVipFrameLocked(frameKey)) {
-      _showToast(
-        context.tr('home_lachnnyang_d9f089'),
-        success: false,
-      );
-      return;
-    }
-    _updateThemeDraft(
-      () => _draftAvatarFrameKey = _resolveAllowedAvatarFrameKey(frameKey),
-    );
-  }
+
 
   _ThemePanelConfig _buildThemePanelConfig() {
     return _ThemePanelConfig(

@@ -35,6 +35,8 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
   bool _isFirstEvent = true;
   double _shakeIntensity = 0.0;
   final List<_RippleEffect> _ripples = [];
+  // Throttle sensor: chỉ xử lý 1 event mỗi 16ms (~60fps)
+  int _lastSensorProcessedMs = 0;
 
   @override
   void initState() {
@@ -60,6 +62,9 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
       _sensorSubscription = SensorHelper.accelerometerEvents.listen(
         (event) {
           if (!mounted) return;
+          final nowMs = DateTime.now().millisecondsSinceEpoch;
+          if (nowMs - _lastSensorProcessedMs < 16) return;
+          _lastSensorProcessedMs = nowMs;
 
           // Check if sensor is sending changing values (to detect static/emulated sensors)
           if (lastRawX != null && lastRawY != null) {
@@ -1511,8 +1516,7 @@ class _WavePainter extends CustomPainter {
         oldDelegate.styleKey != styleKey ||
         oldDelegate.quality != quality ||
         oldDelegate.shakeIntensity != shakeIntensity ||
-        oldDelegate.ripples.length != ripples.length ||
-        ripples.isNotEmpty;
+        oldDelegate.ripples.length != ripples.length;
   }
 }
 

@@ -29,8 +29,9 @@ extension _MainHomeListeners on _MainHomeTabState {
 
   void _listenHomeCalendarEvents(String houseId) {
     _homeCalendarSubscription?.cancel();
-    _homeCalendarSubscription = _dbRef
-        .child('houses/$houseId/calendar')
+    final calendarRef = _dbRef.child('houses/$houseId/calendar');
+    calendarRef.keepSynced(true);
+    _homeCalendarSubscription = calendarRef
         .onValue
         .listen((event) {
       if (!mounted || !_isTabActive) return;
@@ -38,7 +39,11 @@ extension _MainHomeListeners on _MainHomeTabState {
         _safeSetState(() {
           _homeCalendarEvents = [];
         });
-        unawaited(WidgetService.syncCalendarWidgetData(houseId: houseId));
+        _calendarWidgetSyncDebounce?.cancel();
+        _calendarWidgetSyncDebounce = Timer(const Duration(milliseconds: 500), () {
+          if (!mounted) return;
+          unawaited(WidgetService.syncCalendarWidgetData(houseId: houseId));
+        });
         return;
       }
 
@@ -64,8 +69,12 @@ extension _MainHomeListeners on _MainHomeTabState {
         _safeSetState(() {
           _homeCalendarEvents = parsedEvents;
         });
-        // Sync calendar widget ngay khi dữ liệu thay đổi
-        unawaited(WidgetService.syncCalendarWidgetData(houseId: houseId));
+        // Debounce 500ms trước khi sync calendar widget
+        _calendarWidgetSyncDebounce?.cancel();
+        _calendarWidgetSyncDebounce = Timer(const Duration(milliseconds: 500), () {
+          if (!mounted) return;
+          unawaited(WidgetService.syncCalendarWidgetData(houseId: houseId));
+        });
       } catch (e) {
         debugPrint('[MainHomeListeners] Calendar events parse error: $e');
       }
@@ -76,13 +85,18 @@ extension _MainHomeListeners on _MainHomeTabState {
 
   void _listenHealthCycleForWidgetSync(String houseId) {
     _healthCycleSyncSubscription?.cancel();
-    _healthCycleSyncSubscription = _dbRef
-        .child('houses/$houseId/health_cycle')
+    final healthRef = _dbRef.child('houses/$houseId/health_cycle');
+    healthRef.keepSynced(true);
+    _healthCycleSyncSubscription = healthRef
         .onValue
         .listen((event) {
       if (!mounted || !_isTabActive || !event.snapshot.exists) return;
-      // Sync cycle widget ngay khi dữ liệu thay đổi
-      unawaited(WidgetService.syncCycleWidgetData(houseId: houseId));
+      // Debounce 500ms trước khi sync cycle widget
+      _healthCycleWidgetSyncDebounce?.cancel();
+      _healthCycleWidgetSyncDebounce = Timer(const Duration(milliseconds: 500), () {
+        if (!mounted) return;
+        unawaited(WidgetService.syncCycleWidgetData(houseId: houseId));
+      });
     }, onError: (Object error) {
       debugPrint('[MainHomeListeners] Health cycle stream failed: $error');
     });

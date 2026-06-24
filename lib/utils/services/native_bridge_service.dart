@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'local_database_service.dart';
-import 'pet_garden_service.dart';
 
 /// ============================================================
 ///  NativeBridgeService — Gra (Logic/Data)
@@ -37,35 +36,19 @@ class NativeBridgeService {
 
         return await _buildWidgetPayload(houseId);
 
-      case 'feedPetQuickAction':
-        // Khi người dùng bấm nút "Cho ăn" thẳng ngoài màn hình Home
-        final houseId = call.arguments?['houseId'] as String?;
-        if (houseId != null) {
-          await PetGardenService().feedPet(houseId);
-          return await _buildWidgetPayload(houseId);
-        }
-        return false;
-
       default:
         throw MissingPluginException('Không hỗ trợ hàm: ${call.method}');
     }
   }
 
-  /// Cấu trúc khối dữ liệu JSON gửi ra ngoài màn hình chính cho Trae vẽ
+  /// Cấu trúc khối dữ liệu JSON gửi ra ngoài màn hình chính cho Widget vẽ
   Future<String> _buildWidgetPayload(String houseId) async {
-    // 1. Phân tích Thú cưng
-    final pet = await PetGardenService().getPet(houseId);
-
-    // 2. Phân tích Tin nhắn offline gần nhất
+    // 1. Phân tích Tin nhắn offline gần nhất
     final msgs = await LocalDatabaseService().getCachedMessages(houseId);
     final lastMsg = msgs.isNotEmpty ? msgs.first['text'] : 'Chưa có tin nhắn';
 
-    // 3. Đóng gói JSON
+    // 2. Đóng gói JSON
     final payload = {
-      'petName': pet?.name ?? 'Chưa đón pet',
-      'petLevel': pet?.level ?? 1,
-      'petHunger': pet?.hunger ?? 100,
-      'petHappiness': pet?.happiness ?? 100,
       'lastMessage': lastMsg,
       'loveDays': 100 // Tạm hardcode, có thể lấy từ DB
     };

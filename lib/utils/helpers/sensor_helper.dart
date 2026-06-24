@@ -9,46 +9,48 @@ class SensorHelper {
   static StreamSubscription<UserAccelerometerEvent>? _userAccelerometerSub;
 
   static Stream<AccelerometerEvent> get accelerometerEvents {
-    if (_accelerometerController == null) {
-      _accelerometerController = StreamController<AccelerometerEvent>.broadcast(
-        onListen: () {
-          if (_accelerometerSub == null) {
-            _accelerometerSub = accelerometerEventStream().listen(
-              (event) {
-                if (_accelerometerController?.isClosed == false) {
-                  _accelerometerController?.add(event);
-                }
-              },
-              onError: (err) {
-                _accelerometerController?.addError(err);
-              },
-            );
-          }
-        },
-      );
-    }
+    _accelerometerController ??= StreamController<AccelerometerEvent>.broadcast(
+      onListen: () {
+        _accelerometerSub ??= accelerometerEventStream().listen(
+          (event) {
+            if (_accelerometerController?.isClosed == false) {
+              _accelerometerController?.add(event);
+            }
+          },
+          onError: (err) {
+            _accelerometerController?.addError(err);
+          },
+        );
+      },
+      onCancel: () {
+        _accelerometerSub?.cancel();
+        _accelerometerSub = null;
+        _accelerometerController = null;
+      },
+    );
     return _accelerometerController!.stream;
   }
 
   static Stream<UserAccelerometerEvent> get userAccelerometerEvents {
-    if (_userAccelerometerController == null) {
-      _userAccelerometerController = StreamController<UserAccelerometerEvent>.broadcast(
-        onListen: () {
-          if (_userAccelerometerSub == null) {
-            _userAccelerometerSub = userAccelerometerEventStream().listen(
-              (event) {
-                if (_userAccelerometerController?.isClosed == false) {
-                  _userAccelerometerController?.add(event);
-                }
-              },
-              onError: (err) {
-                _userAccelerometerController?.addError(err);
-              },
-            );
-          }
-        },
-      );
-    }
+    _userAccelerometerController ??= StreamController<UserAccelerometerEvent>.broadcast(
+      onListen: () {
+        _userAccelerometerSub ??= userAccelerometerEventStream().listen(
+          (event) {
+            if (_userAccelerometerController?.isClosed == false) {
+              _userAccelerometerController?.add(event);
+            }
+          },
+          onError: (err) {
+            _userAccelerometerController?.addError(err);
+          },
+        );
+      },
+      onCancel: () {
+        _userAccelerometerSub?.cancel();
+        _userAccelerometerSub = null;
+        _userAccelerometerController = null;
+      },
+    );
     return _userAccelerometerController!.stream;
   }
 }

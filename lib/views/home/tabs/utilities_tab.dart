@@ -46,7 +46,7 @@ import '../../utilities/creative_diary_screen.dart';
 import '../../utilities/sticker_library_screen.dart';
 import '../../utilities/utility_sticker_icon.dart';
 import '../../utilities/health_screen.dart';
-import 'package:soullocket_app/views/utilities/pet_garden_screen.dart';
+import '../../utilities/local_album_screen.dart';
 
 // import '../../utils/sl_notice.dart';
 
@@ -439,6 +439,13 @@ class _UtilitiesTabState extends State<UtilitiesTab>
       SLNotice.showInfo(context, context.tr('home_tinchnychd_6061d1'));
       return;
     }
+    // LocalAlbumScreen khong can houseId
+    if (id == 'local_album') {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (_) => const LocalAlbumScreen()));
+      return;
+    }
+
     final houseId = _houseId;
     if (houseId == null || houseId.isEmpty) {
       SLNotice.showInfo(context, context.tr('home_angtidliun_f42fcd'));
@@ -573,11 +580,11 @@ class _UtilitiesTabState extends State<UtilitiesTab>
       case 'creative_diary':
         screen = CreativeDiaryScreen(houseId: houseId);
         break;
+      case 'local_album':
+        screen = const LocalAlbumScreen();
+        break;
       case 'health':
         screen = HealthScreen(houseId: houseId);
-        break;
-      case 'pet':
-        screen = PetGardenScreen(houseId: houseId, myName: _myName);
         break;
     }
     if (screen != null) {

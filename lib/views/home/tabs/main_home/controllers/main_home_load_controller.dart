@@ -21,6 +21,18 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _loveWidgetSyncDebounce = null;
     _incomingInteractionDialogTimer?.cancel();
     _incomingInteractionDialogTimer = null;
+    _fallbackTimeoutTimer?.cancel();
+    _fallbackTimeoutTimer = null;
+    _delayedListenersTimer?.cancel();
+    _delayedListenersTimer = null;
+    _delayedMapWeatherTimer?.cancel();
+    _delayedMapWeatherTimer = null;
+    _presenceSnapshotFallbackTimer?.cancel();
+    _presenceSnapshotFallbackTimer = null;
+    _calendarWidgetSyncDebounce?.cancel();
+    _calendarWidgetSyncDebounce = null;
+    _healthCycleWidgetSyncDebounce?.cancel();
+    _healthCycleWidgetSyncDebounce = null;
     _settingsSubscription?.cancel();
     _settingsSubscription = null;
     _membersSubscription?.cancel();
@@ -301,6 +313,482 @@ extension _MainHomeLoadController on _MainHomeTabState {
     }
   }
 
+  void _setupTimeoutFallback(int sessionId, bool Function() isStale) {
+    _fallbackTimeoutTimer?.cancel();
+    _fallbackTimeoutTimer = Timer(const Duration(seconds: 8), () {
+      if (isStale() || !mounted || !_isLoading || _houseSettings != null) {
+        return;
+      }
+      setState(() {
+        _houseSettings = _buildDefaultHomeSettings();
+        _isLoading = false;
+      });
+    });
+  }
+
+  void _startDelayedListeners(String houseId, int sessionId, bool Function() isStale) {
+    _delayedListenersTimer?.cancel();
+    _delayedListenersTimer = Timer(const Duration(seconds: 3), () {
+      if (!mounted || isStale()) return;
+      _wrapSetup(() => _listenNewDeviceNotifications(houseId), 'NewDevice');
+      _wrapSetup(() => _listenInteractionSignals(houseId), 'Interactions');
+      _wrapSetup(() => _listenReactionFlights(houseId), 'Reactions');
+      _startInteractionRotationLoop();
+    });
+  }
+
+  void _startDelayedMapAndWeather(String houseId, int sessionId, bool Function() isStale) {
+    _delayedMapWeatherTimer?.cancel();
+    _delayedMapWeatherTimer = Timer(const Duration(seconds: 6), () {
+      if (!mounted || isStale()) return;
+      _wrapSetup(() => _bindHomeMapPreview(houseId), 'MapPreview');
+      unawaited(_ensureAppWideLocationTracking(houseId));
+      if (_showWeather) {
+        _startWeatherRefreshLoop(houseId);
+      }
+    });
+  }
+
+  void _startPresenceSnapshotFallback(int sessionId, bool Function() isStale) {
+    _presenceSnapshotFallbackTimer?.cancel();
+    _presenceSnapshotFallbackTimer = Timer(const Duration(seconds: 6), () {
+      if (isStale() || !mounted || _hasLoadedPresenceSnapshot) return;
+      setState(() {
+        _hasLoadedPresenceSnapshot = true;
+      });
+    });
+  }
+
+  void _applyResolvedHomeSettings(
+    Map<String, dynamic> settings,
+    String cachedRelMode, {
+    bool warmMedia = true,
+    bool delayMotion = false,
+    bool forceWarmMedia = false,
+  }) {
+    _houseSettings = settings;
+    _houseSettings!['relationshipMode'] = cachedRelMode;
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    } else {
+      _isLoading = false;
+    }
+    if (warmMedia) {
+      _warmHomeMedia(
+        delayMotion: delayMotion,
+        force: forceWarmMedia,
+      );
+    }
+  }
+
+  Future<void> _loadAndApplySettings({
+    required String houseId,
+    required String cacheKey,
+    required String cachedRelMode,
+    required bool isNewHouseContext,
+    required bool preserveVisibleState,
+    required bool Function() isStale,
+  }) async {
+    final cachedSettings = OfflineCacheService.loadCacheSync(cacheKey);
+    if (cachedSettings != null &&
+        mounted &&
+        (_houseSettings == null || isNewHouseContext)) {
+      final cachedSettingsMap = cachedSettings is Map
+          ? Map<String, dynamic>.from(
+              Map<dynamic, dynamic>.from(cachedSettings),
+            )
+          : null;
+      if (cachedSettingsMap != null) {
+        _applyResolvedHomeSettings(
+          cachedSettingsMap,
+          cachedRelMode,
+          delayMotion: preserveVisibleState && isNewHouseContext,
+          forceWarmMedia: isNewHouseContext,
+        );
+      }
+    }
+
+    if (_houseSettings == null) {
+      final initialSettingsSnap = await _dbRef
+          .child('houses/$houseId/settings')
+          .get()
+          .timeout(const Duration(seconds: 5));
+      if (isStale()) return;
+      if (initialSettingsSnap.exists && initialSettingsSnap.value is Map) {
+        _houseSettings = Map<String, dynamic>.from(
+          Map<dynamic, dynamic>.from(initialSettingsSnap.value as Map),
+        );
+        final msgCacheSettingsFail = L10nService().translate('home_clixyra_775791');
+        try {
+          await OfflineCacheService.saveCache(cacheKey, _houseSettings);
+        } catch (e) {
+          debugPrint(
+            'Error saving settings to cache: ${AppErrorMapper.resolve(
+              e,
+              fallbackMessage: msgCacheSettingsFail,
+            ).message}',
+          );
+        }
+      } else {
+        _houseSettings = _buildDefaultHomeSettings();
+      }
+
+      _applyResolvedHomeSettings(_houseSettings!, cachedRelMode);
+    }
+  }
+
+  void _setupMembersSubscription(
+    String houseId,
+    int sessionId,
+    bool Function() isStale,
+    String msgMembersFail,
+  ) {
+    _membersSubscription =
+        _dbRef.child('houses/$houseId/members').onValue.listen(
+      (event) {
+        if (isStale() || !_isTabActive) return;
+        if (event.snapshot.value != null && mounted) {
+          final raw = event.snapshot.value;
+          if (raw is Map) {
+            final nextConnected = raw.length >= 2;
+            if (_isCoupleConnected != nextConnected) {
+              if (isStale()) return;
+              setState(() {
+                _isCoupleConnected = nextConnected;
+              });
+            }
+          }
+        } else if (mounted) {
+          if (_isCoupleConnected) {
+            if (isStale()) return;
+            setState(() {
+              _isCoupleConnected = false;
+            });
+          }
+        }
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Home members listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: msgMembersFail,
+          ).message}',
+        );
+      },
+    );
+  }
+
+  void _setupPresenceSubscription(
+    String houseId,
+    int sessionId,
+    bool Function() isStale,
+    String msgPresenceFail,
+  ) {
+    _presenceSubscription =
+        _dbRef.child('houses/$houseId/presence').onValue.listen(
+      (event) {
+        if (isStale() || !_isTabActive) return;
+        if (event.snapshot.value != null && mounted) {
+          final raw = event.snapshot.value;
+          if (raw is Map) {
+            final map = _toStringDynamicMap(raw);
+            _hasLoadedPresenceSnapshot = true;
+            final didUpdatePresence = _updatePresenceDataIfNeededImpl(map);
+
+            if (didUpdatePresence &&
+                _isRoleOnline('user1') &&
+                _isRoleOnline('user2')) {
+              DailyQuestService().recordProgress('simultaneous_online');
+            }
+
+            if (didUpdatePresence) {
+              final partnerPresence = _presenceForRole(_partnerRole);
+              final partnerWeatherRaw = partnerPresence?['weather'];
+              if (partnerWeatherRaw is Map) {
+                unawaited(
+                  _maybeSendAutomaticWeatherCare(
+                    _toStringDynamicMap(partnerWeatherRaw),
+                  ),
+                );
+              }
+            }
+
+            if (didUpdatePresence && _houseSettings != null) {
+              _scheduleLoveWidgetSync(
+                _houseSettings!,
+                includeDiaryMedia: false,
+              );
+            }
+          }
+        } else if (mounted) {
+          _hasLoadedPresenceSnapshot = true;
+          final didUpdatePresence =
+              _updatePresenceDataIfNeededImpl(const <String, dynamic>{});
+          if (didUpdatePresence && _houseSettings != null) {
+            _scheduleLoveWidgetSync(
+              _houseSettings!,
+              includeDiaryMedia: false,
+            );
+          }
+        }
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Home presence listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: msgPresenceFail,
+          ).message}',
+        );
+        if (mounted) {
+          setState(() {
+            _hasLoadedPresenceSnapshot = true;
+          });
+        }
+      },
+    );
+  }
+
+  void _setupAlertsAndPartnerInbox(
+    String houseId,
+    int sessionId,
+    bool Function() isStale,
+    String userUid,
+  ) {
+    _alertSubscription = _dbRef
+        .child('houses/$houseId/alerts')
+        .onChildAdded
+        .listen((event) async {
+      if (isStale()) return;
+      if (event.snapshot.value == null || !mounted) return;
+      final data = _toStringDynamicMap(event.snapshot.value);
+      final payload = _MissYouAlertPayload.fromMap(data);
+      final sentAt = payload.sentAtMs;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final isExpired = sentAt > 0 &&
+          now - sentAt > const Duration(hours: 24).inMilliseconds;
+
+      if (isExpired) {
+        final key = event.snapshot.key;
+        if (key != null) {
+          _dbRef.child('houses/$houseId/alerts/$key').remove().catchError(
+                (_) {},
+              );
+        }
+        return;
+      }
+
+      if (!_shouldDisplayIncomingAlert(payload, currentUid: userUid)) {
+        return;
+      }
+
+      final key = event.snapshot.key;
+      await _deliverIncomingAlert(
+        payload,
+        removalPath: key == null ? null : 'houses/$houseId/alerts/$key',
+      );
+    }, onError: (Object error) {
+      debugPrint('Home alerts listener failed: $error');
+    });
+
+    _partnerInboxSubscription = _dbRef
+        .child('houses/$houseId/partner_inbox/$_currentRole')
+        .onChildAdded
+        .listen((event) async {
+      if (isStale()) return;
+      if (event.snapshot.value == null || !mounted) return;
+      final data = _toStringDynamicMap(event.snapshot.value);
+      final payload = _MissYouAlertPayload.fromMap(data);
+      final sentAt = payload.sentAtMs;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final isExpired = sentAt > 0 &&
+          now - sentAt > const Duration(hours: 24).inMilliseconds;
+
+      final key = event.snapshot.key;
+      if (isExpired) {
+        if (key != null) {
+          _dbRef
+              .child('houses/$houseId/partner_inbox/$_currentRole/$key')
+              .remove()
+              .catchError((_) {});
+        }
+        return;
+      }
+
+      if (!_shouldDisplayIncomingAlert(payload, currentUid: userUid)) {
+        return;
+      }
+
+      await _deliverIncomingAlert(
+        payload,
+        removalPath: key == null
+            ? null
+            : 'houses/$houseId/partner_inbox/$_currentRole/$key',
+      );
+    }, onError: (Object error) {
+      debugPrint('Home partner inbox listener failed: $error');
+    });
+  }
+
+  void _setupMissInteractionSubscription(
+    String houseId,
+    int sessionId,
+    bool Function() isStale,
+    String userUid,
+  ) {
+    _missInteractionSubscription = _dbRef
+        .child('houses/$houseId/interactions/miss')
+        .onValue
+        .listen((event) {
+      if (isStale()) return;
+      if (event.snapshot.value != null && mounted) {
+        final data = _toStringDynamicMap(event.snapshot.value);
+        final payload = _MissYouAlertPayload.fromMap(data);
+        final sentAt = payload.sentAtMs;
+
+        if (sentAt > 0) {
+          final now = DateTime.now().millisecondsSinceEpoch;
+          if (now - sentAt < const Duration(seconds: 15).inMilliseconds &&
+              _shouldDisplayIncomingAlert(payload, currentUid: userUid)) {
+            _showMissYouScreen(payload);
+          }
+        }
+      }
+    }, onError: (Object error) {
+      debugPrint('Home miss interaction listener failed: $error');
+    });
+  }
+
+  void _setupSettingsSubscription(
+    String houseId,
+    int sessionId,
+    bool Function() isStale,
+    String cacheKey,
+    String cachedRelMode,
+    String msgCacheSettingsFail,
+    String msgLoadDataFail,
+  ) {
+    _settingsSubscription = _dbRef
+        .child('houses/$houseId/settings')
+        .onValue
+        .listen((event) async {
+      if (isStale()) return;
+      if (event.snapshot.value is Map && mounted) {
+        final settings = Map<String, dynamic>.from(
+          Map<dynamic, dynamic>.from(event.snapshot.value as Map),
+        );
+        final nextShowStatus = settings.containsKey('showStatus')
+            ? _readBoolSettingFlagImpl(
+                settings['showStatus'],
+                fallback: _showStatus,
+              )
+            : _showStatus;
+        final nextShowWeather = settings.containsKey('showWeather')
+            ? _readBoolSettingFlagImpl(
+                settings['showWeather'],
+                fallback: _showWeather,
+              )
+            : _showWeather;
+        final visibilityPrefsChanged = nextShowStatus != _showStatus ||
+            nextShowWeather != _showWeather;
+        final relMode =
+            (settings['relationshipMode'] ?? 'single').toString();
+        final settingsKey = _buildInsightSettingsKeyImpl(settings, relMode);
+        final payloadSignature =
+            _buildCanonicalSettingsPayloadSignatureImpl(settings);
+        final widgetSettingsKey = _buildWidgetSettingsSyncKeyImpl(settings);
+        final shouldApplySettings =
+            _lastHomeSettingsPayloadSignature != payloadSignature;
+        final shouldSyncWidget =
+            _lastWidgetSettingsSyncKey != widgetSettingsKey;
+
+        if (visibilityPrefsChanged) {
+          final prefs = OfflineCacheService.getPrefsSync() ??
+              await SharedPreferences.getInstance();
+          if (isStale()) return;
+          await prefs.setBool('il_show_status', nextShowStatus);
+          await prefs.setBool('il_show_weather', nextShowWeather);
+          if (isStale()) return;
+        }
+
+        if (shouldApplySettings) {
+          _lastHomeSettingsPayloadSignature = payloadSignature;
+
+          try {
+            await OfflineCacheService.saveCache(cacheKey, settings);
+          } catch (e) {
+            debugPrint(
+              'Error saving settings to cache: ${AppErrorMapper.resolve(
+                e,
+                fallbackMessage: msgCacheSettingsFail,
+              ).message}',
+            );
+          }
+
+          if (isStale()) return;
+          if (!mounted) return;
+          setState(() {
+            _houseSettings = settings;
+            _showStatus = nextShowStatus;
+            _showWeather = nextShowWeather;
+            _isLoading = false;
+          });
+          unawaited(_maybeShowFirstSetupGuide());
+          _warmHomeMedia();
+        } else if (visibilityPrefsChanged && mounted) {
+          if (isStale()) return;
+          setState(() {
+            _showStatus = nextShowStatus;
+            _showWeather = nextShowWeather;
+          });
+        } else if (_isLoading && mounted) {
+          if (isStale()) return;
+          setState(() => _isLoading = false);
+          unawaited(_maybeShowFirstSetupGuide());
+        }
+
+        if (visibilityPrefsChanged) {
+          if (nextShowWeather && _isTabActive) {
+            _startWeatherRefreshLoop(houseId);
+          } else {
+            _weatherRefreshTimer?.cancel();
+            _weatherRefreshTimer = null;
+          }
+        }
+        if (_insightData == null ||
+            (_lastInsightSettingsKey != settingsKey &&
+                _pendingInsightSettingsKey != settingsKey)) {
+          unawaited(
+            _refreshHomeInsightsImpl(
+              houseId: houseId,
+              relationshipMode: relMode,
+              settingsKey: settingsKey,
+            ),
+          );
+        }
+        if (shouldSyncWidget) {
+          _lastWidgetSettingsSyncKey = widgetSettingsKey;
+          _scheduleLoveWidgetSync(settings, includeDiaryMedia: true);
+        }
+      } else if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }, onError: (Object error) {
+      debugPrint(
+        'Home settings listener failed: ${AppErrorMapper.resolve(
+          error,
+          fallbackMessage: msgLoadDataFail,
+        ).message}',
+      );
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    });
+  }
+
   Future<void> _fetchHouseDataImpl({
     bool preserveVisibleState = false,
     bool preloadOnly = false,
@@ -370,15 +858,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
       return;
     }
 
-    Future<void>.delayed(const Duration(seconds: 8), () {
-      if (isStale() || !mounted || !_isLoading || _houseSettings != null) {
-        return;
-      }
-      setState(() {
-        _houseSettings = _buildDefaultHomeSettings();
-        _isLoading = false;
-      });
-    });
+    // 1. Setup Timeout Fallback
+    _setupTimeoutFallback(sessionId, isStale);
 
     try {
       final prefs = OfflineCacheService.getPrefsSync() ??
@@ -389,6 +870,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
       _showStatus = prefs.getBool('il_show_status') ?? true;
       _showWeather = prefs.getBool('il_show_weather') ?? true;
       if (isStale()) return;
+
       if (houseId != null && houseId.isNotEmpty) {
         _houseId = houseId;
         final cacheKey = _homeSettingsCacheKey(houseId);
@@ -418,65 +900,15 @@ extension _MainHomeLoadController on _MainHomeTabState {
         await _loadHomeToolSelection(houseId: houseId);
         if (isStale()) return;
 
-        void applyResolvedHomeSettings(
-          Map<String, dynamic> settings, {
-          bool warmMedia = true,
-          bool delayMotion = false,
-          bool forceWarmMedia = false,
-        }) {
-          _houseSettings = settings;
-          _houseSettings!['relationshipMode'] = cachedRelMode;
-          if (mounted) {
-            setState(() {
-              _isLoading = false;
-            });
-          } else {
-            _isLoading = false;
-          }
-          if (warmMedia) {
-            _warmHomeMedia(
-              delayMotion: delayMotion,
-              force: forceWarmMedia,
-            );
-          }
-        }
-
-        final cachedSettings = OfflineCacheService.loadCacheSync(cacheKey);
-        if (cachedSettings != null &&
-            mounted &&
-            (_houseSettings == null || isNewHouseContext)) {
-          final cachedSettingsMap = cachedSettings is Map
-              ? Map<String, dynamic>.from(
-                  Map<dynamic, dynamic>.from(cachedSettings),
-                )
-              : null;
-          if (cachedSettingsMap != null) {
-            applyResolvedHomeSettings(
-              cachedSettingsMap,
-              delayMotion: preserveVisibleState && isNewHouseContext,
-              forceWarmMedia: isNewHouseContext,
-            );
-          }
-        }
-
-        if (_houseSettings == null) {
-          final initialSettingsSnap = await _dbRef
-              .child('houses/$houseId/settings')
-              .get()
-              .timeout(const Duration(seconds: 5));
-          if (isStale()) return;
-          if (initialSettingsSnap.exists && initialSettingsSnap.value is Map) {
-            _houseSettings = Map<String, dynamic>.from(
-              Map<dynamic, dynamic>.from(initialSettingsSnap.value as Map),
-            );
-            await OfflineCacheService.saveCache(cacheKey, _houseSettings);
-          } else {
-            _houseSettings = _buildDefaultHomeSettings();
-          }
-
-          applyResolvedHomeSettings(_houseSettings!);
-        }
-
+        // 2. Load and Apply Settings
+        await _loadAndApplySettings(
+          houseId: houseId,
+          cacheKey: cacheKey,
+          cachedRelMode: cachedRelMode,
+          isNewHouseContext: isNewHouseContext,
+          preserveVisibleState: preserveVisibleState,
+          isStale: isStale,
+        );
         if (isStale()) return;
 
         if (preloadOnly) {
@@ -499,24 +931,14 @@ extension _MainHomeLoadController on _MainHomeTabState {
           return;
         }
 
+        // Setup immediate active bindings
         _wrapSetup(() => _listenHighlights(houseId), 'Highlights');
         _wrapSetup(() => _listenHomeCalendarEvents(houseId), 'Calendar');
         _wrapSetup(() => _listenHealthCycleForWidgetSync(houseId), 'HealthCycle');
-        Future<void>.delayed(const Duration(seconds: 3), () {
-          if (!mounted || isStale()) return;
-          _wrapSetup(() => _listenNewDeviceNotifications(houseId), 'NewDevice');
-          _wrapSetup(() => _listenInteractionSignals(houseId), 'Interactions');
-          _wrapSetup(() => _listenReactionFlights(houseId), 'Reactions');
-          _startInteractionRotationLoop();
-        });
-        Future<void>.delayed(const Duration(seconds: 6), () {
-          if (!mounted || isStale()) return;
-          _wrapSetup(() => _bindHomeMapPreview(houseId), 'MapPreview');
-          unawaited(_ensureAppWideLocationTracking(houseId));
-          if (_showWeather) {
-            _startWeatherRefreshLoop(houseId);
-          }
-        });
+
+        // 3. Delayed bindings setup
+        _startDelayedListeners(houseId, sessionId, isStale);
+        _startDelayedMapAndWeather(houseId, sessionId, isStale);
 
         _pinnedApps = await _utilityService.getPinnedApps();
         if (isStale()) return;
@@ -526,335 +948,27 @@ extension _MainHomeLoadController on _MainHomeTabState {
         if (isStale()) return;
         if (mounted) setState(() => _isCoupleConnected = connected);
 
-        _membersSubscription =
-            _dbRef.child('houses/$houseId/members').onValue.listen(
-          (event) {
-            if (isStale() || !_isTabActive) return;
-            if (event.snapshot.value != null && mounted) {
-              final raw = event.snapshot.value;
-              if (raw is Map) {
-                final nextConnected = raw.length >= 2;
-                if (_isCoupleConnected != nextConnected) {
-                  if (isStale()) return;
-                  setState(() {
-                    _isCoupleConnected = nextConnected;
-                  });
-                }
-              }
-            } else if (mounted) {
-              if (_isCoupleConnected) {
-                if (isStale()) return;
-                setState(() {
-                  _isCoupleConnected = false;
-                });
-              }
-            }
-          },
-          onError: (Object error) {
-            debugPrint(
-              'Home members listener failed: ${AppErrorMapper.resolve(
-                error,
-                fallbackMessage: msgMembersFail,
-              ).message}',
-            );
-          },
+        // 4. Stream subscriptions setup
+        _setupMembersSubscription(houseId, sessionId, isStale, msgMembersFail);
+        _setupPresenceSubscription(houseId, sessionId, isStale, msgPresenceFail);
+
+        // Setup presence fallback timer
+        _startPresenceSnapshotFallback(sessionId, isStale);
+
+        _setupAlertsAndPartnerInbox(houseId, sessionId, isStale, user.uid);
+        _setupMissInteractionSubscription(houseId, sessionId, isStale, user.uid);
+        _setupSettingsSubscription(
+          houseId,
+          sessionId,
+          isStale,
+          cacheKey,
+          cachedRelMode,
+          msgCacheSettingsFail,
+          msgLoadDataFail,
         );
-
-        _presenceSubscription =
-            _dbRef.child('houses/$houseId/presence').onValue.listen(
-          (event) {
-            if (isStale() || !_isTabActive) return;
-            if (event.snapshot.value != null && mounted) {
-              final raw = event.snapshot.value;
-              if (raw is Map) {
-                final map = _toStringDynamicMap(raw);
-                final hadLoadedPresenceSnapshot = _hasLoadedPresenceSnapshot;
-                _hasLoadedPresenceSnapshot = true;
-                final didUpdatePresence = _updatePresenceDataIfNeededImpl(map);
-                if (!hadLoadedPresenceSnapshot && mounted) {
-                  // ⚡ Lần đầu load presence: không cần setState rỗng,
-                  // widget sẽ tự cập nhật qua ValueListenableBuilder
-                }
-
-                if (didUpdatePresence &&
-                    _isRoleOnline('user1') &&
-                    _isRoleOnline('user2')) {
-                  DailyQuestService().recordProgress('simultaneous_online');
-                }
-
-                if (didUpdatePresence) {
-                  final partnerPresence = _presenceForRole(_partnerRole);
-                  final partnerWeatherRaw = partnerPresence?['weather'];
-                  if (partnerWeatherRaw is Map) {
-                    unawaited(
-                      _maybeSendAutomaticWeatherCare(
-                        _toStringDynamicMap(partnerWeatherRaw),
-                      ),
-                    );
-                  }
-                }
-
-                if (didUpdatePresence && _houseSettings != null) {
-                  _scheduleLoveWidgetSync(
-                    _houseSettings!,
-                    includeDiaryMedia: false,
-                  );
-                }
-              }
-            } else if (mounted) {
-              final hadLoadedPresenceSnapshot = _hasLoadedPresenceSnapshot;
-              _hasLoadedPresenceSnapshot = true;
-              final didUpdatePresence =
-                  _updatePresenceDataIfNeededImpl(const <String, dynamic>{});
-              if (!didUpdatePresence && !hadLoadedPresenceSnapshot) {
-                // ⚡ Lần đầu load presence mà không có data: không cần setState rỗng
-              }
-              if (didUpdatePresence && _houseSettings != null) {
-                _scheduleLoveWidgetSync(
-                  _houseSettings!,
-                  includeDiaryMedia: false,
-                );
-              }
-            }
-          },
-          onError: (Object error) {
-            debugPrint(
-              'Home presence listener failed: ${AppErrorMapper.resolve(
-                error,
-                fallbackMessage: msgPresenceFail,
-              ).message}',
-            );
-            if (mounted) {
-              setState(() {
-                _hasLoadedPresenceSnapshot = true;
-              });
-            }
-          },
-        );
-
-        Future<void>.delayed(const Duration(seconds: 6), () {
-          if (isStale() || !mounted || _hasLoadedPresenceSnapshot) return;
-          setState(() {
-            _hasLoadedPresenceSnapshot = true;
-          });
-        });
-
-        _alertSubscription = _dbRef
-            .child('houses/$houseId/alerts')
-            .onChildAdded
-            .listen((event) async {
-          if (isStale()) return;
-          if (event.snapshot.value == null || !mounted) return;
-          final data = _toStringDynamicMap(event.snapshot.value);
-          final payload = _MissYouAlertPayload.fromMap(data);
-          final sentAt = payload.sentAtMs;
-          final now = DateTime.now().millisecondsSinceEpoch;
-          final isExpired = sentAt > 0 &&
-              now - sentAt > const Duration(hours: 24).inMilliseconds;
-
-          if (isExpired) {
-            final key = event.snapshot.key;
-            if (key != null) {
-              _dbRef.child('houses/$houseId/alerts/$key').remove().catchError(
-                    (_) {},
-                  );
-            }
-            return;
-          }
-
-          if (!_shouldDisplayIncomingAlert(payload, currentUid: user.uid)) {
-            return;
-          }
-
-          final key = event.snapshot.key;
-          await _deliverIncomingAlert(
-            payload,
-            removalPath: key == null ? null : 'houses/$houseId/alerts/$key',
-          );
-        }, onError: (Object error) {
-          debugPrint('Home alerts listener failed: $error');
-        });
-
-        _partnerInboxSubscription = _dbRef
-            .child('houses/$houseId/partner_inbox/$_currentRole')
-            .onChildAdded
-            .listen((event) async {
-          if (isStale()) return;
-          if (event.snapshot.value == null || !mounted) return;
-          final data = _toStringDynamicMap(event.snapshot.value);
-          final payload = _MissYouAlertPayload.fromMap(data);
-          final sentAt = payload.sentAtMs;
-          final now = DateTime.now().millisecondsSinceEpoch;
-          final isExpired = sentAt > 0 &&
-              now - sentAt > const Duration(hours: 24).inMilliseconds;
-
-          final key = event.snapshot.key;
-          if (isExpired) {
-            if (key != null) {
-              _dbRef
-                  .child('houses/$houseId/partner_inbox/$_currentRole/$key')
-                  .remove()
-                  .catchError((_) {});
-            }
-            return;
-          }
-
-          if (!_shouldDisplayIncomingAlert(payload, currentUid: user.uid)) {
-            return;
-          }
-
-          await _deliverIncomingAlert(
-            payload,
-            removalPath: key == null
-                ? null
-                : 'houses/$houseId/partner_inbox/$_currentRole/$key',
-          );
-        }, onError: (Object error) {
-          debugPrint('Home partner inbox listener failed: $error');
-        });
-
-        _missInteractionSubscription = _dbRef
-            .child('houses/$houseId/interactions/miss')
-            .onValue
-            .listen((event) {
-          if (isStale()) return;
-          if (event.snapshot.value != null && mounted) {
-            final data = _toStringDynamicMap(event.snapshot.value);
-            final payload = _MissYouAlertPayload.fromMap(data);
-            final sentAt = payload.sentAtMs;
-
-            if (sentAt > 0) {
-              final now = DateTime.now().millisecondsSinceEpoch;
-              if (now - sentAt < const Duration(seconds: 15).inMilliseconds &&
-                  _shouldDisplayIncomingAlert(payload, currentUid: user.uid)) {
-                _showMissYouScreen(payload);
-              }
-            }
-          }
-        }, onError: (Object error) {
-          debugPrint('Home miss interaction listener failed: $error');
-        });
-
-        _settingsSubscription = _dbRef
-            .child('houses/$houseId/settings')
-            .onValue
-            .listen((event) async {
-          if (isStale()) return;
-          if (event.snapshot.value is Map && mounted) {
-            final settings = Map<String, dynamic>.from(
-              Map<dynamic, dynamic>.from(event.snapshot.value as Map),
-            );
-            final nextShowStatus = settings.containsKey('showStatus')
-                ? _readBoolSettingFlagImpl(
-                    settings['showStatus'],
-                    fallback: _showStatus,
-                  )
-                : _showStatus;
-            final nextShowWeather = settings.containsKey('showWeather')
-                ? _readBoolSettingFlagImpl(
-                    settings['showWeather'],
-                    fallback: _showWeather,
-                  )
-                : _showWeather;
-            final visibilityPrefsChanged = nextShowStatus != _showStatus ||
-                nextShowWeather != _showWeather;
-            final relMode =
-                (settings['relationshipMode'] ?? 'single').toString();
-            final settingsKey = _buildInsightSettingsKeyImpl(settings, relMode);
-            final payloadSignature =
-                _buildCanonicalSettingsPayloadSignatureImpl(settings);
-            final widgetSettingsKey = _buildWidgetSettingsSyncKeyImpl(settings);
-            final shouldApplySettings =
-                _lastHomeSettingsPayloadSignature != payloadSignature;
-            final shouldSyncWidget =
-                _lastWidgetSettingsSyncKey != widgetSettingsKey;
-
-            if (visibilityPrefsChanged) {
-              final prefs = OfflineCacheService.getPrefsSync() ??
-                  await SharedPreferences.getInstance();
-              if (isStale()) return;
-              await prefs.setBool('il_show_status', nextShowStatus);
-              await prefs.setBool('il_show_weather', nextShowWeather);
-              if (isStale()) return;
-            }
-
-            if (shouldApplySettings) {
-              _lastHomeSettingsPayloadSignature = payloadSignature;
-
-              try {
-                await OfflineCacheService.saveCache(cacheKey, settings);
-              } catch (e) {
-                debugPrint(
-                  'Error saving settings to cache: ${AppErrorMapper.resolve(
-                    e,
-                    fallbackMessage: msgCacheSettingsFail,
-                  ).message}',
-                );
-              }
-
-              if (isStale()) return;
-              if (!mounted) return;
-              setState(() {
-                _houseSettings = settings;
-                _showStatus = nextShowStatus;
-                _showWeather = nextShowWeather;
-                _isLoading = false;
-              });
-              unawaited(_maybeShowFirstSetupGuide());
-              _warmHomeMedia();
-            } else if (visibilityPrefsChanged && mounted) {
-              if (isStale()) return;
-              setState(() {
-                _showStatus = nextShowStatus;
-                _showWeather = nextShowWeather;
-              });
-            } else if (_isLoading && mounted) {
-              if (isStale()) return;
-              setState(() => _isLoading = false);
-              unawaited(_maybeShowFirstSetupGuide());
-            }
-
-            if (visibilityPrefsChanged) {
-              if (nextShowWeather && _isTabActive) {
-                _startWeatherRefreshLoop(houseId);
-              } else {
-                _weatherRefreshTimer?.cancel();
-                _weatherRefreshTimer = null;
-              }
-            }
-            if (_insightData == null ||
-                (_lastInsightSettingsKey != settingsKey &&
-                    _pendingInsightSettingsKey != settingsKey)) {
-              unawaited(
-                _refreshHomeInsightsImpl(
-                  houseId: houseId,
-                  relationshipMode: relMode,
-                  settingsKey: settingsKey,
-                ),
-              );
-            }
-            if (shouldSyncWidget) {
-              _lastWidgetSettingsSyncKey = widgetSettingsKey;
-              _scheduleLoveWidgetSync(settings, includeDiaryMedia: true);
-            }
-          } else if (mounted) {
-            setState(() => _isLoading = false);
-          }
-        }, onError: (Object error) {
-          debugPrint(
-            'Home settings listener failed: ${AppErrorMapper.resolve(
-              error,
-              fallbackMessage: msgLoadDataFail,
-            ).message}',
-          );
-          if (mounted) {
-            setState(() {
-              _isLoading = false;
-            });
-          }
-        });
         return;
       }
+
       if (isStale()) return;
       if (mounted) {
         setState(() {

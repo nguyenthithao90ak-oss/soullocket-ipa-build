@@ -5920,5 +5920,6 @@
   "forgot_pwd_step3_desc_no_hint": "Nhập email đăng ký đầy đủ để hệ thống gửi mã khôi phục.",
   "forgot_pwd_helper_date": "Đang nhập ngày/tháng/năm",
   "forgot_pwd_btn_send_code": "Gửi mã khôi phục",
-  "auth_sync_guide_step1": "Hãy tạo một tài khoản (Email & Mật khẩu) chung và cùng đăng nhập trên thiết bị của hai người."
+  "auth_sync_guide_step1": "Hãy tạo một tài khoản (Email & Mật khẩu) chung và cùng đăng nhập trên thiết bị của hai người.",
+  "util_luunhtbit_6f4b4a": "Local Photos"
 }
