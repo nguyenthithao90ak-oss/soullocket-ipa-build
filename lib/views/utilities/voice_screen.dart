@@ -161,22 +161,19 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, 
         return;
       }
 
-      final result = await AppLifecyclePresenceGuard.guard(
-        () => FilePicker.pickFiles(
+      final file = await AppLifecyclePresenceGuard.guard(
+        () => FilePicker.pickFile(
           type: FileType.custom,
-          allowMultiple: false,
-          withData: true,
           allowedExtensions: const ['mp3', 'm4a', 'aac', 'ogg'],
         ),
       );
 
-      if (result == null || result.files.isEmpty) {
+      if (file == null) {
         return;
       }
 
-      final file = result.files.single;
-      final bytes = file.bytes;
-      if (bytes == null || bytes.isEmpty) {
+      final bytes = await file.readAsBytes();
+      if (bytes.isEmpty) {
         throw Exception(errNoFileBytes);
       }
       if (bytes.length > _maxPickedVoiceBytes) {

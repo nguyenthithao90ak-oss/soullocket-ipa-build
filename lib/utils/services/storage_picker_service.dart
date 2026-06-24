@@ -34,29 +34,27 @@ class StoragePickerService {
   }
 
   XFile? platformFileToXFile(PlatformFile file) {
-    final bytes = file.bytes;
-    if (bytes != null) {
-      return XFile.fromData(bytes, name: file.name);
+    try {
+      return file.xFile;
+    } catch (_) {
+      final path = file.path;
+      if (path != null && path.isNotEmpty) {
+        return XFile(path, name: file.name);
+      }
+      return null;
     }
-    final path = file.path;
-    if (path != null && path.isNotEmpty) {
-      return XFile(path, name: file.name);
-    }
-    return null;
   }
 
   Future<XFile?> pickMusicFile() async {
     if (kIsWeb) {
       StorageWebPickerGuard.arm(const Duration(seconds: 4));
       try {
-        final result = await FilePicker.pickFiles(
+        final file = await FilePicker.pickFile(
           type: FileType.custom,
-          allowMultiple: false,
           allowedExtensions: storageMusicPickerExtensions,
-          withData: true,
         );
-        if (result != null && result.files.isNotEmpty) {
-          return platformFileToXFile(result.files.first);
+        if (file != null) {
+          return platformFileToXFile(file);
         }
       } finally {
         StorageWebPickerGuard.arm();
@@ -65,16 +63,14 @@ class StoragePickerService {
     }
 
     return _guardedPicker(() async {
-      final result = await FilePicker.pickFiles(
+      final file = await FilePicker.pickFile(
         type: FileType.custom,
-        allowMultiple: false,
         allowedExtensions: storageMusicPickerExtensions,
-        withData: false,
       );
-      if (result == null || result.files.isEmpty) {
+      if (file == null) {
         return null;
       }
-      return platformFileToXFile(result.files.first);
+      return platformFileToXFile(file);
     });
   }
 
@@ -82,13 +78,11 @@ class StoragePickerService {
     if (kIsWeb) {
       StorageWebPickerGuard.arm(const Duration(seconds: 4));
       try {
-        final result = await FilePicker.pickFiles(
+        final file = await FilePicker.pickFile(
           type: FileType.image,
-          allowMultiple: false,
-          withData: true,
         );
-        if (result != null && result.files.isNotEmpty) {
-          return platformFileToXFile(result.files.first);
+        if (file != null) {
+          return platformFileToXFile(file);
         }
       } finally {
         StorageWebPickerGuard.arm();
@@ -117,8 +111,6 @@ class StoragePickerService {
       try {
         final result = await FilePicker.pickFiles(
           type: FileType.image,
-          allowMultiple: true,
-          withData: true,
         );
         final files = (result?.files ?? const <PlatformFile>[])
             .map(platformFileToXFile)

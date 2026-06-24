@@ -1,10 +1,6 @@
 // ignore_for_file: deprecated_member_use, use_super_parameters, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, unused_field
 import 'dart:async';
-import 'dart:ui' as ui;
 import 'dart:math' as math;
-import 'package:sensors_plus/sensors_plus.dart';
-import 'package:soullocket_app/utils/helpers/sensor_helper.dart';
-import 'package:vector_math/vector_math_64.dart' show Vector3;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../screens/document_viewer_screen.dart';

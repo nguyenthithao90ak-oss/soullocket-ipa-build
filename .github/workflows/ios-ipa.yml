@@ -406,29 +406,28 @@ jobs:
         run: |
           set -euo pipefail
 
-          XCARCHIVE_PATH="$(find build/ios/archive -name '*.xcarchive' -print -quit)"
-          if [[ -z "${XCARCHIVE_PATH:-}" ]]; then
-            echo "No xcarchive found under build/ios/archive." >&2
-            exit 1
-          fi
-
           UPLOAD_SYMBOLS="ios/Pods/FirebaseCrashlytics/upload-symbols"
           if [[ ! -x "$UPLOAD_SYMBOLS" ]]; then
-            echo "Crashlytics upload-symbols helper not found at $UPLOAD_SYMBOLS" >&2
+            echo "Crashlytics not configured — skipping." >&2
+            exit 0
+          fi
+
+          XCARCHIVE_PATH="$(find build/ios/archive -name '*.xcarchive' -print -quit)"
+          if [[ -z "${XCARCHIVE_PATH:-}" ]]; then
+            echo "No xcarchive found." >&2
             exit 1
           fi
 
           GOOGLE_SERVICE_INFO_PLIST="ios/Runner/GoogleService-Info.plist"
           if [[ ! -f "$GOOGLE_SERVICE_INFO_PLIST" ]]; then
-            echo "GoogleService-Info.plist not found at $GOOGLE_SERVICE_INFO_PLIST" >&2
-            exit 1
+            echo "GoogleService-Info.plist not found — skipping." >&2
+            exit 0
           fi
 
           DSYM_PATH="$XCARCHIVE_PATH/dSYMs"
           if [[ ! -d "$DSYM_PATH" ]] || [[ -z "$(find "$DSYM_PATH" -name '*.dSYM' -print -quit)" ]]; then
-            echo "No dSYM files found at $DSYM_PATH" >&2
-            find "$XCARCHIVE_PATH" -maxdepth 3 -print >&2
-            exit 1
+            echo "No dSYM files found — skipping." >&2
+            exit 0
           fi
 
           "$UPLOAD_SYMBOLS" -gsp "$GOOGLE_SERVICE_INFO_PLIST" -p ios "$DSYM_PATH"

@@ -1388,7 +1388,7 @@ class DiaryMemoryController extends ChangeNotifier {
           'author': authorName.trim(),
           'authorId': FirebaseAuth.instance.currentUser?.uid ?? '',
           'authorName': authorName.trim(),
-          'storagePath': upload?.storagePath ?? '',
+          'storagePath': upload.storagePath,
           'authorEmail': authorEmail.trim(),
           'authorRole': authorRole.trim(),
           if (position != null) 'lat': position.latitude,

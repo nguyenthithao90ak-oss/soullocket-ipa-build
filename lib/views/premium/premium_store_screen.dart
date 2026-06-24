@@ -799,30 +799,30 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       return 'Thanh toán một lần';
     }
 
-    if (info != null) {
+    try {
+      final rawPrice = product.rawPrice;
+      if (rawPrice > 0) {
+        final perDay = rawPrice / durationDays;
+        if (product.currencyCode == 'VND') {
+          final formatter = NumberFormat.currency(
+            locale: 'vi_VN',
+            symbol: 'đ',
+            decimalDigits: 0,
+          );
+          return '~${formatter.format(perDay).replaceAll(' ', '')}/ngày';
+        }
+
+        final formatter = NumberFormat.simpleCurrency(name: product.currencyCode);
+        return '~${formatter.format(perDay).replaceAll(' ', '')}/ngày';
+      }
+    } catch (_) {}
+
+    if (info != null && (product.currencyCode.isEmpty || product.currencyCode == 'VND')) {
       final perDay = (info.priceVnd / durationDays).round();
       return '~${_formatVnd(perDay)}/ngày';
     }
 
-    try {
-      final perDay = product.rawPrice / durationDays;
-      if (product.currencyCode == 'VND') {
-        final formatter = NumberFormat.currency(
-          locale: 'vi_VN',
-          symbol: '₫',
-          decimalDigits: 0,
-        );
-        return '~${formatter.format(perDay).replaceAll(' ', '')}/ngày';
-      }
-
-      final formatter = NumberFormat.currency(
-        symbol: product.currencyCode,
-        decimalDigits: 2,
-      );
-      return '~${formatter.format(perDay)}/ngày';
-    } catch (_) {
-      return 'Tính theo ngày';
-    }
+    return 'Tính theo ngày';
   }
 
   Widget _buildHeroSection() {

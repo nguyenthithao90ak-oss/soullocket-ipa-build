@@ -217,8 +217,7 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
     final items = _memoryPhotos;
     if (items.isEmpty) {
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
-        content: Text(L10nService().translate('util_khngcknimn_e17be4') ??
-            'Chưa có kỷ niệm nào.'),
+        content: Text(L10nService().translate('util_khngcknimn_e17be4')),
       ));
       return;
     }

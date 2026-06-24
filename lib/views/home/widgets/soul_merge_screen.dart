@@ -1736,6 +1736,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
     return InkWell(
       onTap: () {
+        // ignore: dead_code
         if (!canUse) {
           Navigator.pop(context);
           Navigator.push(
