@@ -107,7 +107,6 @@ class UtilityService {
       title: 'util_luunhtbit_6f4b4a',
       icon: Icons.photo_library_rounded,
       colors: [const Color(0xFF7C4DFF), const Color(0xFF448AFF)],
-      isTool: true,
     ),
     UtilityApp(
       id: 'giftcode',
