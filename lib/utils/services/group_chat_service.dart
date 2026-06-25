@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../models/chat_message.dart';
@@ -289,7 +290,7 @@ class GroupChatService {
       groupId: groupId,
       viewerHouseId: reporterHouseId,
     );
-    await _dbRef.child('reports').push().set({
+    await FirebaseFirestore.instance.collection('reports').add({
       'type': 'group_report',
       'groupId': groupId.trim(),
       'target': groupId.trim(),
@@ -299,7 +300,7 @@ class GroupChatService {
           ? normalizedReason.substring(0, 500)
           : normalizedReason,
       'status': 'open',
-      'ts': ServerValue.timestamp,
+      'ts': FieldValue.serverTimestamp(),
     });
   }
 

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/constants/app_config.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/auth_service.dart';
 import '../../utils/app_error_mapper.dart';
@@ -51,7 +52,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
     try {
       final results = await Future.wait([
         _db.child('houses').get().timeout(const Duration(seconds: 8)),
-        _db.child('reports').get().timeout(const Duration(seconds: 8)),
+        FirebaseFirestore.instance.collection('reports').count().get().timeout(const Duration(seconds: 8)),
         _db.child('social_feed').get().timeout(const Duration(seconds: 8)),
         _db.child('support_tickets').get().timeout(const Duration(seconds: 8)),
         _db.child(AppConfig.maintenanceModePath).get().timeout(const Duration(seconds: 5)),
@@ -94,7 +95,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
         _totalHouses = results[0].children.length;
         _bannedHouses = banned;
         _vipHouses = vip;
-        _totalReports = results[1].children.length;
+        _totalReports = (results[1] as AggregateQuerySnapshot).count ?? 0;
         _totalFeeds = results[2].children.length;
         _totalSupportTickets = totalTickets;
         _unreadSupportTickets = unreadTickets;

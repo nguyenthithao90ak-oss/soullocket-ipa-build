@@ -828,6 +828,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
   }
 
   Future<void> _shareItem() async {
+    // ignore: unused_local_variable
     final item = widget.items[_currentIndex];
     final file = File(_filePath(_currentIndex));
     if (!await file.exists()) {
@@ -884,6 +885,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
   @override
   Widget build(BuildContext context) {
     if (widget.items.isEmpty) return const SizedBox.shrink();
+    // ignore: unused_local_variable
     final item = widget.items[_currentIndex];
     return Scaffold(
       backgroundColor: Colors.black,

@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart' hide Query;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:path/path.dart';
@@ -17,6 +18,7 @@ class CommunityFeedService {
   CommunityFeedService._internal();
 
   final FirebaseDatabase _db = FirebaseDatabase.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Database? _localCache;
   final LinkedHashSet<String> _resolvedMediaUrls = LinkedHashSet<String>();
@@ -75,7 +77,7 @@ class CommunityFeedService {
       return const Stream<List<Map<dynamic, dynamic>>>.empty();
     }
 
-    final query = _buildFeedQuery(
+    final query = _buildFirestoreQuery(
       pageSize: pageSize,
       afterTimestamp: afterTimestamp,
       endBeforeTimestamp: endBeforeTimestamp,
@@ -83,16 +85,16 @@ class CommunityFeedService {
 
     if (!attachRealtime || endBeforeTimestamp != null) {
       return query.get().asStream().map(
-            (snapshot) => _mapFeedSnapshot(
+            (snapshot) => _mapFirestoreSnapshot(
               snapshot,
               feedType: feedType,
             ),
           );
     }
 
-    return query.onValue.map(
-      (event) => _mapFeedSnapshot(
-        event.snapshot,
+    return query.snapshots().map(
+      (snapshot) => _mapFirestoreSnapshot(
+        snapshot,
         feedType: feedType,
       ),
     );
@@ -103,51 +105,48 @@ class CommunityFeedService {
     int pageSize = _defaultFeedPageSize,
     int? endBeforeTimestamp,
   }) async {
-    final snapshot = await _buildFeedQuery(
+    final snapshot = await _buildFirestoreQuery(
       pageSize: pageSize,
       endBeforeTimestamp: endBeforeTimestamp,
     ).get();
-    return _mapFeedSnapshot(snapshot, feedType: feedType);
+    return _mapFirestoreSnapshot(snapshot, feedType: feedType);
   }
 
-  Query _buildFeedQuery({
+  Query<Map<String, dynamic>> _buildFirestoreQuery({
     required int pageSize,
     int? afterTimestamp,
     int? endBeforeTimestamp,
   }) {
     final safePageSize = pageSize.clamp(1, _maxFeedPageSize).toInt();
-    Query query = _db.ref('social_feed').orderByChild('ts');
+    Query<Map<String, dynamic>> query = _firestore.collection('social_feed').orderBy('ts', descending: true);
 
     if (afterTimestamp != null) {
-      query = query.startAt(afterTimestamp + 1);
+      query = query.where('ts', isGreaterThan: afterTimestamp);
     }
 
     if (endBeforeTimestamp != null) {
-      query = query.endAt(endBeforeTimestamp - 1);
+      query = query.where('ts', isLessThan: endBeforeTimestamp);
     }
 
-    return query.limitToLast(safePageSize);
+    return query.limit(safePageSize);
   }
 
-  List<Map<dynamic, dynamic>> _mapFeedSnapshot(
-    DataSnapshot snapshot, {
+  List<Map<dynamic, dynamic>> _mapFirestoreSnapshot(
+    QuerySnapshot<Map<String, dynamic>> snapshot, {
     required String feedType,
   }) {
-    if (!snapshot.exists || snapshot.value == null) {
+    if (snapshot.docs.isEmpty) {
       return const <Map<dynamic, dynamic>>[];
     }
 
-    final raw = Map<dynamic, dynamic>.from(snapshot.value as Map);
     final feedItems = <Map<dynamic, dynamic>>[];
 
-    raw.forEach((key, value) {
-      if (value is! Map) return;
-
-      final item = Map<String, dynamic>.from(value);
-      item['id'] = key;
+    for (var doc in snapshot.docs) {
+      final item = Map<String, dynamic>.from(doc.data());
+      item['id'] = doc.id;
       feedItems.add(item);
       _cacheSinglePost(item);
-    });
+    }
 
     if (feedType == 'tophot') {
       feedItems.sort((a, b) {
@@ -271,7 +270,67 @@ class CommunityFeedService {
   }
 
   Future<void> sendHeartToPost(String postId) async {
-    final ref = _db.ref('community_posts/$postId/hearts');
-    await ref.set(ServerValue.increment(1));
+    final ref = _firestore.collection('community_posts').doc(postId);
+    await ref.set({'hearts': FieldValue.increment(1)}, SetOptions(merge: true));
+    
+    // Đồng thời update bên social_feed để giao diện feed cập nhật luôn
+    try {
+      final feedRef = _firestore.collection('social_feed').doc(postId);
+      await feedRef.set({'hearts': FieldValue.increment(1)}, SetOptions(merge: true));
+    } catch (_) {}
+  }
+
+  // ── SCRIPT MIGRATION TỰ ĐỘNG ──
+  Future<void> migrateFeedFromRTDB() async {
+    final migrateFlag = await _firestore
+        .collection('admin_system').doc('migrations')
+        .collection('flags').doc('feed_migration').get();
+    
+    if (migrateFlag.exists && migrateFlag.data()?['done'] == true) return;
+
+    final snap = await _db.ref('social_feed').get();
+    if (!snap.exists || snap.value == null) {
+      _setMigrationDone();
+      return;
+    }
+
+    final raw = snap.value;
+    if (raw is! Map) return;
+
+    WriteBatch batch = _firestore.batch();
+    int count = 0;
+
+    for (var entry in raw.entries) {
+      if (entry.value is Map) {
+        final docRef = _firestore.collection('social_feed').doc(entry.key.toString());
+        batch.set(docRef, Map<String, dynamic>.from(entry.value as Map), SetOptions(merge: true));
+        count++;
+        
+        if (count % 450 == 0) {
+          await batch.commit();
+          batch = _firestore.batch();
+        }
+      }
+    }
+
+    if (count % 450 != 0) {
+      await batch.commit();
+    }
+    
+    // Xoá data cũ trên RTDB để tránh tốn bandwidth/storage
+    try {
+      await _db.ref('social_feed').remove();
+    } catch (_) {}
+
+    _setMigrationDone();
+  }
+
+  Future<void> _setMigrationDone() async {
+    try {
+      await _firestore
+          .collection('admin_system').doc('migrations')
+          .collection('flags').doc('feed_migration')
+          .set({'done': true, 'ts': DateTime.now().millisecondsSinceEpoch}, SetOptions(merge: true));
+    } catch (_) {}
   }
 }

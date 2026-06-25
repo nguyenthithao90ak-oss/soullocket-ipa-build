@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 import '../../utils/services/house_service.dart';
@@ -28,7 +29,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
   String _lockType = 'permanent';
   int _lockedUntil = 0;
 
-  Stream<DatabaseEvent>? _appealsStream;
+  Stream<QuerySnapshot>? _appealsStream;
 
   @override
   void initState() {
@@ -107,11 +108,10 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
         _lockType = lockType;
         _lockedUntil = lockedUntil;
         _isLoadingProfile = false;
-        _appealsStream = FirebaseDatabase.instance
-            .ref('appeals')
-            .orderByChild('uid')
-            .equalTo(user.uid)
-            .onValue;
+        _appealsStream = FirebaseFirestore.instance
+            .collection('appeals')
+            .where('uid', isEqualTo: user.uid)
+            .snapshots();
         if (_contactCtrl.text.trim().isEmpty && contactSeed.isNotEmpty) {
           _contactCtrl.text = contactSeed;
         }
@@ -135,7 +135,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      await FirebaseDatabase.instance.ref('appeals').push().set({
+      await FirebaseFirestore.instance.collection('appeals').add({
         'uid': user.uid,
         'type': 'account_lock_appeal',
         'lockType': _lockType,
@@ -147,7 +147,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
         'contact': contact,
         'reason': reason,
         'status': 'pending',
-        'ts': ServerValue.timestamp,
+        'ts': FieldValue.serverTimestamp(),
       });
 
       if (!mounted) return;
@@ -521,7 +521,7 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
                 fontWeight: FontWeight.w700,
               ),
             )
-          : StreamBuilder<DatabaseEvent>(
+          : StreamBuilder<QuerySnapshot>(
               stream: stream,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -535,20 +535,20 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
                   );
                 }
 
-                final value = snapshot.data?.snapshot.value;
-                if (value == null || value is! Map) {
+                final docs = snapshot.data?.docs;
+                if (docs == null || docs.isEmpty) {
                   return _buildEmptyHistory();
                 }
 
-                final items = value.entries
-                    .map((entry) {
-                      final raw = entry.value;
-                      if (raw is! Map) return null;
-                      final map = Map<String, dynamic>.from(raw);
-                      map['id'] = entry.key.toString();
+                final items = docs
+                    .map((doc) {
+                      final map = doc.data() as Map<String, dynamic>;
+                      map['id'] = doc.id;
+                      if (map['ts'] is Timestamp) {
+                        map['ts'] = (map['ts'] as Timestamp).millisecondsSinceEpoch;
+                      }
                       return map;
                     })
-                    .whereType<Map<String, dynamic>>()
                     .where(
                       (item) =>
                           item['type']?.toString() == 'account_lock_appeal',

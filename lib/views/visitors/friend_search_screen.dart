@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../utils/services/friends_service.dart';
@@ -30,6 +31,7 @@ class _FriendSearchScreenState extends State<FriendSearchScreen> {
   final Set<String> _sentTo = {};
   Set<String> _friends = {};
   bool _isSearching = false;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -39,6 +41,7 @@ class _FriendSearchScreenState extends State<FriendSearchScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _ctrl.dispose();
     super.dispose();
   }
@@ -58,17 +61,22 @@ class _FriendSearchScreenState extends State<FriendSearchScreen> {
     }
   }
 
-  Future<void> _search(String q) async {
+  void _search(String q) {
     if (q.trim().isEmpty) {
+      _debounce?.cancel();
       setState(() => _results = []);
       return;
     }
-    setState(() => _isSearching = true);
-    final results = await _friendsService.searchHouses(q.trim());
-    if (!mounted) return;
-    setState(() {
-      _results = results;
-      _isSearching = false;
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () async {
+      if (!mounted) return;
+      setState(() => _isSearching = true);
+      final results = await _friendsService.searchHouses(q.trim());
+      if (!mounted) return;
+      setState(() {
+        _results = results;
+        _isSearching = false;
+      });
     });
   }
 

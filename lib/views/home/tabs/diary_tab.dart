@@ -705,6 +705,7 @@ class _DiaryTabState extends State<DiaryTab>
   }
 
   BannerAd? _bottomBannerAd;
+  // ignore: unused_field
   bool _isBottomBannerReady = false;
 
   void _loadBottomBanner() async {
@@ -732,6 +733,7 @@ class _DiaryTabState extends State<DiaryTab>
     );
   }
 
+  // ignore: unused_element
   Widget _buildBottomAdBanner(BannerAd bannerAd) {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,

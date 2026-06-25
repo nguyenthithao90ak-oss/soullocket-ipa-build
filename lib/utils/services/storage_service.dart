@@ -4,7 +4,6 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,7 +22,6 @@ import 'storage_media_constants.dart';
 import 'storage_path_policy.dart';
 import 'storage_picker_service.dart';
 import 'storage_raw_upload_helper.dart';
-import 'storage_signed_upload_helper.dart';
 import 'storage_upload_result.dart';
 import 'storage_upload_session_helper.dart';
 import 'storage_upload_result_mapper.dart';
@@ -64,8 +62,6 @@ class StorageService {
   final StorageAppCheckHelper _appCheckHelper = const StorageAppCheckHelper();
   final StorageManagedUploadHelper _managedUploadHelper =
       const StorageManagedUploadHelper();
-  final StorageSignedUploadHelper _signedUploadHelper =
-      const StorageSignedUploadHelper();
   final StorageUploadSessionHelper _uploadSessionHelper =
       const StorageUploadSessionHelper();
   final StorageRawUploadHelper _rawUploadHelper =
@@ -230,22 +226,6 @@ class StorageService {
       storagePath: storagePath,
       currentUid: _auth.currentUser?.uid.trim() ?? '',
     );
-  }
-
-  Map<String, String> _stringMapFromDynamicMap(Object? value) {
-    if (value is! Map) {
-      return <String, String>{};
-    }
-
-    final mapped = <String, String>{};
-    value.forEach((key, item) {
-      final normalizedKey = key?.toString().trim() ?? '';
-      final normalizedValue = item?.toString().trim() ?? '';
-      if (normalizedKey.isNotEmpty && normalizedValue.isNotEmpty) {
-        mapped[normalizedKey] = normalizedValue;
-      }
-    });
-    return mapped;
   }
 
   Future<Map<String, dynamic>> _createSecretVaultUploadSession({
@@ -487,46 +467,6 @@ class StorageService {
                 : 'Không thể tạo phiên tải ảnh Album.',
           );
       }
-    }
-  }
-
-  Future<Map<String, dynamic>> _createCollageUploadSession({
-    required String houseId,
-    required String contentType,
-    required String fileName,
-  }) async {
-    try {
-      return _uploadSessionHelper.createUploadSession(
-        invokeCallable: (name, payload) => _callWithAppCheckRetry(
-          () => _functions.httpsCallable(name).call(payload),
-          allowUnauthenticatedWithoutMarkers: true,
-        ),
-        functionName: 'createCollageUploadSession',
-        payload: <String, dynamic>{
-          'houseId': houseId.trim(),
-          'contentType': contentType.trim(),
-          'fileName': fileName.trim(),
-        },
-        label: 'Collage upload session',
-        requireSessionId: true,
-      );
-    } on FirebaseFunctionsException catch (error) {
-      if (_appCheckHelper.isAppCheckFailure(
-        error,
-        allowUnauthenticatedWithoutMarkers: true,
-      )) {
-        throw Exception(
-          AppErrorMapper.resolve(
-            error,
-            fallbackMessage: 'Không thể tạo phiên tải ảnh ghép.',
-          ).message,
-        );
-      }
-      throw Exception(
-        (error.message ?? '').trim().isNotEmpty
-            ? error.message!.trim()
-            : 'Không thể tạo phiên tải ảnh ghép.',
-      );
     }
   }
 
@@ -1048,75 +988,6 @@ class StorageService {
       },
       label: 'Collage finalize response',
     );
-  }
-
-  bool _shouldRetrySignedUploadStatus(int statusCode) {
-    return statusCode == 408 ||
-        statusCode == 429 ||
-        statusCode == 500 ||
-        statusCode == 502 ||
-        statusCode == 503 ||
-        statusCode == 504;
-  }
-
-  bool _shouldRetrySignedUploadError(Object error) {
-    final text = error.toString().toLowerCase();
-    return text.contains('timeout') ||
-        text.contains('timed out') ||
-        text.contains('network') ||
-        text.contains('unavailable') ||
-        text.contains('connection') ||
-        text.contains('kết nối') ||
-        text.contains('mạng');
-  }
-
-  Future<void> _uploadBytesToSignedUrl({
-    required String uploadUrl,
-    required Uint8List bytes,
-    required Map<String, String> headers,
-    ValueChanged<double>? onProgress,
-  }) async {
-    for (var attempt = 0; attempt < 3; attempt++) {
-      try {
-        final request = http.StreamedRequest('PUT', Uri.parse(uploadUrl));
-        request.headers.addAll(headers);
-        request.contentLength = bytes.length;
-
-        () async {
-          try {
-            const chunkSize = 64 * 1024; // 64KB per chunk
-            for (var i = 0; i < bytes.length; i += chunkSize) {
-              final end = (i + chunkSize < bytes.length) ? i + chunkSize : bytes.length;
-              request.sink.add(bytes.sublist(i, end));
-              if (onProgress != null) onProgress(end / bytes.length);
-              await Future.delayed(const Duration(milliseconds: 2));
-            }
-          } finally {
-            request.sink.close();
-          }
-        }();
-
-        final streamedResponse = await request.send().timeout(const Duration(minutes: 2));
-        final response = await http.Response.fromStream(streamedResponse);
-
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-          return;
-        }
-        if (attempt < 2 &&
-            _shouldRetrySignedUploadStatus(response.statusCode)) {
-          await Future.delayed(Duration(milliseconds: 520 * (attempt + 1)));
-          continue;
-        }
-        throw Exception(
-          'Máy chủ lưu trữ từ chối ảnh kho bí mật (${response.statusCode}).',
-        );
-      } catch (error) {
-        if (attempt >= 2 || !_shouldRetrySignedUploadError(error)) {
-          rethrow;
-        }
-        await Future.delayed(Duration(milliseconds: 520 * (attempt + 1)));
-      }
-    }
   }
 
   Future<String> uploadFileToPath(

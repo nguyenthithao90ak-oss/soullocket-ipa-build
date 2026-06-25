@@ -478,6 +478,9 @@ class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, 
       rethrow;
     }
 
+    // Đợi 500ms để Cloudflare R2 đồng bộ file hoàn chỉnh
+    await Future.delayed(const Duration(milliseconds: 500));
+
     await _finalizeVoiceUpload(
       sessionId: sessionId,
       fileName: fileName,

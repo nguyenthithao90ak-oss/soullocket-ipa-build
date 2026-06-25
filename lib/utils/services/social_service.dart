@@ -1159,7 +1159,7 @@ class SocialService {
       throw 'Bài viết không còn tồn tại.';
     }
     final targetHouseId = (postData['houseId'] ?? '').toString();
-    await _dbRef.child('reports').push().set({
+    await _firestore.collection('reports').add({
       'type': 'post_report',
       'postId': postId,
       'post': postId,
@@ -1168,7 +1168,7 @@ class SocialService {
       if (targetHouseId.isNotEmpty) 'targetHouseId': targetHouseId,
       'reason': _normalizeReportReason(reason),
       'status': 'open',
-      'ts': ServerValue.timestamp,
+      'ts': FieldValue.serverTimestamp(),
     });
   }
 
@@ -1191,7 +1191,7 @@ class SocialService {
     final targetHouseId =
         (commentData['houseId'] ?? commentData['uid'] ?? '').toString();
 
-    await _dbRef.child('reports').push().set({
+    await _firestore.collection('reports').add({
       'type': 'comment_report',
       'postId': postId,
       'post': postId,
@@ -1201,7 +1201,7 @@ class SocialService {
       if (targetHouseId.isNotEmpty) 'targetHouseId': targetHouseId,
       'reason': _normalizeReportReason(reason),
       'status': 'open',
-      'ts': ServerValue.timestamp,
+      'ts': FieldValue.serverTimestamp(),
     });
   }
 
@@ -1226,7 +1226,7 @@ class SocialService {
       throw 'Bạn không thể tự báo cáo chính mình.';
     }
 
-    await _dbRef.child('reports').push().set({
+    await _firestore.collection('reports').add({
       'type': 'user_report',
       'targetHouseId': target,
       'target': target,
@@ -1234,7 +1234,7 @@ class SocialService {
       'reporterHouseId': reporter,
       'reason': _normalizeReportReason(reason),
       'status': 'open',
-      'ts': ServerValue.timestamp,
+      'ts': FieldValue.serverTimestamp(),
     });
   }
 

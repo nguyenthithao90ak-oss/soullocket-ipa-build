@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_page_physics.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -32,6 +33,7 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen>
   int _searchLimit = 50;
   int _suggestionLimit = 50;
   HouseSettings? _mySettings;
+  Timer? _debounce;
 
   late Stream<List<String>> _friendsStream;
   late Stream<FriendRequestsData> _requestsStream;
@@ -45,6 +47,7 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen>
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchCtrl.dispose();
     _tabController.dispose();
     super.dispose();
@@ -66,23 +69,28 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen>
     }
   }
 
-  Future<void> _search(String q) async {
+  void _search(String q) {
     if (q.trim().isEmpty) {
+      _debounce?.cancel();
       setState(() {
         _searchResults = [];
         _searchLimit = 50;
       });
       return;
     }
-    setState(() {
-      _isSearching = true;
-      _searchLimit = 50;
-    });
-    final results = await _friendsService.searchHouses(q.trim());
-    if (!mounted) return;
-    setState(() {
-      _searchResults = results;
-      _isSearching = false;
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () async {
+      if (!mounted) return;
+      setState(() {
+        _isSearching = true;
+        _searchLimit = 50;
+      });
+      final results = await _friendsService.searchHouses(q.trim());
+      if (!mounted) return;
+      setState(() {
+        _searchResults = results;
+        _isSearching = false;
+      });
     });
   }
 

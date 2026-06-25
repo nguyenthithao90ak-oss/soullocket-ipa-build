@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
@@ -179,10 +180,9 @@ class AuthSupportDialog {
                                     ServerValue.timestamp,
                               });
 
-                              await FirebaseDatabase.instance
-                                  .ref('appeals')
-                                  .push()
-                                  .set({
+                              await FirebaseFirestore.instance
+                                  .collection('appeals')
+                                  .add({
                                 'uid': user.uid,
                                 'type': 'support_contact',
                                 'name': name.isEmpty
@@ -200,7 +200,7 @@ class AuthSupportDialog {
                                 'status': 'pending',
                                 'source': 'auth_support_dialog',
                                 'ticketId': user.uid,
-                                'ts': ServerValue.timestamp,
+                                'ts': FieldValue.serverTimestamp(),
                               });
                             } catch (_) {
                               if (!dialogContext.mounted) return;

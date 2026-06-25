@@ -643,7 +643,9 @@ class FriendsService {
   Future<List<Map<String, dynamic>>> searchHouses(String query,
       {int limit = 50}) async {
     final effectiveLimit = limit < 1 ? 1 : limit;
-    final snap = await _db.ref('houses').get();
+    // ⚡ Tối ưu hóa băng thông: Chỉ tải node houses_public (chứa thông tin công khai siêu nhẹ)
+    // thay vì tải toàn bộ cây houses (chứa nhật ký, ảnh album của tất cả mọi nhà).
+    final snap = await _db.ref('houses_public').get();
     final rawValue = snap.value;
     if (!snap.exists || rawValue is! Map) return [];
     final raw = Map<dynamic, dynamic>.from(rawValue);

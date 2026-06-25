@@ -595,6 +595,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     );
   }
 
+  // ignore: unused_element
   Widget _buildBottomAdBanner(BannerAd bannerAd) {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,

@@ -21,7 +21,6 @@ import '../../../utils/services/notification_service.dart';
 import '../../../core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
-import 'package:soullocket_app/views/premium/premium_store_screen.dart';
 
 Stream<dynamic>? _sharedOverlayStream;
 
@@ -411,6 +410,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _pulseController.repeat(reverse: true);
   }
 
+  // ignore: unused_element
   String _getConnectionStatusText() {
     if (!_iHaveBumped && !_partnerHasBumped) {
       return 'Đang chờ hai bạn chạm... 💫';
@@ -423,6 +423,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     }
   }
 
+  // ignore: unused_element
   Color _getConnectionStatusColor() {
     if (_iHaveBumped || _partnerHasBumped) {
       return const Color(0xFFFF7FB2);
@@ -1732,24 +1733,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     required StateSetter setSheetState,
   }) {
     final bool isSelected = (_activeStyle == styleKey);
-    final bool canUse = true; // Tạm thời mở miễn phí để test
 
     return InkWell(
       onTap: () {
-        if (!canUse) {
-          Navigator.pop(context);
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PremiumStoreScreen(
-                houseId: _houseId ?? '',
-                myName: _myName,
-              ),
-            ),
-          );
-          return;
-        }
-        
         _selectHeartStyle(styleKey);
         setSheetState(() {});
         setState(() {});

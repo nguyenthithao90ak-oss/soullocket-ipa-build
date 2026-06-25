@@ -501,6 +501,7 @@ class _CommunityTabState extends State<CommunityTab>
   @override
   void initState() {
     super.initState();
+    unawaited(CommunityFeedService().migrateFeedFromRTDB());
     _heartController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 16),

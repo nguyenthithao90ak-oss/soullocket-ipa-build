@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:soullocket_app/app.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/build_signature_service.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -182,6 +183,37 @@ void main() {
             'library': details.library,
             'context': details.context?.toDescription(),
           },
+        ),
+      );
+    };
+
+    ErrorWidget.builder = (FlutterErrorDetails details) {
+      return Container(
+        color: SLColors.bgMain,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.favorite,
+              color: SLColors.primary,
+              size: 44,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Có lỗi nhỏ xảy ra. Hãy thử lại sau nhé!',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.quicksand(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: SLColors.textPrimary,
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ],
         ),
       );
     };

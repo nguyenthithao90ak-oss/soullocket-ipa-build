@@ -39,6 +39,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   bool _isVip = false;
   List<ProductDetails> _products = [];
   String _storeHint = 'Tính năng chưa khả dụng trong bản phát hành hiện tại.';
+  // ignore: unused_field
   bool _storeConfigured = false;
 
   bool get _isAppleStorePlatform =>
@@ -703,6 +704,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildStoreNotConfiguredCard() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -1530,6 +1532,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildStoreUnavailableCard() {
     return Container(
       width: double.infinity,

@@ -1,10 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import '../../utils/services/auth_service.dart';
 import '../../utils/app_error_mapper.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/sl_theme.dart';
 import 'widgets/admin_shared_widgets.dart';
 
@@ -43,54 +44,52 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
     }
 
     try {
-      final snapshot = await _db.child('reports').get().timeout(const Duration(seconds: 8));
+      final snapshot = await FirebaseFirestore.instance.collection('reports').get().timeout(const Duration(seconds: 8));
       final List<Map<String, dynamic>> loaded = [];
 
-      if (snapshot.exists) {
-        final data = snapshot.value;
-        if (data is Map) {
-          final entries = data.entries.toList();
+      if (snapshot.docs.isNotEmpty) {
+          final entries = snapshot.docs.map((d) => MapEntry(d.id, d.data())).toList();
 
           // Fetch post data for each report concurrently
           await Future.wait(entries.map((entry) async {
             final key = entry.key;
             final value = entry.value;
 
-            if (value is Map) {
-              final reportData = Map<String, dynamic>.from(value);
-              reportData['id'] = key.toString();
+            final reportData = Map<String, dynamic>.from(value);
+            reportData['id'] = key.toString();
 
-              final postId = reportData['postId']?.toString() ??
-                  reportData['post']?.toString() ??
-                  '';
-              final commentId = reportData['commentId']?.toString() ?? '';
-              final isCommentReport = reportData['type'] == 'comment_report' ||
-                  reportData['type'] == 'comment';
+            final postId = reportData['postId']?.toString() ??
+                reportData['post']?.toString() ??
+                '';
+            final commentId = reportData['commentId']?.toString() ?? '';
+            final isCommentReport = reportData['type'] == 'comment_report' ||
+                reportData['type'] == 'comment';
 
-              if (postId.isNotEmpty) {
-                try {
-                  final postSnap = await _db.child('social_feed/$postId').get();
-                  if (postSnap.exists && postSnap.value is Map) {
-                    final postData =
-                        Map<String, dynamic>.from(postSnap.value as Map);
-                    reportData['postData'] = postData;
+            if (postId.isNotEmpty) {
+              try {
+                final postSnap = await FirebaseFirestore.instance.collection('social_feed').doc(postId).get();
+                if (postSnap.exists && postSnap.data() != null) {
+                  final postData =
+                      Map<String, dynamic>.from(postSnap.data() as Map);
+                  reportData['postData'] = postData;
 
-                    if (isCommentReport && commentId.isNotEmpty) {
-                      final commentSnap = await _db
-                          .child('social_feed/$postId/comments/$commentId')
-                          .get();
-                      if (commentSnap.exists && commentSnap.value is Map) {
-                        reportData['commentData'] =
-                            Map<String, dynamic>.from(commentSnap.value as Map);
-                      }
+                  if (isCommentReport && commentId.isNotEmpty) {
+                    final commentSnapRtdb = await _db.child('social_feed/$postId/comments/$commentId').get();
+                    if (commentSnapRtdb.exists && commentSnapRtdb.value is Map) {
+                      reportData['commentData'] = Map<String, dynamic>.from(commentSnapRtdb.value as Map);
                     }
                   }
-                } catch (_) {}
-              }
-
-              loaded.add(reportData);
+                }
+              } catch (_) {}
             }
+
+            loaded.add(reportData);
           }));
+      }
+
+      for (var r in loaded) {
+        if (r['ts'] is Timestamp) {
+          r['ts'] = (r['ts'] as Timestamp).millisecondsSinceEpoch;
         }
       }
 
@@ -131,11 +130,12 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
   Future<void> _deletePost(String postId, String reportId) async {
     try {
+      await FirebaseFirestore.instance.collection('social_feed').doc(postId).delete();
       await _db.child('social_feed/$postId').remove();
-      await _db.child('reports/$reportId').remove();
+      await FirebaseFirestore.instance.collection('reports').doc(reportId).delete();
 
-      await _db.child('admin_system/audit_log').push().set({
-        'ts': ServerValue.timestamp,
+      await FirebaseFirestore.instance.collection('admin_audit_logs').add({
+        'ts': FieldValue.serverTimestamp(),
         'action': 'delete_post',
         'targetId': postId,
         'actorRole': 'web_admin',
@@ -165,10 +165,10 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
       // Thử xóa trên Firebase RTDB
       await _db.child('social_feed/$postId/comments/$commentId').remove();
 
-      await _db.child('reports/$reportId').remove();
+      await FirebaseFirestore.instance.collection('reports').doc(reportId).delete();
 
-      await _db.child('admin_system/audit_log').push().set({
-        'ts': ServerValue.timestamp,
+      await FirebaseFirestore.instance.collection('admin_audit_logs').add({
+        'ts': FieldValue.serverTimestamp(),
         'action': 'delete_comment',
         'targetId': '$postId/$commentId',
         'actorRole': 'web_admin',
@@ -194,7 +194,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
   Future<void> _dismissReport(String reportId) async {
     try {
-      await _db.child('reports/$reportId').remove();
+      await FirebaseFirestore.instance.collection('reports').doc(reportId).delete();
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(context.tr('admin_bquaboco_cc6fa6'))));
