@@ -94,6 +94,26 @@ class DeviceManagerService {
   Future<String?>? _currentHouseIdFuture;
   String? _currentHouseIdFutureUid;
   int _cachedHouseIdAtMs = 0;
+
+  /// Lấy houseId từ cache (TTL 10 phút), tránh đọc RTDB lặp nhiều lần
+  Future<String?> _getHouseIdCached() async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return null;
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    if (_cachedHouseId != null &&
+        _cachedHouseAuthUid == uid &&
+        nowMs - _cachedHouseIdAtMs < _houseIdCacheTtl.inMilliseconds) {
+      return _cachedHouseId;
+    }
+    final snap = await _db.ref('users/$uid/houseId').get().timeout(const Duration(seconds: 10));
+    final houseId = snap.value?.toString().trim();
+    if (houseId != null && houseId.isNotEmpty) {
+      _cachedHouseId = houseId;
+      _cachedHouseAuthUid = uid;
+      _cachedHouseIdAtMs = nowMs;
+    }
+    return houseId;
+  }
   DeviceTrustState? _cachedTrustState;
   String? _cachedTrustStateUid;
   int _cachedTrustStateAtMs = 0;
@@ -722,10 +742,7 @@ class DeviceManagerService {
     if (await _callDeviceActionFunction('approveDeviceSecure', deviceId)) {
       return;
     }
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
-    final houseSnap = await _db.ref('users/$uid/houseId').get();
-    final houseId = houseSnap.value?.toString().trim();
+    final houseId = await _getHouseIdCached();
     if (houseId == null || houseId.isEmpty) return;
     await _db.ref('houses/$houseId/security/devices/$deviceId').update({
       'status': 'approved',
@@ -739,10 +756,7 @@ class DeviceManagerService {
     if (await _callDeviceActionFunction('blockDeviceSecure', deviceId)) {
       return;
     }
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
-    final houseSnap = await _db.ref('users/$uid/houseId').get();
-    final houseId = houseSnap.value?.toString().trim();
+    final houseId = await _getHouseIdCached();
     if (houseId == null || houseId.isEmpty) return;
 
     final ref = _db.ref('houses/$houseId/security/devices/$deviceId');
@@ -768,10 +782,7 @@ class DeviceManagerService {
     if (await _callDeviceActionFunction('deleteDeviceSecure', deviceId)) {
       return;
     }
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
-    final houseSnap = await _db.ref('users/$uid/houseId').get();
-    final houseId = houseSnap.value?.toString().trim();
+    final houseId = await _getHouseIdCached();
     if (houseId == null || houseId.isEmpty) return;
 
     await _db.ref('houses/$houseId/security/devices/$deviceId').update({
@@ -944,11 +955,15 @@ class DeviceManagerService {
   }
 
   Future<int> _countTrustedDevicesForHouse(String houseId) async {
+    // Chỉ query devices có status == 'approved', không load toàn bộ node
     final devicesSnap = await _db
         .ref('houses/$houseId/security/devices')
+        .orderByChild('status')
+        .equalTo('approved')
         .get()
         .timeout(const Duration(seconds: 5));
-    return _countTrustedActiveDevices(_snapshotDeviceRecords(devicesSnap));
+    if (!devicesSnap.exists || devicesSnap.value is! Map) return 0;
+    return (devicesSnap.value as Map).length;
   }
 
   bool _isTrustedActiveDevice(Map<String, dynamic> device) {

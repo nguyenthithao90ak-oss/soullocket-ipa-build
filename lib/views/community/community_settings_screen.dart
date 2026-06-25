@@ -114,97 +114,106 @@ class _CommunitySettingsScreenState extends State<CommunitySettingsScreen> {
 
   Future<void> _loadSettings() async {
     try {
-      final snap = await _dbRef.child('houses/${widget.houseId}').get();
+      final snaps = await Future.wait([
+        _dbRef.child('houses/${widget.houseId}/settings').get(),
+        _dbRef.child('houses/${widget.houseId}/houseName').get(),
+        _dbRef.child('houses/${widget.houseId}/username').get(),
+        _dbRef.child('houses/${widget.houseId}/houseAvatar').get(),
+        _dbRef.child('houses/${widget.houseId}/avatar').get(),
+        _dbRef.child('houses/${widget.houseId}/profileHeaderImageUrl').get(),
+        _dbRef.child('houses/${widget.houseId}/profileHeaderThemeKey').get(),
+      ]);
       if (!mounted) return;
 
-      if (snap.exists && snap.value is Map) {
-        final data = Map<String, dynamic>.from(
-          Map<dynamic, dynamic>.from(snap.value as Map),
-        );
-        final settings = data['settings'] is Map
-            ? Map<String, dynamic>.from(
-                Map<dynamic, dynamic>.from(data['settings'] as Map),
-              )
-            : <String, dynamic>{};
+      final settingsSnap = snaps[0];
+      final houseNameSnap = snaps[1];
+      final usernameSnap = snaps[2];
+      final houseAvatarSnap = snaps[3];
+      final avatarSnap = snaps[4];
+      final headerImgSnap = snaps[5];
+      final headerThemeSnap = snaps[6];
 
-        setState(() {
-          _houseName = data['houseName']?.toString().trim() ?? '';
-          _username = (data['username'] ?? settings['username'] ?? '')
-              .toString()
-              .trim();
-          _bio = settings['bio']?.toString().trim() ?? '';
-          _lastUsernameUpdate = settings['lastUsernameUpdate'] is int
-              ? settings['lastUsernameUpdate'] as int
-              : null;
+      final settings = settingsSnap.exists && settingsSnap.value is Map
+          ? Map<String, dynamic>.from(
+              Map<dynamic, dynamic>.from(settingsSnap.value as Map),
+            )
+          : <String, dynamic>{};
 
-          _privacy = settings['privacy']?.toString() ?? 'public';
-          _friendRequestLimit = int.tryParse(
-                  settings['friendRequestLimit']?.toString() ?? '30') ??
-              30;
-          _likedVisibility =
-              settings['likedVisibility']?.toString() ?? 'private';
-          _locketVisibility =
-              settings['locketVisibility']?.toString() ?? 'private';
-          _highlightSort = settings['highlightSort']?.toString() ?? 'date_desc';
-          _friendRequestPolicy =
-              settings['friendRequestPolicy']?.toString() ?? 'all';
-          _commentPolicy = settings['commentPolicy']?.toString() ?? 'all';
+      setState(() {
+        _houseName = houseNameSnap.value?.toString().trim() ?? '';
+        _username = (usernameSnap.value ?? settings['username'] ?? '')
+            .toString()
+            .trim();
+        _bio = settings['bio']?.toString().trim() ?? '';
+        _lastUsernameUpdate = settings['lastUsernameUpdate'] is int
+            ? settings['lastUsernameUpdate'] as int
+            : null;
 
-          _keywordFilter = settings['keywordFilter'] == true;
-          _searchPrivacy = settings['searchPrivacy'] != false;
-          _msgPrivacy = settings['msgPrivacy'] == true;
-          _hideActiveStatus = settings['hideActiveStatus'] == true;
-          _hideLikeCount = settings['hideLikeCount'] == true;
-          _taggingPolicy = settings['taggingPolicy'] == true;
-          _allowDownload = settings['allowDownload'] != false;
-          _dndMode = settings['dndMode'] == true;
-          _showCreationDate = settings['showCreationDate'] != false;
+        _privacy = settings['privacy']?.toString() ?? 'public';
+        _friendRequestLimit = int.tryParse(
+                settings['friendRequestLimit']?.toString() ?? '30') ??
+            30;
+        _likedVisibility =
+            settings['likedVisibility']?.toString() ?? 'private';
+        _locketVisibility =
+            settings['locketVisibility']?.toString() ?? 'private';
+        _highlightSort = settings['highlightSort']?.toString() ?? 'date_desc';
+        _friendRequestPolicy =
+            settings['friendRequestPolicy']?.toString() ?? 'all';
+        _commentPolicy = settings['commentPolicy']?.toString() ?? 'all';
 
-          _avatarUrl = (settings['houseAvatar'] ??
-                  data['houseAvatar'] ??
-                  data['avatar'] ??
-                  '')
-              .toString()
-              .trim();
-          _headerImageUrl = (settings['profileHeaderImageUrl'] ??
-                  data['profileHeaderImageUrl'] ??
-                  '')
-              .toString()
-              .trim();
-          _headerThemeKey = ((settings['profileHeaderThemeKey'] ??
-                      data['profileHeaderThemeKey']) ??
-                  'soft_default')
-              .toString()
-              .trim();
+        _keywordFilter = settings['keywordFilter'] == true;
+        _searchPrivacy = settings['searchPrivacy'] != false;
+        _msgPrivacy = settings['msgPrivacy'] == true;
+        _hideActiveStatus = settings['hideActiveStatus'] == true;
+        _hideLikeCount = settings['hideLikeCount'] == true;
+        _taggingPolicy = settings['taggingPolicy'] == true;
+        _allowDownload = settings['allowDownload'] != false;
+        _dndMode = settings['dndMode'] == true;
+        _showCreationDate = settings['showCreationDate'] != false;
 
-          _nameController.text = _houseName;
-          _usernameController.text = _username;
-          _bioController.text = _bio;
+        _avatarUrl = (settings['houseAvatar'] ??
+                houseAvatarSnap.value ??
+                avatarSnap.value ??
+                '')
+            .toString()
+            .trim();
+        _headerImageUrl = (settings['profileHeaderImageUrl'] ??
+                headerImgSnap.value ??
+                '')
+            .toString()
+            .trim();
+        _headerThemeKey = ((settings['profileHeaderThemeKey'] ??
+                    headerThemeSnap.value) ??
+                'soft_default')
+            .toString()
+            .trim();
 
-          _origHouseName = _houseName;
-          _origUsername = _username;
-          _origBio = _bio;
-          _origPrivacy = _privacy;
-          _origFriendRequestLimit = _friendRequestLimit;
-          _origLikedVisibility = _likedVisibility;
-          _origLocketVisibility = _locketVisibility;
-          _origHighlightSort = _highlightSort;
-          _origFriendRequestPolicy = _friendRequestPolicy;
-          _origCommentPolicy = _commentPolicy;
-          _origKeywordFilter = _keywordFilter;
-          _origSearchPrivacy = _searchPrivacy;
-          _origMsgPrivacy = _msgPrivacy;
-          _origHideActiveStatus = _hideActiveStatus;
-          _origHideLikeCount = _hideLikeCount;
-          _origTaggingPolicy = _taggingPolicy;
-          _origAllowDownload = _allowDownload;
-          _origDndMode = _dndMode;
-          _origShowCreationDate = _showCreationDate;
-          _isLoading = false;
-        });
-      } else {
-        setState(() => _isLoading = false);
-      }
+        _nameController.text = _houseName;
+        _usernameController.text = _username;
+        _bioController.text = _bio;
+
+        _origHouseName = _houseName;
+        _origUsername = _username;
+        _origBio = _bio;
+        _origPrivacy = _privacy;
+        _origFriendRequestLimit = _friendRequestLimit;
+        _origLikedVisibility = _likedVisibility;
+        _origLocketVisibility = _locketVisibility;
+        _origHighlightSort = _highlightSort;
+        _origFriendRequestPolicy = _friendRequestPolicy;
+        _origCommentPolicy = _commentPolicy;
+        _origKeywordFilter = _keywordFilter;
+        _origSearchPrivacy = _searchPrivacy;
+        _origMsgPrivacy = _msgPrivacy;
+        _origHideActiveStatus = _hideActiveStatus;
+        _origHideLikeCount = _hideLikeCount;
+        _origTaggingPolicy = _taggingPolicy;
+        _origAllowDownload = _allowDownload;
+        _origDndMode = _dndMode;
+        _origShowCreationDate = _showCreationDate;
+        _isLoading = false;
+      });
     } catch (e) {
       debugPrint(
         'Error loading community settings: ${AppErrorMapper.resolve(e).message}',

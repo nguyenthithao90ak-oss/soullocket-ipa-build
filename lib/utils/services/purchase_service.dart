@@ -13,6 +13,7 @@ import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'app_check_http_headers.dart';
 import 'revenue_security_telemetry_service.dart';
+import 'secure_storage_service.dart';
 
 class VipProduct {
   static const weekly = 'soullocket_vip_weekly';
@@ -470,9 +471,17 @@ class PurchaseService {
   }
 
   Future<String?> _resolveCurrentHouseId(String uid) async {
+    final cachedHouseId = (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
+    final cachedAuthUid = (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? '';
+    if (cachedHouseId.isNotEmpty && cachedAuthUid == uid) {
+      return cachedHouseId;
+    }
+
     final primarySnap = await _db.ref('users/$uid/houseId').get();
     final primaryValue = primarySnap.value?.toString().trim() ?? '';
     if (primaryValue.isNotEmpty) {
+      await SecureStorageService.instance.write(SecureStorageService.keyHouseId, primaryValue);
+      await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
       return primaryValue;
     }
 
@@ -480,6 +489,8 @@ class PurchaseService {
     final legacyValue = legacySnap.value?.toString().trim() ?? '';
     if (legacyValue.isNotEmpty) {
       await _db.ref('users/$uid').update({'houseId': legacyValue});
+      await SecureStorageService.instance.write(SecureStorageService.keyHouseId, legacyValue);
+      await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
       return legacyValue;
     }
 

@@ -157,8 +157,7 @@ class _DiaryTabShell extends StatelessWidget {
                   ),
                 ),
               ),
-              if (state._isBottomBannerReady && state._bottomBannerAd != null)
-                state._buildBottomAdBanner(state._bottomBannerAd!),
+
             ],
           ),
           // Selection bar

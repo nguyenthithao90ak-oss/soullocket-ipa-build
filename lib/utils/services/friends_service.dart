@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
@@ -69,7 +70,7 @@ class FriendsService {
 
     try {
       final targetChecks = await Future.wait([
-        _db.ref('houses_public/$normalizedToHouseId').get(),
+        _db.ref('houses_public/$normalizedToHouseId/updatedAt').get(),
         _db.ref('friends/$normalizedFromHouseId/$normalizedToHouseId').get(),
         _db
             .ref('friend_requests')
@@ -131,15 +132,15 @@ class FriendsService {
         );
       }
 
-      // 1. Đọc settings của người nhận từ houses_public.
-      final settingsRoot = targetPublicSnap.value;
-      final rootMap = settingsRoot is Map
-          ? Map<dynamic, dynamic>.from(settingsRoot)
-          : <dynamic, dynamic>{};
-      final rawSettings = rootMap['settings'];
-      final settings = rawSettings is Map
-          ? Map<String, dynamic>.from(rawSettings)
-          : <String, dynamic>{};
+      // Đọc 2 field cần thiết từ settings thay vì load toàn bộ node
+      final settingsSnaps = await Future.wait([
+        _db.ref('houses_public/$normalizedToHouseId/settings/friendRequestPolicy').get(),
+        _db.ref('houses_public/$normalizedToHouseId/settings/friendRequestLimit').get(),
+      ]);
+      final settings = <String, dynamic>{
+        if (settingsSnaps[0].exists) 'friendRequestPolicy': settingsSnaps[0].value,
+        if (settingsSnaps[1].exists) 'friendRequestLimit': settingsSnaps[1].value,
+      };
 
       final policyStr = settings['friendRequestPolicy']?.toString() ?? 'all';
       final limit = _readInt(settings['friendRequestLimit']) ?? 30;
@@ -443,32 +444,90 @@ class FriendsService {
         FriendRequestsData(sent: {}, received: {}),
       );
     }
-    return _db
-        .ref('friend_requests')
-        .orderByChild('status')
-        .equalTo('pending')
-        .onValue
-        .map((event) {
-      final data = FriendRequestsData(sent: {}, received: {});
-      final raw = event.snapshot.value;
-      if (!event.snapshot.exists || raw is! Map) return data;
 
-      final map = Map<dynamic, dynamic>.from(raw);
-      map.forEach((key, value) {
-        if (value is! Map) return;
-        final req = Map<String, dynamic>.from(value);
-        final from = req['from']?.toString().trim() ?? '';
-        final to = req['to']?.toString().trim() ?? '';
-        if (from == normalizedHouseId && to.isNotEmpty) {
-          data.sent[to] = key.toString();
-        } else if (to == normalizedHouseId && from.isNotEmpty) {
-          data.received[from] = key.toString();
-        }
-      });
-      return data;
-    }).handleError((Object error) {
-      debugPrint('[FriendsService] friend requests stream error: $error');
-    }).asBroadcastStream();
+    final sentStream = _db
+        .ref('friend_requests')
+        .orderByChild('from')
+        .equalTo(normalizedHouseId)
+        .onValue;
+
+    final receivedStream = _db
+        .ref('friend_requests')
+        .orderByChild('to')
+        .equalTo(normalizedHouseId)
+        .onValue;
+
+    late StreamController<FriendRequestsData> controller;
+    StreamSubscription? sentSub;
+    StreamSubscription? receivedSub;
+
+    Map<String, String> currentSent = {};
+    Map<String, String> currentReceived = {};
+
+    void emitLatest() {
+      if (!controller.isClosed) {
+        controller.add(FriendRequestsData(
+          sent: Map<String, String>.from(currentSent),
+          received: Map<String, String>.from(currentReceived),
+        ));
+      }
+    }
+
+    controller = StreamController<FriendRequestsData>.broadcast(
+      onListen: () {
+        sentSub = sentStream.listen((event) {
+          final newSent = <String, String>{};
+          final raw = event.snapshot.value;
+          if (event.snapshot.exists && raw is Map) {
+            final map = Map<dynamic, dynamic>.from(raw);
+            map.forEach((key, value) {
+              if (value is Map) {
+                final req = Map<String, dynamic>.from(value);
+                if (req['status'] == 'pending') {
+                  final to = req['to']?.toString().trim() ?? '';
+                  if (to.isNotEmpty) {
+                    newSent[to] = key.toString();
+                  }
+                }
+              }
+            });
+          }
+          currentSent = newSent;
+          emitLatest();
+        }, onError: (Object error) {
+          if (!controller.isClosed) controller.addError(error);
+        });
+
+        receivedSub = receivedStream.listen((event) {
+          final newReceived = <String, String>{};
+          final raw = event.snapshot.value;
+          if (event.snapshot.exists && raw is Map) {
+            final map = Map<dynamic, dynamic>.from(raw);
+            map.forEach((key, value) {
+              if (value is Map) {
+                final req = Map<String, dynamic>.from(value);
+                if (req['status'] == 'pending') {
+                  final from = req['from']?.toString().trim() ?? '';
+                  if (from.isNotEmpty) {
+                    newReceived[from] = key.toString();
+                  }
+                }
+              }
+            });
+          }
+          currentReceived = newReceived;
+          emitLatest();
+        }, onError: (Object error) {
+          if (!controller.isClosed) controller.addError(error);
+        });
+      },
+      onCancel: () {
+        sentSub?.cancel();
+        receivedSub?.cancel();
+      },
+    );
+
+    return controller.stream;
   }
 
   // ─────────────────────────────────────────────────────────────

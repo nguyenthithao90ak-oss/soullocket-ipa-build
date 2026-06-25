@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/services/auth/auth_house_context_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -135,15 +136,24 @@ class _MessengerScreenState extends State<MessengerScreen>
       return;
     }
 
-    // Check both houseId and legacy house_id keys
-    final primarySnap = await _dbRef.child('users/$uid/houseId').get();
-    String? houseId = primarySnap.value?.toString().trim();
+    // Try quickHouseId cache first
+    String? houseId = await AuthHouseContextService.quickHouseId();
 
     if (houseId == null || houseId.isEmpty) {
-      final legacySnap = await _dbRef.child('users/$uid/house_id').get();
-      houseId = legacySnap.value?.toString().trim();
+      // Check both houseId and legacy house_id keys
+      final primarySnap = await _dbRef.child('users/$uid/houseId').get();
+      houseId = primarySnap.value?.toString().trim();
+
+      if (houseId == null || houseId.isEmpty) {
+        final legacySnap = await _dbRef.child('users/$uid/house_id').get();
+        houseId = legacySnap.value?.toString().trim();
+        if (houseId != null && houseId.isNotEmpty) {
+          await _dbRef.child('users/$uid').update({'houseId': houseId});
+        }
+      }
+
       if (houseId != null && houseId.isNotEmpty) {
-        await _dbRef.child('users/$uid').update({'houseId': houseId});
+        AuthHouseContextService.setMemHouseId(houseId);
       }
     }
 

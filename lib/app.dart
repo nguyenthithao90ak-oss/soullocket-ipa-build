@@ -402,6 +402,24 @@ class StartupErrorApp extends StatelessWidget {
                         ),
                       ),
                     ),
+                    SLSpacing.h12,
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF0F0),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE53935).withValues(alpha: 0.2)),
+                      ),
+                      child: Text(
+                        'SoulLocket © ${DateTime.now().year} — Tame Trương Việt Hoàng.\nMọi hành vi crack, mod, can thiệp trái phép đều vi phạm bản quyền.',
+                        style: SLTheme.quicksand(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF8E1B1B),
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

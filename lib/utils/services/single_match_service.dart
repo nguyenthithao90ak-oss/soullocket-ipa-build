@@ -13,9 +13,14 @@ class SingleMatchService {
 
   static final SingleMatchService instance = SingleMatchService._();
   static const String _profileIndexRoot = 'single_match_profiles';
+  static const Duration _profileIndexCacheTtl = Duration(minutes: 5);
 
   final DatabaseReference _db = FirebaseDatabase.instance.ref();
   final HouseService _houseService = HouseService();
+
+  // Cache profile index để tránh listen realtime liên tục
+  Map<String, Map<dynamic, dynamic>>? _profileIndexCache;
+  DateTime? _profileIndexCachedAt;
 
   static String profileIndexPath(String houseId) =>
       '$_profileIndexRoot/$houseId';
@@ -59,7 +64,6 @@ class SingleMatchService {
     required String currentHouseId,
   }) {
     late final StreamController<List<SingleMatchCandidate>> controller;
-    StreamSubscription<DatabaseEvent>? indexSub;
     var indexedProfiles = <String, Map<dynamic, dynamic>>{};
     var fallbackProfiles = <String, Map<dynamic, dynamic>>{};
 
@@ -101,24 +105,21 @@ class SingleMatchService {
     controller = StreamController<List<SingleMatchCandidate>>(
       onListen: () {
         controller.add(const <SingleMatchCandidate>[]);
-        indexSub = _db.child(_profileIndexRoot).onValue.listen(
-          (event) {
-            indexedProfiles = _readProfileMap(event.snapshot.value);
+        // Dùng cache thay vì listen realtime toàn bộ single_match_profiles
+        unawaited(_fetchProfileIndexWithCache().then((profiles) {
+          if (!controller.isClosed) {
+            indexedProfiles = profiles;
             emitMergedCandidates();
-          },
-          onError: (Object error) {
-            debugPrint(
-                '[SingleMatch] profile index stream failed: ${AppErrorMapper.resolve(
-              error,
-              fallbackMessage: L10nService().translate('err_single_match_profile_index_stream_failed'),
-            ).message}');
-            emitMergedCandidates();
-          },
-        );
+          }
+        }).catchError((Object error) {
+          debugPrint(
+              '[SingleMatch] profile index fetch failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: L10nService().translate('err_single_match_profile_index_stream_failed'),
+          ).message}');
+          emitMergedCandidates();
+        }));
         unawaited(loadFallbackProfiles());
-      },
-      onCancel: () async {
-        await indexSub?.cancel();
       },
     );
 
@@ -324,6 +325,21 @@ class SingleMatchService {
       }
     }
     return fallback;
+  }
+
+  // Fetch profile index 1 lần + cache 5 phút — tránh listen realtime liên tục
+  Future<Map<String, Map<dynamic, dynamic>>> _fetchProfileIndexWithCache() async {
+    final now = DateTime.now();
+    if (_profileIndexCache != null &&
+        _profileIndexCachedAt != null &&
+        now.difference(_profileIndexCachedAt!) < _profileIndexCacheTtl) {
+      return _profileIndexCache!;
+    }
+    final snap = await _db.child(_profileIndexRoot).get();
+    final result = _readProfileMap(snap.value);
+    _profileIndexCache = result;
+    _profileIndexCachedAt = now;
+    return result;
   }
 
   Map<String, Map<dynamic, dynamic>> _readProfileMap(Object? rawValue) {

@@ -386,18 +386,16 @@ class DiaryFeedController extends ChangeNotifier {
 
   Future<void> _hydrateMemberRoles(String houseId) async {
     try {
-      final snap = await _dbRef
-          .child('houses/$houseId')
-          .get()
-          .timeout(const Duration(seconds: 3));
-      final raw = snap.value;
-      if (raw is! Map) {
-        return;
-      }
+      final snaps = await Future.wait([
+        _dbRef.child('houses/$houseId/owner_uid').get().timeout(const Duration(seconds: 3)),
+        _dbRef.child('houses/$houseId/members').get().timeout(const Duration(seconds: 3)),
+      ]);
 
-      final houseData = Map<dynamic, dynamic>.from(raw);
-      final ownerUid = houseData['owner_uid']?.toString().trim() ?? '';
-      final membersRaw = houseData['members'];
+      final ownerUidSnap = snaps[0];
+      final membersSnap = snaps[1];
+
+      final ownerUid = ownerUidSnap.value?.toString().trim() ?? '';
+      final membersRaw = membersSnap.value;
       final roles = <String, String>{};
 
       if (membersRaw is Map) {

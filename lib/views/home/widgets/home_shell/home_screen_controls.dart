@@ -383,35 +383,53 @@ extension _HomeScreenShellControls on _HomeScreenState {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2.0),
+      padding: const EdgeInsets.symmetric(horizontal: 1.0),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _switchToTab(index),
+          onTap: () {
+            unawaited(HapticFeedback.lightImpact());
+            _switchToTab(index);
+          },
           borderRadius: BorderRadius.circular(24),
           child: AnimatedContainer(
             duration: animationDuration,
             curve: Curves.easeOutCubic,
-            height: 42,
-            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+            height: 46,
+            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
             decoration: BoxDecoration(
               color: Colors.transparent,
               borderRadius: BorderRadius.circular(24),
             ),
-            child: Center(
-              child: KeyedSubtree(
-                key: targetKey,
-                child: AnimatedScale(
-                  duration: animationDuration,
-                  curve: Curves.easeOutBack,
-                  scale: isActive && !isPerformanceMode ? 1.15 : 1.0,
-                  child: Icon(
-                    _getIconForTab(index),
-                    color: isActive ? item.activeColor : inactiveColor,
-                    size: isActive ? 22 : 20,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                KeyedSubtree(
+                  key: targetKey,
+                  child: AnimatedScale(
+                    duration: animationDuration,
+                    curve: Curves.easeOutBack,
+                    scale: isActive && !isPerformanceMode ? 1.1 : 1.0,
+                    child: Icon(
+                      _getIconForTab(index),
+                      color: isActive ? item.activeColor : inactiveColor,
+                      size: isActive ? 20 : 19,
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 2),
+                Text(
+                  L10nService().translate(item.labelKey),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
+                    fontSize: 8.5,
+                    fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
+                    color: isActive ? item.activeColor : inactiveColor,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

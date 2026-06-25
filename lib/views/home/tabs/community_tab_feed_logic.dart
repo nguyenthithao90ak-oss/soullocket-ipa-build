@@ -290,7 +290,7 @@ extension _CommunityTabFeedLogic on _CommunityTabState {
 
     if (candidates.isEmpty) {
       try {
-        final snap = await _dbRef.child('houses/$houseId/memories').get();
+        final snap = await _dbRef.child('houses/$houseId/memories').limitToLast(50).get();
         _collectAnniversaryMemoryCandidates(
           candidates,
           snap.value,

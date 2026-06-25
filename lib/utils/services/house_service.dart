@@ -32,6 +32,7 @@ class HouseCreationOtpRequiredException implements Exception {
 }
 
 class HouseService {
+  static DateTime? _lastFetchTime;
   static const String _defaultHouseName = 'Chúng mình';
   static const String _defaultNameU1 = 'Bạn Nam';
   static const String _defaultNameU2 = 'Bạn Nữ';
@@ -449,11 +450,14 @@ class HouseService {
         await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
         await prefs.remove('il_house_id');
       } else {
-        _fetchAndCacheHouseId(
-          user.uid,
-          prefs,
-          validateMembership: true,
-        ).catchError((_) => null);
+        final now = DateTime.now();
+        if (_lastFetchTime == null || now.difference(_lastFetchTime!) > const Duration(minutes: 15)) {
+          _fetchAndCacheHouseId(
+            user.uid,
+            prefs,
+            validateMembership: true,
+          ).catchError((_) => null);
+        }
         _syncHouseIdToFirestore(user.uid, cachedHouseId).catchError((_) => null);
         return cachedHouseId;
       }
@@ -476,6 +480,7 @@ class HouseService {
     bool validateMembership = false,
   }) async {
     try {
+      _lastFetchTime = DateTime.now();
       // ⚡ Parallelize reads of primary and legacy house IDs (2x faster)
       final results = await Future.wait([
         _dbRef
@@ -789,7 +794,7 @@ class HouseService {
   Future<String> _generateUniqueHouseId() async {
     for (var attempt = 0; attempt < 6; attempt++) {
       final candidate = _generateHouseId();
-      final snapshot = await _dbRef.child('houses/$candidate').get();
+      final snapshot = await _dbRef.child('houses/$candidate/owner_uid').get();
       if (!snapshot.exists) {
         return candidate;
       }

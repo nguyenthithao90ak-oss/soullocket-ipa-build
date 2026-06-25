@@ -371,6 +371,9 @@ class GroupChatService {
     Query query = _dbRef.child('groups/$groupId/messages').orderByKey();
     if (afterKey != null && afterKey.isNotEmpty) {
       query = query.startAt(afterKey);
+    } else {
+      // Chỉ lấy 80 tin nhắn cuối, tránh download toàn bộ lịch sử nhóm
+      query = query.limitToLast(80);
     }
 
     controller = StreamController<ChatMessage>(

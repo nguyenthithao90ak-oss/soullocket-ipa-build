@@ -1,28 +1,44 @@
 import 'package:firebase_database/firebase_database.dart';
 
+// Fields cần cho chat display — không load toàn bộ house node
+const _kChatHouseFields = [
+  'houseName',
+  'nameU1',
+  'nameU2',
+  'username',
+  'houseAvatar',
+  'avatar',
+  'avtUser1',
+  'profileAvatarSizePx',
+  'relationshipMode',
+];
+
 Future<Map<dynamic, dynamic>> loadChatHouseInfo(
   DatabaseReference dbRef,
   String houseId,
 ) async {
   final merged = <dynamic, dynamic>{};
 
-  Future<void> mergeFromPath(String path) async {
+  // Chỉ fetch đúng các field cần, không load toàn bộ node
+  Future<void> fetchFields(String rootPath) async {
     try {
-      final snap = await dbRef.child(path).get();
-      if (!snap.exists || snap.value is! Map) {
-        return;
-      }
-      final raw = Map<dynamic, dynamic>.from(snap.value as Map);
-      merged.addAll(raw);
-      final settings = raw['settings'];
-      if (settings is Map) {
-        merged.addAll(Map<dynamic, dynamic>.from(settings));
+      final results = await Future.wait(
+        _kChatHouseFields.map((field) => dbRef.child('$rootPath/$field').get()),
+      );
+      for (var i = 0; i < _kChatHouseFields.length; i++) {
+        final snap = results[i];
+        if (snap.exists && snap.value != null) {
+          merged[_kChatHouseFields[i]] = snap.value;
+        }
       }
     } catch (_) {}
   }
 
-  await mergeFromPath('houses/$houseId');
-  await mergeFromPath('houses_public/$houseId');
-  await mergeFromPath('house_profiles/$houseId');
+  await Future.wait([
+    fetchFields('houses/$houseId'),
+    fetchFields('houses_public/$houseId'),
+    fetchFields('house_profiles/$houseId'),
+  ]);
+
   return merged;
 }

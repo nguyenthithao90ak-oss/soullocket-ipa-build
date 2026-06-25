@@ -1,7 +1,9 @@
 // ignore_for_file: deprecated_member_use, use_super_parameters, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, unused_field
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import '../../../core/fast_backdrop_filter.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../screens/document_viewer_screen.dart';

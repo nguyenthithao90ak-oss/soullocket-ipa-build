@@ -615,17 +615,42 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
 
       if (_targetData.isEmpty) {
         try {
-          final targetSnap2 =
-              await _db.ref('houses/${widget.targetHouseId}').get();
-          if (targetSnap2.exists && targetSnap2.value is Map) {
-            _targetData = Map<String, dynamic>.from(
-              Map<dynamic, dynamic>.from(targetSnap2.value as Map),
-            );
-            _targetSettings = _targetData['settings'] is Map
-                ? Map<String, dynamic>.from(
-                    Map<dynamic, dynamic>.from(_targetData['settings'] as Map),
-                  )
-                : {};
+          // Chỉ fetch field cần, không load toàn bộ settings node (~10KB)
+          const kSettingsFields = [
+            'bio', 'privacy', 'proUntil', 'relationshipMode',
+            'avtUser1', 'avtUser2', 'hideLikeCount',
+            'likedVisibility', 'locketVisibility',
+            'profileHeaderImageUrl', 'profileHeaderThemeKey', 'profileAvatarSizePx',
+          ];
+          final base = 'houses/${widget.targetHouseId}';
+          final allSnaps = await Future.wait([
+            _db.ref('$base/houseName').get(),
+            _db.ref('$base/houseAvatar').get(),
+            _db.ref('$base/avatar').get(),
+            ...kSettingsFields.map((f) => _db.ref('$base/settings/$f').get()),
+          ]);
+
+          final houseNameSnap = allSnaps[0];
+          final houseAvatarSnap = allSnaps[1];
+          final avatarSnap = allSnaps[2];
+          final settingsSnaps = allSnaps.skip(3).toList();
+
+          final settingsMap = <String, dynamic>{};
+          for (var i = 0; i < kSettingsFields.length; i++) {
+            final s = settingsSnaps[i];
+            if (s.exists && s.value != null) {
+              settingsMap[kSettingsFields[i]] = s.value;
+            }
+          }
+
+          if (allSnaps.any((s) => s.exists)) {
+            _targetData = {
+              if (settingsMap.isNotEmpty) 'settings': settingsMap,
+              if (houseNameSnap.exists) 'houseName': houseNameSnap.value,
+              if (houseAvatarSnap.exists) 'houseAvatar': houseAvatarSnap.value,
+              if (avatarSnap.exists) 'avatar': avatarSnap.value,
+            };
+            _targetSettings = settingsMap;
           }
         } catch (_) {}
       }

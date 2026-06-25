@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 import '../../core/sl_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/services/activity_history_service.dart';
+import '../../widgets/skeleton_container.dart';
+import '../ui_prefs.dart';
 
 class SharedNotesScreen extends StatefulWidget {
   final String houseId;
@@ -520,8 +522,48 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
 
   Widget _buildNotesList() {
     if (_isLoadingNotes && _cachedNotes.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(color: SLColors.primary),
+      final uiState = UiPrefs.notifier.value;
+      final isDark = uiState.themeKey == 'theme-night' || uiState.themeKey == 'theme-dark' || uiState.themeKey == 'theme-true-black';
+      final cardColor = isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.03);
+      final baseColor = isDark ? const Color(0xFF262626) : const Color(0xFFF2F3F5);
+      final highlightColor = isDark ? const Color(0xFF333333) : const Color(0xFFE2E4E8);
+
+      return ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        itemCount: 4,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.02)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      SkeletonContainer.circle(size: 24, baseColor: baseColor, highlightColor: highlightColor),
+                      const SizedBox(width: 8),
+                      SkeletonContainer.rounded(width: 80, height: 14, baseColor: baseColor, highlightColor: highlightColor),
+                      const Spacer(),
+                      SkeletonContainer.rounded(width: 50, height: 12, baseColor: baseColor, highlightColor: highlightColor),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  SkeletonContainer.rounded(width: double.infinity, height: 16, baseColor: baseColor, highlightColor: highlightColor),
+                  const SizedBox(height: 6),
+                  SkeletonContainer.rounded(width: 150, height: 14, baseColor: baseColor, highlightColor: highlightColor),
+                ],
+              ),
+            ),
+          );
+        },
       );
     }
 

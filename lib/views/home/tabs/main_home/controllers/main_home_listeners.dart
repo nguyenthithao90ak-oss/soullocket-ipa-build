@@ -30,7 +30,6 @@ extension _MainHomeListeners on _MainHomeTabState {
   void _listenHomeCalendarEvents(String houseId) {
     _homeCalendarSubscription?.cancel();
     final calendarRef = _dbRef.child('houses/$houseId/calendar');
-    calendarRef.keepSynced(true);
     _homeCalendarSubscription = calendarRef
         .onValue
         .listen((event) {
@@ -86,7 +85,6 @@ extension _MainHomeListeners on _MainHomeTabState {
   void _listenHealthCycleForWidgetSync(String houseId) {
     _healthCycleSyncSubscription?.cancel();
     final healthRef = _dbRef.child('houses/$houseId/health_cycle');
-    healthRef.keepSynced(true);
     _healthCycleSyncSubscription = healthRef
         .onValue
         .listen((event) {

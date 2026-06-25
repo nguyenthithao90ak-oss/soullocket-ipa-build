@@ -202,25 +202,37 @@ class AuthRecoveryService {
 
   Future<Map<String, dynamic>?> getHouseSecurityData(String houseId) async {
     try {
-      final snapshot = await _db.child('houses/$houseId').get();
-      if (!snapshot.exists) return null;
-      final data = _asStringDynamicMap(snapshot.value);
-      if (data == null) {
+      final snaps = await Future.wait([
+        _db.child('houses/$houseId/security').get(),
+        _db.child('houses/$houseId/recovery_q').get(),
+        _db.child('houses/$houseId/recovery_a').get(),
+        _db.child('houses/$houseId/email').get(),
+      ]);
+
+      final securitySnap = snaps[0];
+      final recoveryQSnap = snaps[1];
+      final recoveryASnap = snaps[2];
+      final emailSnap = snaps[3];
+
+      if (!securitySnap.exists &&
+          !recoveryQSnap.exists &&
+          !recoveryASnap.exists &&
+          !emailSnap.exists) {
         return null;
       }
 
       final security =
-          _asStringDynamicMap(data['security']) ?? <String, dynamic>{};
+          _asStringDynamicMap(securitySnap.value) ?? <String, dynamic>{};
       final recovery =
           _asStringDynamicMap(security['recovery']) ?? <String, dynamic>{};
       final question = (recovery['question'] ??
-              data['recovery_q'] ??
+              recoveryQSnap.value ??
               security['question'] ??
               '')
           .toString()
           .trim();
       final answerHash = (recovery['answerHash'] ??
-              data['recovery_a'] ??
+              recoveryASnap.value ??
               security['answer'] ??
               security['answerHash'] ??
               '')
@@ -240,8 +252,8 @@ class AuthRecoveryService {
           if (answerHash.isNotEmpty) 'answerHash': answerHash,
         };
       }
-      if (data['email'] != null && security['email'] == null) {
-        security['email'] = data['email'];
+      if (emailSnap.value != null && security['email'] == null) {
+        security['email'] = emailSnap.value;
       }
       final backupEmail =
           (security['backupEmail'] ?? security['secondaryEmail'] ?? '')

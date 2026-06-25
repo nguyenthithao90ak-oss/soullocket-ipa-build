@@ -195,6 +195,12 @@ class LoveInsightData {
 class LoveInsightService {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
 
+  // Cache 5 phút để tránh tải toàn bộ diary+album nhiều lần
+  static LoveInsightData? _cachedInsight;
+  static String? _cachedHouseId;
+  static DateTime? _cacheTime;
+  static const Duration _cacheTtl = Duration(minutes: 5);
+
   String _tr(String key, [Map<String, Object?> params = const {}]) {
     final l10n = L10nService();
     return params.isEmpty ? l10n.translate(key) : l10n.format(key, params);
@@ -277,6 +283,13 @@ class LoveInsightService {
     String relationshipMode,
   ) async {
     final now = DateTime.now();
+    // Trả về cache nếu còn trong TTL 5 phút và cùng houseId
+    if (_cachedInsight != null &&
+        _cachedHouseId == houseId &&
+        _cacheTime != null &&
+        now.difference(_cacheTime!) < _cacheTtl) {
+      return _cachedInsight!;
+    }
     final monthStart = DateTime(now.year, now.month, 1);
 
     try {
@@ -300,6 +313,10 @@ class LoveInsightService {
         results[5].value,
       );
       await _saveInsightCache(houseId, relationshipMode, data);
+      // Cập nhật in-memory cache
+      _cachedInsight = data;
+      _cachedHouseId = houseId;
+      _cacheTime = DateTime.now();
       return data;
     } catch (e) {
       final cached = await _loadInsightCache(houseId, relationshipMode);

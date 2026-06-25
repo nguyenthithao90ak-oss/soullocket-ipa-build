@@ -1,4 +1,4 @@
-﻿// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
+// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -93,17 +93,24 @@ class _TopHotScreenState extends State<TopHotScreen>
         final houseId = entry.key;
         final hearts = (entry.value as num).toInt();
 
-        final profileSnap = await _db.ref('house_profiles/$houseId').get();
-        if (profileSnap.exists && profileSnap.value is Map) {
-          final profile = Map<String, dynamic>.from(
-            Map<dynamic, dynamic>.from(profileSnap.value as Map),
-          );
-          final settings = profile['settings'] is Map
-              ? Map<String, dynamic>.from(
-                  Map<dynamic, dynamic>.from(profile['settings'] as Map),
-                )
-              : <String, dynamic>{};
-
+        const kTopFields = ['houseName', 'name', 'houseAvatar', 'avatar', 'hotScore', 'updatedAt'];
+        const kTopSettingsFields = ['houseAvatar', 'bio', 'proUntil', 'adminFireTick', 'redTickPro', 'rankTicks', 'rankPersistentGold'];
+        final base = 'house_profiles/$houseId';
+        final fieldSnaps = await Future.wait([
+          ...kTopFields.map((f) => _db.ref('$base/$f').get()),
+          ...kTopSettingsFields.map((f) => _db.ref('$base/settings/$f').get()),
+        ]);
+        final profile = <String, dynamic>{};
+        for (var i = 0; i < kTopFields.length; i++) {
+          final s = fieldSnaps[i];
+          if (s.exists && s.value != null) profile[kTopFields[i]] = s.value;
+        }
+        final settings = <String, dynamic>{};
+        for (var i = 0; i < kTopSettingsFields.length; i++) {
+          final s = fieldSnaps[kTopFields.length + i];
+          if (s.exists && s.value != null) settings[kTopSettingsFields[i]] = s.value;
+        }
+        if (profile.isNotEmpty || settings.isNotEmpty) {
           entries.add(_HouseEntry(
             id: houseId,
             name: profile['houseName']?.toString() ??
@@ -116,8 +123,8 @@ class _TopHotScreenState extends State<TopHotScreen>
             hearts: hearts,
             updatedAt: profile['updatedAt'] ?? 0,
             isPro: (((settings['proUntil'] ?? profile['proUntil']) as num?)
-                        ?.toInt() ??
-                    0) >
+                            ?.toInt() ??
+                        0) >
                 DateTime.now().millisecondsSinceEpoch,
             adminTick: settings['adminFireTick'] == true ||
                 settings['redTickPro'] == true,

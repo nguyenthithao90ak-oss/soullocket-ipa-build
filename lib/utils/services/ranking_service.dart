@@ -209,15 +209,52 @@ class RankingService {
       return cached.data;
     }
 
-    final values = await Future.wait<Object?>([
-      _safeGetValue('house_profiles/$houseId'),
-      _safeGetValue('houses_public/$houseId'),
+    // Field cần cho ranking — không load nguyên node
+    const rootFields = [
+      'hearts_received', 'hotScore', 'proUntil',
+      'houseName', 'houseAvatar', 'avatar', 'bio',
+    ];
+    const settingsFields = [
+      'hearts_received', 'proUntil', 'houseName',
+      'houseAvatar', 'bio', 'adminFireTick', 'redTickPro',
+    ];
+
+    Future<Map<String, dynamic>> fetchFields(String base) async {
+      final result = <String, dynamic>{};
+      try {
+        final snaps = await Future.wait([
+          ...rootFields.map((f) => _db.ref('$base/$f').get()),
+          ...settingsFields.map((f) => _db.ref('$base/settings/$f').get()),
+        ]);
+        for (var i = 0; i < rootFields.length; i++) {
+          final s = snaps[i];
+          if (s.exists && s.value != null) result[rootFields[i]] = s.value;
+        }
+        final settingsMap = <String, dynamic>{};
+        for (var i = 0; i < settingsFields.length; i++) {
+          final s = snaps[rootFields.length + i];
+          if (s.exists && s.value != null) settingsMap[settingsFields[i]] = s.value;
+        }
+        if (settingsMap.isNotEmpty) result['settings'] = settingsMap;
+      } catch (_) {}
+      return result;
+    }
+
+    final results = await Future.wait([
+      fetchFields('house_profiles/$houseId'),
+      fetchFields('houses_public/$houseId'),
     ]);
 
     final merged = <String, dynamic>{
-      ..._asStringMap(values[1]),
-      ..._asStringMap(values[0]),
+      ...results[1], // houses_public (base)
+      ...results[0], // house_profiles (override)
     };
+    // Merge settings sub-map
+    final s0 = results[0]['settings'] as Map<String, dynamic>? ?? {};
+    final s1 = results[1]['settings'] as Map<String, dynamic>? ?? {};
+    if (s0.isNotEmpty || s1.isNotEmpty) {
+      merged['settings'] = {...s1, ...s0};
+    }
 
     _houseSnapshotCache[houseId] = _CachedHouseSnapshot(
       data: merged,
@@ -225,14 +262,6 @@ class RankingService {
     );
     _trimHouseSnapshotCache();
     return merged;
-  }
-
-  Future<Object?> _safeGetValue(String path) async {
-    try {
-      return (await _db.ref(path).get()).value;
-    } catch (_) {
-      return null;
-    }
   }
 
   Map<String, int> _parseScoreMap(Object? raw) {

@@ -266,6 +266,7 @@ extension _SettingsTabShell on _SettingsTabState {
   }
 
   Widget _buildResponsiveSettingsScaffold() {
+    final double headerHeight = MediaQuery.of(context).padding.top + 52;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -275,10 +276,9 @@ extension _SettingsTabShell on _SettingsTabState {
           body: SafeArea(
             top: false,
             bottom: false,
-            child: Column(
+            child: Stack(
               children: [
-                _buildSettingsHeader(),
-                Expanded(
+                Positioned.fill(
                   child: Material(
                     color: Colors.transparent,
                     child: LayoutBuilder(
@@ -296,7 +296,10 @@ extension _SettingsTabShell on _SettingsTabState {
                             ),
                             child: ListView(
                               physics: const ClampingScrollPhysics(),
-                              padding: const EdgeInsets.only(bottom: 120),
+                              padding: EdgeInsets.only(
+                                top: headerHeight,
+                                bottom: 120,
+                              ),
                               children: [
                                 _buildSettingsSyncBanner(),
                                 _buildSettingsCategoryGrid(),
@@ -381,42 +384,55 @@ extension _SettingsTabShell on _SettingsTabState {
                     ),
                   ),
                 ),
-                if (_isBottomBannerReady && _bottomBannerAd != null)
-                  _buildBottomAdBanner(_bottomBannerAd!),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _buildSettingsHeader(),
+                ),
               ],
             ),
           ),
         ),
-      ],
+],
     );
   }
 
   Widget _buildSettingsHeader() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(
-        14,
-        MediaQuery.of(context).padding.top + 4,
-        14,
-        8,
-      ),
-      decoration: BoxDecoration(
-        color: _kSettingsHeaderBg,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: const Border(
-          bottom: BorderSide(
-            color: _kSettingsHeaderBorder,
-            width: 1.0,
-          ),
-        ),
-      ),
-      child: Row(
+    final uiState = UiPrefs.notifier.value;
+    final isDark = uiState.themeKey == 'theme-night' || uiState.themeKey == 'theme-dark' || uiState.themeKey == 'theme-true-black';
+    final headerBgColor = (isDark ? Colors.black : _kSettingsHeaderBg).withValues(alpha: 0.65);
+
+    return RepaintBoundary(
+      child: ClipRect(
+        child: FastBackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          fallbackColor: isDark ? Colors.black87 : _kSettingsHeaderBg,
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.fromLTRB(
+              14,
+              MediaQuery.of(context).padding.top + 4,
+              14,
+              8,
+            ),
+            decoration: BoxDecoration(
+              color: headerBgColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.06),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              border: Border(
+                bottom: BorderSide(
+                  color: _kSettingsHeaderBorder.withValues(alpha: 0.45),
+                  width: 1.0,
+                ),
+              ),
+            ),
+            child: Row(
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
@@ -470,6 +486,9 @@ extension _SettingsTabShell on _SettingsTabState {
             },
           ),
         ],
+            ),
+          ),
+        ),
       ),
     );
   }

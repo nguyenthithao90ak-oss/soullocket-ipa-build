@@ -200,15 +200,16 @@ class MiniGamesService {
     }
 
     // Trừ điểm và lưu lịch sử đổi đồ
-    await _db.ref('houses/$normalizedHouseId').runTransaction((currentData) {
-      if (currentData is! Map) return Transaction.abort();
+    await _db.ref('houses/$normalizedHouseId/points').runTransaction((currentData) {
+      int pts = 0;
+      if (currentData is num) {
+        pts = currentData.toInt();
+      } else if (currentData != null) {
+        pts = int.tryParse(currentData.toString()) ?? 0;
+      }
 
-      final data = Map<String, dynamic>.from(currentData);
-      int pts = _asTimestamp(data['points']);
       if (pts < cost) return Transaction.abort();
-
-      data['points'] = pts - cost;
-      return Transaction.success(data);
+      return Transaction.success(pts - cost);
     });
 
     // Lưu vào store history

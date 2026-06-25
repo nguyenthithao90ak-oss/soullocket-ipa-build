@@ -552,17 +552,17 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
       return;
     }
     try {
-      final snap = await _dbRef
-          .child('houses/$houseId')
-          .get()
-          .timeout(const Duration(seconds: 3));
-      final data = snap.value is Map
-          ? Map<String, dynamic>.from(
-              Map<dynamic, dynamic>.from(snap.value as Map))
-          : <String, dynamic>{};
-      final deletionAt = _toIntOrNull(data['scheduledDeletionAt']) ?? 0;
+      final snaps = await Future.wait([
+        _dbRef.child('houses/$houseId/scheduledDeletionAt').get().timeout(const Duration(seconds: 3)),
+        _dbRef.child('houses/$houseId/scheduledDeletionUid').get().timeout(const Duration(seconds: 3)),
+      ]);
+
+      final deletionAtSnap = snaps[0];
+      final deletionUidSnap = snaps[1];
+
+      final deletionAt = _toIntOrNull(deletionAtSnap.value) ?? 0;
       final deletionUid =
-          (data['scheduledDeletionUid'] ?? '').toString().trim();
+          (deletionUidSnap.value ?? '').toString().trim();
       if (!mounted) return;
       setState(() {
         _pendingAccountDeletionAtMs =

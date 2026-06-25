@@ -1099,6 +1099,26 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
                       },
                     ),
+                    // Copyright watermark
+                    SafeArea(
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                              bottom: MediaQuery.of(context).padding.bottom > 0
+                                  ? 8
+                                  : 16),
+                          child: Text(
+                            'SoulLocket © ${DateTime.now().year} — Tame Trương Việt Hoàng',
+                            style: SLTheme.quicksand(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white.withValues(alpha: 0.50),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

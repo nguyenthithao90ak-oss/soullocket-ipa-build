@@ -9,6 +9,7 @@ import 'package:permission_handler/permission_handler.dart' as app_permission;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soullocket_app/utils/services/auth/auth_house_context_service.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:soullocket_app/views/app_entry.dart';
@@ -203,15 +204,21 @@ class NotificationService {
         .ref('users/${user.uid}/fcmToken')
         .set(token);
 
-    // Cũng lưu theo house để gửi cho cả cặp đôi
-    final houseIdSnap =
-        await FirebaseDatabase.instance.ref('users/${user.uid}/houseId').get();
-    String? houseId = houseIdSnap.value?.toString();
+    // Dùng cache trước, fallback RTDB nếu cache miss
+    String? houseId = await AuthHouseContextService.quickHouseId();
     if (houseId == null || houseId.isEmpty) {
-      final houseSnap = await FirebaseDatabase.instance
-          .ref('users/${user.uid}/house_id')
-          .get();
-      houseId = houseSnap.value?.toString();
+      final houseIdSnap =
+          await FirebaseDatabase.instance.ref('users/${user.uid}/houseId').get();
+      houseId = houseIdSnap.value?.toString();
+      if (houseId == null || houseId.isEmpty) {
+        final houseSnap = await FirebaseDatabase.instance
+            .ref('users/${user.uid}/house_id')
+            .get();
+        houseId = houseSnap.value?.toString();
+      }
+      if (houseId != null && houseId.isNotEmpty) {
+        AuthHouseContextService.setMemHouseId(houseId);
+      }
     }
 
     if (houseId != null && houseId.isNotEmpty) {

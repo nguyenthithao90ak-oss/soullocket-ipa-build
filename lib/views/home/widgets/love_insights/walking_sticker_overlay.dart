@@ -184,7 +184,13 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
       _walkDuration = Duration(milliseconds: durationMs);
     });
 
-    _wobbleController.repeat(reverse: true);
+    // Defer starting wobble until after layout is complete to avoid
+    // the 'debugNeedsLayout: is not true' assertion in RenderObject.markNeedsPaint
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _isWalking) {
+        _wobbleController.repeat(reverse: true);
+      }
+    });
   }
 
   void _onTapSticker() {

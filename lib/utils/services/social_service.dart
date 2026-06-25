@@ -491,6 +491,9 @@ class SocialService {
     Query query = _dbRef.child('social_feed').orderByChild('ts');
     if (afterTs != null) {
       query = query.startAt(afterTs);
+    } else {
+      // Giới hạn 50 post mới nhất để tránh download toàn bộ node
+      query = query.limitToLast(50);
     }
     return query.onChildAdded.map((event) {
       if (!event.snapshot.exists || event.snapshot.value is! Map) {
