@@ -12,6 +12,10 @@ class RevenueSecurityTelemetryService {
   static bool _disabledForSession = false;
   static bool _permissionDeniedLogged = false;
 
+  // Cooldown: không ghi cùng type quá 1 lần / 30 giây
+  static const Duration _cooldownPerType = Duration(seconds: 30);
+  static final Map<String, DateTime> _lastWrittenAt = {};
+
   Future<void> logEvent({
     required String type,
     required String reason,
@@ -66,6 +70,14 @@ class RevenueSecurityTelemetryService {
     String? uid,
   }) async {
     if (_disabledForSession) return;
+
+    // Rate-limit: bỏ qua nếu cùng type đã ghi trong vòng 30 giây
+    final now = DateTime.now();
+    final lastWrite = _lastWrittenAt[type];
+    if (lastWrite != null && now.difference(lastWrite) < _cooldownPerType) {
+      return;
+    }
+    _lastWrittenAt[type] = now;
 
     final normalizedType = type.trim();
     final normalizedReason = reason.trim();

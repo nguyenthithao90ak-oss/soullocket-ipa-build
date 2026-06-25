@@ -352,10 +352,54 @@ class DeviceManagerService {
       }
 
       await ref.update(updateData).timeout(const Duration(seconds: 5));
+
+      // Dọn device cũ sau khi đăng ký xong (không chặn flow)
+      unawaited(_pruneStaleDevices(houseId, deviceId).catchError((_) {}));
     } catch (e) {
       debugPrint('registerCurrentDevice ignored: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Không thể đăng ký thiết bị hiện tại.',
+      ).message}');
+    }
+  }
+
+  /// Dọn device không hoạt động > 30 ngày để giảm kích thước node devices
+  Future<void> _pruneStaleDevices(String houseId, String currentDeviceId) async {
+    try {
+      final snap = await _db
+          .ref('houses/$houseId/security/devices')
+          .get()
+          .timeout(const Duration(seconds: 10));
+      if (!snap.exists || snap.value is! Map) return;
+
+      final data = Map<dynamic, dynamic>.from(snap.value as Map);
+      final cutoffMs = DateTime.now()
+          .subtract(const Duration(days: 30))
+          .millisecondsSinceEpoch;
+
+      final toDelete = <String>[];
+      for (final entry in data.entries) {
+        final id = entry.key.toString();
+        if (id == currentDeviceId) continue; // giữ nguyên device hiện tại
+        final device = entry.value;
+        if (device is! Map) continue;
+        final lastSeen = (device['last_seen'] as num?)?.toInt() ?? 0;
+        if (lastSeen > 0 && lastSeen < cutoffMs) {
+          toDelete.add(id);
+        }
+      }
+
+      for (final id in toDelete) {
+        await _db
+            .ref('houses/$houseId/security/devices/$id')
+            .remove()
+            .timeout(const Duration(seconds: 5));
+        debugPrint('[DeviceManager] Pruned stale device: $id');
+      }
+    } catch (e) {
+      debugPrint('_pruneStaleDevices ignored: ${AppErrorMapper.resolve(
+        e,
+        fallbackMessage: 'Không thể dọn thiết bị cũ.',
       ).message}');
     }
   }

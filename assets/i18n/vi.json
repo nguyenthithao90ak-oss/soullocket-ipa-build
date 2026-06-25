@@ -5921,5 +5921,12 @@
   "đăng nhập": "đăng nhập",
   "⚠️ Đã đăng xuất": "⚠️ Đã đăng xuất",
   "✨ GIỚI TÍNH CỦA BẠN": "✨ GIỚI TÍNH CỦA BẠN",
-  "util_luunhtbit_6f4b4a": "Local Photos"
+  "util_luunhtbit_6f4b4a": "Local Photos",
+  "vault_style_title": "Giao diện Kho bí mật",
+  "vault_style_soft": "Dịu nhẹ (mặc định)",
+  "vault_style_secure": "Bảo mật",
+  "vault_style_cosmic": "Vũ trụ ✨ (VIP)",
+  "vault_style_pro_required": "Giao diện này chỉ dành cho thành viên VIP.",
+  "home_xem_them": "... Xem thêm {count} kiểu",
+  "home_tat_ca_kieu_trai_tim": "Tất cả kiểu trái tim"
 }

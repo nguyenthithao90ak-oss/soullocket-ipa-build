@@ -5921,5 +5921,12 @@
   "forgot_pwd_helper_date": "Đang nhập ngày/tháng/năm",
   "forgot_pwd_btn_send_code": "Gửi mã khôi phục",
   "auth_sync_guide_step1": "Hãy tạo một tài khoản (Email & Mật khẩu) chung và cùng đăng nhập trên thiết bị của hai người.",
-  "util_luunhtbit_6f4b4a": "Local Photos"
+  "util_luunhtbit_6f4b4a": "Local Photos",
+  "vault_style_title": "Secret Vault Style",
+  "vault_style_soft": "Soft (default)",
+  "vault_style_secure": "Secure",
+  "vault_style_cosmic": "Cosmic ✨ (VIP)",
+  "vault_style_pro_required": "This style is for VIP members only.",
+  "home_xem_them": "... See {count} more styles",
+  "home_tat_ca_kieu_trai_tim": "All heart styles"
 }

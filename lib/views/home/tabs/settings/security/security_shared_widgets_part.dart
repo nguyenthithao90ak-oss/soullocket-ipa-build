@@ -106,10 +106,10 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
             Text(
               subtitle,
               style: SLTheme.quicksand(
-                fontSize: 11.5,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: const Color(0xFF7A6A74),
-                height: 1.4,
+                height: 1.5,
               ),
             ),
           ],
