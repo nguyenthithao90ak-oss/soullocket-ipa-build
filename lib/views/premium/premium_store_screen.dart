@@ -1177,12 +1177,8 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   }
 
   Widget _buildProductSection() {
-    if (!_storeConfigured) {
-      return _buildStoreNotConfiguredCard();
-    }
-
     if (_sortedProducts.isEmpty) {
-      return _buildStoreUnavailableCard();
+      return _buildMockProductSection();
     }
 
     return Column(
@@ -1197,6 +1193,147 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
         ..._sortedProducts.map(_buildProductCard),
       ],
     );
+  }
+
+  /// Hiển thị cards mock khi App Store chưa trả về sản phẩm (dùng giá VNĐ nội bộ)
+  Widget _buildMockProductSection() {
+    final mockPlans = VipProduct.planInfo.entries.toList()
+      ..sort((a, b) {
+        const order = [
+          VipProduct.weekly,
+          VipProduct.monthly,
+          VipProduct.sixMonths,
+          VipProduct.yearly,
+          VipProduct.lifetime,
+        ];
+        return order.indexOf(a.key).compareTo(order.indexOf(b.key));
+      });
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeading(
+          title: 'Chọn gói phù hợp',
+          subtitle: 'Giá hiển thị theo định giá tham khảo. Giá chính xác sẽ được xác nhận bởi $_storeDisplayName trước khi thanh toán.',
+        ),
+        const SizedBox(height: 14),
+        ...mockPlans.map((e) => _buildMockProductCard(e.key, e.value)),
+      ],
+    );
+  }
+
+  Widget _buildMockProductCard(String planId, VipPlanInfo info) {
+    final featured = planId == VipProduct.yearly;
+    final priceStr = _formatVndPrice(info.priceVnd);
+    final perDayStr = info.durationDays != null
+        ? '~${_formatVndPrice((info.priceVnd / info.durationDays!).round())}/ngày'
+        : 'Thanh toán một lần';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: featured
+              ? [const Color(0x26F8C14E), const Color(0x22F37B9B)]
+              : [Colors.white.withValues(alpha: 0.08), Colors.white.withValues(alpha: 0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: featured
+              ? const Color(0xFFF9C15A).withValues(alpha: 0.42)
+              : Colors.white.withValues(alpha: 0.08),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: featured
+                ? const Color(0xFFF9C15A).withValues(alpha: 0.12)
+                : Colors.black.withValues(alpha: 0.16),
+            blurRadius: 22,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (info.badge.isNotEmpty) _buildPlanBadge(label: info.badge, bright: featured),
+              _buildPlanBadge(label: info.label),
+              _buildPlanBadge(label: info.durationDays != null ? 'Đăng ký tự động gia hạn' : 'Mua một lần'),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'SoulLocket PRO ${info.label}',
+                      style: SLTheme.quicksand(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 20, height: 1.12),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      planId == VipProduct.yearly
+                          ? 'Tối ưu chi phí cho nhu cầu dùng lâu dài suốt cả năm.'
+                          : planId == VipProduct.lifetime
+                              ? 'Thanh toán một lần để giữ quyền lợi PRO lâu dài.'
+                              : planId == VipProduct.sixMonths
+                                  ? 'Phù hợp khi hai bạn dùng ổn định và muốn tiết kiệm.'
+                                  : planId == VipProduct.monthly
+                                      ? 'Dễ bắt đầu, đủ dùng hằng ngày và giữ mức chi phí nhẹ.'
+                                      : 'Gói ngắn hạn để mở nhanh toàn bộ quyền lợi PRO.',
+                      style: SLTheme.quicksand(color: const Color(0xFFD6DCEF), fontWeight: FontWeight.w600, fontSize: 12.5, height: 1.42),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 14),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(priceStr, style: SLTheme.quicksand(color: const Color(0xFFFFD36D), fontWeight: FontWeight.w900, fontSize: 24)),
+                  const SizedBox(height: 4),
+                  Text(perDayStr, style: SLTheme.quicksand(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w700)),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: null,
+              style: ElevatedButton.styleFrom(
+                disabledBackgroundColor: featured
+                    ? const Color(0xFFF9C15A).withValues(alpha: 0.85)
+                    : Colors.white.withValues(alpha: 0.14),
+                disabledForegroundColor: featured ? Colors.black87 : Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: Text('Mua ngay', style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 16, color: featured ? Colors.black87 : Colors.white)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatVndPrice(int vnd) {
+    if (vnd >= 1000000) {
+      final millions = vnd / 1000000;
+      final str = millions == millions.truncateToDouble() ? '${millions.toInt()}' : millions.toStringAsFixed(1);
+      return '${str}M₫';
+    }
+    final formatted = vnd.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
+    return '${formatted}đ';
   }
 
   Widget _buildProductCard(ProductDetails product) {
