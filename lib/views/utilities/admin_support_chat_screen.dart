@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -321,7 +322,7 @@ class _AdminSupportChatDetailScreenState
   final _msgCtrl = TextEditingController();
   final List<Map<String, dynamic>> _messages = [];
   StreamSubscription<DatabaseEvent>? _ticketSub;
-  StreamSubscription<DatabaseEvent>? _messagesSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _messagesSub;
   Map<String, dynamic>? _ticket;
 
   @override
@@ -356,33 +357,20 @@ class _AdminSupportChatDetailScreenState
       },
     );
 
-    _messagesSub = _db
-        .child('support_tickets/${widget.ticketId}/messages')
-        .orderByChild('ts')
-        .limitToLast(100)
-        .onValue
+    _messagesSub = FirebaseFirestore.instance
+        .collection('support_tickets')
+        .doc(widget.ticketId)
+        .collection('messages')
+        .orderBy('ts')
+        .snapshots()
         .listen(
-      (event) {
-        final raw = event.snapshot.value;
-        if (raw is! Map) {
-          if (mounted) {
-            setState(() => _messages.clear());
-          }
-          return;
-        }
-
-        final loaded = <Map<String, dynamic>>[];
-        raw.forEach((key, value) {
-          if (value is! Map) return;
+      (snapshot) {
+        final loaded = snapshot.docs.map((doc) {
+          final value = doc.data();
           final item = Map<String, dynamic>.from(value);
-          item['id'] = key.toString();
-          loaded.add(item);
-        });
-
-        loaded.sort(
-          (a, b) => ((a['ts'] as num?)?.toInt() ?? 0)
-              .compareTo((b['ts'] as num?)?.toInt() ?? 0),
-        );
+          item['id'] = doc.id;
+          return item;
+        }).toList();
 
         if (!mounted) return;
         setState(() {
@@ -416,12 +404,16 @@ class _AdminSupportChatDetailScreenState
     final text = _msgCtrl.text.trim();
     if (text.isEmpty) return;
 
-    await _db.child('support_tickets/${widget.ticketId}/messages').push().set({
+    await FirebaseFirestore.instance
+        .collection('support_tickets')
+        .doc(widget.ticketId)
+        .collection('messages')
+        .add({
       'text': text,
       'is_admin': true,
       'is_bot': false,
       'sender': 'Admin',
-      'ts': ServerValue.timestamp,
+      'ts': DateTime.now().millisecondsSinceEpoch,
     });
 
     await _db.child('support_tickets/${widget.ticketId}').update({

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -42,7 +43,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   String _ticketStatus = 'new';
   bool _isSending = false;
   final List<_SupportMessage> _messages = [];
-  StreamSubscription<DatabaseEvent>? _messagesSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _messagesSub;
   StreamSubscription<DatabaseEvent>? _statusSub;
   static const int _maxWaitingAdminFollowUps = 3;
 
@@ -172,41 +173,34 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     );
 
     final msgMsgErr = L10nService().translate('util_khngthtini_9fd6cd');
-    _messagesSub = _db
-        .ref('support_tickets/$_ticketId/messages')
-        .orderByChild('ts')
-        .limitToLast(80)
-        .onValue
+    _messagesSub = FirebaseFirestore.instance
+        .collection('support_tickets')
+        .doc(_ticketId)
+        .collection('messages')
+        .orderBy('ts')
+        .snapshots()
         .listen(
-      (event) {
-        if (!event.snapshot.exists) {
+      (snapshot) {
+        if (snapshot.docs.isEmpty) {
           if (_messages.isEmpty) {
             _showGreeting();
           }
           return;
         }
 
-        final raw = event.snapshot.value;
-        if (raw is! Map) return;
-
-        final loaded = <_SupportMessage>[];
-        raw.forEach((key, value) {
-          if (value is! Map) return;
+        final loaded = snapshot.docs.map((doc) {
+          final value = doc.data();
           final text = value['text']?.toString() ?? '';
-          loaded.add(
-            _SupportMessage(
-              id: key.toString(),
-              text: text,
-              isBot: value['is_bot'] == true,
-              isAdmin: value['is_admin'] == true,
-              isMenuCommand: value['is_menu_command'] == true ||
-                  _isSupportMenuCommandText(text),
-              ts: (value['ts'] as num?)?.toInt() ?? 0,
-            ),
+          return _SupportMessage(
+            id: doc.id,
+            text: text,
+            isBot: value['is_bot'] == true,
+            isAdmin: value['is_admin'] == true,
+            isMenuCommand: value['is_menu_command'] == true ||
+                _isSupportMenuCommandText(text),
+            ts: (value['ts'] as num?)?.toInt() ?? 0,
           );
-        });
-
-        loaded.sort((a, b) => a.ts.compareTo(b.ts));
+        }).toList();
 
         if (!mounted) return;
         setState(() {
@@ -407,7 +401,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           : <String, dynamic>{};
       if (wasAlreadyWaiting &&
           !isMenuCommand &&
-          _countWaitingAdminFollowUpsFromRaw(ticketData['messages']) >=
+          _countWaitingAdminFollowUps(_messages) >=
               _maxWaitingAdminFollowUps) {
         if (mounted) {
           setState(() => _isSending = false);
@@ -416,9 +410,11 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         return;
       }
 
-      final msgRef = _db.ref('support_tickets/$_ticketId/messages').push();
-
-      await msgRef.set({
+      await FirebaseFirestore.instance
+          .collection('support_tickets')
+          .doc(_ticketId)
+          .collection('messages')
+          .add({
         'text': text,
         'is_bot': false,
         'is_admin': false,
@@ -432,7 +428,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         'topic_label': topic?.title,
         'summary': summary,
         'context': _buildMessageContext(summary: summary, topic: topic),
-        'ts': ServerValue.timestamp,
+        'ts': DateTime.now().millisecondsSinceEpoch,
       });
 
       final updates = <String, dynamic>{
@@ -642,11 +638,15 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
 
   Future<void> _saveBotReply(String text) async {
     if (_ticketId == null) return;
-    await _db.ref('support_tickets/$_ticketId/messages').push().set({
+    await FirebaseFirestore.instance
+        .collection('support_tickets')
+        .doc(_ticketId)
+        .collection('messages')
+        .add({
       'text': text,
       'is_bot': true,
       'is_admin': false,
-      'ts': ServerValue.timestamp,
+      'ts': DateTime.now().millisecondsSinceEpoch,
     });
   }
 
@@ -873,24 +873,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     return count > 0 ? count - 1 : 0;
   }
 
-  int _countWaitingAdminFollowUpsFromRaw(dynamic rawMessages) {
-    if (rawMessages is! Map) return 0;
 
-    var substantiveCount = 0;
-    rawMessages.forEach((_, value) {
-      if (value is! Map) return;
-      if (value['is_bot'] == true || value['is_admin'] == true) return;
-
-      final text = value['text']?.toString() ?? '';
-      final isMenuCommand =
-          value['is_menu_command'] == true || _isSupportMenuCommandText(text);
-      if (!isMenuCommand) {
-        substantiveCount++;
-      }
-    });
-
-    return substantiveCount > 0 ? substantiveCount - 1 : 0;
-  }
 
   int get _waitingAdminFollowUpCount => _countWaitingAdminFollowUps(_messages);
 

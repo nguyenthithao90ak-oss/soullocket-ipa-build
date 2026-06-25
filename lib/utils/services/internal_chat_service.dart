@@ -77,13 +77,13 @@ class InternalChatService {
   Future<List<ChatMessage>> fetchMessagesPage(
     String houseId, {
     int limit = 40,
-    DocumentSnapshot? startAfter,
+    int? beforeTs,
   }) async {
     Query<Map<String, dynamic>> query =
         _messagesRef(houseId).orderBy('ts', descending: true).limit(limit);
 
-    if (startAfter != null) {
-      query = query.startAfterDocument(startAfter);
+    if (beforeTs != null) {
+      query = query.where('ts', isLessThan: beforeTs);
     }
 
     final snap = await query.get();

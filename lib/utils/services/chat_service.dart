@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -579,14 +580,21 @@ class ChatService {
         await _ensureChatRoomStructure(myHouseId, targetHouseId, roomId);
         await _ensureChatRoomIndex(myHouseId, targetHouseId, roomId);
 
-        final pushRef = _dbRef.child('chats/$roomId/messages').push();
-        final messageId = pushRef.key ?? '';
+        final msgPayload = _buildMessageWriteMap(
+          senderId: myHouseId,
+          text: safeText,
+          type: type,
+        );
+        msgPayload['ts'] = DateTime.now().millisecondsSinceEpoch;
+
+        final docRef = await FirebaseFirestore.instance
+            .collection('chats')
+            .doc(roomId)
+            .collection('messages')
+            .add(msgPayload);
+        final messageId = docRef.id;
+
         await _dbRef.update({
-          'chats/$roomId/messages/$messageId': _buildMessageWriteMap(
-            senderId: myHouseId,
-            text: safeText,
-            type: type,
-          ),
           'chats/$roomId/lastMessage': _lastMessageWriteMap(
             senderId: myHouseId,
             type: type,
@@ -661,11 +669,9 @@ class ChatService {
           await _ensureChatRoomStructure(myHouseId, target, roomId);
           await _ensureChatRoomIndex(myHouseId, target, roomId);
 
-          final pushRef = _dbRef.child('chats/$roomId/messages').push();
-          final messageId = pushRef.key ?? '';
-          
+          final senderId = isInternal ? senderRole : myHouseId;
           final msgMap = _buildMessageWriteMap(
-            senderId: isInternal ? senderRole : myHouseId,
+            senderId: senderId,
             text: '[Hình ảnh]',
             type: 'image',
           );
@@ -673,11 +679,17 @@ class ChatService {
           if (upload.blurHash != null) {
             msgMap['blurHash'] = upload.blurHash;
           }
-          
+
+          final docRef = await FirebaseFirestore.instance
+              .collection('chats')
+              .doc(roomId)
+              .collection('messages')
+              .add(msgMap);
+          final messageId = docRef.id;
+
           await _dbRef.update({
-            'chats/$roomId/messages/$messageId': msgMap,
             'chats/$roomId/lastMessage': _lastMessageWriteMap(
-              senderId: isInternal ? senderRole : myHouseId,
+              senderId: senderId,
               type: 'image',
               text: '[Hình ảnh]',
               messageId: messageId,
@@ -907,9 +919,14 @@ class ChatService {
         await _assertNotBlocked(myHouseId, targetHouseId);
         await _assertChatRoomOpen(myHouseId, targetHouseId);
         final roomId = _getRoomId(myHouseId, targetHouseId);
-        await _dbRef
-            .child('chats/$roomId/messages/$messageId/reactions/$myHouseId')
-            .set(emoji);
+        
+        final docRef = FirebaseFirestore.instance
+            .collection('chats')
+            .doc(roomId)
+            .collection('messages')
+            .doc(messageId);
+            
+        await docRef.update({'reactions.$myHouseId': emoji});
       },
       permissionMessage:
           'Không thả cảm xúc được: có thể tin nhắn không còn tồn tại, chat đã bị đóng hoặc quyền truy cập chưa đồng bộ.',
@@ -923,48 +940,35 @@ class ChatService {
     String myHouseId,
     String targetHouseId, {
     int limit = 40,
-    String? endBeforeKey,
+    int? beforeTs,
   }) async {
     final roomId = _getRoomId(myHouseId, targetHouseId);
     if (!await _ensureViewerRoomIndex(myHouseId, roomId)) {
       return [];
     }
 
-    Query query = _dbRef.child('chats/$roomId/messages').orderByKey();
-    final fetchLimit = endBeforeKey == null ? limit : limit + 1;
-    if (endBeforeKey != null && endBeforeKey.isNotEmpty) {
-      query = query.endAt(endBeforeKey);
+    var query = FirebaseFirestore.instance
+        .collection('chats')
+        .doc(roomId)
+        .collection('messages')
+        .orderBy('ts', descending: true)
+        .limit(limit);
+
+    if (beforeTs != null) {
+      query = query.where('ts', isLessThan: beforeTs);
     }
 
     try {
-      final snap = await query
-          .limitToLast(fetchLimit)
-          .get()
-          .timeout(const Duration(seconds: 10));
-      if (!snap.exists || snap.value is! Map) return [];
+      final snap = await query.get().timeout(const Duration(seconds: 10));
+      if (snap.docs.isEmpty) return [];
 
-      final data = Map<dynamic, dynamic>.from(snap.value as Map);
-      final messages = <ChatMessage>[];
-      data.forEach((key, value) {
-        if (value is Map) {
-          messages.add(ChatMessage.fromMap(key.toString(), value));
+      return snap.docs.map((doc) {
+        try {
+          return ChatMessage.fromMap(doc.id, doc.data());
+        } catch (_) {
+          return null;
         }
-      });
-
-      if (endBeforeKey != null && endBeforeKey.isNotEmpty) {
-        messages.removeWhere((message) => message.id == endBeforeKey);
-      }
-
-      messages.sort((a, b) {
-        final byTime = b.timestamp.compareTo(a.timestamp);
-        if (byTime != 0) return byTime;
-        return b.id.compareTo(a.id);
-      });
-
-      if (messages.length > limit) {
-        return messages.sublist(0, limit);
-      }
-      return messages;
+      }).whereType<ChatMessage>().toList();
     } on TimeoutException {
       return [];
     }
@@ -973,160 +977,46 @@ class ChatService {
   Future<List<ChatMessage>> fetchInternalMessagesPage(
     String houseId, {
     int limit = 40,
-    String? endBeforeKey,
+    int? beforeTs,
   }) async {
-    Query query =
-        _dbRef.child('houses/$houseId/chat_room/messages').orderByKey();
-    final fetchLimit = endBeforeKey == null ? limit : limit + 1;
-    if (endBeforeKey != null && endBeforeKey.isNotEmpty) {
-      query = query.endAt(endBeforeKey);
-    }
-
-    try {
-      final snap = await query
-          .limitToLast(fetchLimit)
-          .get()
-          .timeout(const Duration(seconds: 10));
-      if (!snap.exists || snap.value is! Map) return [];
-
-      final data = Map<dynamic, dynamic>.from(snap.value as Map);
-      final messages = <ChatMessage>[];
-      data.forEach((key, value) {
-        if (value is Map) {
-          messages.add(ChatMessage.fromMap(key.toString(), value));
-        }
-      });
-
-      if (endBeforeKey != null && endBeforeKey.isNotEmpty) {
-        messages.removeWhere((message) => message.id == endBeforeKey);
-      }
-
-      messages.sort((a, b) {
-        final byTime = b.timestamp.compareTo(a.timestamp);
-        if (byTime != 0) return byTime;
-        return b.id.compareTo(a.id);
-      });
-
-      if (messages.length > limit) {
-        return messages.sublist(0, limit);
-      }
-      return messages;
-    } on TimeoutException {
-      return [];
-    }
+    return InternalChatService()
+        .fetchMessagesPage(houseId, limit: limit, beforeTs: beforeTs);
   }
 
   Stream<ChatMessage> streamNewMessages(
     String myHouseId,
     String targetHouseId, {
-    String? afterKey,
+    int? afterTs,
   }) {
     final roomId = _getRoomId(myHouseId, targetHouseId);
-    late final StreamController<ChatMessage> controller;
-    StreamSubscription<DatabaseEvent>? indexSub;
-    StreamSubscription<ChatMessage>? messageAddedSub;
-    StreamSubscription<ChatMessage>? messageChangedSub;
-    var attached = false;
-
-    ChatMessage readMessage(DatabaseEvent event) {
-      final raw = event.snapshot.value;
-      if (raw is! Map) {
-        throw StateError('Tin nhắn không hợp lệ');
-      }
-      return ChatMessage.fromMap(
-        event.snapshot.key ?? '',
-        Map<dynamic, dynamic>.from(raw),
-      );
-    }
-
-    Stream<ChatMessage> newMessageStream() {
-      Query query = _dbRef.child('chats/$roomId/messages').orderByKey();
-      if (afterKey != null && afterKey.isNotEmpty) {
-        query = query.startAt(afterKey);
-      }
-
-      return query.onChildAdded.map(readMessage);
-    }
-
-    Stream<ChatMessage> changedMessageStream() {
-      Query query = _dbRef.child('chats/$roomId/messages').orderByKey();
-      if (afterKey != null && afterKey.isNotEmpty) {
-        query = query.startAt(afterKey);
-      }
-      return query.onChildChanged.map(readMessage);
-    }
-
-    Future<void> attachMessageStream() async {
-      if (attached || controller.isClosed) {
-        return;
-      }
-      attached = true;
-      messageAddedSub = newMessageStream().listen(
-        controller.add,
-        onError: (Object error) {
-          debugPrint(
-            '[ChatService] message add stream failed: ${AppErrorMapper.resolve(
-              error,
-              fallbackMessage: 'Không thể tải tin nhắn phòng chat.',
-            ).message}',
-          );
-        },
-      );
-      messageChangedSub = changedMessageStream().listen(
-        controller.add,
-        onError: (Object error) {
-          debugPrint(
-            '[ChatService] message change stream failed: ${AppErrorMapper.resolve(
-              error,
-              fallbackMessage: 'Không thể cập nhật tin nhắn phòng chat.',
-            ).message}',
-          );
-        },
-      );
-    }
-
-    Future<void> start() async {
-      if (await _ensureViewerRoomIndex(myHouseId, roomId)) {
-        await attachMessageStream();
-        return;
-      }
-
-      indexSub = _dbRef.child(_roomIndexPath(myHouseId, roomId)).onValue.listen(
-        (event) {
-          if (_snapshotHasRoomIndex(event.snapshot)) {
-            indexSub?.cancel();
-            unawaited(attachMessageStream());
+    final tsFilter = afterTs ?? 0;
+    
+    return FirebaseFirestore.instance
+        .collection('chats')
+        .doc(roomId)
+        .collection('messages')
+        .where('ts', isGreaterThan: tsFilter)
+        .orderBy('ts')
+        .snapshots()
+        .expand((snapshot) => snapshot.docChanges
+            .where((change) =>
+                change.type == DocumentChangeType.added ||
+                change.type == DocumentChangeType.modified)
+            .map((change) {
+          try {
+            return ChatMessage.fromMap(change.doc.id, change.doc.data()!);
+          } catch (_) {
+            return null;
           }
-        },
-        onError: (Object error) {
-          debugPrint(
-            '[ChatService] room index stream failed: ${AppErrorMapper.resolve(
-              error,
-              fallbackMessage: 'Không thể tải chỉ mục phòng chat.',
-            ).message}',
-          );
-        },
-      );
-    }
-
-    controller = StreamController<ChatMessage>(
-      onListen: start,
-      onCancel: () async {
-        await indexSub?.cancel();
-        await messageAddedSub?.cancel();
-        await messageChangedSub?.cancel();
-      },
-    );
-
-    return controller.stream;
+        })
+        .whereType<ChatMessage>());
   }
 
   Stream<ChatMessage> streamNewInternalMessages(
     String houseId, {
-    String? afterKey,
+    int? afterTs,
   }) {
-    // afterKey is RTDB key – ignored, we use Firestore timestamp-based stream
-    return InternalChatService().streamNewMessages(houseId);
+    return InternalChatService().streamNewMessages(houseId, afterTs: afterTs ?? 0);
   }
 
 

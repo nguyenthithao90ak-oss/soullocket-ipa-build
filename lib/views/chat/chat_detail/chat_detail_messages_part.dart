@@ -1,4 +1,4 @@
-﻿// ignore_for_file: invalid_use_of_protected_member
+// ignore_for_file: invalid_use_of_protected_member
 
 part of '../chat_detail_screen.dart';
 
@@ -46,8 +46,8 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
     }
     _messages.insert(_findMessageInsertIndex(message), message);
     if (_messages.isNotEmpty) {
-      _newestMessageKey = _messages.first.id;
-      _oldestMessageKey = _messages.last.id;
+      _newestMessageTs = _messages.first.timestamp.millisecondsSinceEpoch;
+      _oldestMessageTs = _messages.last.timestamp.millisecondsSinceEpoch;
     }
   }
 
@@ -80,8 +80,8 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
   }
 
   Future<void> _loadOlderMessages() async {
-    final cursor = _oldestMessageKey;
-    if (cursor == null || cursor.isEmpty) {
+    final cursor = _oldestMessageTs;
+    if (cursor == null) {
       _hasMoreMessages = false;
       return;
     }
@@ -92,13 +92,13 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
           ? await _chatService.fetchInternalMessagesPage(
               widget.myHouseId,
               limit: _ChatDetailScreenState._chatPageSize,
-              endBeforeKey: cursor,
+              beforeTs: cursor,
             )
           : await _chatService.fetchMessagesPage(
               widget.myHouseId,
               widget.targetHouseId,
               limit: _ChatDetailScreenState._chatPageSize,
-              endBeforeKey: cursor,
+              beforeTs: cursor,
             );
       if (!mounted) return;
       if (older.isEmpty) {
@@ -121,8 +121,8 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
         _messages
           ..clear()
           ..addAll(merged);
-        _oldestMessageKey = _messages.isEmpty ? null : _messages.last.id;
-        _newestMessageKey = _messages.isEmpty ? null : _messages.first.id;
+        _oldestMessageTs = _messages.isEmpty ? null : _messages.last.timestamp.millisecondsSinceEpoch;
+        _newestMessageTs = _messages.isEmpty ? null : _messages.first.timestamp.millisecondsSinceEpoch;
         _hasMoreMessages = older.length >= _ChatDetailScreenState._chatPageSize;
         _isLoadingOlderMessages = false;
       });
@@ -140,8 +140,8 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
     _messageIds
       ..clear()
       ..addAll(messages.map((message) => message.id));
-    _oldestMessageKey = _messages.isEmpty ? null : _messages.last.id;
-    _newestMessageKey = _messages.isEmpty ? null : _messages.first.id;
+    _oldestMessageTs = _messages.isEmpty ? null : _messages.last.timestamp.millisecondsSinceEpoch;
+    _newestMessageTs = _messages.isEmpty ? null : _messages.first.timestamp.millisecondsSinceEpoch;
     // ⚡ Không cần setState rỗng — widget dùng StreamBuilder hoặc sẽ rebuild
     // khi listener _listenForNewMessages kích hoạt
   }
@@ -151,12 +151,12 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
     final stream = _isInternal
         ? _chatService.streamNewInternalMessages(
             widget.myHouseId,
-            afterKey: _newestMessageKey,
+            afterTs: _newestMessageTs,
           )
         : _chatService.streamNewMessages(
             widget.myHouseId,
             widget.targetHouseId,
-            afterKey: _newestMessageKey,
+            afterTs: _newestMessageTs,
           );
     _liveMessageSub = stream.listen((message) {
       if (!mounted) return;

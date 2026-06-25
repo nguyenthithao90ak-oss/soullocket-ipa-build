@@ -44,20 +44,7 @@ class GroupChatService {
   String _sanitize(String input) =>
       input.replaceAll('<', '&lt;').replaceAll('>', '&gt;').trim();
 
-  Map<String, dynamic> _buildGroupMessagePayload({
-    required String senderHouseId,
-    required String text,
-    required String type,
-    required Object timestampValue,
-  }) {
-    return <String, dynamic>{
-      'senderId': senderHouseId,
-      'text': text,
-      'type': type,
-      'ts': timestampValue,
-      'isRead': false,
-    };
-  }
+
 
   bool isHouseMemberOfGroup(GroupChatRoom room, String houseId) {
     final normalizedHouseId = houseId.trim();
@@ -227,24 +214,31 @@ class GroupChatService {
       viewerHouseId: senderHouseId,
     );
 
-    final pushRef = _dbRef.child('groups/$groupId/messages').push();
-    final messageId = pushRef.key ?? '';
-    const serverTimestamp = ServerValue.timestamp;
-    final messagePayload = _buildGroupMessagePayload(
-      senderHouseId: senderHouseId,
-      text: safeText,
-      type: type,
-      timestampValue: serverTimestamp,
-    );
+    final docRef = await FirebaseFirestore.instance
+        .collection('group_chats')
+        .doc(groupId)
+        .collection('messages')
+        .add({
+      'senderId': senderHouseId,
+      'text': safeText,
+      'type': type,
+      'ts': DateTime.now().millisecondsSinceEpoch,
+      'isRead': false,
+    });
+    final messageId = docRef.id;
+
     final lastMessagePayload = <String, dynamic>{
-      ...messagePayload,
+      'senderId': senderHouseId,
+      'text': type == 'share' ? '[Chia sẻ]' : safeText,
+      'type': type,
+      'ts': ServerValue.timestamp,
+      'isRead': false,
       if (messageId.isNotEmpty) 'messageId': messageId,
     };
 
     await _dbRef.update({
-      'groups/$groupId/messages/$messageId': messagePayload,
       'groups/$groupId/lastMessage': lastMessagePayload,
-      'groups/$groupId/updatedAt': serverTimestamp,
+      'groups/$groupId/updatedAt': ServerValue.timestamp,
     });
   }
 
@@ -308,111 +302,84 @@ class GroupChatService {
     String groupId, {
     required String viewerHouseId,
     int limit = 40,
-    String? endBeforeKey,
+    int? beforeTs,
   }) async {
     await requireMemberRoom(
       groupId: groupId,
       viewerHouseId: viewerHouseId,
     );
-    Query query = _dbRef.child('groups/$groupId/messages').orderByKey();
-    final fetchLimit = endBeforeKey == null ? limit : limit + 1;
-    if (endBeforeKey != null && endBeforeKey.isNotEmpty) {
-      query = query.endAt(endBeforeKey);
+    var query = FirebaseFirestore.instance
+        .collection('group_chats')
+        .doc(groupId)
+        .collection('messages')
+        .orderBy('ts', descending: true)
+        .limit(limit);
+
+    if (beforeTs != null) {
+      query = query.where('ts', isLessThan: beforeTs);
     }
 
-    final snap = await query.limitToLast(fetchLimit).get();
-    if (!snap.exists || snap.value is! Map) {
+    try {
+      final snap = await query.get().timeout(const Duration(seconds: 10));
+      if (snap.docs.isEmpty) return const <ChatMessage>[];
+
+      return snap.docs.map((doc) {
+        try {
+          return ChatMessage.fromMap(doc.id, doc.data());
+        } catch (_) {
+          return null;
+        }
+      }).whereType<ChatMessage>().toList();
+    } on TimeoutException {
       return const <ChatMessage>[];
     }
-
-    final data = Map<dynamic, dynamic>.from(snap.value as Map);
-    final messages = <ChatMessage>[];
-    data.forEach((key, value) {
-      if (value is Map) {
-        messages.add(ChatMessage.fromMap(key.toString(), value));
-      }
-    });
-
-    if (endBeforeKey != null && endBeforeKey.isNotEmpty) {
-      messages.removeWhere((message) => message.id == endBeforeKey);
-    }
-
-    messages.sort((a, b) {
-      final byTime = b.timestamp.compareTo(a.timestamp);
-      if (byTime != 0) {
-        return byTime;
-      }
-      return b.id.compareTo(a.id);
-    });
-
-    return messages.length > limit ? messages.sublist(0, limit) : messages;
   }
 
   Stream<ChatMessage> streamNewGroupMessages(
     String groupId, {
     required String viewerHouseId,
-    String? afterKey,
+    int? afterTs,
   }) {
     late final StreamController<ChatMessage> controller;
-    StreamSubscription<ChatMessage>? addedSub;
-    StreamSubscription<ChatMessage>? changedSub;
-
-    ChatMessage readMessage(DatabaseEvent event) {
-      final raw = event.snapshot.value;
-      if (raw is! Map) {
-        throw StateError('Tin nhắn nhóm không hợp lệ');
-      }
-      return ChatMessage.fromMap(
-        event.snapshot.key ?? '',
-        Map<dynamic, dynamic>.from(raw),
-      );
-    }
-
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? firestoreSub;
     late final StreamSubscription<DatabaseEvent> membershipSub;
-    Query query = _dbRef.child('groups/$groupId/messages').orderByKey();
-    if (afterKey != null && afterKey.isNotEmpty) {
-      query = query.startAt(afterKey);
-    } else {
-      // Chỉ lấy 80 tin nhắn cuối, tránh download toàn bộ lịch sử nhóm
-      query = query.limitToLast(80);
-    }
+
+    final tsFilter = afterTs ?? 0;
 
     controller = StreamController<ChatMessage>(
       onListen: () {
-        Timer? addedDebounce;
-        Timer? changedDebounce;
-        addedSub = query.onChildAdded.map(readMessage).listen(
-          (msg) {
-            addedDebounce?.cancel();
-            addedDebounce = Timer(const Duration(milliseconds: 150), () {
-              controller.add(msg);
-            });
+        firestoreSub = FirebaseFirestore.instance
+            .collection('group_chats')
+            .doc(groupId)
+            .collection('messages')
+            .where('ts', isGreaterThan: tsFilter)
+            .orderBy('ts')
+            .snapshots()
+            .listen(
+          (snapshot) {
+            for (final change in snapshot.docChanges) {
+              if (change.type == DocumentChangeType.added ||
+                  change.type == DocumentChangeType.modified) {
+                try {
+                  final msg = ChatMessage.fromMap(
+                    change.doc.id,
+                    change.doc.data()!,
+                  );
+                  controller.add(msg);
+                } catch (_) {}
+              }
+            }
           },
           onError: (Object error) {
             debugPrint(
-              '[GroupChat] message add stream failed: ${AppErrorMapper.resolve(
+              '[GroupChat] firestore message stream failed: ${AppErrorMapper.resolve(
                 error,
                 fallbackMessage: 'Không thể tải tin nhắn nhóm.',
               ).message}',
             );
           },
         );
-        changedSub = query.onChildChanged.map(readMessage).listen(
-          (msg) {
-            changedDebounce?.cancel();
-            changedDebounce = Timer(const Duration(milliseconds: 150), () {
-              controller.add(msg);
-            });
-          },
-          onError: (Object error) {
-            debugPrint(
-              '[GroupChat] message change stream failed: ${AppErrorMapper.resolve(
-                error,
-                fallbackMessage: 'Không thể cập nhật tin nhắn nhóm.',
-              ).message}',
-            );
-          },
-        );
+
         Timer? membershipDebounce;
         membershipSub =
             _dbRef.child('groups/$groupId/memberHouseIds').onValue.listen((
@@ -420,33 +387,32 @@ class GroupChatService {
         ) {
           membershipDebounce?.cancel();
           membershipDebounce = Timer(const Duration(milliseconds: 200), () {
-          final raw = event.snapshot.value;
-          final nextMembers = <String>[];
-          if (raw is Map) {
-            for (final entry in raw.entries) {
-              final houseId = entry.key.toString().trim();
-              final enabled = entry.value == true || entry.value == 1;
-              if (houseId.isNotEmpty && enabled) {
-                nextMembers.add(houseId);
+            final raw = event.snapshot.value;
+            final nextMembers = <String>[];
+            if (raw is Map) {
+              for (final entry in raw.entries) {
+                final houseId = entry.key.toString().trim();
+                final enabled = entry.value == true || entry.value == 1;
+                if (houseId.isNotEmpty && enabled) {
+                  nextMembers.add(houseId);
+                }
+              }
+            } else if (raw is List) {
+              for (final item in raw) {
+                final houseId = item.toString().trim();
+                if (houseId.isNotEmpty) {
+                  nextMembers.add(houseId);
+                }
               }
             }
-          } else if (raw is List) {
-            for (final item in raw) {
-              final houseId = item.toString().trim();
-              if (houseId.isNotEmpty) {
-                nextMembers.add(houseId);
-              }
+            if (viewerHouseId.trim().isEmpty ||
+                nextMembers.contains(viewerHouseId.trim())) {
+              return;
             }
-          }
-          if (viewerHouseId.trim().isEmpty ||
-              nextMembers.contains(viewerHouseId.trim())) {
-            return;
-          }
-          controller
-              .addError(Exception('Bạn không còn là thành viên của nhóm này.'));
-        });
-      },
-      onError: (Object error) {
+            controller.addError(
+                Exception('Bạn không còn là thành viên của nhóm này.'));
+          });
+        }, onError: (Object error) {
           debugPrint(
             '[GroupChat] membership stream failed: ${AppErrorMapper.resolve(
               error,
@@ -456,9 +422,8 @@ class GroupChatService {
         });
       },
       onCancel: () async {
+        await firestoreSub?.cancel();
         await membershipSub.cancel();
-        await addedSub?.cancel();
-        await changedSub?.cancel();
       },
     );
 

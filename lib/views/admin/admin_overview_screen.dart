@@ -59,7 +59,11 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
         _db.child(AppConfig.communityMaintenanceModePath).get().timeout(const Duration(seconds: 5)),
       ]);
 
-      final supportRaw = results[3].value;
+      final snap0 = results[0] as DataSnapshot;
+      final snap2 = results[2] as DataSnapshot;
+      final snap3 = results[3] as DataSnapshot;
+
+      final supportRaw = snap3.value;
       final supportMap = supportRaw is Map
           ? Map<dynamic, dynamic>.from(supportRaw)
           : <dynamic, dynamic>{};
@@ -77,7 +81,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
 
       var banned = 0;
       var vip = 0;
-      final housesRaw = results[0].value;
+      final housesRaw = snap0.value;
       if (housesRaw is Map) {
         final nowTs = DateTime.now().millisecondsSinceEpoch;
         housesRaw.forEach((key, value) {
@@ -92,15 +96,15 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
 
       if (!mounted) return;
       setState(() {
-        _totalHouses = results[0].children.length;
+        _totalHouses = snap0.children.length;
         _bannedHouses = banned;
         _vipHouses = vip;
         _totalReports = (results[1] as AggregateQuerySnapshot).count ?? 0;
-        _totalFeeds = results[2].children.length;
+        _totalFeeds = snap2.children.length;
         _totalSupportTickets = totalTickets;
         _unreadSupportTickets = unreadTickets;
-        _isMaintenanceMode = results[4].value == true;
-        _isCommunityMaintenanceMode = results[5].value == true;
+        _isMaintenanceMode = (results[4] as DataSnapshot).value == true;
+        _isCommunityMaintenanceMode = (results[5] as DataSnapshot).value == true;
         _lastUpdatedAt = DateTime.now();
         _errorText = null;
       });

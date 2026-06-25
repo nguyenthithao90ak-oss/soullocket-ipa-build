@@ -139,8 +139,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   StreamSubscription<ChatMessage>? _liveMessageSub;
   final List<ChatMessage> _messages = [];
   final Set<String> _messageIds = <String>{};
-  String? _oldestMessageKey;
-  String? _newestMessageKey;
+  int? _oldestMessageTs;
+  int? _newestMessageTs;
   String get _roomId => _chatService.roomIdFor(
         widget.myHouseId,
         widget.targetHouseId,
