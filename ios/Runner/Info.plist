@@ -261,7 +261,7 @@
 	<string>Ứng dụng cần quyền camera để chụp ảnh kỷ niệm, quét mã QR kết nối hoặc đăng nhập và dùng cuộc gọi video khi bạn chủ động bật tính năng đó.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Ứng dụng cần quyền Face ID để mở khóa nhanh và bảo vệ nội dung riêng tư của bạn.</string>
-t<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>SoulLocket needs location access even when in background to share location with your partner, update couple map, and help you find nearby friends.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Ứng dụng cần quyền vị trí khi đang sử dụng để hiển thị bản đồ đôi, vị trí hiện tại, nhật ký có gắn địa điểm và gợi ý địa điểm gần bạn.</string>
