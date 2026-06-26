@@ -508,4 +508,132 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     if (!mounted) return;
     SLNotice.showInfo(context, message);
   }
+
+  // ─── Inactivity auto-logout ───────────────────────────────────────────────
+
+  void _resetInactivityTimer() {
+    if (!mounted) return;
+    _inactivityTimer?.cancel();
+    _inactivityTimer = Timer(_HomeScreenState._inactivityTimeout, _onInactivityTimeout);
+  }
+
+  void _onInactivityTimeout() {
+    if (!mounted || _isShowingInactivityDialog) return;
+    unawaited(_showInactivityWarningDialog());
+  }
+
+  Future<void> _showInactivityWarningDialog() async {
+    if (!mounted || _isShowingInactivityDialog) return;
+    _isShowingInactivityDialog = true;
+
+    final stayPressed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const _InactivityCountdownDialog(
+        seconds: _HomeScreenState._inactivityCountdownSeconds,
+      ),
+    );
+
+    if (!mounted) {
+      _isShowingInactivityDialog = false;
+      return;
+    }
+    _isShowingInactivityDialog = false;
+
+    if (stayPressed == true) {
+      _resetInactivityTimer();
+    } else {
+      await _moveAppToBackground();
+    }
+  }
+}
+
+// ─── Inactivity countdown dialog ─────────────────────────────────────────────
+
+class _InactivityCountdownDialog extends StatefulWidget {
+  final int seconds;
+  const _InactivityCountdownDialog({required this.seconds});
+
+  @override
+  State<_InactivityCountdownDialog> createState() =>
+      _InactivityCountdownDialogState();
+}
+
+class _InactivityCountdownDialogState
+    extends State<_InactivityCountdownDialog> {
+  late int _remaining;
+  Timer? _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _remaining = widget.seconds;
+    _tick = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
+      setState(() => _remaining--);
+      if (_remaining <= 0) {
+        t.cancel();
+        Navigator.of(context).pop(false); // hết giờ → thoát
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Row(
+        children: [
+          const Icon(Icons.timer_outlined, color: Color(0xFFFF4B91)),
+          const SizedBox(width: 8),
+          Text(
+            context.tr('home_khonghd_inactivity') != 'home_khonghd_inactivity'
+                ? context.tr('home_khonghd_inactivity')
+                : 'Không có hoạt động',
+            style: SLTheme.quicksand(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+      content: Text(
+        'App sẽ tự đóng sau $_remaining giây do không có thao tác.',
+        style: SLTheme.quicksand(fontSize: 14),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(
+            'Thoát',
+            style: SLTheme.quicksand(
+              color: Colors.grey,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFFFF4B91),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(
+            'Tiếp tục ($_remaining)',
+            style: SLTheme.quicksand(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

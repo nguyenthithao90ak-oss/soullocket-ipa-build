@@ -22,6 +22,7 @@ import '../../../utils/sl_notice.dart';
 import '../../../widgets/share_bottom_sheet.dart';
 import '../../../widgets/skeleton_container.dart';
 import '../../../utils/services/l10n_service.dart';
+import '../../../utils/services/security_service.dart';
 import 'diary_composer.dart';
 
 import 'diary/controllers/diary_composer_controller.dart';
@@ -1023,6 +1024,8 @@ class _DiaryTabState extends State<DiaryTab>
   }
 
   Future<void> _submitDiaryPost() async {
+    // Throttle: chống spam tạo post nhật ký liên tục
+    if (!await SecurityService().guardAction(context, 'diary_post')) return;
     await _composerState.submit(
       feedController: _feedController,
       resolveCurrentUser: _guardController.resolveCurrentUser,

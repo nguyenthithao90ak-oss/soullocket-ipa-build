@@ -283,6 +283,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
   Future<void> _pickFromFilePicker() async {
     if (_items.length >= _maxItems) { _showMsg('Đã đạt giới hạn $_maxItems mục.'); return; }
     int todayCount = await _getTodayVideoCount();
+    // ignore: deprecated_member_use
     final result = await FilePicker.pickFiles(type: FileType.media, allowMultiple: true, withData: false);
     if (result == null || result.files.isEmpty || !mounted) return;
     int videoAdded = 0;

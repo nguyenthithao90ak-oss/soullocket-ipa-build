@@ -1149,7 +1149,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
 
     final totalWeight = availablePresets.fold<double>(
       0,
-      (sum, preset) => sum + (weights[preset.type] ?? 1),
+      (acc, preset) => acc + (weights[preset.type] ?? 1),
     );
     if (totalWeight <= 0) {
       return availablePresets.isNotEmpty

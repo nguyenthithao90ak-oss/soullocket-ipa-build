@@ -10,9 +10,7 @@ import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:soullocket_app/models/diary_post.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import '../../../utils/services/storage_service.dart';
-import '../../../utils/services/cloudflare_r2_service.dart';
 
 import '../../../utils/helpers/bump_detector.dart';
 import '../../../utils/services/soul_merge_service.dart';
@@ -884,11 +882,11 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 40),
                       child: Column(
                         children: [
-                          const SizedBox(height: 24),
+                          SizedBox(height: 24),
                           // Connection status line removed as per user request
                           // Nudge button removed, integrated into cat tap
                           // Removed toggle card from bottom as it is now in the AppBar

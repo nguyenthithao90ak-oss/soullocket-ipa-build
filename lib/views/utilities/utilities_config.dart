@@ -11,6 +11,7 @@ const List<String> utilitiesHubDefaultOrder = <String>[
   'calendar',
   'finance',
   'habit',
+  'health',
   'capsule',
   'history',
   'gift',
@@ -80,6 +81,11 @@ final Map<String, Map<String, dynamic>> appConfig = {
     'colors': [const Color(0xFF2D1B23), const Color(0xFF120B12)],
     'iconColor': const Color(0xFFFFF5F2),
     'title': L10nService().translate('util_thiquen_b0785c'),
+  },
+  'health': {
+    'icon': Icons.health_and_safety_rounded,
+    'colors': [const Color(0xFFFF80AB), const Color(0xFFF06292)],
+    'title': L10nService().translate('health'),
   },
   'wheel': {
     'icon': Icons.pie_chart_rounded,

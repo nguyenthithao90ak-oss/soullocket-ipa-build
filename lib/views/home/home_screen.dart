@@ -32,6 +32,7 @@ import '../../utils/services/schedule_notif_service.dart';
 import '../../utils/services/webrtc_service.dart';
 import '../../utils/services/widget_action_service.dart';
 import '../../utils/services/update_checker_service.dart';
+import '../../utils/services/local_action_throttle_service.dart';
 import '../../widgets/legacy_falling_effect.dart';
 import '../../widgets/touch_effect_overlay.dart';
 import '../notifications/notification_center_screen.dart';
@@ -400,6 +401,10 @@ class _HomeScreenState extends State<HomeScreen>
   Timer? _startupAnimationTimer;
   Timer? _prewarmMediaTimer;
   Timer? _appUpdateTimer;
+  Timer? _inactivityTimer;
+  bool _isShowingInactivityDialog = false;
+  static const Duration _inactivityTimeout = Duration(minutes: 45);
+  static const int _inactivityCountdownSeconds = 5;
   String _prewarmedBackgroundUrl = '';
   bool _isPrewarmingShellMedia = false;
   bool _allowStartupAnimations = false;
@@ -515,6 +520,7 @@ class _HomeScreenState extends State<HomeScreen>
     _widgetActionSub = WidgetActionService().actions.listen((action) {
       unawaited(_handleWidgetLaunchAction(action));
     });
+    _resetInactivityTimer();
   }
 
   Future<void> _checkAndUpdateApp() async {
@@ -913,6 +919,7 @@ class _HomeScreenState extends State<HomeScreen>
     _startupAnimationTimer?.cancel();
     _prewarmMediaTimer?.cancel();
     _appUpdateTimer?.cancel();
+    _inactivityTimer?.cancel();
     final musicService = MusicService();
     musicService.isPlayingNotifier.removeListener(_handleMusicPlaybackChanged);
     musicService.isVisibleNotifier
@@ -1060,16 +1067,28 @@ class _HomeScreenState extends State<HomeScreen>
       if (_musicController.value != 0) {
         _musicController.value = 0;
       }
+      // Tạm dừng inactivity timer khi app vào background
+      _inactivityTimer?.cancel();
     } else if (state == AppLifecycleState.resumed) {
       unawaited(_syncNotificationBadgeListener(forceRestart: true));
       unawaited(WidgetService.checkAndProcessPendingWidgetActions());
       _syncMusicAnimationState();
       _checkScheduleNotifs();
       unawaited(_maybeShowBreakupEntryNotice());
+      // Khởi động lại inactivity timer khi app resume
+      _resetInactivityTimer();
     }
   }
 
   Future<void> _switchToTab(int index) async {
+    // Throttle: chống spam chuyển tab nhanh (tối đa 1 lần/200ms)
+    final throttle = LocalActionThrottleService.instance.registerAttempt(
+      'home_switch_tab',
+      minInterval: const Duration(milliseconds: 200),
+      maxAttempts: 8,
+      burstWindow: const Duration(seconds: 3),
+    );
+    if (!throttle.isAllowed && throttle.isSuspiciousBurst) return;
     final nextIndex = index.clamp(0, _navItems.length - 1);
     if (!mounted) return;
     final oldIndex = _currentIndex;
@@ -1230,6 +1249,14 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _openHomeMessenger() async {
+    // Throttle: chống double-tap liên tục
+    final throttle = LocalActionThrottleService.instance.registerAttempt(
+      'home_messenger_open',
+      minInterval: const Duration(milliseconds: 800),
+      maxAttempts: 3,
+      burstWindow: const Duration(seconds: 5),
+    );
+    if (!throttle.isAllowed) return;
     if (!mounted) return;
     final houseId = (await _houseService.getCurrentHouseId() ?? '').trim();
     if (houseId.isEmpty) return;
@@ -1473,9 +1500,12 @@ class _HomeScreenState extends State<HomeScreen>
         if (didPop) return;
         await _handleExitAttempt();
       },
-      child: GestureDetector(
+      child: Listener(
         behavior: HitTestBehavior.translucent,
-        child: Scaffold(
+        onPointerDown: (_) => _resetInactivityTimer(),
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          child: Scaffold(
           extendBody: true,
           // ⚡ Dùng child param để foregroundContent không bị rebuild khi UiPrefs thay đổi
           body: ValueListenableBuilder<UiPrefsState>(
@@ -1547,6 +1577,7 @@ class _HomeScreenState extends State<HomeScreen>
               return _buildBottomNav(isDark: _isDarkTheme(resolvedThemeKey));
             },
           ),
+        ),
         ),
       ),
     );

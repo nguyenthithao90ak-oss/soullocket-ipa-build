@@ -1335,7 +1335,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       return '${str}M₫';
     }
     final formatted = vnd.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
-    return '${formatted}đ';
+    return '$formattedđ';
   }
 
   Widget _buildProductCard(ProductDetails product) {
