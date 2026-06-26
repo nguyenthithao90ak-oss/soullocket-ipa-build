@@ -5928,5 +5928,7 @@
   "vault_style_cosmic": "Cosmic ✨ (VIP)",
   "vault_style_pro_required": "This style is for VIP members only.",
   "home_xem_them": "... See {count} more styles",
-  "home_tat_ca_kieu_trai_tim": "All heart styles"
+  "home_tat_ca_kieu_trai_tim": "All heart styles",
+  "home_days_label": "days together",
+  "home_days_label_single": "days of journey"
 }

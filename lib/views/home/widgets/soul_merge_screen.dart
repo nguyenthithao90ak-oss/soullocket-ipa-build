@@ -51,7 +51,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   String _myName = 'Người ấy';
   bool _iHaveBumped = false;
   bool _partnerHasBumped = false;
-  final GlobalKey<_TapHeartsOverlayState> _heartsOverlayKey = GlobalKey<_TapHeartsOverlayState>();
+  final GlobalKey<TapHeartsOverlayState> _heartsOverlayKey = GlobalKey<TapHeartsOverlayState>();
   double _interactiveScale = 1.0;
   Timer? _continuousHeartsTimer;
   Offset _lastTapPosition = Offset.zero;
@@ -82,6 +82,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   String? _spamWarning;
 
   String _activeStyle = 'basic';
+  bool _showHeartNotif = false;
+  bool _showHeartGlobal = false;
   bool _isVip = false;
   StreamSubscription<bool>? _vipSub;
 
@@ -212,6 +214,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         //   await prefs.setString('soul_merge_heart_style', 'basic');
         // }
 
+        final showNotif = prefs.getBool('soul_merge_show_heart_notif') ?? false;
+        final showGlobal = prefs.getBool('soul_merge_show_heart_global') ?? false;
+
         setState(() {
           _myRole = myRole;
           _myName = defaultMyName;
@@ -219,6 +224,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           _lastSeenMsgTimestamp = lastSeen;
           _isVip = isUserVip;
           _activeStyle = savedStyle;
+          _showHeartNotif = showNotif;
+          _showHeartGlobal = showGlobal;
         });
 
         final settings = await HouseService().getHouseSettings(_houseId!);
@@ -348,7 +355,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _handleLocalBump();
 
     final now = DateTime.now();
-    if (_lastManualNudgeTime == null || now.difference(_lastManualNudgeTime!).inMinutes >= 10) {
+    if (_showHeartNotif && (_lastManualNudgeTime == null || now.difference(_lastManualNudgeTime!).inMinutes >= 10)) {
       _lastManualNudgeTime = now;
       _sendManualNudgeNotification();
     }
@@ -805,7 +812,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           ),
 
           // Isolated tap hearts particle overlay
-          _TapHeartsOverlay(
+          TapHeartsOverlay(
             key: _heartsOverlayKey,
             style: _activeStyle,
           ),
@@ -1712,6 +1719,40 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                     color: const Color(0xFFFFD700),
                     setSheetState: setSheetState,
                   ),
+                  const SizedBox(height: 16),
+                  const Divider(color: Colors.white12, height: 1),
+                  const SizedBox(height: 16),
+                  _buildToggleRow(
+                    title: 'Bật thông báo thả tim',
+                    subtitle: 'Hiện thông báo bằng chữ khi người ấy thả tim',
+                    value: _showHeartNotif,
+                    onChanged: (val) async {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('soul_merge_show_heart_notif', val);
+                      setSheetState(() {
+                        _showHeartNotif = val;
+                      });
+                      setState(() {
+                        _showHeartNotif = val;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildToggleRow(
+                    title: 'Xuất hiện ở màn hình khác',
+                    subtitle: 'Hiển thị tim bay khắp app khi người ấy thả tim',
+                    value: _showHeartGlobal,
+                    onChanged: (val) async {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('soul_merge_show_heart_global', val);
+                      setSheetState(() {
+                        _showHeartGlobal = val;
+                      });
+                      setState(() {
+                        _showHeartGlobal = val;
+                      });
+                    },
+                  ),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -1821,6 +1862,57 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildToggleRow({
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: SLTheme.quicksand(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: SLTheme.quicksand(
+                    color: Colors.white54,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            activeColor: const Color(0xFFFF7FB2),
+            activeTrackColor: const Color(0xFFFF7FB2).withValues(alpha: 0.3),
+            inactiveThumbColor: Colors.white54,
+            inactiveTrackColor: Colors.white12,
+            onChanged: onChanged,
+          ),
+        ],
       ),
     );
   }
@@ -2203,15 +2295,15 @@ class TinyHeart {
        swayPhase = math.Random().nextDouble() * math.pi * 2;
 }
 
-class _TapHeartsOverlay extends StatefulWidget {
+class TapHeartsOverlay extends StatefulWidget {
   final String style;
-  const _TapHeartsOverlay({super.key, required this.style});
+  const TapHeartsOverlay({super.key, required this.style});
 
   @override
-  State<_TapHeartsOverlay> createState() => _TapHeartsOverlayState();
+  State<TapHeartsOverlay> createState() => TapHeartsOverlayState();
 }
 
-class _TapHeartsOverlayState extends State<_TapHeartsOverlay>
+class TapHeartsOverlayState extends State<TapHeartsOverlay>
     with SingleTickerProviderStateMixin {
   late final AnimationController _tickerController;
   final List<TinyHeart> _hearts = [];
@@ -2318,6 +2410,48 @@ class _TapHeartsOverlayState extends State<_TapHeartsOverlay>
     }
   }
 
+  void spawnLocalExplosion(Offset localPosition, {int count = 8}) {
+    if (!mounted) return;
+    const palettes = [
+      [Color(0xFFFFB7D5), Color(0xFFFF8FB7), Color(0xFFFFD6EE), Color(0xFFFF6BA8)],
+      [Color(0xFFD8A4FF), Color(0xFFC680FF), Color(0xFFEDD5FF), Color(0xFFB85EFF)],
+      [Color(0xFFA8C8FF), Color(0xFF7AABFF), Color(0xFFCCE0FF), Color(0xFF5591FF)],
+      [Color(0xFFFFEAA0), Color(0xFFFFD966), Color(0xFFFFF3CC), Color(0xFFFFCB33)],
+      [Color(0xFFA8F0D0), Color(0xFF6EDBB4), Color(0xFFCCF7E5), Color(0xFF3DC98E)],
+      [Color(0xFFFFCBA4), Color(0xFFFFAA77), Color(0xFFFFE3CC), Color(0xFFFF8844)],
+    ];
+
+    try {
+      final random = math.Random();
+      final palette = palettes[random.nextInt(palettes.length)];
+      
+      setState(() {
+        for (int i = 0; i < count; i++) {
+          final angle = random.nextDouble() * math.pi * 2;
+          final speed = 1.5 + random.nextDouble() * 3.0;
+          final size = 16.0 + random.nextDouble() * 20.0;
+          
+          _hearts.add(
+            TinyHeart(
+              x: localPosition.dx,
+              y: localPosition.dy,
+              angle: angle,
+              speed: speed,
+              size: size,
+              color: palette[random.nextInt(palette.length)],
+              style: widget.style,
+            ),
+          );
+        }
+      });
+      if (!_tickerController.isAnimating) {
+        _tickerController.repeat();
+      }
+    } catch (e) {
+      debugPrint('[TapHeartsOverlay] spawnLocalExplosion error: $e');
+    }
+  }
+
   @override
   void dispose() {
     _tickerController.dispose();
@@ -2329,19 +2463,19 @@ class _TapHeartsOverlayState extends State<_TapHeartsOverlay>
     if (_hearts.isEmpty) return const SizedBox.shrink();
     return RepaintBoundary(
       child: CustomPaint(
-        painter: _HeartsPainter(hearts: _hearts),
+        painter: HeartsPainter(hearts: _hearts),
         size: Size.infinite,
       ),
     );
   }
 }
 
-class _HeartsPainter extends CustomPainter {
+class HeartsPainter extends CustomPainter {
   final List<TinyHeart> hearts;
   static final Path _baseHeartPath = _createBaseHeartPath();
   static final Path _baseStarPath = _createBaseStarPath();
 
-  _HeartsPainter({required this.hearts});
+  HeartsPainter({required this.hearts});
 
   static Path _createBaseHeartPath() {
     final Path path = Path();
@@ -2442,7 +2576,7 @@ class _HeartsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _HeartsPainter oldDelegate) => true;
+  bool shouldRepaint(covariant HeartsPainter oldDelegate) => true;
 }
 
 class FloatingMessage {
@@ -2636,20 +2770,29 @@ class _PersistentFloatingPhotoWidgetState extends State<PersistentFloatingPhotoW
   Widget build(BuildContext context) {
     if (_x == 0 && _y == 0) return const SizedBox();
     
-    Widget content = GestureDetector(
-      onPanStart: (_) {
-         _timer?.cancel();
-         setState(() => _isDragging = true);
+    Widget content = Listener(
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: (event) {
+        _timer?.cancel();
+        setState(() => _isDragging = true);
       },
-      onPanUpdate: (details) {
-         setState(() {
-            _x += details.delta.dx;
-            _y += details.delta.dy;
-         });
+      onPointerMove: (event) {
+        if (_isDragging) {
+          setState(() {
+            _x += event.delta.dx;
+            _y += event.delta.dy;
+          });
+        }
       },
-      onPanEnd: (_) {
-         setState(() => _isDragging = false);
-         _timer = Timer.periodic(const Duration(seconds: 8), (_) => _randomizePosition());
+      onPointerUp: (event) {
+        setState(() => _isDragging = false);
+        _timer?.cancel();
+        _timer = Timer.periodic(const Duration(seconds: 8), (_) => _randomizePosition());
+      },
+      onPointerCancel: (event) {
+        setState(() => _isDragging = false);
+        _timer?.cancel();
+        _timer = Timer.periodic(const Duration(seconds: 8), (_) => _randomizePosition());
       },
       child: Transform.rotate(
         angle: _angle,

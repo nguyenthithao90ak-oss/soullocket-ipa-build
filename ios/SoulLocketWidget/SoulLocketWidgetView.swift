@@ -805,34 +805,98 @@ struct SoulLocketWidgetView: View {
     var body: some View {
         let theme = WidgetTheme.from(entry.data.bgTheme)
 
-        ZStack {
-            LinearGradient(
-                colors: theme.gradient,
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+        if #available(iOS 16.0, *), isLockScreen(family: family) {
+            LockScreenWidgetView(data: entry.data, family: family)
+        } else {
+            ZStack {
+                LinearGradient(
+                    colors: theme.gradient,
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
 
-            if entry.data.bgTheme == "premium" {
-                PremiumAuroraBackdrop(accentColor: theme.accentColor)
-            } else if entry.data.bgTheme == "cosmic" {
-                PremiumCosmicBackdrop()
-            } else {
-                WidgetBackgroundDecorations(bgTheme: entry.data.bgTheme, accentColor: theme.accentColor)
-            }
+                if entry.data.bgTheme == "premium" {
+                    PremiumAuroraBackdrop(accentColor: theme.accentColor)
+                } else if entry.data.bgTheme == "cosmic" {
+                    PremiumCosmicBackdrop()
+                } else {
+                    WidgetBackgroundDecorations(bgTheme: entry.data.bgTheme, accentColor: theme.accentColor)
+                }
 
-            switch family {
-            case .systemSmall:
-                SmallWidgetView(data: entry.data, theme: theme)
-            case .systemMedium:
-                MediumWidgetView(data: entry.data, theme: theme)
-            case .systemLarge:
-                LargeWidgetView(data: entry.data, theme: theme)
-            default:
-                SmallWidgetView(data: entry.data, theme: theme)
+                switch family {
+                case .systemSmall:
+                    SmallWidgetView(data: entry.data, theme: theme)
+                case .systemMedium:
+                    MediumWidgetView(data: entry.data, theme: theme)
+                case .systemLarge:
+                    LargeWidgetView(data: entry.data, theme: theme)
+                default:
+                    SmallWidgetView(data: entry.data, theme: theme)
+                }
             }
+            .modifier(WidgetContainerBackground(theme: theme))
         }
-        .modifier(WidgetContainerBackground(theme: theme))
+    }
+
+    @available(iOS 16.0, *)
+    private func isLockScreen(family: WidgetFamily) -> Bool {
+        return family == .accessoryCircular || family == .accessoryRectangular || family == .accessoryInline
+    }
+}
+
+@available(iOS 16.0, *)
+struct LockScreenWidgetView: View {
+    let data: CoupleWidgetData
+    let family: WidgetFamily
+
+    var body: some View {
+        switch family {
+        case .accessoryRectangular:
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 4) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 14))
+                    Text("SoulLocket")
+                        .font(.system(size: 14, weight: .bold))
+                }
+                Text(data.resolvedDaysText())
+                    .font(.system(size: 18, weight: .bold))
+                if !data.status2.isEmpty {
+                    Text(data.status2)
+                        .font(.system(size: 10))
+                        .lineLimit(1)
+                }
+            }
+            .modifier(TransparentWidgetBackground())
+        case .accessoryCircular:
+            VStack(spacing: 2) {
+                Image(systemName: "heart.fill")
+                    .font(.system(size: 14))
+                let numberStr = String(data.resolvedDaysText().split(separator: " ").first ?? "0")
+                Text(numberStr)
+                    .font(.system(size: 16, weight: .bold))
+                    .minimumScaleFactor(0.5)
+            }
+            .modifier(TransparentWidgetBackground())
+        case .accessoryInline:
+            Text("💕 \(data.resolvedDaysText())")
+        default:
+            EmptyView()
+        }
+    }
+}
+
+struct TransparentWidgetBackground: ViewModifier {
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(iOSApplicationExtension 17.0, *) {
+            content.containerBackground(for: .widget) {
+                Color.clear
+            }
+        } else {
+            content
+        }
     }
 }
 

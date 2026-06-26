@@ -4,10 +4,12 @@ class _SingleMatchTopBar extends StatelessWidget {
   const _SingleMatchTopBar({
     required this.onBack,
     required this.onRefresh,
+    required this.onSettings,
   });
 
   final VoidCallback onBack;
   final VoidCallback onRefresh;
+  final VoidCallback onSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -47,8 +49,8 @@ class _SingleMatchTopBar extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           _SingleMatchTopBarButton(
-            icon: Icons.refresh_rounded,
-            onTap: onRefresh,
+            icon: Icons.settings_rounded,
+            onTap: onSettings,
           ),
         ],
       ),

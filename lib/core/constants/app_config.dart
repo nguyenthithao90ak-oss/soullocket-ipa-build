@@ -309,4 +309,9 @@ class AppConfig {
     }
     return uri.path == '/reset-password-complete';
   }
+
+  /// Giới hạn thời gian gọi (phút).
+  static const int freeCallDurationMinutes = 15;
+  static const int vipCallDurationMinutes = 30;
+  static const int callEndWarningSeconds = 30;
 }

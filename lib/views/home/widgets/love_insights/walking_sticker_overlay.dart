@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/offline_cache_service.dart';
 
 class WalkingStickerOverlay extends StatefulWidget {
   const WalkingStickerOverlay({super.key});
@@ -87,6 +88,21 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
     'Đi khắp thế gian, người tớ muốn ở bên nhất vẫn là cậu! 🌍',
     'Lắng nghe và thấu hiểu nhau nhiều hơn mỗi ngày nha! 🌸',
     'Chỉ cần có nhau, góc nhỏ nào cũng hóa bình yên! 🔑',
+  ];
+
+  static const List<String> _singleSpeechPhrases = [
+    'Meow~ Đi dạo vui quá! 🐾',
+    'Cậu ơi, hôm nay thế nào? ❤️',
+    'Bấm vào tớ để đổi nhân vật nhé! 🔄',
+    'Thể dục nâng cao sức khỏe! 🏃',
+    'Chạm vào tớ xem tớ nhảy nè! ⚡',
+    'Hãy lưu giữ thật nhiều kỷ niệm nha! 📸',
+    'Một ngày tuyệt vời để làm việc mình thích! 🌟',
+    'Chăm sóc bản thân là ưu tiên hàng đầu nhé! 💖',
+    'Hôm nay hãy tự thưởng cho mình một món quà nha! 🎁',
+    'Uống đủ nước và nghỉ ngơi khi mệt nhé! 💧',
+    'Tối nay hãy cùng nghe một bản nhạc thật chill nhé! 🎵',
+    'Góc nhỏ của riêng bạn luôn bình yên và ấm áp! 🏡',
   ];
 
   @override
@@ -196,9 +212,12 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
   void _onTapSticker() {
     // 1. Show speech bubble
     _speechBubbleTimer?.cancel();
-    final phraseIndex = _random.nextInt(_speechPhrases.length);
+    final prefs = OfflineCacheService.getPrefsSync();
+    final isSingle = prefs?.getString('il_rel_mode') == 'single';
+    final phrases = isSingle ? _singleSpeechPhrases : _speechPhrases;
+    final phraseIndex = _random.nextInt(phrases.length);
     setState(() {
-      _speechText = _speechPhrases[phraseIndex];
+      _speechText = phrases[phraseIndex];
     });
 
     _speechBubbleTimer = Timer(const Duration(seconds: 4), () {

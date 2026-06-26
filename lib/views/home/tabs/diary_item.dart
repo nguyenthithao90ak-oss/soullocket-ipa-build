@@ -89,14 +89,22 @@ class DiaryItem extends StatelessWidget {
     }
 
     final displayName = rawName;
-    const accentColor = _diarySoftPink;
+
+    // Phân biệt màu sắc theo vai (Nam: Xanh dương, Nữ: Hồng)
+    final isMale = authorRole == 'user1';
+    final isFemale = authorRole == 'user2';
+    final Color accentColor = isMale 
+        ? const Color(0xFF0288D1) 
+        : (isFemale ? _diarySoftPink : const Color(0xFF7B1FA2));
+
+    final isShortText = post.content.trim().length < 30;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: SLTheme.glassCard(
         margin: EdgeInsets.zero,
-        radius: 20,
-        padding: SLSpacing.all20,
+        radius: 24,
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -107,9 +115,9 @@ class DiaryItem extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.15),
+                    color: accentColor.withOpacity(0.12),
                     borderRadius: SLRadius.mdAll,
-                    border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+                    border: Border.all(color: accentColor.withOpacity(0.25)),
                   ),
                   child: Text(
                     '$displayName ${post.mood}',
@@ -137,22 +145,71 @@ class DiaryItem extends StatelessWidget {
                     child: Icon(
                       Icons.delete_rounded,
                       size: 18,
-                      color: Colors.red.withValues(alpha: 0.6),
+                      color: Colors.grey.withOpacity(0.48),
                     ),
                   ),
                 ],
               ],
             ),
             SLSpacing.h16,
-            Text(
-              post.content,
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-                height: 1.6,
-                color: SLColors.textPrimary,
+            // Quote Card cho bài viết ngắn, hiển thị dạng Quote to, in nghiêng, căn giữa kèm dấu ngoặc kép watermark mờ ảo
+            if (isShortText)
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    left: -6,
+                    top: -16,
+                    child: Text(
+                      '“',
+                      style: TextStyle(
+                        fontSize: 72,
+                        color: accentColor.withOpacity(0.07),
+                        fontWeight: FontWeight.w900,
+                        height: 0.8,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: -6,
+                    bottom: -32,
+                    child: Text(
+                      '”',
+                      style: TextStyle(
+                        fontSize: 72,
+                        color: accentColor.withOpacity(0.07),
+                        fontWeight: FontWeight.w900,
+                        height: 0.8,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    child: Text(
+                      post.content,
+                      textAlign: TextAlign.center,
+                      style: SLTheme.quicksand(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 17.5,
+                        fontStyle: FontStyle.italic,
+                        height: 1.5,
+                        color: SLColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            else
+              Text(
+                post.content,
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14.5,
+                  height: 1.6,
+                  color: SLColors.textPrimary,
+                ),
               ),
-            ),
             if (post.imageUrl.isNotEmpty) ...[
               SLSpacing.h16,
               ClipRRect(
@@ -168,7 +225,7 @@ class DiaryItem extends StatelessWidget {
                   placeholderFadeInDuration: Duration.zero,
                   placeholder: (context, url) => Container(
                     height: 120,
-                    color: Colors.white.withValues(alpha: 0.08),
+                    color: Colors.white.withOpacity(0.08),
                     alignment: Alignment.center,
                     child: const SizedBox(
                       width: 22,
@@ -181,7 +238,7 @@ class DiaryItem extends StatelessWidget {
                   ),
                   errorWidget: (_, __, ___) => Container(
                     height: 120,
-                    color: Colors.white.withValues(alpha: 0.08),
+                    color: Colors.white.withOpacity(0.08),
                     alignment: Alignment.center,
                     child: const Icon(Icons.broken_image_rounded, color: Color(0xFFE98FB1), size: 26),
                   ),

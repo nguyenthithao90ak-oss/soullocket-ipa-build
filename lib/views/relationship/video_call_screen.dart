@@ -7,6 +7,8 @@ import '../../utils/app_error_mapper.dart';
 import '../../utils/services/webrtc_service.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/ad_suppression_guard.dart';
+import '../../utils/services/purchase_service.dart';
+import '../../core/constants/app_config.dart';
 
 class VideoCallScreen extends StatefulWidget {
   final String houseId;
@@ -48,13 +50,102 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   // ignore: unused_field
   StreamSubscription<DatabaseEvent>? _roomStatusSub;
 
+  // Timer + giới hạn cuộc gọi
+  Timer? _elapsedTimer;
+  int _elapsedSeconds = 0;
+  int _maxCallSeconds = 0;
+  bool _isVip = false;
+
   @override
   void initState() {
     super.initState();
     AdSuppressionGuard.instance.suppressAds();
-    _isSpeakerOn = widget.isVideo; // Video call mặc định mở loa ngoài
+    _isSpeakerOn = widget.isVideo;
     _webrtcService.toggleSpeaker(_isSpeakerOn);
     _initRenderers();
+    _checkVip();
+  }
+
+  Future<void> _checkVip() async {
+    try {
+      final isVip = await PurchaseService().isVip();
+      if (mounted) {
+        setState(() {
+          _isVip = isVip;
+          if (isVip && AppConfig.vipCallDurationMinutes > 0) {
+            _maxCallSeconds = AppConfig.vipCallDurationMinutes * 60;
+          } else if (!isVip && AppConfig.freeCallDurationMinutes > 0) {
+            _maxCallSeconds = AppConfig.freeCallDurationMinutes * 60;
+          }
+        });
+      }
+    } catch (_) {}
+  }
+
+  void _startElapsedTimer() {
+    _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) {
+        _elapsedTimer?.cancel();
+        return;
+      }
+      setState(() {
+        _elapsedSeconds++;
+      });
+
+      if (_maxCallSeconds > 0 && _elapsedSeconds >= _maxCallSeconds) {
+        // Hết giờ — tự động kết thúc
+        _elapsedTimer?.cancel();
+        _showTimeUpSnack();
+        _endCall();
+      }
+    });
+  }
+
+  void _showTimeUpSnack() {
+    if (!mounted) return;
+    final limitMin = _isVip
+        ? AppConfig.vipCallDurationMinutes
+        : AppConfig.freeCallDurationMinutes;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Đã hết $limitMin phút. Cuộc gọi đã kết thúc.',
+        ),
+        backgroundColor: const Color(0xFFD81B60),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  String _formatElapsed() {
+    final minutes = _elapsedSeconds ~/ 60;
+    final seconds = _elapsedSeconds % 60;
+    if (minutes >= 60) {
+      final hours = minutes ~/ 60;
+      final mins = minutes % 60;
+      return '${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  int get _remainingSeconds => _maxCallSeconds > 0
+      ? (_maxCallSeconds - _elapsedSeconds).clamp(0, _maxCallSeconds)
+      : 0;
+
+  bool get _isWarning => _maxCallSeconds > 0 &&
+      _remainingSeconds > 0 &&
+      _remainingSeconds <= AppConfig.callEndWarningSeconds;
+
+  @override
+  void dispose() {
+    _elapsedTimer?.cancel();
+    AdSuppressionGuard.instance.resumeAds();
+    _roomStatusSub?.cancel();
+    _webrtcService.hangUp();
+    _localRenderer.dispose();
+    _remoteRenderer.dispose();
+    super.dispose();
   }
 
   Future<void> _initRenderers() async {
@@ -62,13 +153,13 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     await _remoteRenderer.initialize();
     try {
       if (widget.targetHouseId == 'random_stranger_id') {
-        // Mock connection for demo
         await Future.delayed(const Duration(seconds: 2));
         if (!mounted) return;
         setState(() {
           _inCall = true;
           _isPreparing = false;
         });
+        _startElapsedTimer();
         return;
       }
 
@@ -95,7 +186,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         _inCall = true;
         _isPreparing = false;
       });
-      // Đặt timeout 45s cho cuộc gọi chưa được bắt máy
+      _startElapsedTimer();
+
       if (widget.roomId == null) {
         _timeoutTimer = Timer(const Duration(seconds: 45), () {
           if (mounted && _roomId != null) {
@@ -104,7 +196,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         });
       }
 
-      // Lắng nghe trạng thái room để tự hủy timeout và tự kết thúc gọi
       if (_roomId != null) {
         _roomStatusSub = FirebaseDatabase.instance
             .ref('calls/$_roomId/status')
@@ -143,16 +234,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       );
       Navigator.pop(context);
     }
-  }
-
-  @override
-  void dispose() {
-    AdSuppressionGuard.instance.resumeAds();
-    _roomStatusSub?.cancel();
-    _webrtcService.hangUp();
-    _localRenderer.dispose();
-    _remoteRenderer.dispose();
-    super.dispose();
   }
 
   @override
@@ -223,16 +304,51 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
-                                  _isPreparing ? context.tr('relationship_angktni_e4af2e') : callLabel,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.center,
-                                  style: SLTheme.quicksand(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    if (_inCall) ...[
+                                      Icon(
+                                        _isWarning
+                                            ? Icons.timer_off_rounded
+                                            : Icons.timer_outlined,
+                                        color: _isWarning
+                                            ? const Color(0xFFFF5252)
+                                            : Colors.white70,
+                                        size: 14,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${_formatElapsed()} / ${_formatDuration(_remainingSeconds)}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: SLTheme.quicksand(
+                                          color: _isWarning
+                                              ? const Color(0xFFFF5252)
+                                              : Colors.white70,
+                                          fontSize: 13,
+                                          fontWeight: _isWarning
+                                              ? FontWeight.w900
+                                              : FontWeight.w600,
+                                        ),
+                                      ),
+                                    ] else
+                                      Text(
+                                        _isPreparing
+                                            ? context.tr(
+                                                'relationship_angktni_e4af2e')
+                                            : callLabel,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: SLTheme.quicksand(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -423,6 +539,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   }
 
   Future<void> _endCall() async {
+    _elapsedTimer?.cancel();
     await _webrtcService.hangUp();
     if (!mounted) return;
     Navigator.pop(context);
@@ -453,5 +570,17 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         child: Icon(icon, color: iconColor, size: size * 0.5),
       ),
     );
+  }
+
+  String _formatDuration(int seconds) {
+    if (seconds <= 0) return '0:00';
+    final minutes = seconds ~/ 60;
+    final secs = seconds % 60;
+    if (minutes >= 60) {
+      final hours = minutes ~/ 60;
+      final mins = minutes % 60;
+      return '${hours}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    }
+    return '${minutes}:${secs.toString().padLeft(2, '0')}';
   }
 }

@@ -881,8 +881,10 @@ class _ThemeSectionCardState extends State<_ThemeSectionCard> with SingleTickerP
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: Theme(
-          data: Theme.of(context).copyWith(
+        child: Material(
+          type: MaterialType.transparency,
+          child: Theme(
+            data: Theme.of(context).copyWith(
             dividerColor: Colors.transparent,
             splashColor: Colors.transparent,
             highlightColor: Colors.transparent,
@@ -947,7 +949,7 @@ class _ThemeSectionCardState extends State<_ThemeSectionCard> with SingleTickerP
               ),
             ],
           ),
-        ),
+        )),
       ),
     );
   }

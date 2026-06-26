@@ -43,6 +43,8 @@ import '../relationship/video_call_screen.dart';
 import '../utilities/calendar_screen.dart';
 import 'love_insights_screen.dart';
 import '../ui_prefs.dart';
+import 'package:soullocket_app/views/home/tabs/settings/settings_gift_links_manager_screen.dart';
+import 'package:soullocket_app/utils/services/memory_share_service.dart';
 import 'tabs/community_tab.dart';
 import 'tabs/diary_tab.dart';
 import 'tabs/game_tab.dart';
@@ -589,6 +591,7 @@ class _HomeScreenState extends State<HomeScreen>
     final houseId = await HouseService().getCurrentHouseId();
     if (!mounted || houseId == null) return;
     unawaited(_syncIncomingCallListener(houseId));
+    unawaited(_checkExpiredProGracePeriod(houseId));
     final startDateSnap =
         await FirebaseDatabase.instance.ref('houses/$houseId/settings/startDate').get();
     if (!mounted || !startDateSnap.exists || startDateSnap.value == null) return;
@@ -1484,6 +1487,7 @@ class _HomeScreenState extends State<HomeScreen>
             },
             child: _buildMusicButton(),
           ),
+          const SoulMergeSticker(),
         ],
       );
     }

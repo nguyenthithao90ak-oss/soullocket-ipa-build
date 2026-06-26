@@ -637,3 +637,275 @@ class _InactivityCountdownDialogState
     );
   }
 }
+
+extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
+  Future<void> _checkExpiredProGracePeriod(String houseId) async {
+    if (kIsWeb) return;
+    try {
+      final ref = FirebaseDatabase.instance.ref();
+      final proUntilSnap = await ref.child('houses/$houseId/proUntil').get();
+      final proUntil = (proUntilSnap.value as num?)?.toInt() ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      // Nếu còn PRO thì không cần làm gì cả
+      if (proUntil > now) {
+        final graceRef = ref.child('houses/$houseId/expiredProGrace');
+        final graceSnap = await graceRef.get();
+        if (graceSnap.exists) {
+          await graceRef.remove();
+        }
+        return;
+      }
+
+      // Đếm số lượng active memory shares
+      final sharesSnap = await ref.child('houses/$houseId/memoryShares').get();
+      if (!sharesSnap.exists || sharesSnap.value is! Map) {
+        final graceRef = ref.child('houses/$houseId/expiredProGrace');
+        final graceSnap = await graceRef.get();
+        if (graceSnap.exists) {
+          await graceRef.remove();
+        }
+        return;
+      }
+
+      final sharesMap = Map<dynamic, dynamic>.from(sharesSnap.value as Map);
+      final activeLinks = <MapEntry<dynamic, dynamic>>[];
+      sharesMap.forEach((key, val) {
+        if (val is Map) {
+          final revoked = val['revoked'] == true;
+          final expiresAt = (val['expiresAt'] as num?)?.toInt() ?? 0;
+          if (!revoked && (expiresAt == 0 || now < expiresAt)) {
+            activeLinks.add(MapEntry(key, val));
+          }
+        }
+      });
+
+      if (activeLinks.length <= 5) {
+        final graceRef = ref.child('houses/$houseId/expiredProGrace');
+        final graceSnap = await graceRef.get();
+        if (graceSnap.exists) {
+          await graceRef.remove();
+        }
+        return;
+      }
+
+      // Nếu active link > 5 (dư thừa link sau khi hết PRO)
+      final graceRef = ref.child('houses/$houseId/expiredProGrace');
+      final graceSnap = await graceRef.get();
+
+      if (!graceSnap.exists) {
+        // Tạo mới node lưu vết grace period
+        final graceData = <String, dynamic>{
+          'startedAt': now,
+          'lastNotifiedAt': now,
+          'notifiedCount': 1,
+        };
+        await graceRef.set(graceData);
+
+        if (!mounted) return;
+        _showExpiredProGraceDialog(
+          houseId: houseId,
+          activeCount: activeLinks.length,
+          daysRemaining: 3,
+        );
+      } else {
+        final graceData = Map<String, dynamic>.from(graceSnap.value as Map);
+        final startedAt = (graceData['startedAt'] as num?)?.toInt() ?? now;
+        final lastNotifiedAt = (graceData['lastNotifiedAt'] as num?)?.toInt() ?? 0;
+
+        final diffMs = now - startedAt;
+        final daysElapsed = diffMs / (24 * 60 * 60 * 1000);
+
+        if (daysElapsed >= 3.0) {
+          // --- QUÁ 3 NGÀY: TỰ ĐỘNG KHÓA CÁC LINK CŨ, GIỮ LẠI 5 MỚI NHẤT ---
+          activeLinks.sort((a, b) {
+            final tsA = (a.value['createdAt'] as num?)?.toInt() ?? 0;
+            final tsB = (b.value['createdAt'] as num?)?.toInt() ?? 0;
+            return tsB.compareTo(tsA); // giảm dần (mới nhất lên đầu)
+          });
+
+          final linksToRevoke = activeLinks.skip(5).toList();
+          final updates = <String, dynamic>{};
+          final memoryShareService = MemoryShareService();
+
+          for (final entry in linksToRevoke) {
+            final token = entry.key.toString();
+            try {
+              await memoryShareService.revokeShareLink(token);
+            } catch (_) {
+              updates['houses/$houseId/memoryShares/$token/revoked'] = true;
+              updates['houses/$houseId/memoryShares/$token/revokedAt'] = now;
+            }
+          }
+
+          if (updates.isNotEmpty) {
+            await ref.update(updates);
+          }
+
+          // Xoá node grace period
+          await graceRef.remove();
+
+          if (!mounted) return;
+          _showExpiredProAutoCleanedDialog();
+        } else {
+          // --- CHƯA QUÁ 3 NGÀY: NHẮC NHỞ HẰNG NGÀY ---
+          final daysRemaining = (3.0 - daysElapsed).ceil().clamp(1, 3);
+          if (now - lastNotifiedAt >= 24 * 60 * 60 * 1000) {
+            if (!mounted) return;
+            _showExpiredProGraceDialog(
+              houseId: houseId,
+              activeCount: activeLinks.length,
+              daysRemaining: daysRemaining,
+            );
+            await graceRef.update(<String, dynamic>{
+              'lastNotifiedAt': now,
+              'notifiedCount': ServerValue.increment(1),
+            });
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  void _showExpiredProGraceDialog({
+    required String houseId,
+    required int activeCount,
+    required int daysRemaining,
+  }) {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF4B91).withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.warning_amber_rounded, color: Color(0xFFFF4B91), size: 24),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Gói PRO đã hết hạn',
+                style: SLTheme.quicksand(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: SLColors.textPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Tài khoản PRO của bạn đã hết hạn. Bạn hiện đang có $activeCount liên kết album hoạt động (tối đa 5 đối với tài khoản thường).\n\nVui lòng chọn giữ lại tối đa 5 liên kết trong vòng $daysRemaining ngày nữa, nếu không hệ thống sẽ tự động khóa các liên kết cũ.',
+          style: SLTheme.quicksand(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: SLColors.textSecondary,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Để sau',
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w700,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFFF4B91),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                SLRoute<void>(
+                  builder: (_) => SettingsGiftLinksManagerScreen(houseId: houseId),
+                ),
+              );
+            },
+            child: Text(
+              'Chọn ngay',
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showExpiredProAutoCleanedDialog() {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00C853).withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.info_outline_rounded, color: Color(0xFF00C853), size: 24),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Tự động khóa liên kết',
+                style: SLTheme.quicksand(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: SLColors.textPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Đã quá 3 ngày kể từ khi hết hạn PRO, hệ thống đã tự động khóa các liên kết cũ và giữ lại 5 liên kết Memory Share mới nhất của bạn để đảm bảo giới hạn tài khoản thường.',
+          style: SLTheme.quicksand(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: SLColors.textSecondary,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF00C853),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Đồng ý',
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

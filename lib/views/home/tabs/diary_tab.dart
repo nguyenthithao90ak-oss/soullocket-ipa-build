@@ -24,6 +24,7 @@ import '../../../widgets/skeleton_container.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../../utils/services/security_service.dart';
 import 'diary_composer.dart';
+import 'package:soullocket_app/views/home/tabs/settings/settings_gift_links_manager_screen.dart';
 
 import 'diary/controllers/diary_composer_controller.dart';
 import 'diary/controllers/diary_feed_controller.dart';
@@ -272,34 +273,21 @@ class _DiaryTabState extends State<DiaryTab>
       return;
     }
 
-    MemoryShareAllowanceGateResult? gateResult;
     if (!isProUser) {
-      gateResult = await _memoryShareAllowanceService.allowNextCreate(
-        showRewardedAd: () async {
-          _showDiarySnackBar(context.tr('home_angtiqungc_dbfb83'));
-          final adMob = AdMobService();
-          await adMob.initialize();
-          return adMob.showRewardedAd(
-            ignoreCooldown: true,
-            loadTimeout: const Duration(seconds: 10),
-          );
-        },
+      _showDiarySnackBar(context.tr('home_angtiqungc_dbfb83'));
+      final adMob = AdMobService();
+      await adMob.initialize();
+      final watched = await adMob.showRewardedAd(
+        ignoreCooldown: true,
+        loadTimeout: const Duration(seconds: 10),
       );
-      if (!gateResult.allow) {
+      if (!watched) {
         _showDiarySnackBar(
-          gateResult.requiresAd
-              ? context.tr('util_khngticqun_ce9d80')
-              : context.tr('home_cnxemqungc_878e59'),
+          'Bạn cần xem hết quảng cáo để tạo liên kết chia sẻ kỷ niệm.',
           backgroundColor: const Color(0xFFE53935),
         );
         return;
       }
-    }
-
-    if (gateResult != null && gateResult.rewardGranted > 0) {
-      _showDiarySnackBar(
-        'Bạn nhận được ${gateResult.rewardGranted} lượt tạo liên kết. Còn lại ${gateResult.remainingCredits} lượt.',
-      );
     }
 
     showDialog<void>(
@@ -371,6 +359,12 @@ class _DiaryTabState extends State<DiaryTab>
         return;
       }
       Navigator.of(context).pop();
+      final errStr = error.toString();
+      if (errStr.contains('EXCEEDED_ACTIVE_LINKS_LIMIT')) {
+        final isProError = errStr.contains('PRO');
+        _showActiveLinksLimitExceededDialog(isProError);
+        return;
+      }
       final resolvedError = AppErrorMapper.resolve(
         error,
         fallbackMessage: context.tr('home_chathtolin_20194a'),
@@ -380,6 +374,27 @@ class _DiaryTabState extends State<DiaryTab>
         backgroundColor: const Color(0xFFE53935),
       );
     }
+  }
+
+  void _showActiveLinksLimitExceededDialog(bool isPro) {
+    final houseId = _houseId?.trim() ?? '';
+    SLNotice.showConfirmDialog(
+      context,
+      title: 'Đạt giới hạn liên kết',
+      message: isPro
+          ? 'Tài khoản PRO đã đạt giới hạn tối đa 20 liên kết chia sẻ kỷ niệm đang hoạt động cùng lúc. Vui lòng vào Cài đặt để xóa bớt liên kết cũ.'
+          : 'Tài khoản thường chỉ được tạo tối đa 5 liên kết chia sẻ kỷ niệm đang hoạt động cùng lúc. Vui lòng vào Cài đặt để xóa bớt liên kết cũ, hoặc nâng cấp lên PRO để tăng giới hạn lên 20 liên kết.',
+      confirmText: 'Đi tới Cài đặt',
+      cancelText: 'Đóng',
+    ).then((confirmed) {
+      if (confirmed == true && mounted && houseId.isNotEmpty) {
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => SettingsGiftLinksManagerScreen(houseId: houseId),
+          ),
+        );
+      }
+    });
   }
 
   Future<int?> _pickMemoryShareExpiryDays() {
@@ -1115,8 +1130,8 @@ class _DiaryTabState extends State<DiaryTab>
         opaque: false,
         barrierDismissible: true,
         barrierColor: Colors.transparent,
-        transitionDuration: const Duration(milliseconds: 320),
-        reverseTransitionDuration: const Duration(milliseconds: 320),
+        transitionDuration: const Duration(milliseconds: 240),
+        reverseTransitionDuration: const Duration(milliseconds: 240),
         pageBuilder: (dialogContext, animation, secondaryAnimation) {
           final bgOpacityNotifier = ValueNotifier<double>(1.0);
           final isZoomedInNotifier = ValueNotifier<bool>(false);
@@ -1560,6 +1575,12 @@ class _DiaryTabState extends State<DiaryTab>
             },
           );
         },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
       ),
     );
   }
@@ -1884,7 +1905,9 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                     panEnabled: panEnabled,
                     minScale: 1.0,
                     maxScale: 4.5,
-                    boundaryMargin: const EdgeInsets.all(24),
+                    boundaryMargin: panEnabled
+                        ? const EdgeInsets.all(24)
+                        : EdgeInsets.zero,
                     clipBehavior: Clip.none,
                     interactionEndFrictionCoefficient: 0.00008,
                     child: Hero(

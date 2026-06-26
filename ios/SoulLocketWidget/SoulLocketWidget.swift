@@ -146,12 +146,20 @@ struct SoulLocketWidgetBundle: WidgetBundle {
 struct WidgetCoupleProvider: Widget {
     let kind: String = "WidgetCoupleProvider"
 
+    private var families: [WidgetFamily] {
+        if #available(iOS 16.0, *) {
+            return [.systemSmall, .systemMedium, .systemLarge, .accessoryCircular, .accessoryRectangular, .accessoryInline]
+        } else {
+            return [.systemSmall, .systemMedium, .systemLarge]
+        }
+    }
+
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: CoupleWidgetProvider()) { entry in
             SoulLocketWidgetView(entry: entry)
         }
         .configurationDisplayName("SoulLocket")
         .description("Hiển thị thông tin cặp đôi của bạn.")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .supportedFamilies(families)
     }
 }

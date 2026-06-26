@@ -6,7 +6,7 @@ import '../../../utils/services/l10n_service.dart';
 const Color _diarySoftPink = Color(0xFFE98FB1);
 const Color _diarySoftPinkLight = Color(0xFFF6C3D5);
 
-class DiaryComposer extends StatelessWidget {
+class DiaryComposer extends StatefulWidget {
   final List<Map<String, dynamic>> moods;
   final String selectedMood;
   final ValueChanged<String> onMoodChanged;
@@ -25,6 +25,36 @@ class DiaryComposer extends StatelessWidget {
   });
 
   @override
+  State<DiaryComposer> createState() => _DiaryComposerState();
+}
+
+class _DiaryComposerState extends State<DiaryComposer> {
+  final FocusNode _focusNode = FocusNode();
+  bool _isFocused = false;
+  bool _isButtonPressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (mounted) {
+      setState(() {
+        _isFocused = _focusNode.hasFocus;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -34,56 +64,72 @@ class DiaryComposer extends StatelessWidget {
         padding: SLSpacing.all20,
         child: Column(
           children: [
+            // Mood Selector
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                color: Colors.white.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 10,
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: moods.map((mood) {
-                  final active = selectedMood == mood['icon'];
+                children: widget.moods.map((mood) {
+                  final active = widget.selectedMood == mood['icon'];
+                  final moodColor = mood['color'] as Color;
                   return Expanded(
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
-                      onTap: () => onMoodChanged(mood['icon']),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: active ? 42 : 40,
-                            height: active ? 42 : 40,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: active
-                                  ? (mood['color'] as Color).withValues(alpha: 0.15)
-                                  : const Color(0xFFF5F7FA),
-                              border: Border.all(
+                      onTap: () => widget.onMoodChanged(mood['icon']),
+                      child: AnimatedScale(
+                        scale: active ? 1.15 : 1.0,
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeOutBack,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
                                 color: active
-                                    ? mood['color'] as Color
-                                    : Colors.transparent,
-                                width: 2,
+                                    ? moodColor.withOpacity(0.18)
+                                    : const Color(0xFFF2F4F8),
+                                border: Border.all(
+                                  color: active
+                                      ? moodColor
+                                      : Colors.transparent,
+                                  width: 2.2,
+                                ),
+                                boxShadow: active
+                                    ? [
+                                        BoxShadow(
+                                          color: moodColor.withOpacity(0.3),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 3),
+                                        )
+                                      ]
+                                    : null,
                               ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                mood['icon'],
-                                style: TextStyle(
-                                  fontSize: active ? 24 : 22,
+                              child: Center(
+                                child: Text(
+                                  mood['icon'],
+                                  style: TextStyle(
+                                    fontSize: active ? 25 : 22,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          // Removed text label per user request
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -91,81 +137,120 @@ class DiaryComposer extends StatelessWidget {
               ),
             ),
             SLSpacing.h16,
-            TextField(
-              controller: composerController,
-              minLines: 2,
-              maxLines: 6,
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w800,
-                fontSize: 14,
-                color: SLColors.textPrimary,
+            // TextField bọc trong viền Gradient Neon mượt mà
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              padding: const EdgeInsets.all(2.0),
+              decoration: BoxDecoration(
+                borderRadius: SLRadius.lgAll,
+                gradient: LinearGradient(
+                  colors: _isFocused
+                      ? [
+                          const Color(0xFFF6C3D5),
+                          const Color(0xFFE98FB1),
+                          const Color(0xFF90CAF9),
+                        ]
+                      : [
+                          Colors.white.withOpacity(0.5),
+                          Colors.white.withOpacity(0.2),
+                        ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: _isFocused
+                    ? [
+                        BoxShadow(
+                          color: _diarySoftPink.withOpacity(0.22),
+                          blurRadius: 16,
+                          offset: const Offset(0, 5),
+                        )
+                      ]
+                    : null,
               ),
-              decoration: InputDecoration(
-                hintText:
-                    L10nService().translate(context.tr('home_hmnaythnog_0c01f7')),
-                hintStyle: SLTheme.quicksand(
-                  color: SLColors.textTertiary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.65),
+                  borderRadius: const BorderRadius.all(Radius.circular(14)),
                 ),
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.4),
-                contentPadding: SLSpacing.all16,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: SLRadius.lgAll,
-                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: SLRadius.lgAll,
-                  borderSide:
-                      const BorderSide(color: _diarySoftPink, width: 1.5),
+                child: TextField(
+                  focusNode: _focusNode,
+                  controller: widget.composerController,
+                  minLines: 3,
+                  maxLines: 6,
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14.5,
+                    color: SLColors.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: L10nService().translate(context.tr('home_hmnaythnog_0c01f7')),
+                    hintStyle: SLTheme.quicksand(
+                      color: SLColors.textTertiary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    filled: true,
+                    fillColor: Colors.transparent,
+                    contentPadding: SLSpacing.all16,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                  ),
                 ),
               ),
             ),
             SLSpacing.h16,
-            Container(
-              width: double.infinity,
-              height: 56,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [_diarySoftPinkLight, _diarySoftPink],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: _diarySoftPink.withValues(alpha: 0.18),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
+            // Button Lưu Tâm Sự với đổ bóng phát sáng (Glow Shadow) & Bounce Effect
+            AnimatedScale(
+              scale: _isButtonPressed ? 0.96 : 1.0,
+              duration: const Duration(milliseconds: 100),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: double.infinity,
+                height: 54,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [_diarySoftPinkLight, _diarySoftPink],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
                   ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(28),
-                  onTap: isPostingDiary ? null : onSubmit,
-                  child: Center(
-                    child: isPostingDiary
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                  borderRadius: BorderRadius.circular(27),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _diarySoftPink.withOpacity(0.45),
+                      blurRadius: 20,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(27),
+                    onTapDown: (_) => setState(() => _isButtonPressed = true),
+                    onTapUp: (_) => setState(() => _isButtonPressed = false),
+                    onTapCancel: () => setState(() => _isButtonPressed = false),
+                    onTap: widget.isPostingDiary ? null : widget.onSubmit,
+                    child: Center(
+                      child: widget.isPostingDiary
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : Text(
+                              L10nService().translate(context.tr('home_lutms_b4b0f3')),
+                              style: SLTheme.quicksand(
+                                color: Colors.white,
+                                fontSize: 15.5,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
                             ),
-                          )
-                        : Text(
-                            L10nService().translate(context.tr('home_lutms_b4b0f3')),
-                            style: SLTheme.quicksand(
-                              color: Colors.white,
-                              fontSize: 15.5,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.4,
-                            ),
-                          ),
+                    ),
                   ),
                 ),
               ),

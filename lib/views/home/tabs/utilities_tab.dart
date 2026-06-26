@@ -340,7 +340,13 @@ class _UtilitiesTabState extends State<UtilitiesTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final visibleApps = _appsForCurrentSegment();
+    final visibleAppsAll = UtilityService.appsForMode(_relationshipMode);
+    final commonApps = _sortAppsByCurrentOrder(
+      visibleAppsAll.where((app) => !app.isTool).toList(growable: false),
+    );
+    final essentialApps = _sortAppsByCurrentOrder(
+      visibleAppsAll.where((app) => app.isTool).toList(growable: false),
+    );
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -348,7 +354,8 @@ class _UtilitiesTabState extends State<UtilitiesTab>
         currentSegment: _currentSegment,
         onSegmentChanged: _handleSegmentChanged,
         onResetTap: _confirmResetLayout,
-        apps: visibleApps,
+        commonApps: commonApps,
+        essentialApps: essentialApps,
         pinnedApps: _shortcutPinnedApps,
         recentApps: _shortcutRecentApps,
         onShortcutTap: _navigateToApp,

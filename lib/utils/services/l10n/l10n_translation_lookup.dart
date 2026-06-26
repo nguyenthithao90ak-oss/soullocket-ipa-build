@@ -8,7 +8,7 @@ class _L10nTranslationLookup {
   final LinkedHashMap<String, String> _resultCache =
       LinkedHashMap<String, String>();
 
-  String _cacheKey(String lang, String rawKey) => '$lang|$rawKey';
+  String _cacheKey(String lang, String rawKey, bool isSingle) => '$lang|$rawKey|$isSingle';
 
   String translate(
     String key, {
@@ -27,8 +27,11 @@ class _L10nTranslationLookup {
         )
         .key;
 
+    final prefs = OfflineCacheService.getPrefsSync();
+    final isSingle = prefs?.getString('il_rel_mode') == 'single';
+
     // ⚡ Cache hit
-    final ck = _cacheKey(lang, rawKey);
+    final ck = _cacheKey(lang, rawKey, isSingle);
     final cached = _resultCache[ck];
     if (cached != null) return cached;
 
@@ -52,7 +55,30 @@ class _L10nTranslationLookup {
         assetViValueToKey[rawKey] ?? staticViValueToKey[rawKey] ?? rawKey;
 
     String? result;
-    if (webParity.containsKey(canonicalKey)) result = webParity[canonicalKey];
+
+    if (isSingle) {
+      final singleCanonicalKey = '${canonicalKey}_single';
+      final singleRawKey = '${rawKey}_single';
+
+      if (webParity.containsKey(singleCanonicalKey)) result = webParity[singleCanonicalKey];
+      if (result == null && map.containsKey(singleCanonicalKey)) result = map[singleCanonicalKey];
+      if (result == null && webParity.containsKey(singleRawKey)) result = webParity[singleRawKey];
+      if (result == null && map.containsKey(singleRawKey)) result = map[singleRawKey];
+
+      if (result == null) {
+        final commonMap = _commonTranslations[lang] ?? const {};
+        if (commonMap.containsKey(singleCanonicalKey)) result = commonMap[singleCanonicalKey];
+        if (result == null && commonMap.containsKey(singleRawKey)) result = commonMap[singleRawKey];
+      }
+
+      if (result == null) {
+        final enMap = _resolvedEn(assetMaps['en'] ?? const {});
+        if (enMap.containsKey(singleCanonicalKey)) result = enMap[singleCanonicalKey];
+        if (result == null && enMap.containsKey(singleRawKey)) result = enMap[singleRawKey];
+      }
+    }
+
+    if (result == null && webParity.containsKey(canonicalKey)) result = webParity[canonicalKey];
     if (result == null && map.containsKey(canonicalKey)) result = map[canonicalKey];
     if (result == null && webParity.containsKey(rawKey)) result = webParity[rawKey];
     if (result == null && map.containsKey(rawKey)) result = map[rawKey];

@@ -574,7 +574,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   child: Text(
                     isSingle ? context.tr('home_tngquanhmn_0e1b6b') : context.tr('home_hnhtrnhiqu_cbcf59'),
                     maxLines: 1,
-                    overflow: TextOverflow.visible,
+                    overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w900,
                       fontSize: 13,
@@ -589,8 +589,10 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   size: 16,
                   color: SLColors.accent.withValues(alpha: 0.5),
                 ),
-                const Spacer(),
-                if (dragHandle != null) dragHandle,
+                if (dragHandle != null) ...[
+                  const Spacer(),
+                  dragHandle,
+                ],
               ],
             ),
             SLSpacing.h20,

@@ -520,11 +520,15 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
               ),
             ],
           ),
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              dividerColor: Colors.transparent,
-            ),
-            child: ExpansionTile(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Material(
+              type: MaterialType.transparency,
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  dividerColor: Colors.transparent,
+                ),
+                child: ExpansionTile(
               tilePadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               leading: Container(
@@ -732,7 +736,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
                   ),
               ],
             ),
-          ),
+          ))),
         );
       },
     );

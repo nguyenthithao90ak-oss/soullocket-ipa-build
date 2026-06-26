@@ -10,9 +10,13 @@ import '../../core/sl_theme.dart';
 import '../../models/single_match_models.dart';
 import '../../utils/services/single_match_service.dart';
 import '../../utils/app_error_mapper.dart';
-import '../community/community_settings_screen.dart';
+import 'single_match_settings_screen.dart';
 import '../relationship/video_call_screen.dart';
 import '../visitors/visitor_profile_screen.dart';
+import 'tabs/single_match_chats_tab.dart';
+import 'tabs/single_match_calls_tab.dart';
+import 'dialogs/single_match_secret_code_dialog.dart';
+import '../chat/chat_detail_screen.dart';
 
 part 'single_match/single_match_action_panels.dart';
 part 'single_match/single_match_candidate_cards.dart';
@@ -137,8 +141,9 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _historyStream = _service.streamHistory(widget.houseId).asBroadcastStream();
-    _candidateStream =
-        _service.streamCandidates(currentHouseId: widget.houseId);
+    _candidateStream = _service
+        .streamCandidates(currentHouseId: widget.houseId)
+        .asBroadcastStream();
     _discoveryStream = _combineLatest2<List<SingleMatchHistoryEntry>,
         List<SingleMatchCandidate>, _SingleMatchDiscoverySnapshot>(
       _historyStream,
@@ -147,7 +152,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         history: history,
         candidates: candidates,
       ),
-    );
+    ).asBroadcastStream();
     _introController.addListener(_handleDraftTextChanged);
     _tagsController.addListener(_handleDraftTextChanged);
     _loadBootstrap();
@@ -358,6 +363,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
           .savePreferences(
             houseId: widget.houseId,
             preferences: preferences,
+            displayName: _displayName,
+            avatarUrl: _avatarUrl,
           )
           .timeout(const Duration(seconds: 10));
       if (_myDob != _savedDob) {
@@ -365,6 +372,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
             .updateOwnDob(
               houseId: widget.houseId,
               isoDob: _myDob,
+              avatarUrl: _avatarUrl,
+              displayName: _displayName,
             )
             .timeout(const Duration(seconds: 10));
       }
@@ -393,11 +402,24 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
     }
   }
 
+  Future<void> _openSettings() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SingleMatchSettingsScreen(houseId: widget.houseId),
+      ),
+    );
+    if (!mounted) {
+      return;
+    }
+    await _loadBootstrap();
+  }
+
   Future<void> _openCommunitySettings() async {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => CommunitySettingsScreen(houseId: widget.houseId),
+        builder: (_) => SingleMatchSettingsScreen(houseId: widget.houseId),
       ),
     );
     if (!mounted) {
@@ -856,8 +878,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                           ),
                           tabs: <Tab>[
                             Tab(text: L10nService().translate('match_ghpni_91676a')),
-                            Tab(text: L10nService().translate('match_lchs_3061f5')),
-                            Tab(text: L10nService().translate('match_cit_1a6910')),
+                            const Tab(text: 'Trò chuyện'),
+                            const Tab(text: 'Cuộc gọi'),
                           ],
                         ),
                       ),
@@ -876,8 +898,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                                   controller: _tabController,
                                   children: <Widget>[
                                     _buildDiscoveryTab(),
-                                    _buildHistoryTab(),
-                                    _buildSettingsTab(),
+                                    _buildChatsTab(),
+                                    _buildCallsTab(),
                                   ],
                                 ),
                     ),
@@ -895,6 +917,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
     return _SingleMatchTopBar(
       onBack: () => Navigator.pop(context),
       onRefresh: _loadBootstrap,
+      onSettings: _openSettings,
     );
   }
 
@@ -936,6 +959,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
               const SizedBox(height: 14),
               _buildActiveFiltersCard(),
               const SizedBox(height: 14),
+              _buildSecretCodeCard(),
+              const SizedBox(height: 14),
               _buildEmptyPoolCard(),
             ],
           );
@@ -970,6 +995,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
             _buildWarningCard(),
             const SizedBox(height: 14),
             _buildActiveFiltersCard(),
+            const SizedBox(height: 14),
+            _buildSecretCodeCard(),
             const SizedBox(height: 14),
             _buildFeaturedCard(
               scored: featured,
@@ -1121,303 +1148,15 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
     );
   }
 
-  Widget _buildHistoryTab() {
-    return StreamBuilder<List<SingleMatchHistoryEntry>>(
-      stream: _historyStream,
-      builder: (context, snapshot) {
-        final history = snapshot.data ?? const <SingleMatchHistoryEntry>[];
-        if (snapshot.hasError) {
-          return _SingleMatchLoadErrorCard(
-            loadError: AppErrorMapper.resolve(snapshot.error).message,
-            onRetry: _loadBootstrap,
-          );
-        }
-        if (!snapshot.hasData) {
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
-            children: <Widget>[
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: Colors.white),
-                ),
-                child: Column(
-                  children: <Widget>[
-                    const Icon(
-                      Icons.history_toggle_off_rounded,
-                      size: 52,
-                      color: Color(0xFF7C61FF),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      L10nService().translate('match_chaclchs_03d58f'),
-                      style: SLTheme.quicksand(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF32203B),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      L10nService().translate('match_khibngihoc_c9ed47'),
-                      textAlign: TextAlign.center,
-                      style: SLTheme.quicksand(
-                        fontSize: 13,
-                        height: 1.45,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF8B7A90),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        }
-
-        final callEntries = history.where((entry) => entry.isCall).toList();
-        final totalMinutes = callEntries.fold<int>(
-          0,
-          (sum, entry) => sum + entry.durationSeconds ~/ 60,
-        );
-
-        if (history.isEmpty) {
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
-            children: <Widget>[
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: Colors.white),
-                ),
-                child: Column(
-                  children: <Widget>[
-                    const Icon(
-                      Icons.history_toggle_off_rounded,
-                      size: 52,
-                      color: Color(0xFF7C61FF),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      L10nService().translate('match_chaclchs_03d58f'),
-                      style: SLTheme.quicksand(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF32203B),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      L10nService().translate('match_khibngihoc_c9ed47'),
-                      textAlign: TextAlign.center,
-                      style: SLTheme.quicksand(
-                        fontSize: 13,
-                        height: 1.45,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF8B7A90),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        }
-
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: _StatTile(
-                    label: L10nService().translate('match_tngcucgi_8e041e'),
-                    value: '${callEntries.length}',
-                    icon: Icons.call_rounded,
-                    color: const Color(0xFFFF4F87),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _StatTile(
-                    label: L10nService().translate('match_phttrchuyn_b7d1cd'),
-                    value: '$totalMinutes',
-                    icon: Icons.schedule_rounded,
-                    color: const Color(0xFF7C61FF),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            ...history.map(_buildHistoryCard),
-          ],
-        );
-      },
-    );
+  Widget _buildChatsTab() {
+    return SingleMatchChatsTab(houseId: widget.houseId);
   }
 
-  Widget _buildHistoryCard(SingleMatchHistoryEntry entry) {
-    final isVideo = entry.action == 'video_call';
-    final actionLabel = switch (entry.action) {
-      'audio_call' => L10nService().translate('match_cucgithoi_98f19b'),
-      'video_call' => L10nService().translate('match_cucgivideo_e7e38f'),
-      'skipped' => L10nService().translate('match_ltqua_a653f5'),
-      _ => L10nService().translate('match_hotng_2c21bc'),
-    };
-    final accent = switch (entry.action) {
-      'audio_call' => const Color(0xFFFF4F87),
-      'video_call' => const Color(0xFF7C61FF),
-      'skipped' => const Color(0xFF18B67A),
-      _ => const Color(0xFF5B8DEF),
-    };
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Colors.white),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            _buildAvatarVisual(
-              avatarUrl: entry.peerAvatarUrl,
-              radius: 24,
-              fallback: entry.peerName,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Text(
-                          entry.peerName.isEmpty ? L10nService().translate('match_hsc_81b822') : entry.peerName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: SLTheme.quicksand(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF32203B),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: accent.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          actionLabel,
-                          style: SLTheme.quicksand(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: accent,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '${_formatRelativeTime(entry.startedAt)} • ${entry.compatibilityScore.toStringAsFixed(0)}% match',
-                    style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF8A798E),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    entry.isCall
-                        ? _formatDuration(entry.durationSeconds)
-                        : entry.note,
-                    style: SLTheme.quicksand(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF5A495E),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 8,
-                    children: <Widget>[
-                      if (entry.peerHouseId.isNotEmpty)
-                        TextButton.icon(
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => VisitorProfileScreen(
-                                  targetHouseId: entry.peerHouseId),
-                            ),
-                          ),
-                          icon:
-                              const Icon(Icons.person_search_rounded, size: 17),
-                          label: Text(L10nService().translate('match_mhs_d226ff')),
-                        ),
-                      if (entry.isCall && entry.peerHouseId.isNotEmpty)
-                        TextButton.icon(
-                          onPressed: () => _launchCall(
-                            _ScoredCandidate(
-                              candidate: SingleMatchCandidate(
-                                houseId: entry.peerHouseId,
-                                displayName: entry.peerName,
-                                houseName: entry.peerName,
-                                avatarUrl: entry.peerAvatarUrl,
-                                bio: '',
-                                intro: '',
-                                goal: entry.goal,
-                                voiceStyle: _currentPreferences.voiceStyle,
-                                tags: const <String>[],
-                                allowAudioCalls: true,
-                                allowVideoCalls: true,
-                                enabled: true,
-                                privacy: 'public',
-                                updatedAt: entry.startedAt,
-                                age: null,
-                              ),
-                              score: entry.compatibilityScore,
-                              reasons: const <String>[],
-                              sharedTags: const <String>[],
-                              canAudioCall: true,
-                              canVideoCall: true,
-                              previewText: entry.note,
-                            ),
-                            isVideo: isVideo,
-                          ),
-                          icon: Icon(
-                            isVideo
-                                ? Icons.videocam_rounded
-                                : Icons.call_made_rounded,
-                            size: 17,
-                          ),
-                          label: Text(isVideo ? L10nService().translate('match_givideoli_c273d4') : L10nService().translate('match_gili_69e918')),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  Widget _buildCallsTab() {
+    return SingleMatchCallsTab(houseId: widget.houseId);
   }
 
+  // ignore: unused_element
   Widget _buildSettingsTab() {
     final current = _currentPreferences;
 
@@ -1805,6 +1544,69 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       title: title,
       subtitle: subtitle,
       child: child,
+    );
+  }
+
+  Widget _buildSecretCodeCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF1E7F5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            'Soul Merge - Kết nối bí mật',
+            style: SLTheme.quicksand(
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF32203B),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Nhập mã bí mật để kết nối trực tiếp và nhắn tin với một người cụ thể.',
+            style: SLTheme.quicksand(
+              fontSize: 12,
+              height: 1.45,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF7E6C80),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () async {
+                final roomId = await showDialog<String>(
+                  context: context,
+                  builder: (_) => SingleMatchSecretCodeDialog(houseId: widget.houseId),
+                );
+                if (roomId != null && mounted) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatDetailScreen(
+                        myHouseId: widget.houseId,
+                        targetHouseId: roomId,
+                        targetName: 'Người ấy',
+                      ),
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.vpn_key_rounded, size: 18),
+              label: Text('Nhập mã', style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF7C61FF),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

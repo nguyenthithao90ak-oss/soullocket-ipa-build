@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/services/offline_cache_service.dart';
 
 import '../../../models/diary_post.dart';
 import '../../../widgets/skeleton_container.dart';
@@ -133,13 +134,21 @@ class DiaryList extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 32),
               child: Center(
-                child: Text(
-                  '— Đã tải hết nhật ký của hai bạn —',
-                  style: TextStyle(
-                    color: Colors.grey.withValues(alpha: 0.6),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: Builder(
+                  builder: (context) {
+                    final prefs = OfflineCacheService.getPrefsSync();
+                    final isSingle = prefs?.getString('il_rel_mode') == 'single';
+                    return Text(
+                      isSingle
+                          ? '— Đã tải hết nhật ký của bạn —'
+                          : '— Đã tải hết nhật ký của hai bạn —',
+                      style: TextStyle(
+                        color: Colors.grey.withValues(alpha: 0.6),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    );
+                  }
                 ),
               ),
             ),
