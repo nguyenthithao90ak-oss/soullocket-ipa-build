@@ -63,14 +63,8 @@ class UtilityService {
   static bool isCoupleOnly(String id) => _coupleOnlyIds.contains(id);
 
   static bool isUtilityVisibleInCurrentBuild(String id) {
-    if (!kIsWeb &&
-        defaultTargetPlatform == TargetPlatform.iOS &&
-        id == 'vault') {
-      return false;
-    }
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       if (id == 'giftcode') return false;
-      if (id == 'store') return false;
     }
     return kDebugMode || !_debugOnlyIds.contains(id);
   }

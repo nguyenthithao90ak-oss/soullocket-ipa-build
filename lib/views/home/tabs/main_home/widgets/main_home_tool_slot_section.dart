@@ -179,7 +179,7 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
 
     switch (toolId) {
       case 'store':
-        return !kIsWeb && Platform.isIOS ? null : const RewardStoreScreen();
+        return const RewardStoreScreen();
       case 'calculator':
         return const CalculatorScreen();
     }
@@ -223,9 +223,6 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
       case 'wheel':
         return WheelScreen(houseId: houseId);
       case 'vault':
-        if (!kIsWeb && Platform.isIOS) {
-          return null;
-        }
         return UiPrefs.notifier.value.vaultHomeEnabled
             ? _HomeEmbeddedVaultGate(houseId: houseId)
             : null;

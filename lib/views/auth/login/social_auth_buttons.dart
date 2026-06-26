@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 class SocialAuthButtons extends StatelessWidget {
   final ValueChanged<String> onProviderTap;
@@ -26,110 +28,86 @@ class SocialAuthButtons extends StatelessWidget {
         ),
     ];
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final availableWidth =
-            constraints.maxWidth.isFinite && constraints.maxWidth > 0
-                ? constraints.maxWidth
-                : 320.0;
-        final isCompact = availableWidth < 360;
-        final buttonSize = isCompact ? 52.0 : 58.0;
-        final spacing = isCompact ? 8.0 : 14.0;
-
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (var index = 0; index < providers.length; index++) ...[
-              _SocialAuthTile(
-                provider: providers[index],
-                size: buttonSize,
-                compact: isCompact,
-                onTap: () => onProviderTap(providers[index].providerId),
-              ),
-              if (index != providers.length - 1) SizedBox(width: spacing),
-            ],
-          ],
-        );
-      },
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var index = 0; index < providers.length; index++) ...[
+          _SocialAuthButton(
+            provider: providers[index],
+            onTap: () => onProviderTap(providers[index].providerId),
+          ),
+          if (index != providers.length - 1) const SizedBox(height: 12),
+        ],
+      ],
     );
   }
 }
 
-class _SocialAuthTile extends StatelessWidget {
+class _SocialAuthButton extends StatelessWidget {
   final _SocialProviderData provider;
   final VoidCallback onTap;
-  final double size;
-  final bool compact;
 
-  const _SocialAuthTile({
+  const _SocialAuthButton({
     required this.provider,
     required this.onTap,
-    required this.size,
-    required this.compact,
   });
 
   @override
   Widget build(BuildContext context) {
-    final tileRadius = compact ? 16.0 : 18.0;
-    final surfaceRadius = compact ? 18.0 : 20.0;
-    final labelStyle = TextStyle(
-      color: const Color(0xFF7A7483),
-      fontSize: compact ? 10.0 : 11.0,
-      fontWeight: FontWeight.w800,
-      letterSpacing: 0.1,
-    );
+    final l10n = L10nService();
+    final langCode = l10n.localeCode;
+    final buttonText = _getContinueWithText(langCode, provider.caption);
+
     return Semantics(
       button: true,
-      label: provider.providerId,
-      child: Tooltip(
-        message: provider.providerId,
-        child: SizedBox(
-          width: compact ? 74.0 : 86.0,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: size,
-                height: size,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(tileRadius),
-                    onTap: onTap,
-                    child: Center(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEEF0F5).withValues(alpha: 0.72),
-                          borderRadius: BorderRadius.circular(surfaceRadius),
-                          border: Border.all(
-                            color: const Color(0xFFFFFFFF).withValues(alpha: 0.65),
-                            width: 1,
-                          ),
-                        ),
-                        child: SizedBox(
-                          width: size,
-                          height: size,
-                          child: Center(
-                            child: ExcludeSemantics(
-                              child: _buildIcon(),
-                            ),
-                          ),
-                        ),
+      label: buttonText,
+      child: Container(
+        width: double.infinity,
+        height: 52,
+        decoration: BoxDecoration(
+          color: const Color(0xFFEEF0F5).withValues(alpha: 0.72),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: const Color(0xFFFFFFFF).withValues(alpha: 0.65),
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(22),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ExcludeSemantics(
+                    child: _buildIcon(),
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Text(
+                      buttonText,
+                      style: SLTheme.quicksand(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF534C5E),
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ),
+                ],
               ),
-              SizedBox(height: compact ? 6.0 : 8.0),
-              Text(
-                provider.caption,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: labelStyle,
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -137,13 +115,13 @@ class _SocialAuthTile extends StatelessWidget {
   }
 
   Widget _buildIcon() {
-    final iconSize = compact ? 29.0 : 32.0;
+    const iconSize = 24.0;
     switch (provider.iconKind) {
       case _SocialIconKind.google:
         return SvgPicture.string(
           _googleLogo,
-          width: iconSize + 1.5,
-          height: iconSize + 1.5,
+          width: iconSize + 1,
+          height: iconSize + 1,
         );
       case _SocialIconKind.facebook:
         return SvgPicture.string(
@@ -157,6 +135,44 @@ class _SocialAuthTile extends StatelessWidget {
           width: iconSize,
           height: iconSize,
         );
+    }
+  }
+
+  String _getContinueWithText(String langCode, String provider) {
+    switch (langCode) {
+      case 'vi':
+        return 'Tiếp tục với $provider';
+      case 'zh':
+      case 'zh-TW':
+        return '使用 $provider 继续';
+      case 'ja':
+        return '$provider で続行';
+      case 'ko':
+        return '$provider로 계속하기';
+      case 'th':
+        return 'ดำเนินการต่อด้วย $provider';
+      case 'id':
+        return 'Lanjutkan với $provider';
+      case 'es':
+        return 'Continuar con $provider';
+      case 'pt':
+        return 'Continuar com $provider';
+      case 'fr':
+        return 'Continuer avec $provider';
+      case 'de':
+        return 'Weiter mit $provider';
+      case 'it':
+        return 'Continua con $provider';
+      case 'ru':
+        return 'Войти через $provider';
+      case 'tr':
+        return '$provider ile devam et';
+      case 'ar':
+        return 'متابعة باستخدام $provider';
+      case 'hi':
+        return '$provider के साथ आगे बढ़ें';
+      default:
+        return 'Continue with $provider';
     }
   }
 }

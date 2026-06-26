@@ -1645,6 +1645,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) {
+        int activeTab = 0; // 0: Hiệu ứng, 1: Cấu hình
         return StatefulBuilder(
           builder: (context, setSheetState) {
             return Container(
@@ -1692,68 +1693,139 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       fontSize: 13,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  _buildStyleItem(
-                    title: 'Basic Pink',
-                    desc: 'Hiệu ứng màu hồng pastel ngọt ngào cơ bản',
-                    styleKey: 'basic',
-                    isPremium: false,
-                    color: const Color(0xFFFFB7D5),
-                    setSheetState: setSheetState,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildStyleItem(
-                    title: 'Neon Aurora 🌟',
-                    desc: 'Tim phát sáng đổi màu neon lung linh kèm vệt sao lấp lánh',
-                    styleKey: 'aurora',
-                    isPremium: false,
-                    color: const Color(0xFF00FFCC),
-                    setSheetState: setSheetState,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildStyleItem(
-                    title: 'Cosmic Sparkle ✨',
-                    desc: 'Tim nhịp điệu vũ trụ bay lắc lư hình sin và vòng sáng tinh tú',
-                    styleKey: 'cosmic',
-                    isPremium: false,
-                    color: const Color(0xFFFFD700),
-                    setSheetState: setSheetState,
-                  ),
                   const SizedBox(height: 16),
-                  const Divider(color: Colors.white12, height: 1),
-                  const SizedBox(height: 16),
-                  _buildToggleRow(
-                    title: 'Bật thông báo thả tim',
-                    subtitle: 'Hiện thông báo bằng chữ khi người ấy thả tim',
-                    value: _showHeartNotif,
-                    onChanged: (val) async {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setBool('soul_merge_show_heart_notif', val);
-                      setSheetState(() {
-                        _showHeartNotif = val;
-                      });
-                      setState(() {
-                        _showHeartNotif = val;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  _buildToggleRow(
-                    title: 'Xuất hiện ở màn hình khác',
-                    subtitle: 'Hiển thị tim bay khắp app khi người ấy thả tim',
-                    value: _showHeartGlobal,
-                    onChanged: (val) async {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setBool('soul_merge_show_heart_global', val);
-                      setSheetState(() {
-                        _showHeartGlobal = val;
-                      });
-                      setState(() {
-                        _showHeartGlobal = val;
-                      });
-                    },
+                  
+                  // Tab selector dạng Pill
+                  Container(
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(21),
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              setSheetState(() {
+                                activeTab = 0;
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(17),
+                            child: Container(
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: activeTab == 0
+                                    ? const Color(0xFFFF4F93)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(17),
+                              ),
+                              child: Text(
+                                'Hiệu ứng',
+                                style: SLTheme.quicksand(
+                                  color: Colors.white,
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              setSheetState(() {
+                                activeTab = 1;
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(17),
+                            child: Container(
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: activeTab == 1
+                                    ? const Color(0xFFFF4F93)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(17),
+                              ),
+                              child: Text(
+                                'Cấu hình',
+                                style: SLTheme.quicksand(
+                                  color: Colors.white,
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 20),
+
+                  // Nội dung từng Tab
+                  if (activeTab == 0) ...[
+                    _buildStyleItem(
+                      title: 'Basic Pink',
+                      desc: 'Hiệu ứng màu hồng pastel ngọt ngào cơ bản',
+                      styleKey: 'basic',
+                      isPremium: false,
+                      color: const Color(0xFFFFB7D5),
+                      setSheetState: setSheetState,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildStyleItem(
+                      title: 'Neon Aurora 🌟',
+                      desc: 'Tim phát sáng đổi màu neon lung linh kèm vệt sao lấp lánh',
+                      styleKey: 'aurora',
+                      isPremium: false,
+                      color: const Color(0xFF00FFCC),
+                      setSheetState: setSheetState,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildStyleItem(
+                      title: 'Cosmic Sparkle ✨',
+                      desc: 'Tim nhịp điệu vũ trụ bay lắc lư hình sin và vòng sáng tinh tú',
+                      styleKey: 'cosmic',
+                      isPremium: false,
+                      color: const Color(0xFFFFD700),
+                      setSheetState: setSheetState,
+                    ),
+                  ] else ...[
+                    _buildToggleRow(
+                      title: 'Bật thông báo thả tim',
+                      subtitle: 'Hiện thông báo bằng chữ khi người ấy thả tim',
+                      value: _showHeartNotif,
+                      onChanged: (val) async {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setBool('soul_merge_show_heart_notif', val);
+                        setSheetState(() {
+                          _showHeartNotif = val;
+                        });
+                        setState(() {
+                          _showHeartNotif = val;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _buildToggleRow(
+                      title: 'Xuất hiện ở màn hình khác',
+                      subtitle: 'Hiển thị tim bay khắp app khi người ấy thả tim',
+                      value: _showHeartGlobal,
+                      onChanged: (val) async {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setBool('soul_merge_show_heart_global', val);
+                        setSheetState(() {
+                          _showHeartGlobal = val;
+                        });
+                        setState(() {
+                          _showHeartGlobal = val;
+                        });
+                      },
+                    ),
+                  ],
+                  const SizedBox(height: 12),
                 ],
               ),
             );
