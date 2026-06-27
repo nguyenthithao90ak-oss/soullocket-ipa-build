@@ -1,5 +1,4 @@
 part of '../settings_tab.dart';
-// ignore_for_file: unused_element
 
 extension _SettingsTabSharedWidgets on _SettingsTabState {
   // Key để lưu thời điểm bỏ qua cảnh báo bảo mật

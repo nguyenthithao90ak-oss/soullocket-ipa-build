@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use, use_super_parameters, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, unused_field
+// ignore_for_file: unused_field
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -65,7 +65,6 @@ import '../../utilities/voice_screen.dart';
 import '../../../features/wheel/wheel_screen.dart';
 import '../../utilities/wishlist_screen.dart';
 import '../../utilities/diary_export_screen.dart';
-import 'package:local_auth/local_auth.dart';
 import '../../utilities/device_manager_screen.dart';
 // import '../../auth/qr_authorize_scanner_screen.dart';
 import '../../utilities/user_support_chat_screen.dart';
@@ -359,7 +358,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final HouseSettingsService _houseSettingsService = HouseSettingsService();
   final AuthService _authService = AuthService();
-  final BreakupService _breakupService = BreakupService();
   final HouseService _houseService = HouseService();
   final MilitaryLockService _militaryLockService = MilitaryLockService();
   bool _didAutoOpenCountdownMode = false;
@@ -402,7 +400,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   DateTime? _settingsLocalBackupAt;
   String _settingsBackupStatusError = '';
   bool _isSavingAdvanced = false;
-  bool _isSavingTheme = false;
   bool _isSecurityLocked = false;
   bool _isCheckingSecurityLock = true;
   bool _isDevicePending = false;
@@ -434,7 +431,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _isGrantingPermissions = false;
   bool _isUploadingThemeBackground = false;
   double? _themeUploadProgress;
-  Set<String> _unlockedCountdownStyles = {};
   bool _didPromptPendingThemeBackgroundRetry = false;
   bool _isUnlockingStyle = false;
   int _countdownAdUnlockExpiryMs = 0;
@@ -454,7 +450,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   final GlobalKey _supportGuideKey = GlobalKey();
   String _vipPlanLabel = L10nService().translate('home_giminph_5edaf7');
   String _vipExpiryLabel = L10nService().translate('home_chakchhot_27fec1');
-  String _vipPlanCode = '';
   bool _isLifetimeVip = false;
   String _securityEmail = '';
   String _secondaryEmail = '';
@@ -466,6 +461,10 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   String _bgMusicUrl = '';
   String _bgMusicTitle = '';
   String _bgMusicType = 'audio';
+  bool _isSavingTheme = false;
+  String _vipPlanCode = '';
+  String? _openPanel;
+  Set<String> _unlockedCountdownStyles = const <String>{};
   BreakupRequestData? _breakupRequest;
   int _pendingAccountDeletionAtMs = 0;
   String _pendingAccountDeletionUid = '';
@@ -521,10 +520,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     'chat': false,
     'private': false,
   };
-  final LocalAuthentication _localAuth = LocalAuthentication();
-
-  // Panel controllers - which panel is expanded
-  String? _openPanel;
   bool _hasActiveStandalonePanel = false;
 
   // Form controllers
@@ -568,7 +563,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   }
 
   BannerAd? _bottomBannerAd;
-  bool _isBottomBannerReady = false;
+
 
   void _loadBottomBanner() async {
     if (kIsWeb) return;
@@ -580,7 +575,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       _bottomBannerAd?.dispose();
       _bottomBannerAd = null;
       if (!mounted) return;
-      setState(() => _isBottomBannerReady = false);
+      setState(() {});
       return;
     }
 
@@ -590,7 +585,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     _bottomBannerAd = await adMob.createBannerAd(
       onAdLoaded: (_) {
         if (!mounted) return;
-        setState(() => _isBottomBannerReady = true);
+        setState(() {});
       },
     );
   }
@@ -1133,7 +1128,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
             OutlinedButton.icon(
               onPressed: () async {
                 await _authService.signOut();
-                if (!mounted) return;
+                if (!context.mounted) return;
                 Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const LoginScreen()),
                   (_) => false,

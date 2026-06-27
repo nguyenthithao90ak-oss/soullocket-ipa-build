@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, use_build_context_synchronously
 
 part of '../../main_home_tab.dart';
 

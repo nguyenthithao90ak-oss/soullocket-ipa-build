@@ -1,4 +1,3 @@
-// ignore_for_file: unused_field, unused_element
 import 'dart:async';
 import 'dart:convert';
 import 'package:device_info_plus/device_info_plus.dart';

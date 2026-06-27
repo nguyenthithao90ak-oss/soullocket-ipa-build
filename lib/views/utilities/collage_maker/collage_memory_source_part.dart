@@ -1,5 +1,5 @@
-part of '../collage_maker_screen.dart';
 // ignore_for_file: invalid_use_of_protected_member
+part of '../collage_maker_screen.dart';
 
 extension _CollageMemorySourcePart on _CollageMakerScreenState {
   String _memoryPhotoKey(Map<String, dynamic> item) {

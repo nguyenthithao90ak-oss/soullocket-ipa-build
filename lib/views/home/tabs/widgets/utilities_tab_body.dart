@@ -4,6 +4,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../../../utils/services/utility_service.dart';
 import 'utilities_hub_grid.dart';
 import 'utilities_hub_header.dart';
+import '../../../../core/sl_page_physics.dart';
 
 class UtilitiesTabBody extends StatefulWidget {
   const UtilitiesTabBody({
@@ -45,19 +46,22 @@ class UtilitiesTabBody extends StatefulWidget {
 
 class _UtilitiesTabBodyState extends State<UtilitiesTabBody> {
   late PageController _pageController;
+  late int _currentSegment;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: widget.currentSegment);
+    _currentSegment = widget.currentSegment;
+    _pageController = PageController(initialPage: _currentSegment);
   }
 
   @override
   void didUpdateWidget(UtilitiesTabBody oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentSegment != widget.currentSegment) {
-      final currentPage = _pageController.page?.round() ?? _pageController.initialPage;
-      if (currentPage != widget.currentSegment) {
+    if (oldWidget.currentSegment != widget.currentSegment &&
+        _currentSegment != widget.currentSegment) {
+      _currentSegment = widget.currentSegment;
+      if (_pageController.page?.round() != widget.currentSegment) {
         _pageController.animateToPage(
           widget.currentSegment,
           duration: const Duration(milliseconds: 300),
@@ -65,6 +69,23 @@ class _UtilitiesTabBodyState extends State<UtilitiesTabBody> {
         );
       }
     }
+  }
+
+  void _handlePageChanged(int page) {
+    if (_currentSegment == page) return;
+    setState(() => _currentSegment = page);
+    widget.onSegmentChanged(page);
+  }
+
+  void _handleSegmentTap(int segment) {
+    if (_currentSegment == segment) return;
+    setState(() => _currentSegment = segment);
+    widget.onSegmentChanged(segment);
+    _pageController.animateToPage(
+      segment,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOutCubic,
+    );
   }
 
   @override
@@ -78,15 +99,15 @@ class _UtilitiesTabBodyState extends State<UtilitiesTabBody> {
     return Column(
       children: [
         UtilitiesHubHeader(
-          currentSegment: widget.currentSegment,
-          onSegmentChanged: widget.onSegmentChanged,
+          currentSegment: _currentSegment,
+          onSegmentChanged: _handleSegmentTap,
           onResetTap: widget.onResetTap,
         ),
         Expanded(
           child: PageView(
             controller: _pageController,
-            onPageChanged: widget.onSegmentChanged,
-            physics: const ClampingScrollPhysics(),
+            onPageChanged: _handlePageChanged,
+            physics: const SLPagePhysics(parent: ClampingScrollPhysics()),
             children: [
               _KeepAlivePage(
                 child: UtilitiesHubGrid(

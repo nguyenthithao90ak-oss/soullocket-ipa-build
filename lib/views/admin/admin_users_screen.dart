@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -152,15 +151,17 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         final path = '${dir.path}/users_export.csv';
         final file = io.File(path);
         await file.writeAsBytes(bytes);
-        await Share.shareXFiles([XFile(path)], text: 'Export Users');
+        await SharePlus.instance.share(
+          ShareParams(files: [XFile(path)], text: 'Export Users'),
+        );
       }
     } catch (e) {
+      if (!mounted) return;
       final errorInfo = AppErrorMapper.resolve(
         e,
         fallbackMessage: context.tr('admin_chathxutda_dc5b37'),
       );
       debugPrint('Export users failed: ${errorInfo.message}');
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(context.tr('admin_chathxutda_dc5b37')),
@@ -193,10 +194,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: context.tr('admin_ldo_bb946f'),
-                  labelStyle: TextStyle(color: Colors.grey),
-                  enabledBorder: OutlineInputBorder(
+                  labelStyle: const TextStyle(color: Colors.grey),
+                  enabledBorder: const OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey)),
-                  focusedBorder: OutlineInputBorder(
+                  focusedBorder: const OutlineInputBorder(
                       borderSide: BorderSide(color: Color(0xFFFF4B91))),
                 ),
               ),
@@ -205,7 +206,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(context.tr('admin_hy_1e4050'), style: TextStyle(color: Colors.grey)),
+            child: Text(context.tr('admin_hy_1e4050'), style: const TextStyle(color: Colors.grey)),
           ),
           if (actionType == 'ban') ...[
             ElevatedButton(
@@ -215,7 +216,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 Navigator.pop(ctx);
               },
               child: Text(context.tr('admin_khavnhvin_1f9874'),
-                  style: TextStyle(color: Colors.white)),
+                  style: const TextStyle(color: Colors.white)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
@@ -224,7 +225,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 Navigator.pop(ctx);
               },
               child:
-                  Text(context.tr('admin_mkha_b8cf89'), style: TextStyle(color: Colors.white)),
+                  Text(context.tr('admin_mkha_b8cf89'), style: const TextStyle(color: Colors.white)),
             ),
           ],
           if (actionType == 'vip')
@@ -235,7 +236,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 Navigator.pop(ctx);
               },
               child:
-                  Text(context.tr('admin_cppro_ece366'), style: TextStyle(color: Colors.black)),
+                  Text(context.tr('admin_cppro_ece366'), style: const TextStyle(color: Colors.black)),
             ),
         ],
       ),
@@ -384,9 +385,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
-                            dropdownColor: Color(0xFF10182A),
+                            dropdownColor: const Color(0xFF10182A),
                             value: _filterStatus,
-                            style: TextStyle(color: Colors.white),
+                            style: const TextStyle(color: Colors.white),
                             items: [
                               DropdownMenuItem(
                                   value: 'all', child: Text(context.tr('admin_ttc_d8586d'))),
@@ -409,7 +410,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                         icon: const Icon(Icons.download_rounded,
                             color: Colors.white, size: 20),
                         label: Text(context.tr('admin_xutcsv_47bfce'),
-                            style: TextStyle(color: Colors.white)),
+                            style: const TextStyle(color: Colors.white)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1E88E5),
                           padding: const EdgeInsets.symmetric(

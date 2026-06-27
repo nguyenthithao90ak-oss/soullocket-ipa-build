@@ -55,11 +55,8 @@ class SingleMatchService {
   Future<String?> getCurrentHouseId() => _houseService.getCurrentHouseId();
 
   Future<Map<String, dynamic>> fetchHouseSettings(String houseId) async {
-    final snap = await _db.child('houses/$houseId/settings').get();
-    if (!snap.exists || snap.value is! Map) {
-      return <String, dynamic>{};
-    }
-    return Map<String, dynamic>.from(snap.value as Map);
+    final settings = await _houseService.getHouseSettings(houseId);
+    return settings ?? <String, dynamic>{};
   }
 
   Future<SingleMatchPreferences> loadPreferences(String houseId) async {

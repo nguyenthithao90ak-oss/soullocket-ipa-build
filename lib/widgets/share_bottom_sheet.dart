@@ -1,4 +1,3 @@
-﻿// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -217,6 +216,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
     final text = '${widget.contentToShare}\n${widget.shareUrl}'.trim();
     final box = context.findRenderObject() as RenderBox?;
     final rect = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+    // ignore: deprecated_member_use
     Share.share(text, sharePositionOrigin: rect);
     Navigator.pop(context);
   }
@@ -507,8 +507,8 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                         compact ? 52 : 56,
                                         screenWidth,
                                       ),
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
+                                      decoration: const BoxDecoration(
+                                        gradient: LinearGradient(
                                           colors: [
                                             Color(0xFFFCE7F3),
                                             Color(0xFFF8FAFC),

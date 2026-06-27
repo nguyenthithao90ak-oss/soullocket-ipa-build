@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 import 'dart:ui' as ui;
 
@@ -58,6 +57,7 @@ import '../../utils/sl_notice.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../widgets/first_setup_spotlight_guide.dart';
 import '../../core/fast_backdrop_filter.dart';
+import '../../core/sl_page_physics.dart';
 
 part 'widgets/home_shell/home_screen_sync_flows.dart';
 part 'widgets/home_shell/home_screen_notice_flows.dart';
@@ -330,10 +330,8 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
         dragStartBehavior: widget.dragStartBehavior,
         viewportBuilder: (context, position) {
           return Viewport(
-            axisDirection: axisDirection,
+            scrollCacheExtent: const ScrollCacheExtent.viewport(cacheExtent), axisDirection: axisDirection,
             offset: position,
-            cacheExtent: cacheExtent,
-            cacheExtentStyle: CacheExtentStyle.viewport,
             clipBehavior: Clip.hardEdge,
             slivers: [
               SliverFillViewport(
@@ -1468,8 +1466,8 @@ class _HomeScreenState extends State<HomeScreen>
               onPageChanged: _handlePageChanged,
               dragStartBehavior: DragStartBehavior.start,
               // 🛑 TẮT VƯỢT: NeverScrollableScrollPhysics để chỉ chuyển tab bằng nút bottom nav.
-              // ✅ BẬT LẠI: đổi thành `const _HomeTabPagePhysics(parent: ClampingScrollPhysics())`
-              physics: const NeverScrollableScrollPhysics(),
+              // ✅ BẬT LẠI: đổi thành `const SLPagePhysics(parent: ClampingScrollPhysics())`
+              physics: const SLPagePhysics(parent: ClampingScrollPhysics()),
               children: List<Widget>.generate(
                 _navItems.length,
                 _tabPageForIndex,
@@ -1487,7 +1485,12 @@ class _HomeScreenState extends State<HomeScreen>
             },
             child: _buildMusicButton(),
           ),
-          const SoulMergeSticker(),
+          ValueListenableBuilder<int>(
+            valueListenable: _activeTabIndexNotifier,
+            builder: (context, activeIndex, _) {
+              return SoulMergeSticker(activeIndex: activeIndex);
+            },
+          ),
         ],
       );
     }

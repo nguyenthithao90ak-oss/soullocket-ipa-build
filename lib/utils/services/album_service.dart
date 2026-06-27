@@ -1,5 +1,4 @@
 import 'package:firebase_database/firebase_database.dart' hide Query, Transaction;
-import 'package:firebase_database/firebase_database.dart' as rtdb show Transaction;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -39,51 +38,24 @@ class AlbumService {
     '12-31': {'icon': '✨', 'text': 'Cuoi nam'},
   };
 
-  DatabaseReference _albumCountRef(String houseId) =>
-      _dbRef.child('houses/$houseId/albumCount');
 
-  Future<void> migrateAlbumCounter(String houseId) async {
-    final trimmedHouseId = houseId.trim();
-    if (trimmedHouseId.isEmpty) return;
-
-    final prefs = OfflineCacheService.getPrefsSync() ??
-        await SharedPreferences.getInstance();
-    final migrationKey = 'album_counter_migrated_$trimmedHouseId';
-    if (prefs.getBool(migrationKey) == true) return;
-
-    final snap = await _dbRef.child('houses/$trimmedHouseId/album').get();
-    if (!snap.exists) {
-      await _albumCountRef(trimmedHouseId).set(0);
-      await prefs.setBool(migrationKey, true);
-      return;
-    }
-
-    final count = snap.value is Map ? (snap.value as Map).length : 0;
-    await _albumCountRef(trimmedHouseId).set(count);
-    await prefs.setBool(migrationKey, true);
-  }
 
   Future<int> _getAlbumCount(String houseId) async {
-    final countSnap = await _albumCountRef(houseId).get();
-    final storedCount = (countSnap.value as num?)?.toInt();
-    if (storedCount != null && storedCount >= 0) {
-      return storedCount;
+    try {
+      final aggregateQuery = await FirebaseFirestore.instance
+          .collection('houses')
+          .doc(houseId)
+          .collection('album')
+          .count()
+          .get();
+      return aggregateQuery.count ?? 0;
+    } catch (e) {
+      return 0;
     }
-
-    final albumSnap = await _dbRef.child('houses/$houseId/album').get();
-    final fallbackCount = albumSnap.exists && albumSnap.value is Map
-        ? (albumSnap.value as Map).length
-        : 0;
-    await _albumCountRef(houseId).set(fallbackCount);
-    return fallbackCount;
   }
 
   Future<void> _changeAlbumCount(String houseId, int delta) async {
-    if (delta == 0) return;
-    await _albumCountRef(houseId).runTransaction((current) {
-      final next = ((current as num?)?.toInt() ?? 0) + delta;
-      return rtdb.Transaction.success(next < 0 ? 0 : next);
-    });
+    // Bỏ qua. Bộ đếm giờ đọc chuẩn xác từ Firestore aggregate count().
   }
 
   List<Map<String, String>> getDateHighlights(

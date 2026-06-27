@@ -1,4 +1,3 @@
-﻿// ignore_for_file: invalid_use_of_protected_member
 
 part of '../../soul_rhythm_game.dart';
 
@@ -586,6 +585,7 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
             SystemSound.play(SystemSoundType.click);
           }
           HapticFeedback.lightImpact();
+          // ignore: invalid_use_of_protected_member
           setState(() {
             _difficulty = id;
             _rebuildGameChartForDifficulty();

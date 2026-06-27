@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -620,7 +619,7 @@ class _TopHotScreenState extends State<TopHotScreen>
                                   ),
                                 ),
                                 if (isSelf)
-                                  _chip(context.tr('comm_bn_1fd75b'), Color(0xFF16A34A)),
+                                  _chip(context.tr('comm_bn_1fd75b'), const Color(0xFF16A34A)),
                                 _currentPeriodBadge(entry),
                               ],
                             ),
@@ -850,7 +849,7 @@ class _TopHotScreenState extends State<TopHotScreen>
                                     : const Color(0xFF1E293B),
                               ),
                             ),
-                            if (isSelf) _chip(context.tr('comm_bn_1fd75b'), Color(0xFF16A34A)),
+                            if (isSelf) _chip(context.tr('comm_bn_1fd75b'), const Color(0xFF16A34A)),
                             if (entry.adminTick)
                               const Icon(
                                 Icons.local_fire_department_rounded,
@@ -895,7 +894,7 @@ class _TopHotScreenState extends State<TopHotScreen>
                       if (entry.hotScore > 0)
                         _chip('HOT ${entry.hotScore}', const Color(0xFFD81B60)),
                       if (index == 0)
-                        _chip(context.tr('comm_qunqun_1b53f8'), Color(0xFFFF7B00),
+                        _chip(context.tr('comm_qunqun_1b53f8'), const Color(0xFFFF7B00),
                             isGold: true),
                     ],
                   ),

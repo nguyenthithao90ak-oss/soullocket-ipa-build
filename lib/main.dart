@@ -34,6 +34,7 @@ import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/error_logger_service.dart';
 import 'package:soullocket_app/utils/services/revenue_security_telemetry_service.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
+import 'package:soullocket_app/views/home/widgets/floating_bubble_widget.dart';
 import 'package:soullocket_app/utils/services/performance_profile_service.dart';
 
 @pragma('vm:entry-point')
@@ -140,6 +141,17 @@ Future<void> _configureSystemUiForEdgeToEdge() async {
       statusBarIconBrightness: Brightness.dark,
       statusBarBrightness: Brightness.light,
       systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
+}
+
+@pragma('vm:entry-point')
+void overlayMain() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(
+    const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: FloatingBubbleWidget(),
     ),
   );
 }

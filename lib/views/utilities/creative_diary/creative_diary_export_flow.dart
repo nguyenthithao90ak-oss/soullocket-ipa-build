@@ -1,5 +1,5 @@
-part of '../creative_diary_screen.dart';
 // ignore_for_file: invalid_use_of_protected_member
+part of '../creative_diary_screen.dart';
 
 extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
   void _showSnack(

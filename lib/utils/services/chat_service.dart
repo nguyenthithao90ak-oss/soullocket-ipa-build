@@ -510,12 +510,6 @@ class ChatService {
 
   // --- TIN NHẮN TỚI NHÀ KHÁC (Inter-house Social Chat) ---
 
-  Map<String, dynamic> _messageWriteMap(ChatMessage message) {
-    final payload = Map<String, dynamic>.from(message.toMap());
-    payload['ts'] = ServerValue.timestamp;
-    return payload;
-  }
-
   Map<String, dynamic> _buildMessageWriteMap({
     required String senderId,
     required String text,
@@ -783,11 +777,13 @@ class ChatService {
 
       final welcomeText = _friendWelcomeTemplates[
           math.Random().nextInt(_friendWelcomeTemplates.length)];
-      final pushRef = _dbRef.child('chats/$roomId/messages').push();
-      final messageId = pushRef.key ?? '';
-      if (messageId.isEmpty) {
-        throw Exception('Không thể tạo ID tin nhắn hệ thống.');
-      }
+          
+      final docRef = FirebaseFirestore.instance
+          .collection('chats')
+          .doc(roomId)
+          .collection('messages')
+          .doc();
+      final messageId = docRef.id;
 
       final roomRef = _dbRef.child('chats/$roomId');
       final tx = await roomRef.runTransaction((Object? data) {
@@ -802,15 +798,6 @@ class ChatService {
           return Transaction.abort();
         }
 
-        final messages = roomData['messages'] is Map
-            ? Map<dynamic, dynamic>.from(roomData['messages'] as Map)
-            : <dynamic, dynamic>{};
-        messages[messageId] = _buildMessageWriteMap(
-          senderId: myHouseId,
-          text: welcomeText,
-          type: 'text',
-        );
-        roomData['messages'] = messages;
         roomData['lastMessage'] = _lastMessageWriteMap(
           senderId: myHouseId,
           type: 'text',
@@ -821,6 +808,14 @@ class ChatService {
         return Transaction.success(roomData);
       });
       if (!tx.committed) return;
+      
+      final msgPayload = _buildMessageWriteMap(
+        senderId: myHouseId,
+        text: welcomeText,
+        type: 'text',
+      );
+      msgPayload['ts'] = DateTime.now().millisecondsSinceEpoch;
+      await docRef.set(msgPayload);
     });
   }
 
@@ -849,10 +844,22 @@ class ChatService {
         callMode: label,
       );
 
-      final pushRef = _dbRef.child('chats/$chatRoomId/messages').push();
-      final messageId = pushRef.key ?? '';
+      final docRef = await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatRoomId)
+          .collection('messages')
+          .add({
+        'senderId': myHouseId,
+        'text': message.text,
+        'type': message.type,
+        'ts': DateTime.now().millisecondsSinceEpoch,
+        'isRead': false,
+        'callRoomId': message.callRoomId,
+        'callMode': message.callMode,
+      });
+      final messageId = docRef.id;
+
       await _dbRef.update({
-        'chats/$chatRoomId/messages/$messageId': _messageWriteMap(message),
         'chats/$chatRoomId/lastMessage': {
           'text': _previewTextForLastMessage(
             type: 'call_invite',
@@ -864,7 +871,7 @@ class ChatService {
           'type': 'call_invite',
           'callRoomId': roomId,
           'callMode': label,
-          if (messageId.isNotEmpty) 'messageId': messageId,
+          'messageId': messageId,
         },
         'chats/$chatRoomId/updatedAt': ServerValue.timestamp,
       });
@@ -891,10 +898,21 @@ class ChatService {
         sharedUrl: url,
       );
 
-      final pushRef = _dbRef.child('chats/$chatRoomId/messages').push();
-      final messageId = pushRef.key ?? '';
+      final docRef = await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatRoomId)
+          .collection('messages')
+          .add({
+        'senderId': myHouseId,
+        'text': message.text,
+        'type': message.type,
+        'ts': DateTime.now().millisecondsSinceEpoch,
+        'isRead': false,
+        'sharedUrl': message.sharedUrl,
+      });
+      final messageId = docRef.id;
+
       await _dbRef.update({
-        'chats/$chatRoomId/messages/$messageId': _messageWriteMap(message),
         'chats/$chatRoomId/lastMessage': {
           'text': _previewTextForLastMessage(
             type: 'watch_invite',
@@ -905,7 +923,7 @@ class ChatService {
           'isRead': false,
           'type': 'watch_invite',
           'sharedUrl': url,
-          if (messageId.isNotEmpty) 'messageId': messageId,
+          'messageId': messageId,
         },
         'chats/$chatRoomId/updatedAt': ServerValue.timestamp,
       });

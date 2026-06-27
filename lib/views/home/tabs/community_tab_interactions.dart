@@ -398,9 +398,10 @@ extension _CommunityTabInteractions on _CommunityTabState {
 
     String? trackingErrorMessage;
     try {
-      await _dbRef
-          .child('social_feed/$postId/shareCount')
-          .set(ServerValue.increment(1));
+      await FirebaseFirestore.instance
+          .collection('social_posts')
+          .doc(postId)
+          .update({'shareCount': FieldValue.increment(1)});
 
       RecommendationService().recordInteraction(
         houseId: (post['houseId'] ?? '').toString(),

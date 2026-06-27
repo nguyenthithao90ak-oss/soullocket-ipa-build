@@ -1,4 +1,3 @@
-// ignore_for_file: dead_code, unnecessary_null_comparison
 
 import 'dart:async';
 
@@ -535,14 +534,11 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     }
     return L10nService().translate('onboarding_missing_role');
 
-    if (relationshipMode != null && role != null) {
+    if (role != null) {
       return null;
     }
     if (relationshipMode == null && role == null) {
       return L10nService().translate('onboarding_missing_role_and_mode_logout');
-    }
-    if (relationshipMode == null) {
-      return L10nService().translate('onboarding_missing_mode_logout');
     }
     return L10nService().translate('onboarding_missing_role_logout');
   }

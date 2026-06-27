@@ -33,6 +33,7 @@ class HouseCreationOtpRequiredException implements Exception {
 
 class HouseService {
   static DateTime? _lastFetchTime;
+  static Map<String, dynamic>? _cachedSettings;
   static const String _defaultHouseName = 'Chúng mình';
   static const String _defaultNameU1 = 'Bạn Nam';
   static const String _defaultNameU2 = 'Bạn Nữ';
@@ -576,6 +577,31 @@ class HouseService {
   }
 
   Future<Map<String, dynamic>?> getHouseSettings(String houseId) async {
+    if (_cachedSettings != null) {
+      return _cachedSettings;
+    }
+
+    final prefs = OfflineCacheService.getPrefsSync() ?? await SharedPreferences.getInstance();
+    final cached = prefs.getString('il_offline_cache_home_settings');
+    if (cached != null) {
+      try {
+        final decoded = jsonDecode(cached);
+        if (decoded is Map) {
+          final data = _asStringDynamicMap(decoded['data']);
+          if (data != null) {
+            _cachedSettings = data;
+            // Fetch newest from server in background to refresh local cache
+            unawaited(_fetchSettingsFromServerAndCache(houseId, prefs));
+            return data;
+          }
+        }
+      } catch (_) {}
+    }
+
+    return await _fetchSettingsFromServerAndCache(houseId, prefs);
+  }
+
+  Future<Map<String, dynamic>?> _fetchSettingsFromServerAndCache(String houseId, SharedPreferences prefs) async {
     try {
       final snap = await _dbRef
           .child('houses/$houseId/settings')
@@ -584,26 +610,18 @@ class HouseService {
       if (snap.exists) {
         final data = _asStringDynamicMap(snap.value);
         if (data != null) {
+          _cachedSettings = data;
+          await prefs.setString(
+            'il_offline_cache_home_settings',
+            jsonEncode({
+              'data': data,
+              'ts': DateTime.now().millisecondsSinceEpoch,
+            }),
+          );
           return data;
         }
       }
-    } catch (_) {
-      final prefs = OfflineCacheService.getPrefsSync() ??
-          await SharedPreferences.getInstance();
-      final cached = prefs.getString('il_offline_cache_home_settings');
-      if (cached != null) {
-        try {
-          final decoded = jsonDecode(cached);
-          if (decoded is Map) {
-            final data = _asStringDynamicMap(decoded['data']);
-            if (data != null) {
-              return data;
-            }
-          }
-        } catch (_) {}
-      }
-    }
-
+    } catch (_) {}
     return null;
   }
 

@@ -1,5 +1,5 @@
-part of '../secret_vault_screen.dart';
 // ignore_for_file: invalid_use_of_protected_member
+part of '../secret_vault_screen.dart';
 
 extension _SecretVaultResetFlow on SecretVaultScreenState {
   String _formatResetSchedule(int timestamp) {

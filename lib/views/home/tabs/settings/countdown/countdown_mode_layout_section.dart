@@ -1,5 +1,4 @@
 part of '../../settings_tab.dart';
-// ignore_for_file: unused_element
 
 extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
   Future<void> _openSettingsSheetImpl() async {

@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
@@ -14,7 +13,6 @@ import 'package:soullocket_app/core/constants/app_config.dart';
 import 'app_check_http_headers.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'app_lifecycle_presence_guard.dart';
-import 'consent_service.dart';
 import 'house_service.dart';
 import 'offline_cache_service.dart';
 import 'purchase_service.dart';
@@ -110,7 +108,6 @@ class AdMobService {
     '370D8C7AC6D4262893C393843B5727CA',
   ];
   final HouseService _houseService = HouseService();
-  final ConsentService _consentService = ConsentService();
   final Random _random = Random();
 
   // ─── AD UNIT IDs ─────────────────────────────────────────────

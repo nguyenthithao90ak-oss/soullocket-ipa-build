@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'dart:async';
 
@@ -8,7 +7,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:soullocket_app/core/sl_page_physics.dart';
+
 import 'package:intl/intl.dart';
 
 import '../../../core/sl_theme.dart';
@@ -1178,8 +1177,7 @@ class _DiaryTabState extends State<DiaryTab>
                           if (allPhotos.isNotEmpty)
                             PageView.builder(
                               controller: pageController,
-                              physics: const SLPagePhysics(
-                                  parent: BouncingScrollPhysics()),
+                              physics: const ClampingScrollPhysics(),
                               itemCount: allPhotos.length,
                               onPageChanged: (index) {
                                 setState(() {

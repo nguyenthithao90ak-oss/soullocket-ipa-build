@@ -888,10 +888,8 @@ class WidgetService {
       final currentRole = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
       final partnerRole = currentRole == 'user1' ? 'user2' : 'user1';
 
-      final houseData = await FirebaseDatabase.instance.ref('houses/$houseId/settings').get();
-      if (!houseData.exists || houseData.value is! Map) return;
-
-      final data = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(houseData.value as Map));
+      final data = await HouseService().getHouseSettings(houseId);
+      if (data == null) return;
       final myName = (currentRole == 'user1' ? data['nameU1'] : data['nameU2'])?.toString().trim() ?? 'Bạn';
       final partnerName = (partnerRole == 'user1' ? data['nameU1'] : data['nameU2'])?.toString().trim() ?? 'Người ấy';
       final myAvatar = (currentRole == 'user1' ? data['avtUser1'] : data['avtUser2'])?.toString().trim() ?? '';

@@ -1,4 +1,4 @@
-﻿part of '../soul_block_game.dart';
+part of '../soul_block_game.dart';
 
 const LinearGradient _kSoulSplashProgressGradient = LinearGradient(
   colors: <Color>[
@@ -938,69 +938,98 @@ extension _SoulBlockPanels on _SoulBlockGameState {
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF111827),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Row(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0D121D).withValues(alpha: 0.65),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: const Color(0xFF00C3FF).withValues(alpha: 0.2), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF00C3FF).withValues(alpha: 0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
-                        Text(
-                          'Local Leaderboard',
-                          style: SLTheme.quicksand(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                          ),
+                        Row(
+                          children: <Widget>[
+                            const Icon(
+                              Icons.emoji_events_rounded,
+                              color: Color(0xFFFFD700),
+                              size: 28,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Leaderboard',
+                              style: SLTheme.quicksand(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                            const Spacer(),
+                            IconButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              icon: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(
-                            Icons.close_rounded,
-                            color: Colors.white70,
+                        const SizedBox(height: 16),
+                        if (_leaderboard.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Text(
+                              context.tr('util_chacltchin_2aa20c'),
+                              textAlign: TextAlign.center,
+                              style: SLTheme.quicksand(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          )
+                        else
+                          Flexible(
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              itemCount: _leaderboard.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 10),
+                              itemBuilder: (context, index) {
+                                final item = _leaderboard[index];
+                                return _LeaderboardTile(
+                                  rank: index + 1,
+                                  score: _formatNumber(item.score),
+                                  lines: item.lines,
+                                  stamp: item.stampLabel,
+                                );
+                              },
+                            ),
                           ),
-                        ),
                       ],
                     ),
-                    if (_leaderboard.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Text(
-                          context.tr('util_chacltchin_2aa20c'),
-                          textAlign: TextAlign.center,
-                          style: SLTheme.quicksand(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      )
-                    else
-                      Flexible(
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          itemCount: _leaderboard.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 10),
-                          itemBuilder: (context, index) {
-                            final item = _leaderboard[index];
-                            return _LeaderboardTile(
-                              rank: index + 1,
-                              score: _formatNumber(item.score),
-                              lines: item.lines,
-                              stamp: item.stampLabel,
-                            );
-                          },
-                        ),
-                      ),
-                  ],
+                  ),
                 ),
               ),
             ),

@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
@@ -1294,7 +1293,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               context.tr('map_bncthghimv_4c0adc'),
             ),
             behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
           ),
         );
     }

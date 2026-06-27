@@ -1,4 +1,3 @@
-﻿// ignore_for_file: unused_element
 part of '../../settings_tab.dart';
 
 extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {

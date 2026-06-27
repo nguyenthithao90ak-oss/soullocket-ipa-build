@@ -579,8 +579,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     if (minutes >= 60) {
       final hours = minutes ~/ 60;
       final mins = minutes % 60;
-      return '${hours}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+      return '$hours:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
     }
-    return '${minutes}:${secs.toString().padLeft(2, '0')}';
+    return '$minutes:${secs.toString().padLeft(2, '0')}';
   }
 }

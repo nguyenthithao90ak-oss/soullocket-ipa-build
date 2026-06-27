@@ -1,4 +1,3 @@
-// ignore_for_file: dead_code
 part of '../settings_tab.dart';
 
 extension _SettingsTabShell on _SettingsTabState {

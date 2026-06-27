@@ -1,5 +1,5 @@
-part of '../soul_block_game.dart';
 // ignore_for_file: invalid_use_of_protected_member
+part of '../soul_block_game.dart';
 
 extension _SoulBlockFeedbackPart on _SoulBlockGameState {
   Future<void> _initAudio() async {

@@ -1,4 +1,3 @@
-// ignore_for_file: unnecessary_this, unused_element
 
 part of '../messenger_screen.dart';
 
@@ -6,7 +5,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
   Widget _buildConversationsTab(List<String> friends) {
     final hasInternalPartner = _shouldShowInternalPartnerTile;
     if (_friends.isEmpty && !hasInternalPartner) {
-      return this._buildEmptyState(
+      return _buildEmptyState(
         icon: Icons.chat_bubble_outline_rounded,
         title: 'Chưa có cuộc trò chuyện nào',
         body: 'Kết bạn trước rồi quay lại đây để bắt đầu nhắn tin.',
@@ -14,7 +13,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
     }
 
     if (friends.isEmpty && !hasInternalPartner) {
-      return this._buildEmptyState(
+      return _buildEmptyState(
         icon: Icons.search_off_rounded,
         title: 'Không tìm thấy đoạn chat phù hợp',
         body: 'Thử tìm bằng tên nhà hoặc mã nhà khác.',
@@ -27,17 +26,17 @@ extension _MessengerRoomListPart on _MessengerScreenState {
       itemCount: friends.length + (hasInternalPartner ? 1 : 0),
       itemBuilder: (context, index) {
         if (hasInternalPartner && index == 0) {
-          return this._buildInternalConversationTile();
+          return _buildInternalConversationTile();
         }
         final friendId = friends[index - (hasInternalPartner ? 1 : 0)];
-        return this._buildConversationTile(friendId);
+        return _buildConversationTile(friendId);
       },
     );
   }
 
   Widget _buildContactsTab(List<String> friends) {
     if (_friends.isEmpty) {
-      return this._buildEmptyState(
+      return _buildEmptyState(
         icon: Icons.people_outline_rounded,
         title: 'Chưa có bạn bè',
         body: 'Khi có bạn bè, danh bạ sẽ hiện ở đây để mở chat nhanh.',
@@ -45,7 +44,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
     }
 
     if (friends.isEmpty) {
-      return this._buildEmptyState(
+      return _buildEmptyState(
         icon: Icons.person_search_rounded,
         title: 'Không tìm thấy người phù hợp',
         body: 'Đổi từ khóa hoặc thử tìm bằng mã nhà.',
@@ -58,7 +57,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
       itemCount: friends.length,
       itemBuilder: (context, index) {
         final friendId = friends[index];
-        return this._buildContactTile(friendId);
+        return _buildContactTile(friendId);
       },
     );
   }
@@ -79,7 +78,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
             Positioned(
               left: 0,
               top: 6,
-              child: this._buildAvatarBubble(
+              child: _buildAvatarBubble(
                 avatarUrl: mates[0].avatar,
                 label: mates[0].name,
                 radius: 21,
@@ -89,7 +88,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
             Positioned(
               left: 24,
               top: 0,
-              child: this._buildAvatarBubble(
+              child: _buildAvatarBubble(
                 avatarUrl: mates[1].avatar,
                 label: mates[1].name,
                 radius: 21,
@@ -100,7 +99,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
               Positioned(
                 right: 2,
                 bottom: 3,
-                child: this._buildStatusDot(statusColor),
+                child: _buildStatusDot(statusColor),
               ),
           ],
         ),
@@ -117,7 +116,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
       height: 56,
       child: Stack(
         children: [
-          this._buildAvatarBubble(
+          _buildAvatarBubble(
             avatarUrl: fallbackAvatar,
             label: fallbackLabel,
             radius: 26,
@@ -127,7 +126,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
             Positioned(
               right: 1,
               bottom: 1,
-              child: this._buildStatusDot(statusColor),
+              child: _buildStatusDot(statusColor),
             ),
         ],
       ),
@@ -524,7 +523,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
             ),
             child: Row(
               children: [
-                this._buildFriendAvatarCluster(friendId, statusColor),
+                _buildFriendAvatarCluster(friendId, statusColor),
                 SLSpacing.w12,
                 Expanded(
                   child: Column(
@@ -545,20 +544,20 @@ extension _MessengerRoomListPart on _MessengerScreenState {
                             ),
                           ),
                           if (lastMessageTime.isNotEmpty) ...[
-                            this._buildTimeBadge(
+                            _buildTimeBadge(
                               lastMessageTime,
                               highlighted: hasUnread,
                             ),
                             if (hasUnread) ...[
                               const SizedBox(width: 6),
-                              this._buildUnreadDot(prominent: true),
+                              _buildUnreadDot(prominent: true),
                             ],
                           ]
                         ],
                       ),
                       const SizedBox(height: 8),
                       if (_houseMates(friendId).isNotEmpty) ...[
-                        this._buildMateStrip(friendId),
+                        _buildMateStrip(friendId),
                         const SizedBox(height: 8),
                       ] else if (_displayUsername(friendId).isNotEmpty) ...[
                         Text(
@@ -574,7 +573,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
                         const SizedBox(height: 8),
                       ] else
                         const SizedBox(height: 2),
-                      this._buildConversationPreviewRow(
+                      _buildConversationPreviewRow(
                         preview: previewText,
                         statusText: statusText,
                         statusColor: statusColor,
@@ -584,7 +583,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
                           padding: const EdgeInsets.only(top: 8),
                           child: Align(
                             alignment: Alignment.centerRight,
-                            child: this._buildUnreadDot(),
+                            child: _buildUnreadDot(),
                           ),
                         ),
                     ],
@@ -645,7 +644,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
                   height: 56,
                   child: Stack(
                     children: [
-                      this._buildAvatarBubble(
+                      _buildAvatarBubble(
                         avatarUrl: avatar,
                         label: name,
                         radius: 26,
@@ -654,7 +653,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
                       Positioned(
                         right: 1,
                         bottom: 1,
-                        child: this._buildStatusDot(statusColor),
+                        child: _buildStatusDot(statusColor),
                       ),
                     ],
                   ),
@@ -679,19 +678,19 @@ extension _MessengerRoomListPart on _MessengerScreenState {
                             ),
                           ),
                           if (lastMessageTime.isNotEmpty) ...[
-                            this._buildTimeBadge(
+                            _buildTimeBadge(
                               lastMessageTime,
                               highlighted: hasUnread,
                             ),
                             if (hasUnread) ...[
                               const SizedBox(width: 6),
-                              this._buildUnreadDot(prominent: true),
+                              _buildUnreadDot(prominent: true),
                             ],
                           ]
                         ],
                       ),
                       const SizedBox(height: 8),
-                      this._buildConversationPreviewRow(
+                      _buildConversationPreviewRow(
                         preview: previewText,
                         statusText: statusText,
                         statusColor: statusColor,
@@ -701,7 +700,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
                           padding: const EdgeInsets.only(top: 8),
                           child: Align(
                             alignment: Alignment.centerRight,
-                            child: this._buildUnreadDot(),
+                            child: _buildUnreadDot(),
                           ),
                         ),
                     ],
@@ -733,7 +732,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
         ),
         child: Row(
           children: [
-            this._buildFriendAvatarCluster(
+            _buildFriendAvatarCluster(
               friendId,
               statusColor,
               showStatus: false,
@@ -753,7 +752,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
                   ),
                   if (_houseMates(friendId).isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    this._buildMateStrip(friendId),
+                    _buildMateStrip(friendId),
                     const SizedBox(height: 6),
                   ] else if (_displayUsername(friendId).isNotEmpty) ...[
                     SLSpacing.gapH(2),

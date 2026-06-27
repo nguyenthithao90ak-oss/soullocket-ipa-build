@@ -1,4 +1,3 @@
-// ignore_for_file: invalid_use_of_protected_member
 
 part of '../../main_home_tab.dart';
 

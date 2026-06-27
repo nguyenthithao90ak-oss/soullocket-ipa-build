@@ -1115,7 +1115,7 @@ class StorageService {
     XFile file, {
     int minWidth = 960,
     int minHeight = 960,
-    int quality = 70,
+    int quality = 62,
     ValueChanged<double>? onProgress,
   }) {
     return _managedUploadHelper.uploadManagedImage(
@@ -1139,9 +1139,9 @@ class StorageService {
     String houseId,
     String folderName,
     XFile file, {
-    int minWidth = 1080,
-    int minHeight = 1080,
-    int quality = 75,
+    int minWidth = 960,
+    int minHeight = 960,
+    int quality = 62,
     ValueChanged<double>? onProgress,
   }) async {
     final result = await uploadManagedImage(
@@ -1160,9 +1160,9 @@ class StorageService {
     String houseId,
     String target,
     XFile file, {
-    int minWidth = 1080,
-    int minHeight = 1080,
-    int quality = 75,
+    int minWidth = 960,
+    int minHeight = 960,
+    int quality = 62,
     ValueChanged<double>? onProgress,
   }) {
     return _uploadSignedImageWithCompression(
@@ -1190,9 +1190,9 @@ class StorageService {
     XFile file, {
     required bool isInternal,
     String? targetHouseId,
-    int minWidth = 1080,
-    int minHeight = 1080,
-    int quality = 75,
+    int minWidth = 960,
+    int minHeight = 960,
+    int quality = 62,
   }) {
     return _uploadSignedImageWithCompression(
       file: file,
@@ -1217,9 +1217,9 @@ class StorageService {
   Future<StorageUploadResult?> uploadMemoryImage(
     String houseId,
     XFile file, {
-    int minWidth = 1080,
-    int minHeight = 1080,
-    int quality = 78,
+    int minWidth = 960,
+    int minHeight = 960,
+    int quality = 62,
   }) {
     return _uploadSignedImageWithCompression(
       file: file,
@@ -1242,9 +1242,9 @@ class StorageService {
   Future<StorageUploadResult?> uploadAlbumImage(
     String houseId,
     XFile file, {
-    int minWidth = 1080,
-    int minHeight = 1080,
-    int quality = 75,
+    int minWidth = 960,
+    int minHeight = 960,
+    int quality = 62,
   }) {
     return _uploadSignedImageWithCompression(
       file: file,
@@ -1267,9 +1267,9 @@ class StorageService {
   Future<StorageUploadResult?> uploadGiftImage(
     String houseId,
     XFile file, {
-    int minWidth = 1080,
-    int minHeight = 1080,
-    int quality = 75,
+    int minWidth = 960,
+    int minHeight = 960,
+    int quality = 62,
   }) async {
     return _uploadSignedImageWithCompression(
       file: file,
@@ -1292,9 +1292,9 @@ class StorageService {
   Future<StorageUploadResult?> uploadLoveCardImage(
     String houseId,
     XFile file, {
-    int minWidth = 1080,
-    int minHeight = 1080,
-    int quality = 75,
+    int minWidth = 960,
+    int minHeight = 960,
+    int quality = 62,
   }) async {
     return _uploadSignedImageWithCompression(
       file: file,
@@ -1319,9 +1319,9 @@ class StorageService {
   Future<StorageUploadResult?> _uploadDirectToR2({
     required XFile file,
     required String folderName,
-    int minWidth = 1080,
-    int minHeight = 1080,
-    int quality = 75,
+    int minWidth = 960,
+    int minHeight = 960,
+    int quality = 62,
     ValueChanged<double>? onProgress,
   }) async {
     try {
@@ -1434,9 +1434,9 @@ class StorageService {
   Future<StorageUploadResult?> uploadSecretVaultImage(
     String houseId,
     XFile file, {
-    int minWidth = 1080,
-    int minHeight = 1080,
-    int quality = 75,
+    int minWidth = 960,
+    int minHeight = 960,
+    int quality = 62,
   }) {
     return _uploadSignedImageWithCompression(
       file: file,

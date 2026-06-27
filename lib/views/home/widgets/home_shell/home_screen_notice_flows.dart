@@ -784,7 +784,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFFFF4B91).withOpacity(0.12),
+                color: const Color(0xFFFF4B91).withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.warning_amber_rounded, color: Color(0xFFFF4B91), size: 24),
@@ -862,7 +862,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF00C853).withOpacity(0.12),
+                color: const Color(0xFF00C853).withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.info_outline_rounded, color: Color(0xFF00C853), size: 24),

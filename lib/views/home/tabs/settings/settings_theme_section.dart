@@ -1,4 +1,3 @@
-// ignore_for_file: unused_local_variable
 part of '../settings_tab.dart';
 
 const CropAspectRatio _themeBackgroundAspectRatio =

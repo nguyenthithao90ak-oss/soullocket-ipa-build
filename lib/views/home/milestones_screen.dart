@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/l10n_service.dart';
 import '../utilities/calendar_screen.dart';
+import '../../core/sl_page_physics.dart';
 
 class MilestoneEvent {
   final String title;
@@ -509,6 +510,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                 // Tab Views
                 Expanded(
                   child: TabBarView(
+                    physics: const SLPagePhysics(),
                     controller: _tabController,
                     children: [
                       _buildEventsList(_upcomingList, isUpcoming: true),

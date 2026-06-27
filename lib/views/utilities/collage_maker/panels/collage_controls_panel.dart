@@ -1,5 +1,4 @@
 // ignore_for_file: invalid_use_of_protected_member
-
 part of '../../collage_maker_screen.dart';
 
 extension _CollageControlsPanel on _CollageMakerScreenState {

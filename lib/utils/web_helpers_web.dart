@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 import 'dart:html' as html;
 // ignore: avoid_web_libraries_in_flutter
@@ -79,7 +78,7 @@ void clearWebMessageHandlerImpl() {
 void downloadFileImpl(String filename, List<int> bytes, String mimeType) {
   final blob = html.Blob([bytes], mimeType);
   final url = html.Url.createObjectUrlFromBlob(blob);
-  final anchor = html.AnchorElement(href: url)
+  html.AnchorElement(href: url)
     ..setAttribute('download', filename)
     ..click();
   html.Url.revokeObjectUrl(url);

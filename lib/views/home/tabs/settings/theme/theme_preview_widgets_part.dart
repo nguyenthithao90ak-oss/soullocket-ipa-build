@@ -1,5 +1,4 @@
-﻿part of '../../settings_tab.dart';
-// ignore_for_file: unused_element
+part of '../../settings_tab.dart';
 
 extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
   Widget _buildThemeHomeLikePreviewCard(

@@ -1,4 +1,3 @@
-// ignore_for_file: unnecessary_this
 
 part of '../messenger_screen.dart';
 
@@ -24,7 +23,7 @@ extension _MessengerGroupSectionPart on _MessengerScreenState {
             ),
             child: Row(
               children: [
-                this._buildGroupAvatarCluster(group),
+                _buildGroupAvatarCluster(group),
                 SLSpacing.w12,
                 Expanded(
                   child: Column(
@@ -45,13 +44,13 @@ extension _MessengerGroupSectionPart on _MessengerScreenState {
                             ),
                           ),
                           if (lastMessageTime.isNotEmpty) ...[
-                            this._buildTimeBadge(
+                            _buildTimeBadge(
                               lastMessageTime,
                               highlighted: hasUnread,
                             ),
                             if (hasUnread) ...[
                               const SizedBox(width: 6),
-                              this._buildUnreadDot(prominent: true),
+                              _buildUnreadDot(prominent: true),
                             ],
                           ],
                         ],
@@ -86,7 +85,7 @@ extension _MessengerGroupSectionPart on _MessengerScreenState {
                 if (hasUnread)
                   Padding(
                     padding: const EdgeInsets.only(left: 8),
-                    child: this._buildUnreadDot(),
+                    child: _buildUnreadDot(),
                   ),
                 const Icon(
                   Icons.chevron_right_rounded,
@@ -112,7 +111,7 @@ extension _MessengerGroupSectionPart on _MessengerScreenState {
             Positioned(
               left: (index * 16).toDouble(),
               top: index.isEven ? 8 : 0,
-              child: this._buildAvatarBubble(
+              child: _buildAvatarBubble(
                 avatarUrl: _groupHouseAvatar(members[index]),
                 label: _groupHouseName(members[index]),
                 radius: 18,

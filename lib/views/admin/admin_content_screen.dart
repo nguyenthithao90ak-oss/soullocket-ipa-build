@@ -67,16 +67,24 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
             if (postId.isNotEmpty) {
               try {
-                final postSnap = await FirebaseFirestore.instance.collection('social_feed').doc(postId).get();
+                var postSnap = await FirebaseFirestore.instance.collection('social_posts').doc(postId).get();
+                if (!postSnap.exists || postSnap.data() == null) {
+                  postSnap = await FirebaseFirestore.instance.collection('social_feed').doc(postId).get();
+                }
                 if (postSnap.exists && postSnap.data() != null) {
                   final postData =
                       Map<String, dynamic>.from(postSnap.data() as Map);
                   reportData['postData'] = postData;
 
                   if (isCommentReport && commentId.isNotEmpty) {
-                    final commentSnapRtdb = await _db.child('social_feed/$postId/comments/$commentId').get();
-                    if (commentSnapRtdb.exists && commentSnapRtdb.value is Map) {
-                      reportData['commentData'] = Map<String, dynamic>.from(commentSnapRtdb.value as Map);
+                    final commentSnap = await FirebaseFirestore.instance
+                        .collection('social_posts')
+                        .doc(postId)
+                        .collection('comments')
+                        .doc(commentId)
+                        .get();
+                    if (commentSnap.exists && commentSnap.data() != null) {
+                      reportData['commentData'] = Map<String, dynamic>.from(commentSnap.data()!);
                     }
                   }
                 }
@@ -130,8 +138,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
   Future<void> _deletePost(String postId, String reportId) async {
     try {
+      await FirebaseFirestore.instance.collection('social_posts').doc(postId).delete();
       await FirebaseFirestore.instance.collection('social_feed').doc(postId).delete();
-      await _db.child('social_feed/$postId').remove();
       await FirebaseFirestore.instance.collection('reports').doc(reportId).delete();
 
       await FirebaseFirestore.instance.collection('admin_audit_logs').add({
@@ -162,8 +170,16 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
   Future<void> _deleteComment(
       String postId, String commentId, String reportId) async {
     try {
-      // Thử xóa trên Firebase RTDB
-      await _db.child('social_feed/$postId/comments/$commentId').remove();
+      await FirebaseFirestore.instance
+          .collection('social_posts')
+          .doc(postId)
+          .collection('comments')
+          .doc(commentId)
+          .delete();
+      await FirebaseFirestore.instance
+          .collection('social_posts')
+          .doc(postId)
+          .update({'commentCount': FieldValue.increment(-1)});
 
       await FirebaseFirestore.instance.collection('reports').doc(reportId).delete();
 

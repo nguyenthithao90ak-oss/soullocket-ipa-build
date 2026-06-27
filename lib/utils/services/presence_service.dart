@@ -29,6 +29,7 @@ class PresenceService {
   DatabaseReference? _myPresenceRef;
   String? _mySessionId;
   bool _shouldBeOnline = false;
+  bool _isConnected = false;
   String? _activeHouseId;
   String? _activeRole;
   String? _activeDeviceType;
@@ -289,6 +290,7 @@ class PresenceService {
     _connectedSub = _dbRef.child('.info/connected').onValue.listen(
       (event) {
         final connected = event.snapshot.value == true;
+        _isConnected = connected;
         if (connected && _shouldBeOnline) {
           unawaited(_doGoOnline());
         }
@@ -316,6 +318,10 @@ class PresenceService {
     if (!_shouldBeOnline || _myPresenceRef == null || _mySessionId == null) {
       return;
     }
+    if (!_isConnected) {
+      debugPrint('[Presence] Skip lightweight heartbeat because connection is offline');
+      return;
+    }
     try {
       await _myPresenceRef!.child('sessions/$_mySessionId').update({
         'ts': ServerValue.timestamp,
@@ -325,6 +331,10 @@ class PresenceService {
 
   Future<void> _heartbeat() async {
     if (!_shouldBeOnline || _myPresenceRef == null || _mySessionId == null) {
+      return;
+    }
+    if (!_isConnected) {
+      debugPrint('[Presence] Skip heartbeat because connection is offline');
       return;
     }
 

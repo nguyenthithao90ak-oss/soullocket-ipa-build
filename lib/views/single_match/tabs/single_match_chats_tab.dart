@@ -31,12 +31,14 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
         if (mounted) setState(() => _mappings = list);
       },
       onError: (err) {
-        if (mounted) setState(() {
+        if (mounted) {
+          setState(() {
           _error = AppErrorMapper.resolve(
             err,
             fallbackMessage: L10nService().translate('match_khngthtidl_11f27c'),
           ).message;
         });
+        }
       },
     );
   }
@@ -123,7 +125,7 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.cloud_off_rounded, size: 48,
+              const Icon(Icons.cloud_off_rounded, size: 48,
                   color: SLColors.textTertiary),
               const SizedBox(height: 12),
               Text(_error!, textAlign: TextAlign.center,

@@ -1,9 +1,9 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Query, Transaction;
+import 'package:cloud_firestore/cloud_firestore.dart' as cf;
 import 'package:soullocket_app/models/social_post.dart';
 import 'push_notification_helper.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'local_database_service.dart';
 
 /// SocialService — Quản lý social feed cộng đồng
@@ -19,6 +19,26 @@ class SocialService {
 
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<DocumentSnapshot<Map<String, dynamic>>> _getDocWithCacheFallback(
+    DocumentReference<Map<String, dynamic>> docRef,
+  ) async {
+    try {
+      return await docRef.get(const GetOptions(source: Source.server));
+    } catch (_) {
+      return await docRef.get(const GetOptions(source: Source.cache));
+    }
+  }
+
+  Future<cf.QuerySnapshot<Map<String, dynamic>>> _getQueryWithCacheFallback(
+    cf.Query<Map<String, dynamic>> query,
+  ) async {
+    try {
+      return await query.get(const GetOptions(source: Source.server));
+    } catch (_) {
+      return await query.get(const GetOptions(source: Source.cache));
+    }
+  }
 
   static const List<String> _blockedCommunityTerms = <String>[
     '18+',
@@ -111,43 +131,39 @@ class SocialService {
     'boobs',
   ];
 
-  Future<Map<String, dynamic>?> _loadMap(String path) async {
-    final snap = await _dbRef.child(path).get();
-    if (!snap.exists || snap.value is! Map) return null;
-    return Map<String, dynamic>.from(
-        Map<dynamic, dynamic>.from(snap.value as Map));
-  }
+
 
   /// Tải bài đăng từ Firestore trước, fallback sang RTDB nếu không có
   Future<Map<String, dynamic>?> _loadPostHybrid(String postId) async {
     try {
-      final doc = await _firestore.collection('social_posts').doc(postId).get();
+      final doc = await _getDocWithCacheFallback(
+        _firestore.collection('social_posts').doc(postId),
+      );
       if (doc.exists && doc.data() != null) {
         final data = Map<String, dynamic>.from(doc.data()!);
         data['id'] = postId;
         return data;
       }
     } catch (_) {}
-    // Fallback RTDB (bài cũ chưa migrate)
-    return _loadMap('social_feed/$postId');
+    return null;
   }
 
-  /// Tải bình luận từ Firestore trước, fallback sang RTDB nếu không có
   Future<Map<String, dynamic>?> _loadCommentHybrid(String postId, String commentId) async {
     try {
-      final doc = await _firestore
-          .collection('social_posts')
-          .doc(postId)
-          .collection('comments')
-          .doc(commentId)
-          .get();
+      final doc = await _getDocWithCacheFallback(
+        _firestore
+            .collection('social_posts')
+            .doc(postId)
+            .collection('comments')
+            .doc(commentId),
+      );
       if (doc.exists && doc.data() != null) {
         final data = Map<String, dynamic>.from(doc.data()!);
         data['id'] = commentId;
         return data;
       }
     } catch (_) {}
-    return _loadMap('social_feed/$postId/comments/$commentId');
+    return null;
   }
 
   Map<String, dynamic> _readMapField(dynamic raw) {
@@ -488,120 +504,80 @@ class SocialService {
 
   // ── STREAM feed global (mới nhất) bằng onChildAdded ──────────────────
   Stream<SocialPost> streamNewGlobalFeed({int? afterTs}) {
-    Query query = _dbRef.child('social_feed').orderByChild('ts');
+    var query = _firestore
+        .collection('social_posts')
+        .orderBy('ts', descending: false);
     if (afterTs != null) {
-      query = query.startAt(afterTs);
+      query = query.startAfter([afterTs]);
     } else {
-      // Giới hạn 50 post mới nhất để tránh download toàn bộ node
-      query = query.limitToLast(50);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      query = query.startAt([now]);
     }
-    return query.onChildAdded.map((event) {
-      if (!event.snapshot.exists || event.snapshot.value is! Map) {
-        throw StateError('Invalid post');
-      }
-      return SocialPost.fromJson(
-        event.snapshot.key!,
-        Map<dynamic, dynamic>.from(event.snapshot.value as Map),
-      );
+    return query.snapshots().expand((snapshot) {
+      return snapshot.docChanges
+          .where((change) => change.type == DocumentChangeType.added)
+          .map((change) {
+        final doc = change.doc;
+        return SocialPost.fromJson(doc.id, doc.data() ?? {});
+      });
     });
   }
 
   // ── STREAM cập nhật 1 post (lắng nghe like/comment realtime) ─────────
   Stream<SocialPost?> streamPostUpdates(String postId) {
-    return _dbRef.child('social_feed/$postId').onValue.map((event) {
-      if (!event.snapshot.exists || event.snapshot.value is! Map) return null;
-      return SocialPost.fromJson(
-        event.snapshot.key!,
-        Map<dynamic, dynamic>.from(event.snapshot.value as Map),
-      );
+    return _firestore
+        .collection('social_posts')
+        .doc(postId)
+        .snapshots()
+        .map((doc) {
+      if (!doc.exists || doc.data() == null) return null;
+      return SocialPost.fromJson(doc.id, doc.data()!);
     });
   }
 
   // ── STREAM feed của 1 nhà ─────────────────────────────────────────────
   Future<List<SocialPost>> fetchHouseFeedPage(String houseId,
       {int limit = 10, int? endBeforeTs}) async {
-    try {
-      var query = _firestore
-          .collection('social_posts')
-          .where('houseId', isEqualTo: houseId)
-          .orderBy('ts', descending: true)
-          .limit(limit);
-      if (endBeforeTs != null) {
-        query = query.where('ts', isLessThan: endBeforeTs);
-      }
-      final snap = await query.get();
-      return snap.docs
-          .map((doc) => SocialPost.fromJson(doc.id, doc.data()))
-          .toList();
-    } catch (_) {
-      Query query =
-          _dbRef.child('social_feed').orderByChild('houseId').equalTo(houseId);
-      final snap = await query.get();
-      if (!snap.exists) return [];
-
-      // Do Firebase Realtime Database không hỗ trợ multiple orderBy (cả houseId và ts),
-      // chúng ta phải sort ở client và cắt page.
-      final posts = _parseFeed(snap.value);
-      posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-
-      if (endBeforeTs != null) {
-        posts.removeWhere(
-            (p) => p.timestamp.millisecondsSinceEpoch >= endBeforeTs);
-      }
-
-      return posts.take(limit).toList();
+    var query = _firestore
+        .collection('social_posts')
+        .where('houseId', isEqualTo: houseId)
+        .orderBy('ts', descending: true)
+        .limit(limit);
+    if (endBeforeTs != null) {
+      query = query.where('ts', isLessThan: endBeforeTs);
     }
+    final snap = await _getQueryWithCacheFallback(query);
+    return snap.docs
+        .map((doc) => SocialPost.fromJson(doc.id, doc.data()))
+        .toList();
   }
 
   // ── LẤY 1 lần ────────────────────────────────────────────────────────
   Future<List<SocialPost>> fetchGlobalFeed({int limit = 10}) async {
-    try {
-      final snap = await _firestore
-          .collection('social_posts')
-          .orderBy('ts', descending: true)
-          .limit(limit)
-          .get();
-      return snap.docs
-          .map((doc) => SocialPost.fromJson(doc.id, doc.data()))
-          .toList();
-    } catch (_) {
-      final snap = await _dbRef
-          .child('social_feed')
-          .orderByChild('ts')
-          .limitToLast(limit)
-          .get();
-      final posts = _parseFeed(snap.value);
-      posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      return posts;
-    }
+    final snap = await _getQueryWithCacheFallback(_firestore
+        .collection('social_posts')
+        .orderBy('ts', descending: true)
+        .limit(limit));
+    return snap.docs
+        .map((doc) => SocialPost.fromJson(doc.id, doc.data()))
+        .toList();
   }
 
   Future<List<SocialPost>> fetchGlobalFeedPage({
     int limit = 20,
     int? endBeforeTs,
   }) async {
-    try {
-      var query = _firestore
-          .collection('social_posts')
-          .orderBy('ts', descending: true)
-          .limit(limit);
-      if (endBeforeTs != null) {
-        query = query.where('ts', isLessThan: endBeforeTs);
-      }
-      final snap = await query.get();
-      return snap.docs
-          .map((doc) => SocialPost.fromJson(doc.id, doc.data()))
-          .toList();
-    } catch (_) {
-      Query query = _dbRef.child('social_feed').orderByChild('ts');
-      if (endBeforeTs != null) {
-        query = query.endAt(endBeforeTs - 1);
-      }
-      final snap = await query.limitToLast(limit).get();
-      final posts = _parseFeed(snap.value);
-      posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      return posts;
+    var query = _firestore
+        .collection('social_posts')
+        .orderBy('ts', descending: true)
+        .limit(limit);
+    if (endBeforeTs != null) {
+      query = query.where('ts', isLessThan: endBeforeTs);
     }
+    final snap = await _getQueryWithCacheFallback(query);
+    return snap.docs
+        .map((doc) => SocialPost.fromJson(doc.id, doc.data()))
+        .toList();
   }
 
   // ── ĐĂNG bài mới ─────────────────────────────────────────────────────
@@ -633,8 +609,8 @@ class SocialService {
     final resolvedPrivacy = flagged ? 'private' : privacy;
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    final newRef = _dbRef.child('social_feed').push();
-    final postId = newRef.key!;
+    final docRef = _firestore.collection('social_posts').doc();
+    final postId = docRef.id;
 
     final postData = {
       'houseId': houseId,
@@ -659,10 +635,7 @@ class SocialService {
     };
 
     // Ghi nhận vào Firestore
-    await _firestore.collection('social_posts').doc(postId).set(postData);
-
-    // Ghi nhận vào RTDB để stream hoạt động
-    await newRef.set(postData);
+    await docRef.set(postData);
 
     return postId;
   }
@@ -746,7 +719,6 @@ class SocialService {
 
     // Xóa khỏi RTDB
     final updates = <String, Object?>{
-      'social_feed/$normalizedPostId': null,
       'post_likes/$normalizedPostId': null,
     };
     for (final houseId in cleanupHouseIds) {
@@ -761,7 +733,7 @@ class SocialService {
     required String myHouseId,
   }) async {
     await assertCanInteractWithPost(myHouseId: myHouseId, postId: postId);
-    final postData = await _loadMap('social_feed/$postId');
+    final postData = await _loadPostHybrid(postId);
     if (postData == null) {
       throw 'Bài viết không tồn tại.';
     }
@@ -773,21 +745,9 @@ class SocialService {
     ]);
     final liked = likesMap.containsKey(myHouseId) ||
         legacyLikeSnaps.any((snap) => snap.exists);
-    final storedLikes = postData['likes'];
-    final currentLikes =
-        storedLikes is num ? storedLikes.toInt() : likesMap.length;
-    final nextLikes =
-        liked ? (currentLikes > 0 ? currentLikes - 1 : 0) : currentLikes + 1;
     final updates = <String, Object?>{
       'post_likes/$postId/$myHouseId': liked ? null : true,
       'house_likes/$myHouseId/$postId': liked ? null : ServerValue.timestamp,
-      'social_feed/$postId/likes_map/$myHouseId': liked
-          ? null
-          : {
-              'by': myHouseId,
-              'ts': ServerValue.timestamp,
-            },
-      'social_feed/$postId/likes': nextLikes,
     };
 
     await _dbRef.update(updates);
@@ -825,7 +785,7 @@ class SocialService {
 
   // ── CHECK đã like chưa ───────────────────────────────────────────────
   Future<bool> hasLiked(String postId, String myHouseId) async {
-    final postData = await _loadMap('social_feed/$postId');
+    final postData = await _loadPostHybrid(postId);
     if (postData != null &&
         _readMapField(postData['likes_map']).containsKey(myHouseId)) {
       return true;
@@ -845,19 +805,7 @@ class SocialService {
         );
   }
 
-  // ── Parse raw Firebase map → List<SocialPost> ─────────────────────────
-  List<SocialPost> _parseFeed(Object? raw) {
-    if (raw == null || raw is! Map) return [];
-    final posts = <SocialPost>[];
-    raw.forEach((key, value) {
-      if (value is Map) {
-        try {
-          posts.add(SocialPost.fromJson(key.toString(), value));
-        } catch (_) {}
-      }
-    });
-    return posts;
-  }
+
 
   // ── Unified Post Creation (Firebase only) ─────────────────────
   Future<String> createPostUnified({
@@ -905,8 +853,8 @@ class SocialService {
       final normalizedIsAnon =
           isAnon || normalizedPostType.toLowerCase() == 'confession';
       final now = DateTime.now().millisecondsSinceEpoch;
-      final newRef = _dbRef.child('social_feed').push();
-      final postId = newRef.key!;
+      final docRef = _firestore.collection('social_posts').doc();
+      final postId = docRef.id;
 
       final postData = {
         'houseId': houseId,
@@ -939,10 +887,7 @@ class SocialService {
       };
 
       // Ghi nhận vào Firestore
-      await _firestore.collection('social_posts').doc(postId).set(postData);
-
-      // Ghi nhận vào RTDB
-      await newRef.set(postData);
+      await docRef.set(postData);
 
       // Ghi nhận hashtag
       final exp = RegExp(r'\B#(\w+)');
@@ -971,7 +916,7 @@ class SocialService {
         .doc(postId)
         .collection('comments')
         .doc(commentId);
-    final docSnap = await docRef.get();
+    final docSnap = await _getDocWithCacheFallback(docRef);
 
     final requester = requestingHouseId?.trim() ?? '';
     if (docSnap.exists) {
@@ -980,7 +925,9 @@ class SocialService {
         final authorHouseId = (commentData['houseId'] ?? commentData['uid'] ?? '')
             .toString()
             .trim();
-        final postDoc = await _firestore.collection('social_posts').doc(postId).get();
+        final postDoc = await _getDocWithCacheFallback(
+          _firestore.collection('social_posts').doc(postId),
+        );
         final postOwnerHouseId = (postDoc.data()?['houseId'] ?? '').toString().trim();
         if (requester != authorHouseId && requester != postOwnerHouseId) {
           throw 'Bạn không có quyền xóa bình luận này.';
@@ -992,12 +939,6 @@ class SocialService {
           .doc(postId)
           .update({'commentCount': FieldValue.increment(-1)});
     }
-
-    // Also remove from RTDB
-    await _dbRef.child('social_feed/$postId/comments/$commentId').remove();
-    await _dbRef
-        .child('social_feed/$postId/commentCount')
-        .set(ServerValue.increment(-1));
   }
 
   // ── POST COMMENT ────────────────────────────────────────────────────
@@ -1033,10 +974,15 @@ class SocialService {
     }
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    final newCommentRef = _dbRef.child('social_feed/$postId/comments').push();
-    final commentId = newCommentRef.key!;
+    final docRef = _firestore
+        .collection('social_posts')
+        .doc(postId)
+        .collection('comments')
+        .doc();
+    final commentId = docRef.id;
 
     final payload = {
+      'id': commentId,
       'uid': houseId,
       'houseId': houseId,
       'u': resolvedName,
@@ -1057,24 +1003,13 @@ class SocialService {
     };
 
     // Write to Firestore subcollection
-    await _firestore
-        .collection('social_posts')
-        .doc(postId)
-        .collection('comments')
-        .doc(commentId)
-        .set(payload);
+    await docRef.set(payload);
 
     // Update commentCount on Firestore
     await _firestore
         .collection('social_posts')
         .doc(postId)
         .update({'commentCount': FieldValue.increment(1)});
-
-    // Write to RTDB
-    await newCommentRef.set(payload);
-    await _dbRef
-        .child('social_feed/$postId/commentCount')
-        .set(ServerValue.increment(1));
 
     if (!hasViolations) {
       try {
@@ -1120,28 +1055,15 @@ class SocialService {
       });
     } catch (_) {}
 
-    // Also update RTDB
-    try {
-      final commentLikeRef = _dbRef.child(
-          'social_feed/$postId/comments/$commentId/likes_map/$myHouseId');
-      final isLikedSnap = await commentLikeRef.get();
-      if (isLikedSnap.exists) {
-        await commentLikeRef.remove();
-      } else {
-        await commentLikeRef.set({
-          'ts': ServerValue.timestamp,
-          'by': myHouseId,
-        });
-
-        try {
-          await notifyCommentLiked(
-            postId: postId,
-            commentId: commentId,
-            actorHouseId: myHouseId,
-          );
-        } catch (_) {}
-      }
-    } catch (_) {}
+    if (!liked) {
+      try {
+        await notifyCommentLiked(
+          postId: postId,
+          commentId: commentId,
+          actorHouseId: myHouseId,
+        );
+      } catch (_) {}
+    }
   }
 
   // ── REPORT POST ─────────────────────────────────────────────────────
@@ -1273,14 +1195,14 @@ class SocialService {
     if (pageItems.isEmpty) return [];
 
     final posts = <SocialPost>[];
-    final futures = pageItems
-        .map((item) => _dbRef.child('social_feed/${item['postId']}').get());
-    final snaps = await Future.wait(futures);
+    final futures = pageItems.map((item) =>
+        _firestore.collection('social_posts').doc(item['postId'] as String).get());
+    final docSnaps = await Future.wait(futures);
 
-    for (var s in snaps) {
-      if (s.exists && s.value is Map) {
+    for (var doc in docSnaps) {
+      if (doc.exists && doc.data() != null) {
         try {
-          posts.add(SocialPost.fromJson(s.key!, s.value as Map));
+          posts.add(SocialPost.fromJson(doc.id, doc.data()!));
         } catch (_) {}
       }
     }
@@ -1307,17 +1229,18 @@ class SocialService {
   // ── FETCH feed LOCKET ───────────────────────────────────────────────
   Future<List<SocialPost>> fetchLocketFeedPage(String houseId,
       {int limit = 10, int? endBeforeTs}) async {
-    Query query =
-        _dbRef.child('social_feed').orderByChild('isLocket').equalTo(true);
-    final snap = await query.get();
-    if (!snap.exists) return [];
-    final posts = _parseFeed(snap.value);
-    posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    var query = _firestore
+        .collection('social_posts')
+        .where('isLocket', isEqualTo: true)
+        .orderBy('ts', descending: true)
+        .limit(limit);
     if (endBeforeTs != null) {
-      posts.removeWhere(
-          (p) => p.timestamp.millisecondsSinceEpoch >= endBeforeTs);
+      query = query.where('ts', isLessThan: endBeforeTs);
     }
-    return posts.take(limit).toList();
+    final snap = await _getQueryWithCacheFallback(query);
+    return snap.docs
+        .map((doc) => SocialPost.fromJson(doc.id, doc.data()))
+        .toList();
   }
 
   // ── FETCH feed THEO LOẠI ─────────────────────────────────────────────
@@ -1349,12 +1272,14 @@ class SocialService {
                 limit: limit, endBeforeTs: endBeforeTs)
             : fetchGlobalFeedPage(limit: limit, endBeforeTs: endBeforeTs);
       case 'hot':
-        Query query = _dbRef.child('social_feed').orderByChild('hotScore');
-        final snap = await query.limitToLast(100).get();
-        if (!snap.exists) return [];
-        final posts = _parseFeed(snap.value);
-        posts.sort((a, b) => b.hotScore.compareTo(a.hotScore));
-        // Sort theo timestamp để cắt trang đúng cách
+        var query = _firestore
+            .collection('social_posts')
+            .orderBy('hotScore', descending: true)
+            .limit(100);
+        final snap = await _getQueryWithCacheFallback(query);
+        final posts = snap.docs
+            .map((doc) => SocialPost.fromJson(doc.id, doc.data()))
+            .toList();
         posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
         if (endBeforeTs != null) {
           posts.removeWhere(
@@ -1367,68 +1292,5 @@ class SocialService {
   }
 
   // ── SCRIPT MIGRATION TỰ ĐỘNG CHO SOCIAL FEED ─────────────────────────
-  Future<void> migrateSocialFeedFromRTDB(String houseId) async {
-    final trimmedHouseId = houseId.trim();
-    if (trimmedHouseId.isEmpty) return;
 
-    final prefs = await SharedPreferences.getInstance();
-    final migrationKey = 'social_feed_migrated_$trimmedHouseId';
-    if (prefs.getBool(migrationKey) == true) return;
-
-    try {
-      final snap = await _dbRef
-          .child('social_feed')
-          .orderByChild('houseId')
-          .equalTo(trimmedHouseId)
-          .get();
-
-      if (!snap.exists || snap.value is! Map) {
-        await prefs.setBool(migrationKey, true);
-        return;
-      }
-
-      final rawFeed = snap.value as Map;
-      for (final entry in rawFeed.entries) {
-        final postId = entry.key.toString();
-        final postVal = entry.value;
-        if (postVal is! Map) continue;
-
-        final postData = Map<String, dynamic>.from(postVal);
-        postData['id'] = postId;
-
-        // 1. Write the post to Firestore
-        await _firestore.collection('social_posts').doc(postId).set(postData, SetOptions(merge: true));
-
-        // 2. Fetch and migrate comments for this post if any exist on RTDB
-        final commentsSnap = await _dbRef.child('social_feed/$postId/comments').get();
-        if (commentsSnap.exists && commentsSnap.value is Map) {
-          final rawComments = commentsSnap.value as Map;
-          final batch = _firestore.batch();
-          int commentCount = 0;
-
-          rawComments.forEach((commentKey, commentVal) {
-            if (commentVal is Map) {
-              final commentId = commentKey.toString();
-              final commentData = Map<String, dynamic>.from(commentVal);
-              commentData['id'] = commentId;
-
-              final commentDocRef = _firestore
-                  .collection('social_posts')
-                  .doc(postId)
-                  .collection('comments')
-                  .doc(commentId);
-              batch.set(commentDocRef, commentData, SetOptions(merge: true));
-              commentCount++;
-            }
-          });
-
-          if (commentCount > 0) {
-            await batch.commit();
-          }
-        }
-      }
-
-      await prefs.setBool(migrationKey, true);
-    } catch (_) {}
-  }
 }

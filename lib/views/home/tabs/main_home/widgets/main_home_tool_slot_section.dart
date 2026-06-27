@@ -1,5 +1,4 @@
 part of '../../main_home_tab.dart';
-// ignore_for_file: unused_element
 
 extension _MainHomeToolSlotSection on _MainHomeTabState {
   String _homeToolRelationshipMode() {

@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -242,35 +241,6 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       if (!mounted) return;
       _showSnack(
           'Chưa thể cập nhật giao diện hồ sơ lúc này. Vui lòng thử lại.');
-    } finally {
-      if (mounted) {
-        setState(() => _isUpdatingProfileAppearance = false);
-      }
-    }
-  }
-
-  Future<void> _saveHouseAvatar(String avatarUrl) async {
-    final houseId = _editableProfileHouseId;
-    if (houseId == null || _isUpdatingProfileAppearance) {
-      return;
-    }
-
-    setState(() => _isUpdatingProfileAppearance = true);
-    try {
-      final refreshedAvatarUrl = _withRefreshToken(avatarUrl);
-      await _houseSettingsService.updateHouseAvatarOnly(
-        houseId: houseId,
-        avatarUrl: refreshedAvatarUrl,
-      );
-      if (!mounted) return;
-      setState(
-        () => _applyProfilePresentationLocally(
-          houseAvatar: refreshedAvatarUrl,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      _showSnack('Chưa thể cập nhật ảnh đại diện lúc này. Vui lòng thử lại.');
     } finally {
       if (mounted) {
         setState(() => _isUpdatingProfileAppearance = false);

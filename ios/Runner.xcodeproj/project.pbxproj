@@ -121,6 +121,7 @@
 		A10000000000000000000011 /* SoulLocketWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* SoulLocketWidget.swift */; };
 		A10000000000000000000012 /* SoulLocketWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* SoulLocketWidgetView.swift */; };
 		A10000000000000000000014 /* SoulLocketWidgetIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000007 /* SoulLocketWidgetIntent.swift */; };
+		A10000000000000000000054 /* SoulLocketWidgetIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000007 /* SoulLocketWidgetIntent.swift */; };
 		A10000000000000000000015 /* SoulLocketLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000008 /* SoulLocketLiveActivity.swift */; };
 		A10000000000000000000013 /* SoulLocketWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = A10000000000000000000005 /* SoulLocketWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, CodeSignOnCopy, ); }; };
 		A2D24CF88025AA11F63013EB /* icon_sunset_ipadPro@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F1BA41B4A288BC34A37335E8 /* icon_sunset_ipadPro@2x.png */; };
@@ -763,6 +764,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000000000000000000054 /* SoulLocketWidgetIntent.swift in Sources */,
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);

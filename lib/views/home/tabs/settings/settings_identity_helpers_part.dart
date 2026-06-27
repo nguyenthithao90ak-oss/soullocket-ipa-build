@@ -1,6 +1,5 @@
 part of '../settings_tab.dart';
 
-// ignore_for_file: dead_code, unused_element
 
 extension _SettingsTabIdentityHelpers on _SettingsTabState {
   Future<void> _loadLocalSettings() async {

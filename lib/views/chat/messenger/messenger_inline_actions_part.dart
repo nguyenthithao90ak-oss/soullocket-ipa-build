@@ -1,4 +1,3 @@
-// ignore_for_file: unnecessary_this, unused_element, invalid_use_of_protected_member
 
 part of '../messenger_screen.dart';
 
@@ -16,7 +15,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
     final nameCtrl = TextEditingController();
     final selectedIds = <String>{};
 
-    final newGroup = await showModalBottomSheet<_ChatGroupDraft>(
+    final newGroup = await showModalBottomSheet<ChatGroupDraft>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -137,7 +136,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                                   ),
                                   child: Row(
                                     children: [
-                                      this._buildFriendAvatarCluster(
+                                      _buildFriendAvatarCluster(
                                         friendId,
                                         const Color(0xFF22C55E),
                                         showStatus: false,
@@ -186,7 +185,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                                       ...selectedIds,
                                     ];
                                     Navigator.of(sheetContext).pop(
-                                      _ChatGroupDraft(
+                                      ChatGroupDraft(
                                         id: 'group_${DateTime.now().millisecondsSinceEpoch}',
                                         name: nameCtrl.text.trim().isNotEmpty
                                             ? nameCtrl.text.trim()
@@ -281,7 +280,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
     return;
   }
 
-  Future<void> _showGroupDetailsSheet(_ChatGroupDraft group) async {
+  Future<void> _showGroupDetailsSheet(ChatGroupDraft group) async {
     final index = _groupDrafts.indexWhere((item) => item.id == group.id);
     final current = index == -1 ? group : _groupDrafts[index];
 
@@ -418,7 +417,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                               ),
                               child: Row(
                                 children: [
-                                  this._buildAvatarBubble(
+                                  _buildAvatarBubble(
                                     avatarUrl: _groupHouseAvatar(houseId),
                                     label: _groupHouseName(houseId),
                                     radius: 20,
@@ -462,7 +461,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
     );
   }
 
-  Future<void> _renameGroupDraft(_ChatGroupDraft group) async {
+  Future<void> _renameGroupDraft(ChatGroupDraft group) async {
     final ctrl = TextEditingController(text: repairMojibakeText(group.name));
     final nextName = await showDialog<String>(
       context: context,
@@ -507,7 +506,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
     _showMessengerNotice('Đã cập nhật tên nhóm');
   }
 
-  Future<void> _deleteGroupDraft(_ChatGroupDraft group) async {
+  Future<void> _deleteGroupDraft(ChatGroupDraft group) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {

@@ -53,14 +53,14 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
       final results = await Future.wait([
         _db.child('houses').get().timeout(const Duration(seconds: 8)),
         FirebaseFirestore.instance.collection('reports').count().get().timeout(const Duration(seconds: 8)),
-        _db.child('social_feed').get().timeout(const Duration(seconds: 8)),
+        FirebaseFirestore.instance.collection('social_posts').count().get().timeout(const Duration(seconds: 8)),
         _db.child('support_tickets').get().timeout(const Duration(seconds: 8)),
         _db.child(AppConfig.maintenanceModePath).get().timeout(const Duration(seconds: 5)),
         _db.child(AppConfig.communityMaintenanceModePath).get().timeout(const Duration(seconds: 5)),
       ]);
 
       final snap0 = results[0] as DataSnapshot;
-      final snap2 = results[2] as DataSnapshot;
+      final snap2 = results[2] as AggregateQuerySnapshot;
       final snap3 = results[3] as DataSnapshot;
 
       final supportRaw = snap3.value;
@@ -100,7 +100,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
         _bannedHouses = banned;
         _vipHouses = vip;
         _totalReports = (results[1] as AggregateQuerySnapshot).count ?? 0;
-        _totalFeeds = snap2.children.length;
+        _totalFeeds = snap2.count ?? 0;
         _totalSupportTickets = totalTickets;
         _unreadSupportTickets = unreadTickets;
         _isMaintenanceMode = (results[4] as DataSnapshot).value == true;

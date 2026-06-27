@@ -1,4 +1,3 @@
-// ignore_for_file: unnecessary_this
 
 part of '../messenger_screen.dart';
 
@@ -114,10 +113,10 @@ extension _MessengerSearchFilterPart on _MessengerScreenState {
     required List<GroupChatRoom> filteredGroups,
   }) {
     if (_myHouseId == null && _isBootstrapping) {
-      return this._buildMessengerLoadingState();
+      return _buildMessengerLoadingState();
     }
 
-    return this._buildUnifiedMessengerBody(
+    return _buildUnifiedMessengerBody(
       filteredFriends: filteredFriends,
       filteredGroups: filteredGroups,
     );

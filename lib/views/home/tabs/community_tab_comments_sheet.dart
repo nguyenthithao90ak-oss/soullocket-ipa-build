@@ -77,60 +77,36 @@ class _CommentsSheetState extends State<_CommentsSheet> {
         return data;
       }).toList();
     } catch (_) {
-      // Fallback RTDB
-      Query query = widget.dbRef
-          .child('social_feed/${widget.postId}/comments')
-          .orderByKey();
-      final snap = await query.get();
-      if (!snap.exists || snap.value is! Map) return [];
-
-      final data = Map<String, dynamic>.from(
-        Map<dynamic, dynamic>.from(snap.value as Map),
-      );
-      final List<Map<String, dynamic>> items = [];
-      data.forEach((key, value) {
-        if (value is Map) {
-          final item = Map<String, dynamic>.from(value);
-          item['id'] = key;
-          items.add(item);
-        }
-      });
-
-      items.sort(
-          (a, b) => _readTimestamp(b['ts']).compareTo(_readTimestamp(a['ts'])));
-
-      if (endBeforeTs != null) {
-        items.removeWhere((item) => _readTimestamp(item['ts']) >= endBeforeTs);
-      }
-
-      return items.take(20).toList();
+      return [];
     }
   }
 
   void _listenForNewComments() {
     _newCommentsSub?.cancel();
-    Query query = widget.dbRef
-        .child('social_feed/${widget.postId}/comments')
-        .orderByKey();
-    if (_comments.isNotEmpty) {
-      query = query.startAt(_comments.first['id']);
-    }
-    _newCommentsSub = query.onChildAdded.listen((event) {
-      if (!mounted || !event.snapshot.exists || event.snapshot.value is! Map) {
-        return;
+    final startTs = _comments.isNotEmpty
+        ? _readTimestamp(_comments.first['ts'])
+        : DateTime.now().millisecondsSinceEpoch;
+    final query = FirebaseFirestore.instance
+        .collection('social_posts')
+        .doc(widget.postId)
+        .collection('comments')
+        .orderBy('ts', descending: false)
+        .startAfter([startTs]);
+    _newCommentsSub = query.snapshots().listen((snapshot) {
+      if (!mounted) return;
+      for (final change in snapshot.docChanges) {
+        if (change.type == DocumentChangeType.added) {
+          final doc = change.doc;
+          if (_comments.any((c) => c['id'] == doc.id)) continue;
+          final item = doc.data() ?? {};
+          item['id'] = doc.id;
+          setState(() {
+            _comments.insert(0, item);
+            _comments.sort((a, b) =>
+                _readTimestamp(b['ts']).compareTo(_readTimestamp(a['ts'])));
+          });
+        }
       }
-      final key = event.snapshot.key!;
-      if (_comments.any((c) => c['id'] == key)) return;
-
-      final item = Map<String, dynamic>.from(
-        Map<dynamic, dynamic>.from(event.snapshot.value as Map),
-      );
-      item['id'] = key;
-      setState(() {
-        _comments.insert(0, item);
-        _comments.sort((a, b) =>
-            _readTimestamp(b['ts']).compareTo(_readTimestamp(a['ts'])));
-      });
     });
   }
 

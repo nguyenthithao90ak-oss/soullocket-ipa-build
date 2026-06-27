@@ -67,11 +67,11 @@ class _DiaryComposerState extends State<DiaryComposer> {
             // Mood Selector
             Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -101,7 +101,7 @@ class _DiaryComposerState extends State<DiaryComposer> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: active
-                                    ? moodColor.withOpacity(0.18)
+                                    ? moodColor.withValues(alpha: 0.18)
                                     : const Color(0xFFF2F4F8),
                                 border: Border.all(
                                   color: active
@@ -112,7 +112,7 @@ class _DiaryComposerState extends State<DiaryComposer> {
                                 boxShadow: active
                                     ? [
                                         BoxShadow(
-                                          color: moodColor.withOpacity(0.3),
+                                          color: moodColor.withValues(alpha: 0.3),
                                           blurRadius: 10,
                                           offset: const Offset(0, 3),
                                         )
@@ -151,8 +151,8 @@ class _DiaryComposerState extends State<DiaryComposer> {
                           const Color(0xFF90CAF9),
                         ]
                       : [
-                          Colors.white.withOpacity(0.5),
-                          Colors.white.withOpacity(0.2),
+                          Colors.white.withValues(alpha: 0.5),
+                          Colors.white.withValues(alpha: 0.2),
                         ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -160,7 +160,7 @@ class _DiaryComposerState extends State<DiaryComposer> {
                 boxShadow: _isFocused
                     ? [
                         BoxShadow(
-                          color: _diarySoftPink.withOpacity(0.22),
+                          color: _diarySoftPink.withValues(alpha: 0.22),
                           blurRadius: 16,
                           offset: const Offset(0, 5),
                         )
@@ -169,7 +169,7 @@ class _DiaryComposerState extends State<DiaryComposer> {
               ),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.65),
+                  color: Colors.white.withValues(alpha: 0.65),
                   borderRadius: const BorderRadius.all(Radius.circular(14)),
                 ),
                 child: TextField(
@@ -217,7 +217,7 @@ class _DiaryComposerState extends State<DiaryComposer> {
                   borderRadius: BorderRadius.circular(27),
                   boxShadow: [
                     BoxShadow(
-                      color: _diarySoftPink.withOpacity(0.45),
+                      color: _diarySoftPink.withValues(alpha: 0.45),
                       blurRadius: 20,
                       offset: const Offset(0, 6),
                     ),

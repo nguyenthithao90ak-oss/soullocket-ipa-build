@@ -22,7 +22,7 @@ class _CommentSheetState extends State<_CommentSheet> {
 
   List<Map<String, dynamic>> _comments = <Map<String, dynamic>>[];
   bool _loading = true;
-  StreamSubscription<DatabaseEvent>? _commentsSub;
+  StreamSubscription? _commentsSub;
 
   @override
   void initState() {
@@ -40,33 +40,25 @@ class _CommentSheetState extends State<_CommentSheet> {
 
   void _listenToComments() {
     _commentsSub?.cancel();
-    _commentsSub = FirebaseDatabase.instance
-        .ref('social_feed/${widget.postId}/comments')
-        .onValue
-        .listen((event) {
+    _commentsSub = FirebaseFirestore.instance
+        .collection('social_posts')
+        .doc(widget.postId)
+        .collection('comments')
+        .snapshots()
+        .listen((snapshot) {
       if (!mounted) return;
-      final raw = event.snapshot.value;
-      if (raw is! Map) {
-        setState(() {
-          _comments = <Map<String, dynamic>>[];
-          _loading = false;
-        });
-        return;
-      }
-
       final loaded = <Map<String, dynamic>>[];
-      raw.forEach((key, value) {
-        if (value is! Map) return;
-        if (value['isHidden'] == true) return;
+      for (final doc in snapshot.docs) {
+        final item = doc.data();
+        if (item['isHidden'] == true) continue;
 
-        final item = Map<String, dynamic>.from(value);
         final authorId = (item['houseId'] ?? item['uid'] ?? '').toString();
         if (authorId.isNotEmpty && widget.blockedUsers[authorId] == true) {
-          return;
+          continue;
         }
 
         loaded.add(<String, dynamic>{
-          'id': key.toString(),
+          'id': doc.id,
           'content':
               (item['content'] ?? item['c'] ?? item['text'] ?? '').toString(),
           'author_name': (item['authorName'] ??
@@ -85,7 +77,7 @@ class _CommentSheetState extends State<_CommentSheet> {
               .toString(),
           'created_at': item['ts'] ?? 0,
         });
-      });
+      }
 
       loaded.sort((a, b) {
         final left = (a['created_at'] as num?)?.toInt() ?? 0;

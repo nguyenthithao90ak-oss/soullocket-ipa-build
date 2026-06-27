@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element
 
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';

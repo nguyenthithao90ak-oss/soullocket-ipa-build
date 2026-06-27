@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, dead_code, deprecated_member_use, use_super_parameters, prefer_const_constructors, use_build_context_synchronously, duplicate_ignore, avoid_web_libraries_in_flutter, avoid_unnecessary_containers, unnecessary_this
 import 'dart:async';
 import 'dart:convert';
 
@@ -12,6 +11,7 @@ import '../../utils/services/offline_cache_service.dart';
 import '../../utils/services/admob_service.dart';
 
 import '../../models/group_chat_room.dart';
+import '../../models/chat_group_draft.dart';
 import '../../utils/services/presence_service.dart';
 import '../../utils/services/chat_service.dart';
 import '../../utils/services/group_chat_service.dart';
@@ -70,12 +70,10 @@ class _MessengerScreenState extends State<MessengerScreen>
   final Set<String> _friendIdsSet = <String>{};
   List<String> _sortedFriendsCache = const <String>[];
   bool _sortedFriendsDirty = true;
-  final List<_ChatGroupDraft> _groupDrafts = [];
+  final List<ChatGroupDraft> _groupDrafts = [];
   final List<GroupChatRoom> _groupRooms = <GroupChatRoom>[];
   Map<dynamic, dynamic>? _internalPartnerPresence;
   ChatRoomMeta _internalPartnerRoomMeta = const ChatRoomMeta();
-  bool _isGroupDraftsLoaded = false;
-  bool _isGroupRoomsLoaded = false;
   bool _isBootstrapping = true;
   static const Duration _friendRealtimeReleaseDelay = Duration(seconds: 18);
   static const Duration _realtimeUiDebounce = Duration(milliseconds: 140);
@@ -333,37 +331,7 @@ class _MessengerScreenState extends State<MessengerScreen>
     );
   }
 
-  void _mergeHouseInfo(
-    Map<dynamic, dynamic> target,
-    Map<dynamic, dynamic> source,
-  ) {
-    const allowedKeys = {
-      'houseName',
-      'username',
-      'houseAvatar',
-      'avtUser1',
-      'avtUser2',
-      'nameU1',
-      'nameU2',
-      'relationshipMode',
-    };
-    source.forEach((key, value) {
-      if (key == 'settings' ||
-          !allowedKeys.contains(key) ||
-          !_hasDisplayValue(value)) {
-        return;
-      }
-      target[key] = value;
-    });
-  }
 
-  bool _hasDisplayValue(dynamic value) {
-    if (value == null) return false;
-    if (value is String) return value.trim().isNotEmpty;
-    if (value is Map) return value.isNotEmpty;
-    if (value is Iterable) return value.isNotEmpty;
-    return true;
-  }
 
   String _roomIdFor(String friendId) {
     final ids = [_myHouseId ?? '', friendId]..sort();
@@ -758,13 +726,6 @@ class _MessengerScreenState extends State<MessengerScreen>
     return false;
   }
 
-  int? _readEpochMs(dynamic raw) {
-    if (raw is num) {
-      return raw.toInt();
-    }
-    return int.tryParse(raw?.toString() ?? '');
-  }
-
   int? _presenceLastSeen(Map<dynamic, dynamic>? raw) {
     if (raw == null) return null;
     int? latest;
@@ -837,11 +798,6 @@ class _MessengerScreenState extends State<MessengerScreen>
     );
   }
 
-  bool _isRoomClosed(Map<dynamic, dynamic>? rawRoom) {
-    final status = (rawRoom?['status'] ?? '').toString().trim().toLowerCase();
-    return status == 'closed';
-  }
-
   String _formatLastMessageTime(Map<dynamic, dynamic>? raw) {
     final ts = readChatMetaTimestamp(raw);
     if (ts <= 0) return '';
@@ -869,82 +825,14 @@ class _MessengerScreenState extends State<MessengerScreen>
         }
         if (!mounted) return;
         setState(() {
-          _groupRooms
-            ..clear()
-            ..addAll(groups);
-          _isGroupRoomsLoaded = true;
+          _groupRooms.clear();
+          _groupRooms.addAll(groups);
         });
       },
-      onError: (_) {
-        if (!mounted) return;
-        setState(() {
-          _isGroupRoomsLoaded = true;
-        });
-      },
+      onError: (_) {},
     );
   }
 
-  String _groupDraftPrefsKey(String houseId) =>
-      'messenger_group_drafts_v1_$houseId';
-
-  Future<void> _loadGroupDrafts() async {
-    final houseId = _myHouseId;
-    if (houseId == null || houseId.isEmpty) {
-      return;
-    }
-
-    final prefs = await OfflineCacheService.getPrefs();
-    final raw = prefs.getString(_groupDraftPrefsKey(houseId)) ?? '';
-    final nextGroups = <_ChatGroupDraft>[];
-
-    if (raw.isNotEmpty) {
-      try {
-        final decoded = jsonDecode(raw);
-        if (decoded is List) {
-          for (final item in decoded) {
-            if (item is Map) {
-              nextGroups.add(
-                _ChatGroupDraft.fromJson(
-                  Map<String, dynamic>.from(
-                    item.map((key, value) => MapEntry(key.toString(), value)),
-                  ),
-                ),
-              );
-            }
-          }
-        }
-      } catch (_) {}
-    }
-
-    final relatedHouseIds = nextGroups
-        .expand((group) => group.memberHouseIds)
-        .where((id) => id != houseId)
-        .toSet()
-        .toList();
-    if (relatedHouseIds.isNotEmpty) {
-      await _loadHousesInfo(relatedHouseIds);
-    }
-
-    if (!mounted) return;
-    setState(() {
-      _groupDrafts
-        ..clear()
-        ..addAll(nextGroups);
-      _isGroupDraftsLoaded = true;
-    });
-  }
-
-  Future<void> _saveGroupDrafts() async {
-    final houseId = _myHouseId;
-    if (houseId == null || houseId.isEmpty) {
-      return;
-    }
-
-    final prefs = await OfflineCacheService.getPrefs();
-    final encoded =
-        jsonEncode(_groupDrafts.map((group) => group.toJson()).toList());
-    await prefs.setString(_groupDraftPrefsKey(houseId), encoded);
-  }
 
   List<GroupChatRoom> get _sortedGroupRooms {
     final items = <GroupChatRoom>[..._groupRooms];
@@ -1163,6 +1051,18 @@ class _MessengerScreenState extends State<MessengerScreen>
       ),
     );
   }
+
+  Future<void> _saveGroupDrafts() async {
+    final houseId = _myHouseId;
+    if (houseId == null || houseId.isEmpty) {
+      return;
+    }
+
+    final prefs = await OfflineCacheService.getPrefs();
+    final encoded =
+        jsonEncode(_groupDrafts.map((group) => group.toJson()).toList());
+    await prefs.setString('messenger_group_drafts_v1_$houseId', encoded);
+  }
 }
 
 class _FriendRealtimeScope extends StatefulWidget {
@@ -1220,54 +1120,4 @@ class _HouseMatePreview {
   });
 }
 
-class _ChatGroupDraft {
-  final String id;
-  final String name;
-  final List<String> memberHouseIds;
-  final int createdAtMs;
 
-  const _ChatGroupDraft({
-    required this.id,
-    required this.name,
-    required this.memberHouseIds,
-    required this.createdAtMs,
-  });
-
-  factory _ChatGroupDraft.fromJson(Map<String, dynamic> json) {
-    final name = repairMojibakeText(json['name']?.toString().trim() ?? '');
-    return _ChatGroupDraft(
-      id: json['id']?.toString() ?? '',
-      name: name.isNotEmpty ? name : 'Nh\u00f3m m\u1edbi',
-      memberHouseIds: (json['memberHouseIds'] as List? ?? const [])
-          .map((item) => item.toString())
-          .where((item) => item.trim().isNotEmpty)
-          .toList(),
-      createdAtMs: json['createdAtMs'] is num
-          ? (json['createdAtMs'] as num).toInt()
-          : int.tryParse(json['createdAtMs']?.toString() ?? '') ?? 0,
-    );
-  }
-
-  _ChatGroupDraft copyWith({
-    String? id,
-    String? name,
-    List<String>? memberHouseIds,
-    int? createdAtMs,
-  }) {
-    return _ChatGroupDraft(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      memberHouseIds: memberHouseIds ?? this.memberHouseIds,
-      createdAtMs: createdAtMs ?? this.createdAtMs,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'memberHouseIds': memberHouseIds,
-      'createdAtMs': createdAtMs,
-    };
-  }
-}

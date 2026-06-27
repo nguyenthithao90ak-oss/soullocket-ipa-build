@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element_parameter
 part of '../../collage_maker_screen.dart';
 
 class _EditableCollagePhoto {
@@ -8,9 +7,7 @@ class _EditableCollagePhoto {
 
   _EditableCollagePhoto({
     required this.source,
-    this.scale = 1,
-    this.offset = Offset.zero,
-  });
+  }) : scale = 1, offset = Offset.zero;
 
   CollagePhotoTransform get transform => CollagePhotoTransform(
         scale: scale,

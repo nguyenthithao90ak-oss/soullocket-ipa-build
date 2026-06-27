@@ -82,7 +82,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   String? _spamWarning;
 
   String _activeStyle = 'basic';
-  bool _showHeartNotif = false;
+  bool _showHeartNotif = true;
   bool _showHeartGlobal = false;
   bool _isVip = false;
   StreamSubscription<bool>? _vipSub;
@@ -214,7 +214,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         //   await prefs.setString('soul_merge_heart_style', 'basic');
         // }
 
-        final showNotif = prefs.getBool('soul_merge_show_heart_notif') ?? false;
+        final showNotif = prefs.getBool('soul_merge_show_heart_notif') ?? true;
         final showGlobal = prefs.getBool('soul_merge_show_heart_global') ?? false;
 
         setState(() {
@@ -1644,6 +1644,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) {
         int activeTab = 0; // 0: Hiệu ứng, 1: Cấu hình
         return StatefulBuilder(
@@ -1659,174 +1660,181 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                   top: BorderSide(color: Colors.white12, width: 1.5),
                 ),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.white24,
-                        borderRadius: BorderRadius.circular(2),
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 20,
+                bottom: 20 + MediaQuery.of(context).padding.bottom,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Kiểu hiệu ứng thả tim',
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(height: 16),
+                    Text(
+                      'Kiểu hiệu ứng thả tim',
+                      textAlign: TextAlign.center,
+                      style: SLTheme.quicksand(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Chọn phong cách tim bay cao cấp dành riêng cho bạn',
-                    textAlign: TextAlign.center,
-                    style: SLTheme.quicksand(
-                      color: Colors.white60,
-                      fontSize: 13,
+                    const SizedBox(height: 8),
+                    Text(
+                      'Chọn phong cách tim bay cao cấp dành riêng cho bạn',
+                      textAlign: TextAlign.center,
+                      style: SLTheme.quicksand(
+                        color: Colors.white60,
+                        fontSize: 13,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Tab selector dạng Pill
-                  Container(
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(21),
-                    ),
-                    padding: const EdgeInsets.all(4),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: InkWell(
-                            onTap: () {
-                              setSheetState(() {
-                                activeTab = 0;
-                              });
-                            },
-                            borderRadius: BorderRadius.circular(17),
-                            child: Container(
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: activeTab == 0
-                                    ? const Color(0xFFFF4F93)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(17),
-                              ),
-                              child: Text(
-                                'Hiệu ứng',
-                                style: SLTheme.quicksand(
-                                  color: Colors.white,
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.bold,
+                    const SizedBox(height: 16),
+                    
+                    // Tab selector dạng Pill
+                    Container(
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(21),
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () {
+                                setSheetState(() {
+                                  activeTab = 0;
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(17),
+                              child: Container(
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: activeTab == 0
+                                      ? const Color(0xFFFF4F93)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(17),
+                                ),
+                                child: Text(
+                                  'Hiệu ứng',
+                                  style: SLTheme.quicksand(
+                                    color: Colors.white,
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        Expanded(
-                          child: InkWell(
-                            onTap: () {
-                              setSheetState(() {
-                                activeTab = 1;
-                              });
-                            },
-                            borderRadius: BorderRadius.circular(17),
-                            child: Container(
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: activeTab == 1
-                                    ? const Color(0xFFFF4F93)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(17),
-                              ),
-                              child: Text(
-                                'Cấu hình',
-                                style: SLTheme.quicksand(
-                                  color: Colors.white,
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.bold,
+                          Expanded(
+                            child: InkWell(
+                              onTap: () {
+                                setSheetState(() {
+                                  activeTab = 1;
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(17),
+                              child: Container(
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: activeTab == 1
+                                      ? const Color(0xFFFF4F93)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(17),
+                                ),
+                                child: Text(
+                                  'Cấu hình',
+                                  style: SLTheme.quicksand(
+                                    color: Colors.white,
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                  // Nội dung từng Tab
-                  if (activeTab == 0) ...[
-                    _buildStyleItem(
-                      title: 'Basic Pink',
-                      desc: 'Hiệu ứng màu hồng pastel ngọt ngào cơ bản',
-                      styleKey: 'basic',
-                      isPremium: false,
-                      color: const Color(0xFFFFB7D5),
-                      setSheetState: setSheetState,
-                    ),
+                    // Nội dung từng Tab
+                    if (activeTab == 0) ...[
+                      _buildStyleItem(
+                        title: 'Basic Pink',
+                        desc: 'Hiệu ứng màu hồng pastel ngọt ngào cơ bản',
+                        styleKey: 'basic',
+                        isPremium: false,
+                        color: const Color(0xFFFFB7D5),
+                        setSheetState: setSheetState,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildStyleItem(
+                        title: 'Neon Aurora 🌟',
+                        desc: 'Tim phát sáng đổi màu neon lung linh kèm vệt sao lấp lánh',
+                        styleKey: 'aurora',
+                        isPremium: false,
+                        color: const Color(0xFF00FFCC),
+                        setSheetState: setSheetState,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildStyleItem(
+                        title: 'Cosmic Sparkle ✨',
+                        desc: 'Tim nhịp điệu vũ trụ bay lắc lư hình sin và vòng sáng tinh tú',
+                        styleKey: 'cosmic',
+                        isPremium: false,
+                        color: const Color(0xFFFFD700),
+                        setSheetState: setSheetState,
+                      ),
+                    ] else ...[
+                      _buildToggleRow(
+                        title: 'Hiển thị câu thoại của mèo',
+                        subtitle: 'Ẩn hoặc hiện bong bóng lời thoại, gợi ý của mèo',
+                        value: _showHeartNotif,
+                        onChanged: (val) async {
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setBool('soul_merge_show_heart_notif', val);
+                          setSheetState(() {
+                            _showHeartNotif = val;
+                          });
+                          setState(() {
+                            _showHeartNotif = val;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _buildToggleRow(
+                        title: 'Xuất hiện ở toàn bộ màn hình',
+                        subtitle: 'Hiển thị mèo cưng và hiệu ứng tim bay trên tất cả các màn hình',
+                        value: _showHeartGlobal,
+                        onChanged: (val) async {
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setBool('soul_merge_show_heart_global', val);
+                          setSheetState(() {
+                            _showHeartGlobal = val;
+                          });
+                          setState(() {
+                            _showHeartGlobal = val;
+                          });
+                        },
+                      ),
+                    ],
                     const SizedBox(height: 12),
-                    _buildStyleItem(
-                      title: 'Neon Aurora 🌟',
-                      desc: 'Tim phát sáng đổi màu neon lung linh kèm vệt sao lấp lánh',
-                      styleKey: 'aurora',
-                      isPremium: false,
-                      color: const Color(0xFF00FFCC),
-                      setSheetState: setSheetState,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildStyleItem(
-                      title: 'Cosmic Sparkle ✨',
-                      desc: 'Tim nhịp điệu vũ trụ bay lắc lư hình sin và vòng sáng tinh tú',
-                      styleKey: 'cosmic',
-                      isPremium: false,
-                      color: const Color(0xFFFFD700),
-                      setSheetState: setSheetState,
-                    ),
-                  ] else ...[
-                    _buildToggleRow(
-                      title: 'Bật thông báo thả tim',
-                      subtitle: 'Hiện thông báo bằng chữ khi người ấy thả tim',
-                      value: _showHeartNotif,
-                      onChanged: (val) async {
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.setBool('soul_merge_show_heart_notif', val);
-                        setSheetState(() {
-                          _showHeartNotif = val;
-                        });
-                        setState(() {
-                          _showHeartNotif = val;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _buildToggleRow(
-                      title: 'Xuất hiện ở màn hình khác',
-                      subtitle: 'Hiển thị tim bay khắp app khi người ấy thả tim',
-                      value: _showHeartGlobal,
-                      onChanged: (val) async {
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.setBool('soul_merge_show_heart_global', val);
-                        setSheetState(() {
-                          _showHeartGlobal = val;
-                        });
-                        setState(() {
-                          _showHeartGlobal = val;
-                        });
-                      },
-                    ),
                   ],
-                  const SizedBox(height: 12),
-                ],
+                ),
               ),
             );
           },
@@ -1887,12 +1895,16 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                 children: [
                   Row(
                     children: [
-                      Text(
-                        title,
-                        style: SLTheme.quicksand(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
+                      Flexible(
+                        child: Text(
+                          title,
+                          style: SLTheme.quicksand(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (isPremium && !_isVip) ...[
@@ -1978,7 +1990,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           ),
           Switch(
             value: value,
-            activeColor: const Color(0xFFFF7FB2),
+            activeThumbColor: const Color(0xFFFF7FB2),
             activeTrackColor: const Color(0xFFFF7FB2).withValues(alpha: 0.3),
             inactiveThumbColor: Colors.white54,
             inactiveTrackColor: Colors.white12,

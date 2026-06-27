@@ -115,9 +115,9 @@ class DiaryItem extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.12),
+                    color: accentColor.withValues(alpha: 0.12),
                     borderRadius: SLRadius.mdAll,
-                    border: Border.all(color: accentColor.withOpacity(0.25)),
+                    border: Border.all(color: accentColor.withValues(alpha: 0.25)),
                   ),
                   child: Text(
                     '$displayName ${post.mood}',
@@ -145,7 +145,7 @@ class DiaryItem extends StatelessWidget {
                     child: Icon(
                       Icons.delete_rounded,
                       size: 18,
-                      color: Colors.grey.withOpacity(0.48),
+                      color: Colors.grey.withValues(alpha: 0.48),
                     ),
                   ),
                 ],
@@ -164,7 +164,7 @@ class DiaryItem extends StatelessWidget {
                       '“',
                       style: TextStyle(
                         fontSize: 72,
-                        color: accentColor.withOpacity(0.07),
+                        color: accentColor.withValues(alpha: 0.07),
                         fontWeight: FontWeight.w900,
                         height: 0.8,
                       ),
@@ -177,7 +177,7 @@ class DiaryItem extends StatelessWidget {
                       '”',
                       style: TextStyle(
                         fontSize: 72,
-                        color: accentColor.withOpacity(0.07),
+                        color: accentColor.withValues(alpha: 0.07),
                         fontWeight: FontWeight.w900,
                         height: 0.8,
                       ),
@@ -225,7 +225,7 @@ class DiaryItem extends StatelessWidget {
                   placeholderFadeInDuration: Duration.zero,
                   placeholder: (context, url) => Container(
                     height: 120,
-                    color: Colors.white.withOpacity(0.08),
+                    color: Colors.white.withValues(alpha: 0.08),
                     alignment: Alignment.center,
                     child: const SizedBox(
                       width: 22,
@@ -238,7 +238,7 @@ class DiaryItem extends StatelessWidget {
                   ),
                   errorWidget: (_, __, ___) => Container(
                     height: 120,
-                    color: Colors.white.withOpacity(0.08),
+                    color: Colors.white.withValues(alpha: 0.08),
                     alignment: Alignment.center,
                     child: const Icon(Icons.broken_image_rounded, color: Color(0xFFE98FB1), size: 26),
                   ),

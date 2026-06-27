@@ -212,27 +212,73 @@ class _LeaderboardTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isTop1 = rank == 1;
+    final bool isTop2 = rank == 2;
+    final bool isTop3 = rank == 3;
+    final bool isTop3Any = isTop1 || isTop2 || isTop3;
+
+    Color badgeColor;
+    Color borderColor;
+    Color bgColor;
+
+    if (isTop1) {
+      badgeColor = const Color(0xFFFFD700); // Gold
+      borderColor = const Color(0xFFFFD700).withValues(alpha: 0.4);
+      bgColor = const Color(0xFFFFD700).withValues(alpha: 0.1);
+    } else if (isTop2) {
+      badgeColor = const Color(0xFFE0E0E0); // Silver
+      borderColor = const Color(0xFFE0E0E0).withValues(alpha: 0.3);
+      bgColor = const Color(0xFFE0E0E0).withValues(alpha: 0.06);
+    } else if (isTop3) {
+      badgeColor = const Color(0xFFCD7F32); // Bronze
+      borderColor = const Color(0xFFCD7F32).withValues(alpha: 0.3);
+      bgColor = const Color(0xFFCD7F32).withValues(alpha: 0.06);
+    } else {
+      badgeColor = const Color(0xFF00C3FF).withValues(alpha: 0.7);
+      borderColor = Colors.white.withValues(alpha: 0.06);
+      bgColor = Colors.white.withValues(alpha: 0.03);
+    }
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor, width: isTop3Any ? 1.5 : 1.0),
+        boxShadow: isTop1
+            ? [
+                BoxShadow(
+                  color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                )
+              ]
+            : null,
       ),
       child: Row(
         children: <Widget>[
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: const Color(0xFF00C3FF).withValues(alpha: 0.18),
-            child: Text(
-              '$rank',
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: badgeColor.withValues(alpha: 0.2),
+              border: isTop3Any ? Border.all(color: badgeColor.withValues(alpha: 0.5), width: 1.5) : null,
+            ),
+            child: Center(
+              child: isTop1
+                  ? const Icon(Icons.emoji_events_rounded, color: Color(0xFFFFD700), size: 22)
+                  : Text(
+                      '$rank',
+                      style: SLTheme.quicksand(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                        color: isTop3Any ? badgeColor : Colors.white70,
+                      ),
+                    ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,22 +286,30 @@ class _LeaderboardTile extends StatelessWidget {
                 Text(
                   score,
                   style: SLTheme.quicksand(
-                    fontSize: 16,
+                    fontSize: isTop1 ? 22 : 18,
                     fontWeight: FontWeight.w900,
-                    color: Colors.white,
+                    color: isTop1 ? const Color(0xFFFFD700) : Colors.white,
+                    letterSpacing: 1.2,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   '$lines lines • $stamp',
                   style: SLTheme.quicksand(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white60,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white54,
                   ),
                 ),
               ],
             ),
           ),
+          if (isTop1)
+            const Icon(
+              Icons.star_rounded,
+              color: Color(0xFFFFD700),
+              size: 24,
+            ),
         ],
       ),
     );

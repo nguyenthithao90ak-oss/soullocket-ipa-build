@@ -116,15 +116,24 @@ class DiaryService {
     });
   }
 
+  Future<QuerySnapshot<Map<String, dynamic>>> _getQueryWithCacheFallback(
+    Query<Map<String, dynamic>> query,
+  ) async {
+    try {
+      return await query.get(const GetOptions(source: Source.server));
+    } catch (_) {
+      return await query.get(const GetOptions(source: Source.cache));
+    }
+  }
+
   // ── LẤY 1 lần (không stream) ──────────────────────────────────────────
   Future<List<DiaryPost>> fetchDiary(
     String houseId, {
     int limit = 80,
   }) async {
-    final snap = await _diariesRef(houseId)
-        .orderBy('ts', descending: true)
-        .limit(limit)
-        .get();
+    final snap = await _getQueryWithCacheFallback(
+      _diariesRef(houseId).orderBy('ts', descending: true).limit(limit),
+    );
 
     final posts = <DiaryPost>[];
     for (var doc in snap.docs) {
@@ -149,7 +158,7 @@ class DiaryService {
       query = query.startAfterDocument(startAfter);
     }
 
-    final snap = await query.get();
+    final snap = await _getQueryWithCacheFallback(query);
     final posts = <DiaryPost>[];
     for (var doc in snap.docs) {
       try {

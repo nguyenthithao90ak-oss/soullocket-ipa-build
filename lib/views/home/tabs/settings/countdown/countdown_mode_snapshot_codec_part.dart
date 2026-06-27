@@ -1,5 +1,4 @@
 part of '../../settings_tab.dart';
-// ignore_for_file: dead_code, unused_element
 
 extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
   bool _hasLocalCountdownStyleAccess(String styleKey) {

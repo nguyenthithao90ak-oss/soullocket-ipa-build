@@ -65,6 +65,16 @@ class CommunityFeedService {
     }
   }
 
+  Future<QuerySnapshot<Map<String, dynamic>>> _getQueryWithCacheFallback(
+    Query<Map<String, dynamic>> query,
+  ) async {
+    try {
+      return await query.get(const GetOptions(source: Source.server));
+    } catch (_) {
+      return await query.get(const GetOptions(source: Source.cache));
+    }
+  }
+
   Stream<List<Map<dynamic, dynamic>>> listenToFeed({
     String feedType = 'global',
     int pageSize = _defaultFeedPageSize,
@@ -84,7 +94,7 @@ class CommunityFeedService {
     );
 
     if (!attachRealtime || endBeforeTimestamp != null) {
-      return query.get().asStream().map(
+      return _getQueryWithCacheFallback(query).asStream().map(
             (snapshot) => _mapFirestoreSnapshot(
               snapshot,
               feedType: feedType,
@@ -105,10 +115,12 @@ class CommunityFeedService {
     int pageSize = _defaultFeedPageSize,
     int? endBeforeTimestamp,
   }) async {
-    final snapshot = await _buildFirestoreQuery(
-      pageSize: pageSize,
-      endBeforeTimestamp: endBeforeTimestamp,
-    ).get();
+    final snapshot = await _getQueryWithCacheFallback(
+      _buildFirestoreQuery(
+        pageSize: pageSize,
+        endBeforeTimestamp: endBeforeTimestamp,
+      ),
+    );
     return _mapFirestoreSnapshot(snapshot, feedType: feedType);
   }
 
