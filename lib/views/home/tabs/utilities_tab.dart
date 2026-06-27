@@ -1,7 +1,7 @@
 import 'widgets/utilities_tab_body.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart'
-    show kIsWeb, listEquals, TargetPlatform, defaultTargetPlatform;
+    show kIsWeb, listEquals;
 
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -530,6 +530,7 @@ class _UtilitiesTabState extends State<UtilitiesTab>
         screen = WheelScreen(houseId: houseId);
         break;
       case 'vault':
+        if (!mounted) return;
         if (kIsWeb) {
           // Buộc khóa lại trước khi vào để yêu cầu mật khẩu mỗi lần F5 hoặc thoát
           _militaryLockService.lockScope(LockScope.privateArea);
@@ -571,9 +572,7 @@ class _UtilitiesTabState extends State<UtilitiesTab>
         screen = CollageMakerScreen(houseId: houseId);
         break;
       case 'store':
-        screen = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
-            ? null
-            : const RewardStoreScreen();
+        screen = const RewardStoreScreen();
         break;
       case 'age_zodiac':
         screen = AgeZodiacScreen(houseId: houseId);

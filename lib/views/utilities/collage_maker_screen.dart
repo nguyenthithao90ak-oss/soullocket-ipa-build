@@ -1085,6 +1085,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
       if (mounted) {
         if (isSuccess) {
           await CollageLimitService().consumeLimit();
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
                 content: Text(L10nService().translate('util_lunhthnhcn_feffae'))),

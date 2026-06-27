@@ -1421,17 +1421,7 @@ class DiaryMemoryController extends ChangeNotifier {
       );
     }
 
-    try {
-      final memoriesSnap = await _dbRef.child('houses/$houseId/memories').get();
-      return memoriesSnap.exists && memoriesSnap.value is Map
-          ? (memoriesSnap.value as Map).length
-          : 0;
-    } catch (e) {
-      debugPrint(
-        'Failed to read memories list for count: ${AppErrorMapper.resolve(e).message}',
-      );
-      return 0;
-    }
+    return 0;
   }
 
   Future<void> retryPendingUpload({

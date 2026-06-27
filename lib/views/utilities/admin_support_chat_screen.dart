@@ -25,7 +25,7 @@ class _AdminSupportChatScreenState extends State<AdminSupportChatScreen> {
   @override
   void initState() {
     super.initState();
-    _ticketsSub = _db.child('support_tickets').onValue.listen(
+    _ticketsSub = _db.child('support_tickets').orderByChild('last_ts').limitToLast(100).onValue.listen(
       (event) {
         final raw = event.snapshot.value;
         if (raw is! Map) {

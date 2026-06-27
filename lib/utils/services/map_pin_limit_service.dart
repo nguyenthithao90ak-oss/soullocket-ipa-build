@@ -41,8 +41,8 @@ class MapPinLimitService {
 
   Future<MapPinLimitSnapshot> getSnapshot(String houseId) async {
     final results = await Future.wait<_MapPinReadResult>([
-      _safeGet('houses/$houseId/memories'),
-      _safeGet('checkins/$houseId'),
+      _safeGet(_dbRef.child('houses/$houseId/memories').limitToLast(maxPins)),
+      _safeGet(_dbRef.child('checkins/$houseId').limitToLast(maxPins)),
     ]);
 
     final occupiedLocationKeys = <String>{};
@@ -52,9 +52,9 @@ class MapPinLimitService {
     return MapPinLimitSnapshot(occupiedLocationKeys: occupiedLocationKeys);
   }
 
-  Future<_MapPinReadResult> _safeGet(String path) async {
+  Future<_MapPinReadResult> _safeGet(Query query) async {
     try {
-      final snapshot = await _dbRef.child(path).get();
+      final snapshot = await query.get();
       return _MapPinReadResult(value: snapshot.value);
     } on FirebaseException catch (error) {
       if (_isPermissionDenied(error)) {

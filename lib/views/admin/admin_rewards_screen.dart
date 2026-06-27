@@ -40,7 +40,7 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
     }
 
     try {
-      final snapshot = await _db.child('users').get();
+      final snapshot = await _db.child('users').orderByChild('points').startAt(1).limitToLast(100).get();
       final List<Map<String, dynamic>> loaded = [];
 
       if (snapshot.exists) {

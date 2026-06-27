@@ -13,7 +13,6 @@ import 'offline_cache_service.dart';
 /// Kết hợp với HouseService hiện tại (HouseService lo phần tạo nhà)
 class HouseSettingsService {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
-  final DeviceManagerService _deviceManagerService = DeviceManagerService();
   static const Duration startDateChangeCooldown = Duration(days: 3);
 
   static int? _readEpochMs(dynamic raw) {
@@ -75,9 +74,9 @@ class HouseSettingsService {
   }
 
   Stream<HouseSettings?> streamSettings(String houseId) {
-    return _dbRef.child('houses/$houseId/settings').onValue.map((event) {
-      if (!event.snapshot.exists || event.snapshot.value == null) return null;
-      final raw = event.snapshot.value;
+    return Stream.fromFuture(_dbRef.child('houses/$houseId/settings').get()).map((snapshot) {
+      if (!snapshot.exists || snapshot.value == null) return null;
+      final raw = snapshot.value;
       if (raw is! Map) return null;
       try {
         return HouseSettings.fromMap(raw);
@@ -237,14 +236,7 @@ class HouseSettingsService {
     );
   }
 
-  String _formatDateTime(int epochMs) {
-    final dt = DateTime.fromMillisecondsSinceEpoch(epochMs);
-    final dd = dt.day.toString().padLeft(2, '0');
-    final mm = dt.month.toString().padLeft(2, '0');
-    final hh = dt.hour.toString().padLeft(2, '0');
-    final min = dt.minute.toString().padLeft(2, '0');
-    return '$dd/$mm/${dt.year} $hh:$min';
-  }
+
 
   Future<void> updateField(String houseId, String field, dynamic value) async {
     await _ensureCurrentDeviceCanModifySharedInfo(houseId);

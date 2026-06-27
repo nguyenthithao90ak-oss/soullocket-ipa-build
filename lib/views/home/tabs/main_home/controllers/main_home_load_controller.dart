@@ -668,14 +668,13 @@ extension _MainHomeLoadController on _MainHomeTabState {
     String msgCacheSettingsFail,
     String msgLoadDataFail,
   ) {
-    _settingsSubscription = _dbRef
-        .child('houses/$houseId/settings')
-        .onValue
-        .listen((event) async {
+    _settingsSubscription = Stream.fromFuture(
+      _dbRef.child('houses/$houseId/settings').get(),
+    ).listen((snapshot) async {
       if (isStale()) return;
-      if (event.snapshot.value is Map && mounted) {
+      if (snapshot.value is Map && mounted) {
         final settings = Map<String, dynamic>.from(
-          Map<dynamic, dynamic>.from(event.snapshot.value as Map),
+          Map<dynamic, dynamic>.from(snapshot.value as Map),
         );
         final nextShowStatus = settings.containsKey('showStatus')
             ? _readBoolSettingFlagImpl(

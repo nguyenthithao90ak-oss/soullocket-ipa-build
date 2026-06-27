@@ -932,8 +932,8 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     final hasPermission =
         await _locationService.requestPermission(context: context);
     if (!hasPermission) {
-      if (mounted) {
         final status = await Geolocator.checkPermission();
+        if (!mounted) return;
         if (status == LocationPermission.deniedForever) {
           showDialog(
             context: context,
@@ -998,9 +998,8 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
             },
           );
         }
+        return;
       }
-      return;
-    }
 
     final navigator = Navigator.of(context);
     final houseId = _houseId ?? await _houseService.getCurrentHouseId();

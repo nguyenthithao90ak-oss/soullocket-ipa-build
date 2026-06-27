@@ -82,7 +82,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   String? _spamWarning;
 
   String _activeStyle = 'basic';
-  bool _showHeartNotif = true;
+  bool _showHeartNotif = false;
   bool _showHeartGlobal = false;
   bool _isVip = false;
   StreamSubscription<bool>? _vipSub;
@@ -214,7 +214,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         //   await prefs.setString('soul_merge_heart_style', 'basic');
         // }
 
-        final showNotif = prefs.getBool('soul_merge_show_heart_notif') ?? true;
+        final showNotif = prefs.getBool('soul_merge_show_heart_notif') ?? false;
         final showGlobal = prefs.getBool('soul_merge_show_heart_global') ?? false;
 
         setState(() {

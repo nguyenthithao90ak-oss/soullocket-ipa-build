@@ -344,29 +344,26 @@ class DiaryFeedController extends ChangeNotifier {
     final resolved = <String, String>{};
 
     try {
-      // Batch: 1 RTDB read lấy tất cả users cùng lúc thay vì N reads riêng lẻ
-      final batchRef = _dbRef.child('users');
-      final batchSnapshot = await batchRef.get().timeout(const Duration(seconds: 3));
-      final batchData = batchSnapshot.value;
-      if (batchData is Map) {
-        final allUsers = Map<dynamic, dynamic>.from(batchData);
-        for (final uid in uids) {
-          final userData = allUsers[uid];
-          if (userData is! Map) continue;
-          final name = _firstNameCandidate([
-            userData['displayName']?.toString(),
-            userData['name']?.toString(),
-            userData['fullName']?.toString(),
-            userData['username']?.toString(),
-            _emailLocalPart(userData['email']?.toString()),
-          ]);
-          if (name.isNotEmpty) {
-            resolved[uid] = name;
+      await Future.wait(uids.map((uid) async {
+        try {
+          final snap = await _dbRef.child('users/$uid').get().timeout(const Duration(seconds: 3));
+          final userData = snap.value;
+          if (userData is Map) {
+            final name = _firstNameCandidate([
+              userData['displayName']?.toString(),
+              userData['name']?.toString(),
+              userData['fullName']?.toString(),
+              userData['username']?.toString(),
+              _emailLocalPart(userData['email']?.toString()),
+            ]);
+            if (name.isNotEmpty) {
+              resolved[uid] = name;
+            }
           }
-        }
-      }
+        } catch (_) {}
+      }));
     } catch (e) {
-      debugPrint('[DiaryFeed] batch resolve user names error: $e');
+      debugPrint('[DiaryFeed] resolve user names error: $e');
       // Fallback: resolve từ auth cho current user
       for (final uid in uids) {
         if (currentUser?.uid == uid && currentUser?.displayName?.trim().isNotEmpty == true) {

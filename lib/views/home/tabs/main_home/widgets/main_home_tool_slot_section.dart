@@ -228,9 +228,6 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
       case 'gift':
         return GiftMakerScreen(houseId: houseId, myName: myName);
       case 'giftcode':
-        if (!kDebugMode && !kIsWeb && Platform.isIOS) {
-          return null;
-        }
         return GiftcodeScreen(houseId: houseId, myName: myName);
       case 'history':
         return HistoryScreen(

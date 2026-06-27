@@ -19,7 +19,6 @@ class AdminContentScreen extends StatefulWidget {
 }
 
 class _AdminContentScreenState extends State<AdminContentScreen> {
-  final _db = FirebaseDatabase.instance.ref();
   final _authService = AuthService();
   bool _isLoading = true;
   bool _isRefreshing = false;

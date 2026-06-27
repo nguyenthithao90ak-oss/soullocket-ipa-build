@@ -503,6 +503,23 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     widget.isActiveListenable.removeListener(_onActiveChanged);
     _invalidateLiveWorkSession();
     _cancelLiveWorkBindings();
+
+    // Explicitly cancel subscriptions in dispose to satisfy linter rule 'cancel_subscriptions'
+    _settingsSubscription?.cancel();
+    _presenceSubscription?.cancel();
+    _missInteractionSubscription?.cancel();
+    _alertSubscription?.cancel();
+    _newDeviceNotificationSubscription?.cancel();
+    _partnerInboxSubscription?.cancel();
+    _albumSubscription?.cancel();
+    _noteSubscription?.cancel();
+    _homeCalendarSubscription?.cancel();
+    _healthCycleSyncSubscription?.cancel();
+    _chatSignalSubscription?.cancel();
+    _reactionFlightSubscription?.cancel();
+    _gpsSubscription?.cancel();
+    _membersSubscription?.cancel();
+
     _homeMediaWarmupToken++;
 
     _interactionDragHoveredNotifier.dispose();
@@ -3402,7 +3419,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
   StreamSubscription<Map<String, dynamic>>? _interactiveEventsSub;
 
   bool _showGlobal = false;
-  bool _showHeartNotif = true;
+  bool _showHeartNotif = false;
 
   static const List<String> _appTips = [
     '💡 Chạm giữ nút "Lưu Tâm Sự" để thấy hiệu ứng co giãn 3D cực mượt nha!',
@@ -3461,7 +3478,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
     if (mounted) {
       setState(() {
         _showGlobal = prefs.getBool('soul_merge_show_heart_global') ?? false;
-        _showHeartNotif = prefs.getBool('soul_merge_show_heart_notif') ?? true;
+        _showHeartNotif = prefs.getBool('soul_merge_show_heart_notif') ?? false;
         if (!_showHeartNotif) {
           _showBubble = false;
         }

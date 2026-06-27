@@ -96,8 +96,6 @@ class MyApp extends StatelessWidget {
             ),
             useMaterial3: true,
             scaffoldBackgroundColor: SLColors.bgMain,
-            canvasColor: SLColors.bgMain,
-            cardColor: SLColors.bgCard,
             dividerColor: SLColors.border,
             shadowColor: Colors.black.withValues(alpha: 0.08),
             splashFactory: InkRipple.splashFactory,

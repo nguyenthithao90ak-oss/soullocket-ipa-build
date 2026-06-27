@@ -113,6 +113,9 @@ class SettingsSecurityController {
     final trust = await _deviceTrustGuard.resolve(
       fallbackUnlockAtMs: currentState.devicePendingUnlockAtMs,
     );
+    if (!context.mounted) {
+      return currentState;
+    }
     if (!trust.isTrusted) {
       return currentState.copyWith(
         isDevicePending: trust.isPendingDevice,

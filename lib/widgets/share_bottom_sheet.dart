@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -80,7 +81,7 @@ Widget _buildModernSocialIcon({
     width: size,
     height: size,
     decoration: BoxDecoration(
-      shape: BoxShape.circle,
+      borderRadius: BorderRadius.circular(size * 0.28),
       gradient: gradient,
       boxShadow: [
         BoxShadow(
@@ -113,6 +114,18 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && widget.shareUrl.trim().isNotEmpty) {
+        Clipboard.setData(ClipboardData(text: '${widget.contentToShare}\n${widget.shareUrl}'.trim()));
+        ScaffoldMessenger.of(context).showSnackBar(
+          _buildFeedbackSnackBar(
+            message: L10nService().translate('share_copied'),
+            icon: Icons.check_circle_rounded,
+            accentColor: const Color(0xFF0F9D58),
+          ),
+        );
+      }
+    });
     if (widget.loadInAppTargets) {
       _loadFriends();
     } else {
@@ -219,6 +232,49 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
     // ignore: deprecated_member_use
     Share.share(text, sharePositionOrigin: rect);
     Navigator.pop(context);
+  }
+
+  void _shareToSpecific(String platform) async {
+    final link = Uri.encodeComponent(widget.shareUrl.trim());
+    final text = Uri.encodeComponent('${widget.contentToShare}\n${widget.shareUrl}'.trim());
+    String urlStr = '';
+    
+    switch (platform) {
+      case 'Facebook':
+        urlStr = 'https://www.facebook.com/sharer/sharer.php?u=$link';
+        break;
+      case 'Messenger':
+        urlStr = 'fb-messenger://share?link=$link';
+        break;
+      case 'Zalo':
+        urlStr = 'https://zalo.me/share?url=$link';
+        break;
+      case 'Telegram':
+        urlStr = 'tg://msg?text=$text';
+        break;
+      case 'Instagram':
+        _copyToClipboard();
+        urlStr = 'instagram://app';
+        break;
+      case 'SMS':
+        urlStr = 'sms:?body=$text';
+        break;
+      default:
+        _shareToExternal();
+        return;
+    }
+    
+    try {
+      final uri = Uri.parse(urlStr);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        if (mounted) Navigator.pop(context);
+      } else {
+        _shareToExternal();
+      }
+    } catch (_) {
+      _shareToExternal();
+    }
   }
 
   void _copyContentToClipboard({bool closeSheet = false}) {
@@ -439,7 +495,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                           padding: const EdgeInsets.all(6),
                           decoration: const BoxDecoration(
                             color: Color(0xFFF1F5F9),
-                            shape: BoxShape.circle,
+                            borderRadius: const BorderRadius.all(Radius.circular(14)),
                           ),
                           child: const Icon(
                             Icons.close_rounded,
@@ -516,7 +572,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
                                         ),
-                                        shape: BoxShape.circle,
+                                        borderRadius: const BorderRadius.all(Radius.circular(14)),
                                       ),
                                     ),
                                     SizedBox(
@@ -700,7 +756,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                 fallbackColors: const [Color(0xFF00B2FF), Color(0xFF0068FF)],
                               ),
                               label: 'Zalo',
-                              onTap: _shareToExternal,
+                              onTap: () => _shareToSpecific('Zalo'),
                               compact: compact,
                               screenWidth: screenWidth,
                             ),
@@ -711,7 +767,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                 fallbackColors: const [Color(0xFF1877F2), Color(0xFF0C56B6)],
                               ),
                               label: 'Facebook',
-                              onTap: _shareToExternal,
+                              onTap: () => _shareToSpecific('Facebook'),
                               compact: compact,
                               screenWidth: screenWidth,
                             ),
@@ -727,7 +783,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                 ],
                               ),
                               label: 'Messenger',
-                              onTap: _shareToExternal,
+                              onTap: () => _shareToSpecific('Messenger'),
                               compact: compact,
                               screenWidth: screenWidth,
                             ),
@@ -747,7 +803,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                 ),
                               ),
                               label: 'Instagram',
-                              onTap: _shareToExternal,
+                              onTap: () => _shareToSpecific('Instagram'),
                               compact: compact,
                               screenWidth: screenWidth,
                             ),
@@ -758,7 +814,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                 fallbackColors: const [Color(0xFF24A1DE), Color(0xFF1E88BE)],
                               ),
                               label: 'Telegram',
-                              onTap: _shareToExternal,
+                              onTap: () => _shareToSpecific('Telegram'),
                               compact: compact,
                               screenWidth: screenWidth,
                             ),
@@ -766,7 +822,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                               icon: Container(
                                 decoration: const BoxDecoration(
                                   color: Color(0xFF34C759),
-                                  shape: BoxShape.circle,
+                                  borderRadius: const BorderRadius.all(Radius.circular(14)),
                                 ),
                                 alignment: Alignment.center,
                                 child: Icon(
@@ -784,7 +840,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                               icon: Container(
                                 decoration: const BoxDecoration(
                                   color: Color(0xFF64748B),
-                                  shape: BoxShape.circle,
+                                  borderRadius: const BorderRadius.all(Radius.circular(14)),
                                 ),
                                 alignment: Alignment.center,
                                 child: Icon(
@@ -802,7 +858,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                               icon: Container(
                                 decoration: const BoxDecoration(
                                   color: Color(0xFF94A3B8),
-                                  shape: BoxShape.circle,
+                                  borderRadius: const BorderRadius.all(Radius.circular(14)),
                                 ),
                                 alignment: Alignment.center,
                                 child: Icon(
@@ -844,7 +900,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
           height: SLResponsive.dp(compact ? 8 : 9, screenWidth),
           decoration: const BoxDecoration(
             color: Color(0xFFD81B60),
-            shape: BoxShape.circle,
+            borderRadius: const BorderRadius.all(Radius.circular(14)),
           ),
         ),
         SizedBox(width: SLResponsive.dp(10, screenWidth)),
@@ -1007,7 +1063,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
               gradient: const LinearGradient(
                 colors: [Color(0xFFFFEEF4), Color(0xFFFFF5F8)],
               ),
-              shape: BoxShape.circle,
+              borderRadius: const BorderRadius.all(Radius.circular(14)),
               border: Border.all(color: const Color(0xFFFFD8E6)),
             ),
             child: const Icon(
@@ -1040,7 +1096,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFFF0F5),
-                            shape: BoxShape.circle,
+                            borderRadius: const BorderRadius.all(Radius.circular(14)),
                             border: Border.all(color: const Color(0xFFFFE0EB)),
                           ),
                           child: Icon(
@@ -1236,7 +1292,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                             height: SLResponsive.dp(compact ? 20 : 22, screenWidth),
                             decoration: BoxDecoration(
                               color: accentColor,
-                              shape: BoxShape.circle,
+                              borderRadius: const BorderRadius.all(Radius.circular(14)),
                               border: Border.all(color: Colors.white, width: 2),
                             ),
                             child: isSending
@@ -1313,7 +1369,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                   width: SLResponsive.dp(compact ? 52 : 58, screenWidth),
                   height: SLResponsive.dp(compact ? 52 : 58, screenWidth),
                   decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
+                    borderRadius: const BorderRadius.all(Radius.circular(14)),
                     boxShadow: [
                       BoxShadow(
                         color: Color(0x1A000000),

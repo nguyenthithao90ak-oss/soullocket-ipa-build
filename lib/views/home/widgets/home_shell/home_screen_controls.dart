@@ -157,15 +157,15 @@ extension _HomeScreenShellControls on _HomeScreenState {
       pauseAnimations: isSwiping,
     );
     final isPerformanceMode = effectProfile.performanceMode;
-    final useBackdropBlur = effectProfile.premiumEffects && !isPerformanceMode && !isSwiping;
+    const useBackdropBlur = false; // Always solid to prevent transparent flickering during swipes
 
     final navSurface = Container(
       key: _firstGuideBottomNavKey,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.black.withValues(alpha: 0.60)
-            : Colors.black.withValues(alpha: 0.22),
+            ? const Color(0xFF2D2D3A)
+            : const Color(0xFFF3EEEA),
         borderRadius: BorderRadius.circular(40),
         border: Border.all(
           color: isDark
@@ -176,9 +176,9 @@ extension _HomeScreenShellControls on _HomeScreenState {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(
-              alpha: isDark ? 0.18 : 0.04,
+              alpha: isDark ? 0.25 : 0.06,
             ),
-            blurRadius: 8,
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
