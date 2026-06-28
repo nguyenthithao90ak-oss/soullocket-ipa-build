@@ -273,13 +273,22 @@ class AppErrorMapper {
         normalized.contains('không tồn tại') ||
         normalized.contains('đã được sử dụng') ||
         normalized.contains('mật khẩu quá yếu') ||
-        normalized.contains('too-many-requests') ||
-        normalized.contains('user-not-found') ||
-        normalized.contains('wrong-password') ||
-        normalized.contains('invalid-credential') ||
-        normalized.contains('invalid-email') ||
-        normalized.contains('weak-password') ||
+        normalized.contains('already in use') ||
+        normalized.contains('already-in-use') ||
         normalized.contains('email-already-in-use') ||
+        normalized.contains('wrong-password') ||
+        normalized.contains('wrong password') ||
+        normalized.contains('invalid-credential') ||
+        normalized.contains('invalid credential') ||
+        normalized.contains('invalid-email') ||
+        normalized.contains('invalid email') ||
+        normalized.contains('weak-password') ||
+        normalized.contains('weak password') ||
+        normalized.contains('user-not-found') ||
+        normalized.contains('user not found') ||
+        normalized.contains('too-many-requests') ||
+        normalized.contains('too many requests') ||
+        normalized.contains('blocked all requests') ||
         normalized.contains('requires-recent-login') ||
         normalized.contains('phiên đăng nhập') ||
         normalized.contains('đăng nhập để tạo liên kết') ||
@@ -321,6 +330,34 @@ class AppErrorMapper {
     if (normalized.contains('phiên đăng nhập') ||
         normalized.contains('đăng nhập để tạo liên kết')) {
       return recentLoginMessage;
+    }
+    if (normalized.contains('already in use') ||
+        normalized.contains('already-in-use') ||
+        normalized.contains('email-already-in-use')) {
+      return L10nService().translate('err_auth_email_in_use');
+    }
+    if (normalized.contains('weak password') ||
+        normalized.contains('weak-password')) {
+      return L10nService().translate('err_auth_weak_password');
+    }
+    if (normalized.contains('invalid email') ||
+        normalized.contains('invalid-email')) {
+      return L10nService().translate('err_auth_invalid_email');
+    }
+    if (normalized.contains('wrong password') ||
+        normalized.contains('wrong-password') ||
+        normalized.contains('invalid-credential') ||
+        normalized.contains('invalid login credentials')) {
+      return L10nService().translate('err_auth_invalid_credential');
+    }
+    if (normalized.contains('too many requests') ||
+        normalized.contains('too-many-requests') ||
+        normalized.contains('blocked all requests')) {
+      return L10nService().translate('err_auth_too_many_requests');
+    }
+    if (normalized.contains('user not found') ||
+        normalized.contains('user-not-found')) {
+      return L10nService().translate('err_auth_user_not_found');
     }
     if (message.isEmpty) {
       return L10nService().translate('err_invalid_input');

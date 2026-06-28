@@ -834,6 +834,71 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 maxLength: 30,
                 accentColor: panelAccent,
               ),
+              _buildLabel('Mã nhà (House ID)'),
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.home_rounded, color: Color(0xFFD81B60), size: 20),
+                    SLSpacing.w8,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _houseId ?? '',
+                            style: SLTextStyles.quicksand(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFF2C1B22),
+                            ),
+                          ),
+                          if (_houseIdChanged)
+                            Text(
+                              'Chỉ được thay đổi 1 lần duy nhất (Đã đổi)',
+                              style: SLTextStyles.quicksand(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.grey,
+                              ),
+                            )
+                          else
+                            Text(
+                              'Được thay đổi 1 lần duy nhất (Chưa đổi)',
+                              style: SLTextStyles.quicksand(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFFD81B60),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (!_houseIdChanged)
+                      TextButton(
+                        onPressed: () {
+                          _showChangeHouseIdDialog();
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          foregroundColor: const Color(0xFFD81B60),
+                        ),
+                        child: Text(
+                          'Thay đổi',
+                          style: SLTextStyles.quicksand(
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
               // Ẩn hiển thị tên nhà theo yêu cầu
               // Container(
               //   margin: const EdgeInsets.only(bottom: 8),
@@ -1198,6 +1263,293 @@ extension _SettingsTabAccountSection on _SettingsTabState {
           ),
         ),
       ),
+    );
+  }
+
+  void _showChangeHouseIdDialog() {
+    final customIdCtrl = TextEditingController();
+    Timer? debounceTimer;
+    String customId = '';
+    bool isChecking = false;
+    bool isAvailable = false;
+    String? errorReason;
+    List<String> suggestions = [];
+    bool isSaving = false;
+
+    showDialog(
+      context: context,
+      useRootNavigator: true,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            void onIdChanged(String val) {
+              final clean = val.trim().toLowerCase();
+              customId = clean;
+              isAvailable = false;
+              errorReason = null;
+              suggestions = [];
+
+              debounceTimer?.cancel();
+              if (clean.isEmpty) {
+                setState(() {});
+                return;
+              }
+
+              if (!RegExp(r'^[a-z0-9_]{3,20}$').hasMatch(clean)) {
+                setState(() {
+                  errorReason = 'Mã chỉ gồm chữ thường, số, dấu gạch dưới (3-20 ký tự).';
+                });
+                return;
+              }
+
+              setState(() {
+                isChecking = true;
+              });
+
+              debounceTimer = Timer(const Duration(milliseconds: 500), () async {
+                try {
+                  final res = await _houseService.checkHouseIdAvailability(clean);
+                  if (customId != clean) return;
+
+                  setState(() {
+                    isChecking = false;
+                    isAvailable = res['available'] == true;
+                    if (!isAvailable) {
+                      errorReason = res['reason'] ?? 'Mã nhà đã tồn tại, vui lòng chọn mã khác.';
+                      final suggs = res['suggestions'];
+                      if (suggs is List) {
+                        suggestions = suggs.map((e) => e.toString()).toList();
+                      }
+                    }
+                  });
+                } catch (e) {
+                  if (customId != clean) return;
+                  setState(() {
+                    isChecking = false;
+                    errorReason = 'Lỗi kết nối máy chủ.';
+                  });
+                }
+              });
+            }
+
+            void selectSuggestion(String sugg) {
+              customIdCtrl.text = sugg;
+              onIdChanged(sugg);
+            }
+
+            Future<void> submitChange() async {
+              setState(() {
+                isSaving = true;
+              });
+              try {
+                final success = await _houseService.changeHouseId(customId);
+                if (success) {
+                  if (mounted) {
+                    this.setState(() {
+                      _houseId = customId;
+                      _houseIdChanged = true;
+                    });
+                    Navigator.of(dialogContext).pop();
+                    _showToast('Đổi mã nhà thành công! Hệ thống đang tải lại...', success: true);
+                    Future.delayed(const Duration(seconds: 1), () {
+                      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (_) => AppEntry()),
+                        (route) => false,
+                      );
+                    });
+                  }
+                } else {
+                  setState(() {
+                    isSaving = false;
+                    errorReason = 'Đổi mã nhà không thành công.';
+                  });
+                }
+              } catch (e) {
+                setState(() {
+                  isSaving = false;
+                  errorReason = AppErrorMapper.resolve(e).message;
+                });
+              }
+            }
+
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              title: Row(
+                children: [
+                  const Icon(Icons.favorite_rounded, color: Color(0xFFD81B60)),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Đổi mã nhà (Chỉ 1 lần)',
+                    style: SLTextStyles.quicksand(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF2C1B22),
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Lưu ý: Bạn chỉ được thay đổi Mã Nhà (ID) duy nhất một lần. Cả hai thiết bị sẽ được tự động đồng bộ.',
+                      style: SLTextStyles.quicksand(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF7A6871),
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF6FA),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: errorReason != null
+                              ? Colors.red.shade200
+                              : (isAvailable ? Colors.green.shade200 : const Color(0xFFFFD3E4)),
+                        ),
+                      ),
+                      child: TextField(
+                        controller: customIdCtrl,
+                        maxLength: 20,
+                        style: SLTextStyles.quicksand(
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF2C1B22),
+                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Nhập mã nhà mới',
+                          labelStyle: SLTextStyles.quicksand(
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF8C7381),
+                          ),
+                          counterText: '',
+                          border: InputBorder.none,
+                          suffixIcon: isChecking
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: Center(
+                                    child: SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Color(0xFFD81B60),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : (isAvailable
+                                  ? const Icon(Icons.check_circle_rounded, color: Colors.green)
+                                  : (errorReason != null
+                                      ? const Icon(Icons.cancel_rounded, color: Colors.red)
+                                      : null)),
+                        ),
+                        onChanged: onIdChanged,
+                      ),
+                    ),
+                    if (isAvailable) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        'Mã nhà khả dụng và hợp lệ!',
+                        style: SLTextStyles.quicksand(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
+                    ],
+                    if (errorReason != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        errorReason!,
+                        style: SLTextStyles.quicksand(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.red.shade700,
+                        ),
+                      ),
+                    ],
+                    if (suggestions.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        'Gợi ý cho bạn:',
+                        style: SLTextStyles.quicksand(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF7A6871),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: suggestions.map((sugg) {
+                          return ActionChip(
+                            label: Text(
+                              sugg,
+                              style: SLTextStyles.quicksand(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFFD81B60),
+                              ),
+                            ),
+                            backgroundColor: const Color(0xFFFFF0F5),
+                            side: const BorderSide(color: Color(0xFFFFD3E4)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            onPressed: () => selectSuggestion(sugg),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSaving ? null : () => Navigator.of(dialogContext).pop(),
+                  child: Text(
+                    'Huỷ',
+                    style: SLTextStyles.quicksand(fontWeight: FontWeight.w900),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: (isAvailable && !isSaving && !isChecking) ? submitChange : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD81B60),
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.grey.shade200,
+                    disabledForegroundColor: Colors.grey.shade400,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: isSaving
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'Xác nhận',
+                          style: SLTextStyles.quicksand(fontWeight: FontWeight.w900),
+                        ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

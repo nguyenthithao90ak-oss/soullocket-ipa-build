@@ -194,6 +194,46 @@ class _CountdownModeEditorScreenState
     }
   }
 
+  Future<void> _copyFromMainCountdown() async {
+    final houseId = widget.currentHouseId;
+    if (houseId == null || houseId.isEmpty) {
+      _showMessage('Không tìm thấy mã nhà hiện tại.');
+      return;
+    }
+    try {
+      final settings = await HouseSettingsService().fetchSettings(houseId);
+      if (settings == null) {
+        _showMessage('Không thể tải cấu hình Vòng Đếm chính.');
+        return;
+      }
+      setState(() {
+        if (settings.startDate.isNotEmpty) {
+          _anchorDate = DateTime.tryParse(settings.startDate);
+        }
+        _topCtrl.text = settings.countdownTopLabel.isNotEmpty
+            ? settings.countdownTopLabel
+            : settings.houseName;
+        _bottomCtrl.text = settings.countdownBottomLabel.isNotEmpty
+            ? settings.countdownBottomLabel
+            : 'ngày yêu';
+        _leftCtrl.text = settings.nameU1;
+        _rightCtrl.text = settings.nameU2;
+        _leftAvatarCtrl.text = settings.avtUser1;
+        _rightAvatarCtrl.text = settings.avtUser2;
+        _styleKey = settings.countdownStyle.trim().isNotEmpty
+            ? settings.countdownStyle.trim().toLowerCase()
+            : 'default';
+        _themeKey = settings.theme.trim().isNotEmpty
+            ? settings.theme.trim()
+            : 'theme-default';
+        _transparentMode = settings.transparentMode;
+      });
+      _showMessage('Đã sao chép dữ liệu từ Vòng Đếm chính.');
+    } catch (e) {
+      _showMessage('Lỗi khi sao chép: ${AppErrorMapper.resolve(e).message}');
+    }
+  }
+
   static List<MapEntry<String, String>> get _themeOptions =>
       _CountdownModeIndependentScreenState._themeOptions;
   static List<MapEntry<String, String>> get _countdownStyleOptions =>
@@ -800,6 +840,37 @@ class _CountdownModeEditorScreenState
                             ],
                           ),
                           const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton.icon(
+                                onPressed: _copyFromMainCountdown,
+                                icon: const Icon(Icons.copy_all_rounded, size: 18),
+                                label: const Text('Sao chép từ Vòng Đếm chính'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: themeData.isDark
+                                      ? Colors.white
+                                      : const Color(0xFFD81B60),
+                                  backgroundColor: Colors.white.withValues(
+                                    alpha: themeData.isDark ? 0.12 : 0.85,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 10,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: BorderSide(
+                                      color: themeData.isDark
+                                          ? Colors.white24
+                                          : const Color(0xFFF4D2E1),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 14),
                           _sectionCard(
                             icon: Icons.timelapse_rounded,
                             title: 'Xem nhanh không gian',

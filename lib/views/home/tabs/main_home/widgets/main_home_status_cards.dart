@@ -131,8 +131,12 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     // 2. Sinh nhật
     final dobU1 = _houseSettings?['dobU1']?.toString() ?? '';
     final dobU2 = _houseSettings?['dobU2']?.toString() ?? '';
-    final nameU1 = _houseSettings?['nameU1']?.toString() ?? 'Bạn';
-    final nameU2 = _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
+    String nameU1 = _houseSettings?['nameU1']?.toString() ?? 'Bạn';
+    String nameU2 = _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
+    if (nameU1.toLowerCase() == 'bạn nam') nameU1 = context.tr('male_role_default');
+    if (nameU1.toLowerCase() == 'bạn nữ') nameU1 = context.tr('female_role_default');
+    if (nameU2.toLowerCase() == 'bạn nam') nameU2 = context.tr('male_role_default');
+    if (nameU2.toLowerCase() == 'bạn nữ') nameU2 = context.tr('female_role_default');
 
     void addBirthday(String dob, String name) {
       if (dob.isEmpty) return;
@@ -219,8 +223,12 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       }
     }
 
-    final myNameSetting = _houseSettings?['nameU1']?.toString() ?? 'Bạn';
-    final partnerNameSetting = _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
+    String myNameSetting = _houseSettings?['nameU1']?.toString() ?? 'Bạn';
+    String partnerNameSetting = _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
+    if (myNameSetting.toLowerCase() == 'bạn nam') myNameSetting = context.tr('male_role_default');
+    if (myNameSetting.toLowerCase() == 'bạn nữ') myNameSetting = context.tr('female_role_default');
+    if (partnerNameSetting.toLowerCase() == 'bạn nam') partnerNameSetting = context.tr('male_role_default');
+    if (partnerNameSetting.toLowerCase() == 'bạn nữ') partnerNameSetting = context.tr('female_role_default');
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -301,14 +309,14 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                       _buildJourneyStat(
                         emoji: '📅',
                         value: totalDays > 0 ? '$totalDays' : '--',
-                        label: 'Ngày yêu',
+                        label: context.tr('home_love_days'),
                         flex: 1,
                       ),
                       if (totalDays > 0)
                         _buildJourneyStat(
                           emoji: '📸',
                           value: '${_albumHighlights.length}',
-                          label: 'Kỷ niệm',
+                          label: context.tr('home_anniversary_memories'),
                           flex: 1,
                         ),
                     ],

@@ -677,6 +677,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
               .trim();
           if (mounted) {
             setState(() {
+              _houseIdChanged = data['houseIdChanged'] == true;
               _houseName =
                   data['houseName'] ?? loveHouseDefaultName;
               _homeShowHouseName = data.containsKey('homeShowHouseName')

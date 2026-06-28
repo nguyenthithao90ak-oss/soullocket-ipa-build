@@ -92,24 +92,40 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color:
-                              const Color(0xFFFFC1D1).withValues(alpha: 0.3)),
-                    ),
-                    child: Text(
-                      _houseId == null
-                          ? context.tr('home_mnhchac_a0dca8')
-                          : 'ID: $_houseId',
-                      style: SLTextStyles.quicksand(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFFE8A0B6),
+                  GestureDetector(
+                    onTap: _houseIdChanged ? null : () => _showChangeHouseIdDialog(),
+                    child: Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color:
+                                const Color(0xFFFFC1D1).withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _houseId == null
+                                ? context.tr('home_mnhchac_a0dca8')
+                                : 'ID: $_houseId',
+                            style: SLTextStyles.quicksand(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFFE8A0B6),
+                            ),
+                          ),
+                          if (!_houseIdChanged && _houseId != null) ...[
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.edit_rounded,
+                              size: 11,
+                              color: Color(0xFFE8A0B6),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ),

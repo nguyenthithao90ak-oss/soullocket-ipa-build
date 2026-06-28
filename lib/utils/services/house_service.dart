@@ -245,6 +245,7 @@ class HouseService {
     String? recoveryAnswer,
     String createdWith = 'email',
     String? otp,
+    String? customHouseId,
   }) async {
     var user = _auth.currentUser;
     if (user == null) {
@@ -291,6 +292,7 @@ class HouseService {
         recoveryQuestion: normalizedRecoveryQuestion,
         recoveryAnswer: normalizedRecoveryAnswer,
         createdWith: normalizedCreatedWith,
+        customHouseId: customHouseId,
       );
     }
 
@@ -307,6 +309,7 @@ class HouseService {
         if (deviceId.isNotEmpty) 'deviceId': deviceId,
         if (deviceModel.isNotEmpty) 'model': deviceModel,
         if (devicePlatform.isNotEmpty) 'platform': devicePlatform,
+        if ((customHouseId ?? '').trim().isNotEmpty) 'customHouseId': customHouseId!.trim(),
       };
       debugPrint('[HouseService] Admin debug createHouseSecure start');
       final response = await CloudFunctionsHelper.callSecure<dynamic>(
@@ -337,6 +340,7 @@ class HouseService {
         if (deviceModel.isNotEmpty) 'model': deviceModel,
         if (devicePlatform.isNotEmpty) 'platform': devicePlatform,
         if ((otp ?? '').trim().isNotEmpty) 'otp': otp!.trim(),
+        if ((customHouseId ?? '').trim().isNotEmpty) 'customHouseId': customHouseId!.trim(),
       });
       debugPrint('[HouseService] createHouseSecure success');
       final payload = _asStringDynamicMap(response.data);
@@ -410,6 +414,61 @@ class HouseService {
       }
       throw Exception(
           'Tạo ngôi nhà đang mất quá nhiều thời gian. Vui lòng thử lại.');
+    }
+  }
+
+  Future<Map<String, dynamic>> checkHouseIdAvailability(String customHouseId) async {
+    try {
+      final response = await CloudFunctionsHelper.callSecure<dynamic>(
+        'checkHouseIdAvailability',
+        payload: <String, dynamic>{
+          'customHouseId': customHouseId.trim(),
+        },
+      );
+      final map = _asStringDynamicMap(response.data);
+      if (map != null) {
+        final suggestionsRaw = map['suggestions'];
+        final suggestionsList = suggestionsRaw is List
+            ? suggestionsRaw.map((e) => e.toString()).toList()
+            : <String>[];
+        return <String, dynamic>{
+          'available': map['available'] == true,
+          'reason': map['reason']?.toString(),
+          'suggestions': suggestionsList,
+        };
+      }
+      return <String, dynamic>{'available': false, 'suggestions': <String>[]};
+    } catch (e) {
+      debugPrint('[HouseService] checkHouseIdAvailability error: $e');
+      return <String, dynamic>{
+        'available': false,
+        'reason': AppErrorMapper.resolve(e).message,
+        'suggestions': <String>[],
+      };
+    }
+  }
+
+  Future<bool> changeHouseId(String newHouseId) async {
+    try {
+      final response = await CloudFunctionsHelper.callSecure<dynamic>(
+        'changeHouseIdSecure',
+        payload: <String, dynamic>{
+          'newHouseId': newHouseId.trim(),
+        },
+      );
+      final map = _asStringDynamicMap(response.data);
+      final success = map?['success'] == true;
+      if (success) {
+        final updatedId = map?['newHouseId']?.toString().trim();
+        if (updatedId != null && updatedId.isNotEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('il_house_id', updatedId);
+        }
+      }
+      return success;
+    } catch (e) {
+      debugPrint('[HouseService] changeHouseId error: $e');
+      throw Exception(AppErrorMapper.resolve(e).message);
     }
   }
 
@@ -636,6 +695,7 @@ class HouseService {
     required String recoveryQuestion,
     required String recoveryAnswer,
     required String createdWith,
+    String? customHouseId,
   }) async {
     final user = _auth.currentUser;
     if (user == null) {
@@ -658,7 +718,20 @@ class HouseService {
     final now = DateTime.now();
     final nowMs = now.millisecondsSinceEpoch;
     final startDate = now.toIso8601String().substring(0, 10);
-    final newHouseId = await _generateUniqueHouseId();
+    
+    String newHouseId;
+    if (customHouseId != null && customHouseId.trim().isNotEmpty) {
+      newHouseId = customHouseId.trim().toUpperCase();
+      if (!RegExp(r'^[A-Z0-9_]{3,20}$').hasMatch(newHouseId)) {
+        throw Exception('Mã nhà tự chọn chỉ gồm chữ, số, dấu gạch dưới và từ 3 đến 20 ký tự.');
+      }
+      final existsSnap = await _dbRef.child('houses/$newHouseId/owner_uid').get();
+      if (existsSnap.exists) {
+        throw Exception('Mã nhà này đã tồn tại, vui lòng chọn mã khác.');
+      }
+    } else {
+      newHouseId = await _generateUniqueHouseId();
+    }
     final resolvedHouseName =
         houseName.trim().isNotEmpty ? houseName.trim() : _defaultHouseName;
     final hasRecovery =

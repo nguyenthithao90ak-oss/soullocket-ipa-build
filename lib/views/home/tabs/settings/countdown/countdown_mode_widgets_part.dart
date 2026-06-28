@@ -476,6 +476,7 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
     this.onCenterIconChanged,
     this.onLeftAvatarTap,
     this.onRightAvatarTap,
+    this.onRightAvatarChatTap,
   });
 
   final bool isSingleMode;
@@ -491,6 +492,7 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
   final ValueChanged<String>? onCenterIconChanged;
   final VoidCallback? onLeftAvatarTap;
   final VoidCallback? onRightAvatarTap;
+  final VoidCallback? onRightAvatarChatTap;
 
   @override
   Widget build(BuildContext context) {
@@ -634,6 +636,7 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
               isDark: isDark,
               placeholder: isSingleMode,
               onTap: isSingleMode ? null : onRightAvatarTap,
+              onChatTap: isSingleMode ? null : onRightAvatarChatTap,
             ),
           ),
         ],
@@ -654,6 +657,7 @@ class _CountdownModeAvatarIdentity extends StatelessWidget {
     required this.isDark,
     this.placeholder = false,
     this.onTap,
+    this.onChatTap,
   });
 
   final String name;
@@ -666,6 +670,7 @@ class _CountdownModeAvatarIdentity extends StatelessWidget {
   final bool isDark;
   final bool placeholder;
   final VoidCallback? onTap;
+  final VoidCallback? onChatTap;
 
   @override
   Widget build(BuildContext context) {
@@ -682,6 +687,34 @@ class _CountdownModeAvatarIdentity extends StatelessWidget {
               accent: accent,
               placeholder: placeholder,
             ),
+            if (onChatTap != null)
+              Positioned(
+                right: -6,
+                bottom: -6,
+                child: GestureDetector(
+                  onTap: onChatTap,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD81B60),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.chat_bubble_rounded,
+                      color: Colors.white,
+                      size: 13,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
         const SizedBox(height: 10),

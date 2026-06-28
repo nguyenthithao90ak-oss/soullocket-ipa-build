@@ -169,6 +169,7 @@ class _CountdownModeIndependentScreenState
   late bool _transparentMode;
   late double _countdownSizePx;
   late String _customBackgroundUrl;
+  String _fallingEffectType = 'off';
 
   List<String> _spaceHouseIds = <String>[];
   Map<String, String> _spaceDisplayNames = <String, String>{};
@@ -275,6 +276,101 @@ class _CountdownModeIndependentScreenState
     await _setSpaceChromeVisible(true);
   }
 
+  Future<void> _selectFallingEffect() async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final bg = isDark ? const Color(0xFF252036) : Colors.white;
+        final fg = isDark ? Colors.white : const Color(0xFF252036);
+        final subtitleColor = isDark ? Colors.white60 : Colors.grey[600];
+        
+        final options = [
+          {'key': 'off', 'label': 'Tắt hiệu ứng', 'icon': Icons.block_rounded},
+          {'key': 'hearts', 'label': 'Trái tim bay', 'icon': Icons.favorite_rounded},
+          {'key': 'bubbles', 'label': 'Bong bóng khí', 'icon': Icons.bubble_chart_rounded},
+          {'key': 'snow', 'label': 'Tuyết rơi lạnh', 'icon': Icons.ac_unit_rounded},
+          {'key': 'stars', 'label': 'Sao lấp lánh', 'icon': Icons.star_rounded},
+        ];
+
+        return Container(
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Chọn hiệu ứng nền',
+                style: SLTheme.quicksand(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: fg,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Hiệu ứng rơi lãng mạn cho không gian đếm',
+                style: SLTheme.quicksand(
+                  fontSize: 13,
+                  color: subtitleColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: options.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, idx) {
+                    final opt = options[idx];
+                    final isSel = _fallingEffectType == opt['key'];
+                    return ListTile(
+                      onTap: () => Navigator.of(context).pop(opt['key'] as String),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      tileColor: isSel
+                          ? const Color(0xFFD81B60).withValues(alpha: 0.08)
+                          : Colors.transparent,
+                      leading: Icon(
+                        opt['icon'] as IconData,
+                        color: isSel ? const Color(0xFFD81B60) : fg.withValues(alpha: 0.6),
+                      ),
+                      title: Text(
+                        opt['label'] as String,
+                        style: SLTheme.quicksand(
+                          fontSize: 14.5,
+                          fontWeight: isSel ? FontWeight.w800 : FontWeight.w700,
+                          color: isSel ? const Color(0xFFD81B60) : fg,
+                        ),
+                      ),
+                      trailing: isSel
+                          ? const Icon(Icons.check_circle_rounded, color: Color(0xFFD81B60))
+                          : null,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    
+    if (selected != null && mounted) {
+      _safeSetState(() {
+        _fallingEffectType = selected;
+      });
+      await _saveLocalSettings();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_openedSpaceHouseId == null) {
@@ -357,6 +453,15 @@ class _CountdownModeIndependentScreenState
                   ),
                 ),
               ),
+              if (_fallingEffectType != 'off')
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: LegacyFallingEffect(
+                      type: _fallingEffectType,
+                      isDark: themeData.isDark,
+                    ),
+                  ),
+                ),
               Positioned(
                 top: -60,
                 right: -40,
@@ -437,6 +542,21 @@ class _CountdownModeIndependentScreenState
                                       onRightAvatarTap: () => unawaited(
                                         _changeSpaceAvatar(isLeft: false),
                                       ),
+                                      onRightAvatarChatTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) => ChatDetailScreen(
+                                              myHouseId: widget.currentHouseId ?? '',
+                                              targetHouseId: widget.currentHouseId ?? '',
+                                              targetName: rightName,
+                                              targetAvatar: _avatarUrl2,
+                                              isInternal: true,
+                                              currentRole: RoleUtils.currentRoleSync(),
+                                              targetRole: RoleUtils.currentRoleSync() == 'user1' ? 'user2' : 'user1',
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
                                     const SizedBox(height: 32),
                                   ],
@@ -457,6 +577,14 @@ class _CountdownModeIndependentScreenState
                               child: Row(
                                 children: [
                                   const Spacer(),
+                                  _buildActionButton(
+                                    icon: Icons.auto_awesome_rounded,
+                                    foreground: themeData.foreground,
+                                    isDark: themeData.isDark,
+                                    onTap: _selectFallingEffect,
+                                    tooltip: 'Chọn hiệu ứng nền',
+                                  ),
+                                  const SizedBox(width: 10),
                                   _buildActionButton(
                                     icon: Icons.settings_rounded,
                                     foreground: themeData.foreground,

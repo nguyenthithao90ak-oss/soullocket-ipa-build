@@ -59,7 +59,15 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   final _authService = AuthService();
   final _houseNameCtrl = TextEditingController();
   final _recoveryACtrl = TextEditingController();
+  final _customIdCtrl = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  Timer? _debounceTimer;
+  String _customId = '';
+  bool _isIdChecking = false;
+  bool _isIdAvailable = false;
+  String? _idErrorReason;
+  List<String> _idSuggestions = [];
+  bool _showCustomIdScreen = false;
 
   bool _isLoading = false;
   String _mode = 'couple';
@@ -68,7 +76,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   bool _enableRecovery = false;
   bool _showScrollHint = false;
   bool _dismissedScrollHint = false;
-  bool _didQueueAutoCreate = false;
   bool _isPromptingCreationSetup = false;
   // ignore: unused_field
   final bool _showLegacyIntro = false;
@@ -201,37 +208,20 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       });
     }
 
-    if (!widget.autoCreateOnly && !shouldAutoCreate) return;
-    if (_didQueueAutoCreate) return;
-
-    var missingSetupMessage = _creationPrerequisiteErrorMessage();
-    if (missingSetupMessage != null) {
-      await _promptForMissingCreationPrerequisites(prefs: prefs);
-      if (!mounted) return;
-      missingSetupMessage = _creationPrerequisiteErrorMessage();
-    }
-    if (missingSetupMessage != null) {
-      _didQueueAutoCreate = true;
+    if (widget.autoCreateOnly || shouldAutoCreate) {
       if (shouldAutoCreate) {
         await prefs.remove(_pendingSignupAutoCreateHousePrefsKey);
       }
-      _setAutoCreateFailureMessage(missingSetupMessage);
+      if (_houseNameCtrl.text.trim().isEmpty) {
+        _houseNameCtrl.text = _defaultHouseName();
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _isLoading) return;
+        debugPrint('[HouseOnboarding] autoCreateOnly -> _createHouse queued');
+        _createHouse();
+      });
       return;
     }
-
-    if (_houseNameCtrl.text.trim().isEmpty) {
-      _houseNameCtrl.text = _defaultHouseName();
-    }
-
-    _didQueueAutoCreate = true;
-    if (shouldAutoCreate) {
-      await prefs.remove(_pendingSignupAutoCreateHousePrefsKey);
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _isLoading) return;
-      debugPrint('[HouseOnboarding] autoCreateOnly -> _createHouse queued');
-      _createHouse();
-    });
   }
 
   Future<void> _clearPendingSignupDraft({
@@ -250,7 +240,64 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     _scrollController.dispose();
     _houseNameCtrl.dispose();
     _recoveryACtrl.dispose();
+    _customIdCtrl.dispose();
+    _debounceTimer?.cancel();
     super.dispose();
+  }
+
+  void _onIdChanged(String val) {
+    final clean = val.trim().toUpperCase();
+    _customId = clean;
+    _isIdAvailable = false;
+    _idErrorReason = null;
+    _idSuggestions = [];
+
+    _debounceTimer?.cancel();
+    if (clean.isEmpty) {
+      setState(() {});
+      return;
+    }
+
+    if (!RegExp(r'^[A-Z0-9_]{3,20}$').hasMatch(clean)) {
+      setState(() {
+        _idErrorReason = 'Mã chỉ gồm chữ, số, dấu gạch dưới (3-20 ký tự).';
+      });
+      return;
+    }
+
+    setState(() {
+      _isIdChecking = true;
+    });
+
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
+      try {
+        final res = await _houseService.checkHouseIdAvailability(clean);
+        if (!mounted || _customId != clean) return;
+
+        setState(() {
+          _isIdChecking = false;
+          _isIdAvailable = res['available'] == true;
+          if (!_isIdAvailable) {
+            _idErrorReason = res['reason'] ?? 'Mã nhà đã tồn tại, vui lòng chọn mã khác.';
+            final suggs = res['suggestions'];
+            if (suggs is List) {
+              _idSuggestions = suggs.map((e) => e.toString()).toList();
+            }
+          }
+        });
+      } catch (e) {
+        if (!mounted || _customId != clean) return;
+        setState(() {
+          _isIdChecking = false;
+          _idErrorReason = 'Lỗi kết nối máy chủ.';
+        });
+      }
+    });
+  }
+
+  void _selectSuggestion(String suggestion) {
+    _customIdCtrl.text = suggestion;
+    _onIdChanged(suggestion);
   }
 
   void _handleScroll() {
@@ -824,7 +871,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     }
   }
 
-  Future<void> _createHouse({String? houseCreationOtp}) async {
+  Future<void> _createHouse({String? houseCreationOtp, String? customHouseId}) async {
     FocusManager.instance.primaryFocus?.unfocus();
 
     await _hydrateMissingCreationPrerequisites(
@@ -914,6 +961,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         recoveryAnswer: _enableRecovery ? recoveryAnswer : null,
         createdWith: 'email',
         otp: houseCreationOtp,
+        customHouseId: customHouseId,
       )
           .timeout(const Duration(seconds: 15), onTimeout: () {
         throw TimeoutException('_createHouse timed out');
@@ -979,7 +1027,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         );
         return;
       }
-      return _createHouse(houseCreationOtp: otp.trim());
+      return _createHouse(houseCreationOtp: otp.trim(), customHouseId: customHouseId);
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(e);
       debugPrint('[HouseOnboarding] _createHouse failed: ${errorInfo.message}');
@@ -1003,7 +1051,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         );
         await Future.delayed(Duration(milliseconds: 700 * _authSyncRetryCount));
         if (mounted) {
-          return _createHouse(houseCreationOtp: houseCreationOtp);
+          return _createHouse(houseCreationOtp: houseCreationOtp, customHouseId: customHouseId);
         }
       }
       _authSyncRetryCount = 0;
@@ -1026,7 +1074,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         );
         await Future.delayed(Duration(seconds: _transientCreateRetryCount));
         if (mounted) {
-          return _createHouse(houseCreationOtp: houseCreationOtp);
+          return _createHouse(houseCreationOtp: houseCreationOtp, customHouseId: customHouseId);
         }
       }
       _transientCreateRetryCount = 0;
@@ -1100,6 +1148,250 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_showCustomIdScreen) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFFFF7FB),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          actions: [
+            if (widget.onSignedOut != null)
+              TextButton.icon(
+                onPressed: _isLoading ? null : () async {
+                  setState(() => _isLoading = true);
+                  try {
+                    await FirebaseAuth.instance.signOut();
+                    if (widget.onSignedOut != null) {
+                      await widget.onSignedOut!();
+                    }
+                  } catch (_) {}
+                  if (mounted) setState(() => _isLoading = false);
+                },
+                icon: const Icon(Icons.logout_rounded, color: Color(0xFFD81B60), size: 20),
+                label: Text(
+                  'Đăng xuất',
+                  style: SLTheme.quicksand(
+                    color: const Color(0xFFD81B60),
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        body: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 28,
+                      offset: const Offset(0, 16),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Icon(
+                      Icons.favorite_rounded,
+                      size: 52,
+                      color: Color(0xFFD81B60),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Tạo Tổ Ấm Của Hai Bạn',
+                      textAlign: TextAlign.center,
+                      style: SLTheme.quicksand(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF2C1B22),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Thiết lập một Mã Nhà (ID) duy nhất để đối phương có thể kết nối với bạn nhé.',
+                      textAlign: TextAlign.center,
+                      style: SLTheme.quicksand(
+                        fontSize: 14,
+                        height: 1.45,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF7A6871),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF6FA),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: _idErrorReason != null
+                              ? Colors.red.shade200
+                              : (_isIdAvailable ? Colors.green.shade200 : const Color(0xFFFFD3E4)),
+                        ),
+                      ),
+                      child: TextField(
+                        controller: _customIdCtrl,
+                        maxLength: 20,
+                        autofocus: true,
+                        style: SLTheme.quicksand(
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF2C1B22),
+                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Mã nhà của bạn (Ví dụ: NHATHUONG_99)',
+                          labelStyle: SLTheme.quicksand(
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF8C7381),
+                          ),
+                          counterText: '',
+                          border: InputBorder.none,
+                          suffixIcon: _isIdChecking
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: Center(
+                                    child: SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        color: Color(0xFFD81B60),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : (_isIdAvailable
+                                  ? const Icon(Icons.check_circle_rounded, color: Colors.green)
+                                  : (_idErrorReason != null
+                                      ? const Icon(Icons.cancel_rounded, color: Colors.red)
+                                      : null)),
+                        ),
+                        onChanged: _onIdChanged,
+                      ),
+                    ),
+                    if (_isIdAvailable) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.check_circle_outline_rounded, color: Colors.green, size: 16),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'Mã nhà khả dụng và hợp lệ!',
+                              style: SLTheme.quicksand(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.green.shade700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    if (_idErrorReason != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.error_outline_rounded, color: Colors.red, size: 16),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              _idErrorReason!,
+                              style: SLTheme.quicksand(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.red.shade700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    if (_idSuggestions.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        'Gợi ý mã nhà chưa tồn tại cho bạn:',
+                        style: SLTheme.quicksand(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF7A6871),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _idSuggestions.map((sugg) {
+                          return ActionChip(
+                            label: Text(
+                              sugg,
+                              style: SLTheme.quicksand(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFFD81B60),
+                              ),
+                            ),
+                            backgroundColor: const Color(0xFFFFF0F5),
+                            side: const BorderSide(color: Color(0xFFFFD3E4)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            onPressed: () => _selectSuggestion(sugg),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                    const SizedBox(height: 28),
+                    ElevatedButton(
+                      onPressed: (_isIdAvailable && !_isLoading && !_isIdChecking)
+                          ? () => _createHouse(customHouseId: _customId)
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFD81B60),
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: const Color(0xFFF3E5EB),
+                        disabledForegroundColor: const Color(0xFFC3AEB9),
+                        minimumSize: const Size.fromHeight(54),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 3,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              'Thiết lập & Tạo nhà',
+                              style: SLTheme.quicksand(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     if (widget.autoCreateOnly) {
       if (_autoCreateFailureMessage == null) {
         return const LoadingScaffold();

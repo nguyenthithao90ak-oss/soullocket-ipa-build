@@ -475,17 +475,8 @@ class _CountdownVisualSpec {
             ),
           ],
           innerColor: null,
-          innerGradient: LinearGradient(
-            colors: [
-              Colors.white.withValues(alpha: 0.52),
-              const Color(0xFFFFA6C8).withValues(alpha: 0.22),
-              Colors.white.withValues(alpha: 0.04),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          innerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.55), width: 1.5),
+          innerGradient: null,
+          innerBorder: null,
           // Số rõ hơn: gradient đậm dần từ trắng sang hồng đố bão hoà
           numberGradient: const [Color(0xFFFFFFFF), Color(0xFFFF5B9A), Color(0xFFD81B60)],
           topLabelColor: Colors.white,

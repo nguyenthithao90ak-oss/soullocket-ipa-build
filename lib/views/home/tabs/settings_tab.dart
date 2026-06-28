@@ -15,6 +15,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:in_app_review/in_app_review.dart';
 import '../../login_screen.dart';
+import '../../app_entry.dart';
+import 'package:soullocket_app/views/chat/chat_detail_screen.dart';
 import 'package:image_cropper/image_cropper.dart';
 
 import 'dart:io';
@@ -88,6 +90,7 @@ import 'settings/controllers/settings_security_controller.dart';
 import 'settings/security/security_otp_dialogs.dart';
 import '../../../widgets/first_setup_spotlight_guide.dart';
 import '../../../widgets/legacy_web_ui.dart';
+import '../../../widgets/legacy_falling_effect.dart';
 import '../../../widgets/pin_pad_setup_modal.dart';
 import '../../../utils/services/widget_service.dart';
 import '../../../models/house_settings.dart';
@@ -376,6 +379,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       SettingsRelationshipWatcher();
 
   String? _houseId;
+  bool _houseIdChanged = false;
   String _houseName = L10nService().translate('home_nginhtnhyu_dbebce');
   bool _homeShowHouseName = false;
   bool _homeShowTimer = false;

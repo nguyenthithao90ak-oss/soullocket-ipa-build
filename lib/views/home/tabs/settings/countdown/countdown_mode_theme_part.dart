@@ -177,6 +177,9 @@ class _CountdownModeStyleData {
             colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)],
           ),
           innerColor: const Color(0xFFFBF8FA),
+          innerGradient: const LinearGradient(
+            colors: [Color(0xFFFBF8FA), Color(0xFFFBF8FA)],
+          ),
           outerBorder: Border.fromBorderSide(
               BorderSide(color: Color(0xFFE9DDE6), width: 2.2)),
           innerBorder: Border.all(color: Colors.transparent, width: 0),
@@ -203,6 +206,12 @@ class _CountdownModeStyleData {
             ],
           ),
           innerColor: Colors.white.withValues(alpha: 0.08),
+          innerGradient: LinearGradient(
+            colors: [
+              Colors.white.withValues(alpha: 0.08),
+              Colors.white.withValues(alpha: 0.04),
+            ],
+          ),
           outerBorder: Border.all(color: Colors.transparent, width: 0),
           innerBorder: Border.all(color: Colors.transparent, width: 0),
           shadows: [

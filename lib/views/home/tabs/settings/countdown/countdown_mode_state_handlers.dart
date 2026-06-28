@@ -446,6 +446,9 @@ extension _CountdownModeIndependentScreenStatePart
           widget.avatarUrl1.trim();
       _avatarUrl2 = prefs.getString(_prefKey('avatar_2', scope: scope)) ??
           widget.avatarUrl2.trim();
+      _fallingEffectType =
+          prefs.getString(_prefKey('falling_effect_type', scope: scope)) ??
+              'off';
       _anchorDate = parsedDate;
     });
   }
@@ -474,6 +477,10 @@ extension _CountdownModeIndependentScreenStatePart
       prefs.setString(
         _prefKey('anchor_date', scope: scope),
         _anchorDate == null ? '' : DateInputUtils.formatIsoDate(_anchorDate!),
+      ),
+      prefs.setString(
+        _prefKey('falling_effect_type', scope: scope),
+        _fallingEffectType,
       ),
       prefs.setInt(_prefKey('updated_at_ms', scope: scope), snapshot.updatedAtMs),
     ]);
