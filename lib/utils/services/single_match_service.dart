@@ -227,7 +227,7 @@ class SingleMatchService {
       onListen: () {
         controller.add(const <SingleMatchHistoryEntry>[]);
         historySub =
-            _db.child('houses/$houseId/singleMatch/history').onValue.listen(
+            _db.child('houses/$houseId/singleMatch/history').orderByKey().limitToLast(50).onValue.listen(
           (event) {
             if (!event.snapshot.exists || event.snapshot.value is! Map) {
               controller.add(const <SingleMatchHistoryEntry>[]);

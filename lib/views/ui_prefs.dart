@@ -36,6 +36,7 @@ class UiPrefsState {
   final bool transparentMode;
   final String brandMarkKey;
   final List<String> homeBlockOrder;
+  final bool homeShowTimer;
 
   const UiPrefsState({
     required this.themeKey,
@@ -64,6 +65,7 @@ class UiPrefsState {
     required this.transparentMode,
     required this.brandMarkKey,
     required this.homeBlockOrder,
+    required this.homeShowTimer,
   });
 
   UiPrefsState copyWith({
@@ -93,6 +95,7 @@ class UiPrefsState {
     bool? transparentMode,
     String? brandMarkKey,
     List<String>? homeBlockOrder,
+    bool? homeShowTimer,
   }) {
     return UiPrefsState(
       themeKey: themeKey ?? this.themeKey,
@@ -124,6 +127,7 @@ class UiPrefsState {
       transparentMode: transparentMode ?? this.transparentMode,
       brandMarkKey: brandMarkKey ?? this.brandMarkKey,
       homeBlockOrder: homeBlockOrder ?? this.homeBlockOrder,
+      homeShowTimer: homeShowTimer ?? this.homeShowTimer,
     );
   }
 
@@ -157,6 +161,7 @@ class UiPrefsState {
     transparentMode: true,
     brandMarkKey: SoulLocketBrand.defaultStyleKey,
     homeBlockOrder: ['highlight', 'map', 'insight'],
+    homeShowTimer: false,
   );
 }
 
@@ -206,6 +211,7 @@ class UiPrefs {
   static const _kTransparentModeKey = 'il_transparent_mode';
   static const _kBrandMarkKey = 'il_brand_mark_key';
   static const _kHomeBlockOrderKey = 'il_home_block_order';
+  static const _kHomeShowTimerKey = 'il_home_show_timer';
 
   static final ValueNotifier<UiPrefsState> notifier =
       ValueNotifier<UiPrefsState>(UiPrefsState.defaults);
@@ -416,6 +422,8 @@ class UiPrefs {
           prefs.getString(_kBrandMarkKey) ?? UiPrefsState.defaults.brandMarkKey,
         ),
         homeBlockOrder: homeBlockOrder,
+        homeShowTimer: prefs.getBool(_kHomeShowTimerKey) ??
+            UiPrefsState.defaults.homeShowTimer,
       ),
     );
   }
@@ -542,6 +550,14 @@ class UiPrefs {
       transparentMode: state.transparentMode,
       brandMarkKey: SoulLocketBrand.normalizeStyleKey(state.brandMarkKey),
       homeBlockOrder: state.homeBlockOrder,
+      homeShowTimer: state.homeShowTimer,
     );
+  }
+
+  static Future<void> setHomeShowTimer(bool enabled) async {
+    await ensureLoaded();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kHomeShowTimerKey, enabled);
+    notifier.value = notifier.value.copyWith(homeShowTimer: enabled);
   }
 }

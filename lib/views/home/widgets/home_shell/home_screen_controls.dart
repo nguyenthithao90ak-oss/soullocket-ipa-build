@@ -157,15 +157,15 @@ extension _HomeScreenShellControls on _HomeScreenState {
       pauseAnimations: isSwiping,
     );
     final isPerformanceMode = effectProfile.performanceMode;
-    const useBackdropBlur = false; // Always solid to prevent transparent flickering during swipes
+    const useBackdropBlur = true;
 
     final navSurface = Container(
       key: _firstGuideBottomNavKey,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: isDark
-            ? const Color(0xFF2D2D3A)
-            : const Color(0xFFF3EEEA),
+            ? const Color(0xFF2D2D3A).withValues(alpha: 0.65)
+            : const Color(0xFFF3EEEA).withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(40),
         border: Border.all(
           color: isDark
@@ -371,14 +371,11 @@ extension _HomeScreenShellControls on _HomeScreenState {
         isDark ? Colors.white.withValues(alpha: 0.5) : const Color(0xFF94A3B8);
 
     GlobalKey? targetKey;
-    if ((!_HomeScreenState._communityTabEnabled && index == 1) ||
-        (_HomeScreenState._communityTabEnabled && index == 2)) {
+    if (index == 1) {
       targetKey = _firstGuideDiaryTabKey;
-    } else if ((!_HomeScreenState._communityTabEnabled && index == 2) ||
-        (_HomeScreenState._communityTabEnabled && index == 3)) {
+    } else if (index == 2) {
       targetKey = _firstGuideUtilitiesTabKey;
-    } else if ((!_HomeScreenState._communityTabEnabled && index == 4) ||
-        (_HomeScreenState._communityTabEnabled && index == 5)) {
+    } else if (index == 4) {
       targetKey = _firstGuideUpdateTabKey;
     }
 

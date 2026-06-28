@@ -78,7 +78,6 @@ class SettingsSyncService {
     'il_home_block_tone',
     'il_custom_background_url',
     'il_home_show_house_name',
-    'il_home_show_timer',
     'il_auto_reply_text',
     'il_greeting_quote_text',
     'il_love_unit_text',
@@ -144,7 +143,6 @@ class SettingsSyncService {
       'il_greeting_quote_text',
       'il_love_unit_text',
       'il_home_show_house_name',
-      'il_home_show_timer',
       'il_auto_reply_text',
     ]) {
       final value = prefs.get(key);

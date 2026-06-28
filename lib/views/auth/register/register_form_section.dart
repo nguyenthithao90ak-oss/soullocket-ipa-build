@@ -183,13 +183,13 @@ class RegisterForm extends StatelessWidget {
               ),
             ),
           ),
-          AnimatedCrossFade(
+          AnimatedSize(
             duration: const Duration(milliseconds: 300),
-            crossFadeState: showSecurityQuestion
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            firstChild: const SizedBox(height: 4),
-            secondChild: Column(
+            alignment: Alignment.topCenter,
+            curve: Curves.easeInOut,
+            child: !showSecurityQuestion
+                ? const SizedBox(height: 4, width: double.infinity)
+                : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 8),

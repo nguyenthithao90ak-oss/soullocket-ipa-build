@@ -1,4 +1,4 @@
-﻿part of 'short_video_feed_screen.dart';
+part of 'short_video_feed_screen.dart';
 
 // ─── Single Short Video Post ──────────────────────────────────
 class _ShortVideoFeedPostCard extends StatefulWidget {
@@ -91,11 +91,11 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
     VideoPlayerController controller;
     File? cachedFile;
     try {
-      final fileInfo = await DefaultCacheManager().getFileFromCache(_mediaUrl);
+      final fileInfo = await AppCacheManager.instance.getFileFromCache(_mediaUrl);
       if (fileInfo != null) {
         cachedFile = fileInfo.file;
       } else {
-        cachedFile = await DefaultCacheManager().getSingleFile(_mediaUrl);
+        cachedFile = await AppCacheManager.instance.getSingleFile(_mediaUrl);
       }
     } catch (e) {
       debugPrint('Failed to cache video: $e');
@@ -466,6 +466,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
       fit: StackFit.expand,
       children: [
         CachedNetworkImage(
+          cacheManager: AppCacheManager.instance,
           memCacheWidth: mediaCacheWidth,
           imageUrl: _mediaUrl,
           fit: BoxFit.cover,
@@ -483,6 +484,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                 child: Opacity(
                   opacity: 0.82,
                   child: CachedNetworkImage(
+                    cacheManager: AppCacheManager.instance,
                     memCacheWidth: mediaCacheWidth,
                     imageUrl: _mediaUrl,
                     fit: BoxFit.cover,
@@ -626,6 +628,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                                       maxScale: 4,
                                       child: SizedBox.expand(
                                         child: CachedNetworkImage(
+                                          cacheManager: AppCacheManager.instance,
                                           memCacheWidth: 2400,
                                           imageUrl: _mediaUrl,
                                           fit: BoxFit.contain,

@@ -5,7 +5,9 @@ import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/single_match_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/models/single_match_models.dart';
 import 'package:soullocket_app/views/chat/chat_detail_screen.dart';
+import '../screens/single_match_finding_screen.dart';
 
 class SingleMatchChatsTab extends StatefulWidget {
   final String houseId;
@@ -51,30 +53,34 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
 
   Future<void> _startRandomChat() async {
     if (_isCreating) return;
-    setState(() => _isCreating = true);
 
     try {
       final alreadyChatted = _mappings
           .map((m) => m['peerHouseId'].toString())
           .toSet();
 
-      // Dùng pickScoredMatch — chỉ load active pool nhỏ, không tải 10k
-      final pick = await _service.pickScoredMatch(
-        currentHouseId: widget.houseId,
-        excludeHouseIds: alreadyChatted,
-        goal: '',
-        voiceStyle: '',
-        myTags: const [],
-        needAudio: false,
-        needVideo: false,
+      final result = await Navigator.push<dynamic>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SingleMatchFindingScreen(
+            currentHouseId: widget.houseId,
+            excludeHouseIds: alreadyChatted,
+            isChat: true,
+          ),
+        ),
       );
 
-      if (pick == null) {
+      if (result == 'cancelled') return;
+
+      if (result == null || result is! SingleMatchCandidate) {
         if (!mounted) return;
-        _showSnack('Hiện không có ai để trò chuyện. Hãy ghép đôi trước.');
+        _showSnack('Hiện không có ai để trò chuyện lúc này. Hãy ghép đôi thêm.');
         return;
       }
 
+      setState(() => _isCreating = true);
+
+      final pick = result;
       await _service.getOrCreateMatchChatRoom(
         myHouseId: widget.houseId,
         peerHouseId: pick.houseId,

@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/home_startup_media_cache.dart';
 import '../../utils/services/offline_cache_service.dart';
+import '../../utils/app_cache_manager.dart';
 import '../ui_prefs.dart';
 
 class AppEntryHomeAssetPreparer {
@@ -13,7 +14,7 @@ class AppEntryHomeAssetPreparer {
     FirebaseDatabase? database,
     BaseCacheManager? cacheManager,
   })  : _database = database ?? FirebaseDatabase.instance,
-        _cacheManager = cacheManager ?? DefaultCacheManager();
+        _cacheManager = cacheManager ?? AppCacheManager.instance;
 
   final FirebaseDatabase _database;
   final BaseCacheManager _cacheManager;

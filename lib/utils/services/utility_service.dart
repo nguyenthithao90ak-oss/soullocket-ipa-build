@@ -103,6 +103,12 @@ class UtilityService {
       colors: [const Color(0xFF7C4DFF), const Color(0xFF448AFF)],
     ),
     UtilityApp(
+      id: 'soul_events',
+      title: 'Sự Kiện & Kỷ Niệm',
+      icon: Icons.event_note_rounded,
+      colors: [const Color(0xFFFF4D94), const Color(0xFFFF8C42)],
+    ),
+    UtilityApp(
       id: 'giftcode',
       title: 'utility_title_giftcode',
       icon: Icons.confirmation_number_rounded,

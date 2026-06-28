@@ -564,7 +564,7 @@ class AuthSignInService {
       flow: 'auth_login_guard_${action.trim().toLowerCase()}',
       payload: payload,
       autoWarmUp: true,
-    );
+    ).timeout(const Duration(seconds: 3), onTimeout: () => null).catchError((_) => null);
   }
 
   Future<void> _cacheSecurityVerdictFromPayload(
@@ -772,8 +772,8 @@ class AuthSignInService {
           _isGoogleSignInInitialized = true;
         }
 
-        // Chỉ signOut nếu lần trước bị lỗi, tránh logout→login gây chậm
-        // try { await googleSignIn.signOut(); } catch (_) {}
+        // Sign out trước để xoá cache phiên cũ, tránh lỗi treo và sign_in_failed
+        try { await googleSignIn.signOut(); } catch (_) {}
 
         final authCompleter = Completer<dynamic>();
         googleSignIn.authenticate(

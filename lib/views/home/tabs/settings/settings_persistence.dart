@@ -15,7 +15,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
     await prefs.setBool('il_show_weather', _showWeather);
     await prefs.setBool('il_show_status', _showStatus);
     await prefs.setBool('il_home_show_house_name', _homeShowHouseName);
-    await prefs.setBool('il_home_show_timer', _homeShowTimer);
+    await UiPrefs.setHomeShowTimer(_homeShowTimer);
 
     final houseId = _houseId?.trim();
     if (houseId == null || houseId.isEmpty) {
@@ -27,7 +27,6 @@ extension _SettingsTabPersistence on _SettingsTabState {
         'showWeather': _showWeather,
         'showStatus': _showStatus,
         'homeShowHouseName': _homeShowHouseName,
-        'homeShowTimer': _homeShowTimer,
         'updatedAt': ServerValue.timestamp,
       });
     } catch (_) {}
@@ -1051,7 +1050,6 @@ extension _SettingsTabPersistence on _SettingsTabState {
           'confettiFx': _confettiFx,
           'showWeather': _showWeather,
           'showStatus': _showStatus,
-          'homeShowTimer': _homeShowTimer,
           'autoReply': _autoReplyCtrl.text.trim(),
           'updatedAt': ServerValue.timestamp,
         });

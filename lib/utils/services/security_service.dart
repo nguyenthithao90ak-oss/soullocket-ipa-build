@@ -14,7 +14,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:soullocket_app/views/security/security_protection_dialogs.dart';
 import 'package:soullocket_app/utils/rapid_action_feedback_policy.dart';
 import 'package:soullocket_app/utils/sl_notice.dart';
-import 'package:soullocket_app/utils/core/sl_theme.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/local_action_throttle_service.dart';
 import 'package:soullocket_app/utils/services/security_protection_service.dart';
 import 'package:soullocket_app/utils/services/security_runtime_risk_service.dart';

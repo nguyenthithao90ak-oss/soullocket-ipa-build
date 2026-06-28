@@ -1815,6 +1815,46 @@ extension _CountdownModeIndependentScreenViewPart
                         ),
                       ),
                     ),
+                    GestureDetector(
+                      onTap: () => _showPairingInfoBottomSheet(themeData),
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: themeData.isDark
+                                ? [
+                                    themeData.orbA.withValues(alpha: 0.16),
+                                    themeData.orbB.withValues(alpha: 0.10),
+                                  ]
+                                : [
+                                    themeData.orbA.withValues(alpha: 0.14),
+                                    themeData.orbB.withValues(alpha: 0.08),
+                                  ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: themeData.orbA.withValues(
+                              alpha: themeData.isDark ? 0.24 : 0.22,
+                            ),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _surfaceShadowColor(themeData),
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.info_outline_rounded,
+                          size: 20,
+                          color: titleColor,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -1896,6 +1936,272 @@ extension _CountdownModeIndependentScreenViewPart
           ),
         ),
       ],
+    );
+  }
+
+  void _showPairingInfoBottomSheet(_CountdownModeThemeData themeData) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final isDark = themeData.isDark;
+            final sheetBgColor = isDark ? const Color(0xFF1E1E2E) : Colors.white;
+            final cardBgColor = isDark ? const Color(0xFF2E2E3E) : const Color(0xFFF9F9FB);
+            final titleColor = isDark ? Colors.white : const Color(0xFF1F2937);
+            final subColor = isDark ? Colors.white70 : const Color(0xFF4B5563);
+            final labelColor = isDark ? Colors.white54 : const Color(0xFF6B7280);
+            final accentColor = themeData.orbA;
+
+            return Container(
+              decoration: BoxDecoration(
+                color: sheetBgColor,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.black12,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Thông tin riêng tư',
+                        style: SLTheme.quicksand(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: titleColor,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(sheetContext).pop(),
+                        icon: const Icon(Icons.close_rounded),
+                        color: subColor,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // User's pairing code section
+                  Text(
+                    'Mã nhà của bạn (Dùng để ghép nối)',
+                    style: SLTheme.quicksand(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: labelColor,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: cardBgColor,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: SelectableText(
+                            _selfSpaceHouseId,
+                            style: SLTheme.quicksand(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                              color: titleColor,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () async {
+                            await Clipboard.setData(ClipboardData(text: _selfSpaceHouseId));
+                            _showMessage('Đã sao chép mã nhà vào bộ nhớ tạm.');
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(
+                              Icons.copy_all_rounded,
+                              color: accentColor,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Incoming requests section
+                  Text(
+                    'Yêu cầu ghép đôi đang chờ (${_incomingSpaceRequests.length})',
+                    style: SLTheme.quicksand(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: labelColor,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  if (_incomingSpaceRequests.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Center(
+                        child: Text(
+                          'Không có yêu cầu nào đang chờ duyệt.',
+                          style: SLTheme.quicksand(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: labelColor,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 280),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: _incomingSpaceRequests.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final request = _incomingSpaceRequests.values.elementAt(index);
+                          final senderLabel = request.fromHouseName.trim().isNotEmpty
+                              ? request.fromHouseName.trim()
+                              : 'Nhà ẩn danh';
+
+                          final requestId = request.requestId;
+                          final isActionBusy = _spaceRequestActionIds.contains(requestId);
+
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: cardBgColor,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            senderLabel,
+                                            style: SLTheme.quicksand(
+                                              fontSize: 14.5,
+                                              fontWeight: FontWeight.w900,
+                                              color: titleColor,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'Mã nhà: ${request.fromHouseId}',
+                                            style: SLTheme.quicksand(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w700,
+                                              color: labelColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    TextButton(
+                                      onPressed: isActionBusy
+                                          ? null
+                                          : () async {
+                                              setSheetState(() {});
+                                              await _respondToIncomingSpaceRequest(
+                                                request,
+                                                accept: false,
+                                              );
+                                              setSheetState(() {});
+                                            },
+                                      child: Text(
+                                        'Từ chối',
+                                        style: SLTheme.quicksand(
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.redAccent,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ElevatedButton(
+                                      onPressed: isActionBusy
+                                          ? null
+                                          : () async {
+                                              setSheetState(() {});
+                                              await _respondToIncomingSpaceRequest(
+                                                request,
+                                                accept: true,
+                                              );
+                                              setSheetState(() {});
+                                            },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: accentColor,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        elevation: 0,
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      ),
+                                      child: isActionBusy
+                                          ? const SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                valueColor: AlwaysStoppedAnimation(Colors.white),
+                                              ),
+                                            )
+                                          : Text(
+                                              'Chấp nhận',
+                                              style: SLTheme.quicksand(
+                                                fontWeight: FontWeight.w900,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

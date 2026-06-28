@@ -683,10 +683,6 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
                   ? (data['homeShowHouseName'] == true ||
                       data['homeShowHouseName'] == 'true')
                   : false;
-              _homeShowTimer = data.containsKey('homeShowTimer')
-                  ? (data['homeShowTimer'] == true ||
-                      data['homeShowTimer'] == 'true')
-                  : false;
               _loveDate = data['startDate'] ?? '';
               _nameU1 = data['nameU1'] ?? maleRoleName;
               _nameU2 = data['nameU2'] ?? femaleRoleName;

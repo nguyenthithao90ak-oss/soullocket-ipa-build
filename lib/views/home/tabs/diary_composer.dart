@@ -28,21 +28,32 @@ class DiaryComposer extends StatefulWidget {
   State<DiaryComposer> createState() => _DiaryComposerState();
 }
 
-class _DiaryComposerState extends State<DiaryComposer> {
+class _DiaryComposerState extends State<DiaryComposer> with SingleTickerProviderStateMixin {
   final FocusNode _focusNode = FocusNode();
   bool _isFocused = false;
   bool _isButtonPressed = false;
+  late AnimationController _breathingController;
+  late Animation<double> _breathingAnimation;
 
   @override
   void initState() {
     super.initState();
     _focusNode.addListener(_onFocusChange);
+    _breathingController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    _breathingAnimation = Tween<double>(begin: 0.98, end: 1.02).animate(
+      CurvedAnimation(parent: _breathingController, curve: Curves.easeInOut),
+    );
+    _breathingController.repeat(reverse: true);
   }
 
   @override
   void dispose() {
     _focusNode.removeListener(_onFocusChange);
     _focusNode.dispose();
+    _breathingController.dispose();
     super.dispose();
   }
 
@@ -200,10 +211,16 @@ class _DiaryComposerState extends State<DiaryComposer> {
               ),
             ),
             SLSpacing.h16,
-            // Button Lưu Tâm Sự với đổ bóng phát sáng (Glow Shadow) & Bounce Effect
-            AnimatedScale(
-              scale: _isButtonPressed ? 0.96 : 1.0,
-              duration: const Duration(milliseconds: 100),
+            // Button Lưu Tâm Sự với đổ bóng phát sáng (Glow Shadow) & Bounce + Breathing Effect
+            AnimatedBuilder(
+              animation: _breathingAnimation,
+              builder: (context, child) {
+                final scale = (_isButtonPressed ? 0.96 : 1.0) * _breathingAnimation.value;
+                return Transform.scale(
+                  scale: scale,
+                  child: child,
+                );
+              },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: double.infinity,

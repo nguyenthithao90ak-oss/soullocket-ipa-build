@@ -2432,7 +2432,8 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
           final newHue = (hsl.hue + 2.5) % 360;
           heart.color = hsl.withHue(newHue).toColor();
         } else {
-          heart.x += math.cos(heart.angle) * heart.speed;
+          final double sway = math.sin(heart.lifeTimeProgress * 5.0 + heart.swayPhase) * 0.8;
+          heart.x += math.cos(heart.angle) * heart.speed + sway;
           heart.y += math.sin(heart.angle) * heart.speed - 1.2;
         }
 
@@ -2637,6 +2638,7 @@ class HeartsPainter extends CustomPainter {
         _drawHeartShape(canvas, mainPaint, heart.x, heart.y, drawSize);
 
       } else {
+        drawSize = heart.size * (1.0 + 0.08 * math.sin(progress * 12.0));
         mainPaint.color = heart.color.withValues(alpha: heart.opacity);
         _drawHeartShape(canvas, mainPaint, heart.x, heart.y, drawSize);
       }

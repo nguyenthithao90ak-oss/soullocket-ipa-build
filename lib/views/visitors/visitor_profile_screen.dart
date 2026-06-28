@@ -28,7 +28,7 @@ import 'profile/sections/profile_stats_section.dart';
 import 'profile/sections/profile_tab_bar_section.dart';
 import 'profile/sections/profile_tab_content_section.dart';
 
-import '../community/community_settings_screen.dart';
+// import '../community/community_settings_screen.dart'; // DELETED_COMMUNITY_FEATURE 2026-06-28
 import '../home/tabs/short_video_feed_screen.dart';
 import '../home/widgets/visitor_heart_anim.dart';
 
@@ -515,19 +515,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
   }
 
   Future<void> _openCommunitySettingsScreen() async {
-    final houseId = _editableProfileHouseId;
-    if (houseId == null) return;
-
-    final changed = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CommunitySettingsScreen(houseId: houseId),
-      ),
-    );
-
-    if (changed == true) {
-      await _load();
-    }
+    // DELETED_COMMUNITY_FEATURE 2026-06-28
+    _showSnack('Tính năng Cộng đồng hiện đang tạm đóng để nâng cấp hệ thống.');
   }
 
   Future<void> _openProfileAppearanceSheet() async {

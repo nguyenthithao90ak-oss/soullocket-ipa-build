@@ -9,6 +9,7 @@ import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/models/single_match_models.dart';
 import 'package:soullocket_app/views/relationship/video_call_screen.dart';
 import 'package:soullocket_app/views/visitors/visitor_profile_screen.dart';
+import '../screens/single_match_finding_screen.dart';
 
 class SingleMatchCallsTab extends StatefulWidget {
   final String houseId;
@@ -59,24 +60,26 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
         .map((e) => e.peerHouseId)
         .toSet();
 
-    // Dùng pickScoredMatch — chỉ load active pool nhỏ
-    final pick = await _service.pickScoredMatch(
-      currentHouseId: widget.houseId,
-      excludeHouseIds: excludeHouseIds,
-      goal: '',
-      voiceStyle: '',
-      myTags: const [],
-      needAudio: !isVideo,
-      needVideo: isVideo,
+    final result = await Navigator.push<dynamic>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SingleMatchFindingScreen(
+          currentHouseId: widget.houseId,
+          excludeHouseIds: excludeHouseIds,
+          isVideo: isVideo,
+        ),
+      ),
     );
 
-    if (pick == null) {
+    if (result == 'cancelled') return;
+
+    if (result == null || result is! SingleMatchCandidate) {
       if (!mounted) return;
-      _showSnack('Hiện không có ai để gọi ngẫu nhiên.');
+      _showSnack('Hiện không có ai phù hợp để gọi lúc này. Vui lòng thử lại sau.');
       return;
     }
 
-    await _launchCall(pick: pick, isVideo: isVideo);
+    await _launchCall(pick: result, isVideo: isVideo);
   }
 
   Future<void> _launchCall({

@@ -71,10 +71,11 @@ class _MainHomeHeroCountdownSection extends StatelessWidget {
             state: state,
             startDate: startDate,
           ),
-        if (homeShowHouseName)
-          _MainHomeHeroBadges(
-            houseName: houseName,
-          ),
+        // Hiển thị tên nhà đã bị ẩn theo yêu cầu
+        // if (homeShowHouseName)
+        //   MainHomeHeroBadges(
+        //     houseName: houseName,
+        //   ),
       ],
     );
   }

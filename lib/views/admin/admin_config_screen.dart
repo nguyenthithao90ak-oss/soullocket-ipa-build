@@ -235,12 +235,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       if (targetId.isNotEmpty) {
         houseIds.add(targetId);
       } else {
-        // 1. Fetch all active houses
-        final housesSnap = await _db.child('houses').get().timeout(const Duration(seconds: 10));
-        if (!housesSnap.exists) throw noHousesMsg;
-
-        final houses = Map<dynamic, dynamic>.from(housesSnap.value as Map);
-        houseIds = houses.keys.map((k) => k.toString()).toList();
+        throw 'Gửi thông báo toàn hệ thống tạm thời bị khóa. Vui lòng nhập House ID cụ thể.';
       }
 
       // 2. Batch send to notifications node

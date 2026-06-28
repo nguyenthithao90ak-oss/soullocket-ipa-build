@@ -834,32 +834,33 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 maxLength: 30,
                 accentColor: panelAccent,
               ),
-              Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        context.tr('show_house_name_home'),
-                        style: SLTextStyles.quicksand(
-                            fontSize: 14, fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    Switch(
-                      value: panelState.homeShowHouseName,
-                      activeThumbColor: const Color(0xFFD81B60),
-                      onChanged: panelActions.onToggleShowHouseName,
-                    ),
-                  ],
-                ),
-              ),
+              // Ẩn hiển thị tên nhà theo yêu cầu
+              // Container(
+              //   margin: const EdgeInsets.only(bottom: 8),
+              //   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              //   decoration: BoxDecoration(
+              //     color: Colors.white,
+              //     borderRadius: BorderRadius.circular(14),
+              //     border: Border.all(color: const Color(0xFFE2E8F0)),
+              //   ),
+              //   child: Row(
+              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //     children: [
+              //       Expanded(
+              //         child: Text(
+              //           context.tr('show_house_name_home'),
+              //           style: SLTextStyles.quicksand(
+              //               fontSize: 14, fontWeight: FontWeight.w700),
+              //         ),
+              //       ),
+              //       Switch(
+              //         value: panelState.homeShowHouseName,
+              //         activeThumbColor: const Color(0xFFD81B60),
+              //         onChanged: panelActions.onToggleShowHouseName,
+              //       ),
+              //     ],
+              //   ),
+              // ),
               Container(
                 margin: const EdgeInsets.only(bottom: 4),
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),

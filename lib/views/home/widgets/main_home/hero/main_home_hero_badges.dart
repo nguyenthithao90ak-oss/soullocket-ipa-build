@@ -1,9 +1,9 @@
 part of '../../../tabs/main_home_tab.dart';
 
-class _MainHomeHeroBadges extends StatelessWidget {
+class MainHomeHeroBadges extends StatelessWidget {
   final String houseName;
 
-  const _MainHomeHeroBadges({
+  const MainHomeHeroBadges({
     required this.houseName,
   });
 

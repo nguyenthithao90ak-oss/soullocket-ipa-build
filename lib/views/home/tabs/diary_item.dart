@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../models/diary_post.dart';
+import '../../../utils/app_cache_manager.dart';
 import '../../../utils/services/l10n_service.dart';
 
 class DiaryItem extends StatelessWidget {
@@ -215,6 +216,7 @@ class DiaryItem extends StatelessWidget {
               ClipRRect(
                 borderRadius: SLRadius.lgAll,
                 child: CachedNetworkImage(
+                  cacheManager: AppCacheManager.instance,
                   imageUrl: post.imageUrl,
                   width: double.infinity,
                   fit: BoxFit.cover,

@@ -4,9 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'single_match_service.dart';
 import 'activity_history_service.dart';
-import '../models/house_settings.dart';
+import 'package:soullocket_app/models/house_settings.dart';
 import '../utils/flexible_date_input.dart';
-import 'device_manager_service.dart';
 import 'offline_cache_service.dart';
 
 /// HouseSettingsService - realtime listener cho settings nhà
@@ -254,6 +253,7 @@ class HouseSettingsService {
       houseId,
       allowPendingApproval: true,
     );
+    await _checkAndUpdateUploadLimit(houseId);
     final refreshedUrl = _withRefreshToken(url);
     final field = role == 'user1' ? 'avtUser1' : 'avtUser2';
     final updates = <String, dynamic>{
@@ -316,6 +316,9 @@ class HouseSettingsService {
       houseId,
       allowPendingApproval: true,
     );
+    if (headerImageUrl != null) {
+      await _checkAndUpdateUploadLimit(houseId);
+    }
 
     final updates = <String, dynamic>{
       'houses/$houseId/updatedAt': ServerValue.timestamp,
@@ -561,5 +564,34 @@ class HouseSettingsService {
     Duration cooldown = const Duration(hours: 24),
   }) async {
     throw 'Chế độ Độc thân / Có người ấy chỉ được chọn khi tạo nhà lần đầu và không thể đổi lại trong Cài đặt.';
+  }
+
+  Future<void> _checkAndUpdateUploadLimit(String houseId) async {
+    final now = DateTime.now();
+    final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final ref = _dbRef.child('houses/$houseId/security/upload_limit');
+    
+    final snapshot = await ref.get();
+    if (snapshot.exists) {
+      final value = snapshot.value;
+      if (value is Map) {
+        final savedDate = value['date']?.toString();
+        final count = (value['count'] as num?)?.toInt() ?? 0;
+        if (savedDate == todayStr) {
+          if (count >= 15) {
+            throw 'Bạn đã thay đổi quá nhiều, vui lòng đợi hôm sau';
+          }
+          await ref.update({
+            'count': count + 1,
+          });
+          return;
+        }
+      }
+    }
+    
+    await ref.set({
+      'date': todayStr,
+      'count': 1,
+    });
   }
 }

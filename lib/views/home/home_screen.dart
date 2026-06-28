@@ -13,6 +13,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../../utils/services/offline_cache_service.dart';
+import 'package:soullocket_app/models/house_settings.dart';
 
 import '../../core/sl_route.dart';
 import '../../core/sl_theme.dart';
@@ -40,11 +41,12 @@ import '../relationship/couple_connect_screen.dart';
 import 'package:soullocket_app/views/utilities/health_screen.dart';
 import '../relationship/video_call_screen.dart';
 import '../utilities/calendar_screen.dart';
+import '../utilities/soul_events/soul_events_screen.dart';
 import 'love_insights_screen.dart';
 import '../ui_prefs.dart';
 import 'package:soullocket_app/views/home/tabs/settings/settings_gift_links_manager_screen.dart';
 import 'package:soullocket_app/utils/services/memory_share_service.dart';
-import 'tabs/community_tab.dart';
+// import 'tabs/community_tab.dart'; // DELETED_COMMUNITY_FEATURE 2026-06-28
 import 'tabs/diary_tab.dart';
 import 'tabs/game_tab.dart';
 import 'tabs/main_home_tab.dart';
@@ -421,8 +423,6 @@ class _HomeScreenState extends State<HomeScreen>
       Duration(milliseconds: 900);
   static const MethodChannel _appControlChannel =
       MethodChannel('soul_locket/app_control');
-  static const bool _communityTabEnabled = false;
-
   static const List<String> _vipRotatingThemes = <String>[
     'theme-pink-glow',
     'theme-default',
@@ -433,8 +433,6 @@ class _HomeScreenState extends State<HomeScreen>
 
   static const _navItems = [
     _NavItem(labelKey: 'nav_home', activeColor: Color(0xFFFF4B91)),
-    if (_communityTabEnabled)
-      _NavItem(labelKey: 'nav_feed', activeColor: Color(0xFF4FC3F7)),
     _NavItem(labelKey: 'nav_diary', activeColor: Color(0xFF00C853)),
     _NavItem(labelKey: 'nav_apps', activeColor: Color(0xFFB388FF)),
     _NavItem(labelKey: 'nav_fun', activeColor: Color(0xFFFFAB00)),
@@ -461,9 +459,6 @@ class _HomeScreenState extends State<HomeScreen>
             onOpenSettings: _openSettings,
             isSwipingListenable: _isUserTabSwipingNotifier,
           ),
-      if (_communityTabEnabled)
-        (isActiveNotifier) =>
-            CommunityTab(isActiveListenable: isActiveNotifier),
       (isActiveNotifier) => DiaryTab(
             isActiveListenable: isActiveNotifier,
             onSelectionOverlayChanged: _handleDiarySelectionOverlayChanged,
@@ -948,7 +943,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     switch (action) {
       case WidgetLaunchAction.diary:
-        await _switchToTab(_communityTabEnabled ? 2 : 1);
+        await _switchToTab(1);
         return;
       case WidgetLaunchAction.love:
         await _openLoveScreenFromWidget();
@@ -959,7 +954,28 @@ class _HomeScreenState extends State<HomeScreen>
       case WidgetLaunchAction.cycle:
         await _openHealthScreenFromWidget();
         return;
+      case WidgetLaunchAction.soul_events:
+        await _openSoulEventsFromWidget();
+        return;
     }
+  }
+
+  Future<void> _openSoulEventsFromWidget() async {
+    final houseId = await _houseService.getCurrentHouseId();
+    if (houseId == null || houseId.trim().isEmpty) {
+      await _switchToTab(0);
+      return;
+    }
+    if (!mounted) return;
+
+    await _switchToTab(0);
+    if (!mounted) return;
+
+    await Navigator.of(context).push(
+      SLRoute(
+        builder: (_) => const SoulEventsScreen(),
+      ),
+    );
   }
 
   Future<void> _openHealthScreenFromWidget() async {
@@ -1015,7 +1031,7 @@ class _HomeScreenState extends State<HomeScreen>
   Future<void> _openCalendarFromWidget() async {
     final houseId = await _houseService.getCurrentHouseId();
     if (houseId == null || houseId.trim().isEmpty) {
-      await _switchToTab(_communityTabEnabled ? 3 : 2);
+      await _switchToTab(2);
       return;
     }
 
@@ -1595,22 +1611,12 @@ class _HomeScreenState extends State<HomeScreen>
       case 0:
         return Icons.home_rounded;
       case 1:
-        return _communityTabEnabled
-            ? Icons.language_rounded
-            : Icons.menu_book_rounded;
+        return Icons.menu_book_rounded;
       case 2:
-        return _communityTabEnabled
-            ? Icons.menu_book_rounded
-            : Icons.widgets_rounded;
+        return Icons.widgets_rounded;
       case 3:
-        return _communityTabEnabled
-            ? Icons.widgets_rounded
-            : Icons.sports_esports_rounded;
+        return Icons.sports_esports_rounded;
       case 4:
-        return _communityTabEnabled
-            ? Icons.sports_esports_rounded
-            : Icons.notifications_rounded;
-      case 5:
         return Icons.notifications_rounded;
       default:
         return Icons.circle;

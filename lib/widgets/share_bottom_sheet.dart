@@ -495,7 +495,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                           padding: const EdgeInsets.all(6),
                           decoration: const BoxDecoration(
                             color: Color(0xFFF1F5F9),
-                            borderRadius: const BorderRadius.all(Radius.circular(14)),
+                            borderRadius: BorderRadius.all(Radius.circular(14)),
                           ),
                           child: const Icon(
                             Icons.close_rounded,
@@ -572,7 +572,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
                                         ),
-                                        borderRadius: const BorderRadius.all(Radius.circular(14)),
+                                        borderRadius: BorderRadius.all(Radius.circular(14)),
                                       ),
                                     ),
                                     SizedBox(
@@ -822,7 +822,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                               icon: Container(
                                 decoration: const BoxDecoration(
                                   color: Color(0xFF34C759),
-                                  borderRadius: const BorderRadius.all(Radius.circular(14)),
+                                  borderRadius: BorderRadius.all(Radius.circular(14)),
                                 ),
                                 alignment: Alignment.center,
                                 child: Icon(
@@ -840,7 +840,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                               icon: Container(
                                 decoration: const BoxDecoration(
                                   color: Color(0xFF64748B),
-                                  borderRadius: const BorderRadius.all(Radius.circular(14)),
+                                  borderRadius: BorderRadius.all(Radius.circular(14)),
                                 ),
                                 alignment: Alignment.center,
                                 child: Icon(
@@ -858,7 +858,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                               icon: Container(
                                 decoration: const BoxDecoration(
                                   color: Color(0xFF94A3B8),
-                                  borderRadius: const BorderRadius.all(Radius.circular(14)),
+                                  borderRadius: BorderRadius.all(Radius.circular(14)),
                                 ),
                                 alignment: Alignment.center,
                                 child: Icon(
@@ -900,7 +900,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
           height: SLResponsive.dp(compact ? 8 : 9, screenWidth),
           decoration: const BoxDecoration(
             color: Color(0xFFD81B60),
-            borderRadius: const BorderRadius.all(Radius.circular(14)),
+            borderRadius: BorderRadius.all(Radius.circular(14)),
           ),
         ),
         SizedBox(width: SLResponsive.dp(10, screenWidth)),
@@ -1369,7 +1369,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                   width: SLResponsive.dp(compact ? 52 : 58, screenWidth),
                   height: SLResponsive.dp(compact ? 52 : 58, screenWidth),
                   decoration: const BoxDecoration(
-                    borderRadius: const BorderRadius.all(Radius.circular(14)),
+                    borderRadius: BorderRadius.all(Radius.circular(14)),
                     boxShadow: [
                       BoxShadow(
                         color: Color(0x1A000000),

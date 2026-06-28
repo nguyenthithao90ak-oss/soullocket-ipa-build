@@ -18,7 +18,7 @@ import 'package:soullocket_app/widgets/sensitive_content_guard.dart';
 import 'auth_service.dart';
 import 'security_flow_guard.dart';
 import 'settings_sync_service.dart';
-import 'package:soullocket_app/utils/core/sl_theme.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'offline_cache_service.dart';

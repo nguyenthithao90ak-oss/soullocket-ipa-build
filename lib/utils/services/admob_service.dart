@@ -615,7 +615,7 @@ class AdMobService {
       return false;
     }
 
-    // Cách 5 tiếng mới được hiện App Open Ad 1 lần
+    // Cách 2 tiếng mới được hiện App Open Ad 1 lần
     final lastShownMs = prefs.getInt(_appOpenLastShownDatePrefsKey) ?? 0;
     final nowMs = DateTime.now().millisecondsSinceEpoch;
 
@@ -623,9 +623,9 @@ class AdMobService {
       return true; // Lần đầu tiên
     }
 
-    // 1 tiếng = 1 * 60 * 60 * 1000 ms
+    // 2 tiếng = 2 * 60 * 60 * 1000 ms
     final hoursDiff = (nowMs - lastShownMs) / (1000 * 60 * 60);
-    if (hoursDiff >= 1) {
+    if (hoursDiff >= 2) {
       return true;
     }
 

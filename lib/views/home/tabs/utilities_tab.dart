@@ -46,6 +46,7 @@ import '../../utilities/sticker_library_screen.dart';
 import '../../utilities/utility_sticker_icon.dart';
 import '../../utilities/health_screen.dart';
 import '../../utilities/local_album_screen.dart';
+import '../../utilities/soul_events/soul_events_screen.dart';
 import 'package:soullocket_app/core/sl_route.dart';
 
 // import '../../utils/sl_notice.dart';
@@ -591,6 +592,9 @@ class _UtilitiesTabState extends State<UtilitiesTab>
         break;
       case 'health':
         screen = HealthScreen(houseId: houseId);
+        break;
+      case 'soul_events':
+        screen = const SoulEventsScreen();
         break;
     }
     if (screen != null) {

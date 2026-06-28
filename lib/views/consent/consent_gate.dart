@@ -324,41 +324,7 @@ class _ConsentGateState extends State<ConsentGate> {
     );
   }
 
-  Future<bool?> _showTosDialog() {
-    return _showConsentDialog(
-      title: context.tr('consent_iukhonsdng_b931f0'),
-      subtitle:
-          context.tr('consent_trckhivoap_a78836'),
-      actionLabel: context.tr('consent_xemchititi_eda09f'),
-      assetPath: 'assets/docs/terms.html',
-      checkboxLabel:
-          context.tr('consent_ticvngviiu_1cdf11'),
-      leadingIcon: Icons.gavel_rounded,
-      accent: _accentRose,
-      highlightItems: [
-        _ConsentHighlight(
-          icon: Icons.verified_user_rounded,
-          title: context.tr('consent_quynvtrchn_bb2554'),
-          description:
-              context.tr('consent_lmrtrchnhi_ce82e7'),
-        ),
-        _ConsentHighlight(
-          icon: Icons.groups_rounded,
-          title: context.tr('consent_quytccngng_8862e1'),
-          description:
-              context.tr('consent_nuccnguynt_1015f9'),
-        ),
-        _ConsentHighlight(
-          icon: Icons.workspace_premium_rounded,
-          title: context.tr('consent_provdchvs_00f86a'),
-          description:
-              context.tr('consent_giithchcch_1cbbe5'),
-        ),
-      ],
-    );
-  }
-
-  Future<bool?> _showPrivacyDialog() {
+Future<bool?> _showPrivacyDialog() {
     return _showConsentDialog(
       title: context.tr('consent_chnhschbom_98b319'),
       subtitle:

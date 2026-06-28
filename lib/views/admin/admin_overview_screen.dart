@@ -51,7 +51,6 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
 
     try {
       final results = await Future.wait([
-        _db.child('houses').get().timeout(const Duration(seconds: 8)),
         FirebaseFirestore.instance.collection('reports').count().get().timeout(const Duration(seconds: 8)),
         FirebaseFirestore.instance.collection('social_posts').count().get().timeout(const Duration(seconds: 8)),
         _db.child('support_tickets').get().timeout(const Duration(seconds: 8)),
@@ -59,11 +58,11 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
         _db.child(AppConfig.communityMaintenanceModePath).get().timeout(const Duration(seconds: 5)),
       ]);
 
-      final snap0 = results[0] as DataSnapshot;
-      final snap2 = results[2] as AggregateQuerySnapshot;
-      final snap3 = results[3] as DataSnapshot;
+      final snap0 = results[0] as AggregateQuerySnapshot;
+      final snap1 = results[1] as AggregateQuerySnapshot;
+      final snap2 = results[2] as DataSnapshot;
 
-      final supportRaw = snap3.value;
+      final supportRaw = snap2.value;
       final supportMap = supportRaw is Map
           ? Map<dynamic, dynamic>.from(supportRaw)
           : <dynamic, dynamic>{};
@@ -79,32 +78,17 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
         unreadTickets += (item['unread_admin'] as num?)?.toInt() ?? 0;
       });
 
-      var banned = 0;
-      var vip = 0;
-      final housesRaw = snap0.value;
-      if (housesRaw is Map) {
-        final nowTs = DateTime.now().millisecondsSinceEpoch;
-        housesRaw.forEach((key, value) {
-          if (value is Map) {
-            if (value['isBanned'] == true) banned++;
-            final proUntil =
-                int.tryParse(value['proUntil']?.toString() ?? '0') ?? 0;
-            if (proUntil > nowTs) vip++;
-          }
-        });
-      }
-
       if (!mounted) return;
       setState(() {
-        _totalHouses = snap0.children.length;
-        _bannedHouses = banned;
-        _vipHouses = vip;
-        _totalReports = (results[1] as AggregateQuerySnapshot).count ?? 0;
-        _totalFeeds = snap2.count ?? 0;
+        _totalHouses = -1; // Removed for optimization
+        _bannedHouses = -1;
+        _vipHouses = -1;
+        _totalReports = snap0.count ?? 0;
+        _totalFeeds = snap1.count ?? 0;
         _totalSupportTickets = totalTickets;
         _unreadSupportTickets = unreadTickets;
-        _isMaintenanceMode = (results[4] as DataSnapshot).value == true;
-        _isCommunityMaintenanceMode = (results[5] as DataSnapshot).value == true;
+        _isMaintenanceMode = (results[3] as DataSnapshot).value == true;
+        _isCommunityMaintenanceMode = (results[4] as DataSnapshot).value == true;
         _lastUpdatedAt = DateTime.now();
         _errorText = null;
       });

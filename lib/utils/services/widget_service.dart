@@ -18,6 +18,8 @@ import 'house_service.dart';
 import 'notification_service.dart';
 import 'daily_quest_service.dart';
 import 'package:soullocket_app/utils/services/health_cycle_service.dart';
+import 'soul_event_service.dart';
+import '../../models/soul_event.dart';
 
 class WidgetService {
   static const String appGroupId = AppConfig.iOSAppGroupId;
@@ -31,6 +33,9 @@ class WidgetService {
   static const String androidWidgetCalendarName = 'WidgetCalendarProvider';
   static const String qualifiedAndroidWidgetCalendarName =
       'com.soullocket.app.WidgetCalendarProvider';
+  static const String androidWidgetSoulEventName = 'WidgetSoulEventProvider';
+  static const String qualifiedAndroidWidgetSoulEventName =
+      'com.soullocket.app.WidgetSoulEventProvider';
   static const String defaultWidgetStyleKey = 'classic';
   static const String defaultHeartStyleKey = '❤️';
   static const Set<String> _supportedHeartStyleKeys = <String>{
@@ -1204,6 +1209,99 @@ class WidgetService {
     final houseId = await HouseService().getCurrentHouseId();
     if (houseId != null && houseId.isNotEmpty) {
       await syncCalendarWidgetData(houseId: houseId);
+    }
+  }
+
+  static Future<void> syncSoulEventWidgetData({
+    required String houseId,
+  }) async {
+    if (kIsWeb) return;
+    await ensureInitialized();
+
+    try {
+      final service = SoulEventService();
+      final events = await service.getEvents(houseId);
+      
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      
+      SoulEvent? topEvent;
+      int minDays = 99999;
+      
+      for (final event in events) {
+        if (!event.isPinned) continue;
+        
+        final nextDate = event.calculateNextOccurrence(today);
+        if (nextDate != null) {
+          final diff = nextDate.difference(today).inDays;
+          if (diff >= 0 && diff < minDays) {
+            minDays = diff;
+            topEvent = event;
+          }
+        }
+      }
+
+      // Fallback: nearest upcoming event if no pinned event
+      if (topEvent == null && events.isNotEmpty) {
+        for (final event in events) {
+          final nextDate = event.calculateNextOccurrence(today);
+          if (nextDate != null) {
+            final diff = nextDate.difference(today).inDays;
+            if (diff >= 0 && diff < minDays) {
+              minDays = diff;
+              topEvent = event;
+            }
+          }
+        }
+      }
+
+      if (topEvent != null) {
+        final nextDate = topEvent.calculateNextOccurrence(today)!;
+        final isToday = nextDate.isAtSameMomentAs(today);
+        
+        await _saveWidgetDataIfChanged('se_title', topEvent.title);
+        await _saveWidgetDataIfChanged('se_date', 
+            '${nextDate.day.toString().padLeft(2, '0')}/${nextDate.month.toString().padLeft(2, '0')}/${nextDate.year}');
+        
+        if (isToday) {
+          await _saveWidgetDataIfChanged('se_days', 'HÔM NAY');
+          await _saveWidgetDataIfChanged('se_label', '🎉');
+        } else {
+          await _saveWidgetDataIfChanged('se_days', minDays.toString());
+          await _saveWidgetDataIfChanged('se_label', 'ngày nữa');
+        }
+        
+        final colorHex = topEvent.colorHex.isNotEmpty ? topEvent.colorHex : '#FF4D94';
+        await _saveWidgetDataIfChanged('se_color', colorHex);
+      } else {
+        await _saveWidgetDataIfChanged('se_title', 'Sự kiện & Kỷ niệm');
+        await _saveWidgetDataIfChanged('se_date', '--/--/----');
+        await _saveWidgetDataIfChanged('se_days', '0');
+        await _saveWidgetDataIfChanged('se_label', 'ngày nữa');
+        await _saveWidgetDataIfChanged('se_color', '#FF4D94');
+      }
+
+      if (Platform.isAndroid) {
+        await HomeWidget.updateWidget(
+          androidName: androidWidgetSoulEventName,
+          qualifiedAndroidName: qualifiedAndroidWidgetSoulEventName,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error syncing soul event widget: \${AppErrorMapper.resolve(e).message}');
+    }
+  }
+
+  static Future<void> requestPinSoulEventWidget() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    await ensureInitialized(forceUpdate: true);
+    await HomeWidget.requestPinWidget(
+      androidName: androidWidgetSoulEventName,
+      qualifiedAndroidName: qualifiedAndroidWidgetSoulEventName,
+    );
+    final houseId = await HouseService().getCurrentHouseId();
+    if (houseId != null && houseId.isNotEmpty) {
+      await syncSoulEventWidgetData(houseId: houseId);
     }
   }
 }

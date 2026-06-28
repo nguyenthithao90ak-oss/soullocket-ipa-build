@@ -259,6 +259,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                           ? ClipRRect(
                               borderRadius: SLRadius.mdAll,
                               child: CachedNetworkImage(
+                                cacheManager: AppCacheManager.instance,
                                 memCacheWidth: imageCacheWidth,
                                 imageUrl: msg.text,
                                 width: effectiveImageSize,

@@ -26,7 +26,6 @@ import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart';
 import 'package:soullocket_app/utils/services/soul_merge_service.dart';
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
@@ -2177,7 +2176,6 @@ class _CountdownQuickCustomizeSheetContent extends StatefulWidget {
 class _CountdownQuickCustomizeSheetContentState
     extends State<_CountdownQuickCustomizeSheetContent> {
   double? _tempCountdownSize;
-  bool? _localHomeShowTimer;
   bool _isUploadingBg = false;
   double? _bgUploadProgress;
   String? _unlockingStyleKey;
@@ -3337,23 +3335,10 @@ class _CountdownQuickCustomizeSheetContentState
                   },
                 ),
                 buildTimerSection(
-                  showTimer: _localHomeShowTimer ?? (widget.homeState._houseSettings?.containsKey('homeShowTimer') == true
-                      ? (widget.homeState._houseSettings!['homeShowTimer'] == true || widget.homeState._houseSettings!['homeShowTimer'] == 'true')
-                      : false),
+                  showTimer: uiState.homeShowTimer,
                   onToggle: (val) async {
                     HapticFeedback.selectionClick();
-                    setState(() {
-                      _localHomeShowTimer = val;
-                    });
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setBool('il_home_show_timer', val);
-                    final houseId = (widget.homeState._houseId ?? '').trim();
-                    if (houseId.isNotEmpty) {
-                      await widget.homeState._dbRef.child('houses/$houseId/settings').update({
-                        'homeShowTimer': val,
-                        'updatedAt': ServerValue.timestamp,
-                      });
-                    }
+                    await UiPrefs.setHomeShowTimer(val);
                   },
                 ),
                 const SizedBox(height: 12),

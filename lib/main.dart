@@ -163,7 +163,7 @@ void main() {
     FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
     _configureRenderingDefaults();
     await _configureSystemUiForEdgeToEdge();
-    GoogleFonts.config.allowRuntimeFetching = !kIsWeb;
+    GoogleFonts.config.allowRuntimeFetching = true;
 
     // Giữ dọc trên mobile; riêng macOS không khóa để cho phép xoay/ngang.
     if (!kIsWeb && defaultTargetPlatform != TargetPlatform.macOS) {

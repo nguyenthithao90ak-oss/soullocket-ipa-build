@@ -109,11 +109,7 @@ extension _MainHomeDerivedStateHelper on _MainHomeTabState {
             ? (_houseSettings!['homeShowHouseName'] == true ||
                 _houseSettings!['homeShowHouseName'] == 'true')
             : false;
-    final savedHomeShowTimer =
-        _houseSettings?.containsKey('homeShowTimer') == true
-            ? (_houseSettings!['homeShowTimer'] == true ||
-                _houseSettings!['homeShowTimer'] == 'true')
-            : false;
+    final savedHomeShowTimer = uiPrefs.homeShowTimer;
 
     return _MainHomeBodyViewData(
       isSingle: isSingle,

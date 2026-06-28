@@ -852,15 +852,21 @@ class _CountdownModeCircle extends StatelessWidget {
         height: resolvedSize,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
+          color: styleData.outerColor,
           gradient: styleData.outerGradient,
           border: styleData.outerBorder,
           boxShadow: styleData.shadows,
         ),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: (styleData.outerColor != null ||
+                  styleData.outerGradient != null ||
+                  styleData.outerBorder != null)
+              ? const EdgeInsets.all(14)
+              : EdgeInsets.zero,
           child: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
+              color: styleData.innerColor,
               gradient: styleData.innerGradient,
               border: styleData.innerBorder,
             ),

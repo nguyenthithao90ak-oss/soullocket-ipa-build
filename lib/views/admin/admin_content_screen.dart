@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import 'package:firebase_database/firebase_database.dart';
 import '../../utils/services/auth_service.dart';
 import '../../utils/app_error_mapper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

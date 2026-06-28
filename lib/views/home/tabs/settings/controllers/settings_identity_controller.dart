@@ -106,7 +106,6 @@ class SettingsIdentityController {
 
     await dbRef.child('houses/${draft.houseId}/settings').update({
       'homeShowHouseName': draft.homeShowHouseName,
-      'homeShowTimer': draft.homeShowTimer,
     });
 
     if (draft.isHouseNameChanged) {

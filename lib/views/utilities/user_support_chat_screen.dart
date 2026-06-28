@@ -1051,10 +1051,8 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           final isSelected = _selectedTopicId == topic.id;
           return GestureDetector(
             onTap: () {
-              if (_isSending || _selectedTopicId == topic.id) return;
-              setState(() {
-                _selectedTopicId = topic.id;
-              });
+              if (_isSending) return;
+              unawaited(_send(menuId: topic.id, displayMessage: topic.chipLabel));
             },
             child: Container(
               constraints: const BoxConstraints(minHeight: 36),
@@ -1542,6 +1540,8 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                     enabled: canSend,
                     minLines: 1,
                     maxLines: 8,
+                    maxLength: 1000,
+                    buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
                     textInputAction: TextInputAction.send,
                     onSubmitted: canSend ? (_) => _send() : null,
                     style: SLTheme.quicksand(

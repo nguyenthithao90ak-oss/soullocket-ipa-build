@@ -65,7 +65,7 @@ class DiaryMemoryController extends ChangeNotifier {
   }
 
   static const int _webMemoryCacheLimit = 80;
-  static const int _appMemoryCacheLimit = 200;
+  static const int _appMemoryCacheLimit = 50;
   static const int _memoryUploadConcurrency = 3;
   static const Duration _memoryDownloadCacheTtl = Duration(hours: 18);
   static const Color _diaryPinkDeep = Color(0xFFD81B60);
@@ -384,6 +384,20 @@ class DiaryMemoryController extends ChangeNotifier {
     final photos =
         _preparedMemoryFeed?.photos ?? const <Map<String, dynamic>>[];
     if (photos.isEmpty) {
+      return 0;
+    }
+
+    int validPhotoCount = 0;
+    for (final photo in photos) {
+      final id = photo['id'] as String?;
+      if (id != null && id.isNotEmpty) {
+        validPhotoCount++;
+      }
+    }
+
+    if (validPhotoCount > 0 && _selectedMemories.length >= validPhotoCount) {
+      // Đã chọn toàn bộ, ấn lần nữa thì hủy toàn bộ
+      exitSelectionMode();
       return 0;
     }
 
@@ -745,18 +759,15 @@ class DiaryMemoryController extends ChangeNotifier {
         highlights: highlights,
       ));
 
-      for (int i = 0; i < group.items.length; i += 3) {
-        final end = (i + 3 < group.items.length) ? i + 3 : group.items.length;
-        flattenedItems.add((
-          isHeader: false,
-          date: null,
-          dateString: null,
-          totalPhotos: null,
-          photosRow: group.items.sublist(i, end),
-          groupPhotos: null,
-          highlights: const <Map<String, String>>[],
-        ));
-      }
+      flattenedItems.add((
+        isHeader: false,
+        date: null,
+        dateString: null,
+        totalPhotos: null,
+        photosRow: group.items, // Pass all photos for the Masonry grid
+        groupPhotos: null,
+        highlights: const <Map<String, String>>[],
+      ));
     }
 
     return flattenedItems;

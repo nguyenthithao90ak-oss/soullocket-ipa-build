@@ -8,7 +8,6 @@ import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'dart:io';
 
 import '../../../models/social_post.dart';
@@ -17,6 +16,7 @@ import '../../ui_prefs.dart';
 import '../../visitors/visitor_profile_screen.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../../core/sl_theme.dart';
+import '../../../utils/app_cache_manager.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../utils/app_error_mapper.dart';
 

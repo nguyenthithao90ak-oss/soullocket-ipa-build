@@ -118,7 +118,7 @@ class _SingleMatchSettingsScreenState extends State<SingleMatchSettingsScreen> {
           TextButton(
             onPressed: _saveSettings,
             child: Text(
-              L10nService().translate('core_save'),
+              'Lưu',
               style: SLTypography.labelLarge.copyWith(color: SLColors.primary),
             ),
           ),
