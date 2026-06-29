@@ -88,7 +88,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       return 'Chưa tải được dữ liệu. Vui lòng thử lại sau ít phút hoặc kiểm tra kết nối mạng.';
     }
 
-    return 'Tính năng này chưa khả dụng trong bản phát hành hiện tại.';
+    return 'Cửa hàng đã kết nối thành công.';
   }
 
   List<ProductDetails> get _sortedProducts {
@@ -1179,7 +1179,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   }
 
   Widget _buildProductSection() {
-    if (_sortedProducts.isEmpty) {
+    if (_isLoading) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 24),
@@ -1201,6 +1201,55 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                   color: Colors.white70,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_sortedProducts.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                color: Color(0xFFF9C15A),
+                size: 32,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                _storeHint,
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _isLoading = true;
+                  });
+                  _loadData();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF9C15A),
+                  foregroundColor: const Color(0xFF1E1124),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  'Thử lại',
+                  style: SLTheme.quicksand(fontWeight: FontWeight.bold),
                 ),
               ),
             ],

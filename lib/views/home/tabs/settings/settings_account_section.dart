@@ -1372,180 +1372,325 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               }
             }
 
-            return AlertDialog(
+            void confirmSubmitChange() {
+              showDialog(
+                context: dialogContext,
+                builder: (context) {
+                  return AlertDialog(
+                    backgroundColor: Colors.white,
+                    surfaceTintColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    title: Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Xác nhận đổi',
+                          style: SLTextStyles.quicksand(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF2C1B22),
+                          ),
+                        ),
+                      ],
+                    ),
+                    content: Text(
+                      'Bạn có chắc chắn muốn đổi sang "$customId"?\n\nHành động này chỉ được thực hiện MỘT LẦN DUY NHẤT và không thể hoàn tác.',
+                      style: SLTextStyles.quicksand(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF5C4F56),
+                        height: 1.4,
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text(
+                          'Huỷ',
+                          style: SLTextStyles.quicksand(
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF8C7381),
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          submitChange();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFD81B60),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(
+                          'Đổi mã ngay',
+                          style: SLTextStyles.quicksand(fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            }
+
+            return Dialog(
               backgroundColor: Colors.white,
               surfaceTintColor: Colors.transparent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              title: Row(
-                children: [
-                  const Icon(Icons.favorite_rounded, color: Color(0xFFD81B60)),
-                  const SizedBox(width: 10),
-                  Text(
-                    'Đổi mã nhà (Chỉ 1 lần)',
-                    style: SLTextStyles.quicksand(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF2C1B22),
-                    ),
-                  ),
-                ],
-              ),
-              content: SingleChildScrollView(
+              insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF0F5),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(Icons.maps_home_work_rounded, color: Color(0xFFD81B60), size: 32),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Đổi mã nhà',
+                                style: SLTextStyles.quicksand(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF2C1B22),
+                                ),
+                              ),
+                              Text(
+                                'Chỉ thực hiện 1 lần duy nhất',
+                                style: SLTextStyles.quicksand(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFFD81B60),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
                     Text(
-                      'Lưu ý: Bạn chỉ được thay đổi Mã Nhà (ID) duy nhất một lần. Cả hai thiết bị sẽ được tự động đồng bộ.',
+                      'Thiết bị của cả 2 bạn sẽ được tự động đồng bộ sang mã mới.',
                       style: SLTextStyles.quicksand(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                         color: const Color(0xFF7A6871),
                         height: 1.4,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF6FA),
-                        borderRadius: BorderRadius.circular(16),
+                        color: const Color(0xFFFAFAFA),
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(
+                          width: 2,
                           color: errorReason != null
-                              ? Colors.red.shade200
-                              : (isAvailable ? Colors.green.shade200 : const Color(0xFFFFD3E4)),
+                              ? Colors.red.shade300
+                              : (isAvailable ? Colors.green.shade400 : const Color(0xFFEEEEEE)),
                         ),
+                        boxShadow: [
+                          if (isAvailable)
+                            BoxShadow(
+                              color: Colors.green.withValues(alpha: 0.1),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          if (errorReason != null)
+                            BoxShadow(
+                              color: Colors.red.withValues(alpha: 0.1),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                        ],
                       ),
                       child: TextField(
                         controller: customIdCtrl,
                         maxLength: 20,
                         style: SLTextStyles.quicksand(
+                          fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: const Color(0xFF2C1B22),
                         ),
                         decoration: InputDecoration(
                           labelText: 'Nhập mã nhà mới',
                           labelStyle: SLTextStyles.quicksand(
+                            fontSize: 14,
                             fontWeight: FontWeight.w800,
                             color: const Color(0xFF8C7381),
                           ),
                           counterText: '',
                           border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          errorBorder: InputBorder.none,
+                          focusedErrorBorder: InputBorder.none,
                           suffixIcon: isChecking
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: Center(
-                                    child: SizedBox(
-                                      width: 14,
-                                      height: 14,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Color(0xFFD81B60),
-                                      ),
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: Color(0xFFD81B60),
                                     ),
                                   ),
                                 )
                               : (isAvailable
-                                  ? const Icon(Icons.check_circle_rounded, color: Colors.green)
+                                  ? const Icon(Icons.check_circle_rounded, color: Colors.green, size: 26)
                                   : (errorReason != null
-                                      ? const Icon(Icons.cancel_rounded, color: Colors.red)
+                                      ? const Icon(Icons.cancel_rounded, color: Colors.red, size: 26)
                                       : null)),
                         ),
                         onChanged: onIdChanged,
                       ),
                     ),
                     if (isAvailable) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        'Mã nhà khả dụng và hợp lệ!',
-                        style: SLTextStyles.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.green.shade700,
-                        ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.verified_rounded, color: Colors.green, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Mã nhà khả dụng và hợp lệ!',
+                            style: SLTextStyles.quicksand(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.green.shade700,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                     if (errorReason != null) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        errorReason!,
-                        style: SLTextStyles.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.red.shade700,
-                        ),
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.error_outline_rounded, color: Colors.red.shade600, size: 16),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              errorReason!,
+                              style: SLTextStyles.quicksand(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.red.shade700,
+                                height: 1.3,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                     if (suggestions.isNotEmpty) ...[
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       Text(
                         'Gợi ý cho bạn:',
                         style: SLTextStyles.quicksand(
-                          fontSize: 12,
+                          fontSize: 13,
                           fontWeight: FontWeight.w900,
                           color: const Color(0xFF7A6871),
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
+                        spacing: 8,
+                        runSpacing: 8,
                         children: suggestions.map((sugg) {
                           return ActionChip(
                             label: Text(
                               sugg,
                               style: SLTextStyles.quicksand(
-                                fontSize: 11,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w900,
                                 color: const Color(0xFFD81B60),
                               ),
                             ),
                             backgroundColor: const Color(0xFFFFF0F5),
-                            side: const BorderSide(color: Color(0xFFFFD3E4)),
+                            side: const BorderSide(color: Color(0xFFFFD3E4), width: 1.5),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(12),
                             ),
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                             onPressed: () => selectSuggestion(sugg),
                           );
                         }).toList(),
                       ),
                     ],
+                    const SizedBox(height: 28),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: isSaving ? null : () => Navigator.of(dialogContext).pop(),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                            child: Text(
+                              'Huỷ',
+                              style: SLTextStyles.quicksand(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF8C7381),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton(
+                            onPressed: (isAvailable && !isSaving && !isChecking) ? confirmSubmitChange : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFD81B60),
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: const Color(0xFFF0F0F0),
+                              disabledForegroundColor: const Color(0xFFAAAAAA),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                            child: isSaving
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    'Tiếp tục',
+                                    style: SLTextStyles.quicksand(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: isSaving ? null : () => Navigator.of(dialogContext).pop(),
-                  child: Text(
-                    'Huỷ',
-                    style: SLTextStyles.quicksand(fontWeight: FontWeight.w900),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: (isAvailable && !isSaving && !isChecking) ? submitChange : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD81B60),
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: Colors.grey.shade200,
-                    disabledForegroundColor: Colors.grey.shade400,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: isSaving
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          'Xác nhận',
-                          style: SLTextStyles.quicksand(fontWeight: FontWeight.w900),
-                        ),
-                ),
-              ],
             );
           },
         );
