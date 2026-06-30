@@ -27,18 +27,18 @@ class MemoryLimits {
     final shareFreeMaxItems = _readLimitInt(
       data['shareFreeMaxItems'],
       fallbackMemoryLimits.shareFreeMaxItems,
-    ).clamp(1, 500).toInt();
+    ).clamp(1, 999).toInt();
 
     final shareProMaxItems = _readLimitInt(
       data['shareProMaxItems'],
       fallbackMemoryLimits.shareProMaxItems,
-    ).clamp(1, 1000).toInt();
+    ).clamp(1, 999).toInt();
 
     return MemoryLimits(
       shareMaxItems: _readLimitInt(
         data['shareMaxItems'],
         fallbackMemoryLimits.shareMaxItems,
-      ).clamp(1, 1000).toInt(),
+      ).clamp(1, 999).toInt(),
       shareFreeMaxItems: shareFreeMaxItems,
       shareProMaxItems: shareProMaxItems,
       shareDefaultTtlDays: _readLimitInt(
@@ -49,11 +49,11 @@ class MemoryLimits {
       imageFreeDailyLimit: _readLimitInt(
         data['imageFreeDailyLimit'],
         fallbackMemoryLimits.imageFreeDailyLimit,
-      ).clamp(0, 1000).toInt(),
+      ).clamp(0, 999).toInt(),
       imageProDailyLimit: _readLimitInt(
         data['imageProDailyLimit'],
         fallbackMemoryLimits.imageProDailyLimit,
-      ).clamp(0, 1000).toInt(),
+      ).clamp(0, 999).toInt(),
     );
   }
 
@@ -67,13 +67,13 @@ class MemoryLimits {
 }
 
 const MemoryLimits fallbackMemoryLimits = MemoryLimits(
-  shareMaxItems: 24,
-  shareFreeMaxItems: 50,
-  shareProMaxItems: 200,
+  shareMaxItems: 999,
+  shareFreeMaxItems: 999,
+  shareProMaxItems: 999,
   shareDefaultTtlDays: 7,
   shareMaxTtlDays: 183,
-  imageFreeDailyLimit: 10,
-  imageProDailyLimit: 30,
+  imageFreeDailyLimit: 999,
+  imageProDailyLimit: 999,
 );
 
 int _readLimitInt(Object? value, int fallback) {

@@ -255,7 +255,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       'il_rec_house_affinity',
       'il_rec_mood_affinity',
       'il_interaction_metric_gate_v1',
-      'il_first_setup_guide_pending_',
+      'il_first_setup_guide_pending_v2_',
     };
 
     const keepPrefixes = <String>[
@@ -299,7 +299,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       'il_settings_last_cloud_backup_at',
       'il_settings_restore_notice_pending',
       'il_settings_restore_notice_uid',
-      'il_new_user_pro_trial_notice',
+      'il_new_user_welcome_v2',
       'il_diary_privacy_seen_',
       'il_performance_tier_preference',
       'il_countdown_unlock_weekly_expiry_v2',

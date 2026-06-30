@@ -136,6 +136,14 @@ class _WishlistScreenState extends State<WishlistScreen> {
     final text = _itemController.text.trim();
     if (text.isEmpty) return;
 
+    if (_data != null && _data!.length >= 50) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Danh sách điều ước đã đạt giới hạn (tối đa 50 mục). Vui lòng xoá bớt trước khi thêm mới.'),
+        backgroundColor: SLColors.danger,
+      ));
+      return;
+    }
+
     final priceText = _priceController.text.replaceAll(RegExp(r'[^0-9]'), '');
     final price = int.tryParse(priceText) ?? 0;
     final prefs = OfflineCacheService.getPrefsSync() ??
@@ -342,6 +350,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 child: _buildWishTextField(
                   controller: _itemController,
                   hintText: context.tr('util_tnmn_945dda'),
+                  maxLength: 80,
                 ),
               ),
               SLSpacing.w8,
@@ -350,6 +359,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   controller: _priceController,
                   hintText: context.tr('util_gi_072c1a'),
                   keyboardType: TextInputType.number,
+                  maxLength: 12,
                 ),
               ),
               SLSpacing.w8,
@@ -386,6 +396,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     required TextEditingController controller,
     required String hintText,
     TextInputType? keyboardType,
+    int? maxLength,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -396,6 +407,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
+        maxLength: maxLength,
         cursorColor: SLColors.primary,
         style: SLTheme.quicksand(
           color: SLColors.textPrimary,
@@ -408,6 +420,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
             fontWeight: FontWeight.w700,
           ),
           border: InputBorder.none,
+          counterText: "",
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
         ),

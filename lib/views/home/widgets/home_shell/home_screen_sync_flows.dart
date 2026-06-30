@@ -137,7 +137,12 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
           countdownBottomLabel: hasCountdownBottomLabel
               ? settings.countdownBottomLabel.trim()
               : currentUi.countdownBottomLabel,
-          fontKey: currentUi.fontKey,
+          fontKey: () {
+            if (!source.containsKey('font')) return currentUi.fontKey;
+            final f = settings.font.trim().toLowerCase();
+            if (f.isEmpty || f.contains('quicksand')) return 'quicksand';
+            return f;
+          }(),
           homeBlockToneKey: !source.containsKey('homeBlockTone') ||
                   settings.homeBlockTone.trim().isEmpty
               ? currentUi.homeBlockToneKey
@@ -159,6 +164,7 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
             nextUi.countdownStyleKey != currentUi.countdownStyleKey ||
             nextUi.countdownTopLabel != currentUi.countdownTopLabel ||
             nextUi.countdownBottomLabel != currentUi.countdownBottomLabel ||
+            nextUi.fontKey != currentUi.fontKey ||
             nextUi.homeBlockToneKey != currentUi.homeBlockToneKey ||
             nextUi.transparentMode != currentUi.transparentMode ||
             nextUi.customBackgroundUrl != currentUi.customBackgroundUrl;

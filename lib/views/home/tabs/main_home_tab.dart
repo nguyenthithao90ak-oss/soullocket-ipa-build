@@ -230,6 +230,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       ValueNotifier<String?>(null);
   final ValueNotifier<Map<String, dynamic>?> _homePartnerBatteryNotifier =
       ValueNotifier<Map<String, dynamic>?>(null);
+  final ValueNotifier<Map<String, dynamic>?> _homeMyBatteryNotifier =
+      ValueNotifier<Map<String, dynamic>?>(null);
   int _wishIndex = -1;
   int _tipIndex = -1;
   bool _hideSettingsButtonUntilRestart = false;

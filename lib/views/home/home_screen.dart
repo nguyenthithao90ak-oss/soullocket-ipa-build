@@ -13,7 +13,6 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../../utils/services/offline_cache_service.dart';
-import 'package:soullocket_app/models/house_settings.dart';
 
 import '../../core/sl_route.dart';
 import '../../core/sl_theme.dart';

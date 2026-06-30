@@ -474,6 +474,7 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
     required this.isDark,
     this.centerIconType = 'heart',
     this.onCenterIconChanged,
+    this.onCenterIconTap,
     this.onLeftAvatarTap,
     this.onRightAvatarTap,
     this.onRightAvatarChatTap,
@@ -490,6 +491,7 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
   final bool isDark;
   final String centerIconType;
   final ValueChanged<String>? onCenterIconChanged;
+  final VoidCallback? onCenterIconTap;
   final VoidCallback? onLeftAvatarTap;
   final VoidCallback? onRightAvatarTap;
   final VoidCallback? onRightAvatarChatTap;
@@ -543,17 +545,7 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: onCenterIconChanged == null
-                  ? null
-                  : () async {
-                      final selected = await _showCountdownModeCenterIconPicker(
-                        context,
-                        selectedType: centerIconType,
-                      );
-                      if (selected != null) {
-                        onCenterIconChanged!(selected);
-                      }
-                    },
+              onTap: onCenterIconTap,
               onLongPress: onCenterIconChanged == null
                   ? null
                   : () async {

@@ -276,14 +276,20 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
           defaultTopLabel,
       bottomLabel: prefs.getString(_prefKey('bottom_label', scope: scope)) ??
           defaultBottomLabel,
-      nameU1:
-          prefs.getString(_prefKey('name_u1', scope: scope)) ?? defaultNameU1,
-      nameU2:
-          prefs.getString(_prefKey('name_u2', scope: scope)) ?? defaultNameU2,
-      avatarUrl1: prefs.getString(_prefKey('avatar_1', scope: scope)) ??
-          widget.avatarUrl1.trim(),
-      avatarUrl2: prefs.getString(_prefKey('avatar_2', scope: scope)) ??
-          widget.avatarUrl2.trim(),
+      nameU1: scope == _selfSpaceHouseId
+          ? defaultNameU1
+          : (prefs.getString(_prefKey('name_u1', scope: scope)) ?? defaultNameU1),
+      nameU2: scope == _selfSpaceHouseId
+          ? defaultNameU2
+          : (prefs.getString(_prefKey('name_u2', scope: scope)) ?? defaultNameU2),
+      avatarUrl1: scope == _selfSpaceHouseId
+          ? widget.avatarUrl1.trim()
+          : (prefs.getString(_prefKey('avatar_1', scope: scope)) ??
+              widget.avatarUrl1.trim()),
+      avatarUrl2: scope == _selfSpaceHouseId
+          ? widget.avatarUrl2.trim()
+          : (prefs.getString(_prefKey('avatar_2', scope: scope)) ??
+              widget.avatarUrl2.trim()),
       customBackgroundUrl: prefs.getString(_prefKey('bg_url', scope: scope)) ??
           ui.customBackgroundUrl.trim(),
       centerIconType:

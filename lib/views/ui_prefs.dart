@@ -139,8 +139,8 @@ class UiPrefsState {
     avatarSizePx: 90,
     countdownSizePx: 400,
     avatarFrameKey: 'off',
-    // Default countdown visual: glass (kính mờ)
-    countdownStyleKey: 'glass',
+    // Default countdown visual: default (Cân bằng)
+    countdownStyleKey: 'default',
     countdownTopLabel: '',
     countdownBottomLabel: '',
     countdownTextColor: '',

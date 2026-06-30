@@ -34,9 +34,9 @@ class AppEntryAccessResolution {
 }
 
 class AppEntryAccessResolver {
-  static const Duration _prefsTimeout = Duration(seconds: 3);
-  static const Duration _adminTimeout = Duration(seconds: 5);
-  static const Duration _remoteTimeout = Duration(seconds: 5);
+  static const Duration _prefsTimeout = Duration(seconds: 8);
+  static const Duration _adminTimeout = Duration(seconds: 8);
+  static const Duration _remoteTimeout = Duration(seconds: 12);
 
   AppEntryAccessResolver({
     AuthService? authService,
@@ -120,7 +120,16 @@ class AppEntryAccessResolver {
     }());
 
     final cachedHouseId = prefs?.getString('il_house_id');
-    final cachedAuthUid = prefs?.getString('il_auth_uid');
+    var cachedAuthUid = prefs?.getString('il_auth_uid');
+
+    // Tự động gán lại il_auth_uid cho các máy cài phiên bản cũ bị thiếu
+    if (cachedHouseId != null &&
+        cachedHouseId.isNotEmpty &&
+        cachedAuthUid == null &&
+        userId != null) {
+      cachedAuthUid = userId;
+      unawaited(prefs?.setString('il_auth_uid', userId));
+    }
 
     if (cachedHouseId != null &&
         cachedHouseId.isNotEmpty &&

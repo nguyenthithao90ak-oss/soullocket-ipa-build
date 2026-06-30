@@ -215,6 +215,14 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     final text = _noteController.text.trim();
     if (text.isEmpty) return;
 
+    if (_cachedNotes.length >= 50) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Danh sách ghi chú đã đạt giới hạn (tối đa 50 ghi chú). Vui lòng xoá bớt trước khi thêm mới.'),
+        backgroundColor: SLColors.danger,
+      ));
+      return;
+    }
+
     final now = DateTime.now();
     await _dbRef.child('houses/${widget.houseId}/note').push().set({
       'a': widget.myName,
@@ -404,6 +412,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                     controller: _noteController,
                     maxLines: 3,
                     minLines: 1,
+                    maxLength: 200,
                     style: SLTheme.quicksand(
                       color: SLColors.textPrimary,
                       fontWeight: FontWeight.w800,
@@ -415,6 +424,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                         fontWeight: FontWeight.w700,
                       ),
                       border: InputBorder.none,
+                      counterText: "",
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 15,
                         vertical: 12,

@@ -512,27 +512,7 @@ class _CountdownModeEditorScreenState
     if (widget.isVipActive) {
       return true;
     }
-    final prefs = await SharedPreferences.getInstance();
-    final lastAdStr = prefs.getString('last_bg_ad_time');
-    var shouldShowAd = true;
-    if (lastAdStr != null) {
-      final lastAd = DateTime.tryParse(lastAdStr);
-      if (lastAd != null && DateTime.now().difference(lastAd).inMinutes < 20) {
-        shouldShowAd = false;
-      }
-    }
-    if (!shouldShowAd) {
-      return true;
-    }
-    final adSuccess = await AdMobService().showRewardedAd();
-    if (!mounted) {
-      return false;
-    }
-    if (!adSuccess) {
-      _showMessage(context.tr('home_cnxemqungc_370ee8'));
-      return false;
-    }
-    await prefs.setString('last_bg_ad_time', DateTime.now().toIso8601String());
+    await AdMobService().showInterstitialAd();
     return true;
   }
 

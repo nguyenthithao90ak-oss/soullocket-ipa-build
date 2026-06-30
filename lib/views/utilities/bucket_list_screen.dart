@@ -134,6 +134,19 @@ class _BucketListScreenState extends State<BucketListScreen>
   Future<void> _addItem() async {
     final text = _itemController.text.trim();
     if (text.isEmpty) return;
+
+    final currentSnap = await _dbRef.child('houses/${widget.houseId}/bucket').get();
+    if (currentSnap.exists && currentSnap.value is Map) {
+      final currentMap = currentSnap.value as Map;
+      if (currentMap.length >= 50) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Danh sách mong muốn đã đạt giới hạn (tối đa 50 mục). Vui lòng xoá bớt trước khi thêm mới.'),
+          backgroundColor: SLColors.danger,
+        ));
+        return;
+      }
+    }
+
     final now = DateTime.now();
     final labelAction = context.tr('util_thm1mcvobu_fc5d40');
     await _dbRef.child('houses/${widget.houseId}/bucket').push().set({
@@ -433,10 +446,12 @@ class _BucketListScreenState extends State<BucketListScreen>
                 color: SLTheme.textMain,
                 fontWeight: FontWeight.w700,
               ),
+              maxLength: 100,
               decoration: InputDecoration(
                 hintText: context.tr('util_iumunlmcng_a70228'),
                 hintStyle: SLTheme.quicksand(color: SLTheme.textLight),
                 border: InputBorder.none,
+                counterText: "",
                 contentPadding: EdgeInsets.zero,
               ),
               onSubmitted: (_) => _addItem(),

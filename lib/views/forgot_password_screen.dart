@@ -624,41 +624,43 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final isEnabled = onTap != null;
     final colors = isEnabled
         ? const [Color(0xFFD81B60), Color(0xFFFF5293), Color(0xFFFF8FB8)]
-        : const [Color(0xFFE8AFC4), Color(0xFFF1C3D3)];
+        : [
+            const Color(0xFFE8AFC4).withValues(alpha: 0.62),
+            const Color(0xFFF1C3D3).withValues(alpha: 0.62)
+          ];
 
-    return Opacity(
-      opacity: isEnabled ? 1 : 0.62,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: colors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.38),
-            width: 1.4,
-          ),
-          boxShadow: [
-            if (isEnabled)
-              BoxShadow(
-                color: colors.last.withValues(alpha: 0.20),
-                blurRadius: 24,
-                offset: const Offset(0, 12),
-              ),
-          ],
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: colors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(22),
-            onTap: onTap,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              alignment: Alignment.center,
-              child: busy
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: isEnabled ? 0.3 : 0.15),
+          width: 1.4,
+        ),
+        boxShadow: isEnabled
+            ? [
+                BoxShadow(
+                  color: colors.last.withValues(alpha: 0.20),
+                  blurRadius: 24,
+                  offset: const Offset(0, 12),
+                ),
+              ]
+            : [],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            alignment: Alignment.center,
+            child: busy
                   ? const SizedBox(
                       height: 22,
                       width: 22,
@@ -686,7 +688,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
           ),
         ),
-      ),
     );
   }
 

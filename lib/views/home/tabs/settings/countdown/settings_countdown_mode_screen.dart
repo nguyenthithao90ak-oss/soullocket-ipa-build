@@ -151,6 +151,7 @@ class _CountdownModeIndependentScreenState
   StreamSubscription<List<CountdownSpaceInfo>>? _countdownSpacesSub;
   StreamSubscription<List<CountdownSpaceDeleteRequestInfo>>?
       _countdownDeleteRequestsSub;
+  StreamSubscription<Map<String, dynamic>>? _interactiveEventsSub;
   Timer? _countdownDeleteEvaluationTimer;
 
   bool _singleMode = false;
@@ -179,6 +180,8 @@ class _CountdownModeIndependentScreenState
       <String, CountdownSpaceRequestInfo>{};
   final Map<String, CountdownSpaceRequestInfo> _incomingSpaceRequests =
       <String, CountdownSpaceRequestInfo>{};
+  final GlobalKey<TapHeartsOverlayState> _heartsKey =
+      GlobalKey<TapHeartsOverlayState>();
   final Map<String, CountdownSpaceInfo> _sharedSpaces =
       <String, CountdownSpaceInfo>{};
   final Map<String, CountdownSpaceDeleteRequestInfo> _deleteSpaceRequests =
@@ -201,6 +204,24 @@ class _CountdownModeIndependentScreenState
     unawaited(_setSystemUiVisible(true));
     unawaited(_loadSpaces());
     _listenCountdownSpaces();
+    if (widget.relationshipMode.trim() != 'single') {
+      _interactiveEventsSub = SoulMergeService().watchInteractiveEvents().listen((event) async {
+        if (!mounted || event.isEmpty) return;
+        final prefs = await SharedPreferences.getInstance();
+        final myRole = prefs.getString('il_role') ?? 'user1';
+        final sender = event['sender']?.toString();
+        if (sender == myRole) return;
+        
+        final type = event['type']?.toString();
+        if (type == 'photo_shot') {
+          final size = MediaQuery.of(context).size;
+          _heartsKey.currentState?.spawnLocalExplosion(
+            Offset(size.width / 2, size.height * 0.74),
+            count: 8,
+          );
+        }
+      });
+    }
     unawaited(_promptPendingSpaceAvatarRetryIfNeeded());
   }
 
@@ -210,6 +231,7 @@ class _CountdownModeIndependentScreenState
     _countdownRequestsSub?.cancel();
     _countdownSpacesSub?.cancel();
     _countdownDeleteRequestsSub?.cancel();
+    _interactiveEventsSub?.cancel();
     _countdownDeleteEvaluationTimer?.cancel();
     super.dispose();
   }
@@ -536,6 +558,17 @@ class _CountdownModeIndependentScreenState
                                       centerIconType: _centerIconType,
                                       onCenterIconChanged: (type) => unawaited(
                                           _updateCenterIconType(type)),
+                                      onCenterIconTap: () {
+                                        if (!_singleMode) {
+                                          unawaited(SoulMergeService().sendInteractiveEvent(type: 'photo_shot'));
+                                        }
+                                        final size = MediaQuery.of(context).size;
+                                        _heartsKey.currentState?.spawnLocalExplosion(
+                                          Offset(size.width / 2, size.height * 0.74),
+                                          count: 10,
+                                        );
+                                        HapticFeedback.mediumImpact();
+                                      },
                                       onLeftAvatarTap: () => unawaited(
                                         _changeSpaceAvatar(isLeft: true),
                                       ),
@@ -601,6 +634,12 @@ class _CountdownModeIndependentScreenState
                       ],
                     );
                   },
+                ),
+              ),
+              Positioned.fill(
+                child: TapHeartsOverlay(
+                  key: _heartsKey,
+                  style: 'basic',
                 ),
               ),
             ],

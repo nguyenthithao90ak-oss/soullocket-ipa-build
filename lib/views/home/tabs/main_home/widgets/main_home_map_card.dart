@@ -186,54 +186,74 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
               builder: (context, distanceText, _) {
                 return ValueListenableBuilder<Map<String, dynamic>?>(
                   valueListenable: _homePartnerBatteryNotifier,
-                  builder: (context, batteryInfo, _) {
-                    String displayText = distanceText;
-                    if (batteryInfo != null && !isSingle) {
-                      final pct = batteryInfo['level'] as int;
-                      final isCharging = batteryInfo['isCharging'] == true;
-                      final emoji = isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
-                      displayText = '$distanceText • $emoji $pct%';
-                    }
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Icon(
-                                isSingle
-                                    ? Icons.my_location_rounded
-                                    : Icons.route_rounded,
-                                color: const Color(0xFFD81B60),
-                                size: 16,
-                              ),
-                              SLSpacing.w8,
-                              Flexible(
-                                child: Text(
-                                  displayText,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: SLTheme.quicksand(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFF1E293B),
+                  builder: (context, partnerBattery, _) {
+                    return ValueListenableBuilder<Map<String, dynamic>?>(
+                      valueListenable: _homeMyBatteryNotifier,
+                      builder: (context, myBattery, _) {
+                        String displayText = distanceText;
+                        if (!isSingle) {
+                          final List<String> batteryTexts = [];
+                          
+                          if (myBattery != null) {
+                            final pct = myBattery['level'] as int;
+                            final isCharging = myBattery['isCharging'] == true;
+                            final emoji = isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                            batteryTexts.add('Bạn $emoji $pct%');
+                          }
+                          
+                          if (partnerBattery != null) {
+                            final pct = partnerBattery['level'] as int;
+                            final isCharging = partnerBattery['isCharging'] == true;
+                            final emoji = isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                            batteryTexts.add('Người ấy $emoji $pct%');
+                          }
+                          
+                          if (batteryTexts.isNotEmpty) {
+                            displayText = '$distanceText • ${batteryTexts.join(' • ')}';
+                          }
+                        }
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    isSingle
+                                        ? Icons.my_location_rounded
+                                        : Icons.route_rounded,
+                                    color: const Color(0xFFD81B60),
+                                    size: 16,
                                   ),
-                                ),
+                                  SLSpacing.w8,
+                                  Flexible(
+                                    child: Text(
+                                      displayText,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: SLTheme.quicksand(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w900,
+                                        color: const Color(0xFF1E293B),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          isSingle
-                              ? 'Bấm để xem\nvị trí hiện tại'
-                              : 'Bấm để xem\nbản đồ đầy đủ',
-                          textAlign: TextAlign.right,
-                          style: SLTheme.quicksand(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[500],
-                          ),
-                        ),
-                      ],
+                            ),
+                            Text(
+                              isSingle
+                                  ? 'Bấm để xem\nvị trí hiện tại'
+                                  : 'Bấm để xem\nbản đồ đầy đủ',
+                              textAlign: TextAlign.right,
+                              style: SLTheme.quicksand(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     );
                   },
                 );

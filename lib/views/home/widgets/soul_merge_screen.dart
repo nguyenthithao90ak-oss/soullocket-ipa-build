@@ -1268,11 +1268,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
     final presets = _isMerged ? presetsAfter : (showPresetsBefore ? presetsBefore : <String>[]);
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (_spamWarning != null)
             AnimatedContainer(
@@ -1502,6 +1500,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 3,
+                      minLines: 1,
+                      maxLength: 150,
+                      maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                      buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
+                      keyboardType: TextInputType.multiline,
+                      textInputAction: TextInputAction.newline,
                       decoration: InputDecoration(
                         hintText: 'Nhập tin nhắn tâm hồn...',
                         hintStyle: SLTheme.quicksand(
@@ -1515,7 +1520,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(vertical: 8),
                       ),
-                      onSubmitted: (_) => _sendCustomMessage(),
                     ),
                   ),
                 ),
@@ -1543,8 +1547,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             ),
           ),
         ],
-      ),
-    );
+      );
   }
   void _sendOverlaySyncPayload() {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;

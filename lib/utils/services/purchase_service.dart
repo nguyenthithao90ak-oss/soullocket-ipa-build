@@ -177,12 +177,12 @@ class VipAccessInfo {
   }
 
   int? get memoryVaultLimit {
-    if (!isVip) return 365;
-    return isLifetime ? 1000 : 500;
+    if (!isVip) return 999999;
+    return isLifetime ? 999999 : 999999;
   }
 
   int get dailyMemoryUploadLimit {
-    return isVip ? 30 : 10;
+    return isVip ? 999999 : 999999;
   }
 
   @override

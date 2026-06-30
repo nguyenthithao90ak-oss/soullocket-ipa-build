@@ -1353,7 +1353,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     _showToast('Đổi mã nhà thành công! Hệ thống đang tải lại...', success: true);
                     Future.delayed(const Duration(seconds: 1), () {
                       Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (_) => AppEntry()),
+                        MaterialPageRoute(builder: (_) => const AppEntry()),
                         (route) => false,
                       );
                     });

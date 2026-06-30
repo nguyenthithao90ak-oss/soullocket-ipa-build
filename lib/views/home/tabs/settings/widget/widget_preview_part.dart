@@ -1,4 +1,4 @@
-﻿part of '../../settings_tab.dart';
+part of '../../settings_tab.dart';
 
 extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
   ({List<Color> colors, Color textColor, Color borderColor, bool premium})
@@ -963,6 +963,163 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
             final diaryBlockGap =
                 showDiaryPreview ? (isCompact ? 4.0 : 6.0) : 6.0;
 
+            final isSoulEventStyle = _widgetPanelTabKey == 'soulevent';
+            if (isSoulEventStyle) {
+              final widgetHeight = (cardWidth * (isCompact ? 0.56 : 0.52))
+                  .clamp(176.0, 228.0)
+                  .toDouble();
+
+              return FutureBuilder<Map<String, String>>(
+                future: _loadSoulEventPreviewData(),
+                builder: (context, snapshot) {
+                  final data = snapshot.data ?? {
+                    'title': 'Chưa có sự kiện',
+                    'date': '--/--/----',
+                    'days': '0',
+                    'label': 'ngày nữa',
+                    'color': '#EC4899',
+                  };
+
+                  final colorHex = data['color']!;
+                  Color eventColor;
+                  try {
+                    final buffer = StringBuffer();
+                    if (colorHex.length == 6 || colorHex.length == 7) buffer.write('ff');
+                    buffer.write(colorHex.replaceFirst('#', ''));
+                    eventColor = Color(int.parse(buffer.toString(), radix: 16));
+                  } catch (_) {
+                    eventColor = const Color(0xFFEC4899);
+                  }
+
+                  final eventTitle = data['title']!;
+                  final eventDate = data['date']!;
+                  final eventDays = data['days']!;
+                  final eventLabel = data['label']!;
+
+                  return Center(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 850),
+                      curve: Curves.easeInOut,
+                      width: cardWidth,
+                      height: widgetHeight,
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(26),
+                        border: Border.all(
+                          color: eventColor.withValues(alpha: 0.35),
+                          width: 1.8,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: eventColor.withValues(alpha: 0.08),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            bottom: -30,
+                            right: -30,
+                            child: Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: eventColor.withValues(alpha: 0.05),
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              isCompact ? 16 : 20,
+                              16,
+                              isCompact ? 16 : 20,
+                              16,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFFF0F5),
+                                        borderRadius: BorderRadius.circular(12),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(alpha: 0.03),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Text(
+                                        '🎁',
+                                        style: TextStyle(fontSize: 20),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            eventTitle,
+                                            style: SLTheme.quicksand(
+                                              color: const Color(0xFF2C1B22),
+                                              fontSize: isCompact ? 16 : 18,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            eventDate,
+                                            style: SLTheme.quicksand(
+                                              color: const Color(0xFF8C7381),
+                                              fontSize: isCompact ? 11 : 12,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  eventDays,
+                                  style: SLTheme.quicksand(
+                                    color: eventColor,
+                                    fontSize: isCompact ? 38 : 44,
+                                    fontWeight: FontWeight.w900,
+                                    height: 1,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  eventLabel,
+                                  style: SLTheme.quicksand(
+                                    color: eventColor.withValues(alpha: 0.8),
+                                    fontSize: isCompact ? 12 : 13,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            }
+
             if (isCountdownStyle) {
               final countdownHeight = (cardWidth * (isCompact ? 0.56 : 0.52))
                   .clamp(176.0, 228.0)
@@ -1211,6 +1368,76 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
         );
       },
     );
+  }
+
+  Future<Map<String, String>> _loadSoulEventPreviewData() async {
+    final houseId = _houseId ?? '';
+    if (houseId.isEmpty) {
+      return {
+        'title': 'Chưa có sự kiện',
+        'date': '--/--/----',
+        'days': '0',
+        'label': 'ngày nữa',
+        'color': '#EC4899',
+      };
+    }
+
+    try {
+      final events = await SoulEventService().getEvents(houseId);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      
+      SoulEvent? topEvent;
+      int minDays = 99999;
+      
+      for (final event in events) {
+        if (!event.isPinned) continue;
+        final nextDate = event.calculateNextOccurrence(today);
+        if (nextDate != null) {
+          final diff = nextDate.difference(today).inDays;
+          if (diff >= 0 && diff < minDays) {
+            minDays = diff;
+            topEvent = event;
+          }
+        }
+      }
+      
+      if (topEvent == null && events.isNotEmpty) {
+        for (final event in events) {
+          final nextDate = event.calculateNextOccurrence(today);
+          if (nextDate != null) {
+            final diff = nextDate.difference(today).inDays;
+            if (diff >= 0 && diff < minDays) {
+              minDays = diff;
+              topEvent = event;
+            }
+          }
+        }
+      }
+
+      if (topEvent != null) {
+        final nextDate = topEvent.calculateNextOccurrence(today)!;
+        final isToday = nextDate.isAtSameMomentAs(today);
+        final dateStr = '${nextDate.day.toString().padLeft(2, '0')}/${nextDate.month.toString().padLeft(2, '0')}/${nextDate.year}';
+        final colorHex = topEvent.colorHex.isNotEmpty ? topEvent.colorHex : '#EC4899';
+        
+        return {
+          'title': topEvent.title,
+          'date': dateStr,
+          'days': isToday ? 'HÔM NAY' : minDays.toString(),
+          'label': isToday ? '🎉' : 'ngày nữa',
+          'color': colorHex,
+        };
+      }
+    } catch (_) {}
+
+    return {
+      'title': 'Chưa có sự kiện',
+      'date': '--/--/----',
+      'days': '0',
+      'label': 'ngày nữa',
+      'color': '#EC4899',
+    };
   }
 
   Widget _buildWidgetPreviewPerson({

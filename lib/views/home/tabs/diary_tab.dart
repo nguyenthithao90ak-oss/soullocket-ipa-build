@@ -71,6 +71,8 @@ class _DiaryTabState extends State<DiaryTab>
       MemoryShareAllowanceService();
   final ScrollController _diaryScrollController = ScrollController();
   Timer? _diaryScrollDebounce;
+  Timer? _diaryActiveTimer;
+  int _activeSecondsInDiary = 0;
   bool _isTabActive = false;
   bool _isActivatingTab = false;
   bool _deferMemoryLoad = true;
@@ -785,10 +787,48 @@ class _DiaryTabState extends State<DiaryTab>
     );
   }
 
+  void _startDiaryActiveTimer() {
+    _diaryActiveTimer?.cancel();
+    _diaryActiveTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      if (!mounted || !_isTabActive) {
+        timer.cancel();
+        return;
+      }
+      _activeSecondsInDiary += 10;
+      if (_activeSecondsInDiary >= 15 * 60) {
+        _showForcedDiaryAd();
+      }
+    });
+  }
+
+  void _stopDiaryActiveTimer() {
+    _diaryActiveTimer?.cancel();
+    _diaryActiveTimer = null;
+  }
+
+  Future<void> _showForcedDiaryAd() async {
+    final adMob = AdMobService();
+    if (await adMob.isProUser()) return;
+
+    final hasRecent = adMob.hasRecentFullscreenAd(cooldown: const Duration(minutes: 15));
+    if (hasRecent) {
+      return;
+    }
+
+    debugPrint('DiaryTab: Showing forced interstitial ad after 15 minutes of activity.');
+    final shown = await adMob.showInterstitialAd();
+    if (shown) {
+      _activeSecondsInDiary = 0;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _isTabActive = widget.isActiveListenable.value;
+    if (_isTabActive) {
+      _startDiaryActiveTimer();
+    }
     widget.isActiveListenable.addListener(_onActiveChanged);
     _feedController.addListener(_handleFeedControllerChange);
     _memoryController.addListener(_handleControllerChange);
@@ -832,6 +872,7 @@ class _DiaryTabState extends State<DiaryTab>
 
   @override
   void dispose() {
+    _stopDiaryActiveTimer();
     _bottomBannerAd?.dispose();
     widget.onSelectionOverlayChanged?.call(false);
     widget.isActiveListenable.removeListener(_onActiveChanged);
@@ -852,6 +893,7 @@ class _DiaryTabState extends State<DiaryTab>
     _isTabActive = isActive;
     _syncSelectionOverlayVisibility();
     if (isActive) {
+      _startDiaryActiveTimer();
       // ⚡ Defer memory section load until after swipe animation
       if (_deferMemoryLoad) {
         Future.delayed(const Duration(milliseconds: 400), () {
@@ -873,6 +915,8 @@ class _DiaryTabState extends State<DiaryTab>
           unawaited(_activateDiaryTab());
         });
       }
+    } else {
+      _stopDiaryActiveTimer();
     }
   }
 
@@ -1150,8 +1194,9 @@ class _DiaryTabState extends State<DiaryTab>
                       return ValueListenableBuilder<double>(
                         valueListenable: bgOpacityNotifier,
                         builder: (context, dragOpacity, _) {
+                          // Nền xung quanh tối hẳn (1.0) để làm nổi bật ảnh
                           final double opacity =
-                              0.92 * dragOpacity * animation.value;
+                              1.0 * dragOpacity * animation.value;
                           return Container(
                             color: Colors.black.withValues(alpha: opacity),
                           );
@@ -1236,14 +1281,16 @@ class _DiaryTabState extends State<DiaryTab>
                                                     end: Alignment.bottomCenter,
                                                     colors: [
                                                       Colors.black.withValues(
-                                                          alpha: 0.62),
+                                                          alpha: 0.45),
+                                                      Colors.transparent,
                                                       Colors.transparent,
                                                       Colors.black.withValues(
-                                                          alpha: 0.58),
+                                                          alpha: 0.45),
                                                     ],
                                                     stops: const [
                                                       0.0,
-                                                      0.22,
+                                                      0.15,
+                                                      0.85,
                                                       1.0
                                                     ],
                                                   ),

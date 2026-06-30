@@ -180,7 +180,7 @@ class _CountdownModeStyleData {
           innerGradient: const LinearGradient(
             colors: [Color(0xFFFBF8FA), Color(0xFFFBF8FA)],
           ),
-          outerBorder: Border.fromBorderSide(
+          outerBorder: const Border.fromBorderSide(
               BorderSide(color: Color(0xFFE9DDE6), width: 2.2)),
           innerBorder: Border.all(color: Colors.transparent, width: 0),
           shadows: [
@@ -292,12 +292,12 @@ class _CountdownModeStyleData {
             Shadow(
               color: const Color(0xFF8D1A3B).withValues(alpha: 0.55),
               blurRadius: 24,
-              offset: Offset(0, 10),
+              offset: const Offset(0, 10),
             ),
             Shadow(
               color: const Color(0xFF8D1A3B).withValues(alpha: 0.25),
               blurRadius: 8,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         );
@@ -660,12 +660,12 @@ class _CountdownModeStyleData {
             Shadow(
               color: const Color(0xFF8D1A3B).withValues(alpha: 0.55),
               blurRadius: 24,
-              offset: Offset(0, 10),
+              offset: const Offset(0, 10),
             ),
             Shadow(
               color: const Color(0xFF8D1A3B).withValues(alpha: 0.25),
               blurRadius: 8,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         );

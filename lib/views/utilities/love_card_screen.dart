@@ -49,6 +49,13 @@ class LoveCardService {
   }) async {
     try {
       final expiresAt = _expiresAtForMonths(expiryMonths);
+      final cardsSnap = await _db.ref('houses/$houseId/love_cards').get();
+      if (cardsSnap.exists && cardsSnap.value is Map) {
+        final cardsMap = cardsSnap.value as Map;
+        if (cardsMap.length >= 100) {
+          throw Exception('Hộp thư tình yêu đã đạt giới hạn (tối đa 100 thiệp). Vui lòng xoá bớt trước khi gửi thêm.');
+        }
+      }
       final ref = _db.ref('houses/$houseId/love_cards').push();
       await ref.set({
         'fromUid': fromUid,

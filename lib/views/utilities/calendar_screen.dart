@@ -249,6 +249,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
 
     final dateKey = _getDateKey(day);
+    final daySnap = await _dbRef.child('houses/${widget.houseId}/calendar/$dateKey').get();
+    if (daySnap.exists && daySnap.value is Map) {
+      final dayMap = daySnap.value as Map;
+      if (dayMap.length >= 5) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Một ngày chỉ có thể có tối đa 5 sự kiện. Vui lòng xoá bớt trước khi thêm mới.'),
+          backgroundColor: SLColors.danger,
+        ));
+        return false;
+      }
+    }
+
     await _dbRef
         .child('houses/${widget.houseId}/calendar/$dateKey')
         .push()

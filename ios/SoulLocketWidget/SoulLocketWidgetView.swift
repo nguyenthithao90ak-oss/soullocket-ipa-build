@@ -809,19 +809,21 @@ struct SoulLocketWidgetView: View {
             LockScreenWidgetView(data: entry.data, family: family)
         } else {
             ZStack {
-                LinearGradient(
-                    colors: theme.gradient,
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                if #unavailable(iOSApplicationExtension 17.0) {
+                    LinearGradient(
+                        colors: theme.gradient,
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    .ignoresSafeArea()
 
-                if entry.data.bgTheme == "premium" {
-                    PremiumAuroraBackdrop(accentColor: theme.accentColor)
-                } else if entry.data.bgTheme == "cosmic" {
-                    PremiumCosmicBackdrop()
-                } else {
-                    WidgetBackgroundDecorations(bgTheme: entry.data.bgTheme, accentColor: theme.accentColor)
+                    if entry.data.bgTheme == "premium" {
+                        PremiumAuroraBackdrop(accentColor: theme.accentColor)
+                    } else if entry.data.bgTheme == "cosmic" {
+                        PremiumCosmicBackdrop()
+                    } else {
+                        WidgetBackgroundDecorations(bgTheme: entry.data.bgTheme, accentColor: theme.accentColor)
+                    }
                 }
 
                 switch family {
@@ -835,7 +837,7 @@ struct SoulLocketWidgetView: View {
                     SmallWidgetView(data: entry.data, theme: theme)
                 }
             }
-            .modifier(WidgetContainerBackground(theme: theme))
+            .modifier(WidgetContainerBackground(theme: theme, data: entry.data))
         }
     }
 
@@ -902,16 +904,27 @@ struct TransparentWidgetBackground: ViewModifier {
 
 struct WidgetContainerBackground: ViewModifier {
     let theme: WidgetTheme
+    let data: CoupleWidgetData
 
     @ViewBuilder
     func body(content: Content) -> some View {
         if #available(iOSApplicationExtension 17.0, *) {
             content.containerBackground(for: .widget) {
-                LinearGradient(
-                    colors: theme.gradient,
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+                ZStack {
+                    LinearGradient(
+                        colors: theme.gradient,
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+
+                    if data.bgTheme == "premium" {
+                        PremiumAuroraBackdrop(accentColor: theme.accentColor)
+                    } else if data.bgTheme == "cosmic" {
+                        PremiumCosmicBackdrop()
+                    } else {
+                        WidgetBackgroundDecorations(bgTheme: data.bgTheme, accentColor: theme.accentColor)
+                    }
+                }
             }
         } else {
             content

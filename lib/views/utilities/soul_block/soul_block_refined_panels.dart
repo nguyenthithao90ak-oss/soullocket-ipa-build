@@ -147,6 +147,61 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                       ),
                     ),
                     SizedBox(height: introGap),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text(
+                          'GRID SIZE:  ',
+                          style: SLTheme.quicksand(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white70,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        ...<int>[8, 9].map((int size) {
+                          final bool isSelected = _boardSize == size;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            child: GestureDetector(
+                              onTap: () {
+                                if (!_isOpeningGameplay) {
+                                  _emitClickFeedback();
+                                  _setBoardSize(size);
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 6),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  color: isSelected
+                                      ? _kSoulChrome.withValues(alpha: 0.18)
+                                      : Colors.white.withValues(alpha: 0.05),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? _kSoulChrome.withValues(alpha: 0.6)
+                                        : Colors.white.withValues(alpha: 0.1),
+                                    width: 1.2,
+                                  ),
+                                ),
+                                child: Text(
+                                  '${size}x${size}',
+                                  style: SLTheme.quicksand(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w900,
+                                    color: isSelected
+                                        ? _kSoulChrome
+                                        : Colors.white60,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
                     Text(
                       _isOpeningGameplay
                           ? 'Preparing your next board'
@@ -632,54 +687,80 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
     required bool compact,
     required bool ultraCompact,
   }) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Text(
-          'SCORE',
-          style: SLTheme.quicksand(
-            fontSize: ultraCompact
-                ? 10.2
-                : compact
-                    ? 10.8
-                    : 11.6,
-            fontWeight: FontWeight.w800,
-            color: Colors.white.withValues(alpha: 0.74),
-            letterSpacing: 1.1,
-          ),
+    return Container(
+      padding: EdgeInsets.symmetric(
+        vertical: ultraCompact ? 6 : (compact ? 8 : 9),
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: <Color>[
+            const Color(0xFF00C3FF).withValues(alpha: 0.22),
+            const Color(0xFF00C3FF).withValues(alpha: 0.08),
+            _kSoulPanelBottom.withValues(alpha: 0.96),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        SizedBox(height: ultraCompact ? 4 : 6),
-        ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: ultraCompact ? 156 : 228,
+        borderRadius: BorderRadius.circular(compact ? 16 : 18),
+        border: Border.all(color: const Color(0xFF00C3FF).withValues(alpha: 0.26)),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: const Color(0xFF00C3FF).withValues(alpha: 0.06),
+            blurRadius: 10,
+            spreadRadius: -9,
+            offset: const Offset(0, 6),
           ),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              _formatNumber(_score),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: SLTheme.quicksand(
-                fontSize: ultraCompact
-                    ? 42
-                    : compact
-                        ? 50
-                        : 60,
-                fontWeight: FontWeight.w900,
-                color: _kSoulIvory,
-                letterSpacing: 0.1,
-                shadows: <Shadow>[
-                  Shadow(
-                    color: Colors.black.withValues(alpha: 0.12),
-                    blurRadius: 12,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.14),
+            blurRadius: 10,
+            spreadRadius: -10,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text(
+            'SCORE',
+            style: SLTheme.quicksand(
+              fontSize: ultraCompact
+                  ? 7.8
+                  : compact
+                      ? 8.4
+                      : 9.0,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF00C3FF),
+              letterSpacing: 1.1,
+            ),
+          ),
+          SizedBox(height: ultraCompact ? 1 : 2),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: ultraCompact ? 156 : 228,
+            ),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                _formatNumber(_score),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: SLTheme.quicksand(
+                  fontSize: ultraCompact
+                      ? 18
+                      : compact
+                          ? 22
+                          : 26,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 0.15,
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

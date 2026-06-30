@@ -465,6 +465,9 @@ class DiaryFeedController extends ChangeNotifier {
     return '${items.length}|$firstId|$firstTs|$lastId|$lastTs';
   }
 
+  // TTL cho diary feed cache: 24 giờ
+  static const Duration _diaryCacheTtl = Duration(days: 7);
+
   Future<void> _cacheDiaryPosts(
     String houseId,
     List<Map<String, dynamic>> items,
@@ -475,7 +478,11 @@ class DiaryFeedController extends ChangeNotifier {
       return;
     }
     _lastDiaryCacheSignature = signature;
-    await OfflineCacheService.saveCache('diary_$houseId', limited);
+    // Lưu kèm timestamp để hỗ trợ TTL khi đọc lại
+    await OfflineCacheService.saveCache('diary_$houseId', {
+      '_cachedAt': DateTime.now().millisecondsSinceEpoch,
+      'items': limited,
+    });
   }
 
   List<DiaryPost> _sortDiaryPosts(List<DiaryPost> posts) {
@@ -567,9 +574,20 @@ class DiaryFeedController extends ChangeNotifier {
 
       final initialPosts = <DiaryPost>[];
       if (houseId != null) {
-        final cachedData =
+        final cachedRaw =
             await OfflineCacheService.loadCache('diary_$houseId');
-        if (cachedData is List) {
+        // Hỗ trợ format mới {_cachedAt, items} và format cũ List
+        List? cachedData;
+        if (cachedRaw is Map) {
+          final cachedAt = (cachedRaw['_cachedAt'] as num?)?.toInt() ?? 0;
+          final ttlMs = _diaryCacheTtl.inMilliseconds;
+          if (DateTime.now().millisecondsSinceEpoch - cachedAt <= ttlMs) {
+            cachedData = cachedRaw['items'] as List?;
+          }
+        } else if (cachedRaw is List) {
+          cachedData = cachedRaw; // format cũ: chấp nhận không TTL
+        }
+        if (cachedData != null) {
           for (final item in cachedData.take(_diaryCacheLimit)) {
             if (item is! Map) {
               continue;
@@ -634,7 +652,10 @@ class DiaryFeedController extends ChangeNotifier {
               _updatePostsVN();
               _lastDiaryCacheSignature = '0';
               unawaited(
-                  OfflineCacheService.saveCache('diary_$houseId', const []));
+                  OfflineCacheService.saveCache('diary_$houseId', {
+                    '_cachedAt': DateTime.now().millisecondsSinceEpoch,
+                    'items': const <Map<String, dynamic>>[],
+                  }));
               return;
             }
 

@@ -1,4 +1,4 @@
-﻿part of '../../love_card_screen.dart';
+part of '../../love_card_screen.dart';
 
 class _LoveCardCreateView extends StatelessWidget {
   final _LoveCardScreenState state;
@@ -1128,6 +1128,7 @@ class _LoveCardComposerPanel extends StatelessWidget {
             controller: state._senderNameCtrl,
             icon: Icons.favorite_border_rounded,
             themeColors: colors,
+            maxLength: 30,
             onChanged: (_) => state._refreshUi(),
           ),
           const SizedBox(height: 10),
@@ -1139,6 +1140,7 @@ class _LoveCardComposerPanel extends StatelessWidget {
             themeColors: colors,
             minLines: 2,
             maxLines: 2,
+            maxLength: 100,
             onChanged: (_) => state._refreshUi(),
           ),
           RepaintBoundary(
@@ -1175,6 +1177,7 @@ class _LoveCardMetaField extends StatefulWidget {
   final int minLines;
   final int maxLines;
   final List<Color>? themeColors;
+  final int? maxLength;
 
   const _LoveCardMetaField({
     required this.label,
@@ -1185,6 +1188,7 @@ class _LoveCardMetaField extends StatefulWidget {
     this.minLines = 1,
     this.maxLines = 1,
     this.themeColors,
+    this.maxLength,
   });
 
   @override
@@ -1291,6 +1295,7 @@ class _LoveCardMetaFieldState extends State<_LoveCardMetaField> {
             focusNode: _focusNode,
             minLines: widget.minLines,
             maxLines: widget.maxLines,
+            maxLength: widget.maxLength,
             cursorColor: primaryColor,
             onChanged: widget.onChanged,
             textAlignVertical: TextAlignVertical.center,
@@ -1308,6 +1313,7 @@ class _LoveCardMetaFieldState extends State<_LoveCardMetaField> {
                 fontWeight: FontWeight.w600,
               ),
               border: InputBorder.none,
+              counterText: "",
               contentPadding: const EdgeInsets.symmetric(vertical: 6),
             ),
           ),

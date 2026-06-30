@@ -105,6 +105,7 @@ class CalendarEventInputPanel extends StatelessWidget {
                     controller: controller,
                     minLines: 1,
                     maxLines: 3,
+                    maxLength: 100,
                     textInputAction: TextInputAction.done,
                     style: SLTheme.quicksand(
                       color: SLTheme.textMain,
@@ -118,6 +119,7 @@ class CalendarEventInputPanel extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                       border: InputBorder.none,
+                      counterText: "",
                     ),
                     onSubmitted: (_) => onAdd(),
                   ),

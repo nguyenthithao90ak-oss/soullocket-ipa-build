@@ -101,6 +101,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
     final items = <(String, String, IconData)>[
       (WidgetService.defaultWidgetStyleKey, context.tr('home_mcnh_a57a8e'), Icons.widgets_rounded),
       ('countdown', context.tr('home_mngy_5500cb'), Icons.timer_outlined),
+      ('soulevent', 'Kỷ niệm', Icons.celebration_rounded),
     ];
 
     return Container(
@@ -270,7 +271,14 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       }
       try {
         if (Theme.of(context).platform == TargetPlatform.iOS) {
-          await _persistAndSyncWidgetAppearance();
+          if (_widgetPanelTabKey == 'soulevent') {
+            final houseId = _houseId ?? '';
+            if (houseId.isNotEmpty) {
+              await WidgetService.syncSoulEventWidgetData(houseId: houseId);
+            }
+          } else {
+            await _persistAndSyncWidgetAppearance();
+          }
           if (!mounted) return;
           _showToast(context.tr('ios_widget_pin_guide'), success: true);
           return;
@@ -281,8 +289,16 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           _showToast(context.tr('widget_err_not_supported'));
           return;
         }
-        await _persistAndSyncWidgetAppearance();
-        await WidgetService.requestPinWidget();
+        if (_widgetPanelTabKey == 'soulevent') {
+          final houseId = _houseId ?? '';
+          if (houseId.isNotEmpty) {
+            await WidgetService.syncSoulEventWidgetData(houseId: houseId);
+          }
+          await WidgetService.requestPinSoulEventWidget();
+        } else {
+          await _persistAndSyncWidgetAppearance();
+          await WidgetService.requestPinWidget();
+        }
         if (!mounted) return;
         _showToast(context.tr('widget_pin_req_sent'), success: true);
       } catch (_) {
@@ -297,10 +313,15 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
         return;
       }
       try {
-        // Invalidate the runtime cache so every value is force-written to
-        // shared HomeWidget storage, ensuring iOS WidgetKit sees the update.
-        WidgetService.invalidateRuntimeCache();
-        await _persistAndSyncWidgetAppearance();
+        if (_widgetPanelTabKey == 'soulevent') {
+          final houseId = _houseId ?? '';
+          if (houseId.isNotEmpty) {
+            await WidgetService.syncSoulEventWidgetData(houseId: houseId);
+          }
+        } else {
+          WidgetService.invalidateRuntimeCache();
+          await _persistAndSyncWidgetAppearance();
+        }
         if (!mounted) return;
         _showToast(context.tr('widget_updated_success'), success: true);
       } catch (_) {
@@ -334,6 +355,29 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           const SizedBox(height: 14),
           _buildWidgetPanelTabBar(),
           const SizedBox(height: 14),
+          if (_widgetPanelTabKey == 'soulevent') ...[
+            _buildWidgetSectionCard(
+              icon: Icons.info_outline_rounded,
+              title: 'Cấu hình Sự kiện',
+              subtitle: null,
+              iconGradient: const [
+                Color(0xFF3B82F6),
+                Color(0xFF60A5FA),
+              ],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  'Màu sắc và chủ đề của Tiện ích được lấy trực tiếp từ sự kiện bạn chọn ghim hoặc sự kiện gần nhất trong danh sách Sự Kiện & Kỷ Niệm.',
+                  style: SLTheme.quicksand(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF64748B),
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ),
+          ] else ...[
             _buildWidgetSectionCard(
               icon: Icons.palette_outlined,
               title: context.tr('theme_widget_bg'),
@@ -344,7 +388,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               ],
               child: _buildWidgetThemeSwatchGrid(config),
             ),
-          if (_widgetStyleKey == WidgetService.defaultWidgetStyleKey) ...[
+          ],
+          if (_widgetPanelTabKey == WidgetService.defaultWidgetStyleKey) ...[
             const SizedBox(height: 14),
             _buildWidgetSectionCard(
               icon: Icons.favorite_rounded,
@@ -407,7 +452,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               ),
             ),
           ],
-          if (_widgetStyleKey == 'countdown') ...[
+          if (_widgetPanelTabKey == 'countdown') ...[
             const SizedBox(height: 14),
             _buildWidgetSectionCard(
               icon: Icons.timer_rounded,
@@ -420,6 +465,27 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               ],
               child: Text(
                 context.tr('widget_using_style').replaceAll('{style}', _widgetStyleLabel(_widgetStyleKey)),
+                style: SLTheme.quicksand(
+                  fontSize: 12.8,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF475467),
+                  height: 1.45,
+                ),
+              ),
+            ),
+          ],
+          if (_widgetPanelTabKey == 'soulevent') ...[
+            const SizedBox(height: 14),
+            _buildWidgetSectionCard(
+              icon: Icons.celebration_rounded,
+              title: 'Tiện ích Sự kiện & Kỷ niệm',
+              subtitle: 'Đếm ngược các sự kiện quan trọng của 2 bạn',
+              iconGradient: const [
+                Color(0xFFF472B6),
+                Color(0xFFEC4899),
+              ],
+              child: Text(
+                'Hiển thị sự kiện tiếp theo (ví dụ: ngày sinh nhật, chuyến đi, ngày kỷ niệm yêu...) trực tiếp trên màn hình chính.',
                 style: SLTheme.quicksand(
                   fontSize: 12.8,
                   fontWeight: FontWeight.w800,

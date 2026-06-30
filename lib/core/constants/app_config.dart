@@ -145,8 +145,8 @@ class AppConfig {
   /// Tạm thời tắt luồng mua/đổi quyền lợi trên iOS để phát hành bản free-only.
   static bool get isPurchaseEnabled => showPurchaseUi;
 
-  /// Số ngày dùng thử VIP khi tạo nhà mới
-  static const int newHouseTrialDays = 3;
+  /// 1-day free VIP trial for newly created houses
+  static const int newHouseTrialDays = 1;
 
   // ── IMAGE QUALITY ─────────────────────────────────────────────────────
   /// Chất lượng nén ảnh khi upload (0-100)
@@ -222,10 +222,11 @@ class AppConfig {
     defaultValue:
         'https://us-central1-soullockket.cloudfunctions.net/reportAdResolutionHttp',
   );
-  static const String deleteAccountPageUrl = '$webBaseUrl/delete-account.html';
+  static const String deleteAccountPageUrl = 'https://soullocketwitget.web.app/delete-account.html';
   static const String supportPageUrl = '$webBaseUrl/support.html';
-  static const String privacyPolicyUrl = '$webBaseUrl/privacy.html';
-  static const String termsOfUseUrl = '$webBaseUrl/terms.html';
+  static const String privacyPolicyUrl = 'https://soullocketwitget.web.app/privacy.html';
+  static const String termsOfUseUrl = 'https://soullocketwitget.web.app/terms.html';
+  static const String cookiePolicyUrl = 'https://soullocketwitget.web.app/cookie-policy.html';
 
   // ── TIKTOK ADS CONFIG (iOS) ─────────────────────────────────────────
   static const String tiktokIosAppId = String.fromEnvironment(

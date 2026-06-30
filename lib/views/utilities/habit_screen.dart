@@ -9,6 +9,7 @@ import '../../core/fast_backdrop_filter.dart';
 import '../../utils/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/services/activity_history_service.dart';
+import '../../utils/services/connectivity_service.dart';
 
 class HabitScreen extends StatefulWidget {
   final String houseId;
@@ -66,18 +67,37 @@ class _HabitScreenState extends State<HabitScreen> {
     final text = _habitController.text.trim();
     if (text.isEmpty) return;
 
+    final habitSnap = await _dbRef.child('houses/${widget.houseId}/habits').get();
+    if (habitSnap.exists && habitSnap.value is Map) {
+      final habitMap = habitSnap.value as Map;
+      if (habitMap.length >= 25) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Danh sách thói quen đã đạt giới hạn (tối đa 25 mục). Vui lòng xoá bớt trước khi thêm mới.'),
+          backgroundColor: SLColors.danger,
+        ));
+        return;
+      }
+    }
+
     String? timeString;
     if (_selectedTime != null) {
       timeString =
           '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}';
     }
 
-    await _dbRef.child('houses/${widget.houseId}/habits').push().set({
+    final newRef = _dbRef.child('houses/${widget.houseId}/habits').push();
+    final key = newRef.key;
+    final payload = {
       'name': text,
       'creator': widget.myName,
       'time': timeString,
       'ts': DateTime.now().millisecondsSinceEpoch,
-    });
+    };
+
+    if (!ConnectivityService().isOnline) {
+      ConnectivityService().enqueueOfflineData('houses/${widget.houseId}/habits/$key', 'set', payload);
+    }
+    await newRef.set(payload);
 
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
@@ -106,7 +126,11 @@ class _HabitScreenState extends State<HabitScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              _dbRef.child('houses/${widget.houseId}/habits/$key').remove();
+              final path = 'houses/${widget.houseId}/habits/$key';
+              if (!ConnectivityService().isOnline) {
+                ConnectivityService().enqueueOfflineData(path, 'remove', {});
+              }
+              _dbRef.child(path).remove();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Xoá'),
@@ -117,16 +141,21 @@ class _HabitScreenState extends State<HabitScreen> {
   }
 
   void _toggleHabitDay(String key, String dateStr, bool currentValue) {
+    final parentPath = 'houses/${widget.houseId}/habits/$key/completed_dates';
+    final exactPath = '$parentPath/$dateStr';
+    
+    if (!ConnectivityService().isOnline) {
+      if (currentValue) {
+        ConnectivityService().enqueueOfflineData(exactPath, 'remove', {});
+      } else {
+        ConnectivityService().enqueueOfflineData(parentPath, 'update', {dateStr: true});
+      }
+    }
+
     if (currentValue) {
-      _dbRef
-          .child(
-              'houses/${widget.houseId}/habits/$key/completed_dates/$dateStr')
-          .remove();
+      _dbRef.child(exactPath).remove();
     } else {
-      _dbRef
-          .child(
-              'houses/${widget.houseId}/habits/$key/completed_dates/$dateStr')
-          .set(true);
+      _dbRef.child(exactPath).set(true);
     }
   }
 
@@ -294,12 +323,14 @@ class _HabitScreenState extends State<HabitScreen> {
                       color: const Color(0xFF243041),
                       fontWeight: FontWeight.w600,
                     ),
+                    maxLength: 50,
                     decoration: InputDecoration(
                       hintText: context.tr('util_thiquenmiv_24be39'),
                       hintStyle: SLTheme.quicksand(
                         color: const Color(0xFFB55A73),
                       ),
                       border: InputBorder.none,
+                      counterText: "",
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 15, vertical: 12),
                     ),
@@ -558,16 +589,13 @@ class _HabitScreenState extends State<HabitScreen> {
 
             return Container(
               margin: const EdgeInsets.only(bottom: 20),
-              child: ClipRRect(
+              padding: SLSpacing.all20,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: SLRadius.xlAll,
-                child: Container(
-                  padding: SLSpacing.all20,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: SLRadius.xlAll,
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-                  ),
-                  child: Column(
+                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+              ),
+              child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
@@ -681,8 +709,6 @@ class _HabitScreenState extends State<HabitScreen> {
                       )
                     ],
                   ),
-                ),
-              ),
             );
           },
         );

@@ -256,6 +256,9 @@ void main() {
     };
 
     try {
+      await UiPrefs.ensureLoaded();
+      await L10nService().init();
+      
       await BuildSignatureService.verifyOfficialBuildSignature();
       await _initializeFirebaseBootstrap();
       await _initializeGoogleMobileAds();
@@ -268,8 +271,6 @@ void main() {
             _firebaseMessagingBackgroundHandler);
       }
 
-      await UiPrefs.ensureLoaded();
-      await L10nService().init();
       await PerformanceProfileService.instance.initialize();
       runApp(const MyApp());
       _scheduleDeferredBootstrap();

@@ -275,19 +275,74 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
             final translateX = currentX * halfWidth;
             final translateY = (currentY - 0.25) * halfHeight;
 
+            final mainWidget = Transform.rotate(
+              angle: p.baseRotation +
+                  (t * 3.14 * 2 * (widget.shootToRight ? 1 : -1)),
+              child: Transform.scale(
+                scale: currentScale,
+                child: particleWidget,
+              ),
+            );
+
+            // Hiệu ứng nổ nhỏ tỏa ra khi chuẩn bị đáp đất (tới gần avatar)
+            final List<Widget> explosionWidgets = [];
+            if (t > 0.8) {
+              final ext = (t - 0.8) * 5.0; // 0.0 -> 1.0
+              final expOpacity = (1.0 - ext).clamp(0.0, 1.0);
+              final expScale = 0.4 + (1.0 - ext) * 0.6; // 1.0 -> 0.4
+
+              for (int i = 0; i < 6; i++) {
+                final angle = i * (2 * pi / 6) + (p.baseRotation * 2);
+                final distance = ext * 55.0; // Tỏa ra tối đa 55px
+                final dx = cos(angle) * distance;
+                final dy = sin(angle) * distance;
+
+                final bool isSparkle = i % 2 == 0;
+                final Widget expChild = isSparkle
+                    ? const Text(
+                        '✨',
+                        style: TextStyle(fontSize: 14),
+                      )
+                    : (widget.assetPath != null && widget.assetPath!.trim().isNotEmpty
+                        ? Image.asset(
+                            widget.assetPath!,
+                            width: 14,
+                            height: 14,
+                            fit: BoxFit.contain,
+                          )
+                        : Text(
+                            widget.emoji,
+                            style: const TextStyle(fontSize: 14),
+                          ));
+
+                explosionWidgets.add(
+                  Transform.translate(
+                    offset: Offset(dx, dy),
+                    child: Transform.scale(
+                      scale: expScale,
+                      child: Opacity(
+                        opacity: expOpacity,
+                        child: expChild,
+                      ),
+                    ),
+                  ),
+                );
+              }
+            }
+
             return Positioned.fill(
               child: Center(
                 child: Transform.translate(
                   offset: Offset(translateX, translateY),
                   child: Opacity(
                     opacity: currentOpacity,
-                    child: Transform.rotate(
-                      angle: p.baseRotation +
-                          (t * 3.14 * 2 * (widget.shootToRight ? 1 : -1)),
-                      child: Transform.scale(
-                        scale: currentScale,
-                        child: particleWidget,
-                      ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      clipBehavior: Clip.none,
+                      children: [
+                        mainWidget,
+                        ...explosionWidgets,
+                      ],
                     ),
                   ),
                 ),

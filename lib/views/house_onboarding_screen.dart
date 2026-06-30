@@ -67,7 +67,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   bool _isIdAvailable = false;
   String? _idErrorReason;
   List<String> _idSuggestions = [];
-  bool _showCustomIdScreen = false;
+  final bool _showCustomIdScreen = false;
 
   bool _isLoading = false;
   String _mode = 'couple';
@@ -983,9 +983,9 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         DateTime.now().millisecondsSinceEpoch.toString(),
       );
       await prefs.setString('il_rel_mode', relationshipMode);
-      await prefs.setString('il_new_user_pro_trial_notice', '1');
+      await prefs.setString('il_new_user_welcome_v2', '1');
       await prefs.setString(
-        'il_first_setup_guide_pending_$createdHouseId',
+        'il_first_setup_guide_pending_v2_$createdHouseId',
         '1',
       );
 

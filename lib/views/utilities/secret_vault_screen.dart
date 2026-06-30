@@ -652,11 +652,13 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                 TextField(
                   controller: captionCtrl,
                   style: const TextStyle(color: Colors.white),
+                  maxLength: 1000,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white12,
                     hintText: context.tr('util_mtkhonhkhc_52663c'),
                     hintStyle: const TextStyle(color: Colors.white38),
+                    counterText: "",
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(color: Colors.white24)),
@@ -905,11 +907,13 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   controller: passphraseCtrl,
                   obscureText: obscurePass,
                   style: const TextStyle(color: Colors.white),
+                  maxLength: 32,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white12,
                     hintText: context.tr('util_mtkhutithi_d4f304'),
                     hintStyle: const TextStyle(color: Colors.white38),
+                    counterText: "",
                     suffixIcon: IconButton(
                       onPressed: () =>
                           setLocalState(() => obscurePass = !obscurePass),
@@ -938,11 +942,13 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     controller: confirmCtrl,
                     obscureText: obscureConfirm,
                     style: const TextStyle(color: Colors.white),
+                    maxLength: 32,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.white12,
                       hintText: context.tr('util_nhplimtkhu_eee7a7'),
                       hintStyle: const TextStyle(color: Colors.white38),
+                      counterText: "",
                       suffixIcon: IconButton(
                         onPressed: () => setLocalState(
                           () => obscureConfirm = !obscureConfirm,
@@ -1062,11 +1068,13 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           controller: controller,
           textCapitalization: TextCapitalization.characters,
           style: const TextStyle(color: Colors.white),
+          maxLength: 30,
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.white12,
             hintText: 'VD: ABCD-EFGH-JKLM-NPQR',
             hintStyle: const TextStyle(color: Colors.white38),
+            counterText: "",
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -1346,11 +1354,13 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   controller: oldPassCtrl,
                   obscureText: obscureOld,
                   style: const TextStyle(color: Colors.white),
+                  maxLength: 32,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white12,
                     labelText: context.tr('util_mtkhuc_36b0a2'),
                     labelStyle: const TextStyle(color: Colors.white70),
+                    counterText: "",
                     suffixIcon: IconButton(
                       icon: Icon(
                           obscureOld ? Icons.visibility : Icons.visibility_off,
@@ -1367,11 +1377,13 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   controller: newPassCtrl,
                   obscureText: obscureNew,
                   style: const TextStyle(color: Colors.white),
+                  maxLength: 32,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white12,
                     labelText: context.tr('util_mtkhumi_ccef95'),
                     labelStyle: const TextStyle(color: Colors.white70),
+                    counterText: "",
                     suffixIcon: IconButton(
                       icon: Icon(
                           obscureNew ? Icons.visibility : Icons.visibility_off,
@@ -1388,11 +1400,13 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   controller: confirmCtrl,
                   obscureText: obscureNew,
                   style: const TextStyle(color: Colors.white),
+                  maxLength: 32,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white12,
                     labelText: context.tr('util_nhplimtkhu_82a9a4'),
                     labelStyle: const TextStyle(color: Colors.white70),
+                    counterText: "",
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),

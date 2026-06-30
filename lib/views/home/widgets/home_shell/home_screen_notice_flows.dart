@@ -93,7 +93,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     if (houseId == null || houseId.isEmpty) return;
 
     final prefs = await OfflineCacheService.getPrefs();
-    final pendingKey = 'il_first_setup_guide_pending_$houseId';
+    final pendingKey = 'il_first_setup_guide_pending_v2_$houseId';
     if (prefs.getString(pendingKey) != '1') return;
     await prefs.remove(pendingKey);
 
@@ -190,8 +190,8 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
     _didCheckNewUserWelcomeNotice = true;
 
     final prefs = await OfflineCacheService.getPrefs();
-    if (prefs.getString('il_new_user_pro_trial_notice') != '1') return;
-    await prefs.remove('il_new_user_pro_trial_notice');
+    if (prefs.getString('il_new_user_welcome_v2') != '1') return;
+    await prefs.remove('il_new_user_welcome_v2');
     if (!mounted) return;
 
     await showDialog<void>(
@@ -251,7 +251,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Cảm ơn bạn đã tạo tài khoản và trở thành một trong những người dùng đầu tiên của ứng dụng.\n\nĐây vẫn là phiên bản đầu tiên nên có thể còn xuất hiện lỗi nhỏ, tính năng chưa hoàn thiện hoặc đôi lúc hoạt động chưa thật sự ổn định. Mong bạn thông cảm và tiếp tục đồng hành cùng tụi mình trong giai đoạn đầu này.\n\nTài khoản mới cũng đang được tặng Pro dùng thử 3 ngày để bạn khám phá thêm nhiều tính năng. Chúc bạn có thật nhiều trải nghiệm dễ thương với SoulLocket 💖',
+                  'Cảm ơn bạn đã tạo tài khoản và trở thành một trong những người dùng đầu tiên của ứng dụng.\n\nĐây vẫn là phiên bản đầu tiên nên có thể còn xuất hiện lỗi nhỏ, tính năng chưa hoàn thiện hoặc đôi lúc hoạt động chưa thật sự ổn định. Mong bạn thông cảm và tiếp tục đồng hành cùng tụi mình trong giai đoạn đầu này.\n\nTài khoản mới cũng đang được tặng Pro dùng thử 1 ngày để bạn khám phá thêm nhiều tính năng. Chúc bạn có thật nhiều trải nghiệm dễ thương với SoulLocket 💖',
                   style: SLTheme.quicksand(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w600,
@@ -716,8 +716,8 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
         final diffMs = now - startedAt;
         final daysElapsed = diffMs / (24 * 60 * 60 * 1000);
 
-        if (daysElapsed >= 3.0) {
-          // --- QUÁ 3 NGÀY: TỰ ĐỘNG KHÓA CÁC LINK CŨ, GIỮ LẠI 5 MỚI NHẤT ---
+        if (daysElapsed >= 1.0) {
+          // --- QUÁ 1 NGÀY: TỰ ĐỘNG KHÓA CÁC LINK CŨ, GIỮ LẠI 5 MỚI NHẤT ---
           activeLinks.sort((a, b) {
             final tsA = (a.value['createdAt'] as num?)?.toInt() ?? 0;
             final tsB = (b.value['createdAt'] as num?)?.toInt() ?? 0;
@@ -748,8 +748,8 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           if (!mounted) return;
           _showExpiredProAutoCleanedDialog();
         } else {
-          // --- CHƯA QUÁ 3 NGÀY: NHẮC NHỞ HẰNG NGÀY ---
-          final daysRemaining = (3.0 - daysElapsed).ceil().clamp(1, 3);
+          // --- CHƯA QUÁ 1 NGÀY: NHẮC NHỞ HẰNG NGÀY ---
+          final daysRemaining = 1;
           if (now - lastNotifiedAt >= 24 * 60 * 60 * 1000) {
             if (!mounted) return;
             _showExpiredProGraceDialog(
@@ -881,7 +881,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           ],
         ),
         content: Text(
-          'Đã quá 3 ngày kể từ khi hết hạn PRO, hệ thống đã tự động khóa các liên kết cũ và giữ lại 5 liên kết Memory Share mới nhất của bạn để đảm bảo giới hạn tài khoản thường.',
+          'Đã quá 1 ngày kể từ khi hết hạn PRO, hệ thống đã tự động khóa các liên kết cũ và giữ lại 5 liên kết Memory Share mới nhất của bạn để đảm bảo giới hạn tài khoản thường.',
           style: SLTheme.quicksand(
             fontSize: 14,
             fontWeight: FontWeight.w600,

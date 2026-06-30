@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
@@ -615,7 +616,6 @@ class AdMobService {
       return false;
     }
 
-    // Cách 2 tiếng mới được hiện App Open Ad 1 lần
     final lastShownMs = prefs.getInt(_appOpenLastShownDatePrefsKey) ?? 0;
     final nowMs = DateTime.now().millisecondsSinceEpoch;
 
@@ -623,9 +623,21 @@ class AdMobService {
       return true; // Lần đầu tiên
     }
 
-    // 2 tiếng = 2 * 60 * 60 * 1000 ms
     final hoursDiff = (nowMs - lastShownMs) / (1000 * 60 * 60);
-    if (hoursDiff >= 2) {
+    
+    double requiredHours = 1.0;
+    if (Platform.isAndroid) {
+      try {
+        final androidInfo = await DeviceInfoPlugin().androidInfo;
+        if (androidInfo.version.sdkInt < 33) {
+          requiredHours = 4.0;
+        }
+      } catch (_) {
+        requiredHours = 4.0; // fallback an toàn nếu không lấy được info
+      }
+    }
+
+    if (hoursDiff >= requiredHours) {
       return true;
     }
 

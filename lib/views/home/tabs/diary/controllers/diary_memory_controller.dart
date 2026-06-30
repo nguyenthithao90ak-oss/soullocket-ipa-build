@@ -67,7 +67,7 @@ class DiaryMemoryController extends ChangeNotifier {
   static const int _webMemoryCacheLimit = 80;
   static const int _appMemoryCacheLimit = 50;
   static const int _memoryUploadConcurrency = 3;
-  static const Duration _memoryDownloadCacheTtl = Duration(hours: 18);
+  static const Duration _memoryDownloadCacheTtl = Duration(days: 7);
   static const Color _diaryPinkDeep = Color(0xFFD81B60);
   static const String _pendingUploadPrefsKey = 'diary_memory_pending_upload_v1';
 
@@ -518,8 +518,9 @@ class DiaryMemoryController extends ChangeNotifier {
     if (_memoriesCacheHouseId != normalizedHouseId ||
         _memoriesCacheFuture == null) {
       _memoriesCacheHouseId = normalizedHouseId;
-      _memoriesCacheFuture =
-          OfflineCacheService.loadCache('memories_$normalizedHouseId');
+      _memoriesCacheFuture = OfflineCacheService
+          .loadCache('memories_$normalizedHouseId')
+          .then(_extractMemoriesCacheList);
     }
     return _memoriesCacheFuture!;
   }
@@ -529,7 +530,28 @@ class DiaryMemoryController extends ChangeNotifier {
     if (normalizedHouseId == null) {
       return null;
     }
-    return OfflineCacheService.loadCacheSync('memories_$normalizedHouseId');
+    final raw =
+        OfflineCacheService.loadCacheSync('memories_$normalizedHouseId');
+    return _extractMemoriesCacheList(raw);
+  }
+
+  /// Giải nén và kiểm tra TTL của memories cache.
+  /// Cache lưu dưới dạng {_cachedAt: ms, items: [...]}.
+  /// Nếu quá _memoryDownloadCacheTtl (7 ngày) thì trả về null để app fetch lại.
+  dynamic _extractMemoriesCacheList(dynamic raw) {
+    if (raw == null) return null;
+    // Format mới: {_cachedAt, items}
+    if (raw is Map) {
+      final cachedAt = (raw['_cachedAt'] as num?)?.toInt() ?? 0;
+      final ttlMs = _memoryDownloadCacheTtl.inMilliseconds;
+      if (DateTime.now().millisecondsSinceEpoch - cachedAt > ttlMs) {
+        return null; // Cache hết hạn — app sẽ dùng live data
+      }
+      return raw['items'];
+    }
+    // Format cũ: List thẳng (backward compat — không có TTL nên chấp nhận)
+    if (raw is List) return raw;
+    return null;
   }
 
   int _readCacheTs(Map<String, dynamic> item) {
@@ -580,7 +602,11 @@ class DiaryMemoryController extends ChangeNotifier {
       return;
     }
     _lastMemoriesCacheSignature = signature;
-    await OfflineCacheService.saveCache('memories_$houseId', limited);
+    // Lưu kèm timestamp để hỗ trợ TTL khi đọc lại
+    await OfflineCacheService.saveCache('memories_$houseId', {
+      '_cachedAt': DateTime.now().millisecondsSinceEpoch,
+      'items': limited,
+    });
   }
 
   bool _isMemoryUrlExpired(Map<String, dynamic> item) {
@@ -632,6 +658,41 @@ class DiaryMemoryController extends ChangeNotifier {
         debugPrint(
           '[DiaryMemory] signed url refreshed id=$memoryId urlLen=${result.url.length}',
         );
+
+        // Tối ưu hóa Cache: Ghi đè lại URL mới vào Offline Cache để lần sau mở app không cần resolve lại
+        try {
+          final cached = await OfflineCacheService.loadCache('memories_$houseId');
+          List? itemsList;
+          int? cachedAt;
+          // Hỗ trợ cả format mới {_cachedAt, items} và format cũ List
+          if (cached is Map) {
+            itemsList = cached['items'] as List?;
+            cachedAt = (cached['_cachedAt'] as num?)?.toInt();
+          } else if (cached is List) {
+            itemsList = cached;
+          }
+          if (itemsList != null) {
+            bool updated = false;
+            for (final cachedItem in itemsList) {
+              if (cachedItem is Map && cachedItem['id']?.toString() == memoryId) {
+                cachedItem['url'] = result.url;
+                cachedItem['urlExpiresAt'] = result.expiresAt;
+                updated = true;
+                break;
+              }
+            }
+            if (updated) {
+              // Giữ nguyên _cachedAt để không reset TTL chỉ vì refresh URL
+              await OfflineCacheService.saveCache('memories_$houseId', {
+                '_cachedAt': cachedAt ?? DateTime.now().millisecondsSinceEpoch,
+                'items': itemsList,
+              });
+              debugPrint('[DiaryMemory] Offline Cache updated with new signed URL for memoryId=$memoryId');
+            }
+          }
+        } catch (cacheErr) {
+          debugPrint('[DiaryMemory] Failed to update offline cache with new signed URL: $cacheErr');
+        }
       } catch (e) {
         _lastUrlRefreshTimes.remove(memoryId);
         final message = AppErrorMapper.resolve(

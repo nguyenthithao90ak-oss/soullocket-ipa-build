@@ -476,14 +476,32 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
               builder: (context, distanceText, _) {
                 return ValueListenableBuilder<Map<String, dynamic>?>(
                   valueListenable: _homePartnerBatteryNotifier,
-                  builder: (context, batteryInfo, _) {
-                    String displayText = distanceText;
-                    if (batteryInfo != null && !isSingle) {
-                      final pct = batteryInfo['level'] as int;
-                      final isCharging = batteryInfo['isCharging'] == true;
-                      final emoji = isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
-                      displayText = '$distanceText • $emoji $pct%';
-                    }
+                  builder: (context, partnerBattery, _) {
+                    return ValueListenableBuilder<Map<String, dynamic>?>(
+                      valueListenable: _homeMyBatteryNotifier,
+                      builder: (context, myBattery, _) {
+                        String displayText = distanceText;
+                        if (!isSingle) {
+                          final List<String> batteryTexts = [];
+                          
+                          if (myBattery != null) {
+                            final pct = myBattery['level'] as int;
+                            final isCharging = myBattery['isCharging'] == true;
+                            final emoji = isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                            batteryTexts.add('Bạn $emoji $pct%');
+                          }
+                          
+                          if (partnerBattery != null) {
+                            final pct = partnerBattery['level'] as int;
+                            final isCharging = partnerBattery['isCharging'] == true;
+                            final emoji = isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                            batteryTexts.add('Người ấy $emoji $pct%');
+                          }
+                          
+                          if (batteryTexts.isNotEmpty) {
+                            displayText = '$distanceText • ${batteryTexts.join(' • ')}';
+                          }
+                        }
                     return Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -516,6 +534,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                           ),
                         ],
                       ),
+                    );
+                      },
                     );
                   },
                 );

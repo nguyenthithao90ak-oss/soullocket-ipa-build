@@ -191,7 +191,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     );
   }
 
-  void _addTransaction() {
+  void _addTransaction() async {
     final amountText = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
     final amount = int.tryParse(amountText);
     if (amount == null || amount <= 0) {
@@ -204,6 +204,19 @@ class _FinanceScreenState extends State<FinanceScreen> {
       ));
       return;
     }
+
+    final currentSnap = await _dbRef.child('houses/${widget.houseId}/budget').get();
+    if (currentSnap.exists && currentSnap.value is Map) {
+      final currentMap = currentSnap.value as Map;
+      if (currentMap.length >= 100) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Nhật ký thu chi đã đạt giới hạn (tối đa 100 mục). Vui lòng xoá bớt trước khi thêm mới.'),
+          backgroundColor: SLColors.danger,
+        ));
+        return;
+      }
+    }
+
     final now = DateTime.now();
     _dbRef.child('houses/${widget.houseId}/budget').push().set({
       'from': widget.myName,
@@ -279,8 +292,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
                         keyboardType: TextInputType.number,
                         textInputAction: TextInputAction.next,
                         autofocus: true,
+                        maxLength: 12,
                         decoration: InputDecoration(
-                            labelText: context.tr('util_tngstinvnd_59805c')),
+                            labelText: context.tr('util_tngstinvnd_59805c'),
+                            counterText: ""),
                         scrollPadding: const EdgeInsets.only(bottom: 24),
                         onChanged: (_) => setDialogState(() {}),
                         onSubmitted: (_) =>
@@ -291,8 +306,11 @@ class _FinanceScreenState extends State<FinanceScreen> {
                         controller: _splitPeopleController,
                         keyboardType: TextInputType.number,
                         textInputAction: TextInputAction.done,
+                        maxLength: 4,
                         decoration:
-                            InputDecoration(labelText: context.tr('util_sngichia_91ed4e')),
+                            InputDecoration(
+                                labelText: context.tr('util_sngichia_91ed4e'),
+                                counterText: ""),
                         scrollPadding: const EdgeInsets.only(bottom: 24),
                         onChanged: (_) => setDialogState(() {}),
                         onSubmitted: (_) =>
@@ -716,15 +734,20 @@ class _FinanceScreenState extends State<FinanceScreen> {
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           TextField(
             controller: _savingsGoalNameController,
+            maxLength: 50,
             decoration: InputDecoration(
-                labelText: context.tr('util_tnquvdquci_811553')),
+                labelText: context.tr('util_tnquvdquci_811553'),
+                counterText: ""),
           ),
           SLSpacing.h8,
           TextField(
             controller: _savingsGoalAmountController,
             keyboardType: TextInputType.number,
+            maxLength: 12,
             decoration:
-                InputDecoration(labelText: context.tr('util_stinmctiuv_e1bc2d')),
+                InputDecoration(
+                    labelText: context.tr('util_stinmctiuv_e1bc2d'),
+                    counterText: ""),
           ),
         ]),
         actions: [
@@ -882,15 +905,20 @@ class _FinanceScreenState extends State<FinanceScreen> {
           TextField(
             controller: _goalAmountController,
             keyboardType: TextInputType.number,
+            maxLength: 12,
             decoration: InputDecoration(
-                labelText: context.tr('util_tngngnschd_7447b3')),
+                labelText: context.tr('util_tngngnschd_7447b3'),
+                counterText: ""),
           ),
           SLSpacing.h8,
           TextField(
             controller: _goalDaysController,
             keyboardType: TextInputType.number,
+            maxLength: 5,
             decoration:
-                InputDecoration(labelText: context.tr('util_sngypdngvd_78fb41')),
+                InputDecoration(
+                    labelText: context.tr('util_sngypdngvd_78fb41'),
+                    counterText: ""),
           ),
         ]),
         actions: [
@@ -1050,6 +1078,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
               color: SLTheme.textMain,
               fontWeight: FontWeight.w700,
               fontSize: 16),
+          maxLength: 12,
           decoration: InputDecoration(
             hintText: '${context.tr('amount')} (VND)...',
             hintStyle: SLTheme.quicksand(color: SLTheme.textLight),
@@ -1067,6 +1096,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     const BorderSide(color: Color(0xFFD81B60), width: 2.5)),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            counterText: "",
           ),
         ),
         SLSpacing.h8,
@@ -1076,6 +1106,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
               color: SLTheme.textMain,
               fontWeight: FontWeight.w700,
               fontSize: 16),
+          maxLength: 100,
           decoration: InputDecoration(
             hintText: context.tr('util_tychn_9aa32e'),
             hintStyle: SLTheme.quicksand(color: SLTheme.textLight),
@@ -1093,6 +1124,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     const BorderSide(color: Color(0xFFD81B60), width: 2.5)),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            counterText: "",
           ),
         ),
         SLSpacing.h12,

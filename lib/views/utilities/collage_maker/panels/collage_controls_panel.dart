@@ -686,7 +686,7 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            L10nService().translate('util_chnnh_ea3d0d'),
+            L10nService().translate('util_chnnh_719c35'),
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w800,
               color: _paperInk,

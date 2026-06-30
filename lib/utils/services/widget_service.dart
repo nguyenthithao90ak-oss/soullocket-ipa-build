@@ -19,7 +19,7 @@ import 'notification_service.dart';
 import 'daily_quest_service.dart';
 import 'package:soullocket_app/utils/services/health_cycle_service.dart';
 import 'soul_event_service.dart';
-import '../../models/soul_event.dart';
+import 'package:soullocket_app/models/soul_event.dart';
 
 class WidgetService {
   static const String appGroupId = AppConfig.iOSAppGroupId;
@@ -58,6 +58,7 @@ class WidgetService {
   static const Set<String> _supportedWidgetStyleKeys = <String>{
     defaultWidgetStyleKey,
     'countdown',
+    'soulevent',
   };
   static const MethodChannel _iosWidgetBridge = MethodChannel(
     'soullocket/widget_ios_bridge',
@@ -575,7 +576,8 @@ class WidgetService {
         _normalizeLoveDateText(loveDate),
       );
       await _saveWidgetDataIfChanged<String>('startDateRaw', loveDate.trim());
-      await _saveWidgetDataIfChanged<String>('dayUnitText',
+      await _saveWidgetDataIfChanged<String>(
+          'dayUnitText',
           daysText.trim().replaceFirst(RegExp(r'^\d+\s*'), '').trim().isEmpty
               ? 'ngày'
               : daysText.trim().replaceFirst(RegExp(r'^\d+\s*'), '').trim());
@@ -830,7 +832,8 @@ class WidgetService {
           '✅ Widget image saved: ${(compressedBytes.length / 1024).toStringAsFixed(2)}KB');
       return file.path;
     } catch (e) {
-      debugPrint('❌ Error downloading/compressing image: ${AppErrorMapper.resolve(
+      debugPrint(
+          '❌ Error downloading/compressing image: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Không thể tải hoặc nén ảnh widget.',
       ).message}');
@@ -871,7 +874,8 @@ class WidgetService {
   static Future<void> checkAndProcessPendingWidgetActions() async {
     if (kIsWeb || !Platform.isIOS) return;
     try {
-      final actionStr = await HomeWidget.getWidgetData<String>('pendingWidgetAction');
+      final actionStr =
+          await HomeWidget.getWidgetData<String>('pendingWidgetAction');
       if (actionStr == null || actionStr.trim().isEmpty) return;
 
       final parts = actionStr.split('_');
@@ -879,7 +883,8 @@ class WidgetService {
       final actionType = parts[0];
 
       final prefs = await SharedPreferences.getInstance();
-      final lastProcessedAction = prefs.getString('il_last_processed_widget_action') ?? '';
+      final lastProcessedAction =
+          prefs.getString('il_last_processed_widget_action') ?? '';
       if (lastProcessedAction == actionStr) {
         await HomeWidget.saveWidgetData<String>('pendingWidgetAction', '');
         return;
@@ -890,14 +895,26 @@ class WidgetService {
       final houseId = await HouseService().getCurrentHouseId();
       if (houseId == null || houseId.trim().isEmpty) return;
 
-      final currentRole = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
+      final currentRole =
+          prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
       final partnerRole = currentRole == 'user1' ? 'user2' : 'user1';
 
       final data = await HouseService().getHouseSettings(houseId);
       if (data == null) return;
-      final myName = (currentRole == 'user1' ? data['nameU1'] : data['nameU2'])?.toString().trim() ?? 'Bạn';
-      final partnerName = (partnerRole == 'user1' ? data['nameU1'] : data['nameU2'])?.toString().trim() ?? 'Người ấy';
-      final myAvatar = (currentRole == 'user1' ? data['avtUser1'] : data['avtUser2'])?.toString().trim() ?? '';
+      final myName = (currentRole == 'user1' ? data['nameU1'] : data['nameU2'])
+              ?.toString()
+              .trim() ??
+          'Bạn';
+      final partnerName =
+          (partnerRole == 'user1' ? data['nameU1'] : data['nameU2'])
+                  ?.toString()
+                  .trim() ??
+              'Người ấy';
+      final myAvatar =
+          (currentRole == 'user1' ? data['avtUser1'] : data['avtUser2'])
+                  ?.toString()
+                  .trim() ??
+              '';
 
       final String title;
       final String body;
@@ -933,7 +950,8 @@ class WidgetService {
       };
 
       final dbRef = FirebaseDatabase.instance.ref();
-      final inboxRef = dbRef.child('houses/$houseId/partner_inbox/$partnerRole').push();
+      final inboxRef =
+          dbRef.child('houses/$houseId/partner_inbox/$partnerRole').push();
       await dbRef.child('houses/$houseId/alerts').push().set(payload);
       await inboxRef.set({
         ...payload,
@@ -1095,9 +1113,8 @@ class WidgetService {
   }) async {
     if (kIsWeb || !Platform.isAndroid) return;
     try {
-      final snap = await FirebaseDatabase.instance
-          .ref('houses/$houseId/calendar')
-          .get();
+      final snap =
+          await FirebaseDatabase.instance.ref('houses/$houseId/calendar').get();
       if (!snap.exists || snap.value is! Map) {
         await _saveWidgetDataIfChanged<bool>('calendar_enabled', false);
         await HomeWidget.updateWidget(
@@ -1107,7 +1124,8 @@ class WidgetService {
         return;
       }
 
-      final data = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(snap.value as Map));
+      final data = Map<String, dynamic>.from(
+          Map<dynamic, dynamic>.from(snap.value as Map));
       final today = DateTime.now();
       final todayMidnight = DateTime(today.year, today.month, today.day);
 
@@ -1126,9 +1144,11 @@ class WidgetService {
         final eventDate = DateTime(year, month, day);
         if (eventDate.isBefore(todayMidnight)) return;
 
-        final eventsMap = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(dateEventsRaw));
+        final eventsMap = Map<String, dynamic>.from(
+            Map<dynamic, dynamic>.from(dateEventsRaw));
         final sortedList = eventsMap.entries.map((e) {
-          final val = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(e.value as Map));
+          final val = Map<String, dynamic>.from(
+              Map<dynamic, dynamic>.from(e.value as Map));
           return {
             'title': val['title']?.toString() ?? '',
             'ts': val['ts'] as int? ?? 0,
@@ -1184,9 +1204,11 @@ class WidgetService {
       final eventsText = nearestEvents.map((title) => '• $title').join('\n');
 
       await _saveWidgetDataIfChanged<bool>('calendar_enabled', true);
-      await _saveWidgetDataIfChanged<String>('calendar_countdown', countdownText);
+      await _saveWidgetDataIfChanged<String>(
+          'calendar_countdown', countdownText);
       await _saveWidgetDataIfChanged<String>('calendar_next_date', dateLabel);
-      await _saveWidgetDataIfChanged<String>('calendar_events_text', eventsText);
+      await _saveWidgetDataIfChanged<String>(
+          'calendar_events_text', eventsText);
 
       await HomeWidget.updateWidget(
         androidName: androidWidgetCalendarName,
@@ -1221,16 +1243,16 @@ class WidgetService {
     try {
       final service = SoulEventService();
       final events = await service.getEvents(houseId);
-      
+
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
-      
+
       SoulEvent? topEvent;
       int minDays = 99999;
-      
+
       for (final event in events) {
         if (!event.isPinned) continue;
-        
+
         final nextDate = event.calculateNextOccurrence(today);
         if (nextDate != null) {
           final diff = nextDate.difference(today).inDays;
@@ -1258,11 +1280,11 @@ class WidgetService {
       if (topEvent != null) {
         final nextDate = topEvent.calculateNextOccurrence(today)!;
         final isToday = nextDate.isAtSameMomentAs(today);
-        
+
         await _saveWidgetDataIfChanged('se_title', topEvent.title);
-        await _saveWidgetDataIfChanged('se_date', 
+        await _saveWidgetDataIfChanged('se_date',
             '${nextDate.day.toString().padLeft(2, '0')}/${nextDate.month.toString().padLeft(2, '0')}/${nextDate.year}');
-        
+
         if (isToday) {
           await _saveWidgetDataIfChanged('se_days', 'HÔM NAY');
           await _saveWidgetDataIfChanged('se_label', '🎉');
@@ -1270,8 +1292,9 @@ class WidgetService {
           await _saveWidgetDataIfChanged('se_days', minDays.toString());
           await _saveWidgetDataIfChanged('se_label', 'ngày nữa');
         }
-        
-        final colorHex = topEvent.colorHex.isNotEmpty ? topEvent.colorHex : '#FF4D94';
+
+        final colorHex =
+            topEvent.colorHex.isNotEmpty ? topEvent.colorHex : '#FF4D94';
         await _saveWidgetDataIfChanged('se_color', colorHex);
       } else {
         await _saveWidgetDataIfChanged('se_title', 'Sự kiện & Kỷ niệm');
@@ -1288,7 +1311,8 @@ class WidgetService {
         );
       }
     } catch (e) {
-      debugPrint('Error syncing soul event widget: \${AppErrorMapper.resolve(e).message}');
+      debugPrint(
+          'Error syncing soul event widget: \${AppErrorMapper.resolve(e).message}');
     }
   }
 
@@ -1305,4 +1329,3 @@ class WidgetService {
     }
   }
 }
-

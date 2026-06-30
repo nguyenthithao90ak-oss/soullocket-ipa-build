@@ -1,5 +1,7 @@
 import 'widgets/utilities_tab_body.dart';
 import 'dart:async';
+import 'dart:math';
+import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart'
     show kIsWeb, listEquals;
 
@@ -463,12 +465,68 @@ class _UtilitiesTabState extends State<UtilitiesTab>
     final isPro = await _adMob.isProUser();
     if (!isPro && id != 'store') {
       final now = DateTime.now();
-      if ((_lastUtilityAdTime == null ||
-              now.difference(_lastUtilityAdTime!) >
-                  const Duration(minutes: 5)) &&
-          !_adMob.hasRecentFullscreenAd()) {
-        await _adMob.showInterstitialAd();
-        _lastUtilityAdTime = DateTime.now();
+      final prefs = await SharedPreferences.getInstance();
+
+      // 1. Tăng bộ đếm click
+      int tapCount = (prefs.getInt('utility_click_tap_count') ?? 0) + 1;
+      await prefs.setInt('utility_click_tap_count', tapCount);
+
+      // 2. Lấy mục tiêu ngẫu nhiên (nếu chưa có thì sinh mới 7-12)
+      int target = prefs.getInt('utility_click_tap_target') ?? 0;
+      if (target < 7 || target > 12) {
+        target = 7 + Random().nextInt(6); // 7 đến 12
+        await prefs.setInt('utility_click_tap_target', target);
+      }
+
+      debugPrint('UtilityClickAd: Tap count = $tapCount, Target = $target');
+
+      // 3. Nếu đạt mục tiêu
+      if (tapCount >= target) {
+        // Reset bộ đếm và sinh mục tiêu mới
+        final nextTarget = 7 + Random().nextInt(6);
+        await prefs.setInt('utility_click_tap_count', 0);
+        await prefs.setInt('utility_click_tap_target', nextTarget);
+
+        // Kiểm tra giới hạn 2 tiếng
+        final lastShownMs = prefs.getInt('utility_click_ad_last_shown_time') ?? 0;
+        final timeDiff = now.millisecondsSinceEpoch - lastShownMs;
+        final has2HourCooldownPassed = lastShownMs == 0 || timeDiff >= 2 * 60 * 60 * 1000;
+
+        // Kiểm tra giới hạn tối đa 3 cái một ngày
+        final todayStr = DateFormat('yyyy-MM-dd').format(now);
+        final savedDate = prefs.getString('utility_click_ad_shown_date') ?? '';
+        int shownToday = prefs.getInt('utility_click_ad_shown_today_count') ?? 0;
+
+        if (savedDate != todayStr) {
+          shownToday = 0;
+          await prefs.setString('utility_click_ad_shown_date', todayStr);
+          await prefs.setInt('utility_click_ad_shown_today_count', 0);
+        }
+
+        final isUnderDailyLimit = shownToday < 3;
+
+        debugPrint('UtilityClickAd: Cooldown passed = $has2HourCooldownPassed, Shown today = $shownToday, Under limit = $isUnderDailyLimit');
+
+        if (has2HourCooldownPassed && isUnderDailyLimit) {
+          debugPrint('UtilityClickAd: Target reached! Showing click-count ad.');
+          final shown = await _adMob.showInterstitialAd();
+          if (shown) {
+            await prefs.setInt('utility_click_ad_last_shown_time', now.millisecondsSinceEpoch);
+            await prefs.setInt('utility_click_ad_shown_today_count', shownToday + 1);
+            _lastUtilityAdTime = now;
+          }
+        }
+      } else {
+        // Nếu chưa đạt mục tiêu click ngẫu nhiên, vẫn kiểm tra hiển thị ad thường 5 phút như cũ
+        if ((_lastUtilityAdTime == null ||
+                now.difference(_lastUtilityAdTime!) >
+                    const Duration(minutes: 5)) &&
+            !_adMob.hasRecentFullscreenAd()) {
+          final shown = await _adMob.showInterstitialAd();
+          if (shown) {
+            _lastUtilityAdTime = now;
+          }
+        }
       }
     }
 

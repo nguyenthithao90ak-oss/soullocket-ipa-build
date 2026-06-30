@@ -1,6 +1,7 @@
 import 'package:firebase_database/firebase_database.dart' hide Query, Transaction;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:soullocket_app/models/diary_post.dart';
+import 'connectivity_service.dart';
 
 /// DiaryService — quản lý tâm tư (nhật ký) trong Firestore
 /// Path: houses/{houseId}/diaries/{postId}
@@ -119,6 +120,13 @@ class DiaryService {
   Future<QuerySnapshot<Map<String, dynamic>>> _getQueryWithCacheFallback(
     Query<Map<String, dynamic>> query,
   ) async {
+    // If we're offline, get from cache directly for instant UI
+    if (!ConnectivityService().isOnline) {
+      try {
+        return await query.get(const GetOptions(source: Source.cache));
+      } catch (_) {}
+    }
+
     try {
       return await query.get(const GetOptions(source: Source.server));
     } catch (_) {

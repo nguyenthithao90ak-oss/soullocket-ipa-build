@@ -464,6 +464,9 @@ class HouseService {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('il_house_id', updatedId);
         }
+      } else {
+        final reason = map?['reason'] ?? map?['message'] ?? 'Đổi mã nhà không thành công.';
+        throw Exception(reason);
       }
       return success;
     } catch (e) {
@@ -771,6 +774,7 @@ class HouseService {
           'friendRequestPolicy': 'all',
           'friendRequestLimit': 30,
           'homeBlockTone': 'theme',
+          'countdownStyle': 'default',
           'houseName': resolvedHouseName,
           'nameU1': nameU1,
           'nameU2': nameU2,

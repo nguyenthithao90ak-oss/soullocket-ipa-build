@@ -36,6 +36,20 @@ class TimeCapsuleService {
     if (normalizedTitle.isEmpty || normalizedMessage.isEmpty) {
       throw Exception('Hãy nhập tiêu đề và lời nhắn cho hòm thời gian.');
     }
+    if (normalizedTitle.length > 150) {
+      throw Exception('Tiêu đề không được vượt quá 150 ký tự.');
+    }
+    if (normalizedMessage.length > 1500) {
+      throw Exception('Lời nhắn không được vượt quá 1500 ký tự.');
+    }
+
+    final capsulesSnap = await _db.ref('houses/$normalizedHouseId/time_capsules').get();
+    if (capsulesSnap.exists && capsulesSnap.value is Map) {
+      final capsulesMap = capsulesSnap.value as Map;
+      if (capsulesMap.length >= 30) {
+        throw Exception('Hòm thời gian đã đạt giới hạn (tối đa 30 hòm). Vui lòng mở hoặc xoá bớt trước khi thêm mới.');
+      }
+    }
 
     final capsuleRef = _db.ref('houses/$normalizedHouseId/time_capsules').push();
 
@@ -122,5 +136,17 @@ class TimeCapsuleService {
 
     capsule['is_opened'] = true;
     return capsule; // Trả về Nội dung Ký ức
+  }
+
+  /// Xóa một hòm thời gian khỏi Firebase
+  Future<void> deleteCapsule(String houseId, String capsuleId) async {
+    final normalizedHouseId = houseId.trim();
+    final normalizedCapsuleId = capsuleId.trim();
+    if (normalizedHouseId.isEmpty || normalizedCapsuleId.isEmpty) {
+      throw Exception('Thiếu mã nhà hoặc mã hòm để xóa.');
+    }
+    await _db
+        .ref('houses/$normalizedHouseId/time_capsules/$normalizedCapsuleId')
+        .remove();
   }
 }

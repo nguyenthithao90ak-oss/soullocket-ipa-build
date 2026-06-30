@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:ui' as ui;
 import 'dart:io';
@@ -42,7 +42,6 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
   static const Color _dialogSurface = Color(0xCC2B1F66);
   static const Color _dialogInnerSurface = Color(0xB322164F);
   static const Color _dialogBorder = Color(0x66FFFFFF);
-  static const Color _dialogAccent = Color(0xFFE3D7FF);
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
@@ -274,6 +273,43 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
     }
   }
 
+  void _showImageFullScreen(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      useSafeArea: false,
+      builder: (_) => Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: Center(
+          child: InteractiveViewer(
+            panEnabled: true,
+            minScale: 0.5,
+            maxScale: 4,
+            child: CachedNetworkImage(
+              imageUrl: imageUrl,
+              fit: BoxFit.contain,
+              placeholder: (_, __) => const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+              errorWidget: (_, __, ___) => const Icon(
+                Icons.image_not_supported_outlined,
+                color: Colors.white70,
+                size: 50,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _openCapsule(Map<String, dynamic> capsule) async {
     try {
       final updated =
@@ -315,29 +351,57 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                       ),
                       SLSpacing.h20,
                       Container(
-                        padding: SLSpacing.all16,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                         decoration: BoxDecoration(
-                          color: _dialogInnerSurface,
-                          borderRadius: BorderRadius.circular(20),
-                          border: const Border(
-                              left: BorderSide(color: _dialogAccent, width: 4)),
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF6366F1).withValues(alpha: 0.12),
+                              const Color(0xFF8B5CF6).withValues(alpha: 0.12)
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: const Color(0xFF8B5CF6).withValues(alpha: 0.25),
+                            width: 1.5,
+                          ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
                           children: [
-                            Text(
-                                L10nService().format('util_capsule_from', {'sender': updated['sender_uid'] == 'me' ? context.tr('util_ti_a843eb') : context.tr('util_ngiy_5bab37')}),
-                                style: SLTheme.quicksand(
-                                    fontWeight: FontWeight.w800,
-                                    color: _textPrimary,
-                                    fontSize: 13)),
-                            SLSpacing.h4,
-                            Text(
-                                L10nService().format('util_capsule_open_date', {'date': DateFormat('dd/MM/yyyy').format(DateTime.fromMillisecondsSinceEpoch(updated['unlock_time_ms'] ?? 0))}),
-                                style: SLTheme.quicksand(
-                                    color: _textMuted,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600)),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.local_post_office_rounded, color: Color(0xFF8B5CF6), size: 24),
+                            ),
+                            SLSpacing.w16,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    L10nService().format('util_capsule_from', {'sender': updated['sender_uid'] == 'me' ? context.tr('util_ti_a843eb') : context.tr('util_ngiy_5bab37')}),
+                                    style: SLTheme.quicksand(
+                                      fontWeight: FontWeight.w800,
+                                      color: _textPrimary,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  SLSpacing.h4,
+                                  Text(
+                                    L10nService().format('util_capsule_open_date', {'date': DateFormat('dd/MM/yyyy').format(DateTime.fromMillisecondsSinceEpoch(updated['unlock_time_ms'] ?? 0))}),
+                                    style: SLTheme.quicksand(
+                                      color: _textMuted,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -364,19 +428,48 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                   updated['image_url']
                                       .toString()
                                       .isNotEmpty) ...[
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: CachedNetworkImage(
-                                    imageUrl: updated['image_url'],
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                    filterQuality: FilterQuality.medium,
-                                    placeholder: (_, __) => const Center(
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    ),
-                                    errorWidget: (_, __, ___) => const Icon(
-                                      Icons.image_not_supported_outlined,
-                                      color: Colors.white70,
+                                GestureDetector(
+                                  onTap: () => _showImageFullScreen(context, updated['image_url']),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        CachedNetworkImage(
+                                          imageUrl: updated['image_url'],
+                                          width: double.infinity,
+                                          height: 220,
+                                          fit: BoxFit.cover,
+                                          filterQuality: FilterQuality.medium,
+                                          placeholder: (_, __) => const SizedBox(
+                                            height: 220,
+                                            child: Center(
+                                              child: CircularProgressIndicator(strokeWidth: 2),
+                                            ),
+                                          ),
+                                          errorWidget: (_, __, ___) => const SizedBox(
+                                            height: 220,
+                                            child: Center(
+                                              child: Icon(
+                                                Icons.image_not_supported_outlined,
+                                                color: Colors.white70,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Positioned(
+                                          bottom: 8,
+                                          right: 8,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(6),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withValues(alpha: 0.5),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(Icons.zoom_out_map, color: Colors.white, size: 16),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -948,105 +1041,223 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                   (capsule['unlock_time_ms'] as num?)?.toInt() ?? 0;
               final isOpen =
                   DateTime.now().millisecondsSinceEpoch >= unlockDate;
+              final capsuleId = capsule['id']?.toString() ?? '';
 
-              return Container(
-                margin: const EdgeInsets.only(bottom: 15),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
+              return Dismissible(
+                key: ValueKey('capsule_$capsuleId'),
+                direction: DismissDirection.endToStart,
+                confirmDismiss: (_) => _confirmDeleteCapsule(capsule),
+                onDismissed: (_) {},
+                background: Container(
+                  margin: const EdgeInsets.only(bottom: 18),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFEF4444), Color(0xFFB91C1C)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.delete_rounded, color: Colors.white, size: 28),
+                      SizedBox(height: 4),
+                      Text('Xóa', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                child: _CapsuleTouchWrapper(
+                  margin: const EdgeInsets.only(bottom: 18),
+                  child: ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
                   child: FastBackdropFilter(
-                    filter: ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                    filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                     child: Container(
-                      padding: SLSpacing.all16,
+                      padding: EdgeInsets.zero,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(20),
-                        border:
-                            Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                        gradient: LinearGradient(
+                          colors: isOpen 
+                            ? [Colors.white.withValues(alpha: 0.3), Colors.white.withValues(alpha: 0.15)]
+                            : [Colors.white.withValues(alpha: 0.15), Colors.white.withValues(alpha: 0.05)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: isOpen 
+                            ? Colors.white.withValues(alpha: 0.45)
+                            : Colors.white.withValues(alpha: 0.2),
+                          width: 1.2,
+                        ),
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                L10nService().format('util_capsule_open_short', {'date': DateFormat('dd/MM/yyyy').format(DateTime.fromMillisecondsSinceEpoch(unlockDate))}),
-                                style: SLTheme.quicksand(
-                                    color: Colors.white70,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: isOpen
-                                      ? Colors.green.withValues(alpha: 0.3)
-                                      : Colors.orange.withValues(alpha: 0.3),
-                                  borderRadius: SLRadius.smAll,
+                          if (isOpen && capsule['image_url'] != null && capsule['image_url'].toString().isNotEmpty)
+                            GestureDetector(
+                              onTap: () => _showImageFullScreen(context, capsule['image_url']),
+                              child: ClipRRect(
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                                child: Stack(
+                                  children: [
+                                    SizedBox(
+                                      height: 150,
+                                      width: double.infinity,
+                                      child: CachedNetworkImage(
+                                        imageUrl: capsule['image_url'],
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) => Container(
+                                          color: Colors.white.withValues(alpha: 0.1),
+                                          child: const Center(
+                                            child: SizedBox(
+                                              width: 24, height: 24, 
+                                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70)
+                                            )
+                                          ),
+                                        ),
+                                        errorWidget: (context, url, error) => Container(
+                                          color: Colors.white.withValues(alpha: 0.1),
+                                          child: const Icon(Icons.broken_image_rounded, color: Colors.white38, size: 40),
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      top: 10, right: 10,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(alpha: 0.4),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Icons.zoom_out_map_rounded, color: Colors.white, size: 16),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                child: Text(
-                                  isOpen ? context.tr('util_m_7b4530') : context.tr('util_angkha_d004dc'),
-                                  style: SLTheme.quicksand(
-                                    color: isOpen
-                                        ? Colors.greenAccent
-                                        : Colors.orangeAccent,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 10,
-                                  ),
-                                ),
                               ),
-                            ],
-                          ),
-                          SLSpacing.h12,
-                          if (isOpen)
-                            Text(
-                              capsule['content'] ?? '',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: SLTheme.quicksand(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600),
-                            )
-                          else
-                            Text(
-                              context.tr('util_nidungsmng_ea25c0'),
-                              style: SLTheme.quicksand(
-                                  color: Colors.white38,
-                                  fontSize: 13,
-                                  fontStyle: FontStyle.italic),
                             ),
-                          SLSpacing.h12,
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: GestureDetector(
-                              onTap:
-                                  isOpen ? () => _openCapsule(capsule) : null,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 15, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: isOpen
-                                      ? _buttonFill.withValues(alpha: 0.92)
-                                      : Colors.white.withValues(alpha: 0.08),
-                                  borderRadius: SLRadius.mdAll,
-                                  border: Border.all(
-                                    color: isOpen
-                                        ? Colors.white.withValues(alpha: 0.24)
-                                        : Colors.white.withValues(alpha: 0.12),
+                          Padding(
+                            padding: const EdgeInsets.all(18),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(isOpen ? Icons.mark_email_read_rounded : Icons.lock_clock_rounded, 
+                                          size: 16, color: isOpen ? Colors.white : Colors.white60),
+                                        SLSpacing.w8,
+                                        Text(
+                                          L10nService().format('util_capsule_open_short', {'date': DateFormat('dd/MM/yyyy').format(DateTime.fromMillisecondsSinceEpoch(unlockDate))}),
+                                          style: SLTheme.quicksand(
+                                              color: isOpen ? Colors.white : Colors.white70,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w800),
+                                        ),
+                                      ],
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 5),
+                                      decoration: BoxDecoration(
+                                        color: isOpen
+                                            ? const Color(0xFF10B981).withValues(alpha: 0.25)
+                                            : const Color(0xFFF59E0B).withValues(alpha: 0.25),
+                                        borderRadius: SLRadius.pillAll,
+                                        border: Border.all(
+                                          color: isOpen
+                                              ? const Color(0xFF10B981).withValues(alpha: 0.5)
+                                              : const Color(0xFFF59E0B).withValues(alpha: 0.5),
+                                        )
+                                      ),
+                                      child: Text(
+                                        isOpen ? context.tr('util_m_7b4530') : context.tr('util_angkha_d004dc'),
+                                        style: SLTheme.quicksand(
+                                          color: isOpen
+                                              ? const Color(0xFF6EE7B7)
+                                              : const Color(0xFFFCD34D),
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 14),
+                                if (isOpen)
+                                  Text(
+                                    capsule['title'] ?? capsule['content'] ?? '',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: SLTheme.quicksand(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700),
+                                  )
+                                else
+                                  Text(
+                                    context.tr('util_nidungsmng_ea25c0'),
+                                    style: SLTheme.quicksand(
+                                        color: Colors.white.withValues(alpha: 0.5),
+                                        fontSize: 14,
+                                        fontStyle: FontStyle.italic,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                SLSpacing.h16,
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: GestureDetector(
+                                    onTap:
+                                        isOpen ? () => _openCapsule(capsule) : null,
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 200),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 18, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        gradient: isOpen ? const LinearGradient(
+                                          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ) : null,
+                                        color: isOpen
+                                            ? null
+                                            : Colors.white.withValues(alpha: 0.1),
+                                        borderRadius: SLRadius.pillAll,
+                                        boxShadow: isOpen ? [
+                                          BoxShadow(
+                                            color: const Color(0xFF6366F1).withValues(alpha: 0.4),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
+                                          )
+                                        ] : null,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            context.tr('util_mth_e6d950'),
+                                            style: SLTheme.quicksand(
+                                              fontWeight: FontWeight.w900,
+                                              color:
+                                                  isOpen ? Colors.white : Colors.white38,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          if (isOpen) ...[
+                                            const SizedBox(width: 6),
+                                            const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 14),
+                                          ]
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
-                                child: Text(
-                                  context.tr('util_mth_e6d950'),
-                                  style: SLTheme.quicksand(
-                                    fontWeight: FontWeight.w800,
-                                    color:
-                                        isOpen ? _textPrimary : Colors.white24,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ),
+                              ],
                             ),
                           ),
                         ],
@@ -1054,8 +1265,108 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                     ),
                   ),
                 ),
-              );
-            },
+              ),
+            );
+          },
           );
+  }
+
+  Future<bool> _confirmDeleteCapsule(Map<String, dynamic> capsule) async {
+    final capsuleId = capsule['id']?.toString() ?? '';
+    if (capsuleId.isEmpty) return false;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1035),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Xóa hòm thời gian?',
+          style: SLTheme.quicksand(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 17),
+        ),
+        content: Text(
+          'Hành động này không thể hoàn tác. Nội dung trong hòm sẽ bị xóa vĩnh viễn.',
+          style: SLTheme.quicksand(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Hủy', style: SLTheme.quicksand(color: Colors.white54, fontWeight: FontWeight.w700)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Xóa', style: SLTheme.quicksand(color: const Color(0xFFEF4444), fontWeight: FontWeight.w900)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return false;
+    try {
+      await TimeCapsuleService().deleteCapsule(widget.houseId, capsuleId);
+      return true;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Xóa thất bại: ${AppErrorMapper.resolve(e).message}')),
+        );
+      }
+      return false;
+    }
+  }
+}
+
+class _CapsuleTouchWrapper extends StatefulWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? margin;
+
+  const _CapsuleTouchWrapper({required this.child, this.margin});
+
+  @override
+  State<_CapsuleTouchWrapper> createState() => _CapsuleTouchWrapperState();
+}
+
+class _CapsuleTouchWrapperState extends State<_CapsuleTouchWrapper>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      reverseDuration: const Duration(milliseconds: 180),
+      lowerBound: 0.0,
+      upperBound: 1.0,
+    );
+    _scale = Tween<double>(begin: 1.0, end: 0.965).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _ctrl.forward(),
+      onTapUp: (_) => _ctrl.reverse(),
+      onTapCancel: () => _ctrl.reverse(),
+      child: AnimatedBuilder(
+        animation: _scale,
+        builder: (_, child) => Transform.scale(
+          scale: _scale.value,
+          child: Container(
+            margin: widget.margin,
+            child: child,
+          ),
+        ),
+        child: widget.child,
+      ),
+    );
   }
 }
