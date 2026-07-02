@@ -64,9 +64,9 @@ class DiaryMemoryController extends ChangeNotifier {
     _resetMemoriesPagination();
   }
 
-  static const int _webMemoryCacheLimit = 80;
-  static const int _appMemoryCacheLimit = 50;
-  static const int _memoryUploadConcurrency = 3;
+  static const int _webMemoryCacheLimit = 200;
+  static const int _appMemoryCacheLimit = 300;
+  static const int _memoryUploadConcurrency = 5;
   static const Duration _memoryDownloadCacheTtl = Duration(days: 7);
   static const Color _diaryPinkDeep = Color(0xFFD81B60);
   static const String _pendingUploadPrefsKey = 'diary_memory_pending_upload_v1';
@@ -1425,7 +1425,8 @@ class DiaryMemoryController extends ChangeNotifier {
     }
   }
 
-  Future<String?> _uploadSingleMemoryPhoto({
+  /// Upload R2 only — trả về payload để batch-write Firebase sau
+  Future<({String? error, Map<String, dynamic>? payload})> _uploadSingleMemoryPhoto({
     required String houseId,
     required XFile image,
     required String authorName,
@@ -1442,41 +1443,29 @@ class DiaryMemoryController extends ChangeNotifier {
       );
       final imageUrl = upload?.downloadUrl.trim() ?? '';
       if (upload == null || imageUrl.isEmpty) {
-        return L10nService().translate('home_khngthtoph_b49958');
+        return (error: L10nService().translate('home_khngthtoph_b49958'), payload: null);
       }
 
-      // R2 upload hoàn tất → tự ghi record vào Firebase
-      try {
-        final nowMs = DateTime.now().millisecondsSinceEpoch;
-        final memoryRef = _dbRef.child('houses/$houseId/memories').push();
-        final memoryId = memoryRef.key ?? '';
-        if (memoryId.isEmpty) {
-          return L10nService().translate('home_cannot_create_memory_id');
-        }
-        await memoryRef.set({
-          'url': imageUrl,
-          'ts': nowMs,
-          'date': nowMs,
-          'author': authorName.trim(),
-          'authorId': FirebaseAuth.instance.currentUser?.uid ?? '',
-          'authorName': authorName.trim(),
-          'storagePath': upload.storagePath,
-          'authorEmail': authorEmail.trim(),
-          'authorRole': authorRole.trim(),
-          if (position != null) 'lat': position.latitude,
-          if (position != null) 'lng': position.longitude,
-        });
-        debugPrint('✅ UPLOAD THÀNH CÔNG: Memory ID = $memoryId');
-        return null; // Success
-      } catch (dbError) {
-        debugPrint('Lỗi ghi memory vào Firebase: $dbError');
-        return L10nService().translate('home_cannot_save_memory');
-      }
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+      final payload = <String, dynamic>{
+        'url': imageUrl,
+        'ts': nowMs,
+        'date': nowMs,
+        'author': authorName.trim(),
+        'authorId': FirebaseAuth.instance.currentUser?.uid ?? '',
+        'authorName': authorName.trim(),
+        'storagePath': upload.storagePath,
+        'authorEmail': authorEmail.trim(),
+        'authorRole': authorRole.trim(),
+        if (position != null) 'lat': position.latitude,
+        if (position != null) 'lng': position.longitude,
+      };
+      return (error: null, payload: payload);
     } catch (e) {
       debugPrint(
         'Lỗi tải ảnh kỷ niệm: ${AppErrorMapper.resolve(e).message}',
       );
-      return AppErrorMapper.resolve(e).message;
+      return (error: AppErrorMapper.resolve(e).message, payload: null);
     }
   }
 
@@ -1707,29 +1696,46 @@ class DiaryMemoryController extends ChangeNotifier {
           start += _memoryUploadConcurrency) {
         final end = (start + _memoryUploadConcurrency).clamp(0, images.length);
         final batch = images.sublist(start, end);
-        final batchResults = await Future.wait(
-          [
-            for (final image in batch)
-              _uploadSingleMemoryPhoto(
-                houseId: houseId,
-                image: image,
-                authorName: authorName,
-                authorEmail: authorEmail,
-                authorRole: authorRole,
-                uploadQuality: memoryUploadQuality,
-                position: position,
-              ),
-          ],
-        );
 
+        // Bước 1: upload R2 song song (concurrency = _memoryUploadConcurrency)
+        final batchResults = await Future.wait([
+          for (final image in batch)
+            _uploadSingleMemoryPhoto(
+              houseId: houseId,
+              image: image,
+              authorName: authorName,
+              authorEmail: authorEmail,
+              authorRole: authorRole,
+              uploadQuality: memoryUploadQuality,
+              position: position,
+            ),
+        ]);
+
+        // Bước 2: gom tất cả Firebase writes thành 1 batch update duy nhất
+        final batchUpdates = <String, dynamic>{};
         final completedImages = <XFile>[];
         for (var index = 0; index < batchResults.length; index++) {
-          final err = batchResults[index];
-          if (err == null) {
-            uploadedCount++;
-            completedImages.add(batch[index]);
-          } else {
-            errorMessages.add(err);
+          final result = batchResults[index];
+          if (result.error != null) {
+            errorMessages.add(result.error!);
+          } else if (result.payload != null) {
+            final memoryKey = _dbRef.child('houses/$houseId/memories').push().key ?? '';
+            if (memoryKey.isNotEmpty) {
+              batchUpdates['houses/$houseId/memories/$memoryKey'] = result.payload;
+              uploadedCount++;
+              completedImages.add(batch[index]);
+              debugPrint('✅ UPLOAD THÀNH CÔNG: Memory ID = $memoryKey');
+            }
+          }
+        }
+
+        // Ghi Firebase 1 lần cho cả batch
+        if (batchUpdates.isNotEmpty) {
+          try {
+            await _dbRef.update(batchUpdates);
+          } catch (dbError) {
+            debugPrint('Lỗi batch-write Firebase: $dbError');
+            errorMessages.add(L10nService().translate('home_cannot_save_memory'));
           }
         }
         if (completedImages.isNotEmpty) {

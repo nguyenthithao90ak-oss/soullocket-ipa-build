@@ -23,7 +23,7 @@ class _MainHomeHeroHeaderState extends State<_MainHomeHeroHeader> {
     return Stack(
       children: [
         Positioned(
-          top: MediaQuery.of(context).padding.top + 4,
+          top: MediaQuery.paddingOf(context).top + 4,
           right: 14,
           child: ValueListenableBuilder<bool>(
             valueListenable: UiPrefs.captureModeNotifier,
@@ -63,7 +63,7 @@ class _MainHomeHeroHeaderState extends State<_MainHomeHeroHeader> {
         ),
         if (widget.state._showLegacyMessengerButton && !widget.isSingle)
           Positioned(
-            top: MediaQuery.of(context).padding.top + 12,
+            top: MediaQuery.paddingOf(context).top + 12,
             left: 66,
             child: widget.state._buildHeaderButton(
               icon: Icons.messenger_outline,

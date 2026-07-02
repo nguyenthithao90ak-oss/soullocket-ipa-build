@@ -66,16 +66,12 @@ class SettingsSyncService {
   Completer<void>? _backupCompleter;
 
   static const List<String> _syncKeys = [
-    'il_theme_key',
-    'il_falling_effect',
     'il_avatar_size',
     'il_countdown_size',
     'il_avatar_frame',
     'il_countdown_style',
     'il_countdown_top_label',
     'il_countdown_bottom_label',
-    'il_font_key',
-    'il_home_block_tone',
     'il_custom_background_url',
     'il_home_show_house_name',
     'il_auto_reply_text',

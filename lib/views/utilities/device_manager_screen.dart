@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/sl_theme.dart';
 import '../../utils/services/device_manager_service.dart';
@@ -147,6 +146,21 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
         _loadMessage = _loadMessage.isNotEmpty ? _loadMessage : msgNoDevices;
       }
 
+      devices.sort((a, b) {
+        final aIsCurrent = a['deviceId'] == _currentDeviceId;
+        final bIsCurrent = b['deviceId'] == _currentDeviceId;
+        if (aIsCurrent && !bIsCurrent) return -1;
+        if (!aIsCurrent && bIsCurrent) return 1;
+
+        final aTs = (a['last_seen'] as num?)?.toInt() ?? 0;
+        final bTs = (b['last_seen'] as num?)?.toInt() ?? 0;
+        return bTs.compareTo(aTs);
+      });
+
+      if (devices.length > 10) {
+        devices = devices.take(10).toList();
+      }
+
       final currentDevice = devices.cast<Map<String, dynamic>?>().firstWhere(
             (device) => device?['deviceId'] == _currentDeviceId,
             orElse: () => null,
@@ -268,11 +282,26 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
     SLNotice.showInfo(context, msg);
   }
 
-  String _formatTs(dynamic ts) {
+  String _formatRelativeTime(dynamic ts, bool isMe) {
     if (ts == null) return context.tr('util_khngr_b18ff7');
     try {
       final dt = DateTime.fromMillisecondsSinceEpoch((ts as num).toInt());
-      return DateFormat('dd/MM/yyyy HH:mm').format(dt);
+      final now = DateTime.now();
+      final diff = now.difference(dt);
+      
+      if (isMe || diff.inMinutes < 5) {
+        return 'Vẫn đang hoạt động';
+      }
+      
+      if (diff.inDays > 0) {
+        return 'Off ${diff.inDays} ngày trước';
+      } else if (diff.inHours > 0) {
+        return 'Off ${diff.inHours} giờ trước';
+      } else if (diff.inMinutes > 0) {
+        return 'Off ${diff.inMinutes} phút trước';
+      } else {
+        return 'Vừa xong';
+      }
     } catch (_) {
       return context.tr('util_khngr_b18ff7');
     }
@@ -601,8 +630,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
                           SLTheme.quicksand(fontSize: 12, color: Colors.black54)),
                   SLSpacing.gapH(2),
                   Text(
-                      L10nService().format('util_device_last_seen',
-                          {'time': _formatTs(device['last_seen'])}),
+                      _formatRelativeTime(device['last_seen'], isMe),
                       style:
                           SLTheme.quicksand(fontSize: 11, color: Colors.black45)),
                   if (device['ip'] != null && device['ip'] != 'unknown') ...[

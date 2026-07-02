@@ -144,8 +144,8 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_initialized) {
-      final screenWidth = MediaQuery.of(context).size.width;
-      final screenHeight = MediaQuery.of(context).size.height;
+      final screenWidth = MediaQuery.sizeOf(context).width;
+      final screenHeight = MediaQuery.sizeOf(context).height;
       // Start near the bottom-center, accounting for sticker width (150px widget wrapper)
       _posX = (screenWidth - 150) / 2;
       _posY = screenHeight - 220;
@@ -172,8 +172,8 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
   void _pickNextDestination() {
     if (!mounted) return;
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final screenHeight = MediaQuery.sizeOf(context).height;
 
     // Boundaries for the 150x120 sized overlay widget
     const minX = -30.0;

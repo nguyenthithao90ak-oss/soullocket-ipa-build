@@ -186,7 +186,7 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                                   ),
                                 ),
                                 child: Text(
-                                  '${size}x${size}',
+                                  '${size}x$size',
                                   style: SLTheme.quicksand(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w900,

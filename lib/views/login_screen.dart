@@ -1104,7 +1104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         alignment: Alignment.bottomCenter,
                         child: Padding(
                           padding: EdgeInsets.only(
-                              bottom: MediaQuery.of(context).padding.bottom > 0
+                              bottom: MediaQuery.paddingOf(context).bottom > 0
                                   ? 8
                                   : 16),
                           child: Text(

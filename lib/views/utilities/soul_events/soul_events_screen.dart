@@ -75,7 +75,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
       badgeBgColor = color;
     } else if (isPast) {
       dDayText = 'D+ $displayDays';
-      badgeBgColor = SLColors.textSecond.withOpacity(0.15);
+      badgeBgColor = SLColors.textSecond.withValues(alpha: 0.15);
       textColor = SLColors.textPrimary;
     } else {
       dDayText = 'D- $displayDays';
@@ -89,7 +89,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: diff >= 0 ? [
           BoxShadow(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 4),
           )
@@ -164,7 +164,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.event_available_rounded, color: SLColors.textSecond.withOpacity(0.3), size: 64),
+                    Icon(Icons.event_available_rounded, color: SLColors.textSecond.withValues(alpha: 0.3), size: 64),
                     const SizedBox(height: 16),
                     Text('Chưa có sự kiện nào', style: SLTypography.bodyMedium),
                   ],
@@ -197,7 +197,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                 final diff = _calculateDaysDiff(event.dateMs);
                 final color = Color(int.tryParse(event.colorHex.replaceFirst('#', '0xFF')) ?? 0xFFFF4D94);
                 final date = DateTime.fromMillisecondsSinceEpoch(event.dateMs);
-                final dateStr = "${date.day} thg ${date.month}, ${date.year}";
+                final dateStr = '${date.day} thg ${date.month}, ${date.year}';
 
                 return GestureDetector(
                   onTap: () => Navigator.push(
@@ -210,22 +210,22 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                     margin: const EdgeInsets.only(bottom: 16),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(24),
                       border: event.isPinned
-                          ? Border.all(color: SLColors.warningGold.withOpacity(0.5), width: 1.5)
-                          : Border.all(color: Colors.white.withOpacity(0.6), width: 1),
+                          ? Border.all(color: SLColors.warningGold.withValues(alpha: 0.5), width: 1.5)
+                          : Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1),
                       boxShadow: event.isPinned 
                           ? [
                               BoxShadow(
-                                color: SLColors.warningGold.withOpacity(0.12),
+                                color: SLColors.warningGold.withValues(alpha: 0.12),
                                 blurRadius: 16,
                                 offset: const Offset(0, 8),
                               )
                             ]
                           : [
                               BoxShadow(
-                                color: color.withOpacity(0.06),
+                                color: color.withValues(alpha: 0.06),
                                 blurRadius: 16,
                                 offset: const Offset(0, 8),
                               ),
@@ -237,7 +237,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                           width: 56,
                           height: 56,
                           decoration: BoxDecoration(
-                            color: color.withOpacity(0.12),
+                            color: color.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Icon(_getEventIcon(event.title), color: color, size: 28),
@@ -279,7 +279,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: Colors.amber.withOpacity(0.15),
+                                        color: Colors.amber.withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Row(

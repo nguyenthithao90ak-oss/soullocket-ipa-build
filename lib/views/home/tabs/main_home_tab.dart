@@ -153,6 +153,65 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   static const String _insightCardFirstTapSeenPrefsKey =
       'il_home_insight_card_first_tap_seen_v1';
 
+  TextStyle _uiTextStyle({
+    required double fontSize,
+    required FontWeight fontWeight,
+    required Color color,
+    double? height,
+    double? letterSpacing,
+  }) {
+    return SLTheme.textStyleForKey(
+      UiPrefs.notifier.value.fontKey,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      height: height,
+      letterSpacing: letterSpacing,
+    );
+  }
+
+  List<Color> _profileAccentGradient(bool isUser1) {
+    if (isUser1) {
+      return const [Color(0xFF60A5FA), Color(0xFF2563EB)];
+    }
+    return const [Color(0xFFFF8FB1), Color(0xFFFF4D79)];
+  }
+
+  BoxDecoration _homeCardDecoration({double radius = 24}) {
+    final tone = UiPrefs.notifier.value.homeBlockToneKey;
+    final color = switch (tone) {
+      'mist' => const Color(0xFFEEF4FF).withValues(alpha: 0.42),
+      'rose' => const Color(0xFFFFE1EC).withValues(alpha: 0.38),
+      'glass' => const Color(0xFF3A2434).withValues(alpha: 0.22),
+      _ => const Color(0xFF43293A).withValues(alpha: 0.20),
+    };
+    final borderColor = switch (tone) {
+      'mist' => const Color(0xFFDAE8FF).withValues(alpha: 0.62),
+      'rose' => const Color(0xFFFFC7DA).withValues(alpha: 0.60),
+      'glass' => Colors.white.withValues(alpha: 0.22),
+      _ => const Color(0xFFFFD6E4).withValues(alpha: 0.26),
+    };
+    final shadowColor = switch (tone) {
+      'mist' => const Color(0xFF64B5F6).withValues(alpha: 0.10),
+      'rose' => SLColors.primary.withValues(alpha: 0.12),
+      'glass' => Colors.black.withValues(alpha: 0.14),
+      _ => const Color(0xFF2C1623).withValues(alpha: 0.16),
+    };
+
+    return BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(radius),
+      boxShadow: [
+        BoxShadow(
+          color: shadowColor,
+          blurRadius: 28,
+          offset: const Offset(0, 10),
+        ),
+      ],
+      border: Border.all(color: borderColor, width: 1.2),
+    );
+  }
+
   static final List<String> _kHomeStickerAssets = List<String>.generate(99, (i) {
     final num = (i + 1).toString().padLeft(3, '0');
     return 'assets/images/interaction_stickers/custom/numbered/sticker_$num.png';
@@ -206,10 +265,11 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   static const Duration _fetchCacheDuration = Duration(seconds: 30);
 
   Map<String, dynamic>? _houseSettings;
+  Map<String, dynamic> _presenceDataMap = {};
   final ValueNotifier<Map<String, dynamic>> _presenceDataNotifier =
       ValueNotifier<Map<String, dynamic>>({});
-  Map<String, dynamic> get _presenceData => _presenceDataNotifier.value;
-  set _presenceData(Map<String, dynamic> v) => _presenceDataNotifier.value = v;
+  Map<String, dynamic> get _presenceData => _presenceDataMap;
+  set _presenceData(Map<String, dynamic> v) => _presenceDataMap = v;
   bool _hasLoadedPresenceSnapshot = false;
   bool _isLoading = true;
   bool _showStatus = true;
@@ -232,6 +292,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       ValueNotifier<Map<String, dynamic>?>(null);
   final ValueNotifier<Map<String, dynamic>?> _homeMyBatteryNotifier =
       ValueNotifier<Map<String, dynamic>?>(null);
+  final ValueNotifier<bool> _isScrollingNotifier = ValueNotifier<bool>(false);
   int _wishIndex = -1;
   int _tipIndex = -1;
   bool _hideSettingsButtonUntilRestart = false;
@@ -245,8 +306,11 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   Timer? _presenceSnapshotFallbackTimer;
   Timer? _calendarWidgetSyncDebounce;
   Timer? _healthCycleWidgetSyncDebounce;
+  Timer? _fetchHouseDataDebounceTimer;
+  Future<void>? _activeFetchFuture;
   StreamSubscription? _settingsSubscription;
   StreamSubscription? _presenceSubscription;
+  final List<StreamSubscription> _presenceSubList = [];
   StreamSubscription? _missInteractionSubscription;
   StreamSubscription<DatabaseEvent>? _alertSubscription;
   StreamSubscription<DatabaseEvent>? _newDeviceNotificationSubscription;
@@ -329,7 +393,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   int _homeMediaWarmupToken = 0;
   final Set<String> _seenNewDeviceNotificationIds = <String>{};
   String _lastHomeMediaWarmupSignature = '';
-  final ValueNotifier<bool> _isScrollingNotifier = ValueNotifier<bool>(false);
 
   StreamSubscription? _membersSubscription;
 
@@ -367,67 +430,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       }
     }
     return _smartInteractionPreset;
-  }
-
-  List<Color> _profileAccentGradient(bool isUser1) {
-    if (isUser1) {
-      return const [Color(0xFF60A5FA), Color(0xFF2563EB)];
-    }
-    return const [Color(0xFFFF8FB1), Color(0xFFFF4D79)];
-  }
-
-
-
-  TextStyle _uiTextStyle({
-    required double fontSize,
-    required FontWeight fontWeight,
-    required Color color,
-    double? height,
-    double? letterSpacing,
-  }) {
-    return SLTheme.textStyleForKey(
-      UiPrefs.notifier.value.fontKey,
-      fontSize: fontSize,
-      fontWeight: fontWeight,
-      color: color,
-      height: height,
-      letterSpacing: letterSpacing,
-    );
-  }
-
-  BoxDecoration _homeCardDecoration({double radius = 24}) {
-    final tone = UiPrefs.notifier.value.homeBlockToneKey;
-    final color = switch (tone) {
-      'mist' => const Color(0xFFEEF4FF).withValues(alpha: 0.42),
-      'rose' => const Color(0xFFFFE1EC).withValues(alpha: 0.38),
-      'glass' => const Color(0xFF3A2434).withValues(alpha: 0.22),
-      _ => const Color(0xFF43293A).withValues(alpha: 0.20),
-    };
-    final borderColor = switch (tone) {
-      'mist' => const Color(0xFFDAE8FF).withValues(alpha: 0.62),
-      'rose' => const Color(0xFFFFC7DA).withValues(alpha: 0.60),
-      'glass' => Colors.white.withValues(alpha: 0.22),
-      _ => const Color(0xFFFFD6E4).withValues(alpha: 0.26),
-    };
-    final shadowColor = switch (tone) {
-      'mist' => const Color(0xFF64B5F6).withValues(alpha: 0.10),
-      'rose' => SLColors.primary.withValues(alpha: 0.12),
-      'glass' => Colors.black.withValues(alpha: 0.14),
-      _ => const Color(0xFF2C1623).withValues(alpha: 0.16),
-    };
-
-    return BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(radius),
-      boxShadow: [
-        BoxShadow(
-          color: shadowColor,
-          blurRadius: 28,
-          offset: const Offset(0, 10),
-        ),
-      ],
-      border: Border.all(color: borderColor, width: 1.2),
-    );
   }
 
 
@@ -504,8 +506,13 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     widget.isActiveListenable.removeListener(_onActiveChanged);
     _invalidateLiveWorkSession();
     _cancelLiveWorkBindings();
+    _fetchHouseDataDebounceTimer?.cancel();
 
     // Explicitly cancel subscriptions in dispose to satisfy linter rule 'cancel_subscriptions'
+    for (final sub in _presenceSubList) {
+      sub.cancel();
+    }
+    _presenceSubList.clear();
     _settingsSubscription?.cancel();
     _presenceSubscription?.cancel();
     _missInteractionSubscription?.cancel();
@@ -530,8 +537,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _homeDistanceTextNotifier.dispose();
     _homeMapAlertNotifier.dispose();
     _homePartnerBatteryNotifier.dispose();
-    _isScrollingNotifier.dispose();
     _fallingEffectTypeNotifier.dispose();
+    _isScrollingNotifier.dispose();
     super.dispose();
   }
 
@@ -552,9 +559,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       final dataIsFresh = _lastFetchTime != null &&
           DateTime.now().difference(_lastFetchTime!) <= _fetchCacheDuration;
       if (dataIsFresh) return;
-      // ⚡ Delay fetch until after swipe animation (~300ms) + warmup settle (650ms).
+      // ⚡ Debounce fetch until after swipe animation (~300ms) + warmup settle (650ms).
       //    700ms gives enough breathing room so the UI thread is free during animation.
-      Future.delayed(const Duration(milliseconds: 700), () {
+      _fetchHouseDataDebounceTimer?.cancel();
+      _fetchHouseDataDebounceTimer = Timer(const Duration(milliseconds: 700), () {
         if (!mounted || !_isTabActive) return;
         unawaited(
           _fetchHouseData(
@@ -567,6 +575,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     // Do not cancel Firebase RTDB bindings here (keep them connected to avoid tearing down and re-fetching on tab switch).
     // Instead, we only pause non-critical active loops if any, but weather loop and presence check and update will
     // automatically adapt based on _isTabActive inside their respective timers/listeners.
+    _fetchHouseDataDebounceTimer?.cancel();
     _invalidateLiveWorkSession();
   }
 
@@ -799,10 +808,19 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     bool preserveVisibleState = false,
     bool preloadOnly = false,
   }) {
-    return _fetchHouseDataImpl(
+    if (_activeFetchFuture != null) {
+      return _activeFetchFuture!;
+    }
+    final future = _fetchHouseDataImpl(
       preserveVisibleState: preserveVisibleState,
       preloadOnly: preloadOnly,
     );
+    _activeFetchFuture = future;
+    return future.then((_) {
+      _activeFetchFuture = null;
+    }, onError: (_) {
+      _activeFetchFuture = null;
+    });
   }
 
   String _zodiacAndAgeForRole(String role) {
@@ -1843,63 +1861,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         isPremium: true,
       ),
     ];
-    final effectOptions = <_CountdownQuickOption>[
-      _CountdownQuickOption(
-        label: context.tr('effect_auto_season'),
-        value: 'auto',
-        icon: Icons.auto_awesome_motion_rounded,
-        accent: const Color(0xFFB56BE8),
-      ),
-      _CountdownQuickOption(
-        label: context.tr('effect_sparkles'),
-        value: 'sparkles',
-        icon: Icons.auto_awesome_rounded,
-        accent: const Color(0xFFFFB300),
-      ),
-      _CountdownQuickOption(
-        label: context.tr('effect_stars'),
-        value: 'stars',
-        icon: Icons.star_rounded,
-        accent: const Color(0xFF5C6BC0),
-      ),
-      _CountdownQuickOption(
-        label: context.tr('effect_hearts'),
-        value: 'hearts',
-        icon: Icons.favorite_rounded,
-        accent: const Color(0xFFE91E63),
-      ),
-      _CountdownQuickOption(
-        label: context.tr('effect_meteors'),
-        value: 'meteors',
-        icon: Icons.rocket_launch_rounded,
-        accent: const Color(0xFFFF7043),
-      ),
-      _CountdownQuickOption(
-        label: context.tr('effect_bubbles'),
-        value: 'bubbles',
-        icon: Icons.bubble_chart_rounded,
-        accent: const Color(0xFF29B6F6),
-      ),
-      _CountdownQuickOption(
-        label: context.tr('effect_snow'),
-        value: 'snow',
-        icon: Icons.ac_unit_rounded,
-        accent: const Color(0xFF4FC3F7),
-      ),
-      _CountdownQuickOption(
-        label: context.tr('effect_leaves'),
-        value: 'leaves',
-        icon: Icons.spa_rounded,
-        accent: const Color(0xFF66BB6A),
-      ),
-      _CountdownQuickOption(
-        label: context.tr('effect_off'),
-        value: 'off',
-        icon: Icons.do_not_disturb_on_rounded,
-        accent: const Color(0xFF9E9E9E),
-      ),
-    ];
-
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -1910,7 +1871,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       builder: (sheetContext) {
         return _CountdownQuickCustomizeSheetContent(
           styleOptions: styleOptions,
-          effectOptions: effectOptions,
           unlockedStyles: unlockedStyles,
           isVip: isVip,
           homeState: this,
@@ -2153,9 +2113,18 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   }
 }
 
+class _ThemeBackgroundAspectRatioPreset implements CropAspectRatioPresetData {
+  const _ThemeBackgroundAspectRatioPreset();
+
+  @override
+  String get name => 'house_background_9x16';
+
+  @override
+  (int ratioX, int ratioY)? get data => (9, 16);
+}
+
 class _CountdownQuickCustomizeSheetContent extends StatefulWidget {
   final List<_CountdownQuickOption> styleOptions;
-  final List<_CountdownQuickOption> effectOptions;
   final Set<String> unlockedStyles;
   final bool isVip;
   final _MainHomeTabState homeState;
@@ -2163,7 +2132,6 @@ class _CountdownQuickCustomizeSheetContent extends StatefulWidget {
 
   const _CountdownQuickCustomizeSheetContent({
     required this.styleOptions,
-    required this.effectOptions,
     required this.unlockedStyles,
     required this.isVip,
     required this.homeState,
@@ -2574,9 +2542,11 @@ class _CountdownQuickCustomizeSheetContentState
     required ValueChanged<double> onChanged,
     required ValueChanged<double> onChangedEnd,
     required VoidCallback onSave,
+    required String? customBgUrl,
   }) {
     final displayValue = tempValue ?? currentValue;
     final hasChanges = tempValue != null && (tempValue - currentValue).abs() > 0.01;
+    final hasBg = customBgUrl != null && customBgUrl.trim().isNotEmpty;
 
     return Container(
       width: double.infinity,
@@ -2723,6 +2693,181 @@ class _CountdownQuickCustomizeSheetContentState
                 ),
             ],
           ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 10),
+            child: Divider(color: Color(0xFFF0DDE4), height: 1),
+          ),
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF9733EE).withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.image_outlined,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ảnh nền trang chủ',
+                      style: SLTheme.quicksand(
+                        fontSize: 14.8,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF4A3640),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Tải lên hoặc xóa ảnh nền trang chủ.',
+                      style: SLTheme.quicksand(
+                        fontSize: 12.1,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF8E6F7E),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (_isUploadingBg) ...[
+            Row(
+              children: [
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _bgUploadProgress != null
+                        ? 'Đang tải lên: ${(_bgUploadProgress! * 100).toInt()}%'
+                        : 'Đang chuẩn bị tải lên...',
+                    style: SLTheme.quicksand(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF8E6F7E),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            Row(
+              children: [
+                if (hasBg) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: CachedNetworkImage(
+                      imageUrl: customBgUrl.trim(),
+                      width: 44,
+                      height: 44,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        color: const Color(0xFFFDE8F0),
+                        child: const Icon(Icons.image_outlined, size: 16, color: Color(0xFFD81B60)),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: const Color(0xFFFDE8F0),
+                        child: const Icon(Icons.broken_image_outlined, size: 16, color: Color(0xFFD81B60)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFF0DDE4)),
+                      foregroundColor: const Color(0xFF4A3640),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: _pickBgImage,
+                    icon: const Icon(Icons.upload_rounded, size: 16, color: Color(0xFFD81B60)),
+                    label: Text(
+                      hasBg ? 'Thay đổi ảnh' : 'Tải ảnh lên',
+                      style: SLTheme.quicksand(fontSize: 13, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ),
+                if (hasBg) ...[
+                  const SizedBox(width: 10),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF2F7),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFF4D7E2)),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFD81B60), size: 20),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: Text(
+                              'Xóa ảnh nền?',
+                              style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                            ),
+                            content: Text(
+                              'Bạn có chắc chắn muốn xóa ảnh nền trang chủ không?',
+                              style: SLTheme.quicksand(fontWeight: FontWeight.w700),
+                            ),
+                            actions: [
+                              TextButton(
+                                child: Text(
+                                  'Hủy',
+                                  style: SLTheme.quicksand(fontWeight: FontWeight.w800, color: const Color(0xFF8E6F7E)),
+                                ),
+                                onPressed: () => Navigator.pop(ctx),
+                              ),
+                              TextButton(
+                                child: Text(
+                                  'Xóa',
+                                  style: SLTheme.quicksand(fontWeight: FontWeight.w900, color: const Color(0xFFD81B60)),
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(ctx);
+                                  _clearBgImage();
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -3312,6 +3457,7 @@ class _CountdownQuickCustomizeSheetContentState
                   icon: Icons.photo_size_select_large_rounded,
                   currentValue: uiState.countdownSizePx,
                   tempValue: _tempCountdownSize,
+                  customBgUrl: uiState.customBackgroundUrl,
                   onChanged: (value) {
                     setState(() {
                       _tempCountdownSize = value;
@@ -3343,11 +3489,6 @@ class _CountdownQuickCustomizeSheetContentState
                     await UiPrefs.setHomeShowTimer(val);
                   },
                 ),
-                const SizedBox(height: 12),
-                buildBackgroundSection(
-                  customBgUrl: uiState.customBackgroundUrl,
-                ),
-                // Tạm ngắt phần cài đặt Hiệu ứng nền
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
@@ -3614,9 +3755,9 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
       builder: (context, captureMode, _) {
         if (captureMode) return const SizedBox.shrink();
 
-        final defaultPos = Offset(14, MediaQuery.of(context).padding.top + 4);
+        final defaultPos = Offset(14, MediaQuery.paddingOf(context).top + 4);
         final pos = _position ?? defaultPos;
-        final screenWidth = MediaQuery.of(context).size.width;
+        final screenWidth = MediaQuery.sizeOf(context).width;
 
         // Căn giữa sticker mặc định (52 - 212) / 2 = -80
         double tooltipLeft = -80;
@@ -3715,8 +3856,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                   setState(() {
                     final targetPos = details.globalPosition - _dragOffset;
                     _position = Offset(
-                      targetPos.dx.clamp(0.0, MediaQuery.of(context).size.width - 52),
-                      targetPos.dy.clamp(0.0, MediaQuery.of(context).size.height - 150),
+                      targetPos.dx.clamp(0.0, MediaQuery.sizeOf(context).width - 52),
+                      targetPos.dy.clamp(0.0, MediaQuery.sizeOf(context).height - 150),
                     );
                   });
                 },

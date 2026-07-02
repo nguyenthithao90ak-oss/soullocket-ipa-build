@@ -96,7 +96,7 @@ extension _MainHomeDerivedStateHelper on _MainHomeTabState {
             _houseSettings?['dayUnit']?.toString(),
             context.tr('home_ngy_48e4b0'),
           );
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
     final responsiveCircleMax =
         (screenWidth - 20).clamp(280.0, UiPrefs.maxCountdownSizePx).toDouble();
     final circleSize = min(

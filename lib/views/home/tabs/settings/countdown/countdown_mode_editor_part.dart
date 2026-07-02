@@ -688,12 +688,14 @@ class _CountdownModeEditorScreenState
     required IconData icon,
     required String title,
     required String subtitle,
+    List<Color>? iconGradient,
     required Widget child,
   }) =>
       _sectionCardImpl(
         icon: icon,
         title: title,
         subtitle: subtitle,
+        iconGradient: iconGradient,
         child: child,
       );
 
@@ -855,6 +857,10 @@ class _CountdownModeEditorScreenState
                             icon: Icons.timelapse_rounded,
                             title: 'Xem nhanh không gian',
                             subtitle: 'Xem vòng đếm gọn trước khi lưu',
+                            iconGradient: const [
+                              Color(0xFF3B82F6),
+                              Color(0xFF60A5FA),
+                            ],
                             child: Container(
                               width: double.infinity,
                               padding: const EdgeInsets.all(14),
@@ -905,6 +911,10 @@ class _CountdownModeEditorScreenState
                             icon: Icons.edit_note_rounded,
                             title: 'Nội dung hiển thị',
                             subtitle: 'Tên, avatar và icon trung tâm',
+                            iconGradient: const [
+                              Color(0xFFF472B6),
+                              Color(0xFFEC4899),
+                            ],
                             child: Column(
                               children: [
                                 TextField(
@@ -1097,6 +1107,10 @@ class _CountdownModeEditorScreenState
                             icon: Icons.event_available_rounded,
                             title: 'Mốc thời gian & kiểu hiển thị',
                             subtitle: 'Chọn ngày mốc, theme, vòng đếm, kính mờ',
+                            iconGradient: const [
+                              Color(0xFF14B8A6),
+                              Color(0xFF06B6D4),
+                            ],
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -1248,17 +1262,24 @@ class _CountdownModeEditorScreenState
                             title: L10nService().translate('home_giaodinvng_2311dc'),
                             subtitle:
                                 context.tr('home_kiuhinthny_15f695'),
+                            iconGradient: const [
+                              Color(0xFFFF9A9E),
+                              Color(0xFFFECF6A),
+                            ],
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _CountdownModeSheetDropdown(
-                                  label: context.tr('home_ch_f5d6a5'),
-                                  value: _themeKey,
-                                  options: _themeOptions,
-                                  onChanged: (value) =>
-                                      setState(() => _themeKey = value),
+                                Text(
+                                  context.tr('home_ch_f5d6a5'),
+                                  style: SLTheme.quicksand(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFF8A5B76),
+                                  ),
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 10),
+                                _buildCountdownThemeSwatchGrid(),
+                                const SizedBox(height: 16),
                                 _CountdownModeSheetDropdown(
                                   label: _isUnlockingCountdownStyle
                                       ? context.tr('home_angmkhakiu_38c380')

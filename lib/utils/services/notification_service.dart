@@ -239,12 +239,12 @@ class NotificationService {
 
   /// Xử lý thông báo khi App đang mở — hiển thị Local Notification
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
-    final notification = message.notification;
-    if (notification == null || _shouldSkipForegroundMessage(message)) return;
-
     final type = message.data['type']?.toString() ?? '';
     final screen = message.data['screen']?.toString() ?? '';
-    if (type == 'soul_merge' || screen == 'soul_merge' || type == 'chat' || screen == 'chat') {
+    final isOverlayTarget = type == 'soul_merge' || screen == 'soul_merge' || type == 'chat' || screen == 'chat';
+
+    // 1. Luôn hiển thị bong bóng (nếu được cấp quyền) ngay cả khi không có notification block (Data-only FCM)
+    if (isOverlayTarget) {
       try {
         final granted = await FlutterOverlayWindow.isPermissionGranted();
         if (granted) {
@@ -264,6 +264,10 @@ class NotificationService {
         debugPrint('Error showing overlay in foreground: $e');
       }
     }
+
+    // 2. Xử lý hiển thị heads-up (Local Notification)
+    final notification = message.notification;
+    if (notification == null || _shouldSkipForegroundMessage(message)) return;
 
     await showLocalNotification(
       title: notification.title ?? '',

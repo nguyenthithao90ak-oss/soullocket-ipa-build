@@ -302,7 +302,7 @@ class DiaryFeedController extends ChangeNotifier {
       final snap = await _dbRef
           .child('users/$uid')
           .get()
-          .timeout(const Duration(seconds: 2));
+          .timeout(const Duration(seconds: 8));
       final raw = snap.value;
       if (raw is Map) {
         candidates.addAll([
@@ -384,8 +384,8 @@ class DiaryFeedController extends ChangeNotifier {
   Future<void> _hydrateMemberRoles(String houseId) async {
     try {
       final snaps = await Future.wait([
-        _dbRef.child('houses/$houseId/owner_uid').get().timeout(const Duration(seconds: 3)),
-        _dbRef.child('houses/$houseId/members').get().timeout(const Duration(seconds: 3)),
+        _dbRef.child('houses/$houseId/owner_uid').get().timeout(const Duration(seconds: 8)),
+        _dbRef.child('houses/$houseId/members').get().timeout(const Duration(seconds: 8)),
       ]);
 
       final ownerUidSnap = snaps[0];

@@ -16,7 +16,7 @@ class _LoveCardCreateView extends StatelessWidget {
       builder: (context, constraints) {
         final desktopInset = constraints.maxWidth >= 1120 ? 42.0 : 0.0;
         final compactWidth = constraints.maxWidth < 380;
-        final bottomInset = MediaQuery.of(context).padding.bottom;
+        final bottomInset = MediaQuery.paddingOf(context).bottom;
 
         return Stack(
           children: [
@@ -153,7 +153,7 @@ class _LoveCardCreateStickyFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).padding.bottom;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -263,7 +263,7 @@ class _LoveCardThemePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewportWidth = MediaQuery.of(context).size.width;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
     final cardWidth = max(168.0, min(190.0, ((viewportWidth - 60) / 2)));
 
     return SizedBox(
@@ -403,7 +403,7 @@ class _LoveCardPreviewPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewportWidth = MediaQuery.of(context).size.width;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
     final panelHeight = min(max(viewportWidth * 0.92, 340.0), 450.0);
     const surfacePadding = EdgeInsets.all(20);
     const outerRadius = 28.0;
@@ -1313,7 +1313,7 @@ class _LoveCardMetaFieldState extends State<_LoveCardMetaField> {
                 fontWeight: FontWeight.w600,
               ),
               border: InputBorder.none,
-              counterText: "",
+              counterText: '',
               contentPadding: const EdgeInsets.symmetric(vertical: 6),
             ),
           ),

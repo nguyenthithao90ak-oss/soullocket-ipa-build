@@ -169,8 +169,8 @@ class _DiaryTabShell extends StatelessWidget {
                   14,
                   0,
                   14,
-                  (MediaQuery.of(context).padding.bottom > 0
-                          ? MediaQuery.of(context).padding.bottom
+                  (MediaQuery.paddingOf(context).bottom > 0
+                          ? MediaQuery.paddingOf(context).bottom
                           : 0) +
                       10,
                 ),
@@ -251,7 +251,7 @@ class _DiaryTabLoadingSection extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SkeletonContainer.rounded(
-                            width: MediaQuery.of(context).size.width * 0.45,
+                            width: MediaQuery.sizeOf(context).width * 0.45,
                             height: 18,
                             baseColor: baseColor, highlightColor: highlightColor,
                           ),

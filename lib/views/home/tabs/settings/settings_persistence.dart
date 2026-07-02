@@ -597,15 +597,15 @@ extension _SettingsTabPersistence on _SettingsTabState {
       } catch (_) {}
       final currentUser = _auth.currentUser;
       final security = await _authService.getHouseSecurityData(_houseId!);
-      final houseSnap = await _dbRef
-          .child('houses/$_houseId')
-          .get()
-          .timeout(const Duration(seconds: 3));
-      final houseMap = houseSnap.exists && houseSnap.value is Map
-          ? Map<dynamic, dynamic>.from(houseSnap.value as Map)
-          : <dynamic, dynamic>{};
-      final secMap = houseMap['security'] is Map
-          ? Map<dynamic, dynamic>.from(houseMap['security'])
+      final snaps = await Future.wait([
+        _dbRef.child('houses/$_houseId/security').get().timeout(const Duration(seconds: 3)),
+        _dbRef.child('houses/$_houseId/settings').get().timeout(const Duration(seconds: 3)),
+      ]);
+      final securitySnap = snaps[0];
+      final settingsSnap = snaps[1];
+
+      final secMap = securitySnap.exists && securitySnap.value is Map
+          ? Map<dynamic, dynamic>.from(securitySnap.value as Map)
           : <dynamic, dynamic>{};
 
       final effectiveSecurity = {
@@ -648,8 +648,9 @@ extension _SettingsTabPersistence on _SettingsTabState {
               .trim();
       final linkedGoogle = await _authService.isGoogleLinkedCurrentUser();
       final linkedPassword = await _authService.isPasswordLinkedCurrentUser();
-      final settingsMap =
-          Map<dynamic, dynamic>.from(houseMap['settings'] ?? {});
+      final settingsMap = settingsSnap.exists && settingsSnap.value is Map
+          ? Map<dynamic, dynamic>.from(settingsSnap.value as Map)
+          : <dynamic, dynamic>{};
       final lockMap = Map<dynamic, dynamic>.from(secMap['lock'] ?? {});
       final hasLegacyRemoteLockArtifacts = lockMap.isNotEmpty ||
           settingsMap['appLocked'] != null ||
@@ -1179,7 +1180,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
       _nameU1 = draft.nameU1;
       _nameU2 = draft.nameU2;
       _loveUnit = draft.dayUnit;
-      _openPanel = null;
+
     });
     await NotificationService().syncDailySleepReminder();
   }

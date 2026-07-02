@@ -199,7 +199,7 @@ class LoveInsightService {
   static LoveInsightData? _cachedInsight;
   static String? _cachedHouseId;
   static DateTime? _cacheTime;
-  static const Duration _cacheTtl = Duration(minutes: 5);
+  static const Duration _cacheTtl = Duration(minutes: 15);
 
   String _tr(String key, [Map<String, Object?> params = const {}]) {
     final l10n = L10nService();

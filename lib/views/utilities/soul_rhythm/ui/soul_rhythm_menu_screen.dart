@@ -3,7 +3,7 @@ part of '../../soul_rhythm_game.dart';
 
 extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
   Widget _buildMenuScreen() {
-    final width = MediaQuery.of(context).size.width;
+    final width = MediaQuery.sizeOf(context).width;
     final compact = width < 390;
     final laneCount = width < 430 ? '3' : '4';
     final menuGlowScale =

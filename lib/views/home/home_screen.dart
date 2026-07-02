@@ -374,7 +374,6 @@ class _HomeScreenState extends State<HomeScreen>
   final _breakupService = BreakupService();
   late final List<_HomeTabBuilder> _tabBuilders;
   final Map<int, Widget> _tabPageCache = <int, Widget>{};
-  Widget? _cachedForegroundContent;
   int _homeReloadCounter = 0;
   late final ValueNotifier<int> _activeTabIndexNotifier;
   late final ValueNotifier<int>
@@ -616,7 +615,6 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() {
       _homeReloadCounter++;
       _tabPageCache.clear();
-      _cachedForegroundContent = null;
     });
   }
 
@@ -1314,7 +1312,7 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _buildHomeMessengerBubble() {
     return Positioned(
       right: 16,
-      bottom: 110 + MediaQuery.of(context).padding.bottom,
+      bottom: 110 + MediaQuery.paddingOf(context).bottom,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -1469,47 +1467,43 @@ class _HomeScreenState extends State<HomeScreen>
     return bodyContent;
   }
 
-  /// ⚡ Cache foreground content để tránh rebuild PageView khi UiPrefs thay đổi
   Widget _getOrBuildForegroundContent() {
-    if (_cachedForegroundContent == null || _homeReloadCounter > 0) {
-      _cachedForegroundContent = Stack(
-        children: [
-          NotificationListener<ScrollNotification>(
-            onNotification: _handlePageScrollNotification,
-            child: _HomePreloadPageView(
-              controller: _pageController,
-              onPageChanged: _handlePageChanged,
-              dragStartBehavior: DragStartBehavior.start,
-              // 🛑 TẮT VƯỢT: NeverScrollableScrollPhysics để chỉ chuyển tab bằng nút bottom nav.
-              // ✅ BẬT LẠI: đổi thành `const SLPagePhysics(parent: ClampingScrollPhysics())`
-              physics: const SLPagePhysics(parent: ClampingScrollPhysics()),
-              children: List<Widget>.generate(
-                _navItems.length,
-                _tabPageForIndex,
-                growable: false,
-              ),
+    return Stack(
+      children: [
+        NotificationListener<ScrollNotification>(
+          onNotification: _handlePageScrollNotification,
+          child: _HomePreloadPageView(
+            controller: _pageController,
+            onPageChanged: _handlePageChanged,
+            dragStartBehavior: DragStartBehavior.start,
+            // 🛑 TẮT VƯỢT: NeverScrollableScrollPhysics để chỉ chuyển tab bằng nút bottom nav.
+            // ✅ BẬT LẠI: đổi thành `const SLPagePhysics(parent: ClampingScrollPhysics())`
+            physics: const SLPagePhysics(parent: ClampingScrollPhysics()),
+            children: List<Widget>.generate(
+              _navItems.length,
+              _tabPageForIndex,
+              growable: false,
             ),
           ),
-          ValueListenableBuilder<bool>(
-            valueListenable: _isUserTabSwipingNotifier,
-            builder: (context, isSwiping, child) {
-              return TickerMode(
-                enabled: !isSwiping,
-                child: child ?? const SizedBox.shrink(),
-              );
-            },
-            child: _buildMusicButton(),
-          ),
-          ValueListenableBuilder<int>(
-            valueListenable: _activeTabIndexNotifier,
-            builder: (context, activeIndex, _) {
-              return SoulMergeSticker(activeIndex: activeIndex);
-            },
-          ),
-        ],
-      );
-    }
-    return _cachedForegroundContent!;
+        ),
+        ValueListenableBuilder<bool>(
+          valueListenable: _isUserTabSwipingNotifier,
+          builder: (context, isSwiping, child) {
+            return TickerMode(
+              enabled: !isSwiping,
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
+          child: _buildMusicButton(),
+        ),
+        ValueListenableBuilder<int>(
+          valueListenable: _activeTabIndexNotifier,
+          builder: (context, activeIndex, _) {
+            return SoulMergeSticker(activeIndex: activeIndex);
+          },
+        ),
+      ],
+    );
   }
 
   @override
@@ -1660,6 +1654,10 @@ class _HomeScreenState extends State<HomeScreen>
     final raw = effectKey.trim();
     final key = raw.isEmpty ? 'auto' : raw;
     if (key != 'auto') return key;
+
+    if (resolvedThemeKey == 'off' || UiPrefs.notifier.value.customBackgroundUrl.isNotEmpty) {
+      return 'off';
+    }
 
     final now = DateTime.now();
     if (_isDarkTheme(resolvedThemeKey)) {

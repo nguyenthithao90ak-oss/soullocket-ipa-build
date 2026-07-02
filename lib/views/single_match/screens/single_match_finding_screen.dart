@@ -100,7 +100,7 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen> wit
         ? const Color(0xFFFF4F87) 
         : (widget.isVideo ? const Color(0xFF7C61FF) : const Color(0xFFFF4F87));
         
-    final size = MediaQuery.of(context).size;
+    final size = MediaQuery.sizeOf(context);
 
     return PopScope(
       canPop: false,

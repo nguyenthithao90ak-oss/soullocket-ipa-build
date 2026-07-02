@@ -4,9 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
-import '../../utils/services/session/presence_status_formatter.dart';
+import 'package:soullocket_app/utils/services/session/presence_status_formatter.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/role_utils.dart';
+import 'package:soullocket_app/utils/services/device_manager_service.dart';
 
 class PresenceService {
   static const PresenceStatusFormatter _statusFormatter =
@@ -16,12 +17,12 @@ class PresenceService {
   factory PresenceService() => _instance;
   PresenceService._internal();
 
-  static const Duration onlineFreshness = Duration(minutes: 5);
+  static const Duration onlineFreshness = Duration(minutes: 15);
   // Tối ưu: tăng heartbeat lên 180s thay vì 120s → giảm 33% lượng writes presence
   // local grace period cho phép presence vẫn "online" thêm 2 phút sau heartbeat cuối
   // ⚡ Tăng từ 180s lên 300s (5 phút) để giảm writes
   static const Duration heartbeatInterval = Duration(seconds: 300);
-  static const Duration staleSessionThreshold = Duration(minutes: 5);
+  static const Duration staleSessionThreshold = Duration(minutes: 15);
   static const Duration justDisconnectedThreshold = Duration(minutes: 1);
 
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
@@ -238,6 +239,7 @@ class PresenceService {
     required String role,
     String? deviceType,
   }) async {
+    await FirebaseDatabase.instance.goOnline();
     final previousHouseId = _activeHouseId;
     final previousRole = _activeRole;
     final targetChanged = previousHouseId != null &&
@@ -349,10 +351,12 @@ class PresenceService {
 
     final now = DateTime.now().millisecondsSinceEpoch;
     try {
+      final deviceId = await DeviceManagerService().getCurrentDeviceIdentifier();
       await _myPresenceRef!.child('sessions/$_mySessionId').set({
         'ts': now,
         if (_currentUid != null) 'uid': _currentUid,
         if (_activeDeviceType != null) 'device': _activeDeviceType,
+        'deviceId': deviceId,
       }).timeout(const Duration(seconds: 3));
 
       // Prune stale sessions for BOTH roles to ensure accurate online statuses
@@ -414,6 +418,7 @@ class PresenceService {
       final raw = snap.value;
       if (raw is! Map) return;
 
+      final currentDeviceId = await DeviceManagerService().getCurrentDeviceIdentifier();
       var otherFreshCount = 0;
       raw.forEach((key, value) {
         if (key.toString() == sessionId) return; // bỏ qua session của mình
@@ -421,6 +426,13 @@ class PresenceService {
         if (ts != null &&
             nowMs - ts >= 0 &&
             nowMs - ts <= onlineFreshness.inMilliseconds) {
+          // Bỏ qua nếu là cùng một thiết bị (tránh false positive khi restart/hot reload)
+          if (value is Map) {
+            final otherDeviceId = value['deviceId']?.toString();
+            if (otherDeviceId != null && otherDeviceId == currentDeviceId) {
+              return;
+            }
+          }
           otherFreshCount++;
         }
       });
@@ -437,9 +449,9 @@ class PresenceService {
     if (!_shouldBeOnline) {
       return;
     }
-    // Throttle: không gọi heartbeat quá 1 lần mỗi 60s
+    // Throttle: không gọi heartbeat quá 1 lần mỗi 180s (3 phút) để giảm writes
     if (_lastMarkActiveAt != null &&
-        DateTime.now().difference(_lastMarkActiveAt!).inSeconds < 60) {
+        DateTime.now().difference(_lastMarkActiveAt!).inSeconds < 180) {
       return;
     }
     _lastMarkActiveAt = DateTime.now();
@@ -447,7 +459,8 @@ class PresenceService {
       await _doGoOnline();
       return;
     }
-    await _heartbeat();
+    // Dùng lightweight update thay vì full _heartbeat() để tiết kiệm băng thông khi tương tác
+    await _lightweightHeartbeat();
   }
 
   Future<void> _pruneStaleSessions(
@@ -568,10 +581,12 @@ class PresenceService {
       await _pruneStaleSessions(_dbRef.child('houses/$_activeHouseId/presence/user1'), nowMs: now);
       await _pruneStaleSessions(_dbRef.child('houses/$_activeHouseId/presence/user2'), nowMs: now);
 
+      final deviceId = await DeviceManagerService().getCurrentDeviceIdentifier();
       await _myPresenceRef!.child('sessions/$_mySessionId').set({
         'ts': now,
         if (_currentUid != null) 'uid': _currentUid,
         if (_activeDeviceType != null) 'device': _activeDeviceType,
+        'deviceId': deviceId,
       }).timeout(const Duration(seconds: 3));
       await _myPresenceRef!
           .child('sessions/$_mySessionId')
@@ -622,6 +637,7 @@ class PresenceService {
     _myPresenceRef = null;
     _mySessionId = null;
     _lastOnlineFingerprint = null;
+    await FirebaseDatabase.instance.goOffline();
   }
 
   Future<void> _cleanupPresence({

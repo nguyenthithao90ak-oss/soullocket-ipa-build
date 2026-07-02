@@ -1241,6 +1241,54 @@ class WidgetService {
     await ensureInitialized();
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final useCustom = prefs.getBool('widget_use_custom_event') ?? false;
+
+      if (useCustom) {
+        final customTitle = prefs.getString('widget_custom_event_title') ?? '';
+        final customDate = prefs.getString('widget_custom_event_date') ?? '';
+        final customColor = prefs.getString('widget_custom_event_color') ?? '#EC4899';
+
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        DateTime? parsedDate = DateInputUtils.parse(customDate, firstYear: 1900, lastYear: 2100);
+        
+        String daysStr = '0';
+        String labelStr = 'ngày nữa';
+        if (parsedDate != null) {
+          var nextDate = DateTime(parsedDate.year, parsedDate.month, parsedDate.day);
+          if (nextDate.isBefore(today)) {
+            nextDate = DateTime(today.year, parsedDate.month, parsedDate.day);
+            if (nextDate.isBefore(today)) {
+              nextDate = DateTime(today.year + 1, parsedDate.month, parsedDate.day);
+            }
+          }
+          final diff = nextDate.difference(today).inDays;
+          final isToday = nextDate.isAtSameMomentAs(today);
+          if (isToday) {
+            daysStr = 'HÔM NAY';
+            labelStr = '🎉';
+          } else {
+            daysStr = diff.toString();
+            labelStr = 'ngày nữa';
+          }
+        }
+
+        await _saveWidgetDataIfChanged('se_title', customTitle.isEmpty ? 'Sự kiện & Kỷ niệm' : customTitle);
+        await _saveWidgetDataIfChanged('se_date', customDate.isEmpty ? '--/--/----' : customDate);
+        await _saveWidgetDataIfChanged('se_days', daysStr);
+        await _saveWidgetDataIfChanged('se_label', labelStr);
+        await _saveWidgetDataIfChanged('se_color', customColor);
+
+        if (Platform.isAndroid) {
+          await HomeWidget.updateWidget(
+            androidName: androidWidgetSoulEventName,
+            qualifiedAndroidName: qualifiedAndroidWidgetSoulEventName,
+          );
+        }
+        return;
+      }
+
       final service = SoulEventService();
       final events = await service.getEvents(houseId);
 

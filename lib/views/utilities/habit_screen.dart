@@ -71,7 +71,7 @@ class _HabitScreenState extends State<HabitScreen> {
     if (habitSnap.exists && habitSnap.value is Map) {
       final habitMap = habitSnap.value as Map;
       if (habitMap.length >= 25) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Danh sách thói quen đã đạt giới hạn (tối đa 25 mục). Vui lòng xoá bớt trước khi thêm mới.'),
           backgroundColor: SLColors.danger,
         ));
@@ -330,7 +330,7 @@ class _HabitScreenState extends State<HabitScreen> {
                         color: const Color(0xFFB55A73),
                       ),
                       border: InputBorder.none,
-                      counterText: "",
+                      counterText: '',
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 15, vertical: 12),
                     ),

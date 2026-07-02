@@ -637,13 +637,15 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
 
     try {
       _houseId = await _houseService.getCurrentHouseId();
-      final syncedRelationshipMode =
-          await _authService.syncRelationshipModeForCurrentUser(
-        user: user,
-        houseId: _houseId,
-      );
+      final results = await Future.wait([
+        _authService.syncRelationshipModeForCurrentUser(
+          user: user,
+          houseId: _houseId,
+        ),
+        _loadPendingAccountDeletionState(),
+      ]);
+      final syncedRelationshipMode = results[0] as String?;
       _bindBreakupRequestWatcher();
-      await _loadPendingAccountDeletionState();
 
       if (_houseId != null) {
         final houseSnapshot = await _dbRef
@@ -786,16 +788,18 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
           }
           _markSettingsBootstrapComplete();
 
-          if (relMode == 'couple' && _houseId != null) {
-            final connected =
-                await _houseSettingsService.isCoupleConnected(_houseId!);
-            if (mounted) setState(() => _isCoupleConnected = connected);
-          } else if (mounted) {
-            setState(() => _isCoupleConnected = false);
-          }
-          await _loadSecurityDetails();
-          await _refreshBreakupRequestState();
-          await _loadVipStatus();
+          // Chạy song song sau khi UI đã mở — không chặn màn hình Cài đặt
+          unawaited(Future.wait([
+            if (relMode == 'couple' && _houseId != null)
+              _houseSettingsService.isCoupleConnected(_houseId!).then((connected) {
+                if (mounted) setState(() => _isCoupleConnected = connected);
+              })
+            else
+              Future(() { if (mounted) setState(() => _isCoupleConnected = false); }),
+            _loadSecurityDetails(),
+            _refreshBreakupRequestState(),
+            _loadVipStatus(),
+          ]));
         } else {
           _clearBreakupRequestState();
           if (mounted) {

@@ -373,7 +373,7 @@ class _HealthScreenState extends State<HealthScreen>
   }
 
   Widget _buildGlassDashboard(Map<String, dynamic> cycleData) {
-    final availableWidth = MediaQuery.of(context).size.width - 40;
+    final availableWidth = MediaQuery.sizeOf(context).width - 40;
     final outerSize = (availableWidth * 0.72).clamp(220.0, 280.0).toDouble();
     final innerSize = (outerSize - 20).clamp(200.0, 260.0).toDouble();
     final innerPadding = outerSize < 240 ? 18.0 : 24.0;

@@ -148,19 +148,25 @@ class AuthHouseContextService {
           final results = await Future.wait([
             _db
                 .child('houses/$resolvedHouseId/settings/relationshipMode')
-                .get(),
+                .get()
+                .timeout(const Duration(seconds: 3)),
             _db
                 .child('users/${resolvedUser.uid}/pendingRelationshipMode')
-                .get(),
+                .get()
+                .timeout(const Duration(seconds: 3)),
           ]);
           remoteMode = normalizeRelationshipMode(results[0].value?.toString());
           pendingMode = normalizeRelationshipMode(results[1].value?.toString());
         } else {
           final results = await Future.wait([
-            _db.child('users/${resolvedUser.uid}/houseId').get(),
+            _db
+                .child('users/${resolvedUser.uid}/houseId')
+                .get()
+                .timeout(const Duration(seconds: 3)),
             _db
                 .child('users/${resolvedUser.uid}/pendingRelationshipMode')
-                .get(),
+                .get()
+                .timeout(const Duration(seconds: 3)),
           ]);
           resolvedHouseId = results[0].value?.toString().trim();
           pendingMode = normalizeRelationshipMode(results[1].value?.toString());
@@ -168,7 +174,8 @@ class AuthHouseContextService {
           if (resolvedHouseId != null && resolvedHouseId.isNotEmpty) {
             final modeSnap = await _db
                 .child('houses/$resolvedHouseId/settings/relationshipMode')
-                .get();
+                .get()
+                .timeout(const Duration(seconds: 3));
             remoteMode = normalizeRelationshipMode(modeSnap.value?.toString());
           }
         }

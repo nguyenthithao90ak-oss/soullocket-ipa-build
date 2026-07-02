@@ -216,7 +216,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     if (text.isEmpty) return;
 
     if (_cachedNotes.length >= 50) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Danh sách ghi chú đã đạt giới hạn (tối đa 50 ghi chú). Vui lòng xoá bớt trước khi thêm mới.'),
         backgroundColor: SLColors.danger,
       ));
@@ -424,7 +424,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                         fontWeight: FontWeight.w700,
                       ),
                       border: InputBorder.none,
-                      counterText: "",
+                      counterText: '',
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 15,
                         vertical: 12,

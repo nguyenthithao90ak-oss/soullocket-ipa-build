@@ -104,6 +104,12 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
       _draftTransparentMode ??= ui.transparentMode;
       _draftLiteMode = ui.liteMode;
 
+      // Load Custom Event Settings
+      _useCustomWidgetEvent = prefs.getBool('il_widget_use_custom_event_$accountKey') ?? false;
+      _customWidgetEventTitleCtrl.text = prefs.getString('il_widget_custom_event_title_$accountKey') ?? '';
+      _customWidgetEventDateCtrl.text = prefs.getString('il_widget_custom_event_date_$accountKey') ?? '';
+      _customWidgetEventColorHex = prefs.getString('il_widget_custom_event_color_$accountKey') ?? '#EC4899';
+
       final now = DateTime.now().millisecondsSinceEpoch;
       final storedUnlockExpiry =
           prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;

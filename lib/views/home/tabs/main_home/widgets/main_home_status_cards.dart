@@ -709,25 +709,15 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
         for (var index = 0; index < metrics.length; index++) ...[
           Expanded(
             child: Center(
-              child: ValueListenableBuilder<bool>(
-                valueListenable: SLTheme.isTabSwiping,
-                builder: (context, isSwiping, _) {
-                  return ValueListenableBuilder<bool>(
-                    valueListenable: _isScrollingNotifier,
-                    builder: (context, isScrolling, _) {
-                      return _FloatingInsightBubble(
-                        label: metrics[index].label,
-                        value: metrics[index].value,
-                        color: metrics[index].color,
-                        phase: metrics[index].phase,
-                        size: bubbleSize,
-                        emphasize: metrics[index].emphasize,
-                        compact: compact,
-                        enableMotion: enableMotion && !isSwiping && !isScrolling,
-                      );
-                    },
-                  );
-                },
+              child: _FloatingInsightBubble(
+                label: metrics[index].label,
+                value: metrics[index].value,
+                color: metrics[index].color,
+                phase: metrics[index].phase,
+                size: bubbleSize,
+                emphasize: metrics[index].emphasize,
+                compact: compact,
+                enableMotion: enableMotion,
               ),
             ),
           ),

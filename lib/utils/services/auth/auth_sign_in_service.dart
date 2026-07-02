@@ -766,8 +766,8 @@ class AuthSignInService {
             }
           });
           await initCompleter.future.timeout(
-            const Duration(seconds: 5),
-            onTimeout: () => throw 'Không thể khởi động dịch vụ Google. Vui lòng kiểm tra Google Play Services.',
+            const Duration(seconds: 15),
+            onTimeout: () => throw 'Thời gian chờ Google quá lâu. Vui lòng thử lại.',
           );
           _isGoogleSignInInitialized = true;
         }
@@ -789,13 +789,13 @@ class AuthSignInService {
         });
 
         final googleUser = await authCompleter.future.timeout(
-          const Duration(seconds: 10),
-          onTimeout: () => throw 'Đăng nhập Google phản hồi lâu. Vui lòng kiểm tra kết nối mạng và Google Play Services.',
+          const Duration(seconds: 20),
+          onTimeout: () => throw 'Bạn đã để màn hình đăng nhập Google quá lâu hoặc chưa hoàn tất thao tác. Vui lòng thử lại.',
         );
         if (googleUser == null) return null;
         final googleAuth = await googleUser.authentication;
         if ((googleAuth.idToken ?? '').isEmpty) {
-          throw 'Google không trả về ID token hợp lệ. Hãy kiểm tra cấu hình Firebase Google Sign-In.';
+          throw 'Google không trả về ID token hợp lệ. Vui lòng thử lại.';
         }
 
         final credential = firebase_auth.GoogleAuthProvider.credential(
@@ -841,13 +841,13 @@ class AuthSignInService {
             : 'Google chưa cho phép đăng nhập trên bản app này. Hãy cập nhật app hoặc thử lại sau.';
       }
       if (isGoogleSignInNetworkIssue(error)) {
-        throw 'Mạng đang lỗi hoặc bị chặn, chưa thể đăng nhập Google lúc này.';
+        throw 'Lỗi kết nối hoặc sự cố từ Google, chưa thể đăng nhập Google lúc này.';
       }
       if (error is String) rethrow;
       throw AppErrorMapper.resolve(
         error,
         fallbackMessage:
-            'Không đăng nhập Google được: hãy kiểm tra tài khoản Google và kết nối mạng.',
+            'Không đăng nhập Google được, vui lòng thử lại sau.',
       ).message;
     }
   }

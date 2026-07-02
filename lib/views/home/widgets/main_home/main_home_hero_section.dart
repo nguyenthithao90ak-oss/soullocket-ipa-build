@@ -116,6 +116,56 @@ class _ModernHomeBody extends StatelessWidget {
               tabletMax: 620,
               desktopMax: 680,
             );
+            Widget buildCountdown(bool isSwiping) {
+              return ValueListenableBuilder<bool>(
+                valueListenable: state._isScrollingNotifier,
+                builder: (context, isScrolling, _) {
+                  return _MainHomeHeroCountdownSection(
+                    state: state,
+                    isSingle: isSingle,
+                    houseName: houseName,
+                    smartGreeting: smartGreeting,
+                    circleValue: circleValue,
+                    circleTopLabel: circleTopLabel,
+                    circleBottomLabel: circleBottomLabel,
+                    startDate: startDate,
+                    circleSize: circleSize,
+                    homeShowHouseName: homeShowHouseName,
+                    showDayCounter: showDayCounter,
+                    showLoveTimeDetail: showLoveTimeDetail,
+                    countdownStyleKey: countdownStyleKey,
+                    enableMotion: effectProfile.animationEnabled &&
+                        !state._deferHeavyHomeMotion &&
+                        !isSwiping &&
+                        !isScrolling,
+                    onEditStartDate: onEditStartDate,
+                    onEditTopLabel: onEditTopLabel,
+                    onEditBottomLabel: onEditBottomLabel,
+                    firstGuideHeroKey: state.widget.firstGuideHeroKey,
+                  );
+                },
+              );
+            }
+
+            Widget buildInsight(bool isSwiping) {
+              return ValueListenableBuilder<bool>(
+                valueListenable: state._isScrollingNotifier,
+                builder: (context, isScrolling, _) {
+                  return RepaintBoundary(
+                    child: state._buildModernInsightCard(
+                      isSingle: isSingle,
+                      nameU1: nameU1,
+                      nameU2: nameU2,
+                      enableMotion: effectProfile.animationEnabled &&
+                          !state._deferHeavyHomeMotion &&
+                          !isSwiping &&
+                          !isScrolling,
+                    ),
+                  );
+                },
+              );
+            }
+
             return NotificationListener<ScrollNotification>(
               onNotification: (notification) {
                 if (notification is ScrollStartNotification) {
@@ -134,108 +184,50 @@ class _ModernHomeBody extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        SizedBox(height: MediaQuery.of(context).padding.top + 36),
-                        RepaintBoundary(
-                          child: state.widget.isSwipingListenable == null
-                              ? _MainHomeHeroCountdownSection(
-                                  state: state,
-                                  isSingle: isSingle,
-                                  houseName: houseName,
-                                  smartGreeting: smartGreeting,
-                                  circleValue: circleValue,
-                                  circleTopLabel: circleTopLabel,
-                                  circleBottomLabel: circleBottomLabel,
-                                  startDate: startDate,
-                                  circleSize: circleSize,
-                                  homeShowHouseName: homeShowHouseName,
-                                  showDayCounter: showDayCounter,
-                                  showLoveTimeDetail: showLoveTimeDetail,
-                                  countdownStyleKey: countdownStyleKey,
-                                  enableMotion: effectProfile.animationEnabled &&
-                                      !state._deferHeavyHomeMotion,
-                                  onEditStartDate: onEditStartDate,
-                                  onEditTopLabel: onEditTopLabel,
-                                  onEditBottomLabel: onEditBottomLabel,
-                                  firstGuideHeroKey: state.widget.firstGuideHeroKey,
-                                )
-                              : ValueListenableBuilder<bool>(
-                                  valueListenable: state.widget.isSwipingListenable!,
-                                  builder: (context, isSwiping, _) {
-                                    return _MainHomeHeroCountdownSection(
-                                      state: state,
-                                      isSingle: isSingle,
-                                      houseName: houseName,
-                                      smartGreeting: smartGreeting,
-                                      circleValue: circleValue,
-                                      circleTopLabel: circleTopLabel,
-                                      circleBottomLabel: circleBottomLabel,
-                                      startDate: startDate,
-                                      circleSize: circleSize,
-                                      homeShowHouseName: homeShowHouseName,
-                                      showDayCounter: showDayCounter,
-                                      showLoveTimeDetail: showLoveTimeDetail,
-                                      countdownStyleKey: countdownStyleKey,
-                                      enableMotion: effectProfile.animationEnabled &&
-                                          !state._deferHeavyHomeMotion &&
-                                          !isSwiping,
-                                      onEditStartDate: onEditStartDate,
-                                      onEditTopLabel: onEditTopLabel,
-                                      onEditBottomLabel: onEditBottomLabel,
-                                      firstGuideHeroKey: state.widget.firstGuideHeroKey,
-                                    );
-                                  },
-                                ),
-                        ),
+                        SizedBox(height: MediaQuery.paddingOf(context).top + 36),
+                        state.widget.isSwipingListenable == null
+                            ? buildCountdown(false)
+                            : ValueListenableBuilder<bool>(
+                                valueListenable: state.widget.isSwipingListenable!,
+                                builder: (context, isSwiping, _) => buildCountdown(isSwiping),
+                              ),
                         SLSpacing.h8,
-                        RepaintBoundary(
-                          child: state._buildModernAvatarSection(
-                            isSingle: isSingle,
-                            nameU1: nameU1,
-                            nameU2: nameU2,
-                            avtUser1: avtUser1,
-                            avtUser2: avtUser2,
-                          ),
+                        state._buildModernAvatarSection(
+                          isSingle: isSingle,
+                          nameU1: nameU1,
+                          nameU2: nameU2,
+                          avtUser1: avtUser1,
+                          avtUser2: avtUser2,
                         ),
                         SLSpacing.h20,
-                        _ChatReminderBanner(state: state, isSingle: isSingle),
-                        if (!isSingle)
+                        RepaintBoundary(
+                          child: _ChatReminderBanner(state: state, isSingle: isSingle),
+                        ),
+                        if (!isSingle) ...[
+                          SLSpacing.h20,
                           RepaintBoundary(
                             child: state._buildModernHighlightCard(
                               startDate: startDate,
                               isSingle: isSingle,
                             ),
                           ),
-                        if (!isSingle) SLSpacing.h20,
-                        RepaintBoundary(
-                          child: state._buildModernMapCard(
-                            nameU1: nameU1,
-                            nameU2: nameU2,
+                        ],
+                        if (!isSingle) ...[
+                          SLSpacing.h20,
+                          RepaintBoundary(
+                            child: state._buildModernMapCard(
+                              nameU1: nameU1,
+                              nameU2: nameU2,
+                            ),
                           ),
-                        ),
+                        ],
                         SLSpacing.h20,
-                        RepaintBoundary(
-                          child: state.widget.isSwipingListenable == null
-                              ? state._buildModernInsightCard(
-                                  isSingle: isSingle,
-                                  nameU1: nameU1,
-                                  nameU2: nameU2,
-                                  enableMotion: effectProfile.animationEnabled &&
-                                      !state._deferHeavyHomeMotion,
-                                )
-                              : ValueListenableBuilder<bool>(
-                                  valueListenable: state.widget.isSwipingListenable!,
-                                  builder: (context, isSwiping, _) {
-                                    return state._buildModernInsightCard(
-                                      isSingle: isSingle,
-                                      nameU1: nameU1,
-                                      nameU2: nameU2,
-                                      enableMotion: effectProfile.animationEnabled &&
-                                          !state._deferHeavyHomeMotion &&
-                                          !isSwiping,
-                                    );
-                                  },
-                                ),
-                        ),
+                        state.widget.isSwipingListenable == null
+                            ? buildInsight(false)
+                            : ValueListenableBuilder<bool>(
+                                valueListenable: state.widget.isSwipingListenable!,
+                                builder: (context, isSwiping, _) => buildInsight(isSwiping),
+                              ),
                         SLSpacing.h20,
                         RepaintBoundary(
                           child: state._buildHomeToolSlotSection(),

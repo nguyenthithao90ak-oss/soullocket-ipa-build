@@ -77,7 +77,7 @@ class DiaryList extends StatelessWidget {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       SkeletonContainer.rounded(
-                                        width: MediaQuery.of(context).size.width * 0.4,
+                                        width: MediaQuery.sizeOf(context).width * 0.4,
                                         height: 16,
                                         baseColor: baseColor, highlightColor: highlightColor,
                                       ),

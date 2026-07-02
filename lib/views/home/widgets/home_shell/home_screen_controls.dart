@@ -113,7 +113,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
                       UiPrefs.notifier.value,
                       pauseAnimations: isSwiping,
                     );
-                    final bottomInset = MediaQuery.of(context).padding.bottom;
+                    final bottomInset = MediaQuery.paddingOf(context).bottom;
                     return Padding(
                       padding: EdgeInsets.only(bottom: bottomInset > 0 ? bottomInset : 0),
                       child: AnimatedSize(
@@ -149,7 +149,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
     required int currentIndex,
     required bool isSwiping,
   }) {
-    final bottomInset = MediaQuery.of(context).padding.bottom;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
     final accent = _HomeScreenState._navItems[currentIndex].activeColor;
     final uiState = UiPrefs.notifier.value;
     final effectProfile = _resolveHomeEffectProfile(

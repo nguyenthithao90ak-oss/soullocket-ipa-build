@@ -749,7 +749,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           _showExpiredProAutoCleanedDialog();
         } else {
           // --- CHƯA QUÁ 1 NGÀY: NHẮC NHỞ HẰNG NGÀY ---
-          final daysRemaining = 1;
+          const daysRemaining = 1;
           if (now - lastNotifiedAt >= 24 * 60 * 60 * 1000) {
             if (!mounted) return;
             _showExpiredProGraceDialog(

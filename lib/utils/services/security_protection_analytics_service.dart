@@ -44,6 +44,9 @@ class SecurityProtectionAnalyticsService {
     String source = 'app',
     Map<String, Object?> extra = const <String, Object?>{},
   }) async {
+    // Tối ưu hóa băng thông: Không lưu log quyết định bảo mật lên Database chính
+    return;
+    // ignore: dead_code
     try {
       final now = DateTime.now();
       final dayKey = _formatDayKey(now);

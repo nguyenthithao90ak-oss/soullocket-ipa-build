@@ -1371,6 +1371,45 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
   }
 
   Future<Map<String, String>> _loadSoulEventPreviewData() async {
+    if (_useCustomWidgetEvent) {
+      final customTitle = _customWidgetEventTitleCtrl.text.trim();
+      final customDateStr = _customWidgetEventDateCtrl.text.trim();
+      final colorHex = _customWidgetEventColorHex;
+
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      DateTime? parsedDate = DateInputUtils.parse(customDateStr, firstYear: 1900, lastYear: 2100);
+      
+      String daysStr = '0';
+      String labelStr = 'ngày nữa';
+      if (parsedDate != null) {
+        var nextDate = DateTime(parsedDate.year, parsedDate.month, parsedDate.day);
+        if (nextDate.isBefore(today)) {
+          nextDate = DateTime(today.year, parsedDate.month, parsedDate.day);
+          if (nextDate.isBefore(today)) {
+            nextDate = DateTime(today.year + 1, parsedDate.month, parsedDate.day);
+          }
+        }
+        final diff = nextDate.difference(today).inDays;
+        final isToday = nextDate.isAtSameMomentAs(today);
+        if (isToday) {
+          daysStr = 'HÔM NAY';
+          labelStr = '🎉';
+        } else {
+          daysStr = diff.toString();
+          labelStr = 'ngày nữa';
+        }
+      }
+
+      return {
+        'title': customTitle.isEmpty ? 'Sự kiện & Kỷ niệm' : customTitle,
+        'date': customDateStr.isEmpty ? '--/--/----' : customDateStr,
+        'days': daysStr,
+        'label': labelStr,
+        'color': colorHex,
+      };
+    }
+
     final houseId = _houseId ?? '';
     if (houseId.isEmpty) {
       return {

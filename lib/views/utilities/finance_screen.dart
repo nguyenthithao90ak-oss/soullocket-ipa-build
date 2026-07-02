@@ -209,7 +209,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     if (currentSnap.exists && currentSnap.value is Map) {
       final currentMap = currentSnap.value as Map;
       if (currentMap.length >= 100) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Nhật ký thu chi đã đạt giới hạn (tối đa 100 mục). Vui lòng xoá bớt trước khi thêm mới.'),
           backgroundColor: SLColors.danger,
         ));
@@ -295,7 +295,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                         maxLength: 12,
                         decoration: InputDecoration(
                             labelText: context.tr('util_tngstinvnd_59805c'),
-                            counterText: ""),
+                            counterText: ''),
                         scrollPadding: const EdgeInsets.only(bottom: 24),
                         onChanged: (_) => setDialogState(() {}),
                         onSubmitted: (_) =>
@@ -310,7 +310,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                         decoration:
                             InputDecoration(
                                 labelText: context.tr('util_sngichia_91ed4e'),
-                                counterText: ""),
+                                counterText: ''),
                         scrollPadding: const EdgeInsets.only(bottom: 24),
                         onChanged: (_) => setDialogState(() {}),
                         onSubmitted: (_) =>
@@ -737,7 +737,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
             maxLength: 50,
             decoration: InputDecoration(
                 labelText: context.tr('util_tnquvdquci_811553'),
-                counterText: ""),
+                counterText: ''),
           ),
           SLSpacing.h8,
           TextField(
@@ -747,7 +747,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
             decoration:
                 InputDecoration(
                     labelText: context.tr('util_stinmctiuv_e1bc2d'),
-                    counterText: ""),
+                    counterText: ''),
           ),
         ]),
         actions: [
@@ -908,7 +908,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
             maxLength: 12,
             decoration: InputDecoration(
                 labelText: context.tr('util_tngngnschd_7447b3'),
-                counterText: ""),
+                counterText: ''),
           ),
           SLSpacing.h8,
           TextField(
@@ -918,7 +918,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
             decoration:
                 InputDecoration(
                     labelText: context.tr('util_sngypdngvd_78fb41'),
-                    counterText: ""),
+                    counterText: ''),
           ),
         ]),
         actions: [
@@ -1096,7 +1096,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     const BorderSide(color: Color(0xFFD81B60), width: 2.5)),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            counterText: "",
+            counterText: '',
           ),
         ),
         SLSpacing.h8,
@@ -1124,7 +1124,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     const BorderSide(color: Color(0xFFD81B60), width: 2.5)),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            counterText: "",
+            counterText: '',
           ),
         ),
         SLSpacing.h12,

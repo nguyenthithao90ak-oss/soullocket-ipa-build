@@ -79,7 +79,7 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
     final displayDays = diff.abs();
     final color = Color(int.tryParse(_event.colorHex.replaceFirst('#', '0xFF')) ?? 0xFFFF4D94);
     final date = DateTime.fromMillisecondsSinceEpoch(_event.dateMs);
-    final dateStr = "${date.day} thg ${date.month}, ${date.year}";
+    final dateStr = '${date.day} thg ${date.month}, ${date.year}';
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -102,12 +102,12 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(32),
-                border: Border.all(color: Colors.white.withOpacity(0.6), width: 1.5),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: color.withOpacity(0.08),
+                    color: color.withValues(alpha: 0.08),
                     blurRadius: 32,
                     offset: const Offset(0, 16),
                   ),
@@ -121,7 +121,7 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
                     width: 72,
                     height: 72,
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.12),
+                      color: color.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -153,7 +153,7 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.amber.withOpacity(0.15),
+                            color: Colors.amber.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -183,7 +183,7 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
+                      color: color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(

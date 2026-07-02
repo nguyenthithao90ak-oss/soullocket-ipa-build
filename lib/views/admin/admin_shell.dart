@@ -16,6 +16,7 @@ import 'admin_payment_screen.dart';
 import 'admin_abuse_screen.dart';
 import 'admin_config_screen.dart';
 import 'admin_audit_logs_screen.dart';
+import 'admin_feedback_screen.dart';
 
 class AdminShell extends StatefulWidget {
   const AdminShell({super.key});
@@ -153,6 +154,10 @@ class _AdminMainLayoutState extends State<AdminMainLayout> {
                 icon: Icon(Icons.history_rounded),
                 label: Text('Audit Logs'),
               ),
+              const NavigationRailDestination(
+                icon: Icon(Icons.feedback_rounded),
+                label: Text('Góp ý'),
+              ),
             ],
           ),
           const VerticalDivider(
@@ -169,6 +174,7 @@ class _AdminMainLayoutState extends State<AdminMainLayout> {
                 AdminAbuseScreen(user: widget.user),
                 AdminConfigScreen(user: widget.user),
                 AdminAuditLogsScreen(user: widget.user),
+                AdminFeedbackScreen(user: widget.user),
               ],
             ),
           ),

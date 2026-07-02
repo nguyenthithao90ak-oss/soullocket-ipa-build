@@ -1,4 +1,4 @@
-﻿import 'dart:math';
+import 'dart:math';
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
@@ -201,7 +201,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                 final tearInset =
                     constraints.maxWidth >= 1080 ? sidePadding + 20 : 0.0;
                 final sheetTop = max(
-                  MediaQuery.of(context).padding.top + 68,
+                  MediaQuery.paddingOf(context).top + 68,
                   72.0,
                 ).toDouble();
 
@@ -384,7 +384,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                                   0,
                                   envelopeInset,
                                   max(
-                                    MediaQuery.of(context).padding.bottom + 32,
+                                    MediaQuery.paddingOf(context).bottom + 32,
                                     42,
                                   ).toDouble(),
                                 ),
@@ -488,7 +488,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                         22,
                         22,
                         max(
-                          MediaQuery.of(context).padding.bottom + 108,
+                          MediaQuery.paddingOf(context).bottom + 108,
                           132,
                         ).toDouble(),
                       ),
@@ -772,7 +772,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                 left: 18,
                 right: 18,
                 bottom: max(
-                  MediaQuery.of(context).padding.bottom + 14,
+                  MediaQuery.paddingOf(context).bottom + 14,
                   18,
                 ).toDouble(),
                 child: IgnorePointer(

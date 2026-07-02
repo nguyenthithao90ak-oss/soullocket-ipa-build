@@ -47,7 +47,7 @@ class ChatMessageList extends StatelessWidget {
                   const SizedBox(width: 8),
                 ],
                 SkeletonContainer.rounded(
-                  width: MediaQuery.of(context).size.width * 0.6,
+                  width: MediaQuery.sizeOf(context).width * 0.6,
                   height: 44,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(16),

@@ -306,7 +306,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
       _nameU1 = draft.normalizedNameU1;
       _nameU2 = draft.normalizedNameU2;
       _loveUnit = draft.normalizedDayUnit;
-      _openPanel = null;
+
     });
 
     try {

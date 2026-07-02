@@ -170,7 +170,6 @@ class _CountdownModeIndependentScreenState
   late bool _transparentMode;
   late double _countdownSizePx;
   late String _customBackgroundUrl;
-  String _fallingEffectType = 'off';
 
   List<String> _spaceHouseIds = <String>[];
   Map<String, String> _spaceDisplayNames = <String, String>{};
@@ -212,13 +211,20 @@ class _CountdownModeIndependentScreenState
         final sender = event['sender']?.toString();
         if (sender == myRole) return;
         
-        final type = event['type']?.toString();
+        final type = event['type']?.toString() ?? '';
+        final emoji = event['emoji']?.toString() ?? event['customData']?['emoji']?.toString() ?? '❤️';
+        
         if (type == 'photo_shot') {
-          final size = MediaQuery.of(context).size;
+          final size = MediaQuery.sizeOf(context);
           _heartsKey.currentState?.spawnLocalExplosion(
             Offset(size.width / 2, size.height * 0.74),
             count: 8,
           );
+        } else {
+          final exists = _kCountdownModeCenterIconPresets.any((p) => p.type == type);
+          if (exists) {
+            _sendReactionFlight(type, emoji, isIncoming: true);
+          }
         }
       });
     }
@@ -298,100 +304,7 @@ class _CountdownModeIndependentScreenState
     await _setSpaceChromeVisible(true);
   }
 
-  Future<void> _selectFallingEffect() async {
-    final selected = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        final bg = isDark ? const Color(0xFF252036) : Colors.white;
-        final fg = isDark ? Colors.white : const Color(0xFF252036);
-        final subtitleColor = isDark ? Colors.white60 : Colors.grey[600];
-        
-        final options = [
-          {'key': 'off', 'label': 'Tắt hiệu ứng', 'icon': Icons.block_rounded},
-          {'key': 'hearts', 'label': 'Trái tim bay', 'icon': Icons.favorite_rounded},
-          {'key': 'bubbles', 'label': 'Bong bóng khí', 'icon': Icons.bubble_chart_rounded},
-          {'key': 'snow', 'label': 'Tuyết rơi lạnh', 'icon': Icons.ac_unit_rounded},
-          {'key': 'stars', 'label': 'Sao lấp lánh', 'icon': Icons.star_rounded},
-        ];
 
-        return Container(
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Chọn hiệu ứng nền',
-                style: SLTheme.quicksand(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: fg,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Hiệu ứng rơi lãng mạn cho không gian đếm',
-                style: SLTheme.quicksand(
-                  fontSize: 13,
-                  color: subtitleColor,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 18),
-              Flexible(
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: options.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, idx) {
-                    final opt = options[idx];
-                    final isSel = _fallingEffectType == opt['key'];
-                    return ListTile(
-                      onTap: () => Navigator.of(context).pop(opt['key'] as String),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      tileColor: isSel
-                          ? const Color(0xFFD81B60).withValues(alpha: 0.08)
-                          : Colors.transparent,
-                      leading: Icon(
-                        opt['icon'] as IconData,
-                        color: isSel ? const Color(0xFFD81B60) : fg.withValues(alpha: 0.6),
-                      ),
-                      title: Text(
-                        opt['label'] as String,
-                        style: SLTheme.quicksand(
-                          fontSize: 14.5,
-                          fontWeight: isSel ? FontWeight.w800 : FontWeight.w700,
-                          color: isSel ? const Color(0xFFD81B60) : fg,
-                        ),
-                      ),
-                      trailing: isSel
-                          ? const Icon(Icons.check_circle_rounded, color: Color(0xFFD81B60))
-                          : null,
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-    
-    if (selected != null && mounted) {
-      _safeSetState(() {
-        _fallingEffectType = selected;
-      });
-      await _saveLocalSettings();
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -475,15 +388,7 @@ class _CountdownModeIndependentScreenState
                   ),
                 ),
               ),
-              if (_fallingEffectType != 'off')
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: LegacyFallingEffect(
-                      type: _fallingEffectType,
-                      isDark: themeData.isDark,
-                    ),
-                  ),
-                ),
+
               Positioned(
                 top: -60,
                 right: -40,
@@ -559,16 +464,15 @@ class _CountdownModeIndependentScreenState
                                       onCenterIconChanged: (type) => unawaited(
                                           _updateCenterIconType(type)),
                                       onCenterIconTap: () {
-                                        if (!_singleMode) {
-                                          unawaited(SoulMergeService().sendInteractiveEvent(type: 'photo_shot'));
-                                        }
-                                        final size = MediaQuery.of(context).size;
-                                        _heartsKey.currentState?.spawnLocalExplosion(
-                                          Offset(size.width / 2, size.height * 0.74),
-                                          count: 10,
-                                        );
-                                        HapticFeedback.mediumImpact();
-                                      },
+                                         final preset = _countdownModeCenterIconPresetFor(_centerIconType);
+                                          if (!_singleMode) {
+                                            unawaited(SoulMergeService().sendInteractiveEvent(
+                                              type: preset.type,
+                                            ));
+                                          }
+                                         _sendReactionFlight(preset.type, preset.emoji, isIncoming: false);
+                                         HapticFeedback.mediumImpact();
+                                       },
                                       onLeftAvatarTap: () => unawaited(
                                         _changeSpaceAvatar(isLeft: true),
                                       ),
@@ -611,14 +515,6 @@ class _CountdownModeIndependentScreenState
                                 children: [
                                   const Spacer(),
                                   _buildActionButton(
-                                    icon: Icons.auto_awesome_rounded,
-                                    foreground: themeData.foreground,
-                                    isDark: themeData.isDark,
-                                    onTap: _selectFallingEffect,
-                                    tooltip: 'Chọn hiệu ứng nền',
-                                  ),
-                                  const SizedBox(width: 10),
-                                  _buildActionButton(
                                     icon: Icons.settings_rounded,
                                     foreground: themeData.foreground,
                                     isDark: themeData.isDark,
@@ -637,6 +533,30 @@ class _CountdownModeIndependentScreenState
                 ),
               ),
               Positioned.fill(
+                child: ValueListenableBuilder<List<_CountdownReactionFlight>>(
+                  valueListenable: _reactionFlightsNotifier,
+                  builder: (context, flights, _) {
+                    return Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        for (final flight in flights)
+                          Positioned.fill(
+                            key: ValueKey('countdown-flight-${flight.id}'),
+                            child: IgnorePointer(
+                              child: ShootingHeartEffect(
+                                shootToRight: flight.shootToRight,
+                                emoji: flight.emoji,
+                                assetPath: flight.assetPath,
+                                onComplete: () => _removeReactionFlight(flight.id),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              Positioned.fill(
                 child: TapHeartsOverlay(
                   key: _heartsKey,
                   style: 'basic',
@@ -648,4 +568,54 @@ class _CountdownModeIndependentScreenState
       ),
     );
   }
+
+  final ValueNotifier<List<_CountdownReactionFlight>> _reactionFlightsNotifier =
+      ValueNotifier<List<_CountdownReactionFlight>>([]);
+
+  void _sendReactionFlight(String type, String emoji, {required bool isIncoming}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final myRole = prefs.getString('il_role') ?? 'user1';
+    final bool shootToRight = isIncoming ? (myRole == 'user2') : (myRole == 'user1');
+    
+    String? assetPath;
+    for (final preset in _kCountdownModeCenterIconPresets) {
+      if (preset.type == type) {
+        assetPath = preset.assetPath;
+        break;
+      }
+    }
+    
+    final flight = _CountdownReactionFlight(
+      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      shootToRight: shootToRight,
+      emoji: emoji,
+      assetPath: assetPath,
+    );
+    
+    _safeSetState(() {
+      _reactionFlightsNotifier.value = [..._reactionFlightsNotifier.value, flight];
+    });
+  }
+
+  void _removeReactionFlight(String id) {
+    if (!mounted) return;
+    _safeSetState(() {
+      _reactionFlightsNotifier.value =
+          _reactionFlightsNotifier.value.where((f) => f.id != id).toList();
+    });
+  }
+}
+
+class _CountdownReactionFlight {
+  final String id;
+  final bool shootToRight;
+  final String emoji;
+  final String? assetPath;
+
+  _CountdownReactionFlight({
+    required this.id,
+    required this.shootToRight,
+    required this.emoji,
+    this.assetPath,
+  });
 }

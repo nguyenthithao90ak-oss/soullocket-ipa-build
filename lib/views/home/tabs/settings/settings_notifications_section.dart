@@ -665,6 +665,10 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     success: true);
               },
             ),
+            if (kDebugMode) ...[
+              SLSpacing.h8,
+              _buildTestNotificationButton(),
+            ],
           ],
         ],
       ),
@@ -736,6 +740,136 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                 ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Nút gửi thông báo test đến điện thoại đối phương (dùng để kiểm tra)
+  Widget _buildTestNotificationButton() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFD81B60).withAlpha(100), width: 1.5),
+        color: const Color(0xFFFFF0F5),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.notifications_active_rounded, color: Color(0xFFD81B60), size: 20),
+              const SizedBox(width: 8),
+              Text(
+                '🧪 Kiểm tra thông báo',
+                style: SLTextStyles.quicksand(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14.5,
+                  color: const Color(0xFFD81B60),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Gửi thông báo thử đến điện thoại người ấy để kiểm tra xem thông báo có hiện ra ngoài màn hình không.',
+            style: SLTextStyles.quicksand(
+              fontWeight: FontWeight.w600,
+              fontSize: 12.5,
+              color: const Color(0xFF64748B),
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTestNotifBtn(
+                  label: '💬 Test chat',
+                  color: const Color(0xFF6366F1),
+                  type: 'chat',
+                  screen: 'chat',
+                  title: '💬 Nhắn tin mới!',
+                  body: 'Đây là thông báo thử nghiệm loại Chat. Nếu bạn thấy tin này nghĩa là thông báo đang hoạt động! 🎉',
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildTestNotifBtn(
+                  label: '💖 Test Soul Merge',
+                  color: const Color(0xFFD81B60),
+                  type: 'soul_merge',
+                  screen: 'soul_merge',
+                  title: '💖 Soul Merge đang gọi bạn!',
+                  body: 'Người ấy đang chờ bạn trong Soul Merge. Đây là thông báo thử nghiệm! 💕',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: _buildTestNotifBtn(
+              label: '🔔 Test thông báo thường',
+              color: const Color(0xFF059669),
+              type: 'home',
+              screen: 'home',
+              title: '🔔 Thông báo thử nghiệm',
+              body: 'Nếu bạn thấy tin này ngoài màn hình chính nghĩa là thông báo đang hoạt động bình thường! ✅',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTestNotifBtn({
+    required String label,
+    required Color color,
+    required String type,
+    required String screen,
+    required String title,
+    required String body,
+  }) {
+    return GestureDetector(
+      onTap: () async {
+        final houseId = _houseId;
+        if (houseId == null || houseId.isEmpty) {
+          _showToast('Chưa có thông tin nhà, thử lại sau.', success: false);
+          return;
+        }
+        try {
+          await NotificationService().sendPartnerNotification(
+            houseId: houseId,
+            title: title,
+            body: body,
+            data: {'screen': screen, 'type': type},
+          );
+          if (!mounted) return;
+          _showToast('✅ Đã gửi thông báo test đến người ấy!', success: true);
+        } catch (e) {
+          if (!mounted) return;
+          _showToast('❌ Gửi thất bại: ${AppErrorMapper.resolve(e).message}', success: false);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: SLTextStyles.quicksand(
+              fontWeight: FontWeight.w900,
+              fontSize: 12.5,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
           ),
         ),
       ),

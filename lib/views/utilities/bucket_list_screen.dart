@@ -139,7 +139,7 @@ class _BucketListScreenState extends State<BucketListScreen>
     if (currentSnap.exists && currentSnap.value is Map) {
       final currentMap = currentSnap.value as Map;
       if (currentMap.length >= 50) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Danh sách mong muốn đã đạt giới hạn (tối đa 50 mục). Vui lòng xoá bớt trước khi thêm mới.'),
           backgroundColor: SLColors.danger,
         ));
@@ -451,7 +451,7 @@ class _BucketListScreenState extends State<BucketListScreen>
                 hintText: context.tr('util_iumunlmcng_a70228'),
                 hintStyle: SLTheme.quicksand(color: SLTheme.textLight),
                 border: InputBorder.none,
-                counterText: "",
+                counterText: '',
                 contentPadding: EdgeInsets.zero,
               ),
               onSubmitted: (_) => _addItem(),

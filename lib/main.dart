@@ -36,6 +36,7 @@ import 'package:soullocket_app/utils/services/revenue_security_telemetry_service
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/views/home/widgets/floating_bubble_widget.dart';
 import 'package:soullocket_app/utils/services/performance_profile_service.dart';
+import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -45,6 +46,31 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       await _initializeFirebaseBootstrap();
     }
     FirebaseDatabase.instance.setPersistenceEnabled(true);
+
+    // Hiển thị bong bóng tâm hồn / chat nếu app ở background
+    final type = message.data['type']?.toString() ?? '';
+    final screen = message.data['screen']?.toString() ?? '';
+    if (type == 'soul_merge' || screen == 'soul_merge' || type == 'chat' || screen == 'chat') {
+      try {
+        final granted = await FlutterOverlayWindow.isPermissionGranted();
+        if (granted) {
+          final active = await FlutterOverlayWindow.isActive();
+          if (!active) {
+            await FlutterOverlayWindow.showOverlay(
+              enableDrag: true,
+              height: 80,
+              width: 80,
+              alignment: OverlayAlignment.centerRight,
+              overlayTitle: 'Bong bóng tâm hồn',
+              overlayContent: 'Lời thì thầm đang kết nối...',
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('Error showing overlay in background: $e');
+      }
+    }
+
   } catch (error, stackTrace) {
     debugPrint('FCM background bootstrap error: ${AppErrorMapper.resolve(
       error,
@@ -96,7 +122,7 @@ Future<void> _clearStaleIosAuthAfterFreshInstall() async {
 
   if (hasStaleAuth) {
     try {
-      await FirebaseDatabase.instance
+      unawaited(FirebaseDatabase.instance
           .ref('debugFreshInstallCleanup/${staleUser.uid}')
           .push()
           .set({
@@ -106,7 +132,7 @@ Future<void> _clearStaleIosAuthAfterFreshInstall() async {
         'didSignOut': shouldSignOut,
         'localKeyCount': prefs.getKeys().length,
         'createdAtMs': DateTime.now().millisecondsSinceEpoch,
-      });
+      }));
     } catch (e) {
       debugPrint('Fresh install cleanup log skipped: ${AppErrorMapper.resolve(
         e,
@@ -261,10 +287,10 @@ void main() {
       
       await BuildSignatureService.verifyOfficialBuildSignature();
       await _initializeFirebaseBootstrap();
-      await _initializeGoogleMobileAds();
+      unawaited(_initializeGoogleMobileAds());
       await _clearStaleIosAuthAfterFreshInstall();
-      await _requestIosTrackingAuthorization();
-      await _initializeTikTokSdk();
+      unawaited(_requestIosTrackingAuthorization());
+      unawaited(_initializeTikTokSdk());
 
       if (!kIsWeb) {
         FirebaseMessaging.onBackgroundMessage(
@@ -399,7 +425,7 @@ Future<void> _initializeFirebaseBootstrap() async {
       debugPrint('Firestore persistence error: $e');
     }
 
-    await _initializeFirebaseAppCheck();
+    unawaited(_initializeFirebaseAppCheck());
     await ErrorLoggerService.instance.initialize();
   }
 }
@@ -438,13 +464,13 @@ Future<void> _initializeNativeFirebaseBootstrap() async {
   }
 
   await Firebase.initializeApp(options: fallbackOptions)
-      .timeout(const Duration(seconds: 12));
+      .timeout(const Duration(seconds: 3));
 }
 
 Future<void> _initializeDefaultNativeFirebaseApp() async {
   const attemptTimeouts = <Duration>[
-    Duration(seconds: 10),
-    Duration(seconds: 18),
+    Duration(seconds: 2),
+    Duration(seconds: 4),
   ];
 
   Object? lastError;

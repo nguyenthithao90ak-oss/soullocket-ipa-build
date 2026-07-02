@@ -27,8 +27,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
 
   void _showVipAccountDetail() {
     // Mở panel VIP trong settings
-    _openPanel = 'account';
-    setState(() {});
+    _togglePanel('account');
   }
 
   /// Xoá file nhạc cũ trên R2 (dựa vào URL đã lưu trong Firebase)

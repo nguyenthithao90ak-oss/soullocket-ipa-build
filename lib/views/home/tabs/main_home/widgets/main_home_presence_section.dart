@@ -9,154 +9,159 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
     required String avtUser1,
     required String avtUser2,
   }) {
-    final compactMetaLayout = !isSingle && !_showStatus && !_showWeather;
-    final dobU1 = _houseSettings?['dobU1']?.toString() ?? '';
-    final dobU2 = _houseSettings?['dobU2']?.toString() ?? '';
-    final z1 = ZodiacUtils.getZodiac(dobU1);
-    final z2 = ZodiacUtils.getZodiac(dobU2);
-    final ageDaysU1 = _extractAgeDays(dobU1);
-    final ageDaysU2 = _extractAgeDays(dobU2);
-    final effectProfile = UiPrefs.resolveEffectProfile(
-      state: UiPrefs.notifier.value,
-      isWeb: kIsWeb,
-    );
-    final showDecorGlow = !effectProfile.performanceMode;
-    final decorGlowEnabled = DateTime.now().millisecondsSinceEpoch < 0;
+    return ValueListenableBuilder<Map<String, dynamic>>(
+      valueListenable: _presenceDataNotifier,
+      builder: (context, _, __) {
+        final compactMetaLayout = !isSingle && !_showStatus && !_showWeather;
+        final dobU1 = _houseSettings?['dobU1']?.toString() ?? '';
+        final dobU2 = _houseSettings?['dobU2']?.toString() ?? '';
+        final z1 = ZodiacUtils.getZodiac(dobU1);
+        final z2 = ZodiacUtils.getZodiac(dobU2);
+        final ageDaysU1 = _extractAgeDays(dobU1);
+        final ageDaysU2 = _extractAgeDays(dobU2);
+        final effectProfile = UiPrefs.resolveEffectProfile(
+          state: UiPrefs.notifier.value,
+          isWeb: kIsWeb,
+        );
+        final showDecorGlow = !effectProfile.performanceMode;
+        final decorGlowEnabled = DateTime.now().millisecondsSinceEpoch < 0;
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        20,
-        compactMetaLayout ? 18 : 24,
-        20,
-        compactMetaLayout ? 14 : 20,
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
-        children: [
-          if (decorGlowEnabled && showDecorGlow) ...[
-            Positioned(
-              top: -8,
-              left: -4,
-              child: IgnorePointer(
-                child: Container(
-                  width: 78,
-                  height: 78,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        const Color(0xFFFFB7D1).withValues(alpha: 0.28),
-                        const Color(0xFFFFB7D1).withValues(alpha: 0.02),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              right: -10,
-              bottom: -10,
-              child: IgnorePointer(
-                child: Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        const Color(0xFF8FD8FF).withValues(alpha: 0.22),
-                        const Color(0xFF8FD8FF).withValues(alpha: 0.02),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-          Row(
-            mainAxisAlignment: compactMetaLayout
-                ? MainAxisAlignment.spaceEvenly
-                : MainAxisAlignment.spaceAround,
-            crossAxisAlignment: CrossAxisAlignment.start,
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            compactMetaLayout ? 18 : 24,
+            20,
+            compactMetaLayout ? 14 : 20,
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
             children: [
-              Flexible(
-                child: _buildModernUserColumn(
-                  name: nameU1,
-                  avatarUrl: avtUser1,
-                  zodiacEmoji: z1?['emoji'] ?? '✦',
-                  zodiacName: z1?['name'] ?? '',
-                  ageDays: ageDaysU1,
-                  role: 'user1',
-                  isUser1: true,
-                  hideMeta: isSingle,
-                  customOnTap: () => _changeAvatar(isUser1: true),
-                  customOnLongPress: () => _changeAvatar(isUser1: true),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: compactMetaLayout ? 8 : 10,
-                  vertical: compactMetaLayout ? 12 : 20,
-                ),
-                child: _buildModernRelationshipAction(isSingle: isSingle),
-              ),
-              Flexible(
-                child: isSingle
-                    ? _buildModernUserColumn(
-                        name: '',
-                        avatarUrl: '', // Will fall back to placeholder or empty
-                        zodiacEmoji: '',
-                        zodiacName: '',
-                        ageDays: '--',
-                        role: 'user2',
-                        isUser1: false,
-                        hideMeta: true,
-                        isGreyedOut: true,
-                        customOnTap: _openSingleMatchHub,
-                      )
-                    : _buildModernUserColumn(
-                        name: nameU2,
-                        avatarUrl: avtUser2,
-                        zodiacEmoji: z2?['emoji'] ?? '✦',
-                        zodiacName: z2?['name'] ?? '',
-                        ageDays: ageDaysU2,
-                        role: 'user2',
-                        isUser1: false,
-                        hideMeta: false,
-                        customOnTap: () => _changeAvatar(isUser1: false),
-                        customOnLongPress: () => _changeAvatar(isUser1: false),
+              if (decorGlowEnabled && showDecorGlow) ...[
+                Positioned(
+                  top: -8,
+                  left: -4,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: 78,
+                      height: 78,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            const Color(0xFFFFB7D1).withValues(alpha: 0.28),
+                            const Color(0xFFFFB7D1).withValues(alpha: 0.02),
+                          ],
+                        ),
                       ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: -10,
+                  bottom: -10,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            const Color(0xFF8FD8FF).withValues(alpha: 0.22),
+                            const Color(0xFF8FD8FF).withValues(alpha: 0.02),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              Row(
+                mainAxisAlignment: compactMetaLayout
+                    ? MainAxisAlignment.spaceEvenly
+                    : MainAxisAlignment.spaceAround,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Flexible(
+                    child: _buildModernUserColumn(
+                      name: nameU1,
+                      avatarUrl: avtUser1,
+                      zodiacEmoji: z1?['emoji'] ?? '✦',
+                      zodiacName: z1?['name'] ?? '',
+                      ageDays: ageDaysU1,
+                      role: 'user1',
+                      isUser1: true,
+                      hideMeta: isSingle,
+                      customOnTap: () => _changeAvatar(isUser1: true),
+                      customOnLongPress: () => _changeAvatar(isUser1: true),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: compactMetaLayout ? 8 : 10,
+                      vertical: compactMetaLayout ? 12 : 20,
+                    ),
+                    child: _buildModernRelationshipAction(isSingle: isSingle),
+                  ),
+                  Flexible(
+                    child: isSingle
+                        ? _buildModernUserColumn(
+                            name: '',
+                            avatarUrl: '', // Will fall back to placeholder or empty
+                            zodiacEmoji: '',
+                            zodiacName: '',
+                            ageDays: '--',
+                            role: 'user2',
+                            isUser1: false,
+                            hideMeta: true,
+                            isGreyedOut: true,
+                            customOnTap: _openSingleMatchHub,
+                          )
+                        : _buildModernUserColumn(
+                            name: nameU2,
+                            avatarUrl: avtUser2,
+                            zodiacEmoji: z2?['emoji'] ?? '✦',
+                            zodiacName: z2?['name'] ?? '',
+                            ageDays: ageDaysU2,
+                            role: 'user2',
+                            isUser1: false,
+                            hideMeta: false,
+                            customOnTap: () => _changeAvatar(isUser1: false),
+                            customOnLongPress: () => _changeAvatar(isUser1: false),
+                          ),
+                  ),
+                ],
+              ),
+              Positioned.fill(
+                child: ValueListenableBuilder<List<_HomeReactionFlight>>(
+                  valueListenable: _reactionFlightsNotifier,
+                  builder: (context, flights, _) {
+                    return Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        for (final flight in flights)
+                          Positioned.fill(
+                            key: ValueKey('reaction-flight-${flight.id}'),
+                            child: IgnorePointer(
+                              child: ShootingHeartEffect(
+                                shootToRight: flight.shootToRight,
+                                emoji: flight.emoji,
+                                assetPath: flight.assetPath,
+                                imageUrl: flight.imageUrl,
+                                onComplete: () => _removeReactionFlight(flight.id),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
               ),
             ],
           ),
-          Positioned.fill(
-            child: ValueListenableBuilder<List<_HomeReactionFlight>>(
-              valueListenable: _reactionFlightsNotifier,
-              builder: (context, flights, _) {
-                return Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    for (final flight in flights)
-                      Positioned.fill(
-                        key: ValueKey('reaction-flight-${flight.id}'),
-                        child: IgnorePointer(
-                          child: ShootingHeartEffect(
-                            shootToRight: flight.shootToRight,
-                            emoji: flight.emoji,
-                            assetPath: flight.assetPath,
-                            imageUrl: flight.imageUrl,
-                            onComplete: () => _removeReactionFlight(flight.id),
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

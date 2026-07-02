@@ -22,53 +22,67 @@ class _CountdownModeCenterIconPreset {
 
 final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
   _CountdownModeCenterIconPreset(
-    type: 'heart',
-    label: L10nService().translate('home_tritim_94c542'),
+    type: 'miss',
+    label: L10nService().translate('home_nh_dbe2a3'),
     emoji: '\u{1F496}',
     icon: Icons.favorite_rounded,
-    assetPath: null,
-    gradient: [const Color(0xFFFFFFFF), const Color(0xFFFFF2F8)],
+    assetPath: 'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+    gradient: [const Color(0xFFFFD8E6), const Color(0xFFFFF3F7)],
     accent: const Color(0xFFD94C86),
+  ),
+  _CountdownModeCenterIconPreset(
+    type: 'angry',
+    label: L10nService().translate('home_gin_6a4c8c'),
+    emoji: '\u{1F63E}',
+    icon: Icons.sentiment_very_dissatisfied_rounded,
+    assetPath: 'assets/images/interaction_stickers/custom/numbered/sticker_154.png',
+    gradient: [const Color(0xFFFFE6DC), const Color(0xFFFFF6F2)],
+    accent: const Color(0xFFE26A3A),
   ),
   _CountdownModeCenterIconPreset(
     type: 'kiss',
     label: L10nService().translate('home_hn_fac010'),
     emoji: '\u{1F48B}',
     icon: Icons.favorite_border_rounded,
-    gradient: [const Color(0xFFFFF7FA), const Color(0xFFFFD9E8)],
+    assetPath: 'assets/images/interaction_stickers/custom/numbered/sticker_047.png',
+    gradient: [const Color(0xFFFFE1EC), const Color(0xFFFFF7FA)],
     accent: const Color(0xFFE14A8B),
   ),
   _CountdownModeCenterIconPreset(
     type: 'hug',
     label: L10nService().translate('home_m_07a3b7'),
-    emoji: '\u{1F917}',
+    emoji: '\u{1F428}',
     icon: Icons.diversity_1_rounded,
-    gradient: [const Color(0xFFFFFFFF), const Color(0xFFDDF3FF)],
+    assetPath: 'assets/images/interaction_stickers/custom/numbered/sticker_082.png',
+    gradient: [const Color(0xFFDDF3FF), const Color(0xFFF5FBFF)],
     accent: const Color(0xFF2D8FE3),
-  ),
-  _CountdownModeCenterIconPreset(
-    type: 'angry',
-    label: L10nService().translate('home_gin_6a4c8c'),
-    emoji: '\u{1F620}',
-    icon: Icons.sentiment_very_dissatisfied_rounded,
-    gradient: [const Color(0xFFFFFFFF), const Color(0xFFFFE6DC)],
-    accent: const Color(0xFFE26A3A),
   ),
   _CountdownModeCenterIconPreset(
     type: 'tease',
     label: L10nService().translate('home_tru_d66cdf'),
-    emoji: '\u{2728}',
+    emoji: '\u{1F921}',
     icon: Icons.auto_awesome_rounded,
-    gradient: [const Color(0xFFFFFFFF), const Color(0xFFE8E1FF)],
+    assetPath: 'assets/images/interaction_stickers/custom/numbered/sticker_070.png',
+    gradient: [const Color(0xFFE8E1FF), const Color(0xFFF8F5FF)],
     accent: const Color(0xFF7B61D9),
   ),
-  const _CountdownModeCenterIconPreset(
+  _CountdownModeCenterIconPreset(
+    type: 'cry',
+    label: L10nService().translate('home_khc_92394f'),
+    emoji: '\u{1F62D}',
+    icon: Icons.face_retouching_natural_rounded,
+    assetPath: 'assets/images/interaction_stickers/custom/numbered/sticker_089.png',
+    gradient: [const Color(0xFFDDEBFF), const Color(0xFFF4F8FF)],
+    accent: const Color(0xFF5B8DEF),
+  ),
+  _CountdownModeCenterIconPreset(
     type: 'poop',
     label: 'Troll',
-    emoji: '\u{26A1}',
+    emoji: '\u{1F4A9}',
     icon: Icons.bolt_rounded,
-    gradient: [Color(0xFFFFFFFF), Color(0xFFFFE1B9)],
-    accent: Color(0xFFB96B2C),
+    assetPath: 'assets/images/interaction_stickers/custom/numbered/sticker_071.png',
+    gradient: [const Color(0xFFFFE1B9), const Color(0xFFFFF4E6)],
+    accent: const Color(0xFFB96B2C),
   ),
 ];
 
@@ -77,8 +91,7 @@ _CountdownModeCenterIconPreset _countdownModeCenterIconPresetFor(
 ) {
   final normalized = rawType.trim().toLowerCase();
   final legacyNormalized = switch (normalized) {
-    'miss' => 'heart',
-    'cry' => 'heart',
+    'heart' => 'miss',
     'furious' => 'angry',
     _ => normalized,
   };
@@ -114,7 +127,7 @@ Widget _buildCountdownModeCenterIconVisual({
   required _CountdownModeCenterIconPreset preset,
   required double size,
   double? emojiSize,
-  bool preferAsset = false,
+  bool preferAsset = true,
 }) {
   final resolvedAssetPath =
       preset.assetPath != null && preset.assetPath!.trim().isNotEmpty

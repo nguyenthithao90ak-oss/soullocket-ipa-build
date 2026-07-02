@@ -398,7 +398,7 @@ class DeviceManagerService {
       final shouldCheckAutoTrustedLimit = isNew || existingStatus == 'pending';
       if (shouldCheckAutoTrustedLimit) {
         final devicesSnap =
-            await _db.ref('houses/$houseId/security/devices').get();
+            await _db.ref('houses/$houseId/security/devices').limitToFirst(20).get();
         existingDevices = _snapshotDeviceRecords(devicesSnap);
         trustedDeviceCount = _countTrustedActiveDevices(existingDevices);
       }
@@ -848,6 +848,7 @@ class DeviceManagerService {
 
     final snap = await _db
         .ref('houses/$houseId/security/devices')
+        .limitToFirst(20)
         .get()
         .timeout(const Duration(seconds: 10));
     if (!snap.exists) {
@@ -884,14 +885,20 @@ class DeviceManagerService {
 
     final merged = <String, Map<String, dynamic>>{};
     for (final device in legacyDevices) {
-      final id = device['deviceId']?.toString().trim() ?? '';
-      if (id.isEmpty) continue;
-      merged[id] = device;
+      final key = "${device['model']}_${device['platform']}_${device['os']}_${device['ip']}";
+      final currentTs = (device['last_seen'] as num?)?.toInt() ?? 0;
+      final existing = merged[key];
+      if (existing == null || ((existing['last_seen'] as num?)?.toInt() ?? 0) < currentTs) {
+        merged[key] = device;
+      }
     }
     for (final device in functionDevices ?? const <Map<String, dynamic>>[]) {
-      final id = device['deviceId']?.toString().trim() ?? '';
-      if (id.isEmpty) continue;
-      merged[id] = device;
+      final key = "${device['model']}_${device['platform']}_${device['os']}_${device['ip']}";
+      final currentTs = (device['last_seen'] as num?)?.toInt() ?? 0;
+      final existing = merged[key];
+      if (existing == null || ((existing['last_seen'] as num?)?.toInt() ?? 0) < currentTs) {
+        merged[key] = device;
+      }
     }
 
     final devices = merged.values.toList(growable: false)
@@ -901,7 +908,7 @@ class DeviceManagerService {
         return bTs.compareTo(aTs);
       });
 
-    return devices.isEmpty ? (functionDevices ?? []) : devices;
+    return devices;
   }
 
   Future<List<Map<String, dynamic>>?> _loadDevicesFromFunction() async {
@@ -1163,6 +1170,7 @@ class DeviceManagerService {
   Future<int> _countTrustedDevicesForHouse(String houseId) async {
     final devicesSnap = await _db
         .ref('houses/$houseId/security/devices')
+        .limitToFirst(20)
         .get()
         .timeout(const Duration(seconds: 5));
     return _countTrustedActiveDevices(_snapshotDeviceRecords(devicesSnap));

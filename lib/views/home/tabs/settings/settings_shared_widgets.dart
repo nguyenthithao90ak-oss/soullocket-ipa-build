@@ -455,7 +455,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     final isStandalone = Navigator.of(context).canPop();
     final showBack = isStandalone && !hideBackButton;
     final showExpand = !isStandalone;
-    final shortestSide = MediaQuery.of(context).size.shortestSide;
+    final shortestSide = MediaQuery.sizeOf(context).shortestSide;
     final isMobile = shortestSide < 600;
 
     final margin = (flatMode || (isMobile && isStandalone))

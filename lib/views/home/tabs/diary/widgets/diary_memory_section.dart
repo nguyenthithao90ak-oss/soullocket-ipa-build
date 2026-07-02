@@ -87,9 +87,12 @@ class DiaryMemorySection extends StatefulWidget {
 }
 
 class _DiaryMemorySectionState extends State<DiaryMemorySection> {
-  static const int _thumbnailWarmupCount = 18;
+  static const int _thumbnailWarmupCount = 30;
+  static const int _prefetchAheadCount = 50;
+  static const double _loadMoreThreshold = 1500;
   PreparedDiaryMemoryFeed? _lastPreparedFeed;
   String _thumbnailWarmupSignature = '';
+  String _prefetchedSignature = '';
   bool _isUploadingMemory = false;
   final ScrollController _scrollController = ScrollController();
 
@@ -112,11 +115,53 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
-    final maxScroll = _scrollController.position.maxScrollExtent;
-    final currentScroll = _scrollController.position.pixels;
-    if (maxScroll - currentScroll <= 400 && !widget.isLoadingMoreMemories) {
+    final pos = _scrollController.position;
+    final maxScroll = pos.maxScrollExtent;
+    final currentScroll = pos.pixels;
+    // Trigger loadMore sớm hơn: còn 1500px đến cuối thay vì 400px
+    if (maxScroll - currentScroll <= _loadMoreThreshold && !widget.isLoadingMoreMemories) {
       widget.onLoadMore();
     }
+    // Prefetch thumbnail ảnh phía trước khi scroll qua phần giữa
+    _maybePrefetchNextThumbnails(currentScroll, maxScroll);
+  }
+
+  /// Warmup thumbnail của 50 ảnh tiếp theo dựa trên vị trí scroll hiện tại
+  void _maybePrefetchNextThumbnails(double currentScroll, double maxScroll) {
+    final photos = _lastPreparedFeed?.photos;
+    if (photos == null || photos.isEmpty || !mounted) return;
+    if (maxScroll <= 0) return;
+
+    // Tính index ảnh đang xem dựa trên tỷ lệ scroll
+    final ratio = (currentScroll / maxScroll).clamp(0.0, 1.0);
+    final visibleStartIndex = (ratio * photos.length).toInt();
+    final prefetchStart = visibleStartIndex;
+    final prefetchEnd = (prefetchStart + _prefetchAheadCount).clamp(0, photos.length);
+
+    if (prefetchEnd <= prefetchStart) return;
+    final upcoming = photos.sublist(prefetchStart, prefetchEnd);
+    final urls = <String>[
+      for (final photo in upcoming)
+        (photo['url']?.toString() ?? '').trim(),
+    ]..removeWhere((url) => url.isEmpty);
+    if (urls.isEmpty) return;
+
+    final sig = '${widget.thumbnailCacheWidth}|$prefetchStart|${urls.length}';
+    if (_prefetchedSignature == sig) return;
+    _prefetchedSignature = sig;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      for (final url in urls) {
+        unawaited(
+          precacheImage(
+            _DiaryMemoryImageProviders.thumbnail(url, widget.thumbnailCacheWidth),
+            context,
+            onError: (_, __) {},
+          ),
+        );
+      }
+    });
   }
 
   /// Extract available months from photos list
@@ -408,18 +453,22 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                     if (item.isHeader) {
                                       final highlights = item.highlights;
                                       if (highlights.isNotEmpty) {
-                                        return _DiaryMemorySpecialHeader(
-                                          icon:
-                                              highlights.first['icon'] ?? '💖',
-                                          title: highlights.first['text'] ?? '',
-                                          dateString: item.dateString ?? '',
-                                          totalPhotos: item.totalPhotos ?? 0,
+                                        return RepaintBoundary(
+                                          child: _DiaryMemorySpecialHeader(
+                                            icon:
+                                                highlights.first['icon'] ?? '💖',
+                                            title: highlights.first['text'] ?? '',
+                                            dateString: item.dateString ?? '',
+                                            totalPhotos: item.totalPhotos ?? 0,
+                                          ),
                                         );
                                       }
 
-                                      return _DiaryMemoryDateHeader(
-                                        dateString: item.dateString ?? '',
-                                        totalPhotos: item.totalPhotos ?? 0,
+                                      return RepaintBoundary(
+                                        child: _DiaryMemoryDateHeader(
+                                          dateString: item.dateString ?? '',
+                                          totalPhotos: item.totalPhotos ?? 0,
+                                        ),
                                       );
                                     }
 
@@ -923,7 +972,10 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
         itemCount: widget.rowPhotos.length,
         itemBuilder: (context, index) {
           final photo = widget.rowPhotos[index];
-          return _buildPhotoItem(context, photo, index);
+          // RepaintBoundary: isolate từng ảnh, tránh repaint cả row
+          return RepaintBoundary(
+            child: _buildPhotoItem(context, photo, index),
+          );
         },
       ),
     );

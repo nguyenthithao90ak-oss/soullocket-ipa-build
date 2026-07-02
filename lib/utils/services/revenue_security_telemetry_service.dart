@@ -9,7 +9,7 @@ class RevenueSecurityTelemetryService {
 
   static final RevenueSecurityTelemetryService instance =
       RevenueSecurityTelemetryService._();
-  static bool _disabledForSession = false;
+  static bool _disabledForSession = true;
   static bool _permissionDeniedLogged = false;
 
   // Cooldown: không ghi cùng type quá 1 lần / 30 giây

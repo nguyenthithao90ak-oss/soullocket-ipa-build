@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../core/sl_theme.dart';
 
 class StickerLibraryScreen extends StatelessWidget {
@@ -457,8 +457,8 @@ class _StickerPreviewScreen extends StatelessWidget {
                 ],
               ),
               child: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.78,
-                height: MediaQuery.of(context).size.width * 0.78,
+                width: MediaQuery.sizeOf(context).width * 0.78,
+                height: MediaQuery.sizeOf(context).width * 0.78,
                 child: _StickerArt(
                   assetPath: assetPath,
                   fit: BoxFit.contain,

@@ -1,7 +1,7 @@
 part of '../../settings_tab.dart';
 
 class _SettingsCountdownModeScreen extends StatelessWidget {
-  const _SettingsCountdownModeScreen({
+  _SettingsCountdownModeScreen({
     required this.currentHouseId,
     required this.loveDate,
     required this.birthDate,
@@ -15,6 +15,8 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
     required this.onOpenAppearanceSettings,
   });
 
+  final GlobalKey<TapHeartsOverlayState> _heartsOverlayKey =
+      GlobalKey<TapHeartsOverlayState>();
   final String? currentHouseId;
   final String loveDate;
   final String birthDate;
@@ -156,6 +158,14 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
           body: Stack(
             fit: StackFit.expand,
             children: [
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: TapHeartsOverlay(
+                    key: _heartsOverlayKey,
+                    style: uiState.countdownStyleKey,
+                  ),
+                ),
+              ),
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -350,6 +360,18 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                           fontKey: uiState.fontKey,
                                           foreground: themeData.foreground,
                                           isDark: themeData.isDark,
+                                          currentHouseId: currentHouseId,
+                                          onCenterIconTap: () {
+                                            if (!_isSingleMode) {
+                                              unawaited(SoulMergeService().sendInteractiveEvent(type: 'photo_shot'));
+                                            }
+                                            final size = MediaQuery.sizeOf(context);
+                                            _heartsOverlayKey.currentState?.spawnLocalExplosion(
+                                              Offset(size.width / 2, size.height * 0.74),
+                                              count: 10,
+                                            );
+                                            HapticFeedback.mediumImpact();
+                                          },
                                         ),
                                       ],
                                     ],
@@ -383,6 +405,8 @@ class _CountdownModeAvatarCard extends StatefulWidget {
     required this.fontKey,
     required this.foreground,
     required this.isDark,
+    this.currentHouseId,
+    this.onCenterIconTap,
   });
 
   final bool isSingleMode;
@@ -394,6 +418,8 @@ class _CountdownModeAvatarCard extends StatefulWidget {
   final String fontKey;
   final Color foreground;
   final bool isDark;
+  final String? currentHouseId;
+  final VoidCallback? onCenterIconTap;
 
   @override
   State<_CountdownModeAvatarCard> createState() =>
@@ -407,6 +433,26 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
 
   _CountdownModeFriendTarget? _selectedFriend;
   bool _isSelectingFriend = false;
+  String _centerIconType = 'heart';
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadCenterIconType());
+  }
+
+  Future<void> _loadCenterIconType() async {
+    final houseId = widget.currentHouseId?.trim() ?? '';
+    if (houseId.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'il_countdown_mode_center_icon_type_$houseId';
+    final saved = prefs.getString(key) ?? 'heart';
+    if (mounted) {
+      setState(() {
+        _centerIconType = saved;
+      });
+    }
+  }
 
   String get _displayRightName {
     final selected = _selectedFriend;
@@ -730,6 +776,19 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
           fontKey: widget.fontKey,
           foreground: widget.foreground,
           isDark: widget.isDark,
+          centerIconType: _centerIconType,
+          onCenterIconChanged: (type) async {
+            setState(() {
+              _centerIconType = type;
+            });
+            final prefs = await SharedPreferences.getInstance();
+            final houseId = widget.currentHouseId?.trim() ?? '';
+            if (houseId.isNotEmpty) {
+              await prefs.setString(
+                  'il_countdown_mode_center_icon_type_$houseId', type);
+            }
+          },
+          onCenterIconTap: widget.onCenterIconTap,
         ),
         const SizedBox(height: 14),
         Row(

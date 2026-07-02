@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/permission_helper.dart';
 import 'offline_cache_service.dart';
+import 'package:soullocket_app/views/map/map_screen.dart';
 
 class LocationService {
   static const int _kGpsHistoryRetentionDays = 14;
@@ -40,6 +42,8 @@ class LocationService {
   static Map<String, dynamic>? _lastGpsPayload;
   static final Map<String, int> _historyCleanupTsByScope =
       <String, int>{};
+  static StreamSubscription? _partnerMapVisibilitySub;
+  static bool _partnerIsViewingMap = false;
 
   Future<bool> requestPermission(
       {BuildContext? context, bool forcePrompt = false}) async {
@@ -161,6 +165,15 @@ class LocationService {
     _lastAcceptedTs = 0;
     _lastFirebaseUpdateTs = 0;
 
+    final oppositeRole = normalizedRole == 'user1' ? 'user2' : 'user1';
+    _partnerMapVisibilitySub?.cancel();
+    _partnerMapVisibilitySub = _dbRef
+        .child('houses/$normalizedHouseId/presence/$oppositeRole/isViewingMap')
+        .onValue
+        .listen((event) {
+      _partnerIsViewingMap = event.snapshot.value == true;
+    });
+
     try {
       final initialPosition = await Geolocator.getCurrentPosition(
         locationSettings: LocationSettings(accuracy: _bestForegroundAccuracy),
@@ -214,6 +227,9 @@ class LocationService {
   Future<void> stopTracking({String? houseId, String? role}) async {
     await _positionStream?.cancel();
     _positionStream = null;
+    await _partnerMapVisibilitySub?.cancel();
+    _partnerMapVisibilitySub = null;
+    _partnerIsViewingMap = false;
 
     final resolvedHouseId = houseId ?? _activeHouseId;
     final resolvedRole = role ?? _activeRole;
@@ -367,6 +383,14 @@ class LocationService {
   bool _shouldWritePosition(Position position, Position? previous, int now) {
     if (_lastFirebaseUpdateTs <= 0 || previous == null) return true;
 
+    final isRealtime = _partnerIsViewingMap || MapScreen.isMapScreenActive.value;
+    final minIntervalMs = isRealtime 
+        ? const Duration(seconds: 120).inMilliseconds 
+        : const Duration(minutes: 30).inMilliseconds;
+    final minDistance = isRealtime 
+        ? 30.0 
+        : 300.0;
+
     final elapsedMs = now - _lastFirebaseUpdateTs;
     final movedMeters = Geolocator.distanceBetween(
       previous.latitude,
@@ -378,11 +402,12 @@ class LocationService {
         position.accuracy.isFinite &&
         previous.accuracy - position.accuracy >= _kAccuracyImprovementMeters;
 
-    if (elapsedMs >= _kFirebaseMinWriteInterval.inMilliseconds &&
-        (movedMeters >= _kStationaryDistanceMeters || accuracyImproved)) {
+    if (elapsedMs >= minIntervalMs &&
+        (movedMeters >= minDistance || accuracyImproved)) {
       return true;
     }
-    if (elapsedMs >= const Duration(seconds: 12).inMilliseconds &&
+    if (isRealtime &&
+        elapsedMs >= const Duration(seconds: 12).inMilliseconds &&
         movedMeters >= _kForceWriteDistanceMeters) {
       return true;
     }
@@ -457,17 +482,40 @@ class LocationService {
         _dbRef.child('gps_history/$houseId/$role/$dateStr').push().key ??
             now.toString();
 
-    await _dbRef.update({
-      'gps/$houseId/$role': {
-        ...payload,
-        'isLive': true,
-        'sharingEnabled': true,
-        'everShared': true,
-        'lastSeenAt': now,
-        'lastKnown': payload,
-      },
-      'gps_history/$houseId/$role/$dateStr/$historyKey': payload,
-    });
+    final isBackground = WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed;
+    if (isBackground) {
+      await FirebaseDatabase.instance.goOnline();
+    }
+
+    try {
+      await _dbRef.update({
+        'gps/$houseId/$role': {
+          ...payload,
+          'isLive': true,
+          'sharingEnabled': true,
+          'everShared': true,
+          'lastSeenAt': now,
+          'lastKnown': payload,
+        },
+        'gps_history/$houseId/$role/$dateStr/$historyKey': {
+          'lat': position.latitude,
+          'lng': position.longitude,
+          'ts': now,
+        },
+      });
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') {
+        debugPrint('Location write blocked (permission-denied). Silently failing.');
+      } else {
+        rethrow;
+      }
+    }
+
+    if (isBackground) {
+      Future.delayed(const Duration(seconds: 4), () {
+        FirebaseDatabase.instance.goOffline();
+      });
+    }
 
     unawaited(
       _maybeTrimGpsHistory(

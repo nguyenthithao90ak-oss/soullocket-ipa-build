@@ -253,7 +253,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     if (daySnap.exists && daySnap.value is Map) {
       final dayMap = daySnap.value as Map;
       if (dayMap.length >= 5) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Một ngày chỉ có thể có tối đa 5 sự kiện. Vui lòng xoá bớt trước khi thêm mới.'),
           backgroundColor: SLColors.danger,
         ));

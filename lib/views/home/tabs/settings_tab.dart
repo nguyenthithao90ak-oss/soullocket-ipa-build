@@ -22,7 +22,7 @@ import 'package:image_cropper/image_cropper.dart';
 
 import 'dart:io';
 import 'package:flutter/foundation.dart'
-    show kIsWeb, defaultTargetPlatform, TargetPlatform;
+    show kIsWeb, defaultTargetPlatform, TargetPlatform, kDebugMode;
 import '../../../utils/services/notification_service.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:permission_handler/permission_handler.dart' as app_permission;
@@ -94,7 +94,6 @@ import 'settings/controllers/settings_security_controller.dart';
 import 'settings/security/security_otp_dialogs.dart';
 import '../../../widgets/first_setup_spotlight_guide.dart';
 import '../../../widgets/legacy_web_ui.dart';
-import '../../../widgets/legacy_falling_effect.dart';
 import '../../../widgets/pin_pad_setup_modal.dart';
 import '../../../utils/services/widget_service.dart';
 import '../../../models/house_settings.dart';
@@ -103,12 +102,13 @@ import '../../../core/constants/app_config.dart';
 import '../../../utils/flexible_date_input.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../utils/app_error_mapper.dart';
+import '../../../utils/services/error_logger_service.dart';
 import '../../../utils/services/pending_upload_service.dart';
 import '../../../utils/services/app_lifecycle_presence_guard.dart';
 import '../../../widgets/soul_locket_brand_mark.dart';
 import '../../visitors/visitor_profile_screen.dart';
 import 'settings/account/identity_panel.dart';
-import 'main_home_tab.dart' show AnimatedWaveBackground;
+import 'main_home_tab.dart' show AnimatedWaveBackground, ShootingHeartEffect;
 import 'settings/controllers/settings_identity_controller.dart';
 import 'settings/controllers/settings_notifications_controller.dart';
 import 'settings/controllers/settings_widget_controller.dart';
@@ -471,7 +471,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   String _bgMusicType = 'audio';
   bool _isSavingTheme = false;
   String _vipPlanCode = '';
-  String? _openPanel;
+
   Set<String> _unlockedCountdownStyles = const <String>{};
   BreakupRequestData? _breakupRequest;
   int _pendingAccountDeletionAtMs = 0;
@@ -500,6 +500,12 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _draftLiteMode = false;
   Timer? _widgetDiaryPreviewTimer;
   final ValueNotifier<int> _widgetPreviewTickNotifier = ValueNotifier<int>(0);
+  
+  // Custom Widget Event
+  bool _useCustomWidgetEvent = false;
+  final _customWidgetEventTitleCtrl = TextEditingController();
+  final _customWidgetEventDateCtrl = TextEditingController();
+  String _customWidgetEventColorHex = '#EC4899';
   double? _localCountdownSize;
   final List<String> _securityQuestions = [
     L10nService().translate('home_ngysinhcab_82062b'),
@@ -815,6 +821,8 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     _anniversaryNameCtrl.dispose();
     _anniversaryDateCtrl.dispose();
     _musicLinkCtrl.dispose();
+    _customWidgetEventTitleCtrl.dispose();
+    _customWidgetEventDateCtrl.dispose();
     SettingsSyncService().backupSettingsToCloud();
     super.dispose();
   }

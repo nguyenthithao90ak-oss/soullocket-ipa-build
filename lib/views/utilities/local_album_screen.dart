@@ -594,7 +594,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
   }
 
   Widget _buildGrid() {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
     final crossAxisCount = screenWidth > 600 ? 5 : screenWidth > 400 ? 4 : 3;
 
     return Column(

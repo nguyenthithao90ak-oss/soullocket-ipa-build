@@ -467,6 +467,32 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
 
       if (finalConfirm == true) {
         if (!mounted) return;
+        final email = _auth.currentUser?.email;
+        if (email == null || email.trim().isEmpty) {
+          SLNotice.showError(
+            context,
+            'Không tìm thấy email của tài khoản để gửi mã xác thực.',
+          );
+          return;
+        }
+
+        final otpVerified = await showSettingsEmailOtpDialog(
+          context: context,
+          title: 'Xác thực xóa tài khoản',
+          email: email,
+          sendCode: () async {
+            await _authService.sendOtpEmail(email);
+          },
+          verifyCode: (otp) async {
+            await _authService.validateEmailOTP(email, otp);
+          },
+        );
+
+        if (!otpVerified) {
+          return;
+        }
+
+        if (!mounted) return;
         SLNotice.showInfo(context, context.tr('home_angthitlpl_42ed13'));
         try {
           final result = await _authService.deleteAccount();

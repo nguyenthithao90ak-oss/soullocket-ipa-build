@@ -424,7 +424,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.76,
+        width: MediaQuery.sizeOf(context).width * 0.76,
         margin: const EdgeInsets.only(bottom: 12),
         padding: SLSpacing.all12,
         decoration: BoxDecoration(
@@ -503,7 +503,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.76,
+        width: MediaQuery.sizeOf(context).width * 0.76,
         margin: const EdgeInsets.only(bottom: 12),
         padding: SLSpacing.all12,
         decoration: BoxDecoration(
@@ -600,7 +600,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.78,
+        width: MediaQuery.sizeOf(context).width * 0.78,
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(

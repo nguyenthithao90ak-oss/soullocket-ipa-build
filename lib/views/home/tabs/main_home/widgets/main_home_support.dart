@@ -233,7 +233,7 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
   @override
   Widget build(BuildContext context) {
     // Cache the screen size to avoid layout thrashing
-    final screenSize = MediaQuery.of(context).size;
+    final screenSize = MediaQuery.sizeOf(context);
     final halfWidth = screenSize.width / 2;
     final halfHeight = screenSize.height / 2;
 

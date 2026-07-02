@@ -107,10 +107,22 @@ extension _SettingsTabThemeSection on _SettingsTabState {
     return normalized;
   }
 
+  bool _isVipFrameLocked(String frameKey) {
+    return frameKey == 'vip' && !_isVipActive;
+  }
 
-
-
-
+  void _handleAvatarFrameSelection(String frameKey) {
+    if (_isVipFrameLocked(frameKey)) {
+      _showToast(
+        context.tr('home_lachnnyang_d9f089'),
+        success: false,
+      );
+      return;
+    }
+    _updateThemeDraft(
+      () => _draftAvatarFrameKey = _resolveAllowedAvatarFrameKey(frameKey),
+    );
+  }
 
   _ThemePanelConfig _buildThemePanelConfig() {
     return _ThemePanelConfig(
@@ -359,27 +371,57 @@ extension _SettingsTabThemeSection on _SettingsTabState {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-          // 1. Hình nền & Hiệu ứng — thường dùng nhất
+          // 1. Khung & Kích thước
           _ThemeSectionCard(
-            icon: Icons.palette_rounded,
-            title: context.tr('theme_bg_effect_title'),
-            description: context.tr('theme_bg_effect_desc'),
-            themeColor: const Color(0xFF9C27B0),
+            icon: Icons.aspect_ratio_rounded,
+            title: context.tr('theme_frame_size'),
+            description: context.tr('theme_frame_size_desc'),
+            themeColor: const Color(0xFFFF4D73),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildLabel(context.tr('theme_falling_effect')),
-                const SizedBox(height: 6),
-                _buildEffectPresetStrip(selection.effectKey),
+                _SliderWithLabel(
+                  initialValue: _localCountdownSize ?? UiPrefs.notifier.value.countdownSizePx,
+                  min: 200,
+                  max: UiPrefs.maxCountdownSizePx,
+                  onChanged: (value) {
+                    _draftCountdownSizePx = value;
+                    _panelRebuildNotifier.value++;
+                  },
+                  onChangeEnd: (value) {
+                    _updateThemeDraft(() => _draftCountdownSizePx = value, syncPreview: true);
+                  },
+                ),
+                const SizedBox(height: 8),
+                _buildLabel(context.tr('theme_frame_type')),
+                const SizedBox(height: 8),
+                _buildAvatarFrameStrip(selection.avatarFrameKey),
+                const SizedBox(height: 12),
+                _buildLabel(context.tr('theme_countdown_style')),
+                _buildThemeDropdownField(
+                  value: selection.countdownStyleKey,
+                  options: config.countdownStyles.map((s) {
+                    final locked = s.$3 &&
+                        !_isVipActive &&
+                        !selection.hasCountdownAdPass;
+                    final label = locked ? '${s.$1} ${context.tr('theme_countdown_label_ad')}' : s.$1;
+                    return (label, s.$2);
+                  }).toList(),
+                  onChanged: (value) => _handleCountdownStyleChange(value),
+                ),
+                const SizedBox(height: 10),
+                _buildCountdownStyleStrip(selection.countdownStyleKey, selection.hasCountdownAdPass),
                 const SizedBox(height: 12),
                 _buildLabel(context.tr('theme_home_block_tone')),
+                const SizedBox(height: 8),
                 _buildThemeDropdownField(
                   value: selection.homeToneKey,
                   options: config.homeTones,
-                  onChanged: (value) =>
-                      _updateThemeDraft(() => _draftHomeBlockToneKey = value),
+                  onChanged: (value) => _updateThemeDraft(
+                    () => _draftHomeBlockToneKey = value,
+                  ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
@@ -405,49 +447,6 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          // 2. Khung & Kích thước
-          _ThemeSectionCard(
-            icon: Icons.aspect_ratio_rounded,
-            title: context.tr('theme_frame_size'),
-            description: context.tr('theme_frame_size_desc'),
-            themeColor: const Color(0xFFFF4D73),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _SliderWithLabel(
-                  initialValue: _localCountdownSize ?? UiPrefs.notifier.value.countdownSizePx,
-                  min: 200,
-                  max: UiPrefs.maxCountdownSizePx,
-                  onChanged: (value) {
-                    _draftCountdownSizePx = value;
-                    _panelRebuildNotifier.value++;
-                  },
-                  onChangeEnd: (value) {
-                    _updateThemeDraft(() => _draftCountdownSizePx = value, syncPreview: true);
-                  },
-                ),
-                const SizedBox(height: 8),
-                _buildLabel(context.tr('theme_frame_type')),
-                const SizedBox(height: 8),
-                // _buildAvatarFrameStrip(selection.avatarFrameKey),
-                const SizedBox(height: 12),
-                _buildLabel(context.tr('theme_countdown_style')),
-                _buildThemeDropdownField(
-                  value: selection.countdownStyleKey,
-                  options: config.countdownStyles.map((s) {
-                    final locked = s.$3 &&
-                        !_isVipActive &&
-                        !selection.hasCountdownAdPass;
-                    final label = locked ? '${s.$1} ${context.tr('theme_countdown_label_ad')}' : s.$1;
-                    return (label, s.$2);
-                  }).toList(),
-                  onChanged: (value) => _handleCountdownStyleChange(value),
-                ),
-                const SizedBox(height: 10),
-                _buildCountdownStyleStrip(selection.countdownStyleKey, selection.hasCountdownAdPass),
               ],
             ),
           ),

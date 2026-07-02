@@ -80,17 +80,23 @@ extension _HomeScreenShellBackground on _HomeScreenState {
     required bool isDark,
     required String backgroundUrl,
   }) {
-    final overlayColors = isDark
+    final overlayColors = themeKey == 'off'
         ? [
-            Colors.black.withValues(alpha: 0.30),
-            Colors.black.withValues(alpha: 0.18),
-            Colors.black.withValues(alpha: 0.40),
+            Colors.transparent,
+            Colors.transparent,
+            Colors.black.withValues(alpha: 0.12),
           ]
-        : [
-            Colors.white.withValues(alpha: 0.14),
-            Colors.white.withValues(alpha: 0.08),
-            Colors.black.withValues(alpha: 0.30),
-          ];
+        : (isDark
+            ? [
+                Colors.black.withValues(alpha: 0.30),
+                Colors.black.withValues(alpha: 0.18),
+                Colors.black.withValues(alpha: 0.40),
+              ]
+            : [
+                Colors.white.withValues(alpha: 0.14),
+                Colors.white.withValues(alpha: 0.08),
+                Colors.black.withValues(alpha: 0.30),
+              ]);
 
     return Stack(
       fit: StackFit.expand,
@@ -252,7 +258,11 @@ class _StableShellBackgroundImageState
   @override
   void initState() {
     super.initState();
-    _syncProviders();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _syncProviders();
+      }
+    });
   }
 
   @override
@@ -287,6 +297,14 @@ class _StableShellBackgroundImageState
     if (startupFile != null) {
       return;
     }
+
+    precacheImage(provider, context).then((_) {
+      if (!mounted || _currentUrl != url) return;
+      setState(() {
+        _ready = true;
+        _retainedProvider = provider;
+      });
+    }).catchError((_) {});
 
     try {
       final cachedFile = await DefaultCacheManager().getFileFromCache(url);

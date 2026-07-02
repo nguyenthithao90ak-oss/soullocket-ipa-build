@@ -1746,7 +1746,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
               ),
             if (_gameState == 'PLAYING') ...[
               Positioned(
-                top: MediaQuery.of(context).padding.top + 8,
+                top: MediaQuery.paddingOf(context).top + 8,
                 left: 8,
                 right: 8,
                 child: ValueListenableBuilder<int>(

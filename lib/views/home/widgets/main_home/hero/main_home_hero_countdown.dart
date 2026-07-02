@@ -571,7 +571,11 @@ class _MainHomeHeroCountdownCircleState extends State<_MainHomeHeroCountdownCirc
                           ),
                           child: RepaintBoundary(
                             child: AnimatedWaveBackground(
-                              styleKey: widget.countdownStyleKey,
+                              styleKey: (transparentMode ||
+                                      UiPrefs.notifier.value.fallingEffectKey == 'off' ||
+                                      UiPrefs.notifier.value.liteMode)
+                                  ? 'plain'
+                                  : widget.countdownStyleKey,
                               enableMotion: widget.enableMotion,
                               transparentMode: transparentMode,
                             ),

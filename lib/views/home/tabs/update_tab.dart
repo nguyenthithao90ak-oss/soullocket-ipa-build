@@ -9,18 +9,35 @@ import '../../../core/sl_theme.dart';
 import 'package:soullocket_app/core/sl_route.dart';
 import '../../../utils/services/auth_service.dart';
 import '../../../utils/services/l10n_service.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:soullocket_app/utils/services/house_service.dart';
 import '../../utilities/user_support_chat_screen.dart';
 import '../screens/document_viewer_screen.dart';
 import 'settings_tab.dart';
 
-class UpdateTab extends StatelessWidget {
+class UpdateTab extends StatefulWidget {
   const UpdateTab({super.key});
 
+  @override
+  State<UpdateTab> createState() => _UpdateTabState();
+}
+
+class _UpdateTabState extends State<UpdateTab> {
   static const String _version = 'v2.0.0+53';
   static const String _supportEmail = 'hotroviethoangdev.lo.ve@gmail.com';
   static final Uri _webAppUri = Uri.parse(AppConfig.webBaseUrl);
   static String? _cachedAdminUid;
   static Future<bool>? _cachedAdminFuture;
+
+  final TextEditingController _feedbackCtrl = TextEditingController();
+  bool _isSendingFeedback = false;
+  DateTime? _lastFeedbackSentAt;
+
+  @override
+  void dispose() {
+    _feedbackCtrl.dispose();
+    super.dispose();
+  }
 
   bool get _isEnglish => L10nService().locale.languageCode == 'en';
 
@@ -188,17 +205,46 @@ class UpdateTab extends StatelessWidget {
 
   void _showToast(BuildContext context, String message) {
     if (!context.mounted) return;
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            message,
-            style: _labelStyle(fontWeight: FontWeight.w800),
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger != null) {
+      try {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              message,
+              style: _labelStyle(fontWeight: FontWeight.w800, color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFFFF78A8),
+            behavior: SnackBarBehavior.floating,
           ),
-          behavior: SnackBarBehavior.floating,
+        );
+        return;
+      } catch (_) {}
+    }
+
+    // Fallback: Show Dialog when ScaffoldMessenger is not found in context tree
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Text(
+          message,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
         ),
-      );
-    } catch (_) {}
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'OK',
+              style: TextStyle(
+                color: Color(0xFFFF4B91),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showDeleteGuide(BuildContext context) {
@@ -358,6 +404,8 @@ class UpdateTab extends StatelessWidget {
                       _buildGuideBoard(context),
                       SLSpacing.h16,
                       _buildSupportBoard(context, isAdmin: isAdmin),
+                      SLSpacing.h16,
+                      _buildFeedbackPanel(context),
                       SLSpacing.h24,
                       _buildFooter(),
                     ],
@@ -1341,5 +1389,190 @@ class UpdateTab extends StatelessWidget {
         style: _labelStyle(color: color, fontWeight: FontWeight.w800),
       ),
     );
+  }
+
+  Widget _buildFeedbackPanel(BuildContext context) {
+    return _buildPanel(
+      title: _tr('Đóng góp ý kiến', 'Suggest a feature / Feedback'),
+      subtitle: _tr(
+        'Chúng tôi luôn lắng nghe ý kiến đóng góp của bạn để hoàn thiện SoulLocket mỗi ngày.',
+        'We always listen to your suggestions to improve SoulLocket every day.',
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: _feedbackCtrl,
+            maxLines: 4,
+            maxLength: 500,
+            style: _bodyStyle(color: const Color(0xFF1E293B)),
+            decoration: InputDecoration(
+              hintText: _tr('Nhập ý kiến đóng góp của bạn ở đây...', 'Enter your feedback here...'),
+              hintStyle: _bodyStyle(color: Colors.grey[400]),
+              filled: true,
+              fillColor: const Color(0xFFF8FAFC),
+              border: OutlineInputBorder(
+                borderRadius: SLRadius.lgAll,
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: SLRadius.lgAll,
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: SLRadius.lgAll,
+                borderSide: const BorderSide(color: Color(0xFFFF4B91)),
+              ),
+              counterStyle: _bodyStyle(color: Colors.grey[500], fontSize: 11),
+            ),
+          ),
+          SLSpacing.h12,
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _isSendingFeedback ? null : () => _sendFeedback(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF4B91),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: SLRadius.lgAll,
+                ),
+                elevation: 0,
+              ),
+              child: _isSendingFeedback
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Text(
+                      _tr('Gửi đóng góp', 'Submit Feedback'),
+                      style: _labelStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _sendFeedback(BuildContext context) async {
+    final content = _feedbackCtrl.text.trim();
+    if (content.length < 5) {
+      _showToast(context, _tr('Ý kiến đóng góp phải có ít nhất 5 ký tự!', 'Feedback must be at least 5 characters!'));
+      return;
+    }
+    if (content.length > 500) {
+      _showToast(context, _tr('Ý kiến đóng góp tối đa 500 ký tự!', 'Feedback must be at most 500 characters!'));
+      return;
+    }
+
+    final user = AuthService().currentUser;
+    if (user == null) {
+      _showToast(context, _tr('Vui lòng đăng nhập để gửi ý kiến!', 'Please log in to send feedback!'));
+      return;
+    }
+
+    setState(() => _isSendingFeedback = true);
+
+    try {
+      final houseId = await HouseService().getCurrentHouseId();
+      if (houseId == null || houseId.trim().isEmpty) {
+        _showToast(context, _tr('Không thể xác định thông tin nhà. Vui lòng thử lại sau!', 'Could not determine house information. Please try again later!'));
+        setState(() => _isSendingFeedback = false);
+        return;
+      }
+
+      final dbRef = FirebaseDatabase.instance.ref('house_feedbacks/$houseId');
+      final snap = await dbRef.get();
+      
+      Map<String, dynamic> slots = {};
+      if (snap.exists) {
+        final val = snap.value;
+        if (val is Map) {
+          slots = val.map((k, v) => MapEntry(k.toString(), Map<String, dynamic>.from(v as Map)));
+        } else if (val is List) {
+          for (int i = 0; i < val.length; i++) {
+            final item = val[i];
+            if (item is Map) {
+              slots['slot_$i'] = Map<String, dynamic>.from(item);
+            }
+          }
+        }
+      }
+
+      String? targetSlot;
+      for (final s in ['slot_1', 'slot_2', 'slot_3']) {
+        if (!slots.containsKey(s)) {
+          targetSlot = s;
+          break;
+        }
+      }
+
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+
+      if (targetSlot == null) {
+        // Cả 3 slot đều đã có dữ liệu, tìm slot cũ nhất
+        String oldestSlot = 'slot_1';
+        num oldestTime = slots['slot_1']?['createdAt'] ?? 0;
+
+        for (final s in ['slot_2', 'slot_3']) {
+          final time = slots[s]?['createdAt'] ?? 0;
+          if (time < oldestTime) {
+            oldestSlot = s;
+            oldestTime = time;
+          }
+        }
+
+        final diff = nowMs - oldestTime;
+        if (diff < 86400000) {
+          final remainingMs = 86400000 - diff;
+          final hours = remainingMs ~/ 3600000;
+          final mins = (remainingMs % 3600000) ~/ 60000;
+          _showToast(
+            context,
+            _tr(
+              'Nhà của bạn đã gửi tối đa 3 ý kiến trong 24 giờ. Vui lòng đợi $hours giờ $mins phút!',
+              'Your house has submitted max 3 feedbacks in 24 hours. Please wait $hours hours $mins minutes!',
+            ),
+          );
+          setState(() => _isSendingFeedback = false);
+          return;
+        }
+
+        targetSlot = oldestSlot;
+      }
+
+      // Ghi dữ liệu lên slot đã chọn
+      await dbRef.child(targetSlot).set({
+        'uid': user.uid,
+        'email': user.email ?? 'anonymous',
+        'content': content,
+        'createdAt': ServerValue.timestamp,
+      });
+
+      _feedbackCtrl.clear();
+      _lastFeedbackSentAt = DateTime.now();
+      if (mounted) {
+        _showToast(context, _tr('Cảm ơn bạn đã đóng góp ý kiến!', 'Thank you for your feedback!'));
+      }
+    } catch (e) {
+      debugPrint('[Feedback] Error sending feedback: $e');
+      if (mounted) {
+        _showToast(context, _tr('Không thể gửi ý kiến. Vui lòng thử lại sau!', 'Could not send feedback. Please try again later!'));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSendingFeedback = false);
+      }
+    }
   }
 }

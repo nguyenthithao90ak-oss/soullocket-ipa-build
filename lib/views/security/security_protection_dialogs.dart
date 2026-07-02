@@ -87,7 +87,7 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
       padding: EdgeInsets.only(
         left: 14,
         right: 14,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 14,
+        bottom: MediaQuery.viewInsetsOf(context).bottom + 14,
       ),
       child: Container(
         decoration: BoxDecoration(

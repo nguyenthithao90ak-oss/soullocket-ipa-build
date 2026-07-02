@@ -446,9 +446,6 @@ extension _CountdownModeIndependentScreenStatePart
           widget.avatarUrl1.trim();
       _avatarUrl2 = prefs.getString(_prefKey('avatar_2', scope: scope)) ??
           widget.avatarUrl2.trim();
-      _fallingEffectType =
-          prefs.getString(_prefKey('falling_effect_type', scope: scope)) ??
-              'off';
       _anchorDate = parsedDate;
     });
   }
@@ -480,7 +477,7 @@ extension _CountdownModeIndependentScreenStatePart
       ),
       prefs.setString(
         _prefKey('falling_effect_type', scope: scope),
-        _fallingEffectType,
+        'off',
       ),
       prefs.setInt(_prefKey('updated_at_ms', scope: scope), snapshot.updatedAtMs),
     ]);
@@ -530,7 +527,23 @@ extension _CountdownModeIndependentScreenStatePart
           'houses/$houseId/settings/updatedAt': ServerValue.timestamp,
           'houses/$houseId/updatedAt': ServerValue.timestamp,
         };
-        await _countdownSpaceDbRef.update(updates);
+        try {
+          await _countdownSpaceDbRef.update(updates);
+        } catch (e, stackTrace) {
+          debugPrint('[Countdown] Failed to update house settings: $e');
+          ErrorLoggerService.instance.logError(
+            e,
+            stackTrace,
+            reason: 'Lỗi cập nhật cài đặt Không gian riêng lên Firebase',
+            fatal: false,
+          );
+          if (mounted) {
+            _showMessage(AppErrorMapper.resolve(
+              e,
+              fallbackMessage: 'Không thể đồng bộ cài đặt lên mạng. Hãy kiểm tra kết nối nhé!',
+            ).message);
+          }
+        }
       }
       return;
     }

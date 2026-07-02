@@ -758,7 +758,7 @@ class _AdminSupportChatDetailScreenState
                         Container(
                           padding: const EdgeInsets.all(12),
                           constraints: BoxConstraints(
-                            maxWidth: MediaQuery.of(context).size.width * 0.75,
+                            maxWidth: MediaQuery.sizeOf(context).width * 0.75,
                           ),
                           decoration: BoxDecoration(
                             color: isAdmin

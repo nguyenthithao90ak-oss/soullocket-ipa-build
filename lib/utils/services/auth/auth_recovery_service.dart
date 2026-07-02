@@ -203,10 +203,10 @@ class AuthRecoveryService {
   Future<Map<String, dynamic>?> getHouseSecurityData(String houseId) async {
     try {
       final snaps = await Future.wait([
-        _db.child('houses/$houseId/security').get(),
-        _db.child('houses/$houseId/recovery_q').get(),
-        _db.child('houses/$houseId/recovery_a').get(),
-        _db.child('houses/$houseId/email').get(),
+        _db.child('houses/$houseId/security').get().timeout(const Duration(seconds: 3)),
+        _db.child('houses/$houseId/recovery_q').get().timeout(const Duration(seconds: 3)),
+        _db.child('houses/$houseId/recovery_a').get().timeout(const Duration(seconds: 3)),
+        _db.child('houses/$houseId/email').get().timeout(const Duration(seconds: 3)),
       ]);
 
       final securitySnap = snaps[0];

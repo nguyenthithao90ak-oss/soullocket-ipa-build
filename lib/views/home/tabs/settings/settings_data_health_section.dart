@@ -1529,11 +1529,6 @@ extension _SettingsDataHealthSection on _SettingsTabState {
               );
             },
           ),
-          _buildAdvancedPanel(
-            hideBackButton: true,
-            showSaveButton: false,
-            showHeaderCard: false,
-          ),
         ],
       ),
     );

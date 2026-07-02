@@ -20,6 +20,7 @@ import 'purchase_service.dart';
 import 'revenue_security_telemetry_service.dart';
 import 'ad_suppression_guard.dart';
 import 'texas_age_gate_service.dart';
+import 'ad_unit_config.dart';
 
 /// ============================================================
 ///  AdMobService — GRA (Phase Production)
@@ -110,85 +111,57 @@ class AdMobService {
   ];
   final HouseService _houseService = HouseService();
   final Random _random = Random();
+  static bool _isRewardEndpointDisabled = false;
 
-  // ─── AD UNIT IDs ─────────────────────────────────────────────
-  // Debug mode  → Google Test IDs (không tốn tiền khi test)
-  // Release mode → ID thật từ AdMob Console của bạn
+  static String? _androidRewardedMainId;
+  static String? _androidRewardedCheckinId;
+  static String? _androidRewardedSoulGameId;
+  static String? _androidBannerId;
+  static String? _androidInterstitialId;
+  static String? _androidAppOpenId;
 
-  // ANDROID
-  static String _androidRewardedMainId =
-      'ca-app-pub-6165771694697009/3441513253';
-  static String _androidRewardedCheckinId =
-      'ca-app-pub-6165771694697009/9710840883';
-  static String _androidRewardedSoulGameId =
-      'ca-app-pub-6165771694697009/5113438527';
-  static String _androidBannerId = 'ca-app-pub-6165771694697009/5949757521';
-  static String _androidInterstitialId =
-      'ca-app-pub-6165771694697009/6283299015';
-  static String _androidAppOpenId = 'ca-app-pub-6165771694697009/3305781889';
-
-  // IOS
-  static String _iosRewardedMainId = 'ca-app-pub-6165771694697009/8781411712';
-  static String _iosRewardedCheckinId =
-      'ca-app-pub-6165771694697009/8342428018';
-  static String _iosRewardedSoulGameId =
-      'ca-app-pub-6165771694697009/5716264675';
-  static String _iosBannerId = 'ca-app-pub-6165771694697009/6458500706';
-  static String _iosInterstitialId = 'ca-app-pub-6165771694697009/1798124404';
-  static String _iosAppOpenId = 'ca-app-pub-6165771694697009/7141026983';
+  static String? _iosRewardedMainId;
+  static String? _iosRewardedCheckinId;
+  static String? _iosRewardedSoulGameId;
+  static String? _iosBannerId;
+  static String? _iosInterstitialId;
+  static String? _iosAppOpenId;
 
   static String get rewardedMainId {
-    if (kDebugMode) {
-      return Platform.isIOS
-          ? 'ca-app-pub-3940256099942544/1712485313'
-          : 'ca-app-pub-3940256099942544/5224354917';
+    if (Platform.isIOS) {
+      return _iosRewardedMainId ?? AdUnitConfig.rewardedMainId;
     }
-    return Platform.isIOS ? _iosRewardedMainId : _androidRewardedMainId;
+    return _androidRewardedMainId ?? AdUnitConfig.rewardedMainId;
   }
-
   static String get rewardedCheckinId {
-    if (kDebugMode) {
-      return Platform.isIOS
-          ? 'ca-app-pub-3940256099942544/1712485313'
-          : 'ca-app-pub-3940256099942544/5224354917';
+    if (Platform.isIOS) {
+      return _iosRewardedCheckinId ?? AdUnitConfig.rewardedCheckinId;
     }
-    return Platform.isIOS ? _iosRewardedCheckinId : _androidRewardedCheckinId;
+    return _androidRewardedCheckinId ?? AdUnitConfig.rewardedCheckinId;
   }
-
   static String get rewardedSoulGameId {
-    if (kDebugMode) {
-      return Platform.isIOS
-          ? 'ca-app-pub-3940256099942544/1712485313'
-          : 'ca-app-pub-3940256099942544/5224354917';
+    if (Platform.isIOS) {
+      return _iosRewardedSoulGameId ?? AdUnitConfig.rewardedSoulGameId;
     }
-    return Platform.isIOS ? _iosRewardedSoulGameId : _androidRewardedSoulGameId;
+    return _androidRewardedSoulGameId ?? AdUnitConfig.rewardedSoulGameId;
   }
-
   static String get bannerId {
-    if (kDebugMode) {
-      return Platform.isIOS
-          ? 'ca-app-pub-3940256099942544/2934735716'
-          : 'ca-app-pub-3940256099942544/6300978111';
+    if (Platform.isIOS) {
+      return _iosBannerId ?? AdUnitConfig.bannerId;
     }
-    return Platform.isIOS ? _iosBannerId : _androidBannerId;
+    return _androidBannerId ?? AdUnitConfig.bannerId;
   }
-
   static String get interstitialId {
-    if (kDebugMode) {
-      return Platform.isIOS
-          ? 'ca-app-pub-3940256099942544/4411468910'
-          : 'ca-app-pub-3940256099942544/1033173712';
+    if (Platform.isIOS) {
+      return _iosInterstitialId ?? AdUnitConfig.interstitialId;
     }
-    return Platform.isIOS ? _iosInterstitialId : _androidInterstitialId;
+    return _androidInterstitialId ?? AdUnitConfig.interstitialId;
   }
-
   static String get appOpenId {
-    if (kDebugMode) {
-      return Platform.isIOS
-          ? 'ca-app-pub-3940256099942544/5575463023'
-          : 'ca-app-pub-3940256099942544/9257395921';
+    if (Platform.isIOS) {
+      return _iosAppOpenId ?? AdUnitConfig.appOpenId;
     }
-    return Platform.isIOS ? _iosAppOpenId : _androidAppOpenId;
+    return _androidAppOpenId ?? AdUnitConfig.appOpenId;
   }
 
   // ─── REWARDED AD (CHÍNH) ─────────────────────────────────────
@@ -328,41 +301,41 @@ class AdMobService {
             'ios=${map.keys.where((k) => k.toString().startsWith('ios_')).length}).',
           );
           if (map['rewardedMainId'] != null) {
-            _androidRewardedMainId = map['rewardedMainId'].toString();
+            AdUnitConfig.androidRewardedMainId = map['rewardedMainId'].toString();
           }
           if (map['rewardedCheckinId'] != null) {
-            _androidRewardedCheckinId = map['rewardedCheckinId'].toString();
+            AdUnitConfig.androidRewardedCheckinId = map['rewardedCheckinId'].toString();
           }
           if (map['rewardedSoulGameId'] != null) {
-            _androidRewardedSoulGameId = map['rewardedSoulGameId'].toString();
+            AdUnitConfig.androidRewardedSoulGameId = map['rewardedSoulGameId'].toString();
           }
           if (map['bannerId'] != null) {
-            _androidBannerId = map['bannerId'].toString();
+            AdUnitConfig.androidBannerId = map['bannerId'].toString();
           }
           if (map['interstitialId'] != null) {
-            _androidInterstitialId = map['interstitialId'].toString();
+            AdUnitConfig.androidInterstitialId = map['interstitialId'].toString();
           }
           if (map['appOpenId'] != null) {
-            _androidAppOpenId = map['appOpenId'].toString();
+            AdUnitConfig.androidAppOpenId = map['appOpenId'].toString();
           }
 
           if (map['ios_rewardedMainId'] != null) {
-            _iosRewardedMainId = map['ios_rewardedMainId'].toString();
+            AdUnitConfig.iosRewardedMainId = map['ios_rewardedMainId'].toString();
           }
           if (map['ios_rewardedCheckinId'] != null) {
-            _iosRewardedCheckinId = map['ios_rewardedCheckinId'].toString();
+            AdUnitConfig.iosRewardedCheckinId = map['ios_rewardedCheckinId'].toString();
           }
           if (map['ios_rewardedSoulGameId'] != null) {
-            _iosRewardedSoulGameId = map['ios_rewardedSoulGameId'].toString();
+            AdUnitConfig.iosRewardedSoulGameId = map['ios_rewardedSoulGameId'].toString();
           }
           if (map['ios_bannerId'] != null) {
-            _iosBannerId = map['ios_bannerId'].toString();
+            AdUnitConfig.iosBannerId = map['ios_bannerId'].toString();
           }
           if (map['ios_interstitialId'] != null) {
-            _iosInterstitialId = map['ios_interstitialId'].toString();
+            AdUnitConfig.iosInterstitialId = map['ios_interstitialId'].toString();
           }
           if (map['ios_appOpenId'] != null) {
-            _iosAppOpenId = map['ios_appOpenId'].toString();
+            AdUnitConfig.iosAppOpenId = map['ios_appOpenId'].toString();
           }
         }
       } catch (e) {
@@ -1280,6 +1253,9 @@ class AdMobService {
     if (endpoint.trim().isEmpty) {
       return {'ok': false, 'error': 'endpoint_not_configured'};
     }
+    if (_isRewardEndpointDisabled) {
+      return {'ok': false, 'error': 'endpoint_not_found'};
+    }
 
     Future<String> readBearerToken({required bool forceRefresh}) async {
       final rawToken = await user.getIdToken(forceRefresh).timeout(
@@ -1426,6 +1402,9 @@ class AdMobService {
       debugPrint(
         'Reward server rejected request: ${response.statusCode} $error',
       );
+      if (response.statusCode == 404) {
+        _isRewardEndpointDisabled = true;
+      }
       if (_isRevenueSecurityError(error)) {
         await RevenueSecurityTelemetryService.instance.logEvent(
           type: 'reward_server_rejected',

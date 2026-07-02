@@ -265,7 +265,7 @@ extension _SettingsTabShell on _SettingsTabState {
   }
 
   Widget _buildResponsiveSettingsScaffold() {
-    final double headerHeight = MediaQuery.of(context).padding.top + 52;
+    final double headerHeight = MediaQuery.paddingOf(context).top + 52;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -411,7 +411,7 @@ extension _SettingsTabShell on _SettingsTabState {
             width: double.infinity,
             padding: EdgeInsets.fromLTRB(
               14,
-              MediaQuery.of(context).padding.top + 4,
+              MediaQuery.paddingOf(context).top + 4,
               14,
               8,
             ),
@@ -567,6 +567,19 @@ extension _SettingsTabShell on _SettingsTabState {
         onTap: () => _togglePanel('countdownMode'),
       ),
       _buildControlCard(
+        icon: Icons.notifications_active_rounded,
+        accentIcons: const [
+          Icons.cake_rounded,
+          Icons.schedule_rounded,
+        ],
+        label: '${context.tr('settings_notifications_label')} & Tương tác',
+        desc: 'Quản lý thông báo, lời nhắc kỷ niệm và cài đặt hiển thị thời tiết, đồng hồ, trạng thái hoạt động.',
+        gradient: const [Color(0xFFDFF3E2), Color(0xFFA8D9B0)],
+        border: const Color(0xFFA4D7A9),
+        textColor: const Color(0xFF2F8A48),
+        onTap: () => _togglePanel('notifications'),
+      ),
+      _buildControlCard(
         icon: Icons.hub_rounded,
         accentIcons: const [
           Icons.notifications_active_rounded,
@@ -622,6 +635,16 @@ extension _SettingsTabShell on _SettingsTabState {
               fontSize: 10.5,
               fontWeight: FontWeight.w700,
               color: const Color(0xFF7B8794),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '© Bản quyền SoulLocket Hoàng & Tú',
+            textAlign: TextAlign.center,
+            style: SLTheme.quicksand(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF9AA5B1),
             ),
           ),
           const SizedBox(height: 8),

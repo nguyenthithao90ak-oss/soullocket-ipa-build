@@ -92,9 +92,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         debugPrint('Error getting house ID in support chat init: $e');
       }
 
-      _ticketId = (_houseId != null && _houseId!.trim().isNotEmpty)
-          ? _houseId
-          : 'user_${user.uid}';
+      _ticketId = user.uid;
 
       _myName = (user.displayName?.trim().isNotEmpty ?? false)
           ? user.displayName!.trim()
@@ -393,12 +391,21 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       _selectedTopicId = commandId;
     }
 
+    Map<String, dynamic> ticketData = {};
+
     try {
-      final ticketSnapshot = await _db.ref('support_tickets/$_ticketId').get();
-      final rawTicketData = ticketSnapshot.value;
-      final ticketData = rawTicketData is Map
-          ? Map<String, dynamic>.from(rawTicketData)
-          : <String, dynamic>{};
+      try {
+        final ticketSnapshot = await _db
+            .ref('support_tickets/$_ticketId')
+            .get()
+            .timeout(const Duration(seconds: 4));
+        final rawTicketData = ticketSnapshot.value;
+        if (rawTicketData is Map) {
+          ticketData = Map<String, dynamic>.from(rawTicketData);
+        }
+      } catch (e) {
+        debugPrint('Warning: get ticketData timed out or failed: $e');
+      }
       if (wasAlreadyWaiting &&
           !isMenuCommand &&
           _countWaitingAdminFollowUps(_messages) >=
@@ -410,26 +417,30 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         return;
       }
 
-      await FirebaseFirestore.instance
-          .collection('support_tickets')
-          .doc(_ticketId)
-          .collection('messages')
-          .add({
-        'text': text,
-        'is_bot': false,
-        'is_admin': false,
-        'is_menu_command': isMenuCommand,
-        'sender': _myName,
-        'house_id': _houseId,
-        'ticket_id': _ticketId,
-        'user_uid': currentUser?.uid,
-        'user_email': currentUser?.email?.trim(),
-        'topic_id': topic?.id,
-        'topic_label': topic?.title,
-        'summary': summary,
-        'context': _buildMessageContext(summary: summary, topic: topic),
-        'ts': DateTime.now().millisecondsSinceEpoch,
-      });
+      try {
+        await FirebaseFirestore.instance
+            .collection('support_tickets')
+            .doc(_ticketId)
+            .collection('messages')
+            .add({
+          'text': text,
+          'is_bot': false,
+          'is_admin': false,
+          'is_menu_command': isMenuCommand,
+          'sender': _myName,
+          'house_id': _houseId,
+          'ticket_id': _ticketId,
+          'user_uid': currentUser?.uid,
+          'user_email': currentUser?.email?.trim(),
+          'topic_id': topic?.id,
+          'topic_label': topic?.title,
+          'summary': summary,
+          'context': _buildMessageContext(summary: summary, topic: topic),
+          'ts': DateTime.now().millisecondsSinceEpoch,
+        }).timeout(const Duration(seconds: 5));
+      } catch (e) {
+        debugPrint('Warning: Firestore add timed out, but message is in cache: $e');
+      }
 
       final updates = <String, dynamic>{
         'last_message': summary,
@@ -526,7 +537,10 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       }
 
       try {
-        await _db.ref('support_tickets/$_ticketId').update(updates);
+        await _db
+            .ref('support_tickets/$_ticketId')
+            .update(updates)
+            .timeout(const Duration(seconds: 5));
       } catch (e) {
         debugPrint('Error updating ticket metadata: $e');
       }
@@ -638,16 +652,20 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
 
   Future<void> _saveBotReply(String text) async {
     if (_ticketId == null) return;
-    await FirebaseFirestore.instance
-        .collection('support_tickets')
-        .doc(_ticketId)
-        .collection('messages')
-        .add({
-      'text': text,
-      'is_bot': true,
-      'is_admin': false,
-      'ts': DateTime.now().millisecondsSinceEpoch,
-    });
+    try {
+      await FirebaseFirestore.instance
+          .collection('support_tickets')
+          .doc(_ticketId)
+          .collection('messages')
+          .add({
+        'text': text,
+        'is_bot': true,
+        'is_admin': false,
+        'ts': DateTime.now().millisecondsSinceEpoch,
+      }).timeout(const Duration(seconds: 8));
+    } catch (e) {
+      debugPrint('Error saving bot reply: $e');
+    }
   }
 
   String _normalize(String input) {
@@ -1325,7 +1343,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                   ),
                 Container(
                   constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.72,
+                    maxWidth: MediaQuery.sizeOf(context).width * 0.72,
                   ),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -1427,7 +1445,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           16,
           16,
           16,
-          MediaQuery.of(context).padding.bottom + 16,
+          MediaQuery.paddingOf(context).bottom + 16,
         ),
         color: Colors.white,
         child: ElevatedButton(
@@ -1460,7 +1478,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         12,
         8,
         12,
-        MediaQuery.of(context).padding.bottom + 8,
+        MediaQuery.paddingOf(context).bottom + 8,
       ),
       color: Colors.white,
       child: Column(

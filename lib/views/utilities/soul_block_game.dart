@@ -66,7 +66,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   _SoulPieceOption? _holdPiece;
   bool _draggingFromHold = false;
   final GlobalKey _holdAreaKey = GlobalKey();
-  int _rotationsLeft = 3;
+  final int _rotationsLeft = 3;
 
   static const double _boardGap = 1.8;
   static const double _boardPanelPadding = 10;

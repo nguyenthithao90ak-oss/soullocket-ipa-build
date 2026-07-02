@@ -1326,7 +1326,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
     }
     final _SoulBlockPerformanceProfile profile = _performanceProfile;
     final double cardWidth =
-        min(MediaQuery.of(context).size.width * 0.72, 276.0);
+        min(MediaQuery.sizeOf(context).width * 0.72, 276.0);
 
     return Positioned.fill(
       child: IgnorePointer(

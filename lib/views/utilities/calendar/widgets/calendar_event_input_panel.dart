@@ -119,7 +119,7 @@ class CalendarEventInputPanel extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                       border: InputBorder.none,
-                      counterText: "",
+                      counterText: '',
                     ),
                     onSubmitted: (_) => onAdd(),
                   ),

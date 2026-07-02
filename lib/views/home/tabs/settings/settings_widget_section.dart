@@ -357,24 +357,92 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           const SizedBox(height: 14),
           if (_widgetPanelTabKey == 'soulevent') ...[
             _buildWidgetSectionCard(
-              icon: Icons.info_outline_rounded,
-              title: 'Cấu hình Sự kiện',
+              icon: Icons.celebration_rounded,
+              title: 'Cấu hình Sự kiện & Kỷ niệm',
               subtitle: null,
               iconGradient: const [
                 Color(0xFF3B82F6),
                 Color(0xFF60A5FA),
               ],
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  'Màu sắc và chủ đề của Tiện ích được lấy trực tiếp từ sự kiện bạn chọn ghim hoặc sự kiện gần nhất trong danh sách Sự Kiện & Kỷ Niệm.',
-                  style: SLTheme.quicksand(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF64748B),
-                    height: 1.4,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildWidgetToggleTile(
+                    icon: Icons.edit_note_rounded,
+                    title: 'Tự nhập nội dung tùy chỉnh',
+                    subtitle: 'Tự gõ tiêu đề và ngày thay vì lấy từ danh sách kỷ niệm.',
+                    value: _useCustomWidgetEvent,
+                    accentColor: const Color(0xFF3B82F6),
+                    onChanged: (v) async {
+                      setState(() => _useCustomWidgetEvent = v);
+                      await _saveCustomWidgetEventSettings();
+                    },
                   ),
-                ),
+                  if (_useCustomWidgetEvent) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Tiêu đề sự kiện',
+                      style: SLTheme.quicksand(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF475467),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _customWidgetEventTitleCtrl,
+                      onChanged: (_) async => _saveCustomWidgetEventSettings(),
+                      style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 14),
+                      decoration: SLTheme.authInputDecoration(
+                        hintText: 'Ví dụ: Ngày cưới, Sinh nhật của em...',
+                        focusColor: const Color(0xFF3B82F6),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Ngày diễn ra (ngày/tháng/năm)',
+                      style: SLTheme.quicksand(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF475467),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _customWidgetEventDateCtrl,
+                      keyboardType: TextInputType.datetime,
+                      inputFormatters: const [FlexibleDateInputFormatter()],
+                      onChanged: (_) async => _saveCustomWidgetEventSettings(),
+                      style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 14),
+                      decoration: SLTheme.authInputDecoration(
+                        hintText: 'dd/MM/yyyy (ví dụ: 14/02/2026)',
+                        focusColor: const Color(0xFF3B82F6),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Màu sắc chủ đề',
+                      style: SLTheme.quicksand(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF475467),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildCustomEventColorPicker(),
+                  ] else ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Màu sắc và chủ đề của Tiện ích được lấy trực tiếp từ sự kiện bạn chọn ghim hoặc sự kiện gần nhất trong danh sách Sự Kiện & Kỷ Niệm.',
+                      style: SLTheme.quicksand(
+                        fontSize: 12.8,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF64748B),
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ] else ...[
@@ -889,6 +957,55 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 ],
               ),
             ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildCustomEventColorPicker() {
+    final colors = [
+      '#EC4899', // Pink
+      '#EF4444', // Red
+      '#F97316', // Orange
+      '#8B5CF6', // Purple
+      '#3B82F6', // Blue
+      '#10B981', // Green
+    ];
+    return Wrap(
+      spacing: 10,
+      children: colors.map((colorHex) {
+        final buffer = StringBuffer();
+        if (colorHex.length == 6 || colorHex.length == 7) buffer.write('ff');
+        buffer.write(colorHex.replaceFirst('#', ''));
+        final color = Color(int.parse(buffer.toString(), radix: 16));
+        final isSelected = _customWidgetEventColorHex == colorHex;
+
+        return GestureDetector(
+          onTap: () async {
+            setState(() => _customWidgetEventColorHex = colorHex);
+            await _saveCustomWidgetEventSettings();
+          },
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: isSelected
+                  ? Border.all(color: const Color(0xFF1F2937), width: 3)
+                  : Border.all(color: Colors.white, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: isSelected
+                ? const Icon(Icons.check_rounded, color: Colors.white, size: 16)
+                : null,
           ),
         );
       }).toList(),

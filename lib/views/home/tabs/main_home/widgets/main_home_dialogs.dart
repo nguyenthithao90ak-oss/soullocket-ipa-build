@@ -579,8 +579,8 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           margin: EdgeInsets.only(
             left: 16,
             right: 16,
-            bottom: MediaQuery.of(context).size.height -
-                (MediaQuery.of(context).padding.top + 168),
+            bottom: MediaQuery.sizeOf(context).height -
+                (MediaQuery.paddingOf(context).top + 168),
           ),
           content: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

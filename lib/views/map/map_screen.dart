@@ -83,6 +83,8 @@ class MapScreen extends StatefulWidget {
   final String myAvatarUrl;
   final String partnerAvatarUrl;
 
+  static final ValueNotifier<bool> isMapScreenActive = ValueNotifier<bool>(false);
+
   const MapScreen({
     super.key,
     required this.houseId,
@@ -215,9 +217,19 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       ? context.tr('map_bnvtrcabn_fdf5bc')
       : context.tr('map_bnkhongcch_486245');
 
+  void _setViewingMap(bool active) {
+    try {
+      FirebaseDatabase.instance
+          .ref('houses/${widget.houseId}/presence/${widget.myRole}/isViewingMap')
+          .set(active ? true : null);
+    } catch (_) {}
+  }
+
   @override
   void initState() {
     super.initState();
+    MapScreen.isMapScreenActive.value = true;
+    _setViewingMap(true);
     WidgetsBinding.instance.addObserver(this);
     _setPartnerListenerActive(true);
     _initMap();
@@ -225,6 +237,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    MapScreen.isMapScreenActive.value = false;
+    _setViewingMap(false);
     WidgetsBinding.instance.removeObserver(this);
     _cancelTransientMapWork(resetRouteFetch: true);
     _setRealtimePipelinesActive(false);
@@ -248,6 +262,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      MapScreen.isMapScreenActive.value = true;
+      _setViewingMap(true);
       _setPartnerListenerActive(true);
       _setRealtimePipelinesActive(true);
       if (!_isMapReady && _isLoading) {
@@ -268,6 +284,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
+      MapScreen.isMapScreenActive.value = false;
+      _setViewingMap(false);
       if (AppLifecyclePresenceGuard.shouldKeepPresenceOnline) {
         return;
       }
