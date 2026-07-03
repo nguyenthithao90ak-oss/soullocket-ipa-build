@@ -6115,5 +6115,13 @@
   "milestone_weekday_4": "jeudi",
   "milestone_weekday_5": "vendredi",
   "milestone_weekday_6": "samedi",
-  "milestone_weekday_7": "dimanche"
+  "milestone_weekday_7": "dimanche",
+  "widget_theme_mint": "Menthe",
+  "widget_theme_cosmic": "Cosmique ✨",
+  "vault_style_emerald": "Émeraude",
+  "vault_style_pro_required": "Ce style est réservé aux membres VIP.",
+  "vault_style_secure": "Sécurisé",
+  "vault_style_soft": "Doux (défaut)",
+  "vault_style_cosmic": "Cosmique ✨ (VIP)",
+  "vault_style_title": "Style du coffre secret"
 }

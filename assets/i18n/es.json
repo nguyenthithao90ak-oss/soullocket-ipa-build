@@ -6115,5 +6115,13 @@
   "milestone_weekday_4": "jueves",
   "milestone_weekday_5": "viernes",
   "milestone_weekday_6": "sábado",
-  "milestone_weekday_7": "domingo"
+  "milestone_weekday_7": "domingo",
+  "widget_theme_mint": "Menta",
+  "widget_theme_cosmic": "Cósmico ✨",
+  "vault_style_emerald": "Esmeralda",
+  "vault_style_pro_required": "Este estilo es solo para miembros VIP.",
+  "vault_style_secure": "Seguro",
+  "vault_style_soft": "Suave (predeterminado)",
+  "vault_style_cosmic": "Cósmico ✨ (VIP)",
+  "vault_style_title": "Estilo de la Bóveda Secreta"
 }

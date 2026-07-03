@@ -64,8 +64,8 @@ class DiaryMemoryController extends ChangeNotifier {
     _resetMemoriesPagination();
   }
 
-  static const int _webMemoryCacheLimit = 200;
-  static const int _appMemoryCacheLimit = 300;
+  static const int _webMemoryCacheLimit = 120;
+  static const int _appMemoryCacheLimit = 200;
   static const int _memoryUploadConcurrency = 5;
   static const Duration _memoryDownloadCacheTtl = Duration(days: 7);
   static const Color _diaryPinkDeep = Color(0xFFD81B60);
@@ -447,7 +447,14 @@ class DiaryMemoryController extends ChangeNotifier {
     }
     _isLoadingMoreMemories = true;
     _memoryVisibleLimit = _memoryQueryLimit + _memoryLoadMoreStep;
-    _resetMemoriesStreamCache();
+    // ⚡ Không reset stream cache — giữ dữ liệu cũ làm fallback
+    // trong khi chờ stream mới gửi về, tránh flash trắng
+    _cachedHouseIdForMemories = null;
+    _memoriesQuery = null;
+    _memoriesStream = null;
+    _memoriesCacheFuture = null;
+    _memoriesCacheHouseId = null;
+    // Giữ _preparedMemoryFeed để UI không bị mất dữ liệu tạm thời
     notifyListeners();
   }
 

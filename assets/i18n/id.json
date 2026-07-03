@@ -6115,5 +6115,13 @@
   "milestone_weekday_4": "Kamis",
   "milestone_weekday_5": "Jumat",
   "milestone_weekday_6": "Sabtu",
-  "milestone_weekday_7": "Minggu"
+  "milestone_weekday_7": "Minggu",
+  "widget_theme_mint": "Mint",
+  "widget_theme_cosmic": "Kosmik ✨",
+  "vault_style_emerald": "Zamrud",
+  "vault_style_pro_required": "Gaya ini hanya untuk anggota VIP.",
+  "vault_style_secure": "Aman",
+  "vault_style_soft": "Lembut (default)",
+  "vault_style_cosmic": "Kosmik ✨ (VIP)",
+  "vault_style_title": "Gaya Brankas Rahasia"
 }

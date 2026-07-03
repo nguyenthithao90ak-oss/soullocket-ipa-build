@@ -6115,5 +6115,13 @@
   "milestone_weekday_4": "Giovedì",
   "milestone_weekday_5": "Venerdì",
   "milestone_weekday_6": "Sabato",
-  "milestone_weekday_7": "Domenica"
+  "milestone_weekday_7": "Domenica",
+  "widget_theme_mint": "Menta",
+  "widget_theme_cosmic": "Cosmico ✨",
+  "vault_style_emerald": "Smeraldo",
+  "vault_style_pro_required": "Questo stile è riservato ai membri VIP.",
+  "vault_style_secure": "Sicuro",
+  "vault_style_soft": "Morbido (predefinito)",
+  "vault_style_cosmic": "Cosmico ✨ (VIP)",
+  "vault_style_title": "Stile del caveau segreto"
 }

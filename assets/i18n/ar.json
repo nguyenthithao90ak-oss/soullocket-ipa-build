@@ -6115,5 +6115,13 @@
   "milestone_weekday_4": "الخميس",
   "milestone_weekday_5": "الجمعة",
   "milestone_weekday_6": "السبت",
-  "milestone_weekday_7": "الأحد"
+  "milestone_weekday_7": "الأحد",
+  "widget_theme_mint": "نعناع",
+  "widget_theme_cosmic": "كوني ✨",
+  "vault_style_emerald": "زمرد",
+  "vault_style_pro_required": "هذا الأسلوب متاح لأعضاء VIP فقط.",
+  "vault_style_secure": "آمن",
+  "vault_style_soft": "ناعم (افتراضي)",
+  "vault_style_cosmic": "كوني ✨ (VIP)",
+  "vault_style_title": "نمط الخزنة السرية"
 }

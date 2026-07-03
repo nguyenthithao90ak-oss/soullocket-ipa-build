@@ -1,0 +1,20 @@
+--- lib/views/home/tabs/main_home/widgets/main_home_presence_section.dart
++++ lib/views/home/tabs/main_home/widgets/main_home_presence_section.dart
+@@ -87,7 +87,8 @@
+                   hideMeta: isSingle,
+                   customOnTap: _currentRole == 'user1'
+                       ? () => _changeAvatar(isUser1: true)
+-                      : () => _startHomeAvatarCall(targetRole: 'user1'),
++                      : (isSingle ? () {} : null), // Disable call for user1
+                   customOnLongPress: () => _changeAvatar(isUser1: true),
+                 ),
+               ),
+@@ -126,7 +127,8 @@
+                         hideMeta: false,
+                         customOnTap: _currentRole == 'user2'
+                             ? () => _changeAvatar(isUser1: false)
+-                            : () => _startHomeAvatarCall(targetRole: 'user2'),
++                            : (isSingle ? () {} : null), // Disable call for user2
+                         customOnLongPress: () => _changeAvatar(isUser1: false),
+                       ),
+               ),

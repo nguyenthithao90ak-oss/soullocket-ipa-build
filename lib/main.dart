@@ -172,12 +172,45 @@ Future<void> _configureSystemUiForEdgeToEdge() async {
 }
 
 @pragma('vm:entry-point')
-void overlayMain() {
+void overlayMain() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await _initializeFirebaseBootstrap();
+  } catch (e) {
+    debugPrint('[Overlay] Firebase init error: $e');
+  }
+
+  // Đọc houseId + role từ SharedPreferences
+  String? houseId;
+  String? role;
+  String? partnerName;
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    houseId = prefs.getString('il_house_id');
+    role = prefs.getString('il_role') ?? 'user1';
+    // Đọc tên partner từ settings nếu có
+    try {
+      final houseIdLocal = houseId;
+      if (houseIdLocal != null && houseIdLocal.isNotEmpty) {
+        final snap = await FirebaseDatabase.instance
+            .ref('houses/$houseIdLocal/settings')
+            .child(role == 'user2' ? 'nameU1' : 'nameU2')
+            .get();
+        partnerName = snap.value?.toString();
+      }
+    } catch (_) {}
+  } catch (e) {
+    debugPrint('[Overlay] prefs read error: $e');
+  }
+
   runApp(
-    const MaterialApp(
+    MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: FloatingBubbleWidget(),
+      home: FloatingBubbleWidget(
+        initialHouseId: houseId,
+        initialRole: role ?? 'user1',
+        initialPartnerName: partnerName ?? 'Người ấy',
+      ),
     ),
   );
 }

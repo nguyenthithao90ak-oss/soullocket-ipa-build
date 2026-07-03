@@ -6115,5 +6115,13 @@
   "milestone_weekday_4": "गुरुवार",
   "milestone_weekday_5": "शुक्रवार",
   "milestone_weekday_6": "शनिवार",
-  "milestone_weekday_7": "रविवार"
+  "milestone_weekday_7": "रविवार",
+  "widget_theme_mint": "मिंट",
+  "widget_theme_cosmic": "कॉस्मिक ✨",
+  "vault_style_emerald": "पन्ना",
+  "vault_style_pro_required": "यह स्टाइल केवल VIP सदस्यों के लिए है।",
+  "vault_style_secure": "सुरक्षित",
+  "vault_style_soft": "सॉफ्ट (डिफ़ॉल्ट)",
+  "vault_style_cosmic": "कॉस्मिक ✨ (VIP)",
+  "vault_style_title": "सीक्रेट वॉल्ट स्टाइल"
 }

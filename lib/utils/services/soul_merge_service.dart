@@ -198,13 +198,21 @@ class SoulMergeService {
         'timestamp': ServerValue.timestamp,
       });
 
-      // Prune: chỉ xoá event cũ hơn 5 phút, tránh tải toàn bộ danh sách về client
-      final cutoff = DateTime.now().millisecondsSinceEpoch - const Duration(minutes: 5).inMilliseconds;
-      final oldSnap = await ref.orderByChild('timestamp').endAt(cutoff).limitToFirst(30).get();
-      if (oldSnap.exists && oldSnap.value is Map) {
-        final oldEvents = Map<dynamic, dynamic>.from(oldSnap.value as Map);
-        for (final key in oldEvents.keys) {
-          await ref.child(key.toString()).remove();
+      // Prune old events to keep lightweight
+      final snap = await ref.orderByChild('timestamp').get();
+      if (snap.exists && snap.value is Map) {
+        final events = Map<dynamic, dynamic>.from(snap.value as Map);
+        if (events.length > 20) {
+          final sortedKeys = events.keys.toList()
+            ..sort((a, b) {
+              final t1 = events[a]['timestamp'] as int? ?? 0;
+              final t2 = events[b]['timestamp'] as int? ?? 0;
+              return t1.compareTo(t2);
+            });
+          final keysToDelete = sortedKeys.sublist(0, sortedKeys.length - 20);
+          for (final key in keysToDelete) {
+            await ref.child(key.toString()).remove();
+          }
         }
       }
     } catch (e) {

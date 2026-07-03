@@ -6115,5 +6115,13 @@
   "milestone_weekday_4": "木曜日",
   "milestone_weekday_5": "金曜日",
   "milestone_weekday_6": "土曜日",
-  "milestone_weekday_7": "日曜日"
+  "milestone_weekday_7": "日曜日",
+  "widget_theme_mint": "ミント",
+  "widget_theme_cosmic": "コスミック ✨",
+  "vault_style_emerald": "エメラルド",
+  "vault_style_pro_required": "このスタイルはVIPメンバー専用です。",
+  "vault_style_secure": "セキュア",
+  "vault_style_soft": "ソフト（デフォルト）",
+  "vault_style_cosmic": "コスミック ✨ (VIP)",
+  "vault_style_title": "秘密の金庫スタイル"
 }

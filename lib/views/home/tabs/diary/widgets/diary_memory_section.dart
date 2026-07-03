@@ -87,43 +87,53 @@ class DiaryMemorySection extends StatefulWidget {
 }
 
 class _DiaryMemorySectionState extends State<DiaryMemorySection> {
-  static const int _thumbnailWarmupCount = 30;
-  static const int _prefetchAheadCount = 50;
+  static const int _thumbnailWarmupCount = 15;
+  static const int _prefetchAheadCount = 20;
   static const double _loadMoreThreshold = 1500;
+  static const Duration _scrollDebounceDuration = Duration(milliseconds: 150);
   PreparedDiaryMemoryFeed? _lastPreparedFeed;
   String _thumbnailWarmupSignature = '';
   String _prefetchedSignature = '';
   bool _isUploadingMemory = false;
   final ScrollController _scrollController = ScrollController();
+  Timer? _scrollDebounceTimer;
 
   // Month filter state
-  DateTime? _selectedMonth; // only year/month used, day = 1
+  DateTime? _selectedMonth;
   List<DateTime> _availableMonths = [];
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
+    _scrollController.addListener(_onScrollDebounced);
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
+    _scrollController.removeListener(_onScrollDebounced);
+    _scrollDebounceTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
   }
 
-  void _onScroll() {
+  /// Debounced scroll handler — tránh gọi prefetch 50 ảnh mỗi pixel scroll
+  void _onScrollDebounced() {
     if (!_scrollController.hasClients) return;
     final pos = _scrollController.position;
     final maxScroll = pos.maxScrollExtent;
     final currentScroll = pos.pixels;
-    // Trigger loadMore sớm hơn: còn 1500px đến cuối thay vì 400px
+
+    // Load more không cần debounce (chỉ fire 1 lần)
     if (maxScroll - currentScroll <= _loadMoreThreshold && !widget.isLoadingMoreMemories) {
       widget.onLoadMore();
     }
-    // Prefetch thumbnail ảnh phía trước khi scroll qua phần giữa
-    _maybePrefetchNextThumbnails(currentScroll, maxScroll);
+
+    // Debounce prefetch để tránh spam khi scroll nhanh
+    _scrollDebounceTimer?.cancel();
+    _scrollDebounceTimer = Timer(_scrollDebounceDuration, () {
+      if (!mounted) return;
+      _maybePrefetchNextThumbnails(currentScroll, maxScroll);
+    });
   }
 
   /// Warmup thumbnail của 50 ảnh tiếp theo dựa trên vị trí scroll hiện tại
@@ -1030,6 +1040,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
       valueListenable: widget.selectionListenable,
       child: Container(
         decoration: BoxDecoration(
+          color: isStickerOrPng ? Colors.transparent : Colors.black,
           borderRadius: BorderRadius.circular(18),
           // Remove strong white shadow for stickers to prevent ugly white box behind transparent images
           boxShadow: isStickerOrPng ? [
@@ -1053,50 +1064,53 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(18),
-          child: Hero(
-            tag: 'memory_image_${photo['id']}',
-            child: CachedNetworkImage(
-              imageUrl: photoUrl,
-              memCacheWidth: widget.thumbnailCacheWidth,
-              fit: isStickerOrPng ? BoxFit.contain : BoxFit.cover,
-              filterQuality: FilterQuality.low,
-              placeholder: (context, url) => Container(
-                color: isStickerOrPng ? Colors.transparent : const Color(0xFFF1F5F9),
-              ),
-              errorWidget: (context, url, error) {
-                final retries = _retryCount[photoId] ?? 0;
-                if (retries < 2) {
-                  _retryCount[photoId] = retries + 1;
-                  WidgetsBinding.instance.addPostFrameCallback((_) async {
-                    if (!mounted) return;
-                    try {
-                      if (retries >= 1) {
+          child: AspectRatio(
+            aspectRatio: 0.75,
+            child: Hero(
+              tag: 'memory_image_${photo['id']}',
+              child: CachedNetworkImage(
+                imageUrl: photoUrl,
+                memCacheWidth: widget.thumbnailCacheWidth,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.low,
+                placeholder: (context, url) => Container(
+                  color: isStickerOrPng ? Colors.transparent : Colors.black,
+                ),
+                errorWidget: (context, url, error) {
+                  final retries = _retryCount[photoId] ?? 0;
+                  if (retries < 2) {
+                    _retryCount[photoId] = retries + 1;
+                    WidgetsBinding.instance.addPostFrameCallback((_) async {
+                      if (!mounted) return;
+                      try {
+                        if (retries >= 1) {
+                          photo['broken'] = true;
+                        } else {
+                          await _refreshStalePhotoUrl(photo);
+                        }
+                      } catch (_) {
                         photo['broken'] = true;
-                      } else {
-                        await _refreshStalePhotoUrl(photo);
                       }
-                    } catch (_) {
-                      photo['broken'] = true;
-                    }
-                  });
-                }
-                if (retries >= 2 || photo['broken'] == true) {
-                  return const SizedBox.shrink();
-                }
-                return Container(
-                  color: const Color(0xFFF8FAFC),
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.refresh_rounded,
-                        color: Color(0xFF94A3B8),
-                        size: 24,
-                      ),
-                    ],
-                  ),
-                );
-              },
+                    });
+                  }
+                  if (retries >= 2 || photo['broken'] == true) {
+                    return const SizedBox.shrink();
+                  }
+                  return Container(
+                    color: const Color(0xFFF8FAFC),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.refresh_rounded,
+                          color: Color(0xFF94A3B8),
+                          size: 24,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ),

@@ -535,11 +535,7 @@ class _MainHomeHeroCountdownCircleState extends State<_MainHomeHeroCountdownCirc
             // 1. The main interactive circle
             GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: widget.isSingle
-                  ? null
-                  : () => widget.state._showCountdownCircleHint(
-                        smartGreeting: widget.smartGreeting,
-                      ),
+              onTap: null,
               onLongPress: widget.state._showCountdownQuickCustomizeSheet,
               child: Container(
                 width: widget.circleSize,

@@ -6115,5 +6115,13 @@
   "milestone_weekday_4": "목요일",
   "milestone_weekday_5": "금요일",
   "milestone_weekday_6": "토요일",
-  "milestone_weekday_7": "일요일"
+  "milestone_weekday_7": "일요일",
+  "widget_theme_mint": "민트",
+  "widget_theme_cosmic": "코스믹 ✨",
+  "vault_style_emerald": "에메랄드",
+  "vault_style_pro_required": "이 스타일은 VIP 회원 전용입니다.",
+  "vault_style_secure": "보안",
+  "vault_style_soft": "소프트 (기본)",
+  "vault_style_cosmic": "코스믹 ✨ (VIP)",
+  "vault_style_title": "비밀 금고 스타일"
 }

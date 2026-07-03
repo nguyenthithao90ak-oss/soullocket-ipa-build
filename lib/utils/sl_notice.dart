@@ -32,6 +32,9 @@ class SLNotice {
     );
   }
 
+  static String? _lastMessage;
+  static DateTime? _lastMessageTime;
+
   static void _showSnackBar(
     BuildContext context, {
     required String message,
@@ -42,6 +45,18 @@ class SLNotice {
     if (messenger == null) return;
 
     final resolvedMessage = L10nService().translate(message);
+    
+    // Deduplicate: If the same message is shown within 2 seconds, ignore it to prevent spam
+    final now = DateTime.now();
+    if (_lastMessage == resolvedMessage &&
+        _lastMessageTime != null &&
+        now.difference(_lastMessageTime!).inSeconds < 2) {
+      return;
+    }
+    
+    _lastMessage = resolvedMessage;
+    _lastMessageTime = now;
+
     try {
       messenger
         ..clearSnackBars()

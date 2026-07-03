@@ -139,9 +139,9 @@ class AppEntryController {
     try {
       debugPrint('[AppEntry] bootstrap start');
       final preResults = await Future.wait<dynamic>([
-        _resolveCompromisedAuthState().timeout(const Duration(seconds: 2)),
+        _resolveCompromisedAuthState().timeout(const Duration(seconds: 3)),
         _applyStaleSessionPolicy(),
-      ]).timeout(const Duration(seconds: 3));
+      ]).timeout(const Duration(seconds: 5));
 
       final compromisedState = preResults[0] as AppEntryAuthState?;
       if (compromisedState != null) {
@@ -156,7 +156,7 @@ class AppEntryController {
       }
 
       final lockState = await checkAppLock(context: context, isResuming: false)
-          .timeout(const Duration(seconds: 2));
+          .timeout(const Duration(seconds: 8));
       debugPrint('[AppEntry] bootstrap finished');
       return lockState ??
           const AppEntryAuthState(
@@ -190,7 +190,7 @@ class AppEntryController {
           _currentHouseId ?? await _houseService.getCurrentHouseId();
       final effectiveLockSettings = await _militaryLockService
           .getEffectiveLockSettings(houseId: houseId)
-          .timeout(const Duration(seconds: 2));
+          .timeout(const Duration(seconds: 8));
       final isAppLockEnabled = effectiveLockSettings.enabled;
       final isScopeAppEnabled =
           effectiveLockSettings.isScopeEnabled(LockScope.app);

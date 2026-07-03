@@ -19,7 +19,6 @@ import '../../../utils/services/notification_service.dart';
 import '../../../core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
-import 'package:soullocket_app/views/ui_prefs.dart';
 
 Stream<dynamic>? _sharedOverlayStream;
 
@@ -260,7 +259,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   void _sendManualNudgeNotification() async {
     if (_houseId == null || _houseId!.isEmpty) return;
     
-    final size = MediaQuery.sizeOf(context);
+    final size = MediaQuery.of(context).size;
     _heartsOverlayKey.currentState?.spawnExplosion(Offset(size.width / 2, size.height / 2), count: 8);
     
     await NotificationService().sendPartnerNotification(
@@ -616,7 +615,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     if (_memoriesData.isEmpty && specificItem == null) return;
     final randomItem = specificItem ?? _memoriesData[_random.nextInt(_memoriesData.length)];
     
-    final size = MediaQuery.sizeOf(context);
+    final size = MediaQuery.of(context).size;
     final double x = 30 + _random.nextDouble() * (size.width - 200);
     final double y = 140 + _random.nextDouble() * (size.height - 380);
     final position = specificPosition ?? Offset(x, y);
@@ -733,9 +732,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             child: RepaintBoundary(
               child: IgnorePointer(
                 child: CustomPaint(
-                  painter: _CuteBgPatternPainter(
-                    liteMode: UiPrefs.notifier.value.liteMode,
-                  ),
+                  painter: _CuteBgPatternPainter(),
                 ),
               ),
             ),
@@ -954,7 +951,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
           // Message / Preset Chat Input Bar at the bottom
           Positioned(
-            bottom: MediaQuery.paddingOf(context).bottom + 16,
+            bottom: MediaQuery.of(context).padding.bottom + 16,
             left: 4,
             right: 4,
             child: _buildChatInputBar(),
@@ -978,7 +975,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         final x = (event['x'] as num?)?.toDouble() ?? 0.0;
         final y = (event['y'] as num?)?.toDouble() ?? 0.0;
         
-        final pos = Offset(x > 0 ? x : MediaQuery.sizeOf(context).width / 2, y > 0 ? y : MediaQuery.sizeOf(context).height / 2);
+        final pos = Offset(x > 0 ? x : MediaQuery.of(context).size.width / 2, y > 0 ? y : MediaQuery.of(context).size.height / 2);
         _heartsOverlayKey.currentState?.spawnExplosion(pos, count: 5);
         if (url.isNotEmpty) {
            _spawnPhotoExplosion(
@@ -1109,7 +1106,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
   void _spawnFloatingMessage(String text, bool isSelf) {
     if (!mounted) return;
-    final size = MediaQuery.sizeOf(context);
+    final size = MediaQuery.of(context).size;
     final double x = isSelf
         ? size.width * 0.25 + _random.nextDouble() * (size.width * 0.1)
         : size.width * 0.05 + _random.nextDouble() * (size.width * 0.13);
@@ -1271,9 +1268,11 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
     final presets = _isMerged ? presetsAfter : (showPresetsBefore ? presetsBefore : <String>[]);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (_spamWarning != null)
             AnimatedContainer(
@@ -1503,13 +1502,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
-                      maxLines: 3,
-                      minLines: 1,
-                      maxLength: 150,
-                      maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                      buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
-                      keyboardType: TextInputType.multiline,
-                      textInputAction: TextInputAction.newline,
                       decoration: InputDecoration(
                         hintText: 'Nhập tin nhắn tâm hồn...',
                         hintStyle: SLTheme.quicksand(
@@ -1523,6 +1515,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(vertical: 8),
                       ),
+                      onSubmitted: (_) => _sendCustomMessage(),
                     ),
                   ),
                 ),
@@ -1550,7 +1543,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             ),
           ),
         ],
-      );
+      ),
+    );
   }
   void _sendOverlaySyncPayload() {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
@@ -1670,7 +1664,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                 left: 24,
                 right: 24,
                 top: 20,
-                bottom: 20 + MediaQuery.paddingOf(context).bottom,
+                bottom: 20 + MediaQuery.of(context).padding.bottom,
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -2105,15 +2099,13 @@ class _ExplodingPhotoWidgetState extends State<ExplodingPhotoWidget>
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
-          return RepaintBoundary(
-            child: FadeTransition(
-              opacity: _opacityAnimation,
-              child: ScaleTransition(
-                scale: _scaleAnimation,
-                child: Transform.rotate(
-                  angle: widget.photo.angle,
-                  child: child!,
-                ),
+          return Opacity(
+            opacity: _opacityAnimation.value,
+            child: Transform.scale(
+              scale: _scaleAnimation.value,
+              child: Transform.rotate(
+                angle: widget.photo.angle,
+                child: child,
               ),
             ),
           );
@@ -2476,12 +2468,8 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
       final random = math.Random();
       final palette = palettes[random.nextInt(palettes.length)];
       
-      final uiPrefs = UiPrefs.notifier.value;
-      final int maxHearts = uiPrefs.liteMode ? 25 : 60;
-      final int actualCount = uiPrefs.liteMode ? (count / 2).clamp(1, 4).toInt() : count;
-
       setState(() {
-        for (int i = 0; i < actualCount; i++) {
+        for (int i = 0; i < count; i++) {
           final angle = random.nextDouble() * math.pi * 2;
           final speed = 1.5 + random.nextDouble() * 3.0;
           final size = 16.0 + random.nextDouble() * 20.0; // Slightly larger to compensate for fewer hearts
@@ -2497,9 +2485,6 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
               style: widget.style,
             ),
           );
-        }
-        if (_hearts.length > maxHearts) {
-          _hearts.removeRange(0, _hearts.length - maxHearts);
         }
       });
       if (!_tickerController.isAnimating) {
@@ -2525,12 +2510,8 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
       final random = math.Random();
       final palette = palettes[random.nextInt(palettes.length)];
       
-      final uiPrefs = UiPrefs.notifier.value;
-      final int maxHearts = uiPrefs.liteMode ? 25 : 60;
-      final int actualCount = uiPrefs.liteMode ? (count / 2).clamp(1, 4).toInt() : count;
-
       setState(() {
-        for (int i = 0; i < actualCount; i++) {
+        for (int i = 0; i < count; i++) {
           final angle = random.nextDouble() * math.pi * 2;
           final speed = 1.5 + random.nextDouble() * 3.0;
           final size = 16.0 + random.nextDouble() * 20.0;
@@ -2546,9 +2527,6 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
               style: widget.style,
             ),
           );
-        }
-        if (_hearts.length > maxHearts) {
-          _hearts.removeRange(0, _hearts.length - maxHearts);
         }
       });
       if (!_tickerController.isAnimating) {
@@ -2785,13 +2763,11 @@ class _FloatingMessageWidgetState extends State<FloatingMessageWidget>
         return Positioned(
           left: widget.message.position.dx,
           top: widget.message.position.dy + _slideAnim.value,
-          child: RepaintBoundary(
-            child: FadeTransition(
-              opacity: _opacityAnim,
-              child: ScaleTransition(
-                scale: _scaleAnim,
-                child: child!,
-              ),
+          child: Opacity(
+            opacity: _opacityAnim.value.clamp(0.0, 1.0),
+            child: Transform.scale(
+              scale: _scaleAnim.value,
+              child: child,
             ),
           ),
         );
@@ -2799,7 +2775,7 @@ class _FloatingMessageWidgetState extends State<FloatingMessageWidget>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.sizeOf(context).width * 0.65,
+          maxWidth: MediaQuery.of(context).size.width * 0.65,
         ),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.72),
@@ -2862,7 +2838,7 @@ class _PersistentFloatingPhotoWidgetState extends State<PersistentFloatingPhotoW
 
   void _randomizePosition() {
     if (!mounted || _isDragging) return;
-    final size = MediaQuery.sizeOf(context);
+    final size = MediaQuery.of(context).size;
     setState(() {
       _x = 20 + _random.nextDouble() * (size.width - 140);
       _y = 100 + _random.nextDouble() * (size.height - 400);
@@ -2943,16 +2919,13 @@ class _PersistentFloatingPhotoWidgetState extends State<PersistentFloatingPhotoW
 
 // ─── Cute Background Pattern Painter ──────────────────────────────────────────
 class _CuteBgPatternPainter extends CustomPainter {
-  final bool liteMode;
-  _CuteBgPatternPainter({required this.liteMode});
-
   @override
   void paint(Canvas canvas, Size size) {
     final heartPaint = Paint()..style = PaintingStyle.fill;
     final dotPaint = Paint()..style = PaintingStyle.fill;
 
     // Pattern grid — rải đều
-    final double spacing = liteMode ? 96.0 : 52.0;
+    const double spacing = 52;
 
     final colors = [
       const Color(0xFFFFB3CC), // hồng pastel
@@ -3025,6 +2998,5 @@ class _CuteBgPatternPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _CuteBgPatternPainter oldDelegate) =>
-      oldDelegate.liteMode != liteMode;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -6115,5 +6115,13 @@
   "milestone_weekday_4": "Четверг",
   "milestone_weekday_5": "пятница",
   "milestone_weekday_6": "суббота",
-  "milestone_weekday_7": "воскресенье"
+  "milestone_weekday_7": "воскресенье",
+  "widget_theme_mint": "Мятный",
+  "widget_theme_cosmic": "Космос ✨",
+  "vault_style_emerald": "Изумруд",
+  "vault_style_pro_required": "Этот стиль только для VIP-участников.",
+  "vault_style_secure": "Безопасный",
+  "vault_style_soft": "Мягкий (по умолчанию)",
+  "vault_style_cosmic": "Космос ✨ (VIP)",
+  "vault_style_title": "Стиль секретного хранилища"
 }

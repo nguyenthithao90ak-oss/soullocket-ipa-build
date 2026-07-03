@@ -6115,5 +6115,13 @@
   "milestone_weekday_4": "Donnerstag",
   "milestone_weekday_5": "Freitag",
   "milestone_weekday_6": "Samstag",
-  "milestone_weekday_7": "Sonntag"
+  "milestone_weekday_7": "Sonntag",
+  "widget_theme_mint": "Minze",
+  "widget_theme_cosmic": "Kosmisch ✨",
+  "vault_style_emerald": "Smaragd",
+  "vault_style_pro_required": "Dieser Stil ist nur für VIP-Mitglieder.",
+  "vault_style_secure": "Sicher",
+  "vault_style_soft": "Sanft (Standard)",
+  "vault_style_cosmic": "Kosmisch ✨ (VIP)",
+  "vault_style_title": "Geheimtresor-Stil"
 }

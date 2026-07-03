@@ -6115,5 +6115,13 @@
   "milestone_weekday_4": "perşembe",
   "milestone_weekday_5": "Cuma",
   "milestone_weekday_6": "cumartesi",
-  "milestone_weekday_7": "Pazar"
+  "milestone_weekday_7": "Pazar",
+  "widget_theme_mint": "Nane",
+  "widget_theme_cosmic": "Kozmik ✨",
+  "vault_style_emerald": "Zümrüt",
+  "vault_style_pro_required": "Bu stil yalnızca VIP üyeler içindir.",
+  "vault_style_secure": "Güvenli",
+  "vault_style_soft": "Yumuşak (varsayılan)",
+  "vault_style_cosmic": "Kozmik ✨ (VIP)",
+  "vault_style_title": "Gizli Kasa Stili"
 }

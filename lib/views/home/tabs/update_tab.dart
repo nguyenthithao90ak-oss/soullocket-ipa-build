@@ -1491,6 +1491,21 @@ class _UpdateTabState extends State<UpdateTab> {
         return;
       }
 
+      // Kiểm tra chặn User UID hoặc House ID
+      final blockedUidSnap = await FirebaseDatabase.instance.ref('sys_settings/blocked_feedbacks/uids/${user.uid}').get();
+      if (blockedUidSnap.exists && blockedUidSnap.value == true) {
+        _showToast(context, _tr('Tài khoản của bạn đã bị chặn gửi ý kiến đóng góp.', 'Your account has been blocked from sending feedback.'));
+        setState(() => _isSendingFeedback = false);
+        return;
+      }
+      
+      final blockedHouseSnap = await FirebaseDatabase.instance.ref('sys_settings/blocked_feedbacks/houses/$houseId').get();
+      if (blockedHouseSnap.exists && blockedHouseSnap.value == true) {
+        _showToast(context, _tr('Nhà của bạn đã bị chặn gửi ý kiến đóng góp.', 'Your house has been blocked from sending feedback.'));
+        setState(() => _isSendingFeedback = false);
+        return;
+      }
+
       final dbRef = FirebaseDatabase.instance.ref('house_feedbacks/$houseId');
       final snap = await dbRef.get();
       

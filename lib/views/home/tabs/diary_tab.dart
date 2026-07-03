@@ -113,20 +113,28 @@ class _DiaryTabState extends State<DiaryTab>
     _memoryController.syncHouseId(houseId);
   }
 
+  Timer? _rebuildThrottleTimer;
+
   void _handleFeedControllerChange() {
     _syncMemoryControllerHouse();
-    // ⚡ Skip rebuild while tab is inactive to avoid jank during swipe animations
-    if (mounted && _isTabActive) {
-      setState(() {});
-    }
+    _throttledRebuild();
   }
 
   void _handleControllerChange() {
     _syncSelectionOverlayVisibility();
-    // ⚡ Skip rebuild while tab is inactive to avoid jank during swipe animations
-    if (mounted && _isTabActive) {
-      setState(() {});
-    }
+    _throttledRebuild();
+  }
+
+  /// Throttle rebuild tối đa 1 lần mỗi frame (16ms) — tránh cascade
+  /// setState khi upload batch, controller notify, và listener fire
+  void _throttledRebuild() {
+    if (!mounted || !_isTabActive) return;
+    _rebuildThrottleTimer?.cancel();
+    _rebuildThrottleTimer = Timer(const Duration(milliseconds: 16), () {
+      if (mounted && _isTabActive) {
+        setState(() {});
+      }
+    });
   }
 
   void _syncSelectionOverlayVisibility() {
@@ -881,6 +889,7 @@ class _DiaryTabState extends State<DiaryTab>
     _guardController.removeListener(_handleControllerChange);
     _diaryScrollController.removeListener(_onDiaryScroll);
     _diaryScrollDebounce?.cancel();
+    _rebuildThrottleTimer?.cancel();
     _diaryScrollController.dispose();
     _feedController.dispose();
     _memoryController.dispose();

@@ -40,7 +40,7 @@ class _MainHomeHeroHeaderState extends State<_MainHomeHeroHeader> {
                     duration: const Duration(milliseconds: 180),
                     curve: Curves.easeOutCubic,
                     scale: hideButton ? 0.92 : 1.0,
-                    child: widget.state._buildHeaderButton(
+                    child: MainHomeHeaderButton(
                       key: widget.firstGuideSettingsKey,
                       icon: Icons.settings_rounded,
                       color: SLTheme.primary,
@@ -65,7 +65,7 @@ class _MainHomeHeroHeaderState extends State<_MainHomeHeroHeader> {
           Positioned(
             top: MediaQuery.paddingOf(context).top + 12,
             left: 66,
-            child: widget.state._buildHeaderButton(
+            child: MainHomeHeaderButton(
               icon: Icons.messenger_outline,
               color: const Color(0xFFD81B60),
               onTap: () => Navigator.push(

@@ -6115,5 +6115,13 @@
   "milestone_weekday_4": "วันพฤหัสบดี",
   "milestone_weekday_5": "วันศุกร์",
   "milestone_weekday_6": "วันเสาร์",
-  "milestone_weekday_7": "วันอาทิตย์"
+  "milestone_weekday_7": "วันอาทิตย์",
+  "widget_theme_mint": "มิ้นต์",
+  "widget_theme_cosmic": "คอสมิก ✨",
+  "vault_style_emerald": "มรกต",
+  "vault_style_pro_required": "สไตล์นี้สำหรับสมาชิก VIP เท่านั้น",
+  "vault_style_secure": "ปลอดภัย",
+  "vault_style_soft": "นุ่มนวล (ค่าเริ่มต้น)",
+  "vault_style_cosmic": "คอสมิก ✨ (VIP)",
+  "vault_style_title": "สไตล์ห้องนิรภัยลับ"
 }

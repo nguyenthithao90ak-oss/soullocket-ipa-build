@@ -6,7 +6,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FloatingBubbleWidget extends StatefulWidget {
-  const FloatingBubbleWidget({super.key});
+  const FloatingBubbleWidget({
+    super.key,
+    this.initialHouseId,
+    this.initialRole,
+    this.initialPartnerName,
+  });
+
+  final String? initialHouseId;
+  final String? initialRole;
+  final String? initialPartnerName;
 
   @override
   State<FloatingBubbleWidget> createState() => _FloatingBubbleWidgetState();
@@ -16,7 +25,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late Animation<double> _scaleAnimation;
-  
+
   String _messagePreview = '';
   bool _showPreview = false;
   bool _isExpanded = false;

@@ -6115,5 +6115,13 @@
   "milestone_weekday_4": "Quinta-feira",
   "milestone_weekday_5": "Sexta-feira",
   "milestone_weekday_6": "Sábado",
-  "milestone_weekday_7": "Domingo"
+  "milestone_weekday_7": "Domingo",
+  "widget_theme_mint": "Mint",
+  "widget_theme_cosmic": "Cósmico ✨",
+  "vault_style_emerald": "Esmeralda",
+  "vault_style_pro_required": "Este estilo é apenas para membros VIP.",
+  "vault_style_secure": "Seguro",
+  "vault_style_soft": "Suave (padrão)",
+  "vault_style_cosmic": "Cósmico ✨ (VIP)",
+  "vault_style_title": "Estilo do cofre secreto"
 }

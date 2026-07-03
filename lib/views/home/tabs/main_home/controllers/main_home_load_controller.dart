@@ -924,8 +924,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
           if (!shouldKeepVisibleState) {
             _selectedHomeToolId = null;
             _houseSettings = null;
-            _presenceData = <String, dynamic>{};
-            _presenceDataNotifier.value = _presenceData;
+            // Giữ presenceData cũ đến khi listener đầu tiên kích hoạt
+            // để tránh flash "trắng" UI khi chỉ thay đổi settings
             _hasLoadedPresenceSnapshot = false;
             _insightData = null;
           }
