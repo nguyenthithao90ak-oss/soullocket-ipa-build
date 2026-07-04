@@ -1,4 +1,4 @@
-﻿part of '../map_screen.dart';
+part of '../map_screen.dart';
 
 extension _MapDetailDialogsExt on _MapScreenState {
   Future<void> _maybeShowFirstMapNotice() async {
@@ -112,24 +112,21 @@ extension _MapDetailDialogsExt on _MapScreenState {
                   icon: Icons.celebration_rounded,
                   color: const Color(0xFFE11D48),
                   title: context.tr('map_chyuxemvui_26c6ff'),
-                  message:
-                      context.tr('map_khngnndngm_a1ac9c'),
+                  message: context.tr('map_khngnndngm_a1ac9c'),
                 ),
                 SLSpacing.h8,
                 _buildMapIntroNoticeItem(
                   icon: Icons.gps_not_fixed_rounded,
                   color: const Color(0xFF2563EB),
                   title: context.tr('map_vtrcthcsai_88f9c9'),
-                  message:
-                      context.tr('map_sailchcthn_086273'),
+                  message: context.tr('map_sailchcthn_086273'),
                 ),
                 SLSpacing.h8,
                 _buildMapIntroNoticeItem(
                   icon: Icons.construction_rounded,
                   color: const Color(0xFFCA8A04),
                   title: context.tr('map_dnvnangpht_a15ba6'),
-                  message:
-                      context.tr('map_khongcchth_122c13'),
+                  message: context.tr('map_khongcchth_122c13'),
                 ),
                 const SizedBox(height: 10),
                 Container(

@@ -289,8 +289,12 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     _messageIds
       ..clear()
       ..addAll(messages.map((message) => message.id));
-    _newestMessageTs = _messages.isEmpty ? null : _messages.first.timestamp.millisecondsSinceEpoch;
-    _oldestMessageTs = _messages.isEmpty ? null : _messages.last.timestamp.millisecondsSinceEpoch;
+    _newestMessageTs = _messages.isEmpty
+        ? null
+        : _messages.first.timestamp.millisecondsSinceEpoch;
+    _oldestMessageTs = _messages.isEmpty
+        ? null
+        : _messages.last.timestamp.millisecondsSinceEpoch;
     if (mounted) {
       setState(() {});
     }
@@ -312,8 +316,12 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       _messageIds.add(message.id);
     }
     _messages.insert(_findMessageInsertIndex(message), message);
-    _newestMessageTs = _messages.isEmpty ? null : _messages.first.timestamp.millisecondsSinceEpoch;
-    _oldestMessageTs = _messages.isEmpty ? null : _messages.last.timestamp.millisecondsSinceEpoch;
+    _newestMessageTs = _messages.isEmpty
+        ? null
+        : _messages.first.timestamp.millisecondsSinceEpoch;
+    _oldestMessageTs = _messages.isEmpty
+        ? null
+        : _messages.last.timestamp.millisecondsSinceEpoch;
   }
 
   Future<void> _loadInitialMessages() async {
@@ -389,8 +397,12 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         _messages
           ..clear()
           ..addAll(merged);
-        _newestMessageTs = _messages.isEmpty ? null : _messages.first.timestamp.millisecondsSinceEpoch;
-        _oldestMessageTs = _messages.isEmpty ? null : _messages.last.timestamp.millisecondsSinceEpoch;
+        _newestMessageTs = _messages.isEmpty
+            ? null
+            : _messages.first.timestamp.millisecondsSinceEpoch;
+        _oldestMessageTs = _messages.isEmpty
+            ? null
+            : _messages.last.timestamp.millisecondsSinceEpoch;
         _hasMoreMessages = older.length >= _chatPageSize;
         _isLoadingOlderMessages = false;
       });
@@ -408,10 +420,10 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     _liveMessageSub?.cancel();
     _liveMessageSub = _groupChatService
         .streamNewGroupMessages(
-          _groupId,
-          viewerHouseId: widget.myHouseId,
-          afterTs: _newestMessageTs,
-        )
+      _groupId,
+      viewerHouseId: widget.myHouseId,
+      afterTs: _newestMessageTs,
+    )
         .listen((message) {
       if (!mounted) {
         return;
@@ -1325,8 +1337,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                         ? 'Nhắn cả nhóm...'
                         : 'Bạn không còn là thành viên của nhóm này',
                     border: InputBorder.none,
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
                   ),
                   onSubmitted: (_) => _sendMsg(),
                 ),
@@ -1362,8 +1374,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       ),
     );
   }
-
-
 
   @override
   Widget build(BuildContext context) {

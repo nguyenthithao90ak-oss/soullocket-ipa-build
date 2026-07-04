@@ -101,7 +101,8 @@ class DiaryMemoryController extends ChangeNotifier {
   String? _pendingUploadMessage;
   bool _isUploadingMemories = false;
   bool _isDisposed = false;
-  final Map<String, Future<void>> _pendingUrlResolves = <String, Future<void>>{};
+  final Map<String, Future<void>> _pendingUrlResolves =
+      <String, Future<void>>{};
   final Map<String, int> _lastUrlRefreshTimes = <String, int>{};
 
   bool get isSelectionMode => _isSelectionMode;
@@ -301,8 +302,8 @@ class DiaryMemoryController extends ChangeNotifier {
     await _savePendingUploadState(
       houseId: houseId,
       paths: remaining,
-      message:
-          L10nService().format('home_memory_remaining_upload', {'count': remaining.length}),
+      message: L10nService()
+          .format('home_memory_remaining_upload', {'count': remaining.length}),
     );
   }
 
@@ -525,9 +526,9 @@ class DiaryMemoryController extends ChangeNotifier {
     if (_memoriesCacheHouseId != normalizedHouseId ||
         _memoriesCacheFuture == null) {
       _memoriesCacheHouseId = normalizedHouseId;
-      _memoriesCacheFuture = OfflineCacheService
-          .loadCache('memories_$normalizedHouseId')
-          .then(_extractMemoriesCacheList);
+      _memoriesCacheFuture =
+          OfflineCacheService.loadCache('memories_$normalizedHouseId')
+              .then(_extractMemoriesCacheList);
     }
     return _memoriesCacheFuture!;
   }
@@ -668,7 +669,8 @@ class DiaryMemoryController extends ChangeNotifier {
 
         // Tối ưu hóa Cache: Ghi đè lại URL mới vào Offline Cache để lần sau mở app không cần resolve lại
         try {
-          final cached = await OfflineCacheService.loadCache('memories_$houseId');
+          final cached =
+              await OfflineCacheService.loadCache('memories_$houseId');
           List? itemsList;
           int? cachedAt;
           // Hỗ trợ cả format mới {_cachedAt, items} và format cũ List
@@ -681,7 +683,8 @@ class DiaryMemoryController extends ChangeNotifier {
           if (itemsList != null) {
             bool updated = false;
             for (final cachedItem in itemsList) {
-              if (cachedItem is Map && cachedItem['id']?.toString() == memoryId) {
+              if (cachedItem is Map &&
+                  cachedItem['id']?.toString() == memoryId) {
                 cachedItem['url'] = result.url;
                 cachedItem['urlExpiresAt'] = result.expiresAt;
                 updated = true;
@@ -694,11 +697,13 @@ class DiaryMemoryController extends ChangeNotifier {
                 '_cachedAt': cachedAt ?? DateTime.now().millisecondsSinceEpoch,
                 'items': itemsList,
               });
-              debugPrint('[DiaryMemory] Offline Cache updated with new signed URL for memoryId=$memoryId');
+              debugPrint(
+                  '[DiaryMemory] Offline Cache updated with new signed URL for memoryId=$memoryId');
             }
           }
         } catch (cacheErr) {
-          debugPrint('[DiaryMemory] Failed to update offline cache with new signed URL: $cacheErr');
+          debugPrint(
+              '[DiaryMemory] Failed to update offline cache with new signed URL: $cacheErr');
         }
       } catch (e) {
         _lastUrlRefreshTimes.remove(memoryId);
@@ -1433,7 +1438,8 @@ class DiaryMemoryController extends ChangeNotifier {
   }
 
   /// Upload R2 only — trả về payload để batch-write Firebase sau
-  Future<({String? error, Map<String, dynamic>? payload})> _uploadSingleMemoryPhoto({
+  Future<({String? error, Map<String, dynamic>? payload})>
+      _uploadSingleMemoryPhoto({
     required String houseId,
     required XFile image,
     required String authorName,
@@ -1450,7 +1456,10 @@ class DiaryMemoryController extends ChangeNotifier {
       );
       final imageUrl = upload?.downloadUrl.trim() ?? '';
       if (upload == null || imageUrl.isEmpty) {
-        return (error: L10nService().translate('home_khngthtoph_b49958'), payload: null);
+        return (
+          error: L10nService().translate('home_khngthtoph_b49958'),
+          payload: null
+        );
       }
 
       final nowMs = DateTime.now().millisecondsSinceEpoch;
@@ -1726,9 +1735,11 @@ class DiaryMemoryController extends ChangeNotifier {
           if (result.error != null) {
             errorMessages.add(result.error!);
           } else if (result.payload != null) {
-            final memoryKey = _dbRef.child('houses/$houseId/memories').push().key ?? '';
+            final memoryKey =
+                _dbRef.child('houses/$houseId/memories').push().key ?? '';
             if (memoryKey.isNotEmpty) {
-              batchUpdates['houses/$houseId/memories/$memoryKey'] = result.payload;
+              batchUpdates['houses/$houseId/memories/$memoryKey'] =
+                  result.payload;
               uploadedCount++;
               completedImages.add(batch[index]);
               debugPrint('✅ UPLOAD THÀNH CÔNG: Memory ID = $memoryKey');
@@ -1742,7 +1753,8 @@ class DiaryMemoryController extends ChangeNotifier {
             await _dbRef.update(batchUpdates);
           } catch (dbError) {
             debugPrint('Lỗi batch-write Firebase: $dbError');
-            errorMessages.add(L10nService().translate('home_cannot_save_memory'));
+            errorMessages
+                .add(L10nService().translate('home_cannot_save_memory'));
           }
         }
         if (completedImages.isNotEmpty) {

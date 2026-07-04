@@ -1,4 +1,3 @@
-
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -818,12 +817,14 @@ class _DiaryTabState extends State<DiaryTab>
     final adMob = AdMobService();
     if (await adMob.isProUser()) return;
 
-    final hasRecent = adMob.hasRecentFullscreenAd(cooldown: const Duration(minutes: 15));
+    final hasRecent =
+        adMob.hasRecentFullscreenAd(cooldown: const Duration(minutes: 15));
     if (hasRecent) {
       return;
     }
 
-    debugPrint('DiaryTab: Showing forced interstitial ad after 15 minutes of activity.');
+    debugPrint(
+        'DiaryTab: Showing forced interstitial ad after 15 minutes of activity.');
     final shown = await adMob.showInterstitialAd();
     if (shown) {
       _activeSecondsInDiary = 0;
@@ -1962,9 +1963,8 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                     panEnabled: panEnabled,
                     minScale: 1.0,
                     maxScale: 4.5,
-                    boundaryMargin: panEnabled
-                        ? const EdgeInsets.all(24)
-                        : EdgeInsets.zero,
+                    boundaryMargin:
+                        panEnabled ? const EdgeInsets.all(24) : EdgeInsets.zero,
                     clipBehavior: Clip.none,
                     interactionEndFrictionCoefficient: 0.00008,
                     child: Hero(

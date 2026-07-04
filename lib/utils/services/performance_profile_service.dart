@@ -11,7 +11,8 @@ enum PerformanceTier {
 class PerformanceProfileService {
   PerformanceProfileService._();
 
-  static final PerformanceProfileService instance = PerformanceProfileService._();
+  static final PerformanceProfileService instance =
+      PerformanceProfileService._();
 
   static const String _prefKey = 'il_performance_tier_preference';
   PerformanceTier _currentTier = PerformanceTier.medium;
@@ -61,7 +62,7 @@ class PerformanceProfileService {
     try {
       // Platform.numberOfProcessors returns the number of logical processors
       final processors = Platform.numberOfProcessors;
-      
+
       if (processors <= 4) {
         return PerformanceTier.low;
       } else if (processors <= 6) {

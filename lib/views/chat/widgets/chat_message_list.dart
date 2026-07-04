@@ -40,7 +40,8 @@ class ChatMessageList extends StatelessWidget {
           return Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: Row(
-              mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+              mainAxisAlignment:
+                  isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
               children: [
                 if (!isMe) ...[
                   const SkeletonContainer.circle(size: 32),

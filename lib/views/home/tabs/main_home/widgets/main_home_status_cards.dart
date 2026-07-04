@@ -21,7 +21,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   decoration: BoxDecoration(
                     color: const Color(0xFF94A3B8).withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(radius),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.7)),
                   ),
                   child: Center(
                     child: Container(
@@ -34,7 +35,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                         borderRadius: BorderRadius.circular(999),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF94A3B8).withValues(alpha: 0.2),
+                            color:
+                                const Color(0xFF94A3B8).withValues(alpha: 0.2),
                             blurRadius: 16,
                             offset: const Offset(0, 8),
                           ),
@@ -93,19 +95,38 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     if (startDate != null && startDate.isNotEmpty) {
       try {
         final startDt = DateTime.parse(startDate);
-        final startDtMidnight = DateTime(startDt.year, startDt.month, startDt.day);
+        final startDtMidnight =
+            DateTime(startDt.year, startDt.month, startDt.day);
         final daysToday = todayMidnight.difference(startDtMidnight).inDays + 1;
         totalDays = daysToday;
 
         int? nextMilestone;
-        for (final m in [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2000, 2500, 3000, 4000, 5000]) {
+        for (final m in [
+          100,
+          200,
+          300,
+          400,
+          500,
+          600,
+          700,
+          800,
+          900,
+          1000,
+          1500,
+          2000,
+          2500,
+          3000,
+          4000,
+          5000
+        ]) {
           if (m >= daysToday) {
             nextMilestone = m;
             break;
           }
         }
         if (nextMilestone != null) {
-          final milestoneDate = startDtMidnight.add(Duration(days: nextMilestone - 1));
+          final milestoneDate =
+              startDtMidnight.add(Duration(days: nextMilestone - 1));
           upcomingEvents.add(HomeUpcomingEvent(
             title: 'Kỷ niệm $nextMilestone ngày yêu nhau 💖',
             date: milestoneDate,
@@ -113,9 +134,11 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
           ));
         }
 
-        DateTime nextAnniversary = DateTime(todayMidnight.year, startDtMidnight.month, startDtMidnight.day);
+        DateTime nextAnniversary = DateTime(
+            todayMidnight.year, startDtMidnight.month, startDtMidnight.day);
         if (nextAnniversary.isBefore(todayMidnight)) {
-          nextAnniversary = DateTime(todayMidnight.year + 1, startDtMidnight.month, startDtMidnight.day);
+          nextAnniversary = DateTime(todayMidnight.year + 1,
+              startDtMidnight.month, startDtMidnight.day);
         }
         final years = nextAnniversary.year - startDtMidnight.year;
         if (years > 0) {
@@ -133,10 +156,14 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     final dobU2 = _houseSettings?['dobU2']?.toString() ?? '';
     String nameU1 = _houseSettings?['nameU1']?.toString() ?? 'Bạn';
     String nameU2 = _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
-    if (nameU1.toLowerCase() == 'bạn nam') nameU1 = context.tr('male_role_default');
-    if (nameU1.toLowerCase() == 'bạn nữ') nameU1 = context.tr('female_role_default');
-    if (nameU2.toLowerCase() == 'bạn nam') nameU2 = context.tr('male_role_default');
-    if (nameU2.toLowerCase() == 'bạn nữ') nameU2 = context.tr('female_role_default');
+    if (nameU1.toLowerCase() == 'bạn nam')
+      nameU1 = context.tr('male_role_default');
+    if (nameU1.toLowerCase() == 'bạn nữ')
+      nameU1 = context.tr('female_role_default');
+    if (nameU2.toLowerCase() == 'bạn nam')
+      nameU2 = context.tr('male_role_default');
+    if (nameU2.toLowerCase() == 'bạn nữ')
+      nameU2 = context.tr('female_role_default');
 
     void addBirthday(String dob, String name) {
       if (dob.isEmpty) return;
@@ -148,7 +175,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
         }
         final daysUntil = nextBday.difference(todayMidnight).inDays;
         final giftHint = daysUntil <= 7 && daysUntil >= 0
-            ? _MainHomeTabState._giftSuggestionsForBirthday(bday.month, bday.day)
+            ? _MainHomeTabState._giftSuggestionsForBirthday(
+                bday.month, bday.day)
             : '';
         upcomingEvents.add(HomeUpcomingEvent(
           title: giftHint.isNotEmpty
@@ -159,6 +187,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
         ));
       } catch (_) {}
     }
+
     addBirthday(dobU1, nameU1);
     addBirthday(dobU2, nameU2);
 
@@ -179,9 +208,11 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       {'month': 12, 'day': 31, 'name': 'Đêm Giao thừa ✨'},
     ];
     for (final h in holidaysList) {
-      DateTime nextH = DateTime(todayMidnight.year, h['month'] as int, h['day'] as int);
+      DateTime nextH =
+          DateTime(todayMidnight.year, h['month'] as int, h['day'] as int);
       if (nextH.isBefore(todayMidnight)) {
-        nextH = DateTime(todayMidnight.year + 1, h['month'] as int, h['day'] as int);
+        nextH = DateTime(
+            todayMidnight.year + 1, h['month'] as int, h['day'] as int);
       }
       upcomingEvents.add(HomeUpcomingEvent(
         title: h['name'] as String,
@@ -224,11 +255,16 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     }
 
     String myNameSetting = _houseSettings?['nameU1']?.toString() ?? 'Bạn';
-    String partnerNameSetting = _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
-    if (myNameSetting.toLowerCase() == 'bạn nam') myNameSetting = context.tr('male_role_default');
-    if (myNameSetting.toLowerCase() == 'bạn nữ') myNameSetting = context.tr('female_role_default');
-    if (partnerNameSetting.toLowerCase() == 'bạn nam') partnerNameSetting = context.tr('male_role_default');
-    if (partnerNameSetting.toLowerCase() == 'bạn nữ') partnerNameSetting = context.tr('female_role_default');
+    String partnerNameSetting =
+        _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
+    if (myNameSetting.toLowerCase() == 'bạn nam')
+      myNameSetting = context.tr('male_role_default');
+    if (myNameSetting.toLowerCase() == 'bạn nữ')
+      myNameSetting = context.tr('female_role_default');
+    if (partnerNameSetting.toLowerCase() == 'bạn nam')
+      partnerNameSetting = context.tr('male_role_default');
+    if (partnerNameSetting.toLowerCase() == 'bạn nữ')
+      partnerNameSetting = context.tr('female_role_default');
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -443,7 +479,9 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isSingle ? context.tr('home_vtrhinti_f5956d') : context.tr('home_bncahaia_12dcb1'),
+                        isSingle
+                            ? context.tr('home_vtrhinti_f5956d')
+                            : context.tr('home_bncahaia_12dcb1'),
                         style: SLTheme.quicksand(
                           fontSize: 14,
                           fontWeight: FontWeight.w900,
@@ -483,58 +521,64 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                         String displayText = distanceText;
                         if (!isSingle) {
                           final List<String> batteryTexts = [];
-                          
+
                           if (myBattery != null) {
                             final pct = myBattery['level'] as int;
                             final isCharging = myBattery['isCharging'] == true;
-                            final emoji = isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                            final emoji =
+                                isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
                             batteryTexts.add('Bạn $emoji $pct%');
                           }
-                          
+
                           if (partnerBattery != null) {
                             final pct = partnerBattery['level'] as int;
-                            final isCharging = partnerBattery['isCharging'] == true;
-                            final emoji = isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                            final isCharging =
+                                partnerBattery['isCharging'] == true;
+                            final emoji =
+                                isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
                             batteryTexts.add('Người ấy $emoji $pct%');
                           }
-                          
+
                           if (batteryTexts.isNotEmpty) {
-                            displayText = '$distanceText • ${batteryTexts.join(' • ')}';
+                            displayText =
+                                '$distanceText • ${batteryTexts.join(' • ')}';
                           }
                         }
-                    return Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.72),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.82)),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              displayText,
-                              style: SLTheme.quicksand(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF4B5B6E),
-                                height: 1.4,
+                        return Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.72),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.82)),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  displayText,
+                                  style: SLTheme.quicksand(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: const Color(0xFF4B5B6E),
+                                    height: 1.4,
+                                  ),
+                                ),
                               ),
-                            ),
+                              SLSpacing.w12,
+                              Text(
+                                context.tr('home_mngay_02e4c1'),
+                                style: SLTheme.quicksand(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  color: SLColors.secondary,
+                                ),
+                              ),
+                            ],
                           ),
-                          SLSpacing.w12,
-                          Text(
-                            context.tr('home_mngay_02e4c1'),
-                            style: SLTheme.quicksand(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                              color: SLColors.secondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
+                        );
                       },
                     );
                   },
@@ -600,7 +644,9 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 SLSpacing.w8,
                 Flexible(
                   child: Text(
-                    isSingle ? context.tr('home_tngquanhmn_0e1b6b') : context.tr('home_hnhtrnhiqu_cbcf59'),
+                    isSingle
+                        ? context.tr('home_tngquanhmn_0e1b6b')
+                        : context.tr('home_hnhtrnhiqu_cbcf59'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
@@ -633,7 +679,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 ),
               )
             else ...[
-              _buildInsightBubbleWrap(metrics, compact: false, enableMotion: enableMotion),
+              _buildInsightBubbleWrap(metrics,
+                  compact: false, enableMotion: enableMotion),
               SLSpacing.h20,
               Container(
                 padding: const EdgeInsets.fromLTRB(14, 13, 14, 14),
@@ -647,7 +694,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: SLRadius.lgAll,
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.72)),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFFFF9BBC).withValues(alpha: 0.08),
@@ -850,8 +898,8 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                             gradient: LinearGradient(
                               colors: [
                                 Colors.white.withValues(alpha: 0.98),
-                                widget.color.withValues(alpha: 
-                                  widget.emphasize ? 0.18 : 0.11,
+                                widget.color.withValues(
+                                  alpha: widget.emphasize ? 0.18 : 0.11,
                                 ),
                               ],
                               begin: Alignment.topLeft,
@@ -862,8 +910,8 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: widget.color.withValues(alpha: 
-                                  widget.emphasize ? 0.16 : 0.1,
+                                color: widget.color.withValues(
+                                  alpha: widget.emphasize ? 0.16 : 0.1,
                                 ),
                                 blurRadius: widget.emphasize ? 16 : 12,
                                 offset: const Offset(0, 7),

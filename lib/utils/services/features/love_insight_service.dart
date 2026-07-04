@@ -205,6 +205,7 @@ class LoveInsightService {
     final l10n = L10nService();
     return params.isEmpty ? l10n.translate(key) : l10n.format(key, params);
   }
+
   static const List<int> _monthMilestones = [1, 3, 6, 9];
   static const List<int> _dayMilestones = [
     10,
@@ -421,10 +422,20 @@ class LoveInsightService {
     ).millisecondsSinceEpoch;
 
     final isSingle = relationshipMode == 'single';
-    final rawNameU1 = _string(settings['nameU1'], fallback: L10nService().translate('home_bn_1fd75b'));
-    final rawNameU2 = _string(settings['nameU2'], fallback: L10nService().translate('home_ngiy_5bab37'));
-    final nameU1 = rawNameU1.toLowerCase() == 'bạn nam' ? L10nService().translate('male_role_default') : (rawNameU1.toLowerCase() == 'bạn nữ' ? L10nService().translate('female_role_default') : rawNameU1);
-    final nameU2 = rawNameU2.toLowerCase() == 'bạn nữ' ? L10nService().translate('female_role_default') : (rawNameU2.toLowerCase() == 'bạn nam' ? L10nService().translate('male_role_default') : rawNameU2);
+    final rawNameU1 = _string(settings['nameU1'],
+        fallback: L10nService().translate('home_bn_1fd75b'));
+    final rawNameU2 = _string(settings['nameU2'],
+        fallback: L10nService().translate('home_ngiy_5bab37'));
+    final nameU1 = rawNameU1.toLowerCase() == 'bạn nam'
+        ? L10nService().translate('male_role_default')
+        : (rawNameU1.toLowerCase() == 'bạn nữ'
+            ? L10nService().translate('female_role_default')
+            : rawNameU1);
+    final nameU2 = rawNameU2.toLowerCase() == 'bạn nữ'
+        ? L10nService().translate('female_role_default')
+        : (rawNameU2.toLowerCase() == 'bạn nam'
+            ? L10nService().translate('male_role_default')
+            : rawNameU2);
 
     var diaryTotal = 0;
     var diaryMonth = 0;
@@ -923,7 +934,9 @@ class LoveInsightService {
     );
 
     if (isSingle) {
-      if (memoryThisMonth <= 1 && activeDays <= 2 && milestoneSuggestion != null) {
+      if (memoryThisMonth <= 1 &&
+          activeDays <= 2 &&
+          milestoneSuggestion != null) {
         return milestoneSuggestion;
       }
       if (daysSinceLastMemory >= 6) {
@@ -943,7 +956,9 @@ class LoveInsightService {
       }
       return _tr('love_insight_suggest_single_need_self_care');
     }
-    if (memoryThisMonth <= 1 && activeDays <= 3 && milestoneSuggestion != null) {
+    if (memoryThisMonth <= 1 &&
+        activeDays <= 3 &&
+        milestoneSuggestion != null) {
       return milestoneSuggestion;
     }
     if (daysSinceLastMemory >= 6) {
@@ -1008,7 +1023,8 @@ class LoveInsightService {
     }
 
     if (nearestRecentPast != null) {
-      final daysSince = today.difference(_startOfDay(nearestRecentPast.date)).inDays;
+      final daysSince =
+          today.difference(_startOfDay(nearestRecentPast.date)).inDays;
       if (daysSince <= 7) {
         return isSingle
             ? '"${nearestRecentPast.title}" vừa đi qua. Đây là lúc đẹp để ghi lại cảm xúc còn mới, để hành trình này có thêm chiều sâu.'

@@ -5,7 +5,6 @@ import 'package:soullocket_app/utils/services/offline_cache_service.dart';
 import '../../../models/diary_post.dart';
 import '../../../widgets/skeleton_container.dart';
 
-
 class DiaryList extends StatelessWidget {
   final bool showDiaryPrivacyNotice;
   final Widget Function() buildDiaryPrivacyNotice;
@@ -55,48 +54,50 @@ class DiaryList extends StatelessWidget {
               if (showBlockingLoader)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 48, 16, 0),
-                  child: Builder(
-                    builder: (context) {
-                      final baseColor = Colors.white.withValues(alpha: 0.15);
-                      final highlightColor = Colors.white.withValues(alpha: 0.25);
-                      return Column(
-                        children: List.generate(
-                          3,
-                          (index) => Padding(
-                            padding: const EdgeInsets.only(bottom: 24),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SkeletonContainer.circle(
-                                  size: 44,
-                                  baseColor: baseColor, highlightColor: highlightColor,
+                  child: Builder(builder: (context) {
+                    final baseColor = Colors.white.withValues(alpha: 0.15);
+                    final highlightColor = Colors.white.withValues(alpha: 0.25);
+                    return Column(
+                      children: List.generate(
+                        3,
+                        (index) => Padding(
+                          padding: const EdgeInsets.only(bottom: 24),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SkeletonContainer.circle(
+                                size: 44,
+                                baseColor: baseColor,
+                                highlightColor: highlightColor,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SkeletonContainer.rounded(
+                                      width: MediaQuery.sizeOf(context).width *
+                                          0.4,
+                                      height: 16,
+                                      baseColor: baseColor,
+                                      highlightColor: highlightColor,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    SkeletonContainer.rounded(
+                                      width: double.infinity,
+                                      height: 80,
+                                      baseColor: baseColor,
+                                      highlightColor: highlightColor,
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      SkeletonContainer.rounded(
-                                        width: MediaQuery.sizeOf(context).width * 0.4,
-                                        height: 16,
-                                        baseColor: baseColor, highlightColor: highlightColor,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      SkeletonContainer.rounded(
-                                        width: double.infinity,
-                                        height: 80,
-                                        baseColor: baseColor, highlightColor: highlightColor,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                      );
-                    }
-                  ),
+                      ),
+                    );
+                  }),
                 )
               else if (houseId == null)
                 buildHouseSetupState(
@@ -110,7 +111,8 @@ class DiaryList extends StatelessWidget {
         ),
         if (houseId != null && hasPosts)
           SliverPadding(
-            padding: EdgeInsets.only(bottom: isLoadingMore || !hasMore ? 16 : 128),
+            padding:
+                EdgeInsets.only(bottom: isLoadingMore || !hasMore ? 16 : 128),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) => buildPostCard(posts[index]),
@@ -134,22 +136,20 @@ class DiaryList extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 32),
               child: Center(
-                child: Builder(
-                  builder: (context) {
-                    final prefs = OfflineCacheService.getPrefsSync();
-                    final isSingle = prefs?.getString('il_rel_mode') == 'single';
-                    return Text(
-                      isSingle
-                          ? '— Đã tải hết nhật ký của bạn —'
-                          : '— Đã tải hết nhật ký của hai bạn —',
-                      style: TextStyle(
-                        color: Colors.grey.withValues(alpha: 0.6),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    );
-                  }
-                ),
+                child: Builder(builder: (context) {
+                  final prefs = OfflineCacheService.getPrefsSync();
+                  final isSingle = prefs?.getString('il_rel_mode') == 'single';
+                  return Text(
+                    isSingle
+                        ? '— Đã tải hết nhật ký của bạn —'
+                        : '— Đã tải hết nhật ký của hai bạn —',
+                    style: TextStyle(
+                      color: Colors.grey.withValues(alpha: 0.6),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  );
+                }),
               ),
             ),
           ),

@@ -40,12 +40,10 @@ class PendingUploadService {
     final now = DateTime.now().millisecondsSinceEpoch;
     final current = await _readEnvelope(prefs, key);
     final currentMeta = current?[_metaKey];
-    final createdAt = currentMeta is Map
-        ? ((currentMeta['createdAt'] as int?) ?? now)
-        : now;
-    final retryCount = currentMeta is Map
-        ? ((currentMeta['retryCount'] as int?) ?? 0)
-        : 0;
+    final createdAt =
+        currentMeta is Map ? ((currentMeta['createdAt'] as int?) ?? now) : now;
+    final retryCount =
+        currentMeta is Map ? ((currentMeta['retryCount'] as int?) ?? 0) : 0;
 
     await prefs.setString(
       '$_prefix$key',

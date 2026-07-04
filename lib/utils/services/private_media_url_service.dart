@@ -26,9 +26,12 @@ class PrivateMediaUrlService {
       return currentUser;
     }
     try {
-      return auth.authStateChanges().firstWhere(
+      return auth
+          .authStateChanges()
+          .firstWhere(
             (user) => user != null,
-          ).timeout(const Duration(seconds: 3));
+          )
+          .timeout(const Duration(seconds: 3));
     } catch (_) {
       return auth.currentUser;
     }
@@ -76,4 +79,3 @@ class PrivateMediaUrlService {
     }
   }
 }
-

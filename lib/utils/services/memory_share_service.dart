@@ -118,7 +118,8 @@ class MemoryShareService {
 
   Future<MemoryLimits> fetchLimits() async {
     if (_cachedLimits != null && _lastFetchTime != null) {
-      if (DateTime.now().difference(_lastFetchTime!) < const Duration(hours: 1)) {
+      if (DateTime.now().difference(_lastFetchTime!) <
+          const Duration(hours: 1)) {
         return _cachedLimits!;
       }
     }

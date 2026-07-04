@@ -38,7 +38,9 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isSingle ? L10nService().translate('home_vtrhinti_f5956d') : L10nService().translate('home_vtrcachngm_07f765'),
+                        isSingle
+                            ? L10nService().translate('home_vtrhinti_f5956d')
+                            : L10nService().translate('home_vtrcachngm_07f765'),
                         style: SLTheme.quicksand(
                           fontSize: 14,
                           fontWeight: FontWeight.w900,
@@ -108,8 +110,8 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                               height: 54,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color:
-                                    const Color(0xFFD81B60).withValues(alpha: 0.12),
+                                color: const Color(0xFFD81B60)
+                                    .withValues(alpha: 0.12),
                               ),
                             ),
                           ),
@@ -119,7 +121,8 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                             child: _buildMapPreviewMarker(
                               '📍',
                               const Color(0xFFD81B60),
-                              avatarUrl: _houseSettings?['avtUser1']?.toString(),
+                              avatarUrl:
+                                  _houseSettings?['avtUser1']?.toString(),
                             ),
                           ),
                         ),
@@ -172,7 +175,8 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                           child: Container(
                             height: 2,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFD81B60).withValues(alpha: 0.35),
+                              color: const Color(0xFFD81B60)
+                                  .withValues(alpha: 0.35),
                               borderRadius: SLRadius.pillAll,
                             ),
                           ),
@@ -193,23 +197,27 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                         String displayText = distanceText;
                         if (!isSingle) {
                           final List<String> batteryTexts = [];
-                          
+
                           if (myBattery != null) {
                             final pct = myBattery['level'] as int;
                             final isCharging = myBattery['isCharging'] == true;
-                            final emoji = isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                            final emoji =
+                                isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
                             batteryTexts.add('Bạn $emoji $pct%');
                           }
-                          
+
                           if (partnerBattery != null) {
                             final pct = partnerBattery['level'] as int;
-                            final isCharging = partnerBattery['isCharging'] == true;
-                            final emoji = isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                            final isCharging =
+                                partnerBattery['isCharging'] == true;
+                            final emoji =
+                                isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
                             batteryTexts.add('Người ấy $emoji $pct%');
                           }
-                          
+
                           if (batteryTexts.isNotEmpty) {
-                            displayText = '$distanceText • ${batteryTexts.join(' • ')}';
+                            displayText =
+                                '$distanceText • ${batteryTexts.join(' • ')}';
                           }
                         }
                         return Row(
@@ -259,7 +267,8 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                 );
               },
             ),
-            if (_homeMapAlertNotifier.value != null && _homeMapAlertNotifier.value!.trim().isNotEmpty) ...[
+            if (_homeMapAlertNotifier.value != null &&
+                _homeMapAlertNotifier.value!.trim().isNotEmpty) ...[
               SLSpacing.h8,
               Container(
                 width: double.infinity,

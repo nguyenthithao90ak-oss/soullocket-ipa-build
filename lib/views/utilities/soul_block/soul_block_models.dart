@@ -63,8 +63,9 @@ class _SoulPieceTemplate {
     final rotatedCells = cells.map((p) => Point<int>(-p.y, p.x)).toList();
     final minX = rotatedCells.map((p) => p.x).reduce(min);
     final minY = rotatedCells.map((p) => p.y).reduce(min);
-    final normalizedCells = rotatedCells.map((p) => Point<int>(p.x - minX, p.y - minY)).toList();
-    
+    final normalizedCells =
+        rotatedCells.map((p) => Point<int>(p.x - minX, p.y - minY)).toList();
+
     final newWidth = normalizedCells.map((p) => p.x).reduce(max) + 1;
     final newHeight = normalizedCells.map((p) => p.y).reduce(max) + 1;
 

@@ -38,7 +38,8 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                         ),
                         boxShadow: <BoxShadow>[
                           BoxShadow(
-                            color: const Color(0xFF182B63).withValues(alpha: 0.30),
+                            color:
+                                const Color(0xFF182B63).withValues(alpha: 0.30),
                             blurRadius: 26,
                             spreadRadius: -10,
                             offset: const Offset(0, 18),
@@ -125,7 +126,8 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                                       style: SLTheme.quicksand(
                                         fontSize: 10.4,
                                         fontWeight: FontWeight.w800,
-                                        color: Colors.white.withValues(alpha: 0.70),
+                                        color: Colors.white
+                                            .withValues(alpha: 0.70),
                                         letterSpacing: 0.8,
                                       ),
                                     ),
@@ -227,7 +229,8 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                           borderRadius: BorderRadius.circular(28),
                           boxShadow: <BoxShadow>[
                             BoxShadow(
-                              color: const Color(0xFF15295F).withValues(alpha: 0.38),
+                              color: const Color(0xFF15295F)
+                                  .withValues(alpha: 0.38),
                               blurRadius: 28,
                               spreadRadius: -12,
                               offset: const Offset(0, 18),
@@ -702,7 +705,8 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(compact ? 16 : 18),
-        border: Border.all(color: const Color(0xFF00C3FF).withValues(alpha: 0.26)),
+        border:
+            Border.all(color: const Color(0xFF00C3FF).withValues(alpha: 0.26)),
         boxShadow: <BoxShadow>[
           BoxShadow(
             color: const Color(0xFF00C3FF).withValues(alpha: 0.06),

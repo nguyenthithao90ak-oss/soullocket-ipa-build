@@ -136,7 +136,8 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                           alignment: Alignment.center,
                           clipBehavior: Clip.none,
                           children: [
-                             if (UiPrefs.notifier.value.countdownStyleKey == 'floating_hearts') ...[
+                            if (UiPrefs.notifier.value.countdownStyleKey ==
+                                'floating_hearts') ...[
                               // Outer decorative thin ring
                               Container(
                                 width: 94,

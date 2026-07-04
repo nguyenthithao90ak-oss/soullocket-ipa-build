@@ -1,4 +1,3 @@
-
 part of '../../main_home_tab.dart';
 
 extension _MainHomeLoadController on _MainHomeTabState {
@@ -122,7 +121,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
       _showLatestSnackBarImpl('⚠️ $title: $body');
     }, onError: (Object error) {
       if (error.toString().contains('permission-denied')) {
-        debugPrint('[MainHome] new device notification listener: permission-denied (ignored)');
+        debugPrint(
+            '[MainHome] new device notification listener: permission-denied (ignored)');
         _newDeviceNotificationSubscription?.cancel();
       } else {
         debugPrint('[MainHome] new device notification listener error: $error');
@@ -329,7 +329,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
     });
   }
 
-  void _startDelayedListeners(String houseId, int sessionId, bool Function() isStale) {
+  void _startDelayedListeners(
+      String houseId, int sessionId, bool Function() isStale) {
     _delayedListenersTimer?.cancel();
     _delayedListenersTimer = Timer(const Duration(seconds: 3), () {
       if (!mounted || isStale()) return;
@@ -340,7 +341,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
     });
   }
 
-  void _startDelayedMapAndWeather(String houseId, int sessionId, bool Function() isStale) {
+  void _startDelayedMapAndWeather(
+      String houseId, int sessionId, bool Function() isStale) {
     _delayedMapWeatherTimer?.cancel();
     _delayedMapWeatherTimer = Timer(const Duration(seconds: 6), () {
       if (!mounted || isStale()) return;
@@ -423,7 +425,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
         _houseSettings = Map<String, dynamic>.from(
           Map<dynamic, dynamic>.from(initialSettingsSnap.value as Map),
         );
-        final msgCacheSettingsFail = L10nService().translate('home_clixyra_775791');
+        final msgCacheSettingsFail =
+            L10nService().translate('home_clixyra_775791');
         try {
           await OfflineCacheService.saveCache(cacheKey, _houseSettings);
         } catch (e) {
@@ -499,9 +502,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _hasLoadedPresenceSnapshot = true;
     final didUpdatePresence = _updatePresenceDataIfNeededImpl(nextPresence);
 
-    if (didUpdatePresence &&
-        _isRoleOnline('user1') &&
-        _isRoleOnline('user2')) {
+    if (didUpdatePresence && _isRoleOnline('user1') && _isRoleOnline('user2')) {
       DailyQuestService().recordProgress('simultaneous_online');
     }
 
@@ -593,8 +594,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
       final payload = _MissYouAlertPayload.fromMap(data);
       final sentAt = payload.sentAtMs;
       final now = DateTime.now().millisecondsSinceEpoch;
-      final isExpired = sentAt > 0 &&
-          now - sentAt > const Duration(hours: 24).inMilliseconds;
+      final isExpired =
+          sentAt > 0 && now - sentAt > const Duration(hours: 24).inMilliseconds;
 
       if (isExpired) {
         final key = event.snapshot.key;
@@ -630,8 +631,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
       final payload = _MissYouAlertPayload.fromMap(data);
       final sentAt = payload.sentAtMs;
       final now = DateTime.now().millisecondsSinceEpoch;
-      final isExpired = sentAt > 0 &&
-          now - sentAt > const Duration(hours: 24).inMilliseconds;
+      final isExpired =
+          sentAt > 0 && now - sentAt > const Duration(hours: 24).inMilliseconds;
 
       final key = event.snapshot.key;
       if (isExpired) {
@@ -699,10 +700,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
     String msgLoadDataFail,
   ) {
     _settingsSubscription?.cancel();
-    _settingsSubscription = _dbRef
-        .child('houses/$houseId/settings')
-        .onValue
-        .listen((event) async {
+    _settingsSubscription =
+        _dbRef.child('houses/$houseId/settings').onValue.listen((event) async {
       if (isStale()) return;
       final snapshot = event.snapshot;
       if (snapshot.value is Map && mounted) {
@@ -721,10 +720,9 @@ extension _MainHomeLoadController on _MainHomeTabState {
                 fallback: _showWeather,
               )
             : _showWeather;
-        final visibilityPrefsChanged = nextShowStatus != _showStatus ||
-            nextShowWeather != _showWeather;
-        final relMode =
-            (settings['relationshipMode'] ?? 'single').toString();
+        final visibilityPrefsChanged =
+            nextShowStatus != _showStatus || nextShowWeather != _showWeather;
+        final relMode = (settings['relationshipMode'] ?? 'single').toString();
         final settingsKey = _buildInsightSettingsKeyImpl(settings, relMode);
         final payloadSignature =
             _buildCanonicalSettingsPayloadSignatureImpl(settings);
@@ -968,7 +966,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
         // Setup immediate active bindings
         _wrapSetup(() => _listenHighlights(houseId), 'Highlights');
         _wrapSetup(() => _listenHomeCalendarEvents(houseId), 'Calendar');
-        _wrapSetup(() => _listenHealthCycleForWidgetSync(houseId), 'HealthCycle');
+        _wrapSetup(
+            () => _listenHealthCycleForWidgetSync(houseId), 'HealthCycle');
 
         // 3. Delayed bindings setup
         _startDelayedListeners(houseId, sessionId, isStale);
@@ -984,14 +983,16 @@ extension _MainHomeLoadController on _MainHomeTabState {
 
         // 4. Stream subscriptions setup
         _setupMembersSubscription(houseId, sessionId, isStale, msgMembersFail);
-        _setupPresenceSubscription(houseId, sessionId, isStale, msgPresenceFail);
+        _setupPresenceSubscription(
+            houseId, sessionId, isStale, msgPresenceFail);
         unawaited(_albumService.cleanupExpiredTrash(houseId));
 
         // Setup presence fallback timer
         _startPresenceSnapshotFallback(sessionId, isStale);
 
         _setupAlertsAndPartnerInbox(houseId, sessionId, isStale, user.uid);
-        _setupMissInteractionSubscription(houseId, sessionId, isStale, user.uid);
+        _setupMissInteractionSubscription(
+            houseId, sessionId, isStale, user.uid);
         _setupSettingsSubscription(
           houseId,
           sessionId,

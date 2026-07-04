@@ -309,7 +309,8 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       final ByteData data = await rootBundle.load(assetPath);
       return data.buffer.asUint8List();
     } catch (e) {
-      debugPrint('Soul Block: Error loading SFX ($assetPath): ${AppErrorMapper.resolve(
+      debugPrint(
+          'Soul Block: Error loading SFX ($assetPath): ${AppErrorMapper.resolve(
         e,
         fallbackMessage: loadSfxErrorFallback,
       ).message}');
@@ -581,11 +582,11 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
 
     for (int index = 0; index < particleCount; index++) {
       // Downward falling cone: pi/2 is straight down, +/- 0.8 radians (about 45 degrees)
-      final double angle =
-          (pi / 2.0) + (_random.nextDouble() * 1.6 - 0.8);
+      final double angle = (pi / 2.0) + (_random.nextDouble() * 1.6 - 0.8);
       // Shorter distance to keep particles centered near grid cells
       final double distance =
-          (10.0 + (_random.nextDouble() * maxDistance * 0.40)).clamp(10.0, 64.0);
+          (10.0 + (_random.nextDouble() * maxDistance * 0.40))
+              .clamp(10.0, 64.0);
       final bool isShard = index.isEven;
       particles.add(
         _ExplosionParticle(

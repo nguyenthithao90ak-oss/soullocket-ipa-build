@@ -53,7 +53,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     // Hiển thị bong bóng tâm hồn / chat nếu app ở background
     final type = message.data['type']?.toString() ?? '';
     final screen = message.data['screen']?.toString() ?? '';
-    if (type == 'soul_merge' || screen == 'soul_merge' || type == 'chat' || screen == 'chat') {
+    if (type == 'soul_merge' ||
+        screen == 'soul_merge' ||
+        type == 'chat' ||
+        screen == 'chat') {
       try {
         final granted = await FlutterOverlayWindow.isPermissionGranted();
         if (granted) {
@@ -73,7 +76,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         debugPrint('Error showing overlay in background: $e');
       }
     }
-
   } catch (error, stackTrace) {
     debugPrint('FCM background bootstrap error: ${AppErrorMapper.resolve(
       error,
@@ -139,7 +141,8 @@ Future<void> _clearStaleIosAuthAfterFreshInstall() async {
     } catch (e) {
       debugPrint('Fresh install cleanup log skipped: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: L10nService().translate('core_err_log_fresh_install_failed'),
+        fallbackMessage:
+            L10nService().translate('core_err_log_fresh_install_failed'),
       ).message}');
     }
   }
@@ -201,8 +204,11 @@ void overlayMain() async {
     if (houseId == null || houseId.isEmpty) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.reload(); // Đảm bảo lấy dữ liệu mới nhất từ isolate chính
-      houseId = prefs.getString('overlay_house_id') ?? prefs.getString('il_house_id');
-      role = prefs.getString('overlay_role') ?? prefs.getString('il_role') ?? 'user1';
+      houseId =
+          prefs.getString('overlay_house_id') ?? prefs.getString('il_house_id');
+      role = prefs.getString('overlay_role') ??
+          prefs.getString('il_role') ??
+          'user1';
       partnerName = prefs.getString('overlay_partner_name');
     }
 
@@ -221,7 +227,7 @@ void overlayMain() async {
         debugPrint('[Overlay] Fallback Firebase fetch error: $e');
       }
     }
-    
+
     if (partnerName == null || partnerName.isEmpty) {
       // Đọc tên partner từ settings nếu có
       try {
@@ -270,7 +276,8 @@ void main() {
 
     FlutterError.onError = (details) {
       final errStr = details.exception.toString().toLowerCase();
-      if (errStr.contains('unable to load asset') || errStr.contains('không thể tải')) {
+      if (errStr.contains('unable to load asset') ||
+          errStr.contains('không thể tải')) {
         debugPrint('Ignored fatal asset error in main: $errStr');
         return;
       }
@@ -327,7 +334,8 @@ void main() {
 
     PlatformDispatcher.instance.onError = (error, stackTrace) {
       final errStr = error.toString().toLowerCase();
-      if (errStr.contains('unable to load asset') || errStr.contains('không thể tải')) {
+      if (errStr.contains('unable to load asset') ||
+          errStr.contains('không thể tải')) {
         debugPrint('Ignored async asset error in main: $errStr');
         return true;
       }
@@ -353,7 +361,7 @@ void main() {
     try {
       await UiPrefs.ensureLoaded();
       await L10nService().init();
-      
+
       await BuildSignatureService.verifyOfficialBuildSignature();
       await _initializeFirebaseBootstrap();
       unawaited(_initializeGoogleMobileAds());
@@ -379,12 +387,9 @@ void main() {
             ? L10nService().translate('core_err_missing_env_req')
             : L10nService().translate('core_err_app_not_ready'),
         details: [
-          if (kDebugMode)
-            L10nService().translate('core_err_missing_vars'),
-          if (kDebugMode)
-            L10nService().translate('core_err_pass_config_ci'),
-          if (!kDebugMode)
-            L10nService().translate('core_err_update_app'),
+          if (kDebugMode) L10nService().translate('core_err_missing_vars'),
+          if (kDebugMode) L10nService().translate('core_err_pass_config_ci'),
+          if (!kDebugMode) L10nService().translate('core_err_update_app'),
         ],
       ));
     } on UnofficialBuildDetected catch (error) {
@@ -399,8 +404,7 @@ void main() {
     } catch (error) {
       final bootstrapError = AppErrorMapper.resolve(
         error,
-        fallbackMessage:
-            L10nService().translate('core_err_app_start_failed'),
+        fallbackMessage: L10nService().translate('core_err_app_start_failed'),
       );
       debugPrint('Bootstrap error: ${bootstrapError.message}');
       unawaited(
@@ -456,7 +460,7 @@ Future<void> _initializeFirebaseBootstrap() async {
     _throwIfFirebaseEnvMissing();
     await Firebase.initializeApp(options: _firebaseOptionsFromEnv())
         .timeout(const Duration(seconds: 8));
-        
+
     try {
       FirebaseFirestore.instance.settings = const Settings(
         persistenceEnabled: true,
@@ -481,7 +485,8 @@ Future<void> _initializeFirebaseBootstrap() async {
     } catch (e) {
       debugPrint('Firebase persistence error: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: L10nService().translate('core_err_firebase_cache_failed'),
+        fallbackMessage:
+            L10nService().translate('core_err_firebase_cache_failed'),
       ).message}');
     }
 
@@ -519,7 +524,8 @@ Future<void> _initializeNativeFirebaseBootstrap() async {
   } catch (nativeError) {
     debugPrint('Firebase native init error: ${AppErrorMapper.resolve(
       nativeError,
-      fallbackMessage: L10nService().translate('core_err_firebase_native_failed'),
+      fallbackMessage:
+          L10nService().translate('core_err_firebase_native_failed'),
     ).message}');
   }
 
@@ -632,7 +638,8 @@ Future<FirebaseOptions?> _loadNativeFirebaseOptions() async {
   } catch (error) {
     debugPrint('Native Firebase options load error: ${AppErrorMapper.resolve(
       error,
-      fallbackMessage: L10nService().translate('core_err_firebase_read_config_failed'),
+      fallbackMessage:
+          L10nService().translate('core_err_firebase_read_config_failed'),
     ).message}');
     return null;
   }
@@ -653,10 +660,9 @@ Future<void> _initializeFirebaseAppCheck() async {
     }
     if (kDebugMode) {
       try {
-        const debugToken =
-            '8a3fcdfe-ea37-49f1-baf9-279463826649';
-        await SecureStorageService.instance.write(
-            'appcheck_debug_token', debugToken);
+        const debugToken = '8a3fcdfe-ea37-49f1-baf9-279463826649';
+        await SecureStorageService.instance
+            .write('appcheck_debug_token', debugToken);
         // Also write to SharedPreferences for AppCheck native plugin
         await SharedPreferences.getInstance().then((prefs) => prefs.setString(
             'com.google.firebase.appcheck.debug.DebugAppCheckProvider.SECRET_KEY',
@@ -702,18 +708,15 @@ Future<void> _initializeTikTokSdk() async {
   final bool isIos = defaultTargetPlatform == TargetPlatform.iOS ||
       defaultTargetPlatform == TargetPlatform.macOS;
 
-  final appId = (isIos
-          ? AppConfig.tiktokIosAppId
-          : AppConfig.tiktokAndroidAppId)
-      .trim();
+  final appId =
+      (isIos ? AppConfig.tiktokIosAppId : AppConfig.tiktokAndroidAppId).trim();
   final accessToken = (isIos
           ? AppConfig.tiktokIosAccessToken
           : AppConfig.tiktokAndroidAccessToken)
       .trim();
-  final ttAppId = (isIos
-          ? AppConfig.tiktokIosTtAppId
-          : AppConfig.tiktokAndroidTtAppId)
-      .trim();
+  final ttAppId =
+      (isIos ? AppConfig.tiktokIosTtAppId : AppConfig.tiktokAndroidTtAppId)
+          .trim();
 
   if (appId.isEmpty || accessToken.isEmpty || ttAppId.isEmpty) {
     debugPrint('TikTok Business SDK skipped: missing credentials in config');
@@ -728,7 +731,8 @@ Future<void> _initializeTikTokSdk() async {
       openDebug: kDebugMode,
       enableAutoIapTrack: true,
     );
-    debugPrint('TikTok Business SDK initialized successfully [${ isIos ? "iOS" : "Android"}]');
+    debugPrint(
+        'TikTok Business SDK initialized successfully [${isIos ? "iOS" : "Android"}]');
   } catch (e) {
     debugPrint('TikTok Business SDK init error: $e');
   }

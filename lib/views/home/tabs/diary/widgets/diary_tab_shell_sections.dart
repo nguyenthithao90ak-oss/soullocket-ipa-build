@@ -96,7 +96,6 @@ class DiaryHeaderSection extends StatelessWidget {
   }
 }
 
-
 class DiaryTabSectionSwitcher extends StatelessWidget {
   final String currentTab;
   final ValueChanged<String> onTabChanged;

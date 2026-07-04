@@ -1,4 +1,3 @@
-
 part of '../../home_screen.dart';
 
 extension _HomeScreenShellSyncFlows on _HomeScreenState {
@@ -58,25 +57,27 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(context.tr('home_hiu_93c4c0'), style: SLTheme.quicksand()),
+            child:
+                Text(context.tr('home_hiu_93c4c0'), style: SLTheme.quicksand()),
           ),
           if (isMe)
             ElevatedButton(
               onPressed: () async {
                 Navigator.of(ctx).pop();
                 try {
-                  SLNotice.showInfo(context, context.tr('home_anghontc_b7c262'));
+                  SLNotice.showInfo(
+                      context, context.tr('home_anghontc_b7c262'));
                   await AuthService().undoScheduledDeletion();
                   if (!mounted) return;
-                  SLNotice.showSuccess(context, context.tr('home_hontcxathn_58b732'));
+                  SLNotice.showSuccess(
+                      context, context.tr('home_hontcxathn_58b732'));
                 } catch (e) {
                   if (!mounted) return;
                   SLNotice.showError(
                     context,
                     AppErrorMapper.resolve(
                       e,
-                      fallbackMessage:
-                          context.tr('home_chathhontc_5110fb'),
+                      fallbackMessage: context.tr('home_chathhontc_5110fb'),
                     ).message,
                   );
                 }

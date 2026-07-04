@@ -13,18 +13,22 @@ class SoulEventService {
   final _db = FirebaseDatabase.instance.ref();
 
   Stream<List<SoulEvent>> streamEvents(String houseId) async* {
-    final cacheData = await LocalDatabaseService().getCacheEntry('soul_events_$houseId');
+    final cacheData =
+        await LocalDatabaseService().getCacheEntry('soul_events_$houseId');
     if (cacheData != null) {
       try {
         final raw = jsonDecode(cacheData);
         if (raw is List) {
-          yield raw.map((e) => SoulEvent.fromJson(e['id']?.toString() ?? '', e)).toList();
+          yield raw
+              .map((e) => SoulEvent.fromJson(e['id']?.toString() ?? '', e))
+              .toList();
         }
       } catch (_) {}
     }
 
     yield* _db.child('houses/$houseId/soul_events').onValue.map((event) {
-      if (!event.snapshot.exists || event.snapshot.value is! Map) return <SoulEvent>[];
+      if (!event.snapshot.exists || event.snapshot.value is! Map)
+        return <SoulEvent>[];
       final raw = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
       final events = <SoulEvent>[];
       raw.forEach((key, value) {
@@ -33,23 +37,27 @@ class SoulEventService {
         }
       });
       events.sort((a, b) => a.dateMs.compareTo(b.dateMs));
-      
+
       // Save to cache
-      final cacheJson = jsonEncode(events.map((e) => e.toJson()..['id'] = e.id).toList());
+      final cacheJson =
+          jsonEncode(events.map((e) => e.toJson()..['id'] = e.id).toList());
       LocalDatabaseService().setCacheEntry('soul_events_$houseId', cacheJson);
-      
+
       return events;
     });
   }
 
   Future<List<SoulEvent>> getEvents(String houseId) async {
     if (!ConnectivityService().isOnline) {
-      final cacheData = await LocalDatabaseService().getCacheEntry('soul_events_$houseId');
+      final cacheData =
+          await LocalDatabaseService().getCacheEntry('soul_events_$houseId');
       if (cacheData != null) {
         try {
           final raw = jsonDecode(cacheData);
           if (raw is List) {
-            return raw.map((e) => SoulEvent.fromJson(e['id']?.toString() ?? '', e)).toList();
+            return raw
+                .map((e) => SoulEvent.fromJson(e['id']?.toString() ?? '', e))
+                .toList();
           }
         } catch (_) {}
       }
@@ -66,11 +74,12 @@ class SoulEventService {
       }
     });
     events.sort((a, b) => a.dateMs.compareTo(b.dateMs));
-    
+
     // Save to cache
-    final cacheJson = jsonEncode(events.map((e) => e.toJson()..['id'] = e.id).toList());
+    final cacheJson =
+        jsonEncode(events.map((e) => e.toJson()..['id'] = e.id).toList());
     LocalDatabaseService().setCacheEntry('soul_events_$houseId', cacheJson);
-      
+
     return events;
   }
 

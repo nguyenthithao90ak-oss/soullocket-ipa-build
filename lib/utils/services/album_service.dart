@@ -1,4 +1,5 @@
-import 'package:firebase_database/firebase_database.dart' hide Query, Transaction;
+import 'package:firebase_database/firebase_database.dart'
+    hide Query, Transaction;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -37,8 +38,6 @@ class AlbumService {
     '12-24': {'icon': '🎄', 'text': 'Giang sinh'},
     '12-31': {'icon': '✨', 'text': 'Cuoi nam'},
   };
-
-
 
   Future<int> _getAlbumCount(String houseId) async {
     try {
@@ -209,7 +208,8 @@ class AlbumService {
   static const StorageDeleteHelper _deleteHelper = StorageDeleteHelper();
 
   /// Lấy URL ảnh từ Firestore doc và xoá file trên R2.
-  Future<void> _deleteR2Item(String houseId, String itemId, {String source = 'album'}) async {
+  Future<void> _deleteR2Item(String houseId, String itemId,
+      {String source = 'album'}) async {
     try {
       final docRef = FirebaseFirestore.instance
           .collection('houses')
@@ -436,7 +436,8 @@ class AlbumService {
             .doc(houseId)
             .collection('album')
             .doc(key.toString());
-        batch.set(docRef, Map<String, dynamic>.from(value), SetOptions(merge: true));
+        batch.set(
+            docRef, Map<String, dynamic>.from(value), SetOptions(merge: true));
         count++;
       }
     });

@@ -115,7 +115,8 @@ extension _HomeScreenShellControls on _HomeScreenState {
                     );
                     final bottomInset = MediaQuery.paddingOf(context).bottom;
                     return Padding(
-                      padding: EdgeInsets.only(bottom: bottomInset > 0 ? bottomInset : 0),
+                      padding: EdgeInsets.only(
+                          bottom: bottomInset > 0 ? bottomInset : 0),
                       child: AnimatedSize(
                         duration: effectProfile.performanceMode || isSwiping
                             ? Duration.zero
@@ -208,8 +209,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
       },
       child: Padding(
         key: const ValueKey('expanded-nav'),
-        padding: EdgeInsets.fromLTRB(
-            24, 0, 24, bottomInset > 0 ? 4 : 12),
+        padding: EdgeInsets.fromLTRB(24, 0, 24, bottomInset > 0 ? 4 : 12),
         child: Stack(
           alignment: Alignment.topCenter,
           clipBehavior: Clip.none,
@@ -291,8 +291,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
       },
       child: Padding(
         key: const ValueKey('collapsed-nav'),
-        padding:
-            const EdgeInsets.fromLTRB(12, 0, 12, 0),
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
         child: Align(
           alignment: Alignment.bottomCenter,
           child: Material(

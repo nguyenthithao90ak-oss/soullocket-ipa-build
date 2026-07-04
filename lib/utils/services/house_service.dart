@@ -309,7 +309,8 @@ class HouseService {
         if (deviceId.isNotEmpty) 'deviceId': deviceId,
         if (deviceModel.isNotEmpty) 'model': deviceModel,
         if (devicePlatform.isNotEmpty) 'platform': devicePlatform,
-        if ((customHouseId ?? '').trim().isNotEmpty) 'customHouseId': customHouseId!.trim(),
+        if ((customHouseId ?? '').trim().isNotEmpty)
+          'customHouseId': customHouseId!.trim(),
       };
       debugPrint('[HouseService] Admin debug createHouseSecure start');
       final response = await CloudFunctionsHelper.callSecure<dynamic>(
@@ -340,7 +341,8 @@ class HouseService {
         if (deviceModel.isNotEmpty) 'model': deviceModel,
         if (devicePlatform.isNotEmpty) 'platform': devicePlatform,
         if ((otp ?? '').trim().isNotEmpty) 'otp': otp!.trim(),
-        if ((customHouseId ?? '').trim().isNotEmpty) 'customHouseId': customHouseId!.trim(),
+        if ((customHouseId ?? '').trim().isNotEmpty)
+          'customHouseId': customHouseId!.trim(),
       });
       debugPrint('[HouseService] createHouseSecure success');
       final payload = _asStringDynamicMap(response.data);
@@ -417,7 +419,8 @@ class HouseService {
     }
   }
 
-  Future<Map<String, dynamic>> checkHouseIdAvailability(String customHouseId) async {
+  Future<Map<String, dynamic>> checkHouseIdAvailability(
+      String customHouseId) async {
     try {
       final response = await CloudFunctionsHelper.callSecure<dynamic>(
         'checkHouseIdAvailability',
@@ -465,7 +468,8 @@ class HouseService {
           await prefs.setString('il_house_id', updatedId);
         }
       } else {
-        final reason = map?['reason'] ?? map?['message'] ?? 'Đổi mã nhà không thành công.';
+        final reason =
+            map?['reason'] ?? map?['message'] ?? 'Đổi mã nhà không thành công.';
         throw Exception(reason);
       }
       return success;
@@ -483,15 +487,25 @@ class HouseService {
 
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    await SecureStorageService.instance.migrateFromPrefs(SecureStorageService.keyHouseId, prefs.getString('il_house_id'));
-    await SecureStorageService.instance.migrateFromPrefs(SecureStorageService.keyAuthUid, prefs.getString(_authUidPrefsKey));
-    final cachedHouseId = (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
-    final cachedAuthUid = (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? '';
+    await SecureStorageService.instance.migrateFromPrefs(
+        SecureStorageService.keyHouseId, prefs.getString('il_house_id'));
+    await SecureStorageService.instance.migrateFromPrefs(
+        SecureStorageService.keyAuthUid, prefs.getString(_authUidPrefsKey));
+    final cachedHouseId = (await SecureStorageService.instance
+                .read(SecureStorageService.keyHouseId))
+            ?.trim() ??
+        '';
+    final cachedAuthUid = (await SecureStorageService.instance
+                .read(SecureStorageService.keyAuthUid))
+            ?.trim() ??
+        '';
 
     if (cachedHouseId.isNotEmpty) {
       if (cachedAuthUid != user.uid) {
-        await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
-        await SecureStorageService.instance.delete(SecureStorageService.keyRole);
+        await SecureStorageService.instance
+            .delete(SecureStorageService.keyHouseId);
+        await SecureStorageService.instance
+            .delete(SecureStorageService.keyRole);
         await prefs.remove('il_house_id');
         await prefs.remove('il_role');
       } else if (preferFresh) {
@@ -506,22 +520,26 @@ class HouseService {
         }
 
         if (await _validateHouseMembership(user.uid, cachedHouseId)) {
-          _syncHouseIdToFirestore(user.uid, cachedHouseId).catchError((_) => null);
+          _syncHouseIdToFirestore(user.uid, cachedHouseId)
+              .catchError((_) => null);
           return cachedHouseId;
         }
 
-        await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
+        await SecureStorageService.instance
+            .delete(SecureStorageService.keyHouseId);
         await prefs.remove('il_house_id');
       } else {
         final now = DateTime.now();
-        if (_lastFetchTime == null || now.difference(_lastFetchTime!) > const Duration(minutes: 15)) {
+        if (_lastFetchTime == null ||
+            now.difference(_lastFetchTime!) > const Duration(minutes: 15)) {
           _fetchAndCacheHouseId(
             user.uid,
             prefs,
             validateMembership: true,
           ).catchError((_) => null);
         }
-        _syncHouseIdToFirestore(user.uid, cachedHouseId).catchError((_) => null);
+        _syncHouseIdToFirestore(user.uid, cachedHouseId)
+            .catchError((_) => null);
         return cachedHouseId;
       }
     }
@@ -563,8 +581,10 @@ class HouseService {
           primaryValue.isNotEmpty &&
           (!validateMembership ||
               await _validateHouseMembership(uid, primaryValue))) {
-        await SecureStorageService.instance.write(SecureStorageService.keyHouseId, primaryValue);
-        await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyHouseId, primaryValue);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyAuthUid, uid);
         await prefs.remove('il_house_id');
         await prefs.remove(_authUidPrefsKey);
         _syncHouseIdToFirestore(uid, primaryValue).catchError((_) => null);
@@ -579,8 +599,10 @@ class HouseService {
           (!validateMembership ||
               await _validateHouseMembership(uid, legacyValue))) {
         await _dbRef.child('users/$uid').update({'houseId': legacyValue});
-        await SecureStorageService.instance.write(SecureStorageService.keyHouseId, legacyValue);
-        await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyHouseId, legacyValue);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyAuthUid, uid);
         await prefs.remove('il_house_id');
         await prefs.remove(_authUidPrefsKey);
         _syncHouseIdToFirestore(uid, legacyValue).catchError((_) => null);
@@ -595,12 +617,16 @@ class HouseService {
       ).message}');
     }
 
-    final fallback = (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
+    final fallback = (await SecureStorageService.instance
+                .read(SecureStorageService.keyHouseId))
+            ?.trim() ??
+        '';
     if (fallback.isEmpty) {
       return null;
     }
     if (!validateMembership || await _validateHouseMembership(uid, fallback)) {
-      await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
+      await SecureStorageService.instance
+          .write(SecureStorageService.keyAuthUid, uid);
       _syncHouseIdToFirestore(uid, fallback).catchError((_) => null);
       return fallback;
     }
@@ -643,7 +669,8 @@ class HouseService {
       return _cachedSettings;
     }
 
-    final prefs = OfflineCacheService.getPrefsSync() ?? await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     final cached = prefs.getString('il_offline_cache_home_settings');
     if (cached != null) {
       try {
@@ -663,7 +690,8 @@ class HouseService {
     return await _fetchSettingsFromServerAndCache(houseId, prefs);
   }
 
-  Future<Map<String, dynamic>?> _fetchSettingsFromServerAndCache(String houseId, SharedPreferences prefs) async {
+  Future<Map<String, dynamic>?> _fetchSettingsFromServerAndCache(
+      String houseId, SharedPreferences prefs) async {
     try {
       final snap = await _dbRef
           .child('houses/$houseId/settings')
@@ -686,8 +714,6 @@ class HouseService {
     } catch (_) {}
     return null;
   }
-
-
 
   Future<String> _createHouseDirectly({
     required String email,
@@ -721,14 +747,16 @@ class HouseService {
     final now = DateTime.now();
     final nowMs = now.millisecondsSinceEpoch;
     final startDate = now.toIso8601String().substring(0, 10);
-    
+
     String newHouseId;
     if (customHouseId != null && customHouseId.trim().isNotEmpty) {
       newHouseId = customHouseId.trim().toUpperCase();
       if (!RegExp(r'^[A-Z0-9_]{3,20}$').hasMatch(newHouseId)) {
-        throw Exception('Mã nhà tự chọn chỉ gồm chữ, số, dấu gạch dưới và từ 3 đến 20 ký tự.');
+        throw Exception(
+            'Mã nhà tự chọn chỉ gồm chữ, số, dấu gạch dưới và từ 3 đến 20 ký tự.');
       }
-      final existsSnap = await _dbRef.child('houses/$newHouseId/owner_uid').get();
+      final existsSnap =
+          await _dbRef.child('houses/$newHouseId/owner_uid').get();
       if (existsSnap.exists) {
         throw Exception('Mã nhà này đã tồn tại, vui lòng chọn mã khác.');
       }

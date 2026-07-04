@@ -478,7 +478,10 @@ class CountdownSpaceService {
       try {
         final raw = jsonDecode(cacheData);
         if (raw is List) {
-          final list = raw.map((e) => CountdownSpace.fromMap(e['spaceId']?.toString() ?? '', e as Map<String, dynamic>)).toList();
+          final list = raw
+              .map((e) => CountdownSpace.fromMap(
+                  e['spaceId']?.toString() ?? '', e as Map<String, dynamic>))
+              .toList();
           list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
           yield list;
         }
@@ -496,7 +499,7 @@ class CountdownSpaceService {
         }
       });
       list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-      
+
       final cacheJson = jsonEncode(list.map((e) => e.toJson()).toList());
       LocalDatabaseService().setCacheEntry(cacheKey, cacheJson);
 

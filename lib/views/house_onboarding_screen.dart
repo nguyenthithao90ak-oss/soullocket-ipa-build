@@ -1,4 +1,3 @@
-
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -46,7 +45,8 @@ class HouseOnboardingScreen extends StatefulWidget {
 }
 
 class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
-  String _defaultHouseName() => L10nService().translate('onboarding_default_house_name');
+  String _defaultHouseName() =>
+      L10nService().translate('onboarding_default_house_name');
   static const String _savedGenderPrefsKey = 'il_saved_gender';
   static const String _pendingSignupRecoveryQuestionPrefsKey =
       'il_pending_signup_recovery_question';
@@ -278,7 +278,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
           _isIdChecking = false;
           _isIdAvailable = res['available'] == true;
           if (!_isIdAvailable) {
-            _idErrorReason = res['reason'] ?? 'Mã nhà đã tồn tại, vui lòng chọn mã khác.';
+            _idErrorReason =
+                res['reason'] ?? 'Mã nhà đã tồn tại, vui lòng chọn mã khác.';
             final suggs = res['suggestions'];
             if (suggs is List) {
               _idSuggestions = suggs.map((e) => e.toString()).toList();
@@ -599,7 +600,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   }
 
   bool _needsEmailVerification(Object? error, String message) {
-    final normalized = '${message.toLowerCase()} ${error?.toString().toLowerCase() ?? ''}';
+    final normalized =
+        '${message.toLowerCase()} ${error?.toString().toLowerCase() ?? ''}';
     return normalized.contains('resource-exhausted') ||
         normalized.contains('giới hạn') ||
         normalized.contains('too many') ||
@@ -609,7 +611,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   }
 
   String _clearCreateFailureMessage(String message, Object? error) {
-    final normalized = '${message.toLowerCase()} ${error?.toString().toLowerCase() ?? ''}';
+    final normalized =
+        '${message.toLowerCase()} ${error?.toString().toLowerCase() ?? ''}';
     if (normalized.contains('unauthenticated') ||
         normalized.contains('chưa đăng nhập') ||
         normalized.contains('đăng nhập')) {
@@ -641,7 +644,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       final user = FirebaseAuth.instance.currentUser;
       final email = (user?.email ?? '').trim();
       if (user == null || email.isEmpty) {
-        throw Exception('Phiên đăng nhập đang đồng bộ. Vui lòng thử lại sau vài giây.');
+        throw Exception(
+            'Phiên đăng nhập đang đồng bộ. Vui lòng thử lại sau vài giây.');
       }
 
       final maskedEmail = _authService.maskEmail(email);
@@ -701,7 +705,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(28),
           ),
@@ -746,7 +751,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                 ),
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFF6FA),
                     borderRadius: BorderRadius.circular(18),
@@ -793,7 +799,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                 }
               },
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               ),
               child: Text(
                 'Xác nhận',
@@ -809,9 +816,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   void _setAutoCreateFailureMessage(String message, {Object? error}) {
     if (!mounted) return;
     final resolvedMessage = _clearCreateFailureMessage(message, error);
-    final detail = kDebugMode && error != null
-        ? _technicalFailureDetail(error)
-        : null;
+    final detail =
+        kDebugMode && error != null ? _technicalFailureDetail(error) : null;
     if (_autoCreateFailureMessage == resolvedMessage &&
         _autoCreateFailureDetail == detail) {
       return;
@@ -871,7 +877,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     }
   }
 
-  Future<void> _createHouse({String? houseCreationOtp, String? customHouseId}) async {
+  Future<void> _createHouse(
+      {String? houseCreationOtp, String? customHouseId}) async {
     FocusManager.instance.primaryFocus?.unfocus();
 
     await _hydrateMissingCreationPrerequisites(
@@ -1013,7 +1020,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         (route) => false,
       );
     } on HouseCreationOtpRequiredException catch (e) {
-      debugPrint('[HouseOnboarding] house creation OTP required: ${AppErrorMapper.resolve(
+      debugPrint(
+          '[HouseOnboarding] house creation OTP required: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Cần xác minh Gmail để tiếp tục tạo nhà.',
       ).message}');
@@ -1027,7 +1035,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         );
         return;
       }
-      return _createHouse(houseCreationOtp: otp.trim(), customHouseId: customHouseId);
+      return _createHouse(
+          houseCreationOtp: otp.trim(), customHouseId: customHouseId);
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(e);
       debugPrint('[HouseOnboarding] _createHouse failed: ${errorInfo.message}');
@@ -1051,7 +1060,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         );
         await Future.delayed(Duration(milliseconds: 700 * _authSyncRetryCount));
         if (mounted) {
-          return _createHouse(houseCreationOtp: houseCreationOtp, customHouseId: customHouseId);
+          return _createHouse(
+              houseCreationOtp: houseCreationOtp, customHouseId: customHouseId);
         }
       }
       _authSyncRetryCount = 0;
@@ -1074,7 +1084,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         );
         await Future.delayed(Duration(seconds: _transientCreateRetryCount));
         if (mounted) {
-          return _createHouse(houseCreationOtp: houseCreationOtp, customHouseId: customHouseId);
+          return _createHouse(
+              houseCreationOtp: houseCreationOtp, customHouseId: customHouseId);
         }
       }
       _transientCreateRetryCount = 0;
@@ -1157,17 +1168,20 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
           actions: [
             if (widget.onSignedOut != null)
               TextButton.icon(
-                onPressed: _isLoading ? null : () async {
-                  setState(() => _isLoading = true);
-                  try {
-                    await FirebaseAuth.instance.signOut();
-                    if (widget.onSignedOut != null) {
-                      await widget.onSignedOut!();
-                    }
-                  } catch (_) {}
-                  if (mounted) setState(() => _isLoading = false);
-                },
-                icon: const Icon(Icons.logout_rounded, color: Color(0xFFD81B60), size: 20),
+                onPressed: _isLoading
+                    ? null
+                    : () async {
+                        setState(() => _isLoading = true);
+                        try {
+                          await FirebaseAuth.instance.signOut();
+                          if (widget.onSignedOut != null) {
+                            await widget.onSignedOut!();
+                          }
+                        } catch (_) {}
+                        if (mounted) setState(() => _isLoading = false);
+                      },
+                icon: const Icon(Icons.logout_rounded,
+                    color: Color(0xFFD81B60), size: 20),
                 label: Text(
                   'Đăng xuất',
                   style: SLTheme.quicksand(
@@ -1228,14 +1242,17 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                     ),
                     const SizedBox(height: 24),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 4),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFF6FA),
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(
                           color: _idErrorReason != null
                               ? Colors.red.shade200
-                              : (_isIdAvailable ? Colors.green.shade200 : const Color(0xFFFFD3E4)),
+                              : (_isIdAvailable
+                                  ? Colors.green.shade200
+                                  : const Color(0xFFFFD3E4)),
                         ),
                       ),
                       child: TextField(
@@ -1270,9 +1287,11 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                                   ),
                                 )
                               : (_isIdAvailable
-                                  ? const Icon(Icons.check_circle_rounded, color: Colors.green)
+                                  ? const Icon(Icons.check_circle_rounded,
+                                      color: Colors.green)
                                   : (_idErrorReason != null
-                                      ? const Icon(Icons.cancel_rounded, color: Colors.red)
+                                      ? const Icon(Icons.cancel_rounded,
+                                          color: Colors.red)
                                       : null)),
                         ),
                         onChanged: _onIdChanged,
@@ -1282,7 +1301,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          const Icon(Icons.check_circle_outline_rounded, color: Colors.green, size: 16),
+                          const Icon(Icons.check_circle_outline_rounded,
+                              color: Colors.green, size: 16),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
@@ -1301,7 +1321,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          const Icon(Icons.error_outline_rounded, color: Colors.red, size: 16),
+                          const Icon(Icons.error_outline_rounded,
+                              color: Colors.red, size: 16),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
@@ -1352,9 +1373,10 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                     ],
                     const SizedBox(height: 28),
                     ElevatedButton(
-                      onPressed: (_isIdAvailable && !_isLoading && !_isIdChecking)
-                          ? () => _createHouse(customHouseId: _customId)
-                          : null,
+                      onPressed:
+                          (_isIdAvailable && !_isLoading && !_isIdChecking)
+                              ? () => _createHouse(customHouseId: _customId)
+                              : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFD81B60),
                         foregroundColor: Colors.white,
@@ -1439,7 +1461,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        _autoCreateFailureMessage ?? 'Đã có lỗi xảy ra khi chuẩn bị ngôi nhà. Vui lòng thử lại.',
+                        _autoCreateFailureMessage ??
+                            'Đã có lỗi xảy ra khi chuẩn bị ngôi nhà. Vui lòng thử lại.',
                         textAlign: TextAlign.center,
                         style: SLTheme.quicksand(
                           height: 1.45,

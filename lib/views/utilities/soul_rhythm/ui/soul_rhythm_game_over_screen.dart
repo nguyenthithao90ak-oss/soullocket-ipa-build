@@ -88,10 +88,12 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFEB3B).withValues(alpha: 0.15),
+                            color:
+                                const Color(0xFFFFEB3B).withValues(alpha: 0.15),
                             borderRadius: SLRadius.pillAll,
                             border: Border.all(
-                              color: const Color(0xFFFFEB3B).withValues(alpha: 0.5),
+                              color: const Color(0xFFFFEB3B)
+                                  .withValues(alpha: 0.5),
                             ),
                           ),
                           child: Text(
@@ -119,7 +121,8 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(22),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                          border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.08)),
                         ),
                         child: Column(
                           children: [
@@ -128,7 +131,8 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'FINAL SCORE',
@@ -149,7 +153,8 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                                           height: 1,
                                           shadows: [
                                             Shadow(
-                                              color: Colors.white.withValues(alpha: 0.42),
+                                              color: Colors.white
+                                                  .withValues(alpha: 0.42),
                                               blurRadius: 18,
                                             ),
                                           ],
@@ -183,7 +188,8 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                                       fontWeight: FontWeight.w900,
                                       color: gradeColor,
                                       shadows: [
-                                        Shadow(color: gradeColor, blurRadius: 15),
+                                        Shadow(
+                                            color: gradeColor, blurRadius: 15),
                                       ],
                                     ),
                                   ),
@@ -246,7 +252,8 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.04),
                             borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+                            border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.06)),
                           ),
                           child: Row(
                             children: [
@@ -343,7 +350,8 @@ extension _SoulRhythmGameOverScreen on _SoulRhythmGameState {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.28)),
+        border:
+            Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.28)),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF00E5FF).withValues(alpha: 0.14),

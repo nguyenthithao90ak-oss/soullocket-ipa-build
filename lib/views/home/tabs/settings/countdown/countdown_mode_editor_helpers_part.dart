@@ -96,10 +96,11 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
     List<Color>? iconGradient,
     required Widget child,
   }) {
-    final gradient = iconGradient ?? const [
-      Color(0xFFEC407A),
-      Color(0xFFD81B60),
-    ];
+    final gradient = iconGradient ??
+        const [
+          Color(0xFFEC407A),
+          Color(0xFFD81B60),
+        ];
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -408,43 +409,125 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
 
   IconData _countdownThemeSwatchIcon(String key) {
     switch (key) {
-      case 'theme-pink-glow': return Icons.favorite_rounded;
-      case 'theme-default':   return Icons.wb_sunny_rounded;
-      case 'theme-ocean':     return Icons.waves_rounded;
-      case 'theme-sunset':    return Icons.wb_twilight_rounded;
-      case 'theme-night':     return Icons.nights_stay_rounded;
-      case 'theme-dark':      return Icons.dark_mode_rounded;
-      case 'theme-mystic-dark': return Icons.auto_awesome_rounded;
-      case 'theme-auto':      return Icons.access_time_filled_rounded;
-      default:                return Icons.block_rounded;
+      case 'theme-pink-glow':
+        return Icons.favorite_rounded;
+      case 'theme-default':
+        return Icons.wb_sunny_rounded;
+      case 'theme-ocean':
+        return Icons.waves_rounded;
+      case 'theme-sunset':
+        return Icons.wb_twilight_rounded;
+      case 'theme-night':
+        return Icons.nights_stay_rounded;
+      case 'theme-dark':
+        return Icons.dark_mode_rounded;
+      case 'theme-mystic-dark':
+        return Icons.auto_awesome_rounded;
+      case 'theme-auto':
+        return Icons.access_time_filled_rounded;
+      default:
+        return Icons.block_rounded;
     }
   }
 
   String _countdownThemeSwatchEmoji(String key) {
     switch (key) {
-      case 'theme-pink-glow': return '🌸';
-      case 'theme-default':   return '☀️';
-      case 'theme-ocean':     return '🌊';
-      case 'theme-sunset':    return '🌅';
-      case 'theme-night':     return '🌙';
-      case 'theme-dark':      return '🖤';
-      case 'theme-mystic-dark': return '✨';
-      case 'theme-auto':      return '⏱️';
-      default:                return '🚫';
+      case 'theme-pink-glow':
+        return '🌸';
+      case 'theme-default':
+        return '☀️';
+      case 'theme-ocean':
+        return '🌊';
+      case 'theme-sunset':
+        return '🌅';
+      case 'theme-night':
+        return '🌙';
+      case 'theme-dark':
+        return '🖤';
+      case 'theme-mystic-dark':
+        return '✨';
+      case 'theme-auto':
+        return '⏱️';
+      default:
+        return '🚫';
     }
   }
 
   Widget _buildCountdownThemeSwatchGrid() {
     final swatches = <(String, List<Color>, String)>[
-      ('theme-auto',      [const Color(0xFF64748B), const Color(0xFF334155)], _CountdownModeIndependentScreenState._themeOptions.firstWhere((o) => o.value == 'theme-auto', orElse: () => const MapEntry('Tự động', 'theme-auto')).key),
-      ('theme-pink-glow', [const Color(0xFFFFB6CA), const Color(0xFFFF7098)], _CountdownModeIndependentScreenState._themeOptions.firstWhere((o) => o.value == 'theme-pink-glow', orElse: () => const MapEntry('Sáng hồng', 'theme-pink-glow')).key),
-      ('theme-default',   [const Color(0xFFFBC02D), const Color(0xFFF57F17)], _CountdownModeIndependentScreenState._themeOptions.firstWhere((o) => o.value == 'theme-default', orElse: () => const MapEntry('Mặc định', 'theme-default')).key),
-      ('theme-ocean',     [const Color(0xFF4FC3F7), const Color(0xFF0288D1)], _CountdownModeIndependentScreenState._themeOptions.firstWhere((o) => o.value == 'theme-ocean', orElse: () => const MapEntry('Đại dương', 'theme-ocean')).key),
-      ('theme-sunset',    [const Color(0xFFFF8A65), const Color(0xFFD84315)], _CountdownModeIndependentScreenState._themeOptions.firstWhere((o) => o.value == 'theme-sunset', orElse: () => const MapEntry('Hoàng hôn', 'theme-sunset')).key),
-      ('theme-night',     [const Color(0xFF7986CB), const Color(0xFF303F9F)], _CountdownModeIndependentScreenState._themeOptions.firstWhere((o) => o.value == 'theme-night', orElse: () => const MapEntry('Đêm thâu', 'theme-night')).key),
-      ('theme-dark',      [const Color(0xFF616161), const Color(0xFF212121)], _CountdownModeIndependentScreenState._themeOptions.firstWhere((o) => o.value == 'theme-dark', orElse: () => const MapEntry('Tối', 'theme-dark')).key),
-      ('theme-mystic-dark', [const Color(0xFFB388FF), const Color(0xFF651FFF)], _CountdownModeIndependentScreenState._themeOptions.firstWhere((o) => o.value == 'theme-mystic-dark', orElse: () => const MapEntry('Tối huyền bí', 'theme-mystic-dark')).key),
-      ('off',             [const Color(0xFFE0E0E0), const Color(0xFF9E9E9E)], _CountdownModeIndependentScreenState._themeOptions.firstWhere((o) => o.value == 'off', orElse: () => const MapEntry('Tắt', 'off')).key),
+      (
+        'theme-auto',
+        [const Color(0xFF64748B), const Color(0xFF334155)],
+        _CountdownModeIndependentScreenState._themeOptions
+            .firstWhere((o) => o.value == 'theme-auto',
+                orElse: () => const MapEntry('Tự động', 'theme-auto'))
+            .key
+      ),
+      (
+        'theme-pink-glow',
+        [const Color(0xFFFFB6CA), const Color(0xFFFF7098)],
+        _CountdownModeIndependentScreenState._themeOptions
+            .firstWhere((o) => o.value == 'theme-pink-glow',
+                orElse: () => const MapEntry('Sáng hồng', 'theme-pink-glow'))
+            .key
+      ),
+      (
+        'theme-default',
+        [const Color(0xFFFBC02D), const Color(0xFFF57F17)],
+        _CountdownModeIndependentScreenState._themeOptions
+            .firstWhere((o) => o.value == 'theme-default',
+                orElse: () => const MapEntry('Mặc định', 'theme-default'))
+            .key
+      ),
+      (
+        'theme-ocean',
+        [const Color(0xFF4FC3F7), const Color(0xFF0288D1)],
+        _CountdownModeIndependentScreenState._themeOptions
+            .firstWhere((o) => o.value == 'theme-ocean',
+                orElse: () => const MapEntry('Đại dương', 'theme-ocean'))
+            .key
+      ),
+      (
+        'theme-sunset',
+        [const Color(0xFFFF8A65), const Color(0xFFD84315)],
+        _CountdownModeIndependentScreenState._themeOptions
+            .firstWhere((o) => o.value == 'theme-sunset',
+                orElse: () => const MapEntry('Hoàng hôn', 'theme-sunset'))
+            .key
+      ),
+      (
+        'theme-night',
+        [const Color(0xFF7986CB), const Color(0xFF303F9F)],
+        _CountdownModeIndependentScreenState._themeOptions
+            .firstWhere((o) => o.value == 'theme-night',
+                orElse: () => const MapEntry('Đêm thâu', 'theme-night'))
+            .key
+      ),
+      (
+        'theme-dark',
+        [const Color(0xFF616161), const Color(0xFF212121)],
+        _CountdownModeIndependentScreenState._themeOptions
+            .firstWhere((o) => o.value == 'theme-dark',
+                orElse: () => const MapEntry('Tối', 'theme-dark'))
+            .key
+      ),
+      (
+        'theme-mystic-dark',
+        [const Color(0xFFB388FF), const Color(0xFF651FFF)],
+        _CountdownModeIndependentScreenState._themeOptions
+            .firstWhere((o) => o.value == 'theme-mystic-dark',
+                orElse: () =>
+                    const MapEntry('Tối huyền bí', 'theme-mystic-dark'))
+            .key
+      ),
+      (
+        'off',
+        [const Color(0xFFE0E0E0), const Color(0xFF9E9E9E)],
+        _CountdownModeIndependentScreenState._themeOptions
+            .firstWhere((o) => o.value == 'off',
+                orElse: () => const MapEntry('Tắt', 'off'))
+            .key
+      ),
     ];
 
     return Wrap(
@@ -457,7 +540,8 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
         final isSelected = _themeKey == key;
         final themeIcon = _countdownThemeSwatchIcon(key);
         final themeEmoji = _countdownThemeSwatchEmoji(key);
-        final isDarkTheme = key.contains('dark') || key == 'theme-night' || key == 'theme-auto';
+        final isDarkTheme =
+            key.contains('dark') || key == 'theme-night' || key == 'theme-auto';
         final iconColor = isDarkTheme
             ? Colors.white.withValues(alpha: 0.7)
             : Colors.white.withValues(alpha: 0.85);
@@ -567,11 +651,13 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
                                       width: 22,
                                       height: 22,
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.92),
+                                        color: Colors.white
+                                            .withValues(alpha: 0.92),
                                         shape: BoxShape.circle,
                                         boxShadow: [
                                           BoxShadow(
-                                            color: colors.last.withValues(alpha: 0.30),
+                                            color: colors.last
+                                                .withValues(alpha: 0.30),
                                             blurRadius: 6,
                                             offset: const Offset(0, 2),
                                           ),
@@ -648,8 +734,12 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
                             overflow: TextOverflow.ellipsis,
                             style: SLTheme.quicksand(
                               fontSize: 10.4,
-                              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
-                              color: isSelected ? colors.last : const Color(0xFF64748B),
+                              fontWeight: isSelected
+                                  ? FontWeight.w900
+                                  : FontWeight.w700,
+                              color: isSelected
+                                  ? colors.last
+                                  : const Color(0xFF64748B),
                             ),
                           ),
                         ),

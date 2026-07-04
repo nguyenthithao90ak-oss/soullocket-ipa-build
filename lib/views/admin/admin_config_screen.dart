@@ -85,8 +85,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       setState(() {
         _errorText = AppErrorMapper.resolve(
           error,
-          fallbackMessage:
-              context.tr('admin_chathticuh_10b42f'),
+          fallbackMessage: context.tr('admin_chathticuh_10b42f'),
         ).message;
       });
     } finally {
@@ -120,7 +119,10 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
       if (!mounted) return;
       setState(() => _isMaintenanceMode = value);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(value ? context.tr('admin_btbotr_26d9dd') : context.tr('admin_ttbotr_75a6e2'))),
+        SnackBar(
+            content: Text(value
+                ? context.tr('admin_btbotr_26d9dd')
+                : context.tr('admin_ttbotr_75a6e2'))),
       );
     } catch (error) {
       if (!mounted) return;
@@ -222,8 +224,7 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
 
     if (title.isEmpty || body.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(inputErrorMsg)),
+        SnackBar(content: Text(inputErrorMsg)),
       );
       return;
     }
@@ -339,7 +340,8 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  context.tr('admin_chbotr_a5b13d'),
+                                                  context.tr(
+                                                      'admin_chbotr_a5b13d'),
                                                   style: SLTheme.quicksand(
                                                     color: Colors.white,
                                                     fontSize: 18,
@@ -351,11 +353,13 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                   contentPadding:
                                                       EdgeInsets.zero,
                                                   title: Text(
-                                                      context.tr('admin_btbotrtonh_31085d'),
+                                                      context.tr(
+                                                          'admin_btbotrtonh_31085d'),
                                                       style: const TextStyle(
                                                           color: Colors.white)),
                                                   subtitle: Text(
-                                                      context.tr('admin_ngidngthng_70f24c'),
+                                                      context.tr(
+                                                          'admin_ngidngthng_70f24c'),
                                                       style: const TextStyle(
                                                           color: Colors.grey)),
                                                   value: _isMaintenanceMode,
@@ -367,11 +371,13 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                   contentPadding:
                                                       EdgeInsets.zero,
                                                   title: Text(
-                                                      context.tr('admin_botrcngngs_d286ae'),
+                                                      context.tr(
+                                                          'admin_botrcngngs_d286ae'),
                                                       style: const TextStyle(
                                                           color: Colors.white)),
                                                   subtitle: Text(
-                                                      context.tr('admin_chkhatabcn_c5ab3c'),
+                                                      context.tr(
+                                                          'admin_chkhatabcn_c5ab3c'),
                                                       style: const TextStyle(
                                                           color: Colors.grey)),
                                                   value:
@@ -388,14 +394,13 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                   style: const TextStyle(
                                                       color: Colors.white),
                                                   maxLines: 2,
-                                                  decoration:
-                                                      InputDecoration(
-                                                    labelText:
-                                                        context.tr('admin_linhnbotr_067aa4'),
+                                                  decoration: InputDecoration(
+                                                    labelText: context.tr(
+                                                        'admin_linhnbotr_067aa4'),
                                                     labelStyle: const TextStyle(
                                                         color: Colors.grey),
-                                                    hintText:
-                                                        context.tr('admin_mcnhtnhnng_d9687b'),
+                                                    hintText: context.tr(
+                                                        'admin_mcnhtnhnng_d9687b'),
                                                     hintStyle: const TextStyle(
                                                         color: Colors.grey),
                                                     enabledBorder:
@@ -417,14 +422,13 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                       _communityMaintenanceEtaCtrl,
                                                   style: const TextStyle(
                                                       color: Colors.white),
-                                                  decoration:
-                                                      InputDecoration(
-                                                    labelText:
-                                                        context.tr('admin_dkinmlityc_02d30d'),
+                                                  decoration: InputDecoration(
+                                                    labelText: context.tr(
+                                                        'admin_dkinmlityc_02d30d'),
                                                     labelStyle: const TextStyle(
                                                         color: Colors.grey),
-                                                    hintText:
-                                                        context.tr('admin_vd1530ngyh_3994f5'),
+                                                    hintText: context.tr(
+                                                        'admin_vd1530ngyh_3994f5'),
                                                     hintStyle: const TextStyle(
                                                         color: Colors.grey),
                                                     enabledBorder:
@@ -458,7 +462,8 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                           vertical: 12),
                                                     ),
                                                     child: Text(
-                                                        context.tr('admin_luthngbo_188629'),
+                                                        context.tr(
+                                                            'admin_luthngbo_188629'),
                                                         style: const TextStyle(
                                                             color:
                                                                 Colors.white)),
@@ -480,7 +485,8 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  context.tr('admin_githngboys_2d765a'),
+                                                  context.tr(
+                                                      'admin_githngboys_2d765a'),
                                                   style: SLTheme.quicksand(
                                                     color: Colors.white,
                                                     fontSize: 18,
@@ -489,7 +495,8 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                 ),
                                                 SLSpacing.h8,
                                                 Text(
-                                                    context.tr('admin_gitrctipvo_eb8f27'),
+                                                    context.tr(
+                                                        'admin_gitrctipvo_eb8f27'),
                                                     style: const TextStyle(
                                                         color: Colors.grey)),
                                                 SLSpacing.h16,
@@ -498,10 +505,9 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                       _targetHouseIdCtrl,
                                                   style: const TextStyle(
                                                       color: Colors.white),
-                                                  decoration:
-                                                      InputDecoration(
-                                                    labelText:
-                                                        context.tr('admin_idnhtrngnu_62421e'),
+                                                  decoration: InputDecoration(
+                                                    labelText: context.tr(
+                                                        'admin_idnhtrngnu_62421e'),
                                                     labelStyle: const TextStyle(
                                                         color: Colors.grey),
                                                     enabledBorder:
@@ -522,10 +528,9 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                   controller: _titleCtrl,
                                                   style: const TextStyle(
                                                       color: Colors.white),
-                                                  decoration:
-                                                      InputDecoration(
-                                                    labelText:
-                                                        context.tr('admin_tiuthngbo_ea017e'),
+                                                  decoration: InputDecoration(
+                                                    labelText: context.tr(
+                                                        'admin_tiuthngbo_ea017e'),
                                                     labelStyle: const TextStyle(
                                                         color: Colors.grey),
                                                     enabledBorder:
@@ -547,9 +552,9 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                   maxLines: 3,
                                                   style: const TextStyle(
                                                       color: Colors.white),
-                                                  decoration:
-                                                      InputDecoration(
-                                                    labelText: context.tr('admin_nidung_ee7ca5'),
+                                                  decoration: InputDecoration(
+                                                    labelText: context.tr(
+                                                        'admin_nidung_ee7ca5'),
                                                     labelStyle: const TextStyle(
                                                         color: Colors.grey),
                                                     enabledBorder:
@@ -584,7 +589,8 @@ class _AdminConfigScreenState extends State<AdminConfigScreen> {
                                                         Icons.send_rounded,
                                                         color: Colors.white),
                                                     label: Text(
-                                                        context.tr('admin_phtthngbo_b92386'),
+                                                        context.tr(
+                                                            'admin_phtthngbo_b92386'),
                                                         style: const TextStyle(
                                                             color: Colors.white,
                                                             fontWeight:

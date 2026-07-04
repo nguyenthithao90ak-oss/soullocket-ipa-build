@@ -311,8 +311,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content:
-              Text(context.tr('upload_background_interrupted')),
+          content: Text(context.tr('upload_background_interrupted')),
           action: SnackBarAction(
             label: 'Thử lại',
             onPressed: () {
@@ -371,7 +370,8 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       bool shouldShowAd = !_isVipActive;
       if (shouldShowAd && lastAdStr != null) {
         final lastAd = DateTime.tryParse(lastAdStr);
-        if (lastAd != null && DateTime.now().difference(lastAd).inMinutes < 20) {
+        if (lastAd != null &&
+            DateTime.now().difference(lastAd).inMinutes < 20) {
           shouldShowAd = false;
         }
       }

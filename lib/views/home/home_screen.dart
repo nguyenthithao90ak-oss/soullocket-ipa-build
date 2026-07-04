@@ -1,5 +1,9 @@
 import 'dart:async';
 import 'dart:ui' as ui;
+import 'dart:io';
+import 'dart:convert';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -331,7 +335,8 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
         dragStartBehavior: widget.dragStartBehavior,
         viewportBuilder: (context, position) {
           return Viewport(
-            scrollCacheExtent: const ScrollCacheExtent.viewport(cacheExtent), axisDirection: axisDirection,
+            scrollCacheExtent: const ScrollCacheExtent.viewport(cacheExtent),
+            axisDirection: axisDirection,
             offset: position,
             clipBehavior: Clip.hardEdge,
             slivers: [
@@ -440,6 +445,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
+    _autoSyncOverlayData();
     RoleUtils.roleNotifier.addListener(_handleGlobalRoleChanged);
     RoleUtils.duplicateRoleNotifier.addListener(_handleDuplicateRoleWarning);
     _currentIndex = widget.initialTab.clamp(0, _navItems.length - 1);
@@ -516,6 +522,28 @@ class _HomeScreenState extends State<HomeScreen>
     _resetInactivityTimer();
   }
 
+  void _autoSyncOverlayData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final houseId = prefs.getString('il_house_id');
+      final role = prefs.getString('il_role') ?? 'user1';
+      final partnerName = prefs.getString('overlay_partner_name') ?? 'Người ấy';
+
+      if (houseId != null && houseId.isNotEmpty) {
+        final payloadText = jsonEncode({
+          'houseId': houseId,
+          'role': role,
+          'partnerName': partnerName,
+        });
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/overlay_sync.json');
+        await file.writeAsString(payloadText);
+      }
+    } catch (e) {
+      debugPrint('[HomeScreen] auto sync overlay error: $e');
+    }
+  }
+
   Future<void> _checkAndUpdateApp() async {
     final updateInfo = await UpdateCheckerService.checkUpdate();
     if (updateInfo != null && updateInfo.needsUpdate && mounted) {
@@ -583,9 +611,11 @@ class _HomeScreenState extends State<HomeScreen>
     if (!mounted || houseId == null) return;
     unawaited(_syncIncomingCallListener(houseId));
     unawaited(_checkExpiredProGracePeriod(houseId));
-    final startDateSnap =
-        await FirebaseDatabase.instance.ref('houses/$houseId/settings/startDate').get();
-    if (!mounted || !startDateSnap.exists || startDateSnap.value == null) return;
+    final startDateSnap = await FirebaseDatabase.instance
+        .ref('houses/$houseId/settings/startDate')
+        .get();
+    if (!mounted || !startDateSnap.exists || startDateSnap.value == null)
+      return;
     final startDate = DateTime.tryParse(startDateSnap.value.toString());
     if (startDate != null) {
       NotificationService().checkAnniversaryReminder(houseId, startDate);
@@ -1277,11 +1307,14 @@ class _HomeScreenState extends State<HomeScreen>
 
     final currentRole = await RoleUtils.currentRole();
     final targetRole = currentRole == 'user1' ? 'user2' : 'user1';
-    var targetName = targetRole == 'user1' ? L10nService().translate('male_role_default') : L10nService().translate('female_role_default');
+    var targetName = targetRole == 'user1'
+        ? L10nService().translate('male_role_default')
+        : L10nService().translate('female_role_default');
     var targetAvatar = '';
 
     try {
-      final snap = await FirebaseDatabase.instance.ref('houses/$houseId/settings').get();
+      final snap =
+          await FirebaseDatabase.instance.ref('houses/$houseId/settings').get();
       final raw = snap.value;
       if (raw is Map) {
         final data = Map<dynamic, dynamic>.from(raw);
@@ -1522,78 +1555,80 @@ class _HomeScreenState extends State<HomeScreen>
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
           child: Scaffold(
-          extendBody: true,
-          // ⚡ Dùng child param để foregroundContent không bị rebuild khi UiPrefs thay đổi
-          body: ValueListenableBuilder<UiPrefsState>(
-            valueListenable: UiPrefs.notifier,
-            builder: (context, uiState, child) {
-              final effectProfile = _resolveHomeEffectProfile(
-                uiState,
-                pauseAnimations: _isUserTabSwiping,
-              );
-              final graphicsQualityKey = effectProfile.graphicsQualityKey;
-              final resolvedThemeKey = _resolveThemeKey(uiState.themeKey);
-              final resolvedEffectKey = uiState.liteMode
-                  ? 'off'
-                  : _resolveEffectKey(
-                      uiState.fallingEffectKey, resolvedThemeKey);
-              final isDark = _isDarkTheme(resolvedThemeKey);
-              final shouldAnimateEffects =
-                  effectProfile.premiumEffects && resolvedEffectKey == 'off';
-              final shouldAnimateFallingEffect =
-                  effectProfile.animationEnabled && resolvedEffectKey != 'off';
-
-              final shellChild = child ?? const SizedBox.shrink();
-
-              if (uiState.themeKey.trim() != 'theme-vip-rotate') {
-                return _buildShellBody(
-                  foregroundChild: shellChild,
-                  isDark: isDark,
-                  resolvedThemeKey: resolvedThemeKey,
-                  resolvedEffectKey: resolvedEffectKey,
-                  graphicsQualityKey: graphicsQualityKey,
-                  shouldAnimateEffects: shouldAnimateEffects,
-                  shouldAnimateFallingEffect: shouldAnimateFallingEffect,
+            extendBody: true,
+            // ⚡ Dùng child param để foregroundContent không bị rebuild khi UiPrefs thay đổi
+            body: ValueListenableBuilder<UiPrefsState>(
+              valueListenable: UiPrefs.notifier,
+              builder: (context, uiState, child) {
+                final effectProfile = _resolveHomeEffectProfile(
+                  uiState,
+                  pauseAnimations: _isUserTabSwiping,
                 );
-              }
+                final graphicsQualityKey = effectProfile.graphicsQualityKey;
+                final resolvedThemeKey = _resolveThemeKey(uiState.themeKey);
+                final resolvedEffectKey = uiState.liteMode
+                    ? 'off'
+                    : _resolveEffectKey(
+                        uiState.fallingEffectKey, resolvedThemeKey);
+                final isDark = _isDarkTheme(resolvedThemeKey);
+                final shouldAnimateEffects =
+                    effectProfile.premiumEffects && resolvedEffectKey == 'off';
+                final shouldAnimateFallingEffect =
+                    effectProfile.animationEnabled &&
+                        resolvedEffectKey != 'off';
 
-              return ValueListenableBuilder<int>(
-                valueListenable: _vipThemeRotationTickNotifier,
-                builder: (context, _, __) {
-                  final rotatedThemeKey = _resolveThemeKey(uiState.themeKey);
-                  final rotatedEffectKey = uiState.liteMode
-                      ? 'off'
-                      : _resolveEffectKey(
-                          uiState.fallingEffectKey, rotatedThemeKey);
-                  final rotatedIsDark = _isDarkTheme(rotatedThemeKey);
-                  final rotatedShouldAnimateEffects =
-                      effectProfile.premiumEffects && rotatedEffectKey == 'off';
-                  final rotatedShouldAnimateFallingEffect =
-                      effectProfile.animationEnabled &&
-                          rotatedEffectKey != 'off';
+                final shellChild = child ?? const SizedBox.shrink();
+
+                if (uiState.themeKey.trim() != 'theme-vip-rotate') {
                   return _buildShellBody(
                     foregroundChild: shellChild,
-                    isDark: rotatedIsDark,
-                    resolvedThemeKey: rotatedThemeKey,
-                    resolvedEffectKey: rotatedEffectKey,
+                    isDark: isDark,
+                    resolvedThemeKey: resolvedThemeKey,
+                    resolvedEffectKey: resolvedEffectKey,
                     graphicsQualityKey: graphicsQualityKey,
-                    shouldAnimateEffects: rotatedShouldAnimateEffects,
-                    shouldAnimateFallingEffect:
-                        rotatedShouldAnimateFallingEffect,
+                    shouldAnimateEffects: shouldAnimateEffects,
+                    shouldAnimateFallingEffect: shouldAnimateFallingEffect,
                   );
-                },
-              );
-            },
-            child: foregroundContent,
+                }
+
+                return ValueListenableBuilder<int>(
+                  valueListenable: _vipThemeRotationTickNotifier,
+                  builder: (context, _, __) {
+                    final rotatedThemeKey = _resolveThemeKey(uiState.themeKey);
+                    final rotatedEffectKey = uiState.liteMode
+                        ? 'off'
+                        : _resolveEffectKey(
+                            uiState.fallingEffectKey, rotatedThemeKey);
+                    final rotatedIsDark = _isDarkTheme(rotatedThemeKey);
+                    final rotatedShouldAnimateEffects =
+                        effectProfile.premiumEffects &&
+                            rotatedEffectKey == 'off';
+                    final rotatedShouldAnimateFallingEffect =
+                        effectProfile.animationEnabled &&
+                            rotatedEffectKey != 'off';
+                    return _buildShellBody(
+                      foregroundChild: shellChild,
+                      isDark: rotatedIsDark,
+                      resolvedThemeKey: rotatedThemeKey,
+                      resolvedEffectKey: rotatedEffectKey,
+                      graphicsQualityKey: graphicsQualityKey,
+                      shouldAnimateEffects: rotatedShouldAnimateEffects,
+                      shouldAnimateFallingEffect:
+                          rotatedShouldAnimateFallingEffect,
+                    );
+                  },
+                );
+              },
+              child: foregroundContent,
+            ),
+            bottomNavigationBar: ValueListenableBuilder<UiPrefsState>(
+              valueListenable: UiPrefs.notifier,
+              builder: (context, uiState, _) {
+                final resolvedThemeKey = _resolveThemeKey(uiState.themeKey);
+                return _buildBottomNav(isDark: _isDarkTheme(resolvedThemeKey));
+              },
+            ),
           ),
-          bottomNavigationBar: ValueListenableBuilder<UiPrefsState>(
-            valueListenable: UiPrefs.notifier,
-            builder: (context, uiState, _) {
-              final resolvedThemeKey = _resolveThemeKey(uiState.themeKey);
-              return _buildBottomNav(isDark: _isDarkTheme(resolvedThemeKey));
-            },
-          ),
-        ),
         ),
       ),
     );
@@ -1655,7 +1690,8 @@ class _HomeScreenState extends State<HomeScreen>
     final key = raw.isEmpty ? 'auto' : raw;
     if (key != 'auto') return key;
 
-    if (resolvedThemeKey == 'off' || UiPrefs.notifier.value.customBackgroundUrl.isNotEmpty) {
+    if (resolvedThemeKey == 'off' ||
+        UiPrefs.notifier.value.customBackgroundUrl.isNotEmpty) {
       return 'off';
     }
 

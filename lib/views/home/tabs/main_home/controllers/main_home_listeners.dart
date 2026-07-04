@@ -30,16 +30,15 @@ extension _MainHomeListeners on _MainHomeTabState {
   void _listenHomeCalendarEvents(String houseId) {
     _homeCalendarSubscription?.cancel();
     final calendarRef = _dbRef.child('houses/$houseId/calendar');
-    _homeCalendarSubscription = calendarRef
-        .onValue
-        .listen((event) {
+    _homeCalendarSubscription = calendarRef.onValue.listen((event) {
       if (!mounted || !_isTabActive) return;
       if (event.snapshot.value == null) {
         _safeSetState(() {
           _homeCalendarEvents = [];
         });
         _calendarWidgetSyncDebounce?.cancel();
-        _calendarWidgetSyncDebounce = Timer(const Duration(milliseconds: 500), () {
+        _calendarWidgetSyncDebounce =
+            Timer(const Duration(milliseconds: 500), () {
           if (!mounted) return;
           unawaited(WidgetService.syncCalendarWidgetData(houseId: houseId));
         });
@@ -55,7 +54,8 @@ extension _MainHomeListeners on _MainHomeTabState {
           final eventsMap = Map<dynamic, dynamic>.from(dateEvents);
           eventsMap.forEach((key, val) {
             if (val is! Map) return;
-            final map = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(val));
+            final map =
+                Map<String, dynamic>.from(Map<dynamic, dynamic>.from(val));
             parsedEvents.add({
               'id': key,
               'dateKey': dateKey.toString(),
@@ -70,7 +70,8 @@ extension _MainHomeListeners on _MainHomeTabState {
         });
         // Debounce 500ms trước khi sync calendar widget
         _calendarWidgetSyncDebounce?.cancel();
-        _calendarWidgetSyncDebounce = Timer(const Duration(milliseconds: 500), () {
+        _calendarWidgetSyncDebounce =
+            Timer(const Duration(milliseconds: 500), () {
           if (!mounted) return;
           unawaited(WidgetService.syncCalendarWidgetData(houseId: houseId));
         });
@@ -85,13 +86,12 @@ extension _MainHomeListeners on _MainHomeTabState {
   void _listenHealthCycleForWidgetSync(String houseId) {
     _healthCycleSyncSubscription?.cancel();
     final healthRef = _dbRef.child('houses/$houseId/health_cycle');
-    _healthCycleSyncSubscription = healthRef
-        .onValue
-        .listen((event) {
+    _healthCycleSyncSubscription = healthRef.onValue.listen((event) {
       if (!mounted || !_isTabActive || !event.snapshot.exists) return;
       // Debounce 500ms trước khi sync cycle widget
       _healthCycleWidgetSyncDebounce?.cancel();
-      _healthCycleWidgetSyncDebounce = Timer(const Duration(milliseconds: 500), () {
+      _healthCycleWidgetSyncDebounce =
+          Timer(const Duration(milliseconds: 500), () {
         if (!mounted) return;
         unawaited(WidgetService.syncCycleWidgetData(houseId: houseId));
       });
@@ -136,16 +136,16 @@ extension _MainHomeListeners on _MainHomeTabState {
           return right.compareTo(left);
         });
       // Cập nhật ts tin nhắn gần nhất (dùng để tính banner "lâu không nhắn")
-      final latestTs = items.isNotEmpty
-          ? (items.first['ts'] as num?)?.toInt() ?? 0
-          : 0;
+      final latestTs =
+          items.isNotEmpty ? (items.first['ts'] as num?)?.toInt() ?? 0 : 0;
       if (latestTs > 0 && latestTs != _lastChatMessageTs) {
         _safeSetState(() => _lastChatMessageTs = latestTs);
       }
       final partnerSenderId = _currentRole == 'user1' ? 'U2' : 'U1';
       final nextSignals = items
           .where((item) => (item['type'] ?? 'text').toString() == 'text')
-          .where((item) => item['senderId'] == partnerSenderId && item['isRead'] != true)
+          .where((item) =>
+              item['senderId'] == partnerSenderId && item['isRead'] != true)
           .map((item) => (item['text'] ?? item['content'] ?? '').toString())
           .map((text) => text.trim())
           .where((text) => text.isNotEmpty)

@@ -68,7 +68,10 @@ class AuthHouseContextService {
       final prefs = await SharedPreferences.getInstance();
       String cached = prefs.getString('il_house_id')?.trim() ?? '';
       if (cached.isEmpty) {
-        cached = (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
+        cached = (await SecureStorageService.instance
+                    .read(SecureStorageService.keyHouseId))
+                ?.trim() ??
+            '';
       }
       if (cached.isNotEmpty) {
         _memHouseId = cached;
@@ -353,7 +356,8 @@ class AuthHouseContextService {
           final role = data['role']?.toString().trim();
           if (role == 'user1' || role == 'user2') {
             await prefs.setString('il_role', role!);
-            await SecureStorageService.instance.write(SecureStorageService.keyRole, role);
+            await SecureStorageService.instance
+                .write(SecureStorageService.keyRole, role);
             return;
           }
         }
@@ -367,7 +371,8 @@ class AuthHouseContextService {
       if (ownerUid != null && ownerUid.isNotEmpty) {
         final resolvedRole = (ownerUid == uid) ? 'user1' : 'user2';
         await prefs.setString('il_role', resolvedRole);
-        await SecureStorageService.instance.write(SecureStorageService.keyRole, resolvedRole);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyRole, resolvedRole);
       }
     } catch (_) {}
   }
@@ -376,24 +381,33 @@ class AuthHouseContextService {
     final prefs = await _prefs;
     String cachedHouseId = prefs.getString('il_house_id')?.trim() ?? '';
     if (cachedHouseId.isEmpty) {
-      cachedHouseId = (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
+      cachedHouseId = (await SecureStorageService.instance
+                  .read(SecureStorageService.keyHouseId))
+              ?.trim() ??
+          '';
     }
     String cachedAuthUid = prefs.getString(_authUidPrefsKey)?.trim() ?? '';
     if (cachedAuthUid.isEmpty) {
-      cachedAuthUid = (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? '';
+      cachedAuthUid = (await SecureStorageService.instance
+                  .read(SecureStorageService.keyAuthUid))
+              ?.trim() ??
+          '';
     }
     final resolvedUser = user ?? _auth.currentUser;
     if (cachedHouseId.isNotEmpty) {
       if (resolvedUser != null && cachedAuthUid == resolvedUser.uid) {
         final localRole = prefs.getString('il_role');
-        if (localRole == null || (localRole != 'user1' && localRole != 'user2')) {
-          await _restoreRoleFromDatabase(cachedHouseId, resolvedUser.uid, prefs);
+        if (localRole == null ||
+            (localRole != 'user1' && localRole != 'user2')) {
+          await _restoreRoleFromDatabase(
+              cachedHouseId, resolvedUser.uid, prefs);
         }
         return cachedHouseId;
       }
       await prefs.remove('il_house_id');
       await prefs.remove('il_role');
-      await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
+      await SecureStorageService.instance
+          .delete(SecureStorageService.keyHouseId);
       await SecureStorageService.instance.delete(SecureStorageService.keyRole);
     }
 
@@ -407,8 +421,10 @@ class AuthHouseContextService {
         await prefs.setString('il_house_id', primaryValue);
         setMemHouseId(primaryValue);
         await prefs.setString(_authUidPrefsKey, resolvedUser.uid);
-        await SecureStorageService.instance.write(SecureStorageService.keyHouseId, primaryValue);
-        await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, resolvedUser.uid);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyHouseId, primaryValue);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyAuthUid, resolvedUser.uid);
         await _restoreRoleFromDatabase(primaryValue, resolvedUser.uid, prefs);
         return primaryValue;
       }
@@ -425,8 +441,10 @@ class AuthHouseContextService {
         await prefs.setString('il_house_id', legacyValue);
         setMemHouseId(legacyValue);
         await prefs.setString(_authUidPrefsKey, resolvedUser.uid);
-        await SecureStorageService.instance.write(SecureStorageService.keyHouseId, legacyValue);
-        await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, resolvedUser.uid);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyHouseId, legacyValue);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyAuthUid, resolvedUser.uid);
         await _restoreRoleFromDatabase(legacyValue, resolvedUser.uid, prefs);
         return legacyValue;
       }

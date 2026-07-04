@@ -133,7 +133,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       ? (_maxCallSeconds - _elapsedSeconds).clamp(0, _maxCallSeconds)
       : 0;
 
-  bool get _isWarning => _maxCallSeconds > 0 &&
+  bool get _isWarning =>
+      _maxCallSeconds > 0 &&
       _remainingSeconds > 0 &&
       _remainingSeconds <= AppConfig.callEndWarningSeconds;
 
@@ -476,7 +477,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   Widget _buildWaitingState(String callLabel) {
     return Center(
       child: Text(
-        _isPreparing ? 'Đang khởi tạo $callLabel...' : context.tr('relationship_angchktni_a08068'),
+        _isPreparing
+            ? 'Đang khởi tạo $callLabel...'
+            : context.tr('relationship_angchktni_a08068'),
         style: SLTheme.quicksand(color: Colors.white54, fontSize: 16),
       ),
     );
@@ -525,7 +528,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             ),
             SLSpacing.h8,
             Text(
-              _isPreparing ? 'Đang kết nối $callLabel...' : context.tr('relationship_micangbt_8c0d7f'),
+              _isPreparing
+                  ? 'Đang kết nối $callLabel...'
+                  : context.tr('relationship_micangbt_8c0d7f'),
               style: SLTheme.quicksand(
                 color: Colors.white70,
                 fontSize: 14,

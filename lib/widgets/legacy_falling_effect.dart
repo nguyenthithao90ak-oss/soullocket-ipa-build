@@ -61,7 +61,8 @@ class _LegacyFallingEffectState extends State<LegacyFallingEffect>
   }
 
   void _syncAnimationState() {
-    final shouldAnimateNow = _shouldAnimate && TickerMode.valuesOf(context).enabled;
+    final shouldAnimateNow =
+        _shouldAnimate && TickerMode.valuesOf(context).enabled;
     if (shouldAnimateNow) {
       final controller = _controller ??= AnimationController(
         vsync: this,
@@ -72,7 +73,9 @@ class _LegacyFallingEffectState extends State<LegacyFallingEffect>
         if (!_startupDelayApplied) {
           _startupDelayApplied = true;
           Future.delayed(_initialAnimationDelay, () {
-            if (mounted && _shouldAnimate && TickerMode.valuesOf(context).enabled) {
+            if (mounted &&
+                _shouldAnimate &&
+                TickerMode.valuesOf(context).enabled) {
               controller.repeat();
             }
           });
@@ -304,7 +307,8 @@ class _LegacyFallingEffectState extends State<LegacyFallingEffect>
       child: AnimatedBuilder(
         animation: controller,
         builder: (context, child) {
-          final shouldAnimateNow = _shouldAnimate && TickerMode.valuesOf(context).enabled;
+          final shouldAnimateNow =
+              _shouldAnimate && TickerMode.valuesOf(context).enabled;
           if (shouldAnimateNow) {
             _tickParticles();
           }
@@ -513,8 +517,8 @@ class _LegacyFallingPainter extends CustomPainter {
     }
 
     paint
-      ..color =
-          (isDark ? const Color(0xFFFFF4C1) : Colors.white).withValues(alpha: alpha)
+      ..color = (isDark ? const Color(0xFFFFF4C1) : Colors.white)
+          .withValues(alpha: alpha)
       ..style = PaintingStyle.fill;
     _drawSparkle(canvas, paint, particle.size);
   }
@@ -547,8 +551,8 @@ class _LegacyFallingPainter extends CustomPainter {
     if (useLiteRendering) {
       paint
         ..shader = null
-        ..color =
-            (isDark ? const Color(0xFFA7EEFF) : Colors.white).withValues(alpha: alpha)
+        ..color = (isDark ? const Color(0xFFA7EEFF) : Colors.white)
+            .withValues(alpha: alpha)
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round
         ..strokeWidth = (particle.size * 0.09).clamp(1.0, 2.4);
@@ -596,8 +600,8 @@ class _LegacyFallingPainter extends CustomPainter {
     );
 
     paint
-      ..color =
-          (isDark ? const Color(0xFF7FE8FF) : Colors.white).withValues(alpha: alpha)
+      ..color = (isDark ? const Color(0xFF7FE8FF) : Colors.white)
+          .withValues(alpha: alpha)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(
       Offset(particle.size * 0.78, particle.size * 0.2),
@@ -641,8 +645,8 @@ class _LegacyFallingPainter extends CustomPainter {
     _LegacyParticle particle,
     double alpha,
   ) {
-    final frostColor =
-        (isDark ? const Color(0xFFE8FAFF) : Colors.white).withValues(alpha: alpha);
+    final frostColor = (isDark ? const Color(0xFFE8FAFF) : Colors.white)
+        .withValues(alpha: alpha);
     final glowColor =
         (isDark ? const Color(0xFFBFE8FF) : const Color(0xFFD9F3FF))
             .withValues(alpha: alpha * 0.38);
@@ -841,7 +845,10 @@ class _LegacyFallingPainter extends CustomPainter {
     for (var i = 0; i < particles.length; i++) {
       final a = particles[i];
       final b = oldDelegate.particles[i];
-      if (a.x != b.x || a.y != b.y || a.rotation != b.rotation || a.twinkle != b.twinkle) {
+      if (a.x != b.x ||
+          a.y != b.y ||
+          a.rotation != b.rotation ||
+          a.twinkle != b.twinkle) {
         return true;
       }
     }

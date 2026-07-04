@@ -1,4 +1,3 @@
-
 part of '../settings_tab.dart';
 
 const List<String> _kSettingsSupportedEmailDomains = <String>[
@@ -109,14 +108,20 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
               children: [
                 Text(
                   isSending
-                      ? L10nService().format('home_sending_otp_email', {'email': email})
+                      ? L10nService()
+                          .format('home_sending_otp_email', {'email': email})
                       : isVerifying
                           ? context.tr('home_angkimtram_b80b59')
                           : sendError != null
-                              ? L10nService().format('home_send_otp_failed', {'error': sendError!})
+                              ? L10nService().format(
+                                  'home_send_otp_failed', {'error': sendError!})
                               : verifyError != null
-                                  ? L10nService().format('home_otp_invalid_or_expired', {'error': verifyError!})
-                                  : L10nService().format('home_otp_sent_to_email', {'email': email}),
+                                  ? L10nService().format(
+                                      'home_otp_invalid_or_expired',
+                                      {'error': verifyError!})
+                                  : L10nService().format(
+                                      'home_otp_sent_to_email',
+                                      {'email': email}),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -185,14 +190,15 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
                 ),
                 onPressed: canConfirm
                     ? () async {
-                        final verifyTimeoutMsg = context.tr('home_kimtramxcn_cd2cff');
-                        final invalidOtpMsg = context.tr('home_vuilngnhp6_526103');
+                        final verifyTimeoutMsg =
+                            context.tr('home_kimtramxcn_cd2cff');
+                        final invalidOtpMsg =
+                            context.tr('home_vuilngnhp6_526103');
                         final otp = otpCtrl.text.trim();
                         if (otp.length != 6) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content:
-                                  Text(invalidOtpMsg),
+                              content: Text(invalidOtpMsg),
                             ),
                           );
                           return;
@@ -325,14 +331,21 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                 children: [
                   Text(
                     isSending
-                        ? L10nService().format('home_sending_reset_password_email', {'email': email})
+                        ? L10nService().format(
+                            'home_sending_reset_password_email',
+                            {'email': email})
                         : isVerifying
                             ? context.tr('home_angkimtram_9b5339')
                             : sendError != null
-                                ? L10nService().format('home_send_otp_failed', {'error': sendError!})
+                                ? L10nService().format('home_send_otp_failed',
+                                    {'error': sendError!})
                                 : verifyError != null
-                                    ? L10nService().format('home_reset_password_failed', {'error': verifyError!})
-                                    : L10nService().format('home_reset_otp_sent', {'email': email}),
+                                    ? L10nService().format(
+                                        'home_reset_password_failed',
+                                        {'error': verifyError!})
+                                    : L10nService().format(
+                                        'home_reset_otp_sent',
+                                        {'email': email}),
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
@@ -432,16 +445,18 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                 ),
                 onPressed: canConfirm
                     ? () async {
-                        final invalidOtpMsg = context.tr('home_vuilngnhp6_526103');
-                        final invalidPasswordMsg = context.tr('home_mtkhumiphi_472132');
-                        final verifyTimeoutMsg = context.tr('home_imtkhuqulu_bfeb3a');
+                        final invalidOtpMsg =
+                            context.tr('home_vuilngnhp6_526103');
+                        final invalidPasswordMsg =
+                            context.tr('home_mtkhumiphi_472132');
+                        final verifyTimeoutMsg =
+                            context.tr('home_imtkhuqulu_bfeb3a');
                         final otp = otpCtrl.text.trim();
                         final newPassword = newPasswordCtrl.text;
                         if (otp.length != 6) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content:
-                                  Text(invalidOtpMsg),
+                              content: Text(invalidOtpMsg),
                             ),
                           );
                           return;
@@ -552,16 +567,21 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
     }
     try {
       final snaps = await Future.wait([
-        _dbRef.child('houses/$houseId/scheduledDeletionAt').get().timeout(const Duration(seconds: 3)),
-        _dbRef.child('houses/$houseId/scheduledDeletionUid').get().timeout(const Duration(seconds: 3)),
+        _dbRef
+            .child('houses/$houseId/scheduledDeletionAt')
+            .get()
+            .timeout(const Duration(seconds: 3)),
+        _dbRef
+            .child('houses/$houseId/scheduledDeletionUid')
+            .get()
+            .timeout(const Duration(seconds: 3)),
       ]);
 
       final deletionAtSnap = snaps[0];
       final deletionUidSnap = snaps[1];
 
       final deletionAt = _toIntOrNull(deletionAtSnap.value) ?? 0;
-      final deletionUid =
-          (deletionUidSnap.value ?? '').toString().trim();
+      final deletionUid = (deletionUidSnap.value ?? '').toString().trim();
       if (!mounted) return;
       setState(() {
         _pendingAccountDeletionAtMs =
@@ -659,8 +679,10 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
           final relMode =
               (data['relationshipMode'] ?? syncedRelationshipMode ?? 'single')
                   .toString();
-          final storedRole =
-              _normalizeSettingsRoleKey(data['role']?.toString() ?? data['currentRole']?.toString() ?? data['activeRole']?.toString());
+          final storedRole = _normalizeSettingsRoleKey(
+              data['role']?.toString() ??
+                  data['currentRole']?.toString() ??
+                  data['activeRole']?.toString());
           final activeRoleKey = _resolveSettingsActiveRoleKey(
             relationshipMode: relMode,
             storedRole: storedRole,
@@ -680,8 +702,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
           if (mounted) {
             setState(() {
               _houseIdChanged = data['houseIdChanged'] == true;
-              _houseName =
-                  data['houseName'] ?? loveHouseDefaultName;
+              _houseName = data['houseName'] ?? loveHouseDefaultName;
               _homeShowHouseName = data.containsKey('homeShowHouseName')
                   ? (data['homeShowHouseName'] == true ||
                       data['homeShowHouseName'] == 'true')
@@ -693,9 +714,8 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
               _avatarUrl2 = data['avtUser2'] ?? '';
               _dobU1 = data['dobU1'] ?? '';
               _dobU2 = data['dobU2'] ?? '';
-              _loveUnit = resolvedLoveUnit.isEmpty
-                  ? loveDaysUnitMsg
-                  : resolvedLoveUnit;
+              _loveUnit =
+                  resolvedLoveUnit.isEmpty ? loveDaysUnitMsg : resolvedLoveUnit;
               _relationshipMode = relMode;
               _activeRoleKey = resolvedActiveRoleKey;
               _musicAutoplay = _musicAutoplay;
@@ -759,14 +779,15 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
               _smartLoveNoteReminder =
                   _toBoolOrNull(data['smartReminderLoveNote']) ??
                       _smartLoveNoteReminder;
-              _smartSleepReminder =
-                  _toBoolOrNull(data['smartReminderSleep']) ??
-                      _smartSleepReminder;
-              final dbMorningTime = data['goodMorningTime']?.toString().trim() ?? '';
+              _smartSleepReminder = _toBoolOrNull(data['smartReminderSleep']) ??
+                  _smartSleepReminder;
+              final dbMorningTime =
+                  data['goodMorningTime']?.toString().trim() ?? '';
               if (dbMorningTime.isNotEmpty) {
                 _goodMorningTime = dbMorningTime;
               }
-              final dbNightTime = data['goodNightTime']?.toString().trim() ?? '';
+              final dbNightTime =
+                  data['goodNightTime']?.toString().trim() ?? '';
               if (dbNightTime.isNotEmpty) {
                 _goodNightTime = dbNightTime;
               }
@@ -791,11 +812,15 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
           // Chạy song song sau khi UI đã mở — không chặn màn hình Cài đặt
           unawaited(Future.wait([
             if (relMode == 'couple' && _houseId != null)
-              _houseSettingsService.isCoupleConnected(_houseId!).then((connected) {
+              _houseSettingsService
+                  .isCoupleConnected(_houseId!)
+                  .then((connected) {
                 if (mounted) setState(() => _isCoupleConnected = connected);
               })
             else
-              Future(() { if (mounted) setState(() => _isCoupleConnected = false); }),
+              Future(() {
+                if (mounted) setState(() => _isCoupleConnected = false);
+              }),
             _loadSecurityDetails(),
             _refreshBreakupRequestState(),
             _loadVipStatus(),

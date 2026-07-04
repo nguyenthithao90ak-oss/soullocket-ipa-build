@@ -41,10 +41,13 @@ class _ArenaBoardPanel extends StatelessWidget {
         currentRoom?.isActive == true && currentRoom?.turnRole == myRole;
 
     final resolvedMyName =
-        (myName ?? context.tr('util_bn_1fd75b')).trim().isEmpty ? context.tr('util_bn_1fd75b') : (myName ?? context.tr('util_bn_1fd75b')).trim();
-    final resolvedOpponentName = (opponentName ?? context.tr('util_ngiy_5bab37')).trim().isEmpty
-        ? context.tr('util_ngiy_5bab37')
-        : (opponentName ?? context.tr('util_ngiy_5bab37')).trim();
+        (myName ?? context.tr('util_bn_1fd75b')).trim().isEmpty
+            ? context.tr('util_bn_1fd75b')
+            : (myName ?? context.tr('util_bn_1fd75b')).trim();
+    final resolvedOpponentName =
+        (opponentName ?? context.tr('util_ngiy_5bab37')).trim().isEmpty
+            ? context.tr('util_ngiy_5bab37')
+            : (opponentName ?? context.tr('util_ngiy_5bab37')).trim();
 
     String subtitle;
     if (currentRoom == null) {
@@ -75,7 +78,9 @@ class _ArenaBoardPanel extends StatelessWidget {
     String? secondaryActionLabel;
     VoidCallback? secondaryAction;
     if (currentRoom == null) {
-      overlayTitle = isBotMode ? context.tr('util_chacvnno_79d99b') : context.tr('util_chambn_96d88c');
+      overlayTitle = isBotMode
+          ? context.tr('util_chacvnno_79d99b')
+          : context.tr('util_chambn_96d88c');
       overlayCaption = isBotMode
           ? context.tr('util_quaylitabs_53de85')
           : context.tr('util_quaylitabs_725d3f');
@@ -100,8 +105,7 @@ class _ArenaBoardPanel extends StatelessWidget {
     } else if (currentRoom.isDone) {
       if (currentRoom.isDraw) {
         overlayTitle = context.tr('util_vnha_b83a70');
-        overlayCaption =
-            context.tr('util_khngaichin_cf71f0');
+        overlayCaption = context.tr('util_khngaichin_cf71f0');
         overlayIcon = Icons.handshake_rounded;
       } else if (currentRoom.winnerRole == myRole) {
         overlayTitle = context.tr('util_bnchinthng_5edacf');
@@ -240,7 +244,9 @@ class _ArenaBoardPanel extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 _TinyPill(
-                  text: isWideBoard ? context.tr('util_5thng_5e66bf') : context.tr('util_3thng_080f34'),
+                  text: isWideBoard
+                      ? context.tr('util_5thng_5e66bf')
+                      : context.tr('util_3thng_080f34'),
                   color: isWideBoard
                       ? const Color(0xFFFFD76F)
                       : const Color(0xFF4EDBFF),
@@ -378,7 +384,8 @@ class _BoardStateCallout extends StatelessWidget {
                         onPressed: onSecondaryTap,
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white,
-                          side: BorderSide(color: accent.withValues(alpha: 0.4)),
+                          side:
+                              BorderSide(color: accent.withValues(alpha: 0.4)),
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -528,7 +535,9 @@ class _BoardPanel extends StatelessWidget {
                 ),
               ),
               _TinyPill(
-                text: isWideBoard ? context.tr('util_kongang_2ac68f') : context.tr('util_chmnh_373341'),
+                text: isWideBoard
+                    ? context.tr('util_kongang_2ac68f')
+                    : context.tr('util_chmnh_373341'),
                 color: isWideBoard
                     ? const Color(0xFFFFD76F)
                     : const Color(0xFF4EDBFF),

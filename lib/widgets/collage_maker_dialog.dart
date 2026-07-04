@@ -58,42 +58,42 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
   final Map<String, ui.Image> _decodedImageCache = {};
   int _generationTicket = 0;
   static List<_DialogStylePreset> get _stylePresets => [
-    _DialogStylePreset(
-      id: 'grid',
-      label: L10nService().translate('collage_style_grid'),
-      subtitle: L10nService().translate('collage_style_balanced'),
-      accent: _dialogPaperRoseDeep,
-      background: const Color(0xFFF7EDE3),
-    ),
-    _DialogStylePreset(
-      id: 'masonry',
-      label: L10nService().translate('collage_style_masonry'),
-      subtitle: L10nService().translate('collage_style_offset_rhythm'),
-      accent: _dialogPaperMistDeep,
-      background: const Color(0xFFF0F2EA),
-    ),
-    _DialogStylePreset(
-      id: 'polaroid',
-      label: L10nService().translate('collage_style_polaroid'),
-      subtitle: L10nService().translate('collage_style_raised_frame'),
-      accent: _dialogPaperRose,
-      background: const Color(0xFFFFF7EF),
-    ),
-    _DialogStylePreset(
-      id: 'scatter',
-      label: L10nService().translate('collage_style_scatter'),
-      subtitle: L10nService().translate('collage_style_playful'),
-      accent: _dialogPaperRoseDeep,
-      background: const Color(0xFFF6ECE3),
-    ),
-    _DialogStylePreset(
-      id: 'heart',
-      label: L10nService().translate('collage_style_heart'),
-      subtitle: L10nService().translate('collage_style_soft'),
-      accent: _dialogPaperMistDeep,
-      background: const Color(0xFFF0F1EA),
-    ),
-  ];
+        _DialogStylePreset(
+          id: 'grid',
+          label: L10nService().translate('collage_style_grid'),
+          subtitle: L10nService().translate('collage_style_balanced'),
+          accent: _dialogPaperRoseDeep,
+          background: const Color(0xFFF7EDE3),
+        ),
+        _DialogStylePreset(
+          id: 'masonry',
+          label: L10nService().translate('collage_style_masonry'),
+          subtitle: L10nService().translate('collage_style_offset_rhythm'),
+          accent: _dialogPaperMistDeep,
+          background: const Color(0xFFF0F2EA),
+        ),
+        _DialogStylePreset(
+          id: 'polaroid',
+          label: L10nService().translate('collage_style_polaroid'),
+          subtitle: L10nService().translate('collage_style_raised_frame'),
+          accent: _dialogPaperRose,
+          background: const Color(0xFFFFF7EF),
+        ),
+        _DialogStylePreset(
+          id: 'scatter',
+          label: L10nService().translate('collage_style_scatter'),
+          subtitle: L10nService().translate('collage_style_playful'),
+          accent: _dialogPaperRoseDeep,
+          background: const Color(0xFFF6ECE3),
+        ),
+        _DialogStylePreset(
+          id: 'heart',
+          label: L10nService().translate('collage_style_heart'),
+          subtitle: L10nService().translate('collage_style_soft'),
+          accent: _dialogPaperMistDeep,
+          background: const Color(0xFFF0F1EA),
+        ),
+      ];
 
   @override
   void initState() {
@@ -188,7 +188,9 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
           return;
         }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(L10nService().translate('collage_no_old_photos_retry'))) ,
+          SnackBar(
+              content:
+                  Text(L10nService().translate('collage_no_old_photos_retry'))),
         );
         return;
       }
@@ -386,7 +388,8 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
     if (parts.length != 2) {
       return value;
     }
-    return L10nService().format('core_month_year', {'month': parts[1], 'year': parts[0]});
+    return L10nService()
+        .format('core_month_year', {'month': parts[1], 'year': parts[0]});
   }
 
   Future<void> _pickDevicePhotos() async {
@@ -403,7 +406,9 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
           if (_deviceFiles.length > 50) {
             _deviceFiles.removeRange(50, _deviceFiles.length);
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(L10nService().translate('collage_max_50_photos'))) ,
+              SnackBar(
+                  content:
+                      Text(L10nService().translate('collage_max_50_photos'))),
             );
           }
         });
@@ -494,7 +499,8 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
     timeoutTimer = Timer(const Duration(seconds: 18), () {
       if (completer.isCompleted) return;
       cleanup();
-      completer.completeError(TimeoutException(L10nService().translate('collage_image_load_timeout')));
+      completer.completeError(TimeoutException(
+          L10nService().translate('collage_image_load_timeout')));
     });
 
     stream.addListener(listener);
@@ -532,7 +538,8 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
           } catch (e) {
             debugPrint('Error loading image $url: ${AppErrorMapper.resolve(
               e,
-              fallbackMessage: L10nService().translate('collage_load_one_image_failed'),
+              fallbackMessage:
+                  L10nService().translate('collage_load_one_image_failed'),
             ).message}');
             return null;
           }
@@ -556,7 +563,9 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
     var urls = _getFilteredUrls();
     if (urls.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(L10nService().translate('collage_no_photos_selected'))) ,
+        SnackBar(
+            content:
+                Text(L10nService().translate('collage_no_photos_selected'))),
       );
       return;
     }
@@ -569,9 +578,11 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
         if (_isFromMemory) {
           resolvedTitle = _selectedMonth == 'all'
               ? L10nService().translate('collage_default_title_our_memories')
-              : L10nService().format('collage_default_title_month', {'month': _selectedMonth.split('-')[1]});
+              : L10nService().format('collage_default_title_month',
+                  {'month': _selectedMonth.split('-')[1]});
         } else {
-          resolvedTitle = L10nService().translate('collage_default_title_wonderful');
+          resolvedTitle =
+              L10nService().translate('collage_default_title_wonderful');
         }
       }
       await PendingUploadService.instance.save(
@@ -607,7 +618,8 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
         if (_isFromMemory) {
           title = _selectedMonth == 'all'
               ? L10nService().translate('collage_default_title_our_memories')
-              : L10nService().format('collage_default_title_month', {'month': _selectedMonth.split('-')[1]});
+              : L10nService().format('collage_default_title_month',
+                  {'month': _selectedMonth.split('-')[1]});
         } else {
           title = L10nService().translate('collage_default_title_wonderful');
         }
@@ -633,7 +645,9 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
         if (mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(L10nService().translate('collage_saved_to_album'))) ,
+            SnackBar(
+                content:
+                    Text(L10nService().translate('collage_saved_to_album'))),
           );
         }
       }
@@ -684,7 +698,9 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
               children: [
                 Transform.rotate(
                   angle: -0.05,
-                  child: _DialogStamp(label: L10nService().translate('collage_quick_edit_stamp')),
+                  child: _DialogStamp(
+                      label:
+                          L10nService().translate('collage_quick_edit_stamp')),
                 ),
                 SLSpacing.w8,
                 Text(
@@ -732,8 +748,8 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                           boxShadow: _isFromMemory
                               ? [
                                   BoxShadow(
-                                    color:
-                                        _dialogPaperRoseDeep.withValues(alpha: 0.10),
+                                    color: _dialogPaperRoseDeep.withValues(
+                                        alpha: 0.10),
                                     blurRadius: 16,
                                     offset: const Offset(0, 8),
                                   )
@@ -766,8 +782,8 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                           boxShadow: !_isFromMemory
                               ? [
                                   BoxShadow(
-                                    color:
-                                        _dialogPaperMistDeep.withValues(alpha: 0.10),
+                                    color: _dialogPaperMistDeep.withValues(
+                                        alpha: 0.10),
                                     blurRadius: 16,
                                     offset: const Offset(0, 8),
                                   )
@@ -821,7 +837,9 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                               flipped: true,
                             ),
                             child: Text(
-                              L10nService().format('core_photo_count', {'count': _memoryCountForMonth(_selectedMonth)}),
+                              L10nService().format('core_photo_count', {
+                                'count': _memoryCountForMonth(_selectedMonth)
+                              }),
                               style: SLTheme.quicksand(
                                 fontWeight: FontWeight.w800,
                                 color: _dialogPaperRoseDeep,
@@ -903,8 +921,8 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                                       ),
                                       decoration: BoxDecoration(
                                         color: isSelected
-                                            ? _dialogPaperRoseDeep
-                                                .withValues(alpha: 0.14)
+                                            ? _dialogPaperRoseDeep.withValues(
+                                                alpha: 0.14)
                                             : const Color(0xFFF3E5D9),
                                         borderRadius:
                                             BorderRadius.circular(999),
@@ -952,15 +970,20 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                               const Icon(Icons.cloud_upload,
                                   color: _dialogPaperRoseDeep, size: 24),
                               SLSpacing.h4,
-                              Text(L10nService().translate('collage_tap_select_photos'),
+                              Text(
+                                  L10nService()
+                                      .translate('collage_tap_select_photos'),
                                   style: SLTheme.quicksand(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
                                       color: _dialogPaperMuted)),
                               Text(
                                 _deviceFiles.isEmpty
-                                    ? L10nService().translate('collage_no_photos_chosen')
-                                    : L10nService().format('collage_selected_photo_count', {'count': _deviceFiles.length}),
+                                    ? L10nService()
+                                        .translate('collage_no_photos_chosen')
+                                    : L10nService().format(
+                                        'collage_selected_photo_count',
+                                        {'count': _deviceFiles.length}),
                                 style: SLTheme.quicksand(
                                     fontSize: 10, color: _dialogPaperMuted),
                               ),
@@ -982,19 +1005,28 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          _buildStyleOption('grid', Icons.grid_on, L10nService().translate('collage_style_even_grid')),
+                          _buildStyleOption(
+                              'grid',
+                              Icons.grid_on,
+                              L10nService()
+                                  .translate('collage_style_even_grid')),
+                          SLSpacing.w8,
+                          _buildStyleOption('masonry', Icons.view_quilt,
+                              L10nService().translate('collage_style_masonry')),
                           SLSpacing.w8,
                           _buildStyleOption(
-                              'masonry', Icons.view_quilt, L10nService().translate('collage_style_masonry')),
+                              'polaroid',
+                              Icons.photo_library,
+                              L10nService()
+                                  .translate('collage_style_polaroid')),
                           SLSpacing.w8,
                           _buildStyleOption(
-                              'polaroid', Icons.photo_library, L10nService().translate('collage_style_polaroid')),
+                              'scatter',
+                              Icons.auto_awesome_mosaic,
+                              L10nService().translate('collage_style_scatter')),
                           SLSpacing.w8,
-                          _buildStyleOption('scatter',
-                              Icons.auto_awesome_mosaic, L10nService().translate('collage_style_scatter')),
-                          SLSpacing.w8,
-                          _buildStyleOption(
-                              'heart', Icons.favorite, L10nService().translate('collage_style_heart')),
+                          _buildStyleOption('heart', Icons.favorite,
+                              L10nService().translate('collage_style_heart')),
                         ],
                       ),
                     ),
@@ -1056,7 +1088,9 @@ class _CollageMakerDialogState extends State<CollageMakerDialog> {
                           strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.auto_awesome),
               label: Text(
-                _isGenerating ? L10nService().translate('collage_generating') : L10nService().translate('collage_create'),
+                _isGenerating
+                    ? L10nService().translate('collage_generating')
+                    : L10nService().translate('collage_create'),
                 style: SLTheme.quicksand(
                     fontWeight: FontWeight.w800, fontSize: 16),
               ),

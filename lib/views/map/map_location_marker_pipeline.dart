@@ -68,7 +68,9 @@ extension _MapLocationMarkerPipelineExt on _MapScreenState {
               icon: Icons.auto_awesome_rounded,
               color: const Color(0xFF8B5CF6),
               title: memory.title,
-              subtitle: memory.note.isEmpty ? L10nService().translate('map_knimbn_288ae0') : memory.note,
+              subtitle: memory.note.isEmpty
+                  ? L10nService().translate('map_knimbn_288ae0')
+                  : memory.note,
               compact: true,
               onTap: () => _showMemoryDialog(memory),
             ),
@@ -170,7 +172,9 @@ extension _MapLocationMarkerPipelineExt on _MapScreenState {
           icon: Icons.auto_awesome_rounded,
           color: const Color(0xFF8B5CF6),
           title: memory.title,
-          subtitle: memory.note.isEmpty ? L10nService().translate('map_knimbn_288ae0') : memory.note,
+          subtitle: memory.note.isEmpty
+              ? L10nService().translate('map_knimbn_288ae0')
+              : memory.note,
           compact: true,
           onTap: () => _showMemoryDialog(memory),
         ),

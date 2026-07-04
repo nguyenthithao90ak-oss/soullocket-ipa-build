@@ -9,7 +9,8 @@ class BucketService {
   Future<void> addItem(String houseId, String title) async {
     final normalizedHouseId = houseId.trim();
     final normalizedTitle = title.trim();
-    if (normalizedHouseId.isEmpty) throw Exception('Thiếu mã nhà để thêm bucket.');
+    if (normalizedHouseId.isEmpty)
+      throw Exception('Thiếu mã nhà để thêm bucket.');
     if (normalizedTitle.isEmpty) throw Exception('Hãy nhập nội dung bucket.');
     final ref = _dbRef.child('houses/$normalizedHouseId/utilities/bucket');
     final snapshot = await ref.get();
@@ -125,9 +126,8 @@ class BucketService {
   Future<double> getCompletionProgress(String houseId) async {
     final normalizedHouseId = houseId.trim();
     if (normalizedHouseId.isEmpty) return 0.0;
-    final ds = await _dbRef
-        .child('houses/$normalizedHouseId/utilities/bucket')
-        .get();
+    final ds =
+        await _dbRef.child('houses/$normalizedHouseId/utilities/bucket').get();
     if (!ds.exists) return 0.0;
 
     final data = Map<dynamic, dynamic>.from(ds.value as Map);

@@ -47,16 +47,25 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
     if (t.contains('sinh nhật') || t.contains('sn') || t.contains('birthday')) {
       return Icons.cake_rounded;
     }
-    if (t.contains('kỷ niệm') || t.contains('yêu') || t.contains('love') || t.contains('anniversary')) {
+    if (t.contains('kỷ niệm') ||
+        t.contains('yêu') ||
+        t.contains('love') ||
+        t.contains('anniversary')) {
       return Icons.favorite_rounded;
     }
-    if (t.contains('du lịch') || t.contains('đi chơi') || t.contains('trip') || t.contains('flight')) {
+    if (t.contains('du lịch') ||
+        t.contains('đi chơi') ||
+        t.contains('trip') ||
+        t.contains('flight')) {
       return Icons.flight_takeoff_rounded;
     }
     if (t.contains('cưới') || t.contains('wedding') || t.contains('marry')) {
       return Icons.favorite_rounded;
     }
-    if (t.contains('học') || t.contains('thi') || t.contains('exam') || t.contains('study')) {
+    if (t.contains('học') ||
+        t.contains('thi') ||
+        t.contains('exam') ||
+        t.contains('study')) {
       return Icons.school_rounded;
     }
     return Icons.event_note_rounded;
@@ -65,11 +74,11 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
   Widget _buildDDayBadge(int diff, Color color) {
     final isPast = diff < 0;
     final displayDays = diff.abs();
-    
+
     String dDayText;
     Color badgeBgColor;
     Color textColor = Colors.white;
-    
+
     if (diff == 0) {
       dDayText = 'HÔM NAY';
       badgeBgColor = color;
@@ -81,19 +90,21 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
       dDayText = 'D- $displayDays';
       badgeBgColor = color;
     }
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         color: badgeBgColor,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: diff >= 0 ? [
-          BoxShadow(
-            color: color.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          )
-        ] : null,
+        boxShadow: diff >= 0
+            ? [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                )
+              ]
+            : null,
       ),
       child: Text(
         dDayText,
@@ -115,16 +126,20 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text('Sự Kiện & Kỷ Niệm', style: SLTypography.titleLarge.copyWith(color: SLColors.primary, fontWeight: FontWeight.w900)),
+        title: Text('Sự Kiện & Kỷ Niệm',
+            style: SLTypography.titleLarge.copyWith(
+                color: SLColors.primary, fontWeight: FontWeight.w900)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: SLColors.primary, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new,
+              color: SLColors.primary, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_to_home_screen_rounded, color: SLColors.secondary, size: 24),
+            icon: const Icon(Icons.add_to_home_screen_rounded,
+                color: SLColors.secondary, size: 24),
             tooltip: 'Thêm tiện ích ra màn hình',
             onPressed: () async {
               try {
@@ -132,7 +147,8 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Đã gửi yêu cầu ghim Tiện ích Sự kiện & Kỷ niệm!'),
+                    content:
+                        Text('Đã gửi yêu cầu ghim Tiện ích Sự kiện & Kỷ niệm!'),
                     backgroundColor: Colors.green,
                   ),
                 );
@@ -148,7 +164,8 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.add_circle, color: SLColors.primary, size: 28),
+            icon:
+                const Icon(Icons.add_circle, color: SLColors.primary, size: 28),
             onPressed: () => _openEditor(null),
           ),
         ],
@@ -157,36 +174,40 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
         child: StreamBuilder<List<SoulEvent>>(
           stream: SoulEventService().streamEvents(_houseId!),
           builder: (context, snapshot) {
-            if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+            if (!snapshot.hasData)
+              return const Center(child: CircularProgressIndicator());
             final events = snapshot.data!;
             if (events.isEmpty) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.event_available_rounded, color: SLColors.textSecond.withValues(alpha: 0.3), size: 64),
+                    Icon(Icons.event_available_rounded,
+                        color: SLColors.textSecond.withValues(alpha: 0.3),
+                        size: 64),
                     const SizedBox(height: 16),
                     Text('Chưa có sự kiện nào', style: SLTypography.bodyMedium),
                   ],
                 ),
               );
             }
-            
+
             // Sort events: pinned first, then by days diff (upcoming first, then past)
-            final sortedEvents = List<SoulEvent>.from(events)..sort((a, b) {
-              if (a.isPinned != b.isPinned) {
-                return a.isPinned ? -1 : 1;
-              }
-              final diffA = _calculateDaysDiff(a.dateMs);
-              final diffB = _calculateDaysDiff(b.dateMs);
-              if (diffA >= 0 && diffB >= 0) {
-                return diffA.compareTo(diffB);
-              } else if (diffA < 0 && diffB < 0) {
-                return diffB.compareTo(diffA);
-              } else {
-                return diffA >= 0 ? -1 : 1;
-              }
-            });
+            final sortedEvents = List<SoulEvent>.from(events)
+              ..sort((a, b) {
+                if (a.isPinned != b.isPinned) {
+                  return a.isPinned ? -1 : 1;
+                }
+                final diffA = _calculateDaysDiff(a.dateMs);
+                final diffB = _calculateDaysDiff(b.dateMs);
+                if (diffA >= 0 && diffB >= 0) {
+                  return diffA.compareTo(diffB);
+                } else if (diffA < 0 && diffB < 0) {
+                  return diffB.compareTo(diffA);
+                } else {
+                  return diffA >= 0 ? -1 : 1;
+                }
+              });
 
             return ListView.builder(
               physics: SLResponsive.scrollPhysicsForPlatform(),
@@ -195,15 +216,18 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
               itemBuilder: (context, index) {
                 final event = sortedEvents[index];
                 final diff = _calculateDaysDiff(event.dateMs);
-                final color = Color(int.tryParse(event.colorHex.replaceFirst('#', '0xFF')) ?? 0xFFFF4D94);
+                final color = Color(
+                    int.tryParse(event.colorHex.replaceFirst('#', '0xFF')) ??
+                        0xFFFF4D94);
                 final date = DateTime.fromMillisecondsSinceEpoch(event.dateMs);
                 final dateStr = '${date.day} thg ${date.month}, ${date.year}';
 
                 return GestureDetector(
                   onTap: () => Navigator.push(
-                    context, 
+                    context,
                     MaterialPageRoute(
-                      builder: (_) => SoulEventDetailScreen(houseId: _houseId!, event: event),
+                      builder: (_) => SoulEventDetailScreen(
+                          houseId: _houseId!, event: event),
                     ),
                   ),
                   child: Container(
@@ -213,12 +237,18 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                       color: Colors.white.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(24),
                       border: event.isPinned
-                          ? Border.all(color: SLColors.warningGold.withValues(alpha: 0.5), width: 1.5)
-                          : Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1),
-                      boxShadow: event.isPinned 
+                          ? Border.all(
+                              color:
+                                  SLColors.warningGold.withValues(alpha: 0.5),
+                              width: 1.5)
+                          : Border.all(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              width: 1),
+                      boxShadow: event.isPinned
                           ? [
                               BoxShadow(
-                                color: SLColors.warningGold.withValues(alpha: 0.12),
+                                color: SLColors.warningGold
+                                    .withValues(alpha: 0.12),
                                 blurRadius: 16,
                                 offset: const Offset(0, 8),
                               )
@@ -240,7 +270,8 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                             color: color.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: Icon(_getEventIcon(event.title), color: color, size: 28),
+                          child: Icon(_getEventIcon(event.title),
+                              color: color, size: 28),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -262,8 +293,11 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                                   ),
                                   if (event.isPinned)
                                     const Padding(
-                                      padding: EdgeInsets.only(left: 4, right: 8),
-                                      child: Icon(Icons.push_pin_rounded, color: SLColors.warningGold, size: 14),
+                                      padding:
+                                          EdgeInsets.only(left: 4, right: 8),
+                                      child: Icon(Icons.push_pin_rounded,
+                                          color: SLColors.warningGold,
+                                          size: 14),
                                     ),
                                 ],
                               ),
@@ -271,26 +305,31 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                               Row(
                                 children: [
                                   Text(
-                                    dateStr, 
-                                    style: SLTypography.bodySmall.copyWith(color: SLColors.textSecondary),
+                                    dateStr,
+                                    style: SLTypography.bodySmall.copyWith(
+                                        color: SLColors.textSecondary),
                                   ),
                                   if (event.isLunar) ...[
                                     const SizedBox(width: 6),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: Colors.amber.withValues(alpha: 0.15),
+                                        color: Colors.amber
+                                            .withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(Icons.dark_mode_rounded, color: Colors.amber, size: 9),
+                                          const Icon(Icons.dark_mode_rounded,
+                                              color: Colors.amber, size: 9),
                                           const SizedBox(width: 2),
                                           Text(
-                                            'Âm lịch', 
-                                            style: SLTypography.labelSmall.copyWith(
-                                              color: Colors.amber[800], 
+                                            'Âm lịch',
+                                            style: SLTypography.labelSmall
+                                                .copyWith(
+                                              color: Colors.amber[800],
                                               fontSize: 9,
                                               fontWeight: FontWeight.w800,
                                             ),
@@ -323,7 +362,8 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => SoulEventEditorSheet(houseId: _houseId!, initialEvent: event),
+      builder: (_) =>
+          SoulEventEditorSheet(houseId: _houseId!, initialEvent: event),
     );
   }
 }

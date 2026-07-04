@@ -200,9 +200,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       }
 
       if (count >= 5) {
-        _showToast(
-            limitCountErr,
-            success: false);
+        _showToast(limitCountErr, success: false);
         return;
       }
 
@@ -546,8 +544,8 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       final statuses = <String, bool>{};
       final settingsLockedPermissions = <String>[];
 
-      statuses['GPS'] = await LocationService()
-          .requestPermission(context: context);
+      statuses['GPS'] =
+          await LocationService().requestPermission(context: context);
 
       if (!kIsWeb) {
         final camera =
@@ -608,8 +606,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       _showToast(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              fallbackErrMsg,
+          fallbackMessage: fallbackErrMsg,
         ).message,
         success: false,
       );
@@ -633,7 +630,8 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
   }
 
   bool _isBirthQuestion(String question) {
-    return question.trim().toLowerCase() == context.tr('home_ngysinhcab_9bdbf2');
+    return question.trim().toLowerCase() ==
+        context.tr('home_ngysinhcab_9bdbf2');
   }
 
   Future<String?> _promptEmailDialog({
@@ -753,7 +751,6 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
     }
   }
 
-
   Future<void> _linkGoogleAccount() async {
     if (_isLinkingGoogle) return;
     final canContinue = await _securityFlowGuard.guard(
@@ -784,8 +781,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       _showToast(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              context.tr('home_chathlinkt_9871a1'),
+          fallbackMessage: context.tr('home_chathlinkt_9871a1'),
         ).message,
         success: false,
       );
@@ -958,8 +954,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
   Future<void> _sendPasswordResetLink() async {
     final email = _auth.currentUser?.email?.trim();
     if (email == null || email.isEmpty) {
-      _showToast(context.tr('home_khngtmthye_1f3420'),
-          success: false);
+      _showToast(context.tr('home_khngtmthye_1f3420'), success: false);
       return;
     }
 
@@ -998,8 +993,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         _showToast(
           AppErrorMapper.resolve(
             e,
-            fallbackMessage:
-                context.tr('home_mtkhuinhng_454b1b'),
+            fallbackMessage: context.tr('home_mtkhuinhng_454b1b'),
           ).message,
           success: false,
         );

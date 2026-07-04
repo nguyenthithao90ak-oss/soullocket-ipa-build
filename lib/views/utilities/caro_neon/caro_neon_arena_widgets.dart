@@ -159,7 +159,9 @@ class _TargetChip extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: selected ? color.withValues(alpha: 0.18) : const Color(0x1A1A2030),
+            color: selected
+                ? color.withValues(alpha: 0.18)
+                : const Color(0x1A1A2030),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(16),
               topRight: Radius.circular(20),
@@ -234,7 +236,9 @@ class _SoundToggleButton extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    enabled ? context.tr('util_bt_9eae51') : context.tr('util_tt_258f00'),
+                    enabled
+                        ? context.tr('util_bt_9eae51')
+                        : context.tr('util_tt_258f00'),
                     style: SLTheme.quicksand(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
@@ -349,7 +353,8 @@ class _ModeTabButton extends StatelessWidget {
               bottomRight: Radius.circular(10),
             ),
             border: Border.all(
-                color: glow.withValues(alpha: enabled ? 0.92 : 0.25), width: 1.4),
+                color: glow.withValues(alpha: enabled ? 0.92 : 0.25),
+                width: 1.4),
             boxShadow: [
               if (selected)
                 BoxShadow(
@@ -409,7 +414,8 @@ class _HeroPanel extends StatelessWidget {
     final partnerRole = room == null
         ? (myRole == 'user2' ? 'user1' : 'user2')
         : (room!.playerXRole == myRole ? room!.playerORole : room!.playerXRole);
-    final partnerLabel = partnerRole == 'bot' ? 'BOT' : context.tr('util_ngiy_e21b71');
+    final partnerLabel =
+        partnerRole == 'bot' ? 'BOT' : context.tr('util_ngiy_e21b71');
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
@@ -560,7 +566,9 @@ class _PlayerPlate extends StatelessWidget {
           const SizedBox(height: 10),
           if (isWinner || isTurn)
             _TinyPill(
-              text: isWinner ? context.tr('util_angthng_e4bde5') : context.tr('util_tilt_db7dc9'),
+              text: isWinner
+                  ? context.tr('util_angthng_e4bde5')
+                  : context.tr('util_tilt_db7dc9'),
               color: isWinner ? const Color(0xFFFFD76F) : accent,
               darkText: isWinner,
             ),
@@ -637,8 +645,7 @@ class _ArenaActionPanel extends StatelessWidget {
           onTap: isBusy ? null : onClear,
         ),
       );
-      infoText =
-          context.tr('util_limigikhin_d80433');
+      infoText = context.tr('util_limigikhin_d80433');
     } else if (currentRoom.isDone) {
       buttons.add(
         _ActionButton(
@@ -669,8 +676,7 @@ class _ArenaActionPanel extends StatelessWidget {
           onTap: isBusy ? null : onClear,
         ),
       );
-      infoText =
-          context.tr('util_chmtrngnhb_816fec');
+      infoText = context.tr('util_chmtrngnhb_816fec');
     }
 
     return Column(
@@ -743,12 +749,13 @@ class _ArenaBotActionPanel extends StatelessWidget {
           onTap: isBusy ? null : onClear,
         ),
       );
-      infoText =
-          context.tr('util_vnnyxongct_2f6faa');
+      infoText = context.tr('util_vnnyxongct_2f6faa');
     } else {
       buttons.add(
         _ActionButton(
-          label: isBusy ? context.tr('util_botangngh_6f8ac2') : context.tr('util_ibnmi_381420'),
+          label: isBusy
+              ? context.tr('util_botangngh_6f8ac2')
+              : context.tr('util_ibnmi_381420'),
           color: const Color(0xFFFF5E9E),
           foreground: Colors.white,
           icon: Icons.auto_awesome_rounded,
@@ -838,9 +845,7 @@ class _ActionPanel extends StatelessWidget {
         ),
       );
     } else if (currentRoom.isWaiting) {
-      buttons.add(_InfoStrip(
-          text:
-              context.tr('util_limigikhin_670a47')));
+      buttons.add(_InfoStrip(text: context.tr('util_limigikhin_670a47')));
       buttons.add(
         _ActionButton(
           label: context.tr('util_hybn_e09cfc'),
@@ -870,9 +875,7 @@ class _ActionPanel extends StatelessWidget {
         ),
       );
     } else {
-      buttons.add(_InfoStrip(
-          text:
-              context.tr('util_chmtrctipv_16c48f')));
+      buttons.add(_InfoStrip(text: context.tr('util_chmtrctipv_16c48f')));
       buttons.add(
         _ActionButton(
           label: context.tr('util_lmmibn_976b32'),
@@ -913,15 +916,15 @@ class _BotActionPanel extends StatelessWidget {
     final currentRoom = room;
     final buttons = <Widget>[
       _InfoStrip(
-        text:
-            context.tr('util_botneonc2k_4dc639'),
+        text: context.tr('util_botneonc2k_4dc639'),
       ),
     ];
 
     if (currentRoom == null) {
       buttons.add(
         _ActionButton(
-          label: 'Bắt đầu với Bot ${selectedWinLength == 5 ? '5 ô' : context.tr('util_3_ad928e')}',
+          label:
+              'Bắt đầu với Bot ${selectedWinLength == 5 ? '5 ô' : context.tr('util_3_ad928e')}',
           color: const Color(0xFF4EDBFF),
           foreground: const Color(0xFF14051A),
           icon: Icons.smart_toy_rounded,
@@ -950,7 +953,9 @@ class _BotActionPanel extends StatelessWidget {
     } else {
       buttons.add(
         _ActionButton(
-          label: isBusy ? context.tr('util_botangngh_6f8ac2') : context.tr('util_vnmi_ea7b55'),
+          label: isBusy
+              ? context.tr('util_botangngh_6f8ac2')
+              : context.tr('util_vnmi_ea7b55'),
           color: const Color(0xFFFF5E9E),
           foreground: Colors.white,
           icon: Icons.auto_awesome_rounded,

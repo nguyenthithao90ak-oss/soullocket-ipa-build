@@ -137,7 +137,6 @@ class PresenceService {
     return false;
   }
 
-
   static int? lastSeenMs(Map<dynamic, dynamic>? data) {
     return _readEpochMs(data?['lastSeen']);
   }
@@ -321,7 +320,8 @@ class PresenceService {
       return;
     }
     if (!_isConnected) {
-      debugPrint('[Presence] Skip lightweight heartbeat because connection is offline');
+      debugPrint(
+          '[Presence] Skip lightweight heartbeat because connection is offline');
       return;
     }
     try {
@@ -353,7 +353,8 @@ class PresenceService {
 
     final now = DateTime.now().millisecondsSinceEpoch;
     try {
-      final deviceId = await DeviceManagerService().getCurrentDeviceIdentifier();
+      final deviceId =
+          await DeviceManagerService().getCurrentDeviceIdentifier();
       await _myPresenceRef!.child('sessions/$_mySessionId').set({
         'ts': now,
         if (_currentUid != null) 'uid': _currentUid,
@@ -364,8 +365,12 @@ class PresenceService {
       // Prune stale sessions for BOTH roles to ensure accurate online statuses
       final houseId = _activeHouseId ?? '';
       if (houseId.isNotEmpty) {
-        await _pruneStaleSessions(_dbRef.child('houses/$houseId/presence/user1'), nowMs: now);
-        await _pruneStaleSessions(_dbRef.child('houses/$houseId/presence/user2'), nowMs: now);
+        await _pruneStaleSessions(
+            _dbRef.child('houses/$houseId/presence/user1'),
+            nowMs: now);
+        await _pruneStaleSessions(
+            _dbRef.child('houses/$houseId/presence/user2'),
+            nowMs: now);
       }
 
       await _refreshAggregatePresence(
@@ -420,7 +425,8 @@ class PresenceService {
       final raw = snap.value;
       if (raw is! Map) return;
 
-      final currentDeviceId = await DeviceManagerService().getCurrentDeviceIdentifier();
+      final currentDeviceId =
+          await DeviceManagerService().getCurrentDeviceIdentifier();
       var otherFreshCount = 0;
       raw.forEach((key, value) {
         if (key.toString() == sessionId) return; // bỏ qua session của mình
@@ -442,7 +448,8 @@ class PresenceService {
       if (otherFreshCount > 0) {
         _lastDuplicateRoleWarnedAt = DateTime.now();
         RoleUtils.duplicateRoleNotifier.value = true;
-        debugPrint('[Presence] Duplicate role detected: $otherFreshCount other session(s) on $role');
+        debugPrint(
+            '[Presence] Duplicate role detected: $otherFreshCount other session(s) on $role');
       }
     } catch (_) {}
   }
@@ -588,10 +595,15 @@ class PresenceService {
       // await _removeCurrentUidGhostSessions(nowMs: now);
 
       // Dọn dẹp stale sessions cho cả 2 vai trò để tránh hiển thị sai trạng thái khi 1 người offline
-      await _pruneStaleSessions(_dbRef.child('houses/$_activeHouseId/presence/user1'), nowMs: now);
-      await _pruneStaleSessions(_dbRef.child('houses/$_activeHouseId/presence/user2'), nowMs: now);
+      await _pruneStaleSessions(
+          _dbRef.child('houses/$_activeHouseId/presence/user1'),
+          nowMs: now);
+      await _pruneStaleSessions(
+          _dbRef.child('houses/$_activeHouseId/presence/user2'),
+          nowMs: now);
 
-      final deviceId = await DeviceManagerService().getCurrentDeviceIdentifier();
+      final deviceId =
+          await DeviceManagerService().getCurrentDeviceIdentifier();
       await _myPresenceRef!.child('sessions/$_mySessionId').set({
         'ts': now,
         if (_currentUid != null) 'uid': _currentUid,
@@ -600,15 +612,12 @@ class PresenceService {
       }).timeout(const Duration(seconds: 3));
       // ⚡ onDisconnect xóa session + update status offline ngay
       // Tránh tình trạng "online ảo" khi app crash/force-close
-      await _myPresenceRef!
-          .onDisconnect()
-          .update({
-            'sessions/$_mySessionId': null,
-            'status': 'offline',
-            'lastSeen': ServerValue.timestamp,
-            if (_activeDeviceType != null) 'device': _activeDeviceType,
-          })
-          .timeout(const Duration(seconds: 3));
+      await _myPresenceRef!.onDisconnect().update({
+        'sessions/$_mySessionId': null,
+        'status': 'offline',
+        'lastSeen': ServerValue.timestamp,
+        if (_activeDeviceType != null) 'device': _activeDeviceType,
+      }).timeout(const Duration(seconds: 3));
       await _refreshAggregatePresence(
         _myPresenceRef!,
         nowMs: now,
@@ -711,7 +720,8 @@ class PresenceService {
       if (_isPermissionDenied(e)) {
         return true;
       }
-      debugPrint('Presence backend reachability failed: ${AppErrorMapper.resolve(
+      debugPrint(
+          'Presence backend reachability failed: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Không thể kiểm tra kết nối hiện diện.',
       ).message}');

@@ -90,7 +90,8 @@ class MiniGamesService {
   /// Stream state game realtime
   Stream<WhoIsState> streamWhoIsState(String houseId) {
     final normalizedHouseId = houseId.trim();
-    if (normalizedHouseId.isEmpty) return Stream<WhoIsState>.value(WhoIsState(question: ''));
+    if (normalizedHouseId.isEmpty)
+      return Stream<WhoIsState>.value(WhoIsState(question: ''));
     return _db.ref('houses/$normalizedHouseId/game_whois').onValue.map((event) {
       if (!event.snapshot.exists || event.snapshot.value is! Map) {
         return WhoIsState(question: '');
@@ -148,7 +149,8 @@ class MiniGamesService {
 
   Stream<List<QuizData>> streamQuizzes(String houseId) {
     final normalizedHouseId = houseId.trim();
-    if (normalizedHouseId.isEmpty) return Stream<List<QuizData>>.value(const []);
+    if (normalizedHouseId.isEmpty)
+      return Stream<List<QuizData>>.value(const []);
     return _db
         .ref('houses/$normalizedHouseId/quiz')
         .orderByChild('ts')
@@ -200,7 +202,9 @@ class MiniGamesService {
     }
 
     // Trừ điểm và lưu lịch sử đổi đồ
-    await _db.ref('houses/$normalizedHouseId/points').runTransaction((currentData) {
+    await _db
+        .ref('houses/$normalizedHouseId/points')
+        .runTransaction((currentData) {
       int pts = 0;
       if (currentData is num) {
         pts = currentData.toInt();
@@ -223,6 +227,7 @@ class MiniGamesService {
 
     return true;
   }
+
   int _asTimestamp(Object? value) {
     if (value is num) return value.toInt();
     return int.tryParse(value?.toString() ?? '') ?? 0;

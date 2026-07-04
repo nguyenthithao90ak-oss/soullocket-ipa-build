@@ -9,7 +9,8 @@ class SoulEventDetailScreen extends StatefulWidget {
   final String houseId;
   final SoulEvent event;
 
-  const SoulEventDetailScreen({super.key, required this.houseId, required this.event});
+  const SoulEventDetailScreen(
+      {super.key, required this.houseId, required this.event});
 
   @override
   State<SoulEventDetailScreen> createState() => _SoulEventDetailScreenState();
@@ -57,7 +58,9 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
         title: const Text('Xóa sự kiện?'),
         content: const Text('Sự kiện này sẽ bị xóa vĩnh viễn.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Hủy')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Xóa', style: TextStyle(color: Colors.red)),
@@ -77,7 +80,8 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
     final diff = _calculateDaysDiff(_event.dateMs);
     final isPast = diff < 0;
     final displayDays = diff.abs();
-    final color = Color(int.tryParse(_event.colorHex.replaceFirst('#', '0xFF')) ?? 0xFFFF4D94);
+    final color = Color(
+        int.tryParse(_event.colorHex.replaceFirst('#', '0xFF')) ?? 0xFFFF4D94);
     final date = DateTime.fromMillisecondsSinceEpoch(_event.dateMs);
     final dateStr = '${date.day} thg ${date.month}, ${date.year}';
 
@@ -91,8 +95,11 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          IconButton(icon: Icon(Icons.edit, color: color), onPressed: _editEvent),
-          IconButton(icon: const Icon(Icons.delete, color: Colors.redAccent), onPressed: _deleteEvent),
+          IconButton(
+              icon: Icon(Icons.edit, color: color), onPressed: _editEvent),
+          IconButton(
+              icon: const Icon(Icons.delete, color: Colors.redAccent),
+              onPressed: _deleteEvent),
         ],
       ),
       body: SLTheme.background(
@@ -104,7 +111,8 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(32),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.5),
+                border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.6), width: 1.5),
                 boxShadow: [
                   BoxShadow(
                     color: color.withValues(alpha: 0.08),
@@ -125,19 +133,20 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      _event.title.toLowerCase().contains('sinh nhật') 
-                          ? Icons.cake_rounded 
-                          : _event.title.toLowerCase().contains('kỷ niệm') 
-                              ? Icons.favorite_rounded 
-                              : Icons.event_note_rounded, 
-                      color: color, 
+                      _event.title.toLowerCase().contains('sinh nhật')
+                          ? Icons.cake_rounded
+                          : _event.title.toLowerCase().contains('kỷ niệm')
+                              ? Icons.favorite_rounded
+                              : Icons.event_note_rounded,
+                      color: color,
                       size: 36,
                     ),
                   ),
                   const SizedBox(height: 24),
                   Text(
                     _event.title,
-                    style: SLTypography.headlineLarge.copyWith(fontWeight: FontWeight.w900),
+                    style: SLTypography.headlineLarge
+                        .copyWith(fontWeight: FontWeight.w900),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -146,20 +155,22 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
                     children: [
                       Text(
                         dateStr,
-                        style: SLTypography.bodyMedium.copyWith(color: SLColors.textSecondary),
+                        style: SLTypography.bodyMedium
+                            .copyWith(color: SLColors.textSecondary),
                       ),
                       if (_event.isLunar) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: Colors.amber.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            'Âm lịch', 
+                            'Âm lịch',
                             style: SLTypography.labelSmall.copyWith(
-                              color: Colors.amber[800], 
+                              color: Colors.amber[800],
                               fontSize: 9,
                               fontWeight: FontWeight.w800,
                             ),
@@ -181,7 +192,8 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
                   ),
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -189,11 +201,11 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
                     child: Text(
                       diff == 0
                           ? 'HÔM NAY'
-                          : isPast 
-                              ? 'NGÀY ĐÃ TRÔI QUA' 
+                          : isPast
+                              ? 'NGÀY ĐÃ TRÔI QUA'
                               : 'NGÀY NỮA',
                       style: SLTypography.titleSmall.copyWith(
-                        color: color, 
+                        color: color,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.0,
                         fontSize: 13,

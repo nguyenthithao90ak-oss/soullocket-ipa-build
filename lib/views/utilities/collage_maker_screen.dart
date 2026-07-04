@@ -51,11 +51,11 @@ class CollageMakerScreen extends StatefulWidget {
 }
 
 class _CollageMakerScreenState extends State<CollageMakerScreen> {
-
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
       tooltip: 'Hướng dẫn',
-      icon: const Icon(Icons.info_outline_rounded, color: Color(0xFFE274A0), size: 22),
+      icon: const Icon(Icons.info_outline_rounded,
+          color: Color(0xFFE274A0), size: 22),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -76,11 +76,14 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
             children: [
               Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text('- Ghép nhiều bức ảnh kỷ niệm lại với nhau theo nhiều bố cục đẹp mắt.\n- Hỗ trợ đổi nền, chỉnh viền và bo góc khung ảnh.'),
+              Text(
+                  '- Ghép nhiều bức ảnh kỷ niệm lại với nhau theo nhiều bố cục đẹp mắt.\n- Hỗ trợ đổi nền, chỉnh viền và bo góc khung ảnh.'),
               SizedBox(height: 12),
-              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Cách sử dụng:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text('- Chọn từ 2 đến 9 bức ảnh.\n- Chọn bố cục ưng ý, thay đổi màu nền hoặc độ dày viền.\n- Bấm Lưu để tải ảnh ghép về máy hoặc lưu vào Album chung.'),
+              Text(
+                  '- Chọn từ 2 đến 9 bức ảnh.\n- Chọn bố cục ưng ý, thay đổi màu nền hoặc độ dày viền.\n- Bấm Lưu để tải ảnh ghép về máy hoặc lưu vào Album chung.'),
             ],
           ),
         ),
@@ -446,7 +449,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
       return CollageDecor.memory(
         occasionLabel: _selectedMonth == 'all'
             ? L10nService().translate('util_nhngngykni_9cdb35')
-            : L10nService().format('util_collage_month_memory', {'month': _displayMonthLabel(_selectedMonth)}),
+            : L10nService().format('util_collage_month_memory',
+                {'month': _displayMonthLabel(_selectedMonth)}),
         message: L10nService().translate('util_lichcnhcho_445f57'),
       );
     }
@@ -459,24 +463,24 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     if (distinctDays.length == 1) {
       final date = dates.first;
       return CollageDecor.memory(
-        occasionLabel: L10nService().format('util_collage_day_memory', {'date': _formatDateLabel(date)}),
-        message:
-            L10nService().translate('util_chcngyknim_8b1525'),
+        occasionLabel: L10nService().format(
+            'util_collage_day_memory', {'date': _formatDateLabel(date)}),
+        message: L10nService().translate('util_chcngyknim_8b1525'),
       );
     }
 
     if (_selectedMonth != 'all') {
       return CollageDecor.memory(
-        occasionLabel: L10nService().format('util_collage_month_memory', {'month': _displayMonthLabel(_selectedMonth)}),
-        message:
-            L10nService().format('util_collage_month_message', {'count': items.length}),
+        occasionLabel: L10nService().format('util_collage_month_memory',
+            {'month': _displayMonthLabel(_selectedMonth)}),
+        message: L10nService()
+            .format('util_collage_month_message', {'count': items.length}),
       );
     }
 
     return CollageDecor.memory(
       occasionLabel: L10nService().translate('util_nhngngymnh_f45642'),
-      message:
-          L10nService().translate('util_mikhunghnh_508be2'),
+      message: L10nService().translate('util_mikhunghnh_508be2'),
     );
   }
 
@@ -484,20 +488,23 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     if (_isFromMemory) {
       return _selectedMonth == 'all'
           ? L10nService().translate('util_knimcachng_b20e45')
-          : L10nService().format('util_collage_title_month', {'month': _selectedMonth.split('-')[1]});
+          : L10nService().format('util_collage_title_month',
+              {'month': _selectedMonth.split('-')[1]});
     }
     return L10nService().translate('util_khonhkhcng_2db9f8');
   }
 
-  String _allMemoryPhotosLabel() =>
-      L10nService().format('util_collage_all_memory_photos', {'count': _memoryPhotos.length});
+  String _allMemoryPhotosLabel() => L10nService().format(
+      'util_collage_all_memory_photos', {'count': _memoryPhotos.length});
 
   String _monthMenuLabel(String key, int count) {
     final parts = key.split('-');
     if (parts.length != 2) {
-      return L10nService().format('util_collage_key_count', {'key': key, 'count': count});
+      return L10nService()
+          .format('util_collage_key_count', {'key': key, 'count': count});
     }
-    return L10nService().format('util_collage_month_menu', {'month': parts[1], 'year': parts[0], 'count': count});
+    return L10nService().format('util_collage_month_menu',
+        {'month': parts[1], 'year': parts[0], 'count': count});
   }
 
   Widget _buildMemoryInfoChip({
@@ -513,9 +520,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
             : Colors.white.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: highlighted
-              ? _paperRoseDeep.withValues(alpha: 0.42)
-              : _paperLine,
+          color:
+              highlighted ? _paperRoseDeep.withValues(alpha: 0.42) : _paperLine,
         ),
       ),
       child: Row(
@@ -579,7 +585,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     return BoxDecoration(
       color: color,
       borderRadius: _paperRadius(flipped: flipped),
-      border: Border.all(color: borderColor.withValues(alpha: 0.92), width: 1.2),
+      border:
+          Border.all(color: borderColor.withValues(alpha: 0.92), width: 1.2),
       boxShadow: _paperShadow(),
     );
   }
@@ -649,7 +656,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
             _deviceFiles.removeRange(50, _deviceFiles.length);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                  content: Text(L10nService().translate('util_chchntia50_7e8030'))),
+                  content:
+                      Text(L10nService().translate('util_chchntia50_7e8030'))),
             );
           }
         });
@@ -731,16 +739,14 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
   }
 
   int _maxPhotosForCurrentStyle() {
-    final stylePreset = _stylePresets
-        .where((s) => s.id == _selectedStyle)
-        .firstOrNull;
+    final stylePreset =
+        _stylePresets.where((s) => s.id == _selectedStyle).firstOrNull;
     return stylePreset?.maxPhotos ?? 20;
   }
 
   int _minPhotosForCurrentStyle() {
-    final stylePreset = _stylePresets
-        .where((s) => s.id == _selectedStyle)
-        .firstOrNull;
+    final stylePreset =
+        _stylePresets.where((s) => s.id == _selectedStyle).firstOrNull;
     return stylePreset?.minPhotos ?? 2;
   }
 
@@ -867,7 +873,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     timeoutTimer = Timer(const Duration(seconds: 18), () {
       if (completer.isCompleted) return;
       cleanup();
-      completer.completeError(TimeoutException(L10nService().translate('util_tinhknimqu_ae5ec5')));
+      completer.completeError(
+          TimeoutException(L10nService().translate('util_tinhknimqu_ae5ec5')));
     });
 
     stream.addListener(listener);
@@ -952,7 +959,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     urls = editablePhotos.map((item) => item.source).toList(growable: false);
     if (urls.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(L10nService().translate('util_chacnhghp_17d056'))),
+        SnackBar(
+            content: Text(L10nService().translate('util_chacnhghp_17d056'))),
       );
       return;
     }
@@ -1088,12 +1096,14 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(L10nService().translate('util_lunhthnhcn_feffae'))),
+                content:
+                    Text(L10nService().translate('util_lunhthnhcn_feffae'))),
           );
         } else {
           final message = result['errorMessage']?.toString();
-          throw Exception(
-              message?.isNotEmpty == true ? message : L10nService().translate('util_likhilunh_39db09'));
+          throw Exception(message?.isNotEmpty == true
+              ? message
+              : L10nService().translate('util_likhilunh_39db09'));
         }
       }
     } catch (e) {
@@ -1211,7 +1221,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
               right: 64,
               top: fullScreen ? topPadding + 12 : 12,
               child: Text(
-                L10nService().format('util_collage_zoom_hint_title', {'title': title}),
+                L10nService()
+                    .format('util_collage_zoom_hint_title', {'title': title}),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: SLTheme.quicksand(
@@ -1349,236 +1360,258 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                         // Photo source — đơn giản: 2 nút chọn ảnh
                         _buildSimplePhotoSource(compact: isPhoneWidth),
                         SLSpacing.h24,
-                          Builder(
-                            builder: (context) {
-                              final availableCount = _getFilteredMemoryItems().length;
-                              final totalCount = _memoryPhotos.length;
-                              final selectedMonthLabel = _selectedMonth == 'all'
-                                  ? L10nService().translate('util_tonbknim_aaedea')
-                                  : L10nService().format('util_collage_filtering_month', {'month': _displayMonthLabel(_selectedMonth)});
+                        Builder(
+                          builder: (context) {
+                            final availableCount =
+                                _getFilteredMemoryItems().length;
+                            final totalCount = _memoryPhotos.length;
+                            final selectedMonthLabel = _selectedMonth == 'all'
+                                ? L10nService()
+                                    .translate('util_tonbknim_aaedea')
+                                : L10nService().format(
+                                    'util_collage_filtering_month', {
+                                    'month': _displayMonthLabel(_selectedMonth)
+                                  });
 
-                              return Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                                decoration: _paperPanelDecoration(
-                                  color: const Color(0xFFFFF8F2),
-                                  borderColor: const Color(0xFFDCC9B8),
-                                  flipped: true,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                L10nService().translate('util_nhknim_6f622f'),
-                                                style: _editorialStyle(
-                                                  size: 18,
-                                                  color: _paperInk,
-                                                  fontWeight: FontWeight.w800,
-                                                ),
+                            return Container(
+                              width: double.infinity,
+                              padding:
+                                  const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                              decoration: _paperPanelDecoration(
+                                color: const Color(0xFFFFF8F2),
+                                borderColor: const Color(0xFFDCC9B8),
+                                flipped: true,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              L10nService().translate(
+                                                  'util_nhknim_6f622f'),
+                                              style: _editorialStyle(
+                                                size: 18,
+                                                color: _paperInk,
+                                                fontWeight: FontWeight.w800,
                                               ),
-                                              SLSpacing.h6,
-                                              Text(
-                                                L10nService().translate('util_chnmcthigi_a2d876'),
-                                                style: SLTheme.quicksand(
-                                                  fontSize: 12.8,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: _paperMuted,
-                                                  height: 1.4,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 8,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFF7EADF),
-                                            borderRadius: BorderRadius.circular(16),
-                                            border: Border.all(color: _paperLine),
-                                          ),
-                                          child: Text(
-                                            L10nService().format('util_collage_photo_count', {'count': availableCount}),
-                                            style: SLTheme.quicksand(
-                                              fontWeight: FontWeight.w800,
-                                              color: _paperRoseDeep,
-                                              fontSize: 12.8,
                                             ),
-                                          ),
+                                            SLSpacing.h6,
+                                            Text(
+                                              L10nService().translate(
+                                                  'util_chnmcthigi_a2d876'),
+                                              style: SLTheme.quicksand(
+                                                fontSize: 12.8,
+                                                fontWeight: FontWeight.w600,
+                                                color: _paperMuted,
+                                                height: 1.4,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
-                                    SLSpacing.h12,
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children: [
-                                        _buildMemoryInfoChip(
-                                          icon: Icons.photo_library_outlined,
-                                          label: L10nService().format('util_collage_available_photo_count', {'count': totalCount}),
-                                        ),
-                                        _buildMemoryInfoChip(
-                                          icon: Icons.calendar_month_outlined,
-                                          label: L10nService().format('util_collage_month_mark_count', {'count': _availableMonths.length}),
-                                        ),
-                                        _buildMemoryInfoChip(
-                                          icon: Icons.auto_awesome_outlined,
-                                          label: selectedMonthLabel,
-                                          highlighted: _selectedMonth != 'all',
-                                        ),
-                                      ],
-                                    ),
-                                    SLSpacing.h16,
-                                    Text(
-                                      L10nService().translate('util_lctheothig_8044cc'),
-                                      style: SLTheme.quicksand(
-                                        fontWeight: FontWeight.w800,
-                                        color: _paperInk,
-                                        fontSize: 14,
                                       ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF7EADF),
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                          border: Border.all(color: _paperLine),
+                                        ),
+                                        child: Text(
+                                          L10nService().format(
+                                              'util_collage_photo_count',
+                                              {'count': availableCount}),
+                                          style: SLTheme.quicksand(
+                                            fontWeight: FontWeight.w800,
+                                            color: _paperRoseDeep,
+                                            fontSize: 12.8,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SLSpacing.h12,
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      _buildMemoryInfoChip(
+                                        icon: Icons.photo_library_outlined,
+                                        label: L10nService().format(
+                                            'util_collage_available_photo_count',
+                                            {'count': totalCount}),
+                                      ),
+                                      _buildMemoryInfoChip(
+                                        icon: Icons.calendar_month_outlined,
+                                        label: L10nService().format(
+                                            'util_collage_month_mark_count',
+                                            {'count': _availableMonths.length}),
+                                      ),
+                                      _buildMemoryInfoChip(
+                                        icon: Icons.auto_awesome_outlined,
+                                        label: selectedMonthLabel,
+                                        highlighted: _selectedMonth != 'all',
+                                      ),
+                                    ],
+                                  ),
+                                  SLSpacing.h16,
+                                  Text(
+                                    L10nService()
+                                        .translate('util_lctheothig_8044cc'),
+                                    style: SLTheme.quicksand(
+                                      fontWeight: FontWeight.w800,
+                                      color: _paperInk,
+                                      fontSize: 14,
                                     ),
-                                    SLSpacing.h8,
-                                    LayoutBuilder(
-                                      builder: (context, dropdownConstraints) {
-                                        final dropdownFontSize =
-                                            dropdownConstraints.maxWidth < 340
-                                                ? 13.4
-                                                : 14.6;
-                                        final monthLabels = <String>[
-                                          _allMemoryPhotosLabel(),
-                                          ..._availableMonths.map((m) {
-                                            final parts = m.split('-');
-                                            final count =
-                                                _memoryPhotos.where((item) {
-                                              final ts = item['ts'] as int? ?? 0;
-                                              if (ts == 0) return false;
-                                              final d =
-                                                  DateTime.fromMillisecondsSinceEpoch(
-                                                ts,
-                                              );
-                                              return d.year ==
-                                                      int.parse(parts[0]) &&
-                                                  d.month == int.parse(parts[1]);
-                                            }).length;
-                                            return _monthMenuLabel(m, count);
-                                          }),
-                                        ];
+                                  ),
+                                  SLSpacing.h8,
+                                  LayoutBuilder(
+                                    builder: (context, dropdownConstraints) {
+                                      final dropdownFontSize =
+                                          dropdownConstraints.maxWidth < 340
+                                              ? 13.4
+                                              : 14.6;
+                                      final monthLabels = <String>[
+                                        _allMemoryPhotosLabel(),
+                                        ..._availableMonths.map((m) {
+                                          final parts = m.split('-');
+                                          final count =
+                                              _memoryPhotos.where((item) {
+                                            final ts = item['ts'] as int? ?? 0;
+                                            if (ts == 0) return false;
+                                            final d = DateTime
+                                                .fromMillisecondsSinceEpoch(
+                                              ts,
+                                            );
+                                            return d.year ==
+                                                    int.parse(parts[0]) &&
+                                                d.month == int.parse(parts[1]);
+                                          }).length;
+                                          return _monthMenuLabel(m, count);
+                                        }),
+                                      ];
 
-                                        Text buildDropdownLabel(String label) {
-                                          return Text(
-                                            label,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            softWrap: false,
-                                            style: SLTheme.quicksand(
-                                              fontSize: dropdownFontSize,
-                                              fontWeight: FontWeight.w700,
-                                              color: _paperInk,
-                                            ),
-                                          );
-                                        }
-
-                                        return Container(
-                                          constraints:
-                                              const BoxConstraints(minHeight: 56),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 14,
-                                            vertical: 6,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withValues(alpha: 0.74),
-                                            borderRadius: _paperRadius(flipped: true),
-                                            border: Border.all(
-                                              color: const Color(0xFFDCC9B8),
-                                              width: 1.1,
-                                            ),
-                                          ),
-                                          child: DropdownButtonHideUnderline(
-                                            child: DropdownButton<String>(
-                                              isExpanded: true,
-                                              isDense: true,
-                                              menuMaxHeight: 360,
-                                              value: _selectedMonth,
-                                              selectedItemBuilder: (_) => monthLabels
-                                                  .map(
-                                                    (label) => Align(
-                                                      alignment:
-                                                          Alignment.centerLeft,
-                                                      child:
-                                                          buildDropdownLabel(label),
-                                                    ),
-                                                  )
-                                                  .toList(growable: false),
-                                              items: [
-                                                DropdownMenuItem(
-                                                  value: 'all',
-                                                  child: buildDropdownLabel(
-                                                    _allMemoryPhotosLabel(),
-                                                  ),
-                                                ),
-                                                ..._availableMonths.map((m) {
-                                                  final parts = m.split('-');
-                                                  final count =
-                                                      _memoryPhotos.where((item) {
-                                                    final ts =
-                                                        item['ts'] as int? ?? 0;
-                                                    if (ts == 0) return false;
-                                                    final d = DateTime
-                                                        .fromMillisecondsSinceEpoch(
-                                                            ts);
-                                                    return d.year ==
-                                                            int.parse(parts[0]) &&
-                                                        d.month ==
-                                                            int.parse(parts[1]);
-                                                  }).length;
-                                                  return DropdownMenuItem(
-                                                    value: m,
-                                                    child: buildDropdownLabel(
-                                                      _monthMenuLabel(m, count),
-                                                    ),
-                                                  );
-                                                }),
-                                              ],
-                                              onChanged: (val) {
-                                                if (val != null) {
-                                                  setState(() {
-                                                    _selectedMonth = val;
-                                                    _generatedCollageBytes = null;
-                                                    _hasFullQualityRender = false;
-                                                  });
-                                                  _scheduleAutoGenerate();
-                                                }
-                                              },
-                                            ),
+                                      Text buildDropdownLabel(String label) {
+                                        return Text(
+                                          label,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          softWrap: false,
+                                          style: SLTheme.quicksand(
+                                            fontSize: dropdownFontSize,
+                                            fontWeight: FontWeight.w700,
+                                            color: _paperInk,
                                           ),
                                         );
-                                      },
+                                      }
+
+                                      return Container(
+                                        constraints:
+                                            const BoxConstraints(minHeight: 56),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.74),
+                                          borderRadius:
+                                              _paperRadius(flipped: true),
+                                          border: Border.all(
+                                            color: const Color(0xFFDCC9B8),
+                                            width: 1.1,
+                                          ),
+                                        ),
+                                        child: DropdownButtonHideUnderline(
+                                          child: DropdownButton<String>(
+                                            isExpanded: true,
+                                            isDense: true,
+                                            menuMaxHeight: 360,
+                                            value: _selectedMonth,
+                                            selectedItemBuilder: (_) =>
+                                                monthLabels
+                                                    .map(
+                                                      (label) => Align(
+                                                        alignment: Alignment
+                                                            .centerLeft,
+                                                        child:
+                                                            buildDropdownLabel(
+                                                                label),
+                                                      ),
+                                                    )
+                                                    .toList(growable: false),
+                                            items: [
+                                              DropdownMenuItem(
+                                                value: 'all',
+                                                child: buildDropdownLabel(
+                                                  _allMemoryPhotosLabel(),
+                                                ),
+                                              ),
+                                              ..._availableMonths.map((m) {
+                                                final parts = m.split('-');
+                                                final count =
+                                                    _memoryPhotos.where((item) {
+                                                  final ts =
+                                                      item['ts'] as int? ?? 0;
+                                                  if (ts == 0) return false;
+                                                  final d = DateTime
+                                                      .fromMillisecondsSinceEpoch(
+                                                          ts);
+                                                  return d.year ==
+                                                          int.parse(parts[0]) &&
+                                                      d.month ==
+                                                          int.parse(parts[1]);
+                                                }).length;
+                                                return DropdownMenuItem(
+                                                  value: m,
+                                                  child: buildDropdownLabel(
+                                                    _monthMenuLabel(m, count),
+                                                  ),
+                                                );
+                                              }),
+                                            ],
+                                            onChanged: (val) {
+                                              if (val != null) {
+                                                setState(() {
+                                                  _selectedMonth = val;
+                                                  _generatedCollageBytes = null;
+                                                  _hasFullQualityRender = false;
+                                                });
+                                                _scheduleAutoGenerate();
+                                              }
+                                            },
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  SLSpacing.h10,
+                                  Text(
+                                    L10nService()
+                                        .translate('util_khungtthml_3401c3'),
+                                    style: SLTheme.quicksand(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: _paperRoseDeep,
+                                      height: 1.35,
                                     ),
-                                    SLSpacing.h10,
-                                    Text(
-                                      L10nService().translate('util_khungtthml_3401c3'),
-                                      style: SLTheme.quicksand(
-                                        fontSize: 12.5,
-                                        fontWeight: FontWeight.w600,
-                                        color: _paperRoseDeep,
-                                        height: 1.35,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                         SLSpacing.h24,
                         _buildSelectedImagesPreview(),
 
@@ -1610,19 +1643,44 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                                 scrollDirection: Axis.horizontal,
                                 child: Row(
                                   children: [
-                                    _buildStyleOption('grid', Icons.grid_on, L10nService().translate('util_lisch_e9d89a')),
+                                    _buildStyleOption(
+                                        'grid',
+                                        Icons.grid_on,
+                                        L10nService()
+                                            .translate('util_lisch_e9d89a')),
                                     SLSpacing.w12,
-                                    _buildStyleOption('masonry', Icons.view_quilt, 'So le'),
+                                    _buildStyleOption(
+                                        'masonry', Icons.view_quilt, 'So le'),
                                     SLSpacing.w12,
-                                    _buildStyleOption('polaroid', Icons.photo_library, L10nService().translate('util_albumgiy_50e58e')),
+                                    _buildStyleOption(
+                                        'polaroid',
+                                        Icons.photo_library,
+                                        L10nService()
+                                            .translate('util_albumgiy_50e58e')),
                                     SLSpacing.w12,
-                                    _buildStyleOption('scatter', Icons.auto_awesome_mosaic, L10nService().translate('util_tdo_ffbe9b')),
+                                    _buildStyleOption(
+                                        'scatter',
+                                        Icons.auto_awesome_mosaic,
+                                        L10nService()
+                                            .translate('util_tdo_ffbe9b')),
                                     SLSpacing.w12,
-                                    _buildStyleOption('heart', Icons.favorite, L10nService().translate('util_tritim_94c542')),
+                                    _buildStyleOption(
+                                        'heart',
+                                        Icons.favorite,
+                                        L10nService()
+                                            .translate('util_tritim_94c542')),
                                     SLSpacing.w12,
-                                    _buildStyleOption('story', Icons.view_agenda, L10nService().translate('util_dcnibt_063192')),
+                                    _buildStyleOption(
+                                        'story',
+                                        Icons.view_agenda,
+                                        L10nService()
+                                            .translate('util_dcnibt_063192')),
                                     SLSpacing.w12,
-                                    _buildStyleOption('poster', Icons.wallpaper, L10nService().translate('util_ngangtpch_1d78c7')),
+                                    _buildStyleOption(
+                                        'poster',
+                                        Icons.wallpaper,
+                                        L10nService().translate(
+                                            'util_ngangtpch_1d78c7')),
                                   ],
                                 ),
                               ),
@@ -1641,7 +1699,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                               _buildAspectRatioSelector(),
                               SLSpacing.h16,
                               Text(
-                                L10nService().translate('util_stickercnh_1fd4ed'),
+                                L10nService()
+                                    .translate('util_stickercnh_1fd4ed'),
                                 style: SLTheme.quicksand(
                                   fontWeight: FontWeight.w800,
                                   color: _paperInk,
@@ -1668,7 +1727,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                         TextField(
                           controller: _titleCtrl,
                           decoration: InputDecoration(
-                            hintText: L10nService().translate('util_vdnhngngyt_523bb0'),
+                            hintText: L10nService()
+                                .translate('util_vdnhngngyt_523bb0'),
                             hintStyle: SLTheme.quicksand(
                                 color: Colors.grey[400], fontSize: 15),
                             contentPadding: const EdgeInsets.symmetric(
@@ -1692,7 +1752,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                         ),
                         SLSpacing.h8,
                         Text(
-                          L10nService().translate('util_collage_title_hint_banner'),
+                          L10nService()
+                              .translate('util_collage_title_hint_banner'),
                           style: SLTheme.quicksand(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
@@ -1714,7 +1775,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  L10nService().translate('util_bnxemtrcco_345e4f'),
+                                  L10nService()
+                                      .translate('util_bnxemtrcco_345e4f'),
                                   style: _editorialStyle(
                                     size: 18,
                                     color: _paperInk,
@@ -1723,7 +1785,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                                 ),
                                 SLSpacing.h8,
                                 Text(
-                                  L10nService().translate('util_chmvonhxem_9c459c'),
+                                  L10nService()
+                                      .translate('util_chmvonhxem_9c459c'),
                                   style: SLTheme.quicksand(
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w700,
@@ -1742,8 +1805,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                                         border: Border.all(color: _paperLine),
                                         boxShadow: [
                                           BoxShadow(
-                                            color:
-                                                _paperCocoa.withValues(alpha: 0.10),
+                                            color: _paperCocoa.withValues(
+                                                alpha: 0.10),
                                             blurRadius: 22,
                                             offset: const Offset(0, 12),
                                           )
@@ -1763,7 +1826,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                                               width: double.infinity,
                                               fit: BoxFit.contain,
                                               alignment: Alignment.topCenter,
-                                              filterQuality: FilterQuality.medium,
+                                              filterQuality:
+                                                  FilterQuality.medium,
                                             ),
                                           ),
                                           Positioned(
@@ -1771,13 +1835,14 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                                             right: 12,
                                             bottom: 12,
                                             child: Container(
-                                              padding: const EdgeInsets.symmetric(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
                                                 horizontal: 12,
                                                 vertical: 8,
                                               ),
                                               decoration: BoxDecoration(
-                                                color: _paperCocoa
-                                                    .withValues(alpha: 0.78),
+                                                color: _paperCocoa.withValues(
+                                                    alpha: 0.78),
                                                 borderRadius:
                                                     _paperRadius(flipped: true),
                                               ),
@@ -1793,7 +1858,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                                                   ),
                                                   SLSpacing.w8,
                                                   Text(
-                                                    L10nService().translate('util_nxemphngto_b305b6'),
+                                                    L10nService().translate(
+                                                        'util_nxemphngto_b305b6'),
                                                     style: SLTheme.quicksand(
                                                       color: Colors.white,
                                                       fontWeight:
@@ -1902,7 +1968,8 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
                                   ),
                                   icon: const Icon(Icons.share),
                                   label: Text(
-                                    L10nService().translate('util_chias_569031'),
+                                    L10nService()
+                                        .translate('util_chias_569031'),
                                     style: SLTheme.quicksand(
                                         fontWeight: FontWeight.w800,
                                         fontSize: 16),

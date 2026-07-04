@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
@@ -101,12 +102,16 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
   String _prepareHtmlDocument(String html) {
     const viewport =
         '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">';
-    final isIOS = !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS);
-    final platformStyles = isIOS ? '''
+    final isIOS = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.iOS ||
+            defaultTargetPlatform == TargetPlatform.macOS);
+    final platformStyles = isIOS
+        ? '''
   #vip, a[href="#vip"] {
     display: none !important;
   }
-''' : '';
+'''
+        : '';
     final sharedStyles = '''
 <style id="sl-inject">
   :root { color-scheme: light; }
@@ -220,7 +225,9 @@ $sharedStyles
   }
 
   String _processHtmlForPlatform(String html) {
-    final isIOS = !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS);
+    final isIOS = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.iOS ||
+            defaultTargetPlatform == TargetPlatform.macOS);
     if (!isIOS) return html;
 
     var result = html;
@@ -261,7 +268,8 @@ $sharedStyles
 
       // Renumber troubleshooting heading/link if needed.
       result = result.replaceAll('7. Khắc phục sự cố', '6. Khắc phục sự cố');
-      result = result.replaceAll('7. Khắc phục sự cố thường gặp', '6. Khắc phục sự cố thường gặp');
+      result = result.replaceAll(
+          '7. Khắc phục sự cố thường gặp', '6. Khắc phục sự cố thường gặp');
 
       // Remove VIP troubleshooting row.
       result = result.replaceAll(
@@ -284,45 +292,46 @@ $sharedStyles
     if (widget.assetPath.contains('terms.html')) {
       // Hide section 7 (vip) completely
       result = result.replaceFirst(
-        RegExp(r'<section\s+class="section"\s+id="vip">[\s\S]*?</section>'), 
-        ''
-      );
+          RegExp(r'<section\s+class="section"\s+id="vip">[\s\S]*?</section>'),
+          '');
       // Hide/remove VIP link in toc
       result = result.replaceFirst(
-        RegExp(r'<a\s+href="#vip">5\. VIP, quảng cáo và phần thưởng</a>'), 
-        ''
-      );
+          RegExp(r'<a\s+href="#vip">5\. VIP, quảng cáo và phần thưởng</a>'),
+          '');
       // Renumber TOC
       result = result
-        .replaceAll('6. Bảo mật và thiết bị', '5. Bảo mật và thiết bị')
-        .replaceAll('7. Giới hạn trách nhiệm', '6. Giới hạn trách nhiệm')
-        .replaceAll('8. Liên hệ', '7. Liên hệ');
+          .replaceAll('6. Bảo mật và thiết bị', '5. Bảo mật và thiết bị')
+          .replaceAll('7. Giới hạn trách nhiệm', '6. Giới hạn trách nhiệm')
+          .replaceAll('8. Liên hệ', '7. Liên hệ');
       // Renumber headings
       result = result
-        .replaceAll('8. Bảo mật, khóa app và trách nhiệm của bạn', '7. Bảo mật, khóa app và trách nhiệm của bạn')
-        .replaceAll('9. Sở hữu trí tuệ của SoulLocket', '8. Sở hữu trí tuệ của SoulLocket')
-        .replaceAll('10. Tạm ngừng, khóa hoặc chấm dứt dịch vụ', '9. Tạm ngừng, khóa hoặc chấm dứt dịch vụ')
-        .replaceAll('11. Giới hạn trách nhiệm', '10. Giới hạn trách nhiệm')
-        .replaceAll('12. Chính sách liên quan', '11. Chính sách liên quan')
-        .replaceAll('13. Cập nhật điều khoản', '12. Cập nhật điều khoản')
-        .replaceAll('14. Liên hệ', '13. Liên hệ');
+          .replaceAll('8. Bảo mật, khóa app và trách nhiệm của bạn',
+              '7. Bảo mật, khóa app và trách nhiệm của bạn')
+          .replaceAll('9. Sở hữu trí tuệ của SoulLocket',
+              '8. Sở hữu trí tuệ của SoulLocket')
+          .replaceAll('10. Tạm ngừng, khóa hoặc chấm dứt dịch vụ',
+              '9. Tạm ngừng, khóa hoặc chấm dứt dịch vụ')
+          .replaceAll('11. Giới hạn trách nhiệm', '10. Giới hạn trách nhiệm')
+          .replaceAll('12. Chính sách liên quan', '11. Chính sách liên quan')
+          .replaceAll('13. Cập nhật điều khoản', '12. Cập nhật điều khoản')
+          .replaceAll('14. Liên hệ', '13. Liên hệ');
       // Clean up text mentions
       result = result
-        .replaceAll(', VIP và dịch vụ hỗ trợ', ' và dịch vụ hỗ trợ')
-        .replaceAll(', VIP, gọi video', ', gọi video')
-        .replaceAll('<li>Tính năng VIP/Premium, quảng cáo thưởng', '<li>Quảng cáo thưởng');
+          .replaceAll(', VIP và dịch vụ hỗ trợ', ' và dịch vụ hỗ trợ')
+          .replaceAll(', VIP, gọi video', ', gọi video')
+          .replaceAll('<li>Tính năng VIP/Premium, quảng cáo thưởng',
+              '<li>Quảng cáo thưởng');
     }
 
     // 3. Process about.html
     if (widget.assetPath.contains('about.html')) {
       // Hide VIP card
       result = result.replaceFirst(
-        RegExp(r'<div\s+class="card">\s*<strong>Có lớp miễn phí, thưởng và trả phí</strong>[\s\S]*?</div>'), 
-        ''
-      );
+          RegExp(
+              r'<div\s+class="card">\s*<strong>Có lớp miễn phí, thưởng và trả phí</strong>[\s\S]*?</div>'),
+          '');
       // Clean up text mentions
-      result = result
-        .replaceAll(', reward, VIP', '');
+      result = result.replaceAll(', reward, VIP', '');
     }
 
     return result;
@@ -383,7 +392,8 @@ $sharedStyles
                       const CircularProgressIndicator(color: Color(0xFFD81B60)),
                       SLSpacing.h16,
                       Text(
-                        L10nService().format('home_loading_percent', {'percent': (_progress * 100).toInt()}),
+                        L10nService().format('home_loading_percent',
+                            {'percent': (_progress * 100).toInt()}),
                         style: const TextStyle(
                           color: Color(0xFFD81B60),
                           fontWeight: FontWeight.bold,

@@ -69,7 +69,8 @@ class _StartSetupDialogState extends State<_StartSetupDialog> {
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(34),
                 ),
-                border: Border.all(color: accent.withValues(alpha: 0.42), width: 1.2),
+                border: Border.all(
+                    color: accent.withValues(alpha: 0.42), width: 1.2),
                 boxShadow: [
                   BoxShadow(
                     color: accent.withValues(alpha: 0.14),
@@ -400,8 +401,9 @@ class _BotStyleChoiceChip extends StatelessWidget {
             duration: const Duration(milliseconds: 180),
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
             decoration: BoxDecoration(
-              color:
-                  selected ? accent.withValues(alpha: 0.14) : const Color(0x1B1B2235),
+              color: selected
+                  ? accent.withValues(alpha: 0.14)
+                  : const Color(0x1B1B2235),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
                 color: selected ? accent : const Color(0x33486888),

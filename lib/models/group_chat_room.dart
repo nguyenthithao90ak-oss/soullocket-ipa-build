@@ -1,4 +1,5 @@
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+
 class GroupChatRoom {
   final String id;
   final String name;

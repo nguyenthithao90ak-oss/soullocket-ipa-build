@@ -1,4 +1,3 @@
-
 part of '../chat_detail_screen.dart';
 
 extension _ChatDetailHelpersPart on _ChatDetailScreenState {

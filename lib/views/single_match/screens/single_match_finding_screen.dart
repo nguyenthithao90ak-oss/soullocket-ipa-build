@@ -20,10 +20,12 @@ class SingleMatchFindingScreen extends StatefulWidget {
   });
 
   @override
-  State<SingleMatchFindingScreen> createState() => _SingleMatchFindingScreenState();
+  State<SingleMatchFindingScreen> createState() =>
+      _SingleMatchFindingScreenState();
 }
 
-class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen> with SingleTickerProviderStateMixin {
+class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen>
+    with SingleTickerProviderStateMixin {
   int _seconds = 0;
   Timer? _timer;
   late AnimationController _animCtrl;
@@ -34,7 +36,9 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen> wit
   @override
   void initState() {
     super.initState();
-    _animCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
+    _animCtrl =
+        AnimationController(vsync: this, duration: const Duration(seconds: 2))
+          ..repeat();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) setState(() => _seconds++);
     });
@@ -48,10 +52,12 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen> wit
     try {
       final cameras = await availableCameras();
       if (cameras.isEmpty) return;
-      
-      final frontCameraIndex = cameras.indexWhere((c) => c.lensDirection == CameraLensDirection.front);
-      final camera = frontCameraIndex != -1 ? cameras[frontCameraIndex] : cameras.first;
-      
+
+      final frontCameraIndex = cameras
+          .indexWhere((c) => c.lensDirection == CameraLensDirection.front);
+      final camera =
+          frontCameraIndex != -1 ? cameras[frontCameraIndex] : cameras.first;
+
       _cameraController = CameraController(
         camera,
         ResolutionPreset.medium,
@@ -96,10 +102,10 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen> wit
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = widget.isChat 
-        ? const Color(0xFFFF4F87) 
+    final accentColor = widget.isChat
+        ? const Color(0xFFFF4F87)
         : (widget.isVideo ? const Color(0xFF7C61FF) : const Color(0xFFFF4F87));
-        
+
     final size = MediaQuery.sizeOf(context);
 
     return PopScope(
@@ -111,15 +117,19 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen> wit
             if (_isCameraReady && _cameraController != null)
               Positioned.fill(
                 child: Transform.scale(
-                  scale: size.aspectRatio * _cameraController!.value.aspectRatio < 1 
-                      ? 1 / (size.aspectRatio * _cameraController!.value.aspectRatio) 
+                  scale: size.aspectRatio *
+                              _cameraController!.value.aspectRatio <
+                          1
+                      ? 1 /
+                          (size.aspectRatio *
+                              _cameraController!.value.aspectRatio)
                       : size.aspectRatio * _cameraController!.value.aspectRatio,
                   child: Center(
                     child: CameraPreview(_cameraController!),
                   ),
                 ),
               ),
-            
+
             // Dark overlay to make text readable
             Positioned.fill(
               child: Container(
@@ -127,23 +137,23 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen> wit
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: widget.isVideo 
-                      ? [
-                          Colors.black.withValues(alpha: 0.6),
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.8),
-                        ]
-                      : [
-                          accentColor.withValues(alpha: 0.35),
-                          Colors.black.withValues(alpha: 0.5),
-                          Colors.black.withValues(alpha: 0.95),
-                        ],
+                    colors: widget.isVideo
+                        ? [
+                            Colors.black.withValues(alpha: 0.6),
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.8),
+                          ]
+                        : [
+                            accentColor.withValues(alpha: 0.35),
+                            Colors.black.withValues(alpha: 0.5),
+                            Colors.black.withValues(alpha: 0.95),
+                          ],
                     stops: const [0.0, 0.4, 1.0],
                   ),
                 ),
               ),
             ),
-            
+
             SafeArea(
               child: Column(
                 children: [
@@ -156,7 +166,8 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen> wit
                         onPressed: () {
                           Navigator.pop(context, 'cancelled');
                         },
-                        icon: const Icon(Icons.close_rounded, color: Colors.white, size: 28),
+                        icon: const Icon(Icons.close_rounded,
+                            color: Colors.white, size: 28),
                         style: IconButton.styleFrom(
                           backgroundColor: Colors.black26,
                           padding: const EdgeInsets.all(12),
@@ -164,9 +175,7 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen> wit
                       ),
                     ),
                   ),
-                  
                   const Spacer(),
-                  
                   SizedBox(
                     height: 180,
                     child: Stack(
@@ -184,22 +193,31 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen> wit
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: accentColor.withValues(alpha: 1.0 - _animCtrl.value),
+                                      color: accentColor.withValues(
+                                          alpha: 1.0 - _animCtrl.value),
                                       width: 2,
                                     ),
-                                    color: accentColor.withValues(alpha: 0.15 - (_animCtrl.value * 0.15)),
+                                    color: accentColor.withValues(
+                                        alpha: 0.15 - (_animCtrl.value * 0.15)),
                                   ),
                                 ),
                                 Container(
-                                  width: 100 + (((_animCtrl.value + 0.5) % 1.0) * 140),
-                                  height: 100 + (((_animCtrl.value + 0.5) % 1.0) * 140),
+                                  width: 100 +
+                                      (((_animCtrl.value + 0.5) % 1.0) * 140),
+                                  height: 100 +
+                                      (((_animCtrl.value + 0.5) % 1.0) * 140),
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: accentColor.withValues(alpha: 1.0 - ((_animCtrl.value + 0.5) % 1.0)),
+                                      color: accentColor.withValues(
+                                          alpha: 1.0 -
+                                              ((_animCtrl.value + 0.5) % 1.0)),
                                       width: 2,
                                     ),
-                                    color: accentColor.withValues(alpha: 0.15 - (((_animCtrl.value + 0.5) % 1.0) * 0.15)),
+                                    color: accentColor.withValues(
+                                        alpha: 0.15 -
+                                            (((_animCtrl.value + 0.5) % 1.0) *
+                                                0.15)),
                                   ),
                                 ),
                               ],
@@ -221,9 +239,11 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen> wit
                             ],
                           ),
                           child: Icon(
-                            widget.isChat 
-                                ? Icons.chat_rounded 
-                                : (widget.isVideo ? Icons.videocam_rounded : Icons.call_rounded),
+                            widget.isChat
+                                ? Icons.chat_rounded
+                                : (widget.isVideo
+                                    ? Icons.videocam_rounded
+                                    : Icons.call_rounded),
                             color: Colors.white,
                             size: 48,
                           ),
@@ -233,7 +253,9 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen> wit
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    widget.isChat ? 'SOUL MATCH' : (widget.isVideo ? 'VIDEO MATCH' : 'VOICE MATCH'),
+                    widget.isChat
+                        ? 'SOUL MATCH'
+                        : (widget.isVideo ? 'VIDEO MATCH' : 'VOICE MATCH'),
                     style: SLTheme.quicksand(
                       fontSize: 28,
                       fontWeight: FontWeight.w900,
@@ -261,7 +283,8 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen> wit
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 14),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(30),
@@ -280,7 +303,14 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen> wit
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(widget.isChat ? Icons.chat_rounded : (widget.isVideo ? Icons.videocam_rounded : Icons.radar_rounded), color: Colors.white, size: 22),
+                            Icon(
+                                widget.isChat
+                                    ? Icons.chat_rounded
+                                    : (widget.isVideo
+                                        ? Icons.videocam_rounded
+                                        : Icons.radar_rounded),
+                                color: Colors.white,
+                                size: 22),
                             const SizedBox(width: 10),
                             Text(
                               '00:${_seconds.toString().padLeft(2, '0')}',

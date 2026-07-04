@@ -514,7 +514,8 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
   void _resetInactivityTimer() {
     if (!mounted) return;
     _inactivityTimer?.cancel();
-    _inactivityTimer = Timer(_HomeScreenState._inactivityTimeout, _onInactivityTimeout);
+    _inactivityTimer =
+        Timer(_HomeScreenState._inactivityTimeout, _onInactivityTimeout);
   }
 
   void _onInactivityTimeout() {
@@ -711,7 +712,8 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
       } else {
         final graceData = Map<String, dynamic>.from(graceSnap.value as Map);
         final startedAt = (graceData['startedAt'] as num?)?.toInt() ?? now;
-        final lastNotifiedAt = (graceData['lastNotifiedAt'] as num?)?.toInt() ?? 0;
+        final lastNotifiedAt =
+            (graceData['lastNotifiedAt'] as num?)?.toInt() ?? 0;
 
         final diffMs = now - startedAt;
         final daysElapsed = diffMs / (24 * 60 * 60 * 1000);
@@ -787,7 +789,8 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
                 color: const Color(0xFFFF4B91).withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.warning_amber_rounded, color: Color(0xFFFF4B91), size: 24),
+              child: const Icon(Icons.warning_amber_rounded,
+                  color: Color(0xFFFF4B91), size: 24),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -825,14 +828,16 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFFF4B91),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () {
               Navigator.pop(ctx);
               Navigator.push(
                 context,
                 SLRoute<void>(
-                  builder: (_) => SettingsGiftLinksManagerScreen(houseId: houseId),
+                  builder: (_) =>
+                      SettingsGiftLinksManagerScreen(houseId: houseId),
                 ),
               );
             },
@@ -865,7 +870,8 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
                 color: const Color(0xFF00C853).withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.info_outline_rounded, color: Color(0xFF00C853), size: 24),
+              child: const Icon(Icons.info_outline_rounded,
+                  color: Color(0xFF00C853), size: 24),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -893,7 +899,8 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF00C853),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () => Navigator.pop(ctx),
             child: Text(

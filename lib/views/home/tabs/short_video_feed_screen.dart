@@ -235,7 +235,8 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
                   }
                   final post = mediaPosts[index];
                   return _ShortVideoFeedPostCard(
-                    key: ValueKey('${post.id}_${post.videoUrl}_${post.imageUrl}'),
+                    key: ValueKey(
+                        '${post.id}_${post.videoUrl}_${post.imageUrl}'),
                     post: post,
                     houseId: widget.houseId,
                     blockedUsers: _blockedUsers,
@@ -245,7 +246,7 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
                 },
               );
             }),
-              ..._flyingHearts.map((h) => _HeartAnimation(
+          ..._flyingHearts.map((h) => _HeartAnimation(
                 key: ValueKey(h.id),
                 heart: h,
                 onComplete: () {

@@ -130,11 +130,13 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
     );
     _jumpAnimation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 0.0, end: -25.0).chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween<double>(begin: 0.0, end: -25.0)
+            .chain(CurveTween(curve: Curves.easeOut)),
         weight: 50,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: -25.0, end: 0.0).chain(CurveTween(curve: Curves.easeIn)),
+        tween: Tween<double>(begin: -25.0, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeIn)),
         weight: 50,
       ),
     ]).animate(_jumpController);
@@ -298,7 +300,8 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
         animation: Listenable.merge([_wobbleController, _jumpController]),
         builder: (context, child) {
           final rotation = _isWalking ? _wobbleAnimation.value : 0.0;
-          final verticalOffset = (_isWalking ? _hopAnimation.value : 0.0) + _jumpAnimation.value;
+          final verticalOffset =
+              (_isWalking ? _hopAnimation.value : 0.0) + _jumpAnimation.value;
 
           return Transform.translate(
             offset: Offset(0, verticalOffset),
@@ -320,7 +323,8 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.9),
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFFFB3CA), width: 2),
+                        border: Border.all(
+                            color: const Color(0xFFFFB3CA), width: 2),
                       ),
                       child: const Center(
                         child: Icon(

@@ -2,8 +2,7 @@ import 'widgets/utilities_tab_body.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:intl/intl.dart';
-import 'package:flutter/foundation.dart'
-    show kIsWeb, listEquals;
+import 'package:flutter/foundation.dart' show kIsWeb, listEquals;
 
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -488,14 +487,17 @@ class _UtilitiesTabState extends State<UtilitiesTab>
         await prefs.setInt('utility_click_tap_target', nextTarget);
 
         // Kiểm tra giới hạn 2 tiếng
-        final lastShownMs = prefs.getInt('utility_click_ad_last_shown_time') ?? 0;
+        final lastShownMs =
+            prefs.getInt('utility_click_ad_last_shown_time') ?? 0;
         final timeDiff = now.millisecondsSinceEpoch - lastShownMs;
-        final has2HourCooldownPassed = lastShownMs == 0 || timeDiff >= 2 * 60 * 60 * 1000;
+        final has2HourCooldownPassed =
+            lastShownMs == 0 || timeDiff >= 2 * 60 * 60 * 1000;
 
         // Kiểm tra giới hạn tối đa 3 cái một ngày
         final todayStr = DateFormat('yyyy-MM-dd').format(now);
         final savedDate = prefs.getString('utility_click_ad_shown_date') ?? '';
-        int shownToday = prefs.getInt('utility_click_ad_shown_today_count') ?? 0;
+        int shownToday =
+            prefs.getInt('utility_click_ad_shown_today_count') ?? 0;
 
         if (savedDate != todayStr) {
           shownToday = 0;
@@ -505,14 +507,17 @@ class _UtilitiesTabState extends State<UtilitiesTab>
 
         final isUnderDailyLimit = shownToday < 3;
 
-        debugPrint('UtilityClickAd: Cooldown passed = $has2HourCooldownPassed, Shown today = $shownToday, Under limit = $isUnderDailyLimit');
+        debugPrint(
+            'UtilityClickAd: Cooldown passed = $has2HourCooldownPassed, Shown today = $shownToday, Under limit = $isUnderDailyLimit');
 
         if (has2HourCooldownPassed && isUnderDailyLimit) {
           debugPrint('UtilityClickAd: Target reached! Showing click-count ad.');
           final shown = await _adMob.showInterstitialAd();
           if (shown) {
-            await prefs.setInt('utility_click_ad_last_shown_time', now.millisecondsSinceEpoch);
-            await prefs.setInt('utility_click_ad_shown_today_count', shownToday + 1);
+            await prefs.setInt(
+                'utility_click_ad_last_shown_time', now.millisecondsSinceEpoch);
+            await prefs.setInt(
+                'utility_click_ad_shown_today_count', shownToday + 1);
             _lastUtilityAdTime = now;
           }
         }

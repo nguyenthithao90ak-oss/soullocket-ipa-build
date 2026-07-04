@@ -15,18 +15,21 @@ class CloudflareR2Service {
   // Key được lưu trong file keys_r2.json (đã thêm .gitignore).
   // Dùng build_aab.bat hoặc flutter_run.bat để build/chạy tự động.
   static const String accessKey = String.fromEnvironment('R2_ACCESS_KEY_ID');
-  static const String secretKey = String.fromEnvironment('R2_SECRET_ACCESS_KEY');
+  static const String secretKey =
+      String.fromEnvironment('R2_SECRET_ACCESS_KEY');
   static const String endpoint = String.fromEnvironment('R2_ENDPOINT_URL');
-  static const String bucketName = String.fromEnvironment('R2_BUCKET_NAME', defaultValue: 'soullocket-media');
+  static const String bucketName = String.fromEnvironment('R2_BUCKET_NAME',
+      defaultValue: 'soullocket-media');
   static const String publicDomain = String.fromEnvironment('R2_PUBLIC_DOMAIN');
 
   Minio? _minio;
 
-  bool get isConfigured => accessKey.isNotEmpty && secretKey.isNotEmpty && endpoint.isNotEmpty;
+  bool get isConfigured =>
+      accessKey.isNotEmpty && secretKey.isNotEmpty && endpoint.isNotEmpty;
 
   void init() {
     if (!isConfigured) return;
-    
+
     // Endpoint của Cloudflare R2 thường có dạng: https://<ACCOUNT_ID>.r2.cloudflarestorage.com
     final uri = Uri.tryParse(endpoint);
     if (uri == null) return;
@@ -41,7 +44,8 @@ class CloudflareR2Service {
   }
 
   /// Uploads base64 image data to Cloudflare R2
-  Future<String?> uploadBase64(String base64Data, {required String folderPath, String extension = 'jpg'}) async {
+  Future<String?> uploadBase64(String base64Data,
+      {required String folderPath, String extension = 'jpg'}) async {
     if (!isConfigured || _minio == null) {
       debugPrint('[CloudflareR2] R2 is not configured.');
       return null;
@@ -56,15 +60,16 @@ class CloudflareR2Service {
 
       // Decode base64 sang mảng byte
       final bytes = base64Decode(cleanBase64);
-      
+
       // Tạo một file tạm thời
       final tempDir = await getTemporaryDirectory();
-      final tempFile = File('${tempDir.path}/temp_upload_${DateTime.now().millisecondsSinceEpoch}.$extension');
+      final tempFile = File(
+          '${tempDir.path}/temp_upload_${DateTime.now().millisecondsSinceEpoch}.$extension');
       await tempFile.writeAsBytes(bytes);
 
       // Dùng hàm uploadFile đã có để đẩy lên R2
       final url = await uploadFile(tempFile, folderPath: folderPath);
-      
+
       // Xóa file tạm để giải phóng bộ nhớ
       if (await tempFile.exists()) {
         await tempFile.delete();
@@ -86,7 +91,8 @@ class CloudflareR2Service {
 
     try {
       final fileName = path.basename(file.path);
-      final uniqueFileName = '${DateTime.now().millisecondsSinceEpoch}_$fileName';
+      final uniqueFileName =
+          '${DateTime.now().millisecondsSinceEpoch}_$fileName';
       final objectName = '$folderPath/$uniqueFileName';
 
       // Upload file sử dụng Minio SDK
@@ -152,7 +158,8 @@ class CloudflareR2Service {
   /// Lấy object name từ public URL
   String? _extractObjectName(String url) {
     final normalized = url.trim();
-    if (publicDomain.isEmpty || !normalized.startsWith(publicDomain)) return null;
+    if (publicDomain.isEmpty || !normalized.startsWith(publicDomain))
+      return null;
 
     const prefix = '$publicDomain/';
     if (!normalized.startsWith(prefix)) return null;

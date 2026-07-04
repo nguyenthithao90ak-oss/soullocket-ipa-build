@@ -49,7 +49,12 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     }
 
     try {
-      final snapshot = await _db.child('houses').orderByChild('createdAt').limitToLast(100).get().timeout(const Duration(seconds: 10));
+      final snapshot = await _db
+          .child('houses')
+          .orderByChild('createdAt')
+          .limitToLast(100)
+          .get()
+          .timeout(const Duration(seconds: 10));
       final List<Map<String, dynamic>> loaded = [];
 
       if (snapshot.exists) {
@@ -79,8 +84,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       setState(() {
         _errorText = AppErrorMapper.resolve(
           error,
-          fallbackMessage:
-              context.tr('admin_chathtidan_64c8c0'),
+          fallbackMessage: context.tr('admin_chathtidan_64c8c0'),
         ).message;
       });
     } finally {
@@ -206,7 +210,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(context.tr('admin_hy_1e4050'), style: const TextStyle(color: Colors.grey)),
+            child: Text(context.tr('admin_hy_1e4050'),
+                style: const TextStyle(color: Colors.grey)),
           ),
           if (actionType == 'ban') ...[
             ElevatedButton(
@@ -224,8 +229,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 _executeAction('unban', house['id'], '');
                 Navigator.pop(ctx);
               },
-              child:
-                  Text(context.tr('admin_mkha_b8cf89'), style: const TextStyle(color: Colors.white)),
+              child: Text(context.tr('admin_mkha_b8cf89'),
+                  style: const TextStyle(color: Colors.white)),
             ),
           ],
           if (actionType == 'vip')
@@ -235,8 +240,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 _executeAction('add_vip', house['id'], '');
                 Navigator.pop(ctx);
               },
-              child:
-                  Text(context.tr('admin_cppro_ece366'), style: const TextStyle(color: Colors.black)),
+              child: Text(context.tr('admin_cppro_ece366'),
+                  style: const TextStyle(color: Colors.black)),
             ),
         ],
       ),
@@ -278,8 +283,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       if (action == 'ban_perm' || action == 'unban') {}
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.tr('admin_thaotcthnh_1f60b3'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr('admin_thaotcthnh_1f60b3'))));
       _loadData(refresh: true);
     } catch (e) {
       final errorInfo = AppErrorMapper.resolve(
@@ -390,11 +395,15 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                             style: const TextStyle(color: Colors.white),
                             items: [
                               DropdownMenuItem(
-                                  value: 'all', child: Text(context.tr('admin_ttc_d8586d'))),
+                                  value: 'all',
+                                  child: Text(context.tr('admin_ttc_d8586d'))),
                               DropdownMenuItem(
-                                  value: 'vip', child: Text(context.tr('admin_chpro_b8ad3b'))),
+                                  value: 'vip',
+                                  child:
+                                      Text(context.tr('admin_chpro_b8ad3b'))),
                               DropdownMenuItem(
-                                  value: 'banned', child: Text(context.tr('admin_kha_f4517f'))),
+                                  value: 'banned',
+                                  child: Text(context.tr('admin_kha_f4517f'))),
                             ],
                             onChanged: (val) {
                               if (val != null) {
@@ -495,14 +504,16 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                             color: Colors.amber),
                                         onPressed: () =>
                                             _showActionDialog(h, 'vip'),
-                                        tooltip: context.tr('admin_cppro_ece366'),
+                                        tooltip:
+                                            context.tr('admin_cppro_ece366'),
                                       ),
                                       IconButton(
                                         icon: const Icon(Icons.block_rounded,
                                             color: Colors.red),
                                         onPressed: () =>
                                             _showActionDialog(h, 'ban'),
-                                        tooltip: context.tr('admin_khamkha_6a6a2d'),
+                                        tooltip:
+                                            context.tr('admin_khamkha_6a6a2d'),
                                       ),
                                     ],
                                   ),

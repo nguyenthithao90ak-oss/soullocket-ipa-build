@@ -289,8 +289,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           await _showGeneratedRecoveryCodeDialog(
             recoveryCode,
             title: context.tr('util_mkhiphcmi_44cc09'),
-            message:
-                context.tr('util_lumnyniant_6e9a93'),
+            message: context.tr('util_lumnyniant_6e9a93'),
           );
         }
       }
@@ -320,8 +319,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   }
 
   Future<void> _loadPhotos() async {
-    final legacyPasswordRequiredText =
-        context.tr('util_cnnhpmtkhu_b5f391');
+    final legacyPasswordRequiredText = context.tr('util_cnnhpmtkhu_b5f391');
     final legacyMigrationText = context.tr('util_cnidungccn_44f5ff');
     final loadFailedText = context.tr('util_khngthtikh_150eff');
     final query = _dbRef
@@ -340,7 +338,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             if (value is! Map) {
               return <String, dynamic>{'id': entry.key};
             }
-            final item = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(value));
+            final item =
+                Map<String, dynamic>.from(Map<dynamic, dynamic>.from(value));
             item['id'] = entry.key;
 
             if (item['caption'] != null &&
@@ -367,7 +366,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           _safeSetState(() => _encStatusMsg = legacyMigrationText);
         }
 
-        loaded.sort((a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0));
+        loaded.sort(
+            (a, b) => (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0));
         if (mounted) {
           final oldestTs =
               loaded.isEmpty ? null : (loaded.last['ts'] as num?)?.toInt();
@@ -409,8 +409,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     if (_isLoadingMorePhotos || !_hasMorePhotos) {
       return;
     }
-    final legacyPasswordRequiredText =
-        context.tr('util_cnnhpmtkhu_b5f391');
+    final legacyPasswordRequiredText = context.tr('util_cnnhpmtkhu_b5f391');
     _safeSetState(() {
       _isLoadingMorePhotos = true;
     });
@@ -484,8 +483,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         return;
       }
       if (needsLegacyMigrationLocal) {
-        _encStatusMsg =
-            context.tr('util_cnidungccn_44f5ff');
+        _encStatusMsg = context.tr('util_cnidungccn_44f5ff');
       }
       final existingIds = _photos.map((item) => item['id']).toSet();
       final mergedMore = loadedMore
@@ -537,12 +535,10 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     const enforceLocalDailyLimit = true;
 
     // Total cap check
-    final vaultCountSnap = await _dbRef
-        .child('houses/${widget.houseId}/vaultCount')
-        .get();
-    final currentTotal = vaultCountSnap.value is num
-        ? (vaultCountSnap.value as num).toInt()
-        : 0;
+    final vaultCountSnap =
+        await _dbRef.child('houses/${widget.houseId}/vaultCount').get();
+    final currentTotal =
+        vaultCountSnap.value is num ? (vaultCountSnap.value as num).toInt() : 0;
     if (currentTotal >= StorageService.secretVaultTotalCap) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -643,96 +639,96 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               backgroundColor: SLColors.darkBgCard,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
-            title: Text(context.tr('util_thmghichty_5651be'),
-                style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w800, color: Colors.white)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: captionCtrl,
-                  style: const TextStyle(color: Colors.white),
-                  maxLength: 1000,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white12,
-                    hintText: context.tr('util_mtkhonhkhc_52663c'),
-                    hintStyle: const TextStyle(color: Colors.white38),
-                    counterText: '',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.white24)),
-                    enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.white24)),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: SLColors.danger)),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: Checkbox(
-                        value: dontAskAgain,
-                        onChanged: (v) {
-                          setLocalState(() => dontAskAgain = v ?? false);
-                        },
-                        checkColor: Colors.white,
-                        activeColor: SLColors.danger,
-                        side: const BorderSide(color: Colors.white54),
-                      ),
+              title: Text(context.tr('util_thmghichty_5651be'),
+                  style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w800, color: Colors.white)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: captionCtrl,
+                    style: const TextStyle(color: Colors.white),
+                    maxLength: 1000,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white12,
+                      hintText: context.tr('util_mtkhonhkhc_52663c'),
+                      hintStyle: const TextStyle(color: Colors.white38),
+                      counterText: '',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.white24)),
+                      enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.white24)),
+                      focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: SLColors.danger)),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setLocalState(() => dontAskAgain = !dontAskAgain);
-                        },
-                        child: Text(
-                          context.tr('util_khnghilitr_e3bf9f'),
-                          style: SLTheme.quicksand(
-                              color: Colors.white70, fontSize: 13),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Checkbox(
+                          value: dontAskAgain,
+                          onChanged: (v) {
+                            setLocalState(() => dontAskAgain = v ?? false);
+                          },
+                          checkColor: Colors.white,
+                          activeColor: SLColors.danger,
+                          side: const BorderSide(color: Colors.white54),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setLocalState(() => dontAskAgain = !dontAskAgain);
+                          },
+                          child: Text(
+                            context.tr('util_khnghilitr_e3bf9f'),
+                            style: SLTheme.quicksand(
+                                color: Colors.white70, fontSize: 13),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      if (dontAskAgain) {
+                        prefs.setInt(
+                            skipDialogKey,
+                            DateTime.now().millisecondsSinceEpoch +
+                                2 * 60 * 60 * 1000);
+                      }
+                      Navigator.pop(ctx, '');
+                    },
+                    child: Text(context.tr('util_bqua_874b71'),
+                        style: SLTheme.quicksand(color: Colors.white38))),
+                TextButton(
+                    onPressed: () {
+                      if (dontAskAgain) {
+                        prefs.setInt(
+                            skipDialogKey,
+                            DateTime.now().millisecondsSinceEpoch +
+                                2 * 60 * 60 * 1000);
+                      }
+                      Navigator.pop(ctx, captionCtrl.text.trim());
+                    },
+                    child: Text(context.tr('util_thm_56ef2c'),
+                        style: SLTheme.quicksand(color: SLColors.danger))),
               ],
             ),
-            actions: [
-              TextButton(
-                  onPressed: () {
-                    if (dontAskAgain) {
-                      prefs.setInt(
-                          skipDialogKey,
-                          DateTime.now().millisecondsSinceEpoch +
-                              2 * 60 * 60 * 1000);
-                    }
-                    Navigator.pop(ctx, '');
-                  },
-                  child: Text(context.tr('util_bqua_874b71'),
-                      style: SLTheme.quicksand(color: Colors.white38))),
-              TextButton(
-                  onPressed: () {
-                    if (dontAskAgain) {
-                      prefs.setInt(
-                          skipDialogKey,
-                          DateTime.now().millisecondsSinceEpoch +
-                              2 * 60 * 60 * 1000);
-                    }
-                    Navigator.pop(ctx, captionCtrl.text.trim());
-                  },
-                  child: Text(context.tr('util_thm_56ef2c'),
-                      style: SLTheme.quicksand(color: SLColors.danger))),
-            ],
           ),
         ),
-      ),
-    );
+      );
       if (result == null) return;
       captionPlain = result;
     }
@@ -793,8 +789,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       debugPrint('Vault upload error: $e\n$stack');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Lỗi tải lên: $e'),
-            backgroundColor: SLColors.danger,
+          content: Text('Lỗi tải lên: $e'),
+          backgroundColor: SLColors.danger,
         ));
       }
     } finally {
@@ -841,7 +837,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     }
 
     await _dbRef.child('houses/${widget.houseId}/private_secure/$id').remove();
-    await _dbRef.child('houses/${widget.houseId}/vaultCount')
+    await _dbRef
+        .child('houses/${widget.houseId}/vaultCount')
         .set(ServerValue.increment(-1));
   }
 
@@ -878,85 +875,49 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         child: StatefulBuilder(
           builder: (ctx, setLocalState) => AlertDialog(
             backgroundColor: SLColors.darkBgCard,
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          scrollable: true,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-            hasSetup ? context.tr('util_mkhakhomt_421171') : context.tr('util_thitlpkhom_792656'),
-            style: SLTheme.quicksand(
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            scrollable: true,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Text(
+              hasSetup
+                  ? context.tr('util_mkhakhomt_421171')
+                  : context.tr('util_thitlpkhom_792656'),
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
             ),
-          ),
-          content: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  hasSetup
-                      ? context.tr('util_nhpmtkhukh_e4639a')
-                      : context.tr('util_tomtkhukho_e3de4f'),
-                  style: SLTheme.quicksand(color: Colors.white70),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: passphraseCtrl,
-                  obscureText: obscurePass,
-                  style: const TextStyle(color: Colors.white),
-                  maxLength: 32,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white12,
-                    hintText: context.tr('util_mtkhutithi_d4f304'),
-                    hintStyle: const TextStyle(color: Colors.white38),
-                    counterText: '',
-                    suffixIcon: IconButton(
-                      onPressed: () =>
-                          setLocalState(() => obscurePass = !obscurePass),
-                      icon: Icon(
-                        obscurePass ? Icons.visibility : Icons.visibility_off,
-                        color: Colors.white54,
-                      ),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.white24),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.white24),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: SLColors.danger),
-                    ),
+            content: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    hasSetup
+                        ? context.tr('util_nhpmtkhukh_e4639a')
+                        : context.tr('util_tomtkhukho_e3de4f'),
+                    style: SLTheme.quicksand(color: Colors.white70),
                   ),
-                ),
-                if (!hasSetup) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   TextField(
-                    controller: confirmCtrl,
-                    obscureText: obscureConfirm,
+                    controller: passphraseCtrl,
+                    obscureText: obscurePass,
                     style: const TextStyle(color: Colors.white),
                     maxLength: 32,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.white12,
-                      hintText: context.tr('util_nhplimtkhu_eee7a7'),
+                      hintText: context.tr('util_mtkhutithi_d4f304'),
                       hintStyle: const TextStyle(color: Colors.white38),
                       counterText: '',
                       suffixIcon: IconButton(
-                        onPressed: () => setLocalState(
-                          () => obscureConfirm = !obscureConfirm,
-                        ),
+                        onPressed: () =>
+                            setLocalState(() => obscurePass = !obscurePass),
                         icon: Icon(
-                          obscureConfirm
-                              ? Icons.visibility
-                              : Icons.visibility_off,
+                          obscurePass ? Icons.visibility : Icons.visibility_off,
                           color: Colors.white54,
                         ),
                       ),
@@ -974,58 +935,98 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                       ),
                     ),
                   ),
+                  if (!hasSetup) ...[
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: confirmCtrl,
+                      obscureText: obscureConfirm,
+                      style: const TextStyle(color: Colors.white),
+                      maxLength: 32,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white12,
+                        hintText: context.tr('util_nhplimtkhu_eee7a7'),
+                        hintStyle: const TextStyle(color: Colors.white38),
+                        counterText: '',
+                        suffixIcon: IconButton(
+                          onPressed: () => setLocalState(
+                            () => obscureConfirm = !obscureConfirm,
+                          ),
+                          icon: Icon(
+                            obscureConfirm
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: Colors.white54,
+                          ),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.white24),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.white24),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: SLColors.danger),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          actions: [
-            if (hasSetup)
+            actions: [
+              if (hasSetup)
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, _recoveryAction),
+                  child: Text(
+                    context.tr('util_dngmkhiphc_698038'),
+                    style: SLTheme.quicksand(color: SLColors.info),
+                  ),
+                ),
               TextButton(
-                onPressed: () => Navigator.pop(ctx, _recoveryAction),
+                onPressed: () => Navigator.pop(ctx),
                 child: Text(
-                  context.tr('util_dngmkhiphc_698038'),
-                  style: SLTheme.quicksand(color: SLColors.info),
+                  context.tr('util_ng_aecc61'),
+                  style: SLTheme.quicksand(color: Colors.white38),
                 ),
               ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                context.tr('util_ng_aecc61'),
-                style: SLTheme.quicksand(color: Colors.white38),
+              TextButton(
+                onPressed: () {
+                  final passphrase = passphraseCtrl.text.trim();
+                  final confirm = confirmCtrl.text.trim();
+                  if (passphrase.length < 8) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(context.tr('util_mtkhukhomt_e98699')),
+                      ),
+                    );
+                    return;
+                  }
+                  if (!hasSetup && passphrase != confirm) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(context.tr('util_mtkhunhpli_f31f82')),
+                      ),
+                    );
+                    return;
+                  }
+                  Navigator.pop(ctx, passphrase);
+                },
+                child: Text(
+                  hasSetup
+                      ? context.tr('util_mkha_e16936')
+                      : context.tr('util_thitlp_486746'),
+                  style: SLTheme.quicksand(color: SLColors.danger),
+                ),
               ),
-            ),
-            TextButton(
-              onPressed: () {
-                final passphrase = passphraseCtrl.text.trim();
-                final confirm = confirmCtrl.text.trim();
-                if (passphrase.length < 8) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(context.tr('util_mtkhukhomt_e98699')),
-                    ),
-                  );
-                  return;
-                }
-                if (!hasSetup && passphrase != confirm) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(context.tr('util_mtkhunhpli_f31f82')),
-                    ),
-                  );
-                  return;
-                }
-                Navigator.pop(ctx, passphrase);
-              },
-              child: Text(
-                hasSetup ? context.tr('util_mkha_e16936') : context.tr('util_thitlp_486746'),
-                style: SLTheme.quicksand(color: SLColors.danger),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   Future<String?> _showRecoveryCodeInputDialog() async {
@@ -1056,49 +1057,50 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         ),
         child: AlertDialog(
           backgroundColor: SLColors.darkBgCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          context.tr('util_nhpmkhiphc_44a271'),
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            context.tr('util_nhpmkhiphc_44a271'),
+            style: SLTheme.quicksand(
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+            ),
           ),
+          content: TextField(
+            controller: controller,
+            textCapitalization: TextCapitalization.characters,
+            style: const TextStyle(color: Colors.white),
+            maxLength: 30,
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white12,
+              hintText: 'VD: ABCD-EFGH-JKLM-NPQR',
+              hintStyle: const TextStyle(color: Colors.white38),
+              counterText: '',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                context.tr('util_ng_f63d1e'),
+                style: SLTheme.quicksand(color: Colors.white38),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+              child: Text(
+                context.tr('util_mkho_68a790'),
+                style: SLTheme.quicksand(color: SLColors.danger),
+              ),
+            ),
+          ],
         ),
-        content: TextField(
-          controller: controller,
-          textCapitalization: TextCapitalization.characters,
-          style: const TextStyle(color: Colors.white),
-          maxLength: 30,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white12,
-            hintText: 'VD: ABCD-EFGH-JKLM-NPQR',
-            hintStyle: const TextStyle(color: Colors.white38),
-            counterText: '',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              context.tr('util_ng_f63d1e'),
-              style: SLTheme.quicksand(color: Colors.white38),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: Text(
-              context.tr('util_mkho_68a790'),
-              style: SLTheme.quicksand(color: SLColors.danger),
-            ),
-          ),
-        ],
       ),
-    ),
-  );
+    );
   }
 
   Future<void> _showGeneratedRecoveryCodeDialog(
@@ -1194,8 +1196,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           content: Text(
             AppErrorMapper.resolve(
               e,
-              fallbackMessage:
-                  context.tr('util_chathtolim_b5c569'),
+              fallbackMessage: context.tr('util_chathtolim_b5c569'),
             ).message,
           ),
         ),
@@ -1263,7 +1264,9 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             ListTile(
               leading: const Icon(Icons.key_rounded, color: SLColors.infoLight),
               title: Text(
-                _hasRecoveryCode ? context.tr('util_tolimkhiph_6a2c38') : context.tr('util_tomkhiphc_67ed4c'),
+                _hasRecoveryCode
+                    ? context.tr('util_tolimkhiph_6a2c38')
+                    : context.tr('util_tomkhiphc_67ed4c'),
                 style: SLTheme.quicksand(color: Colors.white),
               ),
               subtitle: Text(
@@ -1336,173 +1339,176 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         child: StatefulBuilder(
           builder: (ctx, setLocalState) => AlertDialog(
             backgroundColor: SLColors.darkBgCard,
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          scrollable: true,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(context.tr('util_imtkhu_ff6fe7'),
-              style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w800, color: Colors.white)),
-          content: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextField(
-                  controller: oldPassCtrl,
-                  obscureText: obscureOld,
-                  style: const TextStyle(color: Colors.white),
-                  maxLength: 32,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white12,
-                    labelText: context.tr('util_mtkhuc_36b0a2'),
-                    labelStyle: const TextStyle(color: Colors.white70),
-                    counterText: '',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                          obscureOld ? Icons.visibility : Icons.visibility_off,
-                          color: Colors.white54),
-                      onPressed: () =>
-                          setLocalState(() => obscureOld = !obscureOld),
-                    ),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: newPassCtrl,
-                  obscureText: obscureNew,
-                  style: const TextStyle(color: Colors.white),
-                  maxLength: 32,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white12,
-                    labelText: context.tr('util_mtkhumi_ccef95'),
-                    labelStyle: const TextStyle(color: Colors.white70),
-                    counterText: '',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                          obscureNew ? Icons.visibility : Icons.visibility_off,
-                          color: Colors.white54),
-                      onPressed: () =>
-                          setLocalState(() => obscureNew = !obscureNew),
-                    ),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: confirmCtrl,
-                  obscureText: obscureNew,
-                  style: const TextStyle(color: Colors.white),
-                  maxLength: 32,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white12,
-                    labelText: context.tr('util_nhplimtkhu_82a9a4'),
-                    labelStyle: const TextStyle(color: Colors.white70),
-                    counterText: '',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                if (isWithin12Hours) ...[
-                  const SizedBox(height: 16),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        _showVaultResetInfoDialog(isWithin12Hours);
-                      },
-                      child: Text(context.tr('util_tiqunmtkhu_e343b1'),
-                          style: SLTheme.quicksand(
-                              color: SLColors.info,
-                              decoration: TextDecoration.underline)),
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            scrollable: true,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Text(context.tr('util_imtkhu_ff6fe7'),
+                style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w800, color: Colors.white)),
+            content: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: oldPassCtrl,
+                    obscureText: obscureOld,
+                    style: const TextStyle(color: Colors.white),
+                    maxLength: 32,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white12,
+                      labelText: context.tr('util_mtkhuc_36b0a2'),
+                      labelStyle: const TextStyle(color: Colors.white70),
+                      counterText: '',
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                            obscureOld
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: Colors.white54),
+                        onPressed: () =>
+                            setLocalState(() => obscureOld = !obscureOld),
+                      ),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
-                ]
-              ],
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: newPassCtrl,
+                    obscureText: obscureNew,
+                    style: const TextStyle(color: Colors.white),
+                    maxLength: 32,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white12,
+                      labelText: context.tr('util_mtkhumi_ccef95'),
+                      labelStyle: const TextStyle(color: Colors.white70),
+                      counterText: '',
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                            obscureNew
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: Colors.white54),
+                        onPressed: () =>
+                            setLocalState(() => obscureNew = !obscureNew),
+                      ),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: confirmCtrl,
+                    obscureText: obscureNew,
+                    style: const TextStyle(color: Colors.white),
+                    maxLength: 32,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white12,
+                      labelText: context.tr('util_nhplimtkhu_82a9a4'),
+                      labelStyle: const TextStyle(color: Colors.white70),
+                      counterText: '',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                  if (isWithin12Hours) ...[
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _showVaultResetInfoDialog(isWithin12Hours);
+                        },
+                        child: Text(context.tr('util_tiqunmtkhu_e343b1'),
+                            style: SLTheme.quicksand(
+                                color: SLColors.info,
+                                decoration: TextDecoration.underline)),
+                      ),
+                    ),
+                  ]
+                ],
+              ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child:
-                  Text(context.tr('util_hy_1e4050'), style: SLTheme.quicksand(color: Colors.white38)),
-            ),
-            TextButton(
-              onPressed: () async {
-                final oldPass = oldPassCtrl.text.trim();
-                final newPass = newPassCtrl.text.trim();
-                final confirm = confirmCtrl.text.trim();
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(context.tr('util_hy_1e4050'),
+                    style: SLTheme.quicksand(color: Colors.white38)),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final oldPass = oldPassCtrl.text.trim();
+                  final newPass = newPassCtrl.text.trim();
+                  final confirm = confirmCtrl.text.trim();
 
-                if (oldPass.isEmpty || newPass.isEmpty) return;
-                if (newPass.length < 8) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(context.tr('util_mtkhumiphi_0da717'))));
-                  return;
-                }
-                if (newPass != confirm) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(context.tr('util_mtkhumicha_83d367'))));
-                  return;
-                }
-
-                _safeSetState(() {
-                  _encryptionReady = false;
-                  _encStatusMsg = context.tr('util_angimtkhuv_db04a3');
-                });
-                Navigator.pop(ctx);
-
-                try {
-                  await _enc.changePassphrase(widget.houseId, oldPass, newPass);
-                  final recoveryCode =
-                      await _enc.createRecoveryCodeIfMissing(widget.houseId);
-                  if (mounted) {
-                    _safeSetState(() {
-                      _encryptionReady = true;
-                      _encStatusMsg = context.tr('util_imtkhuthnh_82a076');
-                      _hasRecoveryCode = true;
-                    });
+                  if (oldPass.isEmpty || newPass.isEmpty) return;
+                  if (newPass.length < 8) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(context.tr('util_imtkhuthnh_e54dc2')),
-                        backgroundColor: SLColors.success));
-                    if (recoveryCode != null) {
-                      await _showGeneratedRecoveryCodeDialog(
-                        recoveryCode,
-                        title: context.tr('util_mkhiphcmi_44cc09'),
-                        message:
-                            context.tr('util_mtkhuinnmk_e727c7'),
-                      );
+                        content: Text(context.tr('util_mtkhumiphi_0da717'))));
+                    return;
+                  }
+                  if (newPass != confirm) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(context.tr('util_mtkhumicha_83d367'))));
+                    return;
+                  }
+
+                  _safeSetState(() {
+                    _encryptionReady = false;
+                    _encStatusMsg = context.tr('util_angimtkhuv_db04a3');
+                  });
+                  Navigator.pop(ctx);
+
+                  try {
+                    await _enc.changePassphrase(
+                        widget.houseId, oldPass, newPass);
+                    final recoveryCode =
+                        await _enc.createRecoveryCodeIfMissing(widget.houseId);
+                    if (mounted) {
+                      _safeSetState(() {
+                        _encryptionReady = true;
+                        _encStatusMsg = context.tr('util_imtkhuthnh_82a076');
+                        _hasRecoveryCode = true;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(context.tr('util_imtkhuthnh_e54dc2')),
+                          backgroundColor: SLColors.success));
+                      if (recoveryCode != null) {
+                        await _showGeneratedRecoveryCodeDialog(
+                          recoveryCode,
+                          title: context.tr('util_mkhiphcmi_44cc09'),
+                          message: context.tr('util_mtkhuinnmk_e727c7'),
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      _safeSetState(() {
+                        _encryptionReady = true;
+                        _encStatusMsg = context.tr('util_khomtm_a6c43e');
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(context.tr('util_mtkhucchan_decb9b')),
+                          backgroundColor: SLColors.danger));
                     }
                   }
-                } catch (e) {
-                  if (mounted) {
-                    _safeSetState(() {
-                      _encryptionReady = true;
-                      _encStatusMsg = context.tr('util_khomtm_a6c43e');
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(
-                            context.tr('util_mtkhucchan_decb9b')),
-                        backgroundColor: SLColors.danger));
-                  }
-                }
-              },
-              child: Text(context.tr('util_imtkhu_82844c'),
-                  style: SLTheme.quicksand(color: SLColors.danger)),
-            ),
-          ],
+                },
+                child: Text(context.tr('util_imtkhu_82844c'),
+                    style: SLTheme.quicksand(color: SLColors.danger)),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   void _showVaultResetInfoDialog(bool isWithin12Hours) {
@@ -1512,7 +1518,9 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         backgroundColor: SLColors.darkBgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          _hasPendingReset ? context.tr('util_yucureseta_74986f') : context.tr('util_resetkhonh_c48d2d'),
+          _hasPendingReset
+              ? context.tr('util_yucureseta_74986f')
+              : context.tr('util_resetkhonh_c48d2d'),
           style: SLTheme.quicksand(
             fontWeight: FontWeight.bold,
             color: _hasPendingReset ? SLColors.warning : SLColors.danger,
@@ -1542,7 +1550,9 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               }
             },
             child: Text(
-              _hasPendingReset ? context.tr('util_thuhiyucu_cc5144') : context.tr('util_xcnhnquaem_645252'),
+              _hasPendingReset
+                  ? context.tr('util_thuhiyucu_cc5144')
+                  : context.tr('util_xcnhnquaem_645252'),
               style: SLTheme.quicksand(
                 color: _hasPendingReset ? SLColors.warning : SLColors.danger,
                 fontWeight: FontWeight.bold,
@@ -1572,8 +1582,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child:
-                  Text(context.tr('util_hy_1e4050'), style: SLTheme.quicksand(color: Colors.white38))),
+              child: Text(context.tr('util_hy_1e4050'),
+                  style: SLTheme.quicksand(color: Colors.white38))),
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
@@ -1586,14 +1596,12 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   await _enc.resetVaultKeepData(widget.houseId);
                   if (mounted) {
                     _safeSetState(() {
-                      _encStatusMsg =
-                          context.tr('util_khomtcrese_b11161');
+                      _encStatusMsg = context.tr('util_khomtcrese_b11161');
                       _hasRecoveryCode = false;
                       // Không clear _photos, giữ nguyên dữ liệu trên UI
                     });
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(
-                            context.tr('util_resetmtkhu_02f484')),
+                        content: Text(context.tr('util_resetmtkhu_02f484')),
                         backgroundColor: SLColors.success));
                   }
                 } else {
@@ -1620,7 +1628,10 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                 }
               }
             },
-            child: Text(isWithin12Hours ? context.tr('util_tiptc_555f1f') : context.tr('util_xavtoli_90b1ee'),
+            child: Text(
+                isWithin12Hours
+                    ? context.tr('util_tiptc_555f1f')
+                    : context.tr('util_xavtoli_90b1ee'),
                 style: SLTheme.quicksand(
                     color: SLColors.danger, fontWeight: FontWeight.bold)),
           ),
@@ -1630,39 +1641,49 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
   }
 
   void _showInfoDialog(BuildContext context) {
-      showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFF1E1E2C),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: Text(
-            'Hầm bí mật',
-            style: SLTheme.quicksand(fontWeight: FontWeight.w900, color: Colors.white),
-          ),
-          content: const SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70)),
-                SizedBox(height: 4),
-                Text('- Nơi an toàn nhất để cất giữ hình ảnh và video nhạy cảm, riêng tư.\n- Bảo vệ bằng mã PIN hoặc FaceID/Vân tay.\n- Tùy chọn "Mã PIN giả" để hiển thị một hầm trống khi bị ép buộc mở.', style: TextStyle(color: Colors.white60)),
-                SizedBox(height: 12),
-                Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white70)),
-                SizedBox(height: 4),
-                Text('- Thiết lập mã PIN lần đầu khi truy cập.\n- Bấm biểu tượng + để thêm ảnh/video từ thư viện máy.\n- Bật tính năng Mã PIN giả trong phần cài đặt của hầm để tăng cường bảo mật.', style: TextStyle(color: Colors.white60)),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Đã hiểu', style: TextStyle(color: Colors.blueAccent)),
-            ),
-          ],
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2C),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Hầm bí mật',
+          style: SLTheme.quicksand(
+              fontWeight: FontWeight.w900, color: Colors.white),
         ),
-      );
-    }
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.white70)),
+              SizedBox(height: 4),
+              Text(
+                  '- Nơi an toàn nhất để cất giữ hình ảnh và video nhạy cảm, riêng tư.\n- Bảo vệ bằng mã PIN hoặc FaceID/Vân tay.\n- Tùy chọn "Mã PIN giả" để hiển thị một hầm trống khi bị ép buộc mở.',
+                  style: TextStyle(color: Colors.white60)),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.white70)),
+              SizedBox(height: 4),
+              Text(
+                  '- Thiết lập mã PIN lần đầu khi truy cập.\n- Bấm biểu tượng + để thêm ảnh/video từ thư viện máy.\n- Bật tính năng Mã PIN giả trong phần cài đặt của hầm để tăng cường bảo mật.',
+                  style: TextStyle(color: Colors.white60)),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu',
+                style: TextStyle(color: Colors.blueAccent)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1687,15 +1708,15 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             child: Container(color: Colors.black.withValues(alpha: 0.2)),
           ),
         ),
-
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
+        leading: IconButton(
+          icon:
+              const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
+            icon: const Icon(Icons.info_outline_rounded,
+                color: Colors.white, size: 22),
             onPressed: () => _showInfoDialog(context),
           ),
           if (_encryptionReady)

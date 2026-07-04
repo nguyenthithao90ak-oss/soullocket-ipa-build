@@ -250,7 +250,8 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: accent,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: BorderSide(color: accent.withValues(alpha: 0.28)),
+                          side:
+                              BorderSide(color: accent.withValues(alpha: 0.28)),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),

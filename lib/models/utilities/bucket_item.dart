@@ -1,4 +1,5 @@
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+
 // lib/models/utilities/bucket_item.dart
 class BucketItem {
   final String id;
@@ -24,7 +25,8 @@ class BucketItem {
       id: id,
       title: map['title'] ??
           map['text'] ??
-          L10nService().translate('core_untitled_wish'), // Support both old 'text' and new 'title'
+          L10nService().translate(
+              'core_untitled_wish'), // Support both old 'text' and new 'title'
       isCompleted: map['isDone'] ??
           map['done'] ??
           false, // Support both old 'done' and new 'isDone'

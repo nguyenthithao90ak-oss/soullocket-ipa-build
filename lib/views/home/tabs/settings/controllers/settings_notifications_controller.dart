@@ -49,8 +49,10 @@ class SettingsNotificationsController {
     await prefs.setBool('il_notif_friend', draft.notifFriend);
     await prefs.setBool('il_notif_heart', draft.notifHeart);
     await prefs.setBool('il_smart_reminder_diary', draft.smartDiaryReminder);
-    await prefs.setBool('il_smart_reminder_capsule', draft.smartCapsuleReminder);
-    await prefs.setBool('il_smart_reminder_love_note', draft.smartLoveNoteReminder);
+    await prefs.setBool(
+        'il_smart_reminder_capsule', draft.smartCapsuleReminder);
+    await prefs.setBool(
+        'il_smart_reminder_love_note', draft.smartLoveNoteReminder);
     await prefs.setBool('il_smart_reminder_sleep', draft.smartSleepReminder);
     await prefs.setString('il_good_morning_time', draft.goodMorningTime);
     await prefs.setString('il_good_night_time', draft.goodNightTime);

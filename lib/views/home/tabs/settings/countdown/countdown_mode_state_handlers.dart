@@ -390,10 +390,12 @@ extension _CountdownModeIndependentScreenStatePart
         : (widget.fallbackBottomLabel.trim().isNotEmpty
             ? widget.fallbackBottomLabel.trim()
             : context.tr('home_ngy_41ec10'));
-    final defaultNameU1 =
-        widget.nameU1.trim().isEmpty ? context.tr('home_bn_1fd75b') : widget.nameU1.trim();
-    final defaultNameU2 =
-        widget.nameU2.trim().isEmpty ? context.tr('home_ngiy_5bab37') : widget.nameU2.trim();
+    final defaultNameU1 = widget.nameU1.trim().isEmpty
+        ? context.tr('home_bn_1fd75b')
+        : widget.nameU1.trim();
+    final defaultNameU2 = widget.nameU2.trim().isEmpty
+        ? context.tr('home_ngiy_5bab37')
+        : widget.nameU2.trim();
     final defaultThemeKey =
         ui.themeKey.trim().isEmpty ? 'theme-auto' : ui.themeKey.trim();
     final defaultStyleKey = ui.countdownStyleKey.trim().isEmpty
@@ -460,11 +462,14 @@ extension _CountdownModeIndependentScreenStatePart
       prefs.setString(_prefKey('theme_key', scope: scope), _themeKey),
       prefs.setString(_prefKey('style_key', scope: scope), snapshot.styleKey),
       prefs.setString(_prefKey('font_key', scope: scope), _fontKey),
-      prefs.setString(_prefKey('avatar_frame_key', scope: scope), _avatarFrameKey),
-      prefs.setBool(_prefKey('transparent_mode', scope: scope), _transparentMode),
+      prefs.setString(
+          _prefKey('avatar_frame_key', scope: scope), _avatarFrameKey),
+      prefs.setBool(
+          _prefKey('transparent_mode', scope: scope), _transparentMode),
       prefs.setDouble(_prefKey('size_px', scope: scope), _countdownSizePx),
       prefs.setString(_prefKey('bg_url', scope: scope), _customBackgroundUrl),
-      prefs.setString(_prefKey('center_icon_type', scope: scope), _centerIconType),
+      prefs.setString(
+          _prefKey('center_icon_type', scope: scope), _centerIconType),
       prefs.setString(_prefKey('top_label', scope: scope), _topLabelText),
       prefs.setString(_prefKey('bottom_label', scope: scope), _bottomLabelText),
       prefs.setString(_prefKey('name_u1', scope: scope), _nameU1),
@@ -479,7 +484,8 @@ extension _CountdownModeIndependentScreenStatePart
         _prefKey('falling_effect_type', scope: scope),
         'off',
       ),
-      prefs.setInt(_prefKey('updated_at_ms', scope: scope), snapshot.updatedAtMs),
+      prefs.setInt(
+          _prefKey('updated_at_ms', scope: scope), snapshot.updatedAtMs),
     ]);
 
     if (mounted) {
@@ -506,7 +512,8 @@ extension _CountdownModeIndependentScreenStatePart
       if (_selfSpaceHouseId != 'local_self') {
         final houseId = _selfSpaceHouseId;
         final updates = <String, dynamic>{
-          'houses/$houseId/settings/relationshipMode': _singleMode ? 'single' : 'couple',
+          'houses/$houseId/settings/relationshipMode':
+              _singleMode ? 'single' : 'couple',
           'houses/$houseId/settings/theme': _themeKey,
           'houses/$houseId/settings/countdownStyle': snapshot.styleKey,
           'houses/$houseId/settings/font': _fontKey,
@@ -523,7 +530,9 @@ extension _CountdownModeIndependentScreenStatePart
           'houses/$houseId/settings/nameU2': _nameU2,
           'houses/$houseId/settings/avtUser1': _avatarUrl1,
           'houses/$houseId/settings/avtUser2': _avatarUrl2,
-          'houses/$houseId/settings/startDate': _anchorDate == null ? '' : DateInputUtils.formatIsoDate(_anchorDate!),
+          'houses/$houseId/settings/startDate': _anchorDate == null
+              ? ''
+              : DateInputUtils.formatIsoDate(_anchorDate!),
           'houses/$houseId/settings/updatedAt': ServerValue.timestamp,
           'houses/$houseId/updatedAt': ServerValue.timestamp,
         };
@@ -540,7 +549,8 @@ extension _CountdownModeIndependentScreenStatePart
           if (mounted) {
             _showMessage(AppErrorMapper.resolve(
               e,
-              fallbackMessage: 'Không thể đồng bộ cài đặt lên mạng. Hãy kiểm tra kết nối nhé!',
+              fallbackMessage:
+                  'Không thể đồng bộ cài đặt lên mạng. Hãy kiểm tra kết nối nhé!',
             ).message);
           }
         }
@@ -550,11 +560,13 @@ extension _CountdownModeIndependentScreenStatePart
 
     final serializedSnapshot = _snapshotToSerializedMap(snapshot);
     if (_isSharedSpace(scope)) {
-      unawaited(_countdownSpaceService.updateSpaceSnapshot(
+      unawaited(_countdownSpaceService
+          .updateSpaceSnapshot(
         selfHouseId: _selfSpaceHouseId,
         otherHouseId: scope,
         snapshot: serializedSnapshot,
-      ).catchError((Object e) {
+      )
+          .catchError((Object e) {
         debugPrint('Failed to update space snapshot: $e');
       }));
       return;
@@ -564,11 +576,13 @@ extension _CountdownModeIndependentScreenStatePart
     if (pendingRequest == null) {
       return;
     }
-    unawaited(_countdownSpaceService.updatePendingRequestSnapshot(
+    unawaited(_countdownSpaceService
+        .updatePendingRequestSnapshot(
       requestId: pendingRequest.requestId,
       fromHouseId: _selfSpaceHouseId,
       snapshot: serializedSnapshot,
-    ).catchError((Object e) {
+    )
+        .catchError((Object e) {
       debugPrint('Failed to update pending request snapshot: $e');
     }));
   }
@@ -800,7 +814,9 @@ extension _CountdownModeIndependentScreenStatePart
     final nextValue = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(editTopLabel ? context.tr('home_sachtrn_a2d51f') : context.tr('home_sachdi_744600')),
+        title: Text(editTopLabel
+            ? context.tr('home_sachtrn_a2d51f')
+            : context.tr('home_sachdi_744600')),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -1498,7 +1514,9 @@ extension _CountdownModeIndependentScreenStatePart
         (_incomingSpaceRequests[houseId.trim()]?.fromHouseName ?? '').trim();
     if (incomingLabel.isNotEmpty) return incomingLabel;
     if (houseId == _selfSpaceHouseId) {
-      return _nameU1.trim().isEmpty ? context.tr('home_khnggianca_3f6e45') : _nameU1.trim();
+      return _nameU1.trim().isEmpty
+          ? context.tr('home_khnggianca_3f6e45')
+          : _nameU1.trim();
     }
     return houseId.length > 14 ? '${houseId.substring(0, 14)}…' : houseId;
   }
@@ -1608,7 +1626,9 @@ extension _CountdownModeIndependentScreenStatePart
     if (houseId == _selfSpaceHouseId) {
       return context.tr('home_ccb_60e080');
     }
-    return _acceptedSpaceHouseIds.contains(houseId) ? context.tr('home_ghp_835f82') : context.tr('home_chghp_6e894c');
+    return _acceptedSpaceHouseIds.contains(houseId)
+        ? context.tr('home_ghp_835f82')
+        : context.tr('home_chghp_6e894c');
   }
 
   String _spaceConnectionStatusLabel(String houseId) {
@@ -1648,25 +1668,33 @@ extension _CountdownModeIndependentScreenStatePart
 
   String _topLabel() {
     return _topLabelText.trim().isEmpty
-        ? (_singleMode ? context.tr('home_tuicati_5c654c') : context.tr('home_yunhau_501102'))
+        ? (_singleMode
+            ? context.tr('home_tuicati_5c654c')
+            : context.tr('home_yunhau_501102'))
         : _topLabelText.trim();
   }
 
   String _bottomLabel() {
     return _bottomLabelText.trim().isEmpty
-        ? (_singleMode ? context.tr('home_ngytui_22bed4') : context.tr('home_ngy_41ec10'))
+        ? (_singleMode
+            ? context.tr('home_ngytui_22bed4')
+            : context.tr('home_ngy_41ec10'))
         : _bottomLabelText.trim();
   }
 
   String _previewTopLabel(_CountdownSpaceSnapshot snapshot) {
     return snapshot.topLabel.trim().isEmpty
-        ? (snapshot.singleMode ? context.tr('home_tuicati_5c654c') : context.tr('home_yunhau_501102'))
+        ? (snapshot.singleMode
+            ? context.tr('home_tuicati_5c654c')
+            : context.tr('home_yunhau_501102'))
         : snapshot.topLabel.trim();
   }
 
   String _previewBottomLabel(_CountdownSpaceSnapshot snapshot) {
     return snapshot.bottomLabel.trim().isEmpty
-        ? (snapshot.singleMode ? context.tr('home_ngytui_22bed4') : context.tr('home_ngy_41ec10'))
+        ? (snapshot.singleMode
+            ? context.tr('home_ngytui_22bed4')
+            : context.tr('home_ngy_41ec10'))
         : snapshot.bottomLabel.trim();
   }
 

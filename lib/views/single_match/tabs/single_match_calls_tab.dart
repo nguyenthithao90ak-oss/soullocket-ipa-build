@@ -38,11 +38,12 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
       onError: (err) {
         if (mounted) {
           setState(() {
-          _error = AppErrorMapper.resolve(
-            err,
-            fallbackMessage: L10nService().translate('match_khngthtidl_11f27c'),
-          ).message;
-        });
+            _error = AppErrorMapper.resolve(
+              err,
+              fallbackMessage:
+                  L10nService().translate('match_khngthtidl_11f27c'),
+            ).message;
+          });
         }
       },
     );
@@ -55,10 +56,8 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
   }
 
   Future<void> _startRandomCall({required bool isVideo}) async {
-    final excludeHouseIds = _history
-        .where((e) => e.isCall)
-        .map((e) => e.peerHouseId)
-        .toSet();
+    final excludeHouseIds =
+        _history.where((e) => e.isCall).map((e) => e.peerHouseId).toSet();
 
     final result = await Navigator.push<dynamic>(
       context,
@@ -75,7 +74,8 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
 
     if (result == null || result is! SingleMatchCandidate) {
       if (!mounted) return;
-      _showSnack('Hiện không có ai phù hợp để gọi lúc này. Vui lòng thử lại sau.');
+      _showSnack(
+          'Hiện không có ai phù hợp để gọi lúc này. Vui lòng thử lại sau.');
       return;
     }
 
@@ -156,10 +156,11 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.cloud_off_rounded, size: 48,
-                  color: SLColors.textTertiary),
+              const Icon(Icons.cloud_off_rounded,
+                  size: 48, color: SLColors.textTertiary),
               const SizedBox(height: 12),
-              Text(_error!, textAlign: TextAlign.center,
+              Text(_error!,
+                  textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w700,
                     color: SLColors.textSecondary,
@@ -189,19 +190,21 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
           ),
           child: Column(
             children: [
-              const Icon(Icons.casino_rounded, size: 40,
-                  color: Color(0xFF7C61FF)),
+              const Icon(Icons.casino_rounded,
+                  size: 40, color: Color(0xFF7C61FF)),
               const SizedBox(height: 8),
               Text('Gọi ngẫu nhiên',
                   style: SLTheme.quicksand(
-                    fontSize: 17, fontWeight: FontWeight.w900,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
                     color: const Color(0xFF32203B),
                   )),
               const SizedBox(height: 4),
               Text('Hệ thống chọn người phù hợp và kết nối ngay',
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
-                    fontSize: 12, fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
                     color: const Color(0xFF8A798E),
                   )),
               const SizedBox(height: 14),
@@ -217,8 +220,8 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                       ),
                       icon: const Icon(Icons.call_rounded, size: 18),
                       label: Text('Gọi audio',
-                          style: SLTheme.quicksand(
-                              fontWeight: FontWeight.w900)),
+                          style:
+                              SLTheme.quicksand(fontWeight: FontWeight.w900)),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -232,8 +235,8 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                       ),
                       icon: const Icon(Icons.videocam_rounded, size: 18),
                       label: Text('Gọi video',
-                          style: SLTheme.quicksand(
-                              fontWeight: FontWeight.w900)),
+                          style:
+                              SLTheme.quicksand(fontWeight: FontWeight.w900)),
                     ),
                   ),
                 ],
@@ -271,7 +274,8 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
             children: [
               Text('Lịch sử cuộc gọi',
                   style: SLTheme.quicksand(
-                    fontSize: 16, fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
                     color: const Color(0xFF32203B),
                   )),
             ],
@@ -290,19 +294,21 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
             ),
             child: Column(
               children: [
-                const Icon(Icons.call_end_rounded, size: 52,
-                    color: SLColors.textTertiary),
+                const Icon(Icons.call_end_rounded,
+                    size: 52, color: SLColors.textTertiary),
                 const SizedBox(height: 12),
                 Text('Chưa có cuộc gọi nào',
                     style: SLTheme.quicksand(
-                      fontSize: 16, fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
                       color: SLColors.textSecondary,
                     )),
                 const SizedBox(height: 6),
                 Text('Hãy bắt đầu ghép đôi và gọi cho người lạ.',
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
-                      fontSize: 12, fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
                       color: SLColors.textTertiary,
                     )),
               ],
@@ -365,7 +371,8 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: SLTheme.quicksand(
-                            fontSize: 15, fontWeight: FontWeight.w900,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
                             color: const Color(0xFF32203B),
                           ),
                         ),
@@ -380,7 +387,8 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                         child: Text(
                           actionLabel,
                           style: SLTheme.quicksand(
-                            fontSize: 10, fontWeight: FontWeight.w900,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
                             color: accent,
                           ),
                         ),
@@ -391,7 +399,8 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                   Text(
                     '${_formatRelativeTime(entry.startedAt)} • ${entry.compatibilityScore.toStringAsFixed(0)}% match',
                     style: SLTheme.quicksand(
-                      fontSize: 12, fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
                       color: const Color(0xFF8A798E),
                     ),
                   ),
@@ -399,7 +408,8 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                   Text(
                     _formatDuration(entry.durationSeconds),
                     style: SLTheme.quicksand(
-                      fontSize: 13, fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
                       color: const Color(0xFF5A495E),
                     ),
                   ),
@@ -417,8 +427,8 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                           ),
                         ),
                         icon: const Icon(Icons.person_search_rounded, size: 17),
-                        label: Text(
-                            L10nService().translate('match_mhs_d226ff')),
+                        label:
+                            Text(L10nService().translate('match_mhs_d226ff')),
                       ),
                       TextButton.icon(
                         onPressed: () => _launchCall(
@@ -508,12 +518,14 @@ class _StatTile extends StatelessWidget {
           const SizedBox(height: 8),
           Text(value,
               style: SLTheme.quicksand(
-                fontSize: 24, fontWeight: FontWeight.w900,
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
                 color: color,
               )),
           Text(label,
               style: SLTheme.quicksand(
-                fontSize: 11, fontWeight: FontWeight.w700,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
                 color: const Color(0xFF8A798E),
               )),
         ],

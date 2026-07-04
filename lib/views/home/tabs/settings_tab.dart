@@ -17,7 +17,8 @@ import 'package:in_app_review/in_app_review.dart';
 import '../../login_screen.dart';
 import '../../app_entry.dart';
 import 'package:soullocket_app/views/chat/chat_detail_screen.dart';
-import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart' show TapHeartsOverlay, TapHeartsOverlayState;
+import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart'
+    show TapHeartsOverlay, TapHeartsOverlayState;
 import 'package:image_cropper/image_cropper.dart';
 
 import 'dart:io';
@@ -500,7 +501,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _draftLiteMode = false;
   Timer? _widgetDiaryPreviewTimer;
   final ValueNotifier<int> _widgetPreviewTickNotifier = ValueNotifier<int>(0);
-  
+
   // Custom Widget Event
   bool _useCustomWidgetEvent = false;
   final _customWidgetEventTitleCtrl = TextEditingController();
@@ -578,7 +579,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
 
   BannerAd? _bottomBannerAd;
 
-
   void _loadBottomBanner() async {
     if (kIsWeb) return;
     final adMob = AdMobService();
@@ -649,7 +649,8 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     // ⚡ Khởi tạo activeRoleKey ngay từ local để tránh nhảy lộn khi fetch Firebase
     SharedPreferences.getInstance().then((prefs) {
       if (!mounted) return;
-      final localRole = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
+      final localRole =
+          prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
       setState(() => _activeRoleKey = localRole);
     });
     _scheduleSettingsBootstrap();

@@ -159,8 +159,8 @@ mixin _SoulBlockStrategyLogic {
     double progress,
   ) {
     final stress = _boardStressLevel(boardMask);
-    final avgTier =
-        combo.fold<double>(0, (total, item) => total + item.tier) / combo.length;
+    final avgTier = combo.fold<double>(0, (total, item) => total + item.tier) /
+        combo.length;
     final avgCells =
         combo.fold<double>(0, (total, item) => total + item.cellCount) /
             combo.length;
@@ -411,8 +411,6 @@ mixin _SoulBlockStrategyLogic {
 
     return chosenTemplates.map(_spawnPieceFromTemplate).toList(growable: false);
   }
-
-
 
   _SoulPieceOption _spawnPieceFromTemplate(_SoulPieceTemplate template) {
     _pieceSequence += 1;

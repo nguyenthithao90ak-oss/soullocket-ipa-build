@@ -252,7 +252,8 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
               decoration: BoxDecoration(
                 color: const Color(0xD918191A),
                 borderRadius: SLRadius.pillAll,
-                border: Border.all(color: _kMapPinkDeep.withValues(alpha: 0.20)),
+                border:
+                    Border.all(color: _kMapPinkDeep.withValues(alpha: 0.20)),
                 boxShadow: [
                   BoxShadow(
                     color: _kMapPinkDeep.withValues(alpha: 0.12),

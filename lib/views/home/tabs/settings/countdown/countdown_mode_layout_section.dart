@@ -142,7 +142,8 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                   decoration: BoxDecoration(
                     color: const Color(0xFF0F1A2D),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.10)),
                   ),
                   child: SingleChildScrollView(
                     physics: const ClampingScrollPhysics(),
@@ -234,7 +235,8 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                             Expanded(
                               child: ChoiceChip(
                                 selected: draftSingleMode,
-                                label: Text(context.tr('countdown_single_mode')),
+                                label:
+                                    Text(context.tr('countdown_single_mode')),
                                 onSelected: (_) =>
                                     setSheetState(() => draftSingleMode = true),
                               ),
@@ -243,7 +245,8 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                             Expanded(
                               child: ChoiceChip(
                                 selected: !draftSingleMode,
-                                label: Text(context.tr('countdown_couple_mode')),
+                                label:
+                                    Text(context.tr('countdown_couple_mode')),
                                 onSelected: (_) => setSheetState(
                                     () => draftSingleMode = false),
                               ),
@@ -569,14 +572,16 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                     : [
                                         themeData.orbA.withValues(alpha: 0.12),
                                         themeData.orbB.withValues(alpha: 0.08),
-                                        const Color(0xFFFFF5F8).withValues(alpha: 0.88),
+                                        const Color(0xFFFFF5F8)
+                                            .withValues(alpha: 0.88),
                                       ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: themeData.orbA.withValues(alpha: themeData.isDark ? 0.26 : 0.22),
+                                color: themeData.orbA.withValues(
+                                    alpha: themeData.isDark ? 0.26 : 0.22),
                               ),
                             ),
                             child: Center(
@@ -643,7 +648,8 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                       accent.withValues(alpha: 0.12),
                                     ]
                                   : [
-                                      const Color(0xFFFFF5F8).withValues(alpha: 0.88),
+                                      const Color(0xFFFFF5F8)
+                                          .withValues(alpha: 0.88),
                                       accent.withValues(alpha: 0.10),
                                     ],
                               begin: Alignment.topLeft,
@@ -651,7 +657,8 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                             ),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                                color: accent.withValues(alpha: themeData.isDark ? 0.24 : 0.20)),
+                                color: accent.withValues(
+                                    alpha: themeData.isDark ? 0.24 : 0.20)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -720,8 +727,12 @@ extension _CountdownModeSpacesPart on _CountdownModeIndependentScreenState {
                                   borderRadius: BorderRadius.circular(12),
                                   gradient: LinearGradient(
                                     colors: [
-                                      accent.withValues(alpha: themeData.isDark ? 0.24 : 0.18),
-                                      themeData.orbB.withValues(alpha: themeData.isDark ? 0.10 : 0.08),
+                                      accent.withValues(
+                                          alpha:
+                                              themeData.isDark ? 0.24 : 0.18),
+                                      themeData.orbB.withValues(
+                                          alpha:
+                                              themeData.isDark ? 0.10 : 0.08),
                                     ],
                                   ),
                                   border: Border.all(

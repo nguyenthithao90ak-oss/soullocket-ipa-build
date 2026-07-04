@@ -224,7 +224,8 @@ class WebRTCService {
       },
     );
 
-    _calleeCandidatesSub = roomRef.child('calleeCandidates').onChildAdded.listen(
+    _calleeCandidatesSub =
+        roomRef.child('calleeCandidates').onChildAdded.listen(
       (event) {
         final val = event.snapshot.value;
         if (val is! Map) return;
@@ -328,7 +329,8 @@ class WebRTCService {
         .update({'status': 'connected'}).timeout(const Duration(seconds: 8));
 
     // Lắng nghe ICE Candidate của A
-    _callerCandidatesSub = roomRef.child('callerCandidates').onChildAdded.listen(
+    _callerCandidatesSub =
+        roomRef.child('callerCandidates').onChildAdded.listen(
       (event) {
         final raw = event.snapshot.value;
         if (raw is! Map) return;

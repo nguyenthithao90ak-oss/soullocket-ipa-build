@@ -1247,20 +1247,24 @@ class WidgetService {
       if (useCustom) {
         final customTitle = prefs.getString('widget_custom_event_title') ?? '';
         final customDate = prefs.getString('widget_custom_event_date') ?? '';
-        final customColor = prefs.getString('widget_custom_event_color') ?? '#EC4899';
+        final customColor =
+            prefs.getString('widget_custom_event_color') ?? '#EC4899';
 
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
-        DateTime? parsedDate = DateInputUtils.parse(customDate, firstYear: 1900, lastYear: 2100);
-        
+        DateTime? parsedDate =
+            DateInputUtils.parse(customDate, firstYear: 1900, lastYear: 2100);
+
         String daysStr = '0';
         String labelStr = 'ngày nữa';
         if (parsedDate != null) {
-          var nextDate = DateTime(parsedDate.year, parsedDate.month, parsedDate.day);
+          var nextDate =
+              DateTime(parsedDate.year, parsedDate.month, parsedDate.day);
           if (nextDate.isBefore(today)) {
             nextDate = DateTime(today.year, parsedDate.month, parsedDate.day);
             if (nextDate.isBefore(today)) {
-              nextDate = DateTime(today.year + 1, parsedDate.month, parsedDate.day);
+              nextDate =
+                  DateTime(today.year + 1, parsedDate.month, parsedDate.day);
             }
           }
           final diff = nextDate.difference(today).inDays;
@@ -1274,8 +1278,10 @@ class WidgetService {
           }
         }
 
-        await _saveWidgetDataIfChanged('se_title', customTitle.isEmpty ? 'Sự kiện & Kỷ niệm' : customTitle);
-        await _saveWidgetDataIfChanged('se_date', customDate.isEmpty ? '--/--/----' : customDate);
+        await _saveWidgetDataIfChanged('se_title',
+            customTitle.isEmpty ? 'Sự kiện & Kỷ niệm' : customTitle);
+        await _saveWidgetDataIfChanged(
+            'se_date', customDate.isEmpty ? '--/--/----' : customDate);
         await _saveWidgetDataIfChanged('se_days', daysStr);
         await _saveWidgetDataIfChanged('se_label', labelStr);
         await _saveWidgetDataIfChanged('se_color', customColor);

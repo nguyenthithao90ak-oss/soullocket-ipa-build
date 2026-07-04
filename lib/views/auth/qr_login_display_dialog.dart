@@ -284,7 +284,8 @@ class _QRLoginDisplayDialogState extends State<QRLoginDisplayDialog> {
                     decoration: BoxDecoration(
                       color: _statusColor.withValues(alpha: 0.12),
                       borderRadius: SLRadius.lgAll,
-                      border: Border.all(color: _statusColor.withValues(alpha: 0.28)),
+                      border: Border.all(
+                          color: _statusColor.withValues(alpha: 0.28)),
                     ),
                     child: Column(
                       children: [

@@ -135,7 +135,8 @@ class SensitiveContentService {
         ttl: _runtimeRiskService.defaultCacheTtl(verdict),
       );
     } catch (error) {
-      debugPrint('SensitiveContentService signal handling failed: ${AppErrorMapper.resolve(
+      debugPrint(
+          'SensitiveContentService signal handling failed: ${AppErrorMapper.resolve(
         error,
         fallbackMessage: 'Không thể xử lý tín hiệu bảo vệ nội dung.',
       ).message}');

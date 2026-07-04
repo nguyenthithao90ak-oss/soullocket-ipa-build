@@ -15,7 +15,9 @@ const List<Color> _registerButtonDisabledColors = <Color>[
 ];
 
 bool _isRegisterInputValid(String email, String password, bool acceptTerms) {
-  return _registerEmailRegex.hasMatch(email.trim()) && password.trim().length >= 6 && acceptTerms;
+  return _registerEmailRegex.hasMatch(email.trim()) &&
+      password.trim().length >= 6 &&
+      acceptTerms;
 }
 
 class RegisterForm extends StatelessWidget {

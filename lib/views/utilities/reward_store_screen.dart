@@ -24,8 +24,6 @@ class RewardStoreScreen extends StatefulWidget {
 }
 
 class _RewardStoreScreenState extends State<RewardStoreScreen> {
-
-
   final AdMobService _adMob = AdMobService();
   final DailyQuestService _dailyQuestService = DailyQuestService();
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
@@ -136,7 +134,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
           final nextDays = _parseCheckinDays(data);
           final nextCheckedInToday = nextDays[_todayKey()] == true;
           final nextStreak = _calculateStreak(nextDays);
-          
+
           if (_isCheckingIn && !nextCheckedInToday) {
             return;
           }
@@ -560,7 +558,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
 
         // Fallback for real ad if it fails to play (no fill)
         if (!worked) {
-          debugPrint('AdMobService: Real ad failed to load/play. Falling back to simulated web ad dialog.');
+          debugPrint(
+              'AdMobService: Real ad failed to load/play. Falling back to simulated web ad dialog.');
           if (mounted) {
             worked = await _showWebRewardDialog();
           }
@@ -585,13 +584,16 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                 ok: true,
                 granted: AdMobService.rewardedMainPoints,
               );
-              debugPrint('AdMobService: Debug mode fallback points grant succeeded (+50 points).');
+              debugPrint(
+                  'AdMobService: Debug mode fallback points grant succeeded (+50 points).');
               await _adMob.incrementDailyRewardedAdCountDebug();
             } else {
-              debugPrint('AdMobService: Debug mode fallback points grant failed from server.');
+              debugPrint(
+                  'AdMobService: Debug mode fallback points grant failed from server.');
             }
           } catch (fallbackError) {
-            debugPrint('AdMobService: Debug mode fallback points grant exception: $fallbackError');
+            debugPrint(
+                'AdMobService: Debug mode fallback points grant exception: $fallbackError');
           }
         }
 
@@ -887,7 +889,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                 builder: (context, pointSnapshot) {
                   final points = pointSnapshot.data ?? 0;
                   return ListView(
-                    scrollCacheExtent: const ScrollCacheExtent.pixels(900.0), padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                    scrollCacheExtent: const ScrollCacheExtent.pixels(900.0),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                     children: [
                       _buildWatchAdCard(proUntil),
                       SLSpacing.h20,

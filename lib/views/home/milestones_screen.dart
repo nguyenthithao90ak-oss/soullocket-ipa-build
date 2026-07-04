@@ -69,18 +69,35 @@ class _MilestonesScreenState extends State<MilestonesScreen>
 
     // 1. Cột mốc kỷ niệm ngày yêu
     if (startDt != null) {
-      final startDtMidnight = DateTime(startDt.year, startDt.month, startDt.day);
+      final startDtMidnight =
+          DateTime(startDt.year, startDt.month, startDt.day);
 
       // Cột mốc ngày (cả quá khứ và tương lai)
       final milestoneDays = [
-        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
-        1500, 2000, 2500, 3000, 4000, 5000, 10000
+        100,
+        200,
+        300,
+        400,
+        500,
+        600,
+        700,
+        800,
+        900,
+        1000,
+        1500,
+        2000,
+        2500,
+        3000,
+        4000,
+        5000,
+        10000
       ];
       for (final m in milestoneDays) {
         final milestoneDate = startDtMidnight.add(Duration(days: m - 1));
         final diff = milestoneDate.difference(todayMidnight).inDays;
         allEvents.add(MilestoneEvent(
-          title: L10nService().format('milestone_anniversary_days', {'days': m.toString()}),
+          title: L10nService()
+              .format('milestone_anniversary_days', {'days': m.toString()}),
           date: milestoneDate,
           type: 'anniversary',
           diffDays: diff,
@@ -89,10 +106,12 @@ class _MilestonesScreenState extends State<MilestonesScreen>
 
       // Cột mốc năm (kỷ niệm năm yêu nhau)
       for (int y = 1; y <= 25; y++) {
-        final annivDate = DateTime(startDtMidnight.year + y, startDtMidnight.month, startDtMidnight.day);
+        final annivDate = DateTime(startDtMidnight.year + y,
+            startDtMidnight.month, startDtMidnight.day);
         final diff = annivDate.difference(todayMidnight).inDays;
         allEvents.add(MilestoneEvent(
-          title: L10nService().format('milestone_anniversary_years', {'years': y.toString()}),
+          title: L10nService()
+              .format('milestone_anniversary_years', {'years': y.toString()}),
           date: annivDate,
           type: 'anniversary',
           diffDays: diff,
@@ -115,7 +134,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
           final targetYear = todayMidnight.year + yearOffset;
           int day = bday.day;
           if (bday.month == 2 && bday.day == 29) {
-            final isLeap = (targetYear % 4 == 0 && targetYear % 100 != 0) || (targetYear % 400 == 0);
+            final isLeap = (targetYear % 4 == 0 && targetYear % 100 != 0) ||
+                (targetYear % 400 == 0);
             if (!isLeap) day = 28;
           }
           final bdayDate = DateTime(targetYear, bday.month, day);
@@ -129,29 +149,83 @@ class _MilestonesScreenState extends State<MilestonesScreen>
         }
       } catch (_) {}
     }
+
     computeBirthdays(dobU1, nameU1);
     computeBirthdays(dobU2, nameU2);
 
     // 3. Ngày lễ lớn đầy đủ (năm trước, năm nay, năm sau)
     final holidaysList = [
-      {'month': 1, 'day': 1, 'name': L10nService().translate('holiday_new_year')},
-      {'month': 2, 'day': 14, 'name': L10nService().translate('holiday_valentine')},
-      {'month': 3, 'day': 8, 'name': L10nService().translate('holiday_womens_day')},
-      {'month': 3, 'day': 14, 'name': L10nService().translate('holiday_white_valentine')},
-      {'month': 4, 'day': 1, 'name': L10nService().translate('holiday_april_fools')},
-      {'month': 4, 'day': 14, 'name': L10nService().translate('holiday_black_valentine')},
-      {'month': 6, 'day': 1, 'name': L10nService().translate('holiday_childrens_day')},
-      {'month': 6, 'day': 28, 'name': L10nService().translate('holiday_vietnamese_family_day')},
-      {'month': 10, 'day': 20, 'name': L10nService().translate('holiday_vietnamese_womens_day')},
-      {'month': 10, 'day': 31, 'name': L10nService().translate('holiday_halloween')},
-      {'month': 12, 'day': 24, 'name': L10nService().translate('holiday_christmas_eve')},
-      {'month': 12, 'day': 25, 'name': L10nService().translate('holiday_christmas')},
-      {'month': 12, 'day': 31, 'name': L10nService().translate('holiday_new_years_eve')},
+      {
+        'month': 1,
+        'day': 1,
+        'name': L10nService().translate('holiday_new_year')
+      },
+      {
+        'month': 2,
+        'day': 14,
+        'name': L10nService().translate('holiday_valentine')
+      },
+      {
+        'month': 3,
+        'day': 8,
+        'name': L10nService().translate('holiday_womens_day')
+      },
+      {
+        'month': 3,
+        'day': 14,
+        'name': L10nService().translate('holiday_white_valentine')
+      },
+      {
+        'month': 4,
+        'day': 1,
+        'name': L10nService().translate('holiday_april_fools')
+      },
+      {
+        'month': 4,
+        'day': 14,
+        'name': L10nService().translate('holiday_black_valentine')
+      },
+      {
+        'month': 6,
+        'day': 1,
+        'name': L10nService().translate('holiday_childrens_day')
+      },
+      {
+        'month': 6,
+        'day': 28,
+        'name': L10nService().translate('holiday_vietnamese_family_day')
+      },
+      {
+        'month': 10,
+        'day': 20,
+        'name': L10nService().translate('holiday_vietnamese_womens_day')
+      },
+      {
+        'month': 10,
+        'day': 31,
+        'name': L10nService().translate('holiday_halloween')
+      },
+      {
+        'month': 12,
+        'day': 24,
+        'name': L10nService().translate('holiday_christmas_eve')
+      },
+      {
+        'month': 12,
+        'day': 25,
+        'name': L10nService().translate('holiday_christmas')
+      },
+      {
+        'month': 12,
+        'day': 31,
+        'name': L10nService().translate('holiday_new_years_eve')
+      },
     ];
     for (final h in holidaysList) {
       for (int yearOffset = -1; yearOffset <= 1; yearOffset++) {
         final targetYear = todayMidnight.year + yearOffset;
-        final holidayDate = DateTime(targetYear, h['month'] as int, h['day'] as int);
+        final holidayDate =
+            DateTime(targetYear, h['month'] as int, h['day'] as int);
         final diff = holidayDate.difference(todayMidnight).inDays;
         allEvents.add(MilestoneEvent(
           title: h['name'] as String,
@@ -197,13 +271,15 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     }
 
     final upcoming = uniqueEvents.where((e) => e.diffDays >= 0).toList();
-    
+
     // Đã qua: chỉ ghi nhận các sự kiện diễn ra từ ngày bắt đầu tính (startDate) trở đi
     final past = uniqueEvents.where((e) {
       if (e.diffDays >= 0) return false;
       if (startDt != null) {
-        final startDtMidnight = DateTime(startDt.year, startDt.month, startDt.day);
-        final eventDateMidnight = DateTime(e.date.year, e.date.month, e.date.day);
+        final startDtMidnight =
+            DateTime(startDt.year, startDt.month, startDt.day);
+        final eventDateMidnight =
+            DateTime(e.date.year, e.date.month, e.date.day);
         return !eventDateMidnight.isBefore(startDtMidnight);
       }
       return true;
@@ -244,7 +320,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     if (widget.startDate != null && widget.startDate!.isNotEmpty) {
       try {
         final startDt = DateTime.parse(widget.startDate!);
-        final startDtMidnight = DateTime(startDt.year, startDt.month, startDt.day);
+        final startDtMidnight =
+            DateTime(startDt.year, startDt.month, startDt.day);
         daysLove = todayMidnight.difference(startDtMidnight).inDays + 1;
       } catch (_) {}
     }
@@ -303,7 +380,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
               children: [
                 // Custom App Bar siêu đáng yêu
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: Row(
                     children: [
                       IconButton(
@@ -345,7 +423,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                           ),
                         ),
                         onPressed: _openCalendar,
-                        tooltip: L10nService().translate('milestone_manage_calendar'),
+                        tooltip: L10nService()
+                            .translate('milestone_manage_calendar'),
                       ),
                     ],
                   ),
@@ -353,7 +432,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                 // Banner số ngày yêu nhau xinh xắn
                 if (daysLove > 0)
                   Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     width: double.infinity,
                     height: 96,
                     child: Stack(
@@ -369,7 +449,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFFF6B95).withValues(alpha: 0.25),
+                                  color: const Color(0xFFFF6B95)
+                                      .withValues(alpha: 0.25),
                                   blurRadius: 16,
                                   offset: const Offset(0, 8),
                                 ),
@@ -397,7 +478,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 16),
                           child: Row(
                             children: [
                               Container(
@@ -421,16 +503,20 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      L10nService().translate('milestone_together_for'),
+                                      L10nService()
+                                          .translate('milestone_together_for'),
                                       style: SLTheme.quicksand(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
-                                        color: Colors.white.withValues(alpha: 0.9),
+                                        color:
+                                            Colors.white.withValues(alpha: 0.9),
                                       ),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      L10nService().format('milestone_love_days', {'days': daysLove.toString()}),
+                                      L10nService().format(
+                                          'milestone_love_days',
+                                          {'days': daysLove.toString()}),
                                       style: SLTheme.quicksand(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w900,
@@ -448,11 +534,13 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                   ),
                 // Custom TabBar kiểu bong bóng kẹo ngọt
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.8)),
                     boxShadow: [
                       BoxShadow(
                         color: const Color(0xFFCEBCD0).withValues(alpha: 0.08),
@@ -466,8 +554,10 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                     indicatorColor: Colors.transparent,
                     labelColor: Colors.white,
                     unselectedLabelColor: const Color(0xFF8E7A8A),
-                    labelStyle: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 13.5),
-                    unselectedLabelStyle: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 13.5),
+                    labelStyle: SLTheme.quicksand(
+                        fontWeight: FontWeight.w900, fontSize: 13.5),
+                    unselectedLabelStyle: SLTheme.quicksand(
+                        fontWeight: FontWeight.w700, fontSize: 13.5),
                     indicator: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFFFF9EBA), Color(0xFFFF6D97)],
@@ -490,7 +580,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                           children: [
                             const Icon(Icons.hourglass_empty_rounded, size: 16),
                             const SizedBox(width: 6),
-                            Text(L10nService().translate('milestone_tab_upcoming')),
+                            Text(L10nService()
+                                .translate('milestone_tab_upcoming')),
                           ],
                         ),
                       ),
@@ -526,7 +617,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     );
   }
 
-  Widget _buildEventsList(List<MilestoneEvent> list, {required bool isUpcoming}) {
+  Widget _buildEventsList(List<MilestoneEvent> list,
+      {required bool isUpcoming}) {
     if (list.isEmpty) {
       return Center(
         child: Padding(
@@ -551,7 +643,9 @@ class _MilestonesScreenState extends State<MilestonesScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                isUpcoming ? L10nService().translate('milestone_empty_upcoming') : L10nService().translate('milestone_empty_past'),
+                isUpcoming
+                    ? L10nService().translate('milestone_empty_upcoming')
+                    : L10nService().translate('milestone_empty_past'),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontSize: 14,
@@ -565,14 +659,18 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                 ElevatedButton.icon(
                   onPressed: _openCalendar,
                   icon: const Icon(Icons.add_rounded, size: 18),
-                  label: Text(L10nService().translate('milestone_plan_now'), style: SLTheme.quicksand(fontWeight: FontWeight.w800, fontSize: 13)),
+                  label: Text(L10nService().translate('milestone_plan_now'),
+                      style: SLTheme.quicksand(
+                          fontWeight: FontWeight.w800, fontSize: 13)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFF6D97),
                     foregroundColor: Colors.white,
                     elevation: 4,
                     shadowColor: const Color(0xFFFF6D97).withValues(alpha: 0.3),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
                   ),
                 ),
               ],
@@ -608,7 +706,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
         badgeBgColor = const Color(0xFFECFEFF);
         badgeTextColor = const Color(0xFF155E75);
       } else {
-        countdownText = L10nService().format('milestone_days_left', {'days': event.diffDays.toString()});
+        countdownText = L10nService()
+            .format('milestone_days_left', {'days': event.diffDays.toString()});
         badgeBgColor = const Color(0xFFFCE7F3);
         badgeTextColor = const Color(0xFF9D174D);
       }
@@ -619,7 +718,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
         badgeBgColor = const Color(0xFFF1F5F9);
         badgeTextColor = const Color(0xFF475569);
       } else {
-        countdownText = L10nService().format('milestone_days_passed', {'days': passedDays.toString()});
+        countdownText = L10nService()
+            .format('milestone_days_passed', {'days': passedDays.toString()});
         badgeBgColor = const Color(0xFFF1F5F9);
         badgeTextColor = const Color(0xFF475569);
       }
@@ -662,14 +762,16 @@ class _MilestonesScreenState extends State<MilestonesScreen>
       L10nService().translate('milestone_weekday_7')
     ];
     final weekdayStr = weekdays[event.date.weekday - 1];
-    final formattedDate = '$weekdayStr, ${event.date.day.toString().padLeft(2, '0')}/${event.date.month.toString().padLeft(2, '0')}/${event.date.year}';
+    final formattedDate =
+        '$weekdayStr, ${event.date.day.toString().padLeft(2, '0')}/${event.date.month.toString().padLeft(2, '0')}/${event.date.year}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.75),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.5),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFFFB3CA).withValues(alpha: 0.08),
@@ -734,7 +836,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 decoration: BoxDecoration(
                   color: badgeBgColor,
                   borderRadius: BorderRadius.circular(14),

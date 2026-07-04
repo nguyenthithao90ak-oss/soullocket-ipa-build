@@ -26,11 +26,11 @@ class BucketListScreen extends StatefulWidget {
 
 class _BucketListScreenState extends State<BucketListScreen>
     with TickerProviderStateMixin {
-
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
       tooltip: 'Hướng dẫn',
-      icon: const Icon(Icons.info_outline_rounded, color: SLColors.primary, size: 22),
+      icon: const Icon(Icons.info_outline_rounded,
+          color: SLColors.primary, size: 22),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -51,18 +51,22 @@ class _BucketListScreenState extends State<BucketListScreen>
             children: [
               Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text('- Gợi ý và lưu trữ 100 điều các cặp đôi nên làm cùng nhau.\n- Theo dõi tiến độ hoàn thành (0/100).\n- Chia sẻ cảm xúc khi hoàn thành từng mục.'),
+              Text(
+                  '- Gợi ý và lưu trữ 100 điều các cặp đôi nên làm cùng nhau.\n- Theo dõi tiến độ hoàn thành (0/100).\n- Chia sẻ cảm xúc khi hoàn thành từng mục.'),
               SizedBox(height: 12),
-              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Cách sử dụng:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text('- Bấm dấu + để tự thêm điều muốn làm hoặc chọn từ gợi ý có sẵn.\n- Khi cả hai cùng hoàn thành một mục, hãy đánh dấu "Hoàn thành" để lưu lại kỷ niệm.'),
+              Text(
+                  '- Bấm dấu + để tự thêm điều muốn làm hoặc chọn từ gợi ý có sẵn.\n- Khi cả hai cùng hoàn thành một mục, hãy đánh dấu "Hoàn thành" để lưu lại kỷ niệm.'),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+            child: const Text('Đã hiểu',
+                style: TextStyle(color: SLColors.primary)),
           ),
         ],
       ),
@@ -135,12 +139,14 @@ class _BucketListScreenState extends State<BucketListScreen>
     final text = _itemController.text.trim();
     if (text.isEmpty) return;
 
-    final currentSnap = await _dbRef.child('houses/${widget.houseId}/bucket').get();
+    final currentSnap =
+        await _dbRef.child('houses/${widget.houseId}/bucket').get();
     if (currentSnap.exists && currentSnap.value is Map) {
       final currentMap = currentSnap.value as Map;
       if (currentMap.length >= 50) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Danh sách mong muốn đã đạt giới hạn (tối đa 50 mục). Vui lòng xoá bớt trước khi thêm mới.'),
+          content: Text(
+              'Danh sách mong muốn đã đạt giới hạn (tối đa 50 mục). Vui lòng xoá bớt trước khi thêm mới.'),
           backgroundColor: SLColors.danger,
         ));
         return;
@@ -183,7 +189,8 @@ class _BucketListScreenState extends State<BucketListScreen>
         title: const Text('Xoá mục bucket list'),
         content: const Text('Bạn có chắc chắn muốn xoá mục này?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -227,7 +234,8 @@ class _BucketListScreenState extends State<BucketListScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, context.tr('util_danhschcng_153531'), actions: [_buildInfoIcon(context)]),
+      appBar: SLTheme.appBar(context, context.tr('util_danhschcng_153531'),
+          actions: [_buildInfoIcon(context)]),
       body: Stack(
         children: <Widget>[
           SLTheme.softCanvasBackdrop(
@@ -372,7 +380,8 @@ class _BucketListScreenState extends State<BucketListScreen>
                     ),
                     SLSpacing.h4,
                     Text(
-                      L10nService().format('util_bucket_done_count', {'done': doneCount, 'total': total}),
+                      L10nService().format('util_bucket_done_count',
+                          {'done': doneCount, 'total': total}),
                       style: SLTheme.quicksand(
                         fontSize: 12.2,
                         fontWeight: FontWeight.w700,

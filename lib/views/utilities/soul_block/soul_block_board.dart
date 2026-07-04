@@ -20,10 +20,8 @@ extension _SoulBlockBoard on _SoulBlockGameState {
           );
           final double innerExtent =
               boardExtent - (_SoulBlockGameState._boardPanelPadding * 2) - 6.0;
-          final double contentExtent =
-              (cellExtent * _boardSize) +
-                  (_SoulBlockGameState._boardGap *
-                      (_boardSize - 1));
+          final double contentExtent = (cellExtent * _boardSize) +
+              (_SoulBlockGameState._boardGap * (_boardSize - 1));
           final double contentSlack = max(0, innerExtent - contentExtent);
 
           const double boardGap = _SoulBlockGameState._boardGap;
@@ -92,8 +90,8 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                               children: List<Widget>.generate(
                                 _boardSize,
                                 (int row) {
-                                  final bool isLastRow = row ==
-                                      (_boardSize - 1);
+                                  final bool isLastRow =
+                                      row == (_boardSize - 1);
                                   return Padding(
                                     padding: EdgeInsets.only(
                                       bottom: isLastRow ? 0 : boardGap,
@@ -105,8 +103,8 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                                       children: List<Widget>.generate(
                                         _boardSize,
                                         (int col) {
-                                          final bool isLastCol = col ==
-                                              (_boardSize - 1);
+                                          final bool isLastCol =
+                                              col == (_boardSize - 1);
                                           return Padding(
                                             padding: EdgeInsets.only(
                                               right: isLastCol ? 0 : boardGap,
@@ -369,8 +367,8 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     final bool isPreview = draggingPiece != null &&
         hasPreviewAnchor &&
         _isCellInPreviewFootprint(row, col);
-    final bool isClearing =
-        _clearingRows.contains(row) || _clearingCols.contains(col) ||
+    final bool isClearing = _clearingRows.contains(row) ||
+        _clearingCols.contains(col) ||
         _clearingCells.contains(Point<int>(col, row));
 
     if (tile != null) {
@@ -583,7 +581,8 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                       final bool isLast = index == slots.length - 1;
                       return Expanded(
                         child: Padding(
-                          padding: EdgeInsets.only(right: isLast ? 0 : pieceGap),
+                          padding:
+                              EdgeInsets.only(right: isLast ? 0 : pieceGap),
                           child: RepaintBoundary(
                             child: piece == null
                                 ? _buildEmptyPieceCard(compact: compact)
@@ -668,145 +667,148 @@ extension _SoulBlockBoard on _SoulBlockGameState {
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
-          final double hitPaddingX = compact ? 8 : 10;
-          final double hitPaddingY = compact ? 6 : 8;
-          return SizedBox.expand(
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: <Widget>[
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: RadialGradient(
-                          colors: <Color>[
-                            Colors.white
-                                .withValues(alpha: isRecommended ? 0.10 : 0.05),
-                            Colors.transparent,
-                          ],
-                          radius: 0.88,
-                          center: const Alignment(0, -0.08),
+            final double hitPaddingX = compact ? 8 : 10;
+            final double hitPaddingY = compact ? 6 : 8;
+            return SizedBox.expand(
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: <Widget>[
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: RadialGradient(
+                            colors: <Color>[
+                              Colors.white.withValues(
+                                  alpha: isRecommended ? 0.10 : 0.05),
+                              Colors.transparent,
+                            ],
+                            radius: 0.88,
+                            center: const Alignment(0, -0.08),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                Center(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      hitPaddingX,
-                      hitPaddingY,
-                      hitPaddingX,
-                      compact ? 4 : 5,
-                    ),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minWidth:
-                            max(0, constraints.maxWidth - (hitPaddingX * 2)),
-                        minHeight:
-                            max(0, constraints.maxHeight - hitPaddingY - 5),
+                  Center(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        hitPaddingX,
+                        hitPaddingY,
+                        hitPaddingX,
+                        compact ? 4 : 5,
                       ),
-                      child: RepaintBoundary(
-                        child: _buildPieceGrid(piece, compact: compact),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minWidth:
+                              max(0, constraints.maxWidth - (hitPaddingX * 2)),
+                          minHeight:
+                              max(0, constraints.maxHeight - hitPaddingY - 5),
+                        ),
+                        child: RepaintBoundary(
+                          child: _buildPieceGrid(piece, compact: compact),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                if (isRecommended)
-                  Positioned(
-                    top: compact ? -2 : -1,
-                    right: compact ? 2 : 4,
-                    child: Container(
-                      width: 18,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFD166).withValues(alpha: 0.18),
-                        shape: BoxShape.circle,
-                        border: Border.all(
+                  if (isRecommended)
+                    Positioned(
+                      top: compact ? -2 : -1,
+                      right: compact ? 2 : 4,
+                      child: Container(
+                        width: 18,
+                        height: 18,
+                        decoration: BoxDecoration(
                           color:
-                              const Color(0xFFFFD166).withValues(alpha: 0.30),
+                              const Color(0xFFFFD166).withValues(alpha: 0.18),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color:
+                                const Color(0xFFFFD166).withValues(alpha: 0.30),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.auto_awesome_rounded,
+                          size: 11,
+                          color: Color(0xFFFFD166),
                         ),
                       ),
-                      child: const Icon(
-                        Icons.auto_awesome_rounded,
-                        size: 11,
-                        color: Color(0xFFFFD166),
-                      ),
                     ),
-                  ),
-                Positioned(
-                  top: compact ? -4 : -3,
-                  left: compact ? 2 : 4,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => _rotatePiece(piece),
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          width: 1,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.rotate_right_rounded,
-                        size: 14,
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ),
-                ),
-                if (piece.isGold)
                   Positioned(
-                    bottom: compact ? -4 : -2,
-                    right: compact ? 2 : 4,
-                    child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFFFFD700).withValues(alpha: 0.4),
-                          width: 1,
+                    top: compact ? -4 : -3,
+                    left: compact ? 2 : 4,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => _rotatePiece(piece),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
                         ),
-                      ),
-                      child: const Icon(
-                        Icons.star_rounded,
-                        size: 12,
-                        color: Color(0xFFFFD700),
+                        child: const Icon(
+                          Icons.rotate_right_rounded,
+                          size: 14,
+                          color: Colors.white70,
+                        ),
                       ),
                     ),
                   ),
-                if (piece.isBomb)
-                  Positioned(
-                    bottom: compact ? -4 : -2,
-                    right: compact ? 2 : 4,
-                    child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFFFF4500).withValues(alpha: 0.4),
-                          width: 1,
+                  if (piece.isGold)
+                    Positioned(
+                      bottom: compact ? -4 : -2,
+                      right: compact ? 2 : 4,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color:
+                                const Color(0xFFFFD700).withValues(alpha: 0.4),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.star_rounded,
+                          size: 12,
+                          color: Color(0xFFFFD700),
                         ),
                       ),
-                      child: const Icon(
-                        Icons.local_fire_department_rounded,
-                        size: 12,
-                        color: Color(0xFFFF4500),
+                    ),
+                  if (piece.isBomb)
+                    Positioned(
+                      bottom: compact ? -4 : -2,
+                      right: compact ? 2 : 4,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color:
+                                const Color(0xFFFF4500).withValues(alpha: 0.4),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.local_fire_department_rounded,
+                          size: 12,
+                          color: Color(0xFFFF4500),
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
-    ),
-  );
+    );
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -1141,7 +1143,8 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                   height: max(0.9, shortSide * 0.055),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(shortSide),
-                    color: Colors.white.withValues(alpha: isPreview ? 0.18 : 0.10),
+                    color:
+                        Colors.white.withValues(alpha: isPreview ? 0.18 : 0.10),
                   ),
                 ),
               ),

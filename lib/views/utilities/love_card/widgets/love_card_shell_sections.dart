@@ -131,7 +131,6 @@ class _LoveCardScreenBody extends StatelessWidget {
 }
 
 class _LoveCardHeaderSection extends StatelessWidget {
-
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
       context: context,
@@ -148,18 +147,22 @@ class _LoveCardHeaderSection extends StatelessWidget {
             children: [
               Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text('- Bộ sưu tập thẻ bài tương tác vui nhộn dùng để "phạt" hoặc "thưởng" người ấy.\n- Bao gồm nhiều cấp độ hiếm (Common, Rare, Epic, Legendary).'),
+              Text(
+                  '- Bộ sưu tập thẻ bài tương tác vui nhộn dùng để "phạt" hoặc "thưởng" người ấy.\n- Bao gồm nhiều cấp độ hiếm (Common, Rare, Epic, Legendary).'),
               SizedBox(height: 12),
-              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Cách sử dụng:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text('- Bốc thẻ hàng ngày để sưu tập.\n- Chọn một thẻ và bấm Dùng để bắt người ấy thực hiện một hành động (ví dụ: Massage 10 phút, Cấm giận dỗi 1 ngày).\n- Thẻ đã dùng sẽ vào lịch sử và bị tiêu hao.'),
+              Text(
+                  '- Bốc thẻ hàng ngày để sưu tập.\n- Chọn một thẻ và bấm Dùng để bắt người ấy thực hiện một hành động (ví dụ: Massage 10 phút, Cấm giận dỗi 1 ngày).\n- Thẻ đã dùng sẽ vào lịch sử và bị tiêu hao.'),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+            child: const Text('Đã hiểu',
+                style: TextStyle(color: SLColors.primary)),
           ),
         ],
       ),
@@ -730,7 +733,6 @@ class _LoveCardThemeBackdrop extends StatelessWidget {
   }
 }
 
-
 class _LoveCardBackdropBalloonPair extends StatelessWidget {
   final Color leftColor;
   final Color rightColor;
@@ -1094,7 +1096,6 @@ class _LoveCardGlassIcon extends StatelessWidget {
     );
   }
 }
-
 
 class _LoveCardStatusPill extends StatelessWidget {
   final String label;

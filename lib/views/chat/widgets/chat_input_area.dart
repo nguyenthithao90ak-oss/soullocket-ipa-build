@@ -33,7 +33,9 @@ class ChatInputArea extends StatelessWidget {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
-        color: hasChatBackground ? Colors.white.withValues(alpha: 0.92) : Colors.white,
+        color: hasChatBackground
+            ? Colors.white.withValues(alpha: 0.92)
+            : Colors.white,
         child: Text(
           'Tài khoản này không còn khả dụng nên cuộc chat hiện đã bị khóa.',
           textAlign: TextAlign.center,
@@ -47,7 +49,9 @@ class ChatInputArea extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: hasChatBackground ? Colors.white.withValues(alpha: 0.9) : Colors.white,
+        color: hasChatBackground
+            ? Colors.white.withValues(alpha: 0.9)
+            : Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -76,15 +80,18 @@ class ChatInputArea extends StatelessWidget {
               ),
               Expanded(
                 child: Container(
-                  constraints: const BoxConstraints(minHeight: 42, maxHeight: 110),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  constraints:
+                      const BoxConstraints(minHeight: 42, maxHeight: 110),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
                     color: hasChatBackground
                         ? const Color(0xFFFFFFFF).withValues(alpha: 0.82)
                         : const Color(0xFFF0F2F5),
                     borderRadius: BorderRadius.circular(24),
                     border: hasChatBackground
-                        ? Border.all(color: Colors.white.withValues(alpha: 0.35))
+                        ? Border.all(
+                            color: Colors.white.withValues(alpha: 0.35))
                         : null,
                   ),
                   child: Row(
@@ -98,7 +105,8 @@ class ChatInputArea extends StatelessWidget {
                           child: isUploading
                               ? const Padding(
                                   padding: EdgeInsets.all(4),
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Icon(
                                   Icons.image_outlined,
@@ -126,7 +134,8 @@ class ChatInputArea extends StatelessWidget {
                             ),
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 8),
                           ),
                           onSubmitted: (_) => onSend(),
                         ),

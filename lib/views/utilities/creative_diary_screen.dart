@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -35,8 +35,6 @@ class CreativeDiaryScreen extends StatefulWidget {
 }
 
 class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
-
-
   static const Duration _rewardedSaveCooldown = Duration(minutes: 10);
   static const String _rewardedSaveUnlockedUntilPrefsKey =
       'creative_diary_rewarded_save_unlocked_until_ms_v1';
@@ -232,12 +230,12 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                     child: Container(
                       padding: EdgeInsets.all(compact ? 14 : 15),
                       decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.88),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.72),
-                            width: 1.6,
-                          ),
+                        color: Colors.white.withValues(alpha: 0.88),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.72),
+                          width: 1.6,
+                        ),
                         boxShadow: SLTheme.cardShadow,
                       ),
                       child: LayoutBuilder(
@@ -261,7 +259,8 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                               ),
                               SLSpacing.h8,
                               Text(
-                                activePage?.title ?? context.tr('util_staycahaib_a09d75'),
+                                activePage?.title ??
+                                    context.tr('util_staycahaib_a09d75'),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: SLTheme.quicksand(
@@ -275,7 +274,11 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                               Text(
                                 activePage == null
                                     ? context.tr('util_lulinhngdn_f942d3')
-                                    : L10nService().format('util_diary_saved_date', {'date': DateFormat('dd/MM/yyyy').format(activePage.createdAt)}),
+                                    : L10nService().format(
+                                        'util_diary_saved_date', {
+                                        'date': DateFormat('dd/MM/yyyy')
+                                            .format(activePage.createdAt)
+                                      }),
                                 style: SLTheme.quicksand(
                                   fontSize: compact ? 11.5 : 12.5,
                                   fontWeight: FontWeight.w600,
@@ -301,7 +304,9 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
                             ),
                             child: Text(
                               hasPages
-                                  ? L10nService().format('util_diary_word_count', {'count': activePage!.wordCount})
+                                  ? L10nService().format(
+                                      'util_diary_word_count',
+                                      {'count': activePage!.wordCount})
                                   : context.tr('util_btuvit_250950'),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -511,8 +516,7 @@ class _CreativeDiaryScreenState extends State<CreativeDiaryScreen> {
               Positioned.fill(
                 child: _DiaryExportProgressOverlay(
                   status: _exportStatus ?? context.tr('util_anglustayv_e1fb6c'),
-                  detail: _exportDetail ??
-                      context.tr('util_mitrangscl_408b1f'),
+                  detail: _exportDetail ?? context.tr('util_mitrangscl_408b1f'),
                 ),
               ),
           ],
@@ -544,7 +548,8 @@ class _CreativeDiaryEmptyCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: SLTheme.glassCardStrong,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.75), width: 2),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.75), width: 2),
         boxShadow: SLTheme.cardShadow,
       ),
       child: Column(
@@ -566,7 +571,9 @@ class _CreativeDiaryEmptyCard extends StatelessWidget {
           ),
           SLSpacing.h16,
           Text(
-            canCreate ? context.tr('util_chactrangn_a61b97') : context.tr('util_chathmstay_c23b70'),
+            canCreate
+                ? context.tr('util_chactrangn_a61b97')
+                : context.tr('util_chathmstay_c23b70'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               fontSize: 18,
@@ -625,7 +632,8 @@ class _DiaryPageCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: SLTheme.glassCardStrong,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.75), width: 2),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.75), width: 2),
         boxShadow: SLTheme.cardShadow,
       ),
       child: Column(
@@ -715,7 +723,8 @@ class _DiaryPageCard extends StatelessWidget {
               ),
               _DiaryMetaChip(
                 icon: Icons.short_text_rounded,
-                label: L10nService().format('util_diary_word_count', {'count': page.wordCount}),
+                label: L10nService()
+                    .format('util_diary_word_count', {'count': page.wordCount}),
                 color: SLColors.primaryActive,
                 background: SLColors.primaryLight,
               ),
@@ -795,7 +804,10 @@ class _DiaryAttachmentStrip extends StatelessWidget {
                     borderRadius: SLRadius.pillAll,
                   ),
                   child: Text(
-                    extraCount > 0 ? L10nService().format('util_diary_collection_extra', {'count': extraCount}) : context.tr('util_nhnhkm_035065'),
+                    extraCount > 0
+                        ? L10nService().format('util_diary_collection_extra',
+                            {'count': extraCount})
+                        : context.tr('util_nhnhkm_035065'),
                     style: SLTheme.quicksand(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w900,
@@ -877,7 +889,8 @@ class _DiaryExportPageCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.96),
           borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
+          border: Border.all(
+              color: Colors.white.withValues(alpha: 0.9), width: 1.2),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -910,7 +923,10 @@ class _DiaryExportPageCard extends StatelessWidget {
                       ),
                       SLSpacing.h6,
                       Text(
-                        L10nService().format('util_diary_day_date', {'date': DateFormat('dd/MM/yyyy').format(page.createdAt)}),
+                        L10nService().format('util_diary_day_date', {
+                          'date':
+                              DateFormat('dd/MM/yyyy').format(page.createdAt)
+                        }),
                         style: SLTheme.quicksand(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
@@ -1047,7 +1063,8 @@ class _DiaryExportPageCard extends StatelessWidget {
                 ),
                 _DiaryMetaChip(
                   icon: Icons.short_text_rounded,
-                  label: L10nService().format('util_diary_word_count', {'count': page.wordCount}),
+                  label: L10nService().format(
+                      'util_diary_word_count', {'count': page.wordCount}),
                   color: SLColors.primaryActive,
                   background: SLColors.primaryLight,
                 ),
@@ -1292,8 +1309,10 @@ class _DiaryPageData {
 
     return _DiaryPageData(
       id: '${raw['id'] ?? ''}',
-      title: '${metadata['title'] ?? L10nService().translate('util_trangknim_1d5156')}',
-      mood: '${metadata['mood'] ?? L10nService().translate('util_yuthng_b60a77')}',
+      title:
+          '${metadata['title'] ?? L10nService().translate('util_trangknim_1d5156')}',
+      mood:
+          '${metadata['mood'] ?? L10nService().translate('util_yuthng_b60a77')}',
       memory: '${raw['content'] ?? ''}',
       prompt:
           '${metadata['prompt'] ?? L10nService().translate('util_hythmmtchi_6eddec')}',

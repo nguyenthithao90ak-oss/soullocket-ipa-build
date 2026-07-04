@@ -157,7 +157,6 @@ class _DiaryTabShell extends StatelessWidget {
                   ),
                 ),
               ),
-
             ],
           ),
           // Selection bar
@@ -220,16 +219,19 @@ class _DiaryTabLoadingSection extends StatelessWidget {
           const SizedBox(height: 20),
           // Skeleton cho Header
           SkeletonContainer.rounded(
-            width: 200, height: 28, 
-            baseColor: baseColor, highlightColor: highlightColor,
+            width: 200,
+            height: 28,
+            baseColor: baseColor,
+            highlightColor: highlightColor,
           ),
           const SizedBox(height: 24),
           // Skeleton cho Tab Switcher
           SkeletonContainer.rounded(
-              width: double.infinity,
-              height: 50,
-              borderRadius: const BorderRadius.all(Radius.circular(20)),
-              baseColor: baseColor, highlightColor: highlightColor,
+            width: double.infinity,
+            height: 50,
+            borderRadius: const BorderRadius.all(Radius.circular(20)),
+            baseColor: baseColor,
+            highlightColor: highlightColor,
           ),
           const SizedBox(height: 30),
           // Danh sách Skeleton Items
@@ -243,7 +245,8 @@ class _DiaryTabLoadingSection extends StatelessWidget {
                   children: [
                     SkeletonContainer.circle(
                       size: 48,
-                      baseColor: baseColor, highlightColor: highlightColor,
+                      baseColor: baseColor,
+                      highlightColor: highlightColor,
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -253,13 +256,15 @@ class _DiaryTabLoadingSection extends StatelessWidget {
                           SkeletonContainer.rounded(
                             width: MediaQuery.sizeOf(context).width * 0.45,
                             height: 18,
-                            baseColor: baseColor, highlightColor: highlightColor,
+                            baseColor: baseColor,
+                            highlightColor: highlightColor,
                           ),
                           const SizedBox(height: 10),
                           SkeletonContainer.rounded(
                             width: double.infinity,
                             height: 100,
-                            baseColor: baseColor, highlightColor: highlightColor,
+                            baseColor: baseColor,
+                            highlightColor: highlightColor,
                           ),
                         ],
                       ),

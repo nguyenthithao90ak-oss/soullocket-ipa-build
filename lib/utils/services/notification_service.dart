@@ -207,8 +207,9 @@ class NotificationService {
     // Dùng cache trước, fallback RTDB nếu cache miss
     String? houseId = await AuthHouseContextService.quickHouseId();
     if (houseId == null || houseId.isEmpty) {
-      final houseIdSnap =
-          await FirebaseDatabase.instance.ref('users/${user.uid}/houseId').get();
+      final houseIdSnap = await FirebaseDatabase.instance
+          .ref('users/${user.uid}/houseId')
+          .get();
       houseId = houseIdSnap.value?.toString();
       if (houseId == null || houseId.isEmpty) {
         final houseSnap = await FirebaseDatabase.instance
@@ -241,7 +242,10 @@ class NotificationService {
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
     final type = message.data['type']?.toString() ?? '';
     final screen = message.data['screen']?.toString() ?? '';
-    final isOverlayTarget = type == 'soul_merge' || screen == 'soul_merge' || type == 'chat' || screen == 'chat';
+    final isOverlayTarget = type == 'soul_merge' ||
+        screen == 'soul_merge' ||
+        type == 'chat' ||
+        screen == 'chat';
 
     // 1. Luôn hiển thị bong bóng (nếu được cấp quyền) ngay cả khi không có notification block (Data-only FCM)
     if (isOverlayTarget) {
@@ -639,7 +643,9 @@ class NotificationService {
         prefs.getBool('il_notifications_enabled') ?? true;
     final sleepReminderEnabled =
         prefs.getBool('il_smart_reminder_sleep') ?? true;
-    if (!notificationsEnabled || !sleepReminderEnabled || !await hasPermission()) {
+    if (!notificationsEnabled ||
+        !sleepReminderEnabled ||
+        !await hasPermission()) {
       await cancelDailySleepReminder();
       return;
     }
@@ -712,7 +718,9 @@ class NotificationService {
     SharedPreferences prefs,
     String role,
   ) async {
-    final fallback = role == 'user2' ? L10nService().translate('female_role_default') : L10nService().translate('male_role_default');
+    final fallback = role == 'user2'
+        ? L10nService().translate('female_role_default')
+        : L10nService().translate('male_role_default');
     final cachedAuthUid = (prefs.getString('il_auth_uid') ?? '').trim();
     final currentUid = FirebaseAuth.instance.currentUser?.uid.trim() ?? '';
     final canUseSessionCache =
@@ -756,13 +764,17 @@ class NotificationService {
 
     final nightTimeStr = prefs.getString('il_good_night_time') ?? '22:15';
     final nightParts = nightTimeStr.split(':');
-    final nightHour = nightParts.isNotEmpty ? (int.tryParse(nightParts[0]) ?? 22) : 22;
-    final nightMinute = nightParts.length > 1 ? (int.tryParse(nightParts[1]) ?? 15) : 15;
+    final nightHour =
+        nightParts.isNotEmpty ? (int.tryParse(nightParts[0]) ?? 22) : 22;
+    final nightMinute =
+        nightParts.length > 1 ? (int.tryParse(nightParts[1]) ?? 15) : 15;
 
     final morningTimeStr = prefs.getString('il_good_morning_time') ?? '05:55';
     final morningParts = morningTimeStr.split(':');
-    final morningHour = morningParts.isNotEmpty ? (int.tryParse(morningParts[0]) ?? 5) : 5;
-    final morningMinute = morningParts.length > 1 ? (int.tryParse(morningParts[1]) ?? 55) : 55;
+    final morningHour =
+        morningParts.isNotEmpty ? (int.tryParse(morningParts[0]) ?? 5) : 5;
+    final morningMinute =
+        morningParts.length > 1 ? (int.tryParse(morningParts[1]) ?? 55) : 55;
 
     await _maybeSendAutoTimedGreeting(
       houseId: houseId,

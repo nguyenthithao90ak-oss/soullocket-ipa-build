@@ -211,12 +211,22 @@ class RankingService {
 
     // Field cần cho ranking — không load nguyên node
     const rootFields = [
-      'hearts_received', 'hotScore', 'proUntil',
-      'houseName', 'houseAvatar', 'avatar', 'bio',
+      'hearts_received',
+      'hotScore',
+      'proUntil',
+      'houseName',
+      'houseAvatar',
+      'avatar',
+      'bio',
     ];
     const settingsFields = [
-      'hearts_received', 'proUntil', 'houseName',
-      'houseAvatar', 'bio', 'adminFireTick', 'redTickPro',
+      'hearts_received',
+      'proUntil',
+      'houseName',
+      'houseAvatar',
+      'bio',
+      'adminFireTick',
+      'redTickPro',
     ];
 
     Future<Map<String, dynamic>> fetchFields(String base) async {
@@ -233,7 +243,8 @@ class RankingService {
         final settingsMap = <String, dynamic>{};
         for (var i = 0; i < settingsFields.length; i++) {
           final s = snaps[rootFields.length + i];
-          if (s.exists && s.value != null) settingsMap[settingsFields[i]] = s.value;
+          if (s.exists && s.value != null)
+            settingsMap[settingsFields[i]] = s.value;
         }
         if (settingsMap.isNotEmpty) result['settings'] = settingsMap;
       } catch (_) {}

@@ -10,7 +10,9 @@ extension _InsightInteractionCardExt on _LoveInsightsScreenState {
         children: [
           _buildCardTitle(
             icon: Icons.visibility_rounded,
-            title: _isSingle ? L10nService().translate('home_tnsutsdng_72ed67') : L10nService().translate('home_tngtcquant_578a21'),
+            title: _isSingle
+                ? L10nService().translate('home_tnsutsdng_72ed67')
+                : L10nService().translate('home_tngtcquant_578a21'),
             subtitle: _isSingle
                 ? L10nService().translate('home_lytheoslnm_cc9da8')
                 : L10nService().translate('home_sosnhmcxem_8fb417'),
@@ -24,7 +26,8 @@ extension _InsightInteractionCardExt on _LoveInsightsScreenState {
                 Expanded(
                   child: _buildPersonStatBlock(
                     name: insight.nameU1,
-                    primaryLabel: L10nService().translate('home_xemnhtk_37a828'),
+                    primaryLabel:
+                        L10nService().translate('home_xemnhtk_37a828'),
                     primaryValue: insight.viewU1,
                     secondaryLabel: L10nService().translate('home_mapp_ab1833'),
                     secondaryValue: insight.openU1,
@@ -35,7 +38,8 @@ extension _InsightInteractionCardExt on _LoveInsightsScreenState {
                 Expanded(
                   child: _buildPersonStatBlock(
                     name: insight.nameU2,
-                    primaryLabel: L10nService().translate('home_xemnhtk_37a828'),
+                    primaryLabel:
+                        L10nService().translate('home_xemnhtk_37a828'),
                     primaryValue: insight.viewU2,
                     secondaryLabel: L10nService().translate('home_mapp_ab1833'),
                     secondaryValue: insight.openU2,

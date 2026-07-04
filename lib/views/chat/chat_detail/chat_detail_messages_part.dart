@@ -120,8 +120,12 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
         _messages
           ..clear()
           ..addAll(merged);
-        _oldestMessageTs = _messages.isEmpty ? null : _messages.last.timestamp.millisecondsSinceEpoch;
-        _newestMessageTs = _messages.isEmpty ? null : _messages.first.timestamp.millisecondsSinceEpoch;
+        _oldestMessageTs = _messages.isEmpty
+            ? null
+            : _messages.last.timestamp.millisecondsSinceEpoch;
+        _newestMessageTs = _messages.isEmpty
+            ? null
+            : _messages.first.timestamp.millisecondsSinceEpoch;
         _hasMoreMessages = older.length >= _ChatDetailScreenState._chatPageSize;
         _isLoadingOlderMessages = false;
       });
@@ -139,8 +143,12 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
     _messageIds
       ..clear()
       ..addAll(messages.map((message) => message.id));
-    _oldestMessageTs = _messages.isEmpty ? null : _messages.last.timestamp.millisecondsSinceEpoch;
-    _newestMessageTs = _messages.isEmpty ? null : _messages.first.timestamp.millisecondsSinceEpoch;
+    _oldestMessageTs = _messages.isEmpty
+        ? null
+        : _messages.last.timestamp.millisecondsSinceEpoch;
+    _newestMessageTs = _messages.isEmpty
+        ? null
+        : _messages.first.timestamp.millisecondsSinceEpoch;
     // ⚡ Không cần setState rỗng — widget dùng StreamBuilder hoặc sẽ rebuild
     // khi listener _listenForNewMessages kích hoạt
   }
@@ -165,7 +173,8 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
     });
   }
 
-  Widget _buildMsgBubble(ChatMessage msg, bool isMe, {bool isLatestMe = false}) {
+  Widget _buildMsgBubble(ChatMessage msg, bool isMe,
+      {bool isLatestMe = false}) {
     if (msg.type == 'call_invite') {
       return _buildCallInviteBubble(msg, isMe);
     }
@@ -243,7 +252,8 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                       : [
                           BoxShadow(
                             color: isMe
-                                ? const Color(0xFF0A7CFF).withValues(alpha: 0.24)
+                                ? const Color(0xFF0A7CFF)
+                                    .withValues(alpha: 0.24)
                                 : Colors.black.withValues(alpha: 0.06),
                             blurRadius: isMe ? 8 : 4,
                             offset: const Offset(0, 2),
@@ -360,7 +370,9 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                         if (isMe && isLatestMe) ...[
                           const SizedBox(width: 4),
                           Icon(
-                            msg.isRead ? Icons.done_all_rounded : Icons.check_circle_outline_rounded,
+                            msg.isRead
+                                ? Icons.done_all_rounded
+                                : Icons.check_circle_outline_rounded,
                             size: 12,
                             color: isMe ? Colors.white70 : Colors.black38,
                           ),

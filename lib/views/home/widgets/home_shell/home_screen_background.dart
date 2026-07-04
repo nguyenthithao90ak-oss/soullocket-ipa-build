@@ -158,8 +158,6 @@ extension _HomeScreenShellBackground on _HomeScreenState {
     return _resolveShellGradient(themeKey, isDark);
   }
 
-
-
   List<Color> _resolveShellGradient(String themeKey, bool isDark) {
     if (themeKey == 'off') {
       return isDark
@@ -381,7 +379,6 @@ class _StableShellBackgroundImageState
     );
   }
 
-  bool get _hasFallback => _diskCachedProvider != null || _retainedProvider != null;
+  bool get _hasFallback =>
+      _diskCachedProvider != null || _retainedProvider != null;
 }
-
-

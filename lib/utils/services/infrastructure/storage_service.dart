@@ -11,7 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'cloudflare_r2_service.dart';
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
-import 'package:soullocket_app/utils/services/secret_vault_media_policy.dart' as secret_vault_policy;
+import 'package:soullocket_app/utils/services/secret_vault_media_policy.dart'
+    as secret_vault_policy;
 import 'package:soullocket_app/utils/services/storage_app_check_helper.dart';
 import 'package:soullocket_app/utils/services/storage_content_policy.dart';
 import 'package:soullocket_app/utils/services/storage_delete_helper.dart';
@@ -1380,9 +1381,8 @@ class StorageService {
           resolvedContentType: 'image/webp',
           rejectVideoUpload: _rejectVideoUpload,
           purgeLegacyCache: _purgeLegacyImgBBKeyCache,
-          onProgress: onProgress != null
-              ? (p) => onProgress(0.4 + (p * 0.6))
-              : null,
+          onProgress:
+              onProgress != null ? (p) => onProgress(0.4 + (p * 0.6)) : null,
         );
 
         final url = await downloadUrl;

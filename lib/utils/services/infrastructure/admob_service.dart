@@ -133,30 +133,35 @@ class AdMobService {
     }
     return _androidRewardedMainId ?? AdUnitConfig.rewardedMainId;
   }
+
   static String get rewardedCheckinId {
     if (Platform.isIOS) {
       return _iosRewardedCheckinId ?? AdUnitConfig.rewardedCheckinId;
     }
     return _androidRewardedCheckinId ?? AdUnitConfig.rewardedCheckinId;
   }
+
   static String get rewardedSoulGameId {
     if (Platform.isIOS) {
       return _iosRewardedSoulGameId ?? AdUnitConfig.rewardedSoulGameId;
     }
     return _androidRewardedSoulGameId ?? AdUnitConfig.rewardedSoulGameId;
   }
+
   static String get bannerId {
     if (Platform.isIOS) {
       return _iosBannerId ?? AdUnitConfig.bannerId;
     }
     return _androidBannerId ?? AdUnitConfig.bannerId;
   }
+
   static String get interstitialId {
     if (Platform.isIOS) {
       return _iosInterstitialId ?? AdUnitConfig.interstitialId;
     }
     return _androidInterstitialId ?? AdUnitConfig.interstitialId;
   }
+
   static String get appOpenId {
     if (Platform.isIOS) {
       return _iosAppOpenId ?? AdUnitConfig.appOpenId;
@@ -301,38 +306,46 @@ class AdMobService {
             'ios=${map.keys.where((k) => k.toString().startsWith('ios_')).length}).',
           );
           if (map['rewardedMainId'] != null) {
-            AdUnitConfig.androidRewardedMainId = map['rewardedMainId'].toString();
+            AdUnitConfig.androidRewardedMainId =
+                map['rewardedMainId'].toString();
           }
           if (map['rewardedCheckinId'] != null) {
-            AdUnitConfig.androidRewardedCheckinId = map['rewardedCheckinId'].toString();
+            AdUnitConfig.androidRewardedCheckinId =
+                map['rewardedCheckinId'].toString();
           }
           if (map['rewardedSoulGameId'] != null) {
-            AdUnitConfig.androidRewardedSoulGameId = map['rewardedSoulGameId'].toString();
+            AdUnitConfig.androidRewardedSoulGameId =
+                map['rewardedSoulGameId'].toString();
           }
           if (map['bannerId'] != null) {
             AdUnitConfig.androidBannerId = map['bannerId'].toString();
           }
           if (map['interstitialId'] != null) {
-            AdUnitConfig.androidInterstitialId = map['interstitialId'].toString();
+            AdUnitConfig.androidInterstitialId =
+                map['interstitialId'].toString();
           }
           if (map['appOpenId'] != null) {
             AdUnitConfig.androidAppOpenId = map['appOpenId'].toString();
           }
 
           if (map['ios_rewardedMainId'] != null) {
-            AdUnitConfig.iosRewardedMainId = map['ios_rewardedMainId'].toString();
+            AdUnitConfig.iosRewardedMainId =
+                map['ios_rewardedMainId'].toString();
           }
           if (map['ios_rewardedCheckinId'] != null) {
-            AdUnitConfig.iosRewardedCheckinId = map['ios_rewardedCheckinId'].toString();
+            AdUnitConfig.iosRewardedCheckinId =
+                map['ios_rewardedCheckinId'].toString();
           }
           if (map['ios_rewardedSoulGameId'] != null) {
-            AdUnitConfig.iosRewardedSoulGameId = map['ios_rewardedSoulGameId'].toString();
+            AdUnitConfig.iosRewardedSoulGameId =
+                map['ios_rewardedSoulGameId'].toString();
           }
           if (map['ios_bannerId'] != null) {
             AdUnitConfig.iosBannerId = map['ios_bannerId'].toString();
           }
           if (map['ios_interstitialId'] != null) {
-            AdUnitConfig.iosInterstitialId = map['ios_interstitialId'].toString();
+            AdUnitConfig.iosInterstitialId =
+                map['ios_interstitialId'].toString();
           }
           if (map['ios_appOpenId'] != null) {
             AdUnitConfig.iosAppOpenId = map['ios_appOpenId'].toString();
@@ -377,7 +390,8 @@ class AdMobService {
       final ageGate = TexasAgeGateService();
       final classification = await ageGate.resolveAgeSignal();
       if (classification == AgeClassification.minor) {
-        debugPrint('AdMobService: minor detected, applying child-directed ad settings.');
+        debugPrint(
+            'AdMobService: minor detected, applying child-directed ad settings.');
         await MobileAds.instance.updateRequestConfiguration(
           RequestConfiguration(
             tagForChildDirectedTreatment: TagForChildDirectedTreatment.yes,
@@ -597,7 +611,7 @@ class AdMobService {
     }
 
     final hoursDiff = (nowMs - lastShownMs) / (1000 * 60 * 60);
-    
+
     double requiredHours = 1.0;
     if (Platform.isAndroid) {
       try {
@@ -976,7 +990,8 @@ class AdMobService {
     if (kIsWeb) return false;
     if (await isProUser()) return false;
     if (AdSuppressionGuard.instance.isSuppressed) {
-      debugPrint('AdMobService: Interstitial ad suppressed by AdSuppressionGuard.');
+      debugPrint(
+          'AdMobService: Interstitial ad suppressed by AdSuppressionGuard.');
       return false;
     }
     await initialize();

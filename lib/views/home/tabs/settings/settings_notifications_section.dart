@@ -539,8 +539,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     SoundService().playClick();
                     unawaited(_persistNotificationPrefs());
                   },
-                  helperText:
-                      context.tr('smart_reminders_love_note_desc'),
+                  helperText: context.tr('smart_reminders_love_note_desc'),
                 ),
                 _buildSwitchRow(
                   context.tr('smart_reminders_sleep'),
@@ -692,7 +691,8 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             initialTime: TimeOfDay(hour: hour, minute: minute),
           );
           if (time != null) {
-            final formatted = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+            final formatted =
+                '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
             onChanged(formatted);
           }
         },
@@ -752,7 +752,8 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFD81B60).withAlpha(100), width: 1.5),
+        border: Border.all(
+            color: const Color(0xFFD81B60).withAlpha(100), width: 1.5),
         color: const Color(0xFFFFF0F5),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -761,7 +762,8 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
         children: [
           Row(
             children: [
-              const Icon(Icons.notifications_active_rounded, color: Color(0xFFD81B60), size: 20),
+              const Icon(Icons.notifications_active_rounded,
+                  color: Color(0xFFD81B60), size: 20),
               const SizedBox(width: 8),
               Text(
                 '🧪 Kiểm tra thông báo',
@@ -793,7 +795,8 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                   type: 'chat',
                   screen: 'chat',
                   title: '💬 Nhắn tin mới!',
-                  body: 'Đây là thông báo thử nghiệm loại Chat. Nếu bạn thấy tin này nghĩa là thông báo đang hoạt động! 🎉',
+                  body:
+                      'Đây là thông báo thử nghiệm loại Chat. Nếu bạn thấy tin này nghĩa là thông báo đang hoạt động! 🎉',
                 ),
               ),
               const SizedBox(width: 8),
@@ -804,7 +807,8 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                   type: 'soul_merge',
                   screen: 'soul_merge',
                   title: '💖 Soul Merge đang gọi bạn!',
-                  body: 'Người ấy đang chờ bạn trong Soul Merge. Đây là thông báo thử nghiệm! 💕',
+                  body:
+                      'Người ấy đang chờ bạn trong Soul Merge. Đây là thông báo thử nghiệm! 💕',
                 ),
               ),
             ],
@@ -818,7 +822,8 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
               type: 'home',
               screen: 'home',
               title: '🔔 Thông báo thử nghiệm',
-              body: 'Nếu bạn thấy tin này ngoài màn hình chính nghĩa là thông báo đang hoạt động bình thường! ✅',
+              body:
+                  'Nếu bạn thấy tin này ngoài màn hình chính nghĩa là thông báo đang hoạt động bình thường! ✅',
             ),
           ),
         ],
@@ -852,7 +857,8 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
           _showToast('✅ Đã gửi thông báo test đến người ấy!', success: true);
         } catch (e) {
           if (!mounted) return;
-          _showToast('❌ Gửi thất bại: ${AppErrorMapper.resolve(e).message}', success: false);
+          _showToast('❌ Gửi thất bại: ${AppErrorMapper.resolve(e).message}',
+              success: false);
         }
       },
       child: Container(

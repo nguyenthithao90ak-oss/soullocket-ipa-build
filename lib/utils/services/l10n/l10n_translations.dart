@@ -656,12 +656,16 @@ abstract final class _L10nStaticData {
     'home_love_days': 'Ngày yêu',
     'home_anniversary_memories': 'Kỷ niệm',
     'theme_event_date_label': 'Ngày diễn ra: {date}',
-    'theme_event_description_hint': 'Bên dưới đã tách rõ: khối hồng là kỷ niệm bạn thêm ở đây, khối xanh là lịch chung lấy từ mục Lịch.',
+    'theme_event_description_hint':
+        'Bên dưới đã tách rõ: khối hồng là kỷ niệm bạn thêm ở đây, khối xanh là lịch chung lấy từ mục Lịch.',
     'theme_event_anniversary_section_title': 'Kỷ niệm sắp tới',
-    'theme_event_anniversary_section_desc': 'Các mốc riêng được thêm trong phần kỷ niệm',
+    'theme_event_anniversary_section_desc':
+        'Các mốc riêng được thêm trong phần kỷ niệm',
     'theme_event_calendar_section_title': 'Lịch chung sắp tới',
-    'theme_event_calendar_section_desc': 'Các kế hoạch đang lấy từ mục Lịch chung',
-    'theme_frame_size_desc': 'Kích thước vòng đếm, kiểu khung avatar và ảnh nền tùy chỉnh',
+    'theme_event_calendar_section_desc':
+        'Các kế hoạch đang lấy từ mục Lịch chung',
+    'theme_frame_size_desc':
+        'Kích thước vòng đếm, kiểu khung avatar và ảnh nền tùy chỉnh',
     'theme_save_size': 'Lưu kích thước',
     'theme_countdown_label_ad': '• Quảng cáo',
     'theme_countdown_label_locked': '• Khóa',
@@ -669,16 +673,19 @@ abstract final class _L10nStaticData {
     'theme_font_lang_desc': 'Điều chỉnh phông chữ hiển thị & ngôn ngữ',
     'theme_bg_effect_title': 'Hình Nền & Hiệu Ứng',
     'theme_bg_effect_desc': 'Hiệu ứng rơi, màu chủ đề và hình nền tùy chỉnh',
-    'theme_bg_in_use': 'Bạn đang sử dụng nền tải lên, không thể sử dụng nền hệ thống',
+    'theme_bg_in_use':
+        'Bạn đang sử dụng nền tải lên, không thể sử dụng nền hệ thống',
     'theme_uploading_pct': 'ĐANG TẢI... {pct}%',
     'theme_perf_title': 'Hiệu Năng & Quyền Hạn',
     'theme_perf_desc': 'Chế độ mượt mà, quyền hệ thống, chế độ trong suốt',
     'theme_applied': 'Đã áp dụng chủ đề',
     'theme_applied_msg': 'Đã tắt ảnh nền tùy chỉnh để áp dụng chủ đề mới.',
     'widget_using_style': 'Đang dùng kiểu: {style}',
-    'widget_ios_guide': 'Để thêm Widget trên iOS:\n1. Nhấn giữ vào màn hình chính\n2. Bấm nút dấu [+] ở góc màn hình\n3. Tìm "SoulLocket" và Thêm tiện ích',
+    'widget_ios_guide':
+        'Để thêm Widget trên iOS:\n1. Nhấn giữ vào màn hình chính\n2. Bấm nút dấu [+] ở góc màn hình\n3. Tìm "SoulLocket" và Thêm tiện ích',
     'account_err_date_range': 'Ngày phải trong khoảng {min} - {max}.',
-    'account_err_email_domain': 'Hệ thống chỉ hỗ trợ đổi sang các loại email: {domains}',
+    'account_err_email_domain':
+        'Hệ thống chỉ hỗ trợ đổi sang các loại email: {domains}',
     'relationship_status_text': 'Trạng thái: {status}',
     'account_success_date': 'Đã cập nhật ngày yêu!',
     'account_err_date': 'Không thể cập nhật ngày yêu',
@@ -941,15 +948,18 @@ abstract final class _L10nStaticData {
     'settings_status_disabled': 'Chưa bật',
     'smart_reminders': 'Nhắc nhở thông minh',
     'smart_reminders_anniversary': 'Nhắc ngày kỷ niệm',
-    'smart_reminders_anniversary_desc': 'Nhắc trước và trong ngày đặc biệt của hai bạn.',
+    'smart_reminders_anniversary_desc':
+        'Nhắc trước và trong ngày đặc biệt của hai bạn.',
     'smart_reminders_diary': 'Nhắc viết nhật ký',
     'smart_reminders_diary_desc': 'Gợi ý ghi lại cảm xúc khi lâu chưa viết.',
     'smart_reminders_capsule': 'Nhắc mở time capsule',
     'smart_reminders_capsule_desc': 'Báo khi hộp thư tương lai đã đến ngày mở.',
     'smart_reminders_love_note': 'Lời yêu thương mỗi ngày',
-    'smart_reminders_love_note_desc': 'Tự động gửi lời chúc sáng/tối ngọt ngào cho đối phương khi bạn mở app.',
+    'smart_reminders_love_note_desc':
+        'Tự động gửi lời chúc sáng/tối ngọt ngào cho đối phương khi bạn mở app.',
     'smart_reminders_sleep': 'Nhắc ngủ ngoan',
-    'smart_reminders_sleep_desc': 'Nhắc nhở người thương đi ngủ đúng giờ vào mỗi tối.',
+    'smart_reminders_sleep_desc':
+        'Nhắc nhở người thương đi ngủ đúng giờ vào mỗi tối.',
     'smart_reminders_morning_time': 'Giờ chúc buổi sáng',
     'smart_reminders_night_time': 'Giờ chúc buổi tối',
     'settings_backup_local': 'Máy này:',
@@ -957,10 +967,14 @@ abstract final class _L10nStaticData {
     'settings_device_trusted': 'Đang tin cậy',
     'settings_cloud_found_short': 'Đã có cloud',
     'settings_cloud_missing_short': 'Chưa thấy cloud',
-    'partner_location_not_enabled_map': '{partnerName} chưa bật vị trí nên bản đồ chưa thể đo khoảng cách của hai bạn.',
-    'partner_gps_not_enabled_map': '{partnerName} chưa bật GPS. Chờ người ấy bật để xem khoảng cách.',
-    'you_location_not_enabled_map': 'Bạn chưa bật vị trí nên bản đồ chưa đủ dữ liệu để đo khoảng cách với {partnerName}.',
-    'home_location_not_enabled_action': 'Bạn chưa bật vị trí. Mở bản đồ và bấm {button} để chia sẻ.',
+    'partner_location_not_enabled_map':
+        '{partnerName} chưa bật vị trí nên bản đồ chưa thể đo khoảng cách của hai bạn.',
+    'partner_gps_not_enabled_map':
+        '{partnerName} chưa bật GPS. Chờ người ấy bật để xem khoảng cách.',
+    'you_location_not_enabled_map':
+        'Bạn chưa bật vị trí nên bản đồ chưa đủ dữ liệu để đo khoảng cách với {partnerName}.',
+    'home_location_not_enabled_action':
+        'Bạn chưa bật vị trí. Mở bản đồ và bấm {button} để chia sẻ.',
     'partner_not_enabled_short': 'Người ấy chưa bật',
     'male_role_default': 'Bạn Nam',
     'female_role_default': 'Bạn Nữ',
@@ -971,12 +985,14 @@ abstract final class _L10nStaticData {
     'settings_perf_mode_enabled': 'Đã bật chế độ mượt hơn.',
     'settings_balanced_mode_enabled': 'Đã về chế độ cân bằng.',
     'settings_performance_mode_title': 'Chế độ hiệu năng',
-    'settings_performance_mode_desc_smooth': 'Đang ưu tiên mượt và tiết kiệm pin.',
+    'settings_performance_mode_desc_smooth':
+        'Đang ưu tiên mượt và tiết kiệm pin.',
     'settings_performance_mode_desc_balanced': 'Đang dùng cấu hình cân bằng.',
     'settings_perf_preset_smoother': 'Mượt hơn',
     'settings_perf_preset_balanced': 'Cân bằng',
     'settings_data_system_label': 'Dữ liệu hệ thống',
-    'settings_data_system_desc': 'Quản lý thông báo, liên kết dữ liệu và các tích hợp hệ thống.',
+    'settings_data_system_desc':
+        'Quản lý thông báo, liên kết dữ liệu và các tích hợp hệ thống.',
     'settings_footer_tagline': 'Lưu giữ từng khoảnh khắc',
     'settings_data_status_checking': 'Đang kiểm tra...',
     'settings_data_status_cloud_found': 'Có bản cloud',
@@ -984,10 +1000,12 @@ abstract final class _L10nStaticData {
     'settings_data_status_linked': 'Đã liên kết',
     'settings_data_status_no_house': 'Chưa có house',
     'settings_restore_title': 'Khôi phục cài đặt',
-    'settings_restore_message': 'App sẽ khôi phục cài đặt đã đồng bộ từ cloud về máy này. Một số giao diện/cài đặt hiện tại trên máy có thể được thay bằng bản cloud.',
+    'settings_restore_message':
+        'App sẽ khôi phục cài đặt đã đồng bộ từ cloud về máy này. Một số giao diện/cài đặt hiện tại trên máy có thể được thay bằng bản cloud.',
     'settings_restore_confirm_btn': 'Khôi phục',
     'settings_restore_groups_title': 'Nhóm dữ liệu có thể khôi phục',
-    'settings_restore_groups_desc': 'App chỉ hiển thị trạng thái từng nhóm, không tự ghi đè dữ liệu cá nhân khi chưa xác nhận.',
+    'settings_restore_groups_desc':
+        'App chỉ hiển thị trạng thái từng nhóm, không tự ghi đè dữ liệu cá nhân khi chưa xác nhận.',
     'settings_restore_groups_details_btn': 'Xem chi tiết restore',
     'settings_restore_details_dialog_title': 'Chi tiết restore dữ liệu',
     'settings_restore_details_dialog_ok': 'Đã hiểu',
@@ -1002,11 +1020,16 @@ abstract final class _L10nStaticData {
     'settings_status_cloud_missing': 'Chưa thấy cloud',
     'settings_status_cloud_not_found': 'Chưa thấy bản cloud',
     'settings_status_missing': 'Chưa có',
-    'settings_group_config_desc': 'Có thể khôi phục theme, hiệu ứng, thông báo, widget và các lựa chọn giao diện đã đồng bộ.',
-    'settings_group_house_desc': 'Dùng house/couple hiện tại để đối chiếu dữ liệu chung. Không tạo house mới trong bước này.',
-    'settings_group_diary_desc': 'Cần bước đối chiếu riêng để tránh ghi đè nhật ký đang có trên máy.',
-    'settings_group_media_desc': 'Media cần kiểm tra link, quyền truy cập và cache trước khi khôi phục hàng loạt.',
-    'settings_group_utilities_desc': 'Sẽ tách thành từng nhóm nhỏ để người dùng chọn khôi phục khi mở rộng.',
+    'settings_group_config_desc':
+        'Có thể khôi phục theme, hiệu ứng, thông báo, widget và các lựa chọn giao diện đã đồng bộ.',
+    'settings_group_house_desc':
+        'Dùng house/couple hiện tại để đối chiếu dữ liệu chung. Không tạo house mới trong bước này.',
+    'settings_group_diary_desc':
+        'Cần bước đối chiếu riêng để tránh ghi đè nhật ký đang có trên máy.',
+    'settings_group_media_desc':
+        'Media cần kiểm tra link, quyền truy cập và cache trước khi khôi phục hàng loạt.',
+    'settings_group_utilities_desc':
+        'Sẽ tách thành từng nhóm nhỏ để người dùng chọn khôi phục khi mở rộng.',
     'settings_back_btn': 'Quay lại',
 
     // === Notifications ===
@@ -1056,7 +1079,8 @@ abstract final class _L10nStaticData {
     'milestone_love_days': '{days} ngày yêu thương 💖',
     'milestone_tab_upcoming': 'Sắp tới ⏳',
     'milestone_tab_past': 'Đã qua 💖',
-    'milestone_empty_upcoming': 'Không có sự kiện sắp tới nào.\nHãy lên kế hoạch hẹn hò mới nhé! ✨',
+    'milestone_empty_upcoming':
+        'Không có sự kiện sắp tới nào.\nHãy lên kế hoạch hẹn hò mới nhé! ✨',
     'milestone_empty_past': 'Chưa có kỷ niệm nào trôi qua.',
     'milestone_plan_now': 'Lên kế hoạch ngay 📅',
     'milestone_today': '📍 Hôm nay',
@@ -1958,11 +1982,14 @@ abstract final class _L10nStaticData {
     'theme_event_calendar_label': 'Shared Calendar',
     'theme_event_anniversary_label': 'Anniversary',
     'theme_event_date_label': 'Date: {date}',
-    'theme_event_description_hint': 'Separated below: Pink blocks are anniversaries added here, Blue blocks are shared plans from Calendar.',
+    'theme_event_description_hint':
+        'Separated below: Pink blocks are anniversaries added here, Blue blocks are shared plans from Calendar.',
     'theme_event_anniversary_section_title': 'Upcoming Anniversaries',
-    'theme_event_anniversary_section_desc': 'Custom dates added in the anniversary section',
+    'theme_event_anniversary_section_desc':
+        'Custom dates added in the anniversary section',
     'theme_event_calendar_section_title': 'Upcoming Shared Plans',
-    'theme_event_calendar_section_desc': 'Plans fetched from the shared Calendar tab',
+    'theme_event_calendar_section_desc':
+        'Plans fetched from the shared Calendar tab',
     'theme_frame_size_desc': 'Countdown ring size, avatar frame style',
     'theme_save_size': 'Save size',
     'theme_countdown_label_ad': '• Ad',
@@ -1970,17 +1997,22 @@ abstract final class _L10nStaticData {
     'theme_memory_desc': 'Add and manage upcoming anniversary dates',
     'theme_font_lang_desc': 'Adjust display font & language',
     'theme_bg_effect_title': 'Background & Effects',
-    'theme_bg_effect_desc': 'Falling effects, color theme and custom background',
-    'theme_bg_in_use': 'You are using a custom uploaded background, cannot use system backgrounds',
+    'theme_bg_effect_desc':
+        'Falling effects, color theme and custom background',
+    'theme_bg_in_use':
+        'You are using a custom uploaded background, cannot use system backgrounds',
     'theme_uploading_pct': 'UPLOADING... {pct}%',
     'theme_perf_title': 'Performance & Permissions',
     'theme_perf_desc': 'Smooth mode, system permissions, transparent mode',
     'theme_applied': 'Theme applied',
-    'theme_applied_msg': 'Custom background was disabled to apply the new theme.',
+    'theme_applied_msg':
+        'Custom background was disabled to apply the new theme.',
     'widget_using_style': 'Using style: {style}',
-    'widget_ios_guide': 'To add a Widget on iOS:\n1. Long press on the home screen\n2. Tap the [+] button in the corner\n3. Search "SoulLocket" and add the widget',
+    'widget_ios_guide':
+        'To add a Widget on iOS:\n1. Long press on the home screen\n2. Tap the [+] button in the corner\n3. Search "SoulLocket" and add the widget',
     'account_err_date_range': 'Date must be between {min} - {max}.',
-    'account_err_email_domain': 'Only the following email types are supported: {domains}',
+    'account_err_email_domain':
+        'Only the following email types are supported: {domains}',
     'relationship_status_text': 'Status: {status}',
     'account_success_date': 'Anniversary updated!',
     'account_err_date': 'Failed to update anniversary',
@@ -2145,10 +2177,13 @@ abstract final class _L10nStaticData {
     'settings_cloud_check_failed': 'Cloud check failed.',
     'settings_sync_to_cloud_success': 'Settings synced to cloud.',
     'settings_sync_to_cloud_failed': 'Failed to sync settings to cloud.',
-    'settings_sign_in_required_to_restore': 'Sign in required to restore settings.',
-    'settings_cloud_backup_not_found_to_restore': 'Cloud backup not found to restore.',
+    'settings_sign_in_required_to_restore':
+        'Sign in required to restore settings.',
+    'settings_cloud_backup_not_found_to_restore':
+        'Cloud backup not found to restore.',
     'settings_restore_from_cloud_success': 'Settings restored from cloud.',
-    'settings_restore_from_cloud_failed': 'Failed to restore settings from cloud.',
+    'settings_restore_from_cloud_failed':
+        'Failed to restore settings from cloud.',
     'settings_time_not_available': 'No timestamp available.',
     'settings_cloud_checking': 'Checking cloud',
     'settings_sync_error_short': 'Sync error',
@@ -2174,7 +2209,8 @@ abstract final class _L10nStaticData {
     'err_save_music': 'Could not save music',
     'err_upload_background': 'Could not upload wallpaper',
     'resend_cooldown_text': 'Please wait before resending',
-    'upload_background_interrupted': 'Previous wallpaper upload was interrupted',
+    'upload_background_interrupted':
+        'Previous wallpaper upload was interrupted',
     'ok': 'OK',
     'select_your_dob': 'Select your Date of Birth',
     'login_app_lock': 'Login, App Lock',
@@ -2375,12 +2411,14 @@ abstract final class _L10nStaticData {
     'settings_perf_mode_enabled': 'Smoother mode enabled.',
     'settings_balanced_mode_enabled': 'Balanced mode restored.',
     'settings_performance_mode_title': 'Performance mode',
-    'settings_performance_mode_desc_smooth': 'Prioritizing smoothness and saving battery.',
+    'settings_performance_mode_desc_smooth':
+        'Prioritizing smoothness and saving battery.',
     'settings_performance_mode_desc_balanced': 'Using balanced configuration.',
     'settings_perf_preset_smoother': 'Smoother',
     'settings_perf_preset_balanced': 'Balanced',
     'settings_data_system_label': 'System Data',
-    'settings_data_system_desc': 'Manage notifications, data links and system integrations.',
+    'settings_data_system_desc':
+        'Manage notifications, data links and system integrations.',
     'settings_footer_tagline': 'Preserving every moment',
     'settings_data_status_checking': 'Checking...',
     'settings_data_status_cloud_found': 'Cloud backup available',
@@ -2388,10 +2426,12 @@ abstract final class _L10nStaticData {
     'settings_data_status_linked': 'Linked',
     'settings_data_status_no_house': 'No house linked',
     'settings_restore_title': 'Restore settings',
-    'settings_restore_message': 'The app will restore synced settings from the cloud to this device. Some current configurations on the device may be replaced by the cloud version.',
+    'settings_restore_message':
+        'The app will restore synced settings from the cloud to this device. Some current configurations on the device may be replaced by the cloud version.',
     'settings_restore_confirm_btn': 'Restore',
     'settings_restore_groups_title': 'Restorable data groups',
-    'settings_restore_groups_desc': 'The app only displays the status of each group, it will not overwrite personal data without your confirmation.',
+    'settings_restore_groups_desc':
+        'The app only displays the status of each group, it will not overwrite personal data without your confirmation.',
     'settings_restore_groups_details_btn': 'View restore details',
     'settings_restore_details_dialog_title': 'Restore details',
     'settings_restore_details_dialog_ok': 'Got it',
@@ -2406,11 +2446,16 @@ abstract final class _L10nStaticData {
     'settings_status_cloud_missing': 'Cloud not found',
     'settings_status_cloud_not_found': 'No cloud backup found',
     'settings_status_missing': 'Not configured',
-    'settings_group_config_desc': 'Can restore themes, effects, notifications, widgets and other synced configurations.',
-    'settings_group_house_desc': 'Uses the current house/couple profile to cross-reference data. Does not create a new house in this step.',
-    'settings_group_diary_desc': 'Requires a separate check to avoid overwriting existing diaries on this device.',
-    'settings_group_media_desc': 'Media needs to check links, access permissions, and cache before bulk restoration.',
-    'settings_group_utilities_desc': 'Will be separated into smaller groups for individual restoration choice in future updates.',
+    'settings_group_config_desc':
+        'Can restore themes, effects, notifications, widgets and other synced configurations.',
+    'settings_group_house_desc':
+        'Uses the current house/couple profile to cross-reference data. Does not create a new house in this step.',
+    'settings_group_diary_desc':
+        'Requires a separate check to avoid overwriting existing diaries on this device.',
+    'settings_group_media_desc':
+        'Media needs to check links, access permissions, and cache before bulk restoration.',
+    'settings_group_utilities_desc':
+        'Will be separated into smaller groups for individual restoration choice in future updates.',
     'settings_back_btn': 'Back',
 
     // === Notifications ===

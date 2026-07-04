@@ -41,12 +41,12 @@ class _CaroBackdropPainter extends CustomPainter {
       );
     }
 
-    glowOrb(Offset(size.width * 0.16, size.height * 0.2), 110,
-        _caroNeonOrbBlue);
-    glowOrb(Offset(size.width * 0.82, size.height * 0.18), 130,
-        _caroNeonOrbPink);
-    glowOrb(Offset(size.width * 0.72, size.height * 0.84), 150,
-        _caroNeonOrbPurple);
+    glowOrb(
+        Offset(size.width * 0.16, size.height * 0.2), 110, _caroNeonOrbBlue);
+    glowOrb(
+        Offset(size.width * 0.82, size.height * 0.18), 130, _caroNeonOrbPink);
+    glowOrb(
+        Offset(size.width * 0.72, size.height * 0.84), 150, _caroNeonOrbPurple);
 
     final linePaint = Paint()
       ..style = PaintingStyle.stroke

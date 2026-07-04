@@ -11,7 +11,8 @@ class GameDataManager {
   static const String _downloadedKeyPrefix = 'game_downloaded_';
 
   // Base URL cho game assets (Cần upload các file assets lên hosting/Firebase Storage này)
-  static const String _remoteBaseUrl = 'https://firebasestorage.googleapis.com/v0/b/soullocket-app.appspot.com/o/game_assets';
+  static const String _remoteBaseUrl =
+      'https://firebasestorage.googleapis.com/v0/b/soullocket-app.appspot.com/o/game_assets';
 
   static Future<String> getGameFolder(String gameId) async {
     final docDir = await getApplicationSupportDirectory();
@@ -33,7 +34,8 @@ class GameDataManager {
     return Directory(folder).existsSync();
   }
 
-  static Future<void> downloadGame(String gameId, {Function(double)? onProgress}) async {
+  static Future<void> downloadGame(String gameId,
+      {Function(double)? onProgress}) async {
     final folder = await getGameFolder(gameId);
 
     // Danh sách file cần tải cho từng game
@@ -64,7 +66,8 @@ class GameDataManager {
 
     for (int i = 0; i < files.length; i++) {
       final fileRelativePath = files[i];
-      final url = '$_remoteBaseUrl${Uri.encodeComponent(fileRelativePath)}?alt=media';
+      final url =
+          '$_remoteBaseUrl${Uri.encodeComponent(fileRelativePath)}?alt=media';
       final savePath = '$folder/${fileRelativePath.split('/').last}';
 
       try {
@@ -105,7 +108,8 @@ class GameDataManager {
     }
   }
 
-  static Future<String?> getLocalFilePath(String gameId, String fileName) async {
+  static Future<String?> getLocalFilePath(
+      String gameId, String fileName) async {
     final folder = await getGameFolder(gameId);
     final file = File('$folder/$fileName');
     if (await file.exists()) {

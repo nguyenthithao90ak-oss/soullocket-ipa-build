@@ -32,7 +32,9 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppErrorMapper.resolve(e, fallbackMessage: 'Không thể xoá đóng góp ý kiến.').message,
+              AppErrorMapper.resolve(e,
+                      fallbackMessage: 'Không thể xoá đóng góp ý kiến.')
+                  .message,
             ),
           ),
         );
@@ -74,9 +76,11 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                     child: StreamBuilder<DatabaseEvent>(
                       stream: _dbRef.orderByChild('createdAt').onValue,
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return const Center(
-                            child: CircularProgressIndicator(color: Color(0xFFFF4B91)),
+                            child: CircularProgressIndicator(
+                                color: Color(0xFFFF4B91)),
                           );
                         }
 
@@ -94,19 +98,22 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                           return Center(
                             child: Text(
                               'Chưa có đóng góp ý kiến nào.',
-                              style: SLTheme.quicksand(color: const Color(0xFF9AA8C4), fontSize: 16),
+                              style: SLTheme.quicksand(
+                                  color: const Color(0xFF9AA8C4), fontSize: 16),
                             ),
                           );
                         }
 
-                        final houseFeedbackMap = Map<String, dynamic>.from(data);
+                        final houseFeedbackMap =
+                            Map<String, dynamic>.from(data);
                         final List<_FeedbackItem> feedbackList = [];
 
                         houseFeedbackMap.forEach((houseId, slotData) {
                           if (slotData is Map) {
                             slotData.forEach((slot, val) {
                               if (val is Map) {
-                                final feedbackVal = Map<String, dynamic>.from(val);
+                                final feedbackVal =
+                                    Map<String, dynamic>.from(val);
                                 feedbackList.add(_FeedbackItem(
                                   id: '$houseId/$slot',
                                   uid: feedbackVal['uid'] ?? '',
@@ -120,7 +127,8 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                             for (int i = 0; i < slotData.length; i++) {
                               final val = slotData[i];
                               if (val is Map) {
-                                final feedbackVal = Map<String, dynamic>.from(val);
+                                final feedbackVal =
+                                    Map<String, dynamic>.from(val);
                                 feedbackList.add(_FeedbackItem(
                                   id: '$houseId/slot_$i',
                                   uid: feedbackVal['uid'] ?? '',
@@ -134,7 +142,8 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                         });
 
                         // Sắp xếp mới nhất lên đầu
-                        feedbackList.sort((a, b) => b.createdAtMs.compareTo(a.createdAtMs));
+                        feedbackList.sort(
+                            (a, b) => b.createdAtMs.compareTo(a.createdAtMs));
 
                         return ListView.builder(
                           physics: const BouncingScrollPhysics(),
@@ -143,7 +152,11 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                           itemBuilder: (context, index) {
                             final item = feedbackList[index];
                             final dateStr = item.createdAtMs > 0
-                                ? DateTime.fromMillisecondsSinceEpoch(item.createdAtMs).toLocal().toString().substring(0, 19)
+                                ? DateTime.fromMillisecondsSinceEpoch(
+                                        item.createdAtMs)
+                                    .toLocal()
+                                    .toString()
+                                    .substring(0, 19)
                                 : '--';
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 16),
@@ -154,11 +167,15 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                                   children: [
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Row(
                                             children: [
-                                              const Icon(Icons.account_circle_rounded, color: Color(0xFFFF4B91), size: 20),
+                                              const Icon(
+                                                  Icons.account_circle_rounded,
+                                                  color: Color(0xFFFF4B91),
+                                                  size: 20),
                                               const SizedBox(width: 8),
                                               Expanded(
                                                 child: Text(
@@ -173,7 +190,8 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                                               Text(
                                                 dateStr,
                                                 style: SLTheme.quicksand(
-                                                  color: const Color(0xFF64748B),
+                                                  color:
+                                                      const Color(0xFF64748B),
                                                   fontSize: 12,
                                                 ),
                                               ),
@@ -201,31 +219,47 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                                     ),
                                     const SizedBox(width: 16),
                                     IconButton(
-                                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 22),
+                                      icon: const Icon(
+                                          Icons.delete_outline_rounded,
+                                          color: Colors.redAccent,
+                                          size: 22),
                                       onPressed: () {
                                         showDialog(
                                           context: context,
                                           builder: (ctx) => AlertDialog(
-                                            backgroundColor: const Color(0xFF10182A),
+                                            backgroundColor:
+                                                const Color(0xFF10182A),
                                             title: Text(
                                               'Xoá ý kiến?',
-                                              style: SLTheme.quicksand(color: Colors.white, fontWeight: FontWeight.bold),
+                                              style: SLTheme.quicksand(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold),
                                             ),
                                             content: Text(
                                               'Bạn có chắc chắn muốn xoá đóng góp ý kiến này không?',
-                                              style: SLTheme.quicksand(color: const Color(0xFF9AA8C4)),
+                                              style: SLTheme.quicksand(
+                                                  color:
+                                                      const Color(0xFF9AA8C4)),
                                             ),
                                             actions: [
                                               TextButton(
-                                                onPressed: () => Navigator.pop(ctx),
-                                                child: Text('Huỷ', style: SLTheme.quicksand(color: const Color(0xFF64748B))),
+                                                onPressed: () =>
+                                                    Navigator.pop(ctx),
+                                                child: Text('Huỷ',
+                                                    style: SLTheme.quicksand(
+                                                        color: const Color(
+                                                            0xFF64748B))),
                                               ),
                                               TextButton(
                                                 onPressed: () {
                                                   Navigator.pop(ctx);
                                                   _deleteFeedback(item.id);
                                                 },
-                                                child: Text('Xoá', style: SLTheme.quicksand(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                                                child: Text('Xoá',
+                                                    style: SLTheme.quicksand(
+                                                        color: Colors.redAccent,
+                                                        fontWeight:
+                                                            FontWeight.bold)),
                                               ),
                                             ],
                                           ),

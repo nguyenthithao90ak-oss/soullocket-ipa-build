@@ -251,7 +251,8 @@ extension _SettingsTabSecurityLockHelpersPart on _SettingsTabState {
         child: Row(
           children: [
             Icon(icon,
-                color: const Color(0xFFD81B60).withValues(alpha: 0.7), size: 22),
+                color: const Color(0xFFD81B60).withValues(alpha: 0.7),
+                size: 22),
             const SizedBox(width: 14),
             Expanded(
               child: Text(

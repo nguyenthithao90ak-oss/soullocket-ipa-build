@@ -46,7 +46,8 @@ import 'package:soullocket_app/utils/sl_notice.dart';
 import 'package:soullocket_app/models/album_item.dart';
 import 'package:soullocket_app/models/house_settings.dart';
 import 'package:soullocket_app/models/utilities/shared_note.dart';
-import 'package:soullocket_app/views/home/tabs/settings_tab.dart' show SettingsTab, FloatingHeartsRingOverlay;
+import 'package:soullocket_app/views/home/tabs/settings_tab.dart'
+    show SettingsTab, FloatingHeartsRingOverlay;
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/views/utilities/age_zodiac_screen.dart';
 import 'package:soullocket_app/views/utilities/bucket_list_screen.dart';
@@ -123,7 +124,6 @@ part '../widgets/main_home/hero/main_home_hero_countdown.dart';
 part '../widgets/main_home/hero/main_home_hero_counters.dart';
 part '../widgets/main_home/hero/main_home_hero_header.dart';
 part 'main_home/models/main_home_models.dart';
-
 
 class MainHomeTab extends StatefulWidget {
   final ValueNotifier<bool> isActiveListenable;
@@ -211,7 +211,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     );
   }
 
-  static final List<String> _kHomeStickerAssets = List<String>.generate(99, (i) {
+  static final List<String> _kHomeStickerAssets =
+      List<String>.generate(99, (i) {
     final num = (i + 1).toString().padLeft(3, '0');
     return 'assets/images/interaction_stickers/custom/numbered/sticker_$num.png';
   });
@@ -356,7 +357,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   List<String> _cachedWidgetDiaryImageUrls = const <String>[];
   List<String> _recentChatSignals = [];
   int _lastChatMessageTs = 0; // timestamp ms của tin nhắn chat cuối cùng
-  late final ValueNotifier<_PartnerInteractionPreset> _smartInteractionPresetNotifier;
+  late final ValueNotifier<_PartnerInteractionPreset>
+      _smartInteractionPresetNotifier;
   _PartnerInteractionPreset get _smartInteractionPreset =>
       _smartInteractionPresetNotifier.value;
   set _smartInteractionPreset(_PartnerInteractionPreset v) =>
@@ -431,7 +433,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     return _smartInteractionPreset;
   }
 
-
   @override
   void initState() {
     super.initState();
@@ -439,8 +440,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _isTabActive = widget.isActiveListenable.value;
     widget.isActiveListenable.addListener(_onActiveChanged);
     _reactionFlightsNotifier = ValueNotifier<List<_HomeReactionFlight>>([]);
-    _smartInteractionPresetNotifier =
-        ValueNotifier<_PartnerInteractionPreset>(_defaultSmartInteractionPreset());
+    _smartInteractionPresetNotifier = ValueNotifier<_PartnerInteractionPreset>(
+        _defaultSmartInteractionPreset());
     unawaited(() async {
       try {
         final selectedUiFont = SLTheme.textStyleForKey(
@@ -473,9 +474,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       ),
     );
     unawaited(_promptPendingAvatarRetryIfNeeded());
-    unawaited(PurchaseService()
-        .getVipAccessInfo()
-        .catchError((_) => const VipAccessInfo(isVip: false, planId: '', expiresAtMs: null)));
+    unawaited(PurchaseService().getVipAccessInfo().catchError((_) =>
+        const VipAccessInfo(isVip: false, planId: '', expiresAtMs: null)));
   }
 
   void _onActiveChanged() {
@@ -543,7 +543,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _isTabActive && _houseId != null) {
+    if (state == AppLifecycleState.resumed &&
+        _isTabActive &&
+        _houseId != null) {
       unawaited(_ensureAppWideLocationTracking(_houseId!));
       unawaited(_refreshCurrentRoleWeather());
     }
@@ -561,7 +563,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       // ⚡ Debounce fetch until after swipe animation (~300ms) + warmup settle (650ms).
       //    700ms gives enough breathing room so the UI thread is free during animation.
       _fetchHouseDataDebounceTimer?.cancel();
-      _fetchHouseDataDebounceTimer = Timer(const Duration(milliseconds: 700), () {
+      _fetchHouseDataDebounceTimer =
+          Timer(const Duration(milliseconds: 700), () {
         if (!mounted || !_isTabActive) return;
         unawaited(
           _fetchHouseData(
@@ -679,17 +682,11 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     }
   }
 
-
-
   int _invalidateLiveWorkSession() => _invalidateLiveWorkSessionImpl();
-
-
 
   void _cancelLiveWorkBindings() {
     _cancelLiveWorkBindingsImpl();
   }
-
-
 
   void _showLatestSnackBar(
     String message, {
@@ -1609,13 +1606,15 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       }
     }
     // Migration: nếu đã có unlock hàng loạt cũ còn hiệu lực thì cộng vào
-    final legacyExpiry = prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
+    final legacyExpiry =
+        prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
     if (legacyExpiry > now) {
       result.addAll(_kCountdownQuickPremiumStyleKeys);
     } else {
       final legacyTs = prefs.getInt('il_countdown_unlock_ad_ts') ?? 0;
       if (legacyTs > 0) {
-        final fallbackExpiry = legacyTs + _kCountdownQuickUnlockWindow.inMilliseconds;
+        final fallbackExpiry =
+            legacyTs + _kCountdownQuickUnlockWindow.inMilliseconds;
         if (fallbackExpiry > now) {
           result.addAll(_kCountdownQuickPremiumStyleKeys);
         }
@@ -1693,7 +1692,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     if (countdownStyleKey != null &&
         _kCountdownQuickPremiumStyleKeys.contains(resolvedCountdownStyleKey) &&
         !resolvedIsVip) {
-      final resolvedUnlockedStyles = prevalidatedUnlockedStyles ?? await _getUnlockedCountdownStyles();
+      final resolvedUnlockedStyles =
+          prevalidatedUnlockedStyles ?? await _getUnlockedCountdownStyles();
       if (!resolvedUnlockedStyles.contains(resolvedCountdownStyleKey)) {
         if (mounted) {
           _showLatestSnackBar(
@@ -1710,14 +1710,18 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     final normalizedFallingEffectKey = fallingEffectKey == null
         ? current.fallingEffectKey
         : resolvedFallingEffectKey;
-    final normalizedCountdownSizePx = countdownSizePx ?? current.countdownSizePx;
+    final normalizedCountdownSizePx =
+        countdownSizePx ?? current.countdownSizePx;
     final normalizedAvatarSizePx = avatarSizePx ?? current.avatarSizePx;
     final normalizedAvatarFrameKey = avatarFrameKey ?? current.avatarFrameKey;
-    final normalizedCustomBackgroundUrl = customBackgroundUrl ?? current.customBackgroundUrl;
-    final normalizedCountdownTextColor = countdownTextColor ?? current.countdownTextColor;
-    
+    final normalizedCustomBackgroundUrl =
+        customBackgroundUrl ?? current.customBackgroundUrl;
+    final normalizedCountdownTextColor =
+        countdownTextColor ?? current.countdownTextColor;
+
     // Auto turn off transparentMode if user explicitly changes countdown style
-    final newTransparentMode = (countdownStyleKey != null) ? false : current.transparentMode;
+    final newTransparentMode =
+        (countdownStyleKey != null) ? false : current.transparentMode;
 
     if (normalizedCountdownStyleKey == current.countdownStyleKey &&
         normalizedFallingEffectKey == current.fallingEffectKey &&
@@ -1774,7 +1778,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         updates['transparentMode'] = newTransparentMode;
       }
 
-      unawaited(_dbRef.child('houses/$houseId/settings').update(updates).catchError((e) {
+      unawaited(_dbRef
+          .child('houses/$houseId/settings')
+          .update(updates)
+          .catchError((e) {
         if (mounted) {
           _showLatestSnackBar(
             'Đã lưu trên máy. Chưa thể đồng bộ lúc này, vui lòng thử lại sau.',
@@ -1783,7 +1790,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       }));
     }
   }
-
 
   Future<void> _showCountdownQuickCustomizeSheet() async {
     final isVip = await PurchaseService().isVip();
@@ -1878,11 +1884,12 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       },
     );
   }
+
   void _hideSettingsButtonForSession() {
     if (!mounted) return;
     final isCurrentlyHidden = _hideSettingsButtonUntilRestart;
     setState(() => _hideSettingsButtonUntilRestart = !isCurrentlyHidden);
-    
+
     if (!isCurrentlyHidden) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
@@ -1903,7 +1910,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   bool _shouldShowAdminBadge(String role) {
     return false;
   }
-
 
   void triggerShootingHeartState({String? emoji, String? fromRole}) {
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -2064,7 +2070,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   Future<void> _handleSendInteraction(String type, String emoji) async {
     final cleanEmoji =
         emoji.trim().isEmpty ? _emojiForInteractionType(type) : emoji;
-    
+
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     final localWait = _consumeLocalReactionThrowWaitSeconds(nowMs);
     if (localWait > 0) {
@@ -2163,7 +2169,8 @@ class _CountdownQuickCustomizeSheetContentState
   }) {
     final accent = option.accent;
     final borderColor = selected ? accent : accent.withValues(alpha: 0.28);
-    final backgroundColor = selected ? accent.withValues(alpha: 0.14) : Colors.white;
+    final backgroundColor =
+        selected ? accent.withValues(alpha: 0.14) : Colors.white;
     final textColor = selected ? accent : const Color(0xFF584450);
 
     return Material(
@@ -2234,19 +2241,25 @@ class _CountdownQuickCustomizeSheetContentState
                     final prefs = await SharedPreferences.getInstance();
                     final now = DateTime.now().millisecondsSinceEpoch;
                     await prefs.setInt('il_last_any_rewarded_ad_ts', now);
-                    final expiry = now + _MainHomeTabState._kCountdownQuickUnlockWindow.inMilliseconds;
-                    final expiryKey = 'il_countdown_style_unlock_expiry_${option.value}';
+                    final expiry = now +
+                        _MainHomeTabState
+                            ._kCountdownQuickUnlockWindow.inMilliseconds;
+                    final expiryKey =
+                        'il_countdown_style_unlock_expiry_${option.value}';
                     await prefs.setInt(expiryKey, expiry);
                     setState(() {
                       _unlockedStyles = {..._unlockedStyles, option.value};
                     });
                     await onUnlocked(option);
-                    widget.homeState._showLatestSnackBar('Đã mở khóa "${option.label}" trong 7 ngày!');
+                    widget.homeState._showLatestSnackBar(
+                        'Đã mở khóa "${option.label}" trong 7 ngày!');
                   } else {
-                    widget.homeState._showLatestSnackBar('Chưa mở khóa. Vui lòng xem hết quảng cáo.');
+                    widget.homeState._showLatestSnackBar(
+                        'Chưa mở khóa. Vui lòng xem hết quảng cáo.');
                   }
                 } catch (_) {
-                  widget.homeState._showLatestSnackBar('Đã xảy ra lỗi khi tải quảng cáo.');
+                  widget.homeState
+                      ._showLatestSnackBar('Đã xảy ra lỗi khi tải quảng cáo.');
                 } finally {
                   if (mounted) {
                     setState(() {
@@ -2261,7 +2274,8 @@ class _CountdownQuickCustomizeSheetContentState
           decoration: BoxDecoration(
             color: accent.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: accent.withValues(alpha: 0.45), width: 1.5),
+            border:
+                Border.all(color: accent.withValues(alpha: 0.45), width: 1.5),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -2381,7 +2395,8 @@ class _CountdownQuickCustomizeSheetContentState
             spacing: 10,
             runSpacing: 10,
             children: options.map((option) {
-              final isLocked = option.isPremium && !_unlockedStyles.contains(option.value);
+              final isLocked =
+                  option.isPremium && !_unlockedStyles.contains(option.value);
               if (isLocked) {
                 return buildLockedAdButton(
                   option: option,
@@ -2498,8 +2513,10 @@ class _CountdownQuickCustomizeSheetContentState
               children: colors.map((hex) {
                 final isSelected = selectedColorHex == hex;
                 final isDefault = hex.isEmpty;
-                final color = isDefault ? Colors.transparent : Color(int.parse(hex.replaceFirst('#', '0xFF')));
-                
+                final color = isDefault
+                    ? Colors.transparent
+                    : Color(int.parse(hex.replaceFirst('#', '0xFF')));
+
                 return GestureDetector(
                   onTap: () async {
                     HapticFeedback.selectionClick();
@@ -2513,14 +2530,24 @@ class _CountdownQuickCustomizeSheetContentState
                       color: color,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: isSelected ? const Color(0xFFD81B60) : const Color(0xFFF0DDE4),
+                        color: isSelected
+                            ? const Color(0xFFD81B60)
+                            : const Color(0xFFF0DDE4),
                         width: isSelected ? 3.0 : 1.5,
                       ),
                     ),
                     child: isDefault
-                        ? Icon(Icons.format_color_reset_rounded, size: 20, color: isSelected ? const Color(0xFFD81B60) : const Color(0xFF8E6F7E))
+                        ? Icon(Icons.format_color_reset_rounded,
+                            size: 20,
+                            color: isSelected
+                                ? const Color(0xFFD81B60)
+                                : const Color(0xFF8E6F7E))
                         : (isSelected
-                            ? Icon(Icons.check_rounded, size: 20, color: color.computeLuminance() > 0.5 ? Colors.black : Colors.white)
+                            ? Icon(Icons.check_rounded,
+                                size: 20,
+                                color: color.computeLuminance() > 0.5
+                                    ? Colors.black
+                                    : Colors.white)
                             : null),
                   ),
                 );
@@ -2544,7 +2571,8 @@ class _CountdownQuickCustomizeSheetContentState
     required String? customBgUrl,
   }) {
     final displayValue = tempValue ?? currentValue;
-    final hasChanges = tempValue != null && (tempValue - currentValue).abs() > 0.01;
+    final hasChanges =
+        tempValue != null && (tempValue - currentValue).abs() > 0.01;
     final hasBg = customBgUrl != null && customBgUrl.trim().isNotEmpty;
 
     return Container(
@@ -2626,15 +2654,19 @@ class _CountdownQuickCustomizeSheetContentState
                     activeTrackColor: const Color(0xFFD81B60),
                     inactiveTrackColor: const Color(0xFFFDE8F0),
                     thumbColor: const Color(0xFFD81B60),
-                    overlayColor: const Color(0xFFD81B60).withValues(alpha: 0.12),
+                    overlayColor:
+                        const Color(0xFFD81B60).withValues(alpha: 0.12),
                     trackHeight: 4.0,
-                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8.0),
-                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 16.0),
+                    thumbShape:
+                        const RoundSliderThumbShape(enabledThumbRadius: 8.0),
+                    overlayShape:
+                        const RoundSliderOverlayShape(overlayRadius: 16.0),
                   ),
                   child: Slider(
                     min: 200.0,
                     max: UiPrefs.maxCountdownSizePx,
-                    value: displayValue.clamp(200.0, UiPrefs.maxCountdownSizePx),
+                    value:
+                        displayValue.clamp(200.0, UiPrefs.maxCountdownSizePx),
                     onChanged: onChanged,
                     onChangeEnd: onChangedEnd,
                   ),
@@ -2656,7 +2688,9 @@ class _CountdownQuickCustomizeSheetContentState
                 style: SLTheme.quicksand(
                   fontSize: 12.6,
                   fontWeight: FontWeight.w800,
-                  color: hasChanges ? const Color(0xFFD81B60) : const Color(0xFF8E6F7E),
+                  color: hasChanges
+                      ? const Color(0xFFD81B60)
+                      : const Color(0xFF8E6F7E),
                 ),
               ),
               if (hasChanges)
@@ -2666,14 +2700,16 @@ class _CountdownQuickCustomizeSheetContentState
                     borderRadius: BorderRadius.circular(12),
                     onTap: onSave,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFF2F7),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: const Color(0xFFF4D7E2)),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFD81B60).withValues(alpha: 0.08),
+                            color:
+                                const Color(0xFFD81B60).withValues(alpha: 0.08),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -2758,7 +2794,8 @@ class _CountdownQuickCustomizeSheetContentState
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -2789,11 +2826,13 @@ class _CountdownQuickCustomizeSheetContentState
                       fit: BoxFit.cover,
                       placeholder: (context, url) => Container(
                         color: const Color(0xFFFDE8F0),
-                        child: const Icon(Icons.image_outlined, size: 16, color: Color(0xFFD81B60)),
+                        child: const Icon(Icons.image_outlined,
+                            size: 16, color: Color(0xFFD81B60)),
                       ),
                       errorWidget: (context, url, error) => Container(
                         color: const Color(0xFFFDE8F0),
-                        child: const Icon(Icons.broken_image_outlined, size: 16, color: Color(0xFFD81B60)),
+                        child: const Icon(Icons.broken_image_outlined,
+                            size: 16, color: Color(0xFFD81B60)),
                       ),
                     ),
                   ),
@@ -2810,10 +2849,12 @@ class _CountdownQuickCustomizeSheetContentState
                       ),
                     ),
                     onPressed: _pickBgImage,
-                    icon: const Icon(Icons.upload_rounded, size: 16, color: Color(0xFFD81B60)),
+                    icon: const Icon(Icons.upload_rounded,
+                        size: 16, color: Color(0xFFD81B60)),
                     label: Text(
                       hasBg ? 'Thay đổi ảnh' : 'Tải ảnh lên',
-                      style: SLTheme.quicksand(fontSize: 13, fontWeight: FontWeight.w800),
+                      style: SLTheme.quicksand(
+                          fontSize: 13, fontWeight: FontWeight.w800),
                     ),
                   ),
                 ),
@@ -2826,31 +2867,38 @@ class _CountdownQuickCustomizeSheetContentState
                       border: Border.all(color: const Color(0xFFF4D7E2)),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFD81B60), size: 20),
+                      icon: const Icon(Icons.delete_outline_rounded,
+                          color: Color(0xFFD81B60), size: 20),
                       onPressed: () {
                         showDialog(
                           context: context,
                           builder: (ctx) => AlertDialog(
                             title: Text(
                               'Xóa ảnh nền?',
-                              style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                              style: SLTheme.quicksand(
+                                  fontWeight: FontWeight.w900),
                             ),
                             content: Text(
                               'Bạn có chắc chắn muốn xóa ảnh nền trang chủ không?',
-                              style: SLTheme.quicksand(fontWeight: FontWeight.w700),
+                              style: SLTheme.quicksand(
+                                  fontWeight: FontWeight.w700),
                             ),
                             actions: [
                               TextButton(
                                 child: Text(
                                   'Hủy',
-                                  style: SLTheme.quicksand(fontWeight: FontWeight.w800, color: const Color(0xFF8E6F7E)),
+                                  style: SLTheme.quicksand(
+                                      fontWeight: FontWeight.w800,
+                                      color: const Color(0xFF8E6F7E)),
                                 ),
                                 onPressed: () => Navigator.pop(ctx),
                               ),
                               TextButton(
                                 child: Text(
                                   'Xóa',
-                                  style: SLTheme.quicksand(fontWeight: FontWeight.w900, color: const Color(0xFFD81B60)),
+                                  style: SLTheme.quicksand(
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFFD81B60)),
                                 ),
                                 onPressed: () {
                                   Navigator.pop(ctx);
@@ -2876,7 +2924,8 @@ class _CountdownQuickCustomizeSheetContentState
     final homeState = widget.homeState;
     final houseId = (homeState._houseId ?? '').trim();
     if (houseId.isEmpty) {
-      homeState._showLatestSnackBar('Vui lòng đăng nhập hoặc tham gia nhà để đổi ảnh nền.');
+      homeState._showLatestSnackBar(
+          'Vui lòng đăng nhập hoặc tham gia nhà để đổi ảnh nền.');
       return;
     }
 
@@ -3137,7 +3186,8 @@ class _CountdownQuickCustomizeSheetContentState
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -3168,11 +3218,13 @@ class _CountdownQuickCustomizeSheetContentState
                       fit: BoxFit.cover,
                       placeholder: (context, url) => Container(
                         color: const Color(0xFFFDE8F0),
-                        child: const Icon(Icons.image_outlined, size: 16, color: Color(0xFFD81B60)),
+                        child: const Icon(Icons.image_outlined,
+                            size: 16, color: Color(0xFFD81B60)),
                       ),
                       errorWidget: (context, url, error) => Container(
                         color: const Color(0xFFFDE8F0),
-                        child: const Icon(Icons.broken_image_outlined, size: 16, color: Color(0xFFD81B60)),
+                        child: const Icon(Icons.broken_image_outlined,
+                            size: 16, color: Color(0xFFD81B60)),
                       ),
                     ),
                   ),
@@ -3189,10 +3241,12 @@ class _CountdownQuickCustomizeSheetContentState
                       ),
                     ),
                     onPressed: _pickBgImage,
-                    icon: const Icon(Icons.upload_rounded, size: 16, color: Color(0xFFD81B60)),
+                    icon: const Icon(Icons.upload_rounded,
+                        size: 16, color: Color(0xFFD81B60)),
                     label: Text(
                       hasBg ? 'Thay đổi ảnh' : 'Tải ảnh lên',
-                      style: SLTheme.quicksand(fontSize: 13, fontWeight: FontWeight.w800),
+                      style: SLTheme.quicksand(
+                          fontSize: 13, fontWeight: FontWeight.w800),
                     ),
                   ),
                 ),
@@ -3205,31 +3259,38 @@ class _CountdownQuickCustomizeSheetContentState
                       border: Border.all(color: const Color(0xFFF4D7E2)),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFD81B60), size: 20),
+                      icon: const Icon(Icons.delete_outline_rounded,
+                          color: Color(0xFFD81B60), size: 20),
                       onPressed: () {
                         showDialog(
                           context: context,
                           builder: (ctx) => AlertDialog(
                             title: Text(
                               'Xóa ảnh nền?',
-                              style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                              style: SLTheme.quicksand(
+                                  fontWeight: FontWeight.w900),
                             ),
                             content: Text(
                               'Bạn có chắc chắn muốn xóa ảnh nền trang chủ không?',
-                              style: SLTheme.quicksand(fontWeight: FontWeight.w700),
+                              style: SLTheme.quicksand(
+                                  fontWeight: FontWeight.w700),
                             ),
                             actions: [
                               TextButton(
                                 child: Text(
                                   'Hủy',
-                                  style: SLTheme.quicksand(fontWeight: FontWeight.w800, color: const Color(0xFF8E6F7E)),
+                                  style: SLTheme.quicksand(
+                                      fontWeight: FontWeight.w800,
+                                      color: const Color(0xFF8E6F7E)),
                                 ),
                                 onPressed: () => Navigator.pop(ctx),
                               ),
                               TextButton(
                                 child: Text(
                                   'Xóa',
-                                  style: SLTheme.quicksand(fontWeight: FontWeight.w900, color: const Color(0xFFD81B60)),
+                                  style: SLTheme.quicksand(
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFFD81B60)),
                                 ),
                                 onPressed: () {
                                   Navigator.pop(ctx);
@@ -3404,7 +3465,8 @@ class _CountdownQuickCustomizeSheetContentState
                             buildLockedAdButton(
                               option: selectedStyle,
                               onUnlocked: (opt) async {
-                                await widget.homeState._saveCountdownQuickUiPrefs(
+                                await widget.homeState
+                                    ._saveCountdownQuickUiPrefs(
                                   countdownStyleKey: opt.value,
                                   prevalidatedUnlockedStyles: _unlockedStyles,
                                   isVip: widget.isVip,
@@ -3415,7 +3477,8 @@ class _CountdownQuickCustomizeSheetContentState
                             buildOptionChip(
                               option: selectedStyle,
                               selected: true,
-                              onTap: () => widget.homeState._saveCountdownQuickUiPrefs(
+                              onTap: () =>
+                                  widget.homeState._saveCountdownQuickUiPrefs(
                                 countdownStyleKey: selectedStyle.value,
                                 prevalidatedUnlockedStyles: _unlockedStyles,
                                 isVip: widget.isVip,
@@ -3434,7 +3497,8 @@ class _CountdownQuickCustomizeSheetContentState
                   icon: Icons.change_circle_rounded,
                   options: widget.styleOptions,
                   selectedValue: uiState.countdownStyleKey,
-                  onSelect: (option) => widget.homeState._saveCountdownQuickUiPrefs(
+                  onSelect: (option) =>
+                      widget.homeState._saveCountdownQuickUiPrefs(
                     countdownStyleKey: option.value,
                     prevalidatedUnlockedStyles: _unlockedStyles,
                     isVip: widget.isVip,
@@ -3443,7 +3507,8 @@ class _CountdownQuickCustomizeSheetContentState
                 const SizedBox(height: 12),
                 buildTextColorSection(
                   selectedColorHex: uiState.countdownTextColor,
-                  onSelect: (hex) => widget.homeState._saveCountdownQuickUiPrefs(
+                  onSelect: (hex) =>
+                      widget.homeState._saveCountdownQuickUiPrefs(
                     countdownTextColor: hex,
                     prevalidatedUnlockedStyles: _unlockedStyles,
                     isVip: widget.isVip,
@@ -3541,7 +3606,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
   String _myRole = 'user1';
   final _random = Random();
 
-  final GlobalKey<TapHeartsOverlayState> _globalHeartsKey = GlobalKey<TapHeartsOverlayState>();
+  final GlobalKey<TapHeartsOverlayState> _globalHeartsKey =
+      GlobalKey<TapHeartsOverlayState>();
   String _globalHeartStyle = 'basic';
   StreamSubscription<Map<String, dynamic>>? _interactiveEventsSub;
 
@@ -3638,11 +3704,12 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
 
   void _initInteractiveEventsListening() {
     _interactiveEventsSub?.cancel();
-    _interactiveEventsSub = SoulMergeService().watchInteractiveEvents().listen((event) async {
+    _interactiveEventsSub =
+        SoulMergeService().watchInteractiveEvents().listen((event) async {
       if (event.isEmpty || _isSingle || !mounted) return;
       final sender = event['sender']?.toString();
       if (sender == _myRole) return; // ignore my own
-      
+
       final type = event['type']?.toString();
       if (type == 'photo_shot') {
         // 1. Hiển thị thông báo bằng chữ nếu được bật
@@ -3662,7 +3729,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
             });
             // Trì hoãn nhẹ 50ms để widget cập nhật style mới rồi bắn tim
             Future.delayed(const Duration(milliseconds: 50), () {
-              _globalHeartsKey.currentState?.spawnLocalExplosion(const Offset(26, 26), count: 6);
+              _globalHeartsKey.currentState
+                  ?.spawnLocalExplosion(const Offset(26, 26), count: 6);
             });
           }
         }
@@ -3683,7 +3751,9 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
       if (sender != _myRole) {
         final text = lastMsg['text']?.toString() ?? '';
         final imgUrl = lastMsg['imageUrl']?.toString() ?? '';
-        final displayTxt = text.isNotEmpty ? text : (imgUrl.isNotEmpty ? 'Đã gửi một ảnh 📸' : '');
+        final displayTxt = text.isNotEmpty
+            ? text
+            : (imgUrl.isNotEmpty ? 'Đã gửi một ảnh 📸' : '');
         if (displayTxt.isEmpty) return;
 
         final msgTime = lastMsg['timestamp'] as int? ?? 0;
@@ -3788,8 +3858,10 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                         decoration: const BoxDecoration(
                           color: Colors.white,
                           border: Border(
-                            bottom: BorderSide(color: Color(0xFFFFB3CA), width: 1.5),
-                            right: BorderSide(color: Color(0xFFFFB3CA), width: 1.5),
+                            bottom: BorderSide(
+                                color: Color(0xFFFFB3CA), width: 1.5),
+                            right: BorderSide(
+                                color: Color(0xFFFFB3CA), width: 1.5),
                           ),
                         ),
                       ),
@@ -3806,7 +3878,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                   child: _showBubble && _bubbleText != null
                       ? Container(
                           width: 212,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
@@ -3816,7 +3889,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFCEBCD0).withValues(alpha: 0.3),
+                                color: const Color(0xFFCEBCD0)
+                                    .withValues(alpha: 0.3),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -3855,8 +3929,10 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                   setState(() {
                     final targetPos = details.globalPosition - _dragOffset;
                     _position = Offset(
-                      targetPos.dx.clamp(0.0, MediaQuery.sizeOf(context).width - 52),
-                      targetPos.dy.clamp(0.0, MediaQuery.sizeOf(context).height - 150),
+                      targetPos.dx
+                          .clamp(0.0, MediaQuery.sizeOf(context).width - 52),
+                      targetPos.dy
+                          .clamp(0.0, MediaQuery.sizeOf(context).height - 150),
                     );
                   });
                 },
@@ -3909,4 +3985,3 @@ class HomeUpcomingEvent {
     required this.type,
   });
 }
-

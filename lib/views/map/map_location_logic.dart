@@ -42,7 +42,8 @@ extension _MapLocationLogicExt on _MapScreenState {
       id: id,
       lat: lat,
       lng: lng,
-      title: (map['title'] ?? map['name'] ?? context.tr('map_knim_4f6aeb')).toString(),
+      title: (map['title'] ?? map['name'] ?? context.tr('map_knim_4f6aeb'))
+          .toString(),
       note: (map['note'] ?? map['desc'] ?? '').toString(),
       author: (map['author'] ?? map['uid'] ?? '').toString(),
       ts: _readInt(map['ts'] ?? map['timestamp']),
@@ -200,7 +201,8 @@ extension _MapLocationLogicExt on _MapScreenState {
         lng: currentLng,
         ts: currentTs,
         accuracy: _readDouble(activeLiveMap['acc']),
-        battery: _readInt(activeLiveMap['battery'] ?? activeLiveMap['batteryPct']),
+        battery:
+            _readInt(activeLiveMap['battery'] ?? activeLiveMap['batteryPct']),
         isCharging: activeLiveMap['isCharging'] == true,
         speed: _readDouble(activeLiveMap['speed']),
       );
@@ -228,7 +230,8 @@ extension _MapLocationLogicExt on _MapScreenState {
         lng: currentLng,
         ts: currentTs,
         accuracy: _readDouble(activeLiveMap['acc']),
-        battery: _readInt(activeLiveMap['battery'] ?? activeLiveMap['batteryPct']),
+        battery:
+            _readInt(activeLiveMap['battery'] ?? activeLiveMap['batteryPct']),
         isCharging: activeLiveMap['isCharging'] == true,
         speed: _readDouble(activeLiveMap['speed']),
       );
@@ -289,7 +292,9 @@ extension _MapLocationLogicExt on _MapScreenState {
     if (lat != null && lng != null) {
       return '${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}';
     }
-    return isLive ? context.tr('map_angcpnht_f4c117') : context.tr('map_khngcdliu_89903b');
+    return isLive
+        ? context.tr('map_angcpnht_f4c117')
+        : context.tr('map_khngcdliu_89903b');
   }
 
   String _formatDistanceMeters(double meters) {
@@ -861,7 +866,8 @@ extension _MapLocationLogicExt on _MapScreenState {
       id: id,
       lat: lat,
       lng: lng,
-      title: (map['text'] ?? map['title'] ?? context.tr('map_knim_4f6aeb')).toString(),
+      title: (map['text'] ?? map['title'] ?? context.tr('map_knim_4f6aeb'))
+          .toString(),
       note: (map['desc'] ?? map['note'] ?? '').toString(),
       imageUrl: (map['imageUrl'] ?? map['url'] ?? '').toString(),
       author: (map['author'] ?? '').toString(),
@@ -1179,7 +1185,8 @@ extension _MapLocationLogicExt on _MapScreenState {
         ).timeout(const Duration(seconds: 10));
         if (response.statusCode != 200) return null;
 
-        final map = await compute(_parseRouteMap, response.body) as Map<String, dynamic>;
+        final map = await compute(_parseRouteMap, response.body)
+            as Map<String, dynamic>;
         final routes = map['routes'];
         if (routes is! List || routes.isEmpty) return null;
 
@@ -1332,10 +1339,8 @@ extension _MapLocationLogicExt on _MapScreenState {
         mapInsightText = context.tr('map_bnanghinth_85b060');
       } else if (myPoint != null || myHasHistory) {
         distanceText = context.tr('map_vtrlu_7f955b');
-        mapInsightText =
-            context.tr('map_bnanghinth_652b9f');
-        mapAlert =
-            context.tr('map_angdngvtrc_9a3510');
+        mapInsightText = context.tr('map_bnanghinth_652b9f');
+        mapAlert = context.tr('map_angdngvtrc_9a3510');
       } else {
         distanceText = context.tr('map_chabtgps_aa3568');
         mapInsightText = context.tr('map_btgpsbnhin_4d7d3f');
@@ -1369,8 +1374,7 @@ extension _MapLocationLogicExt on _MapScreenState {
         mapInsightText = hasExactRoute
             ? 'Đang dùng vị trí cuối cùng đã lưu của cả hai. Quãng đường khoảng $routeDistanceText.'
             : context.tr('map_angdngvtrc_e2f616');
-        mapAlert =
-            context.tr('map_gpscachaia_8a5ecd');
+        mapAlert = context.tr('map_gpscachaia_8a5ecd');
       } else if (!partnerLive) {
         mapInsightText =
             '${widget.partnerName} đang ở vị trí cuối cùng đã lưu. Khoảng cách vẫn được giữ để bạn tiện theo dõi.';
@@ -1394,14 +1398,15 @@ extension _MapLocationLogicExt on _MapScreenState {
     } else if (myPoint != null || partnerPoint != null) {
       if (!partnerHasHistory) {
         distanceText = context.tr('map_ngiychabtg_defe08');
-        mapInsightText =
-            L10nService().format('partner_location_not_enabled_map', {'partnerName': widget.partnerName});
-        mapAlert =
-            L10nService().format('partner_gps_not_enabled_map', {'partnerName': widget.partnerName});
+        mapInsightText = L10nService().format(
+            'partner_location_not_enabled_map',
+            {'partnerName': widget.partnerName});
+        mapAlert = L10nService().format(
+            'partner_gps_not_enabled_map', {'partnerName': widget.partnerName});
       } else if (!myHasHistory) {
         distanceText = context.tr('map_bnchabtgps_fc6f46');
-        mapInsightText =
-            L10nService().format('you_location_not_enabled_map', {'partnerName': widget.partnerName});
+        mapInsightText = L10nService().format('you_location_not_enabled_map',
+            {'partnerName': widget.partnerName});
         mapAlert = context.tr('map_bnchabtgps_2de829');
       } else if (!partnerLive) {
         distanceText = context.tr('map_vtrcuilu_b4c8ee');
@@ -1410,18 +1415,15 @@ extension _MapLocationLogicExt on _MapScreenState {
         mapAlert = '${widget.partnerName} đã tắt GPS. Bản đồ giữ vị trí cuối.';
       } else if (!myLive) {
         distanceText = context.tr('map_vtrcuilu_b4c8ee');
-        mapInsightText =
-            context.tr('map_bnangdngvt_3c6c9e');
+        mapInsightText = context.tr('map_bnangdngvt_3c6c9e');
         mapAlert = context.tr('map_gpscabnang_6101f9');
       } else {
         distanceText = context.tr('map_angcpnht_f4c117');
-        mapInsightText =
-            context.tr('map_bnangngbli_a9747b');
+        mapInsightText = context.tr('map_bnangngbli_a9747b');
       }
     } else {
       distanceText = context.tr('map_angnhv_ea3669');
-      mapInsightText =
-          context.tr('map_btgpsbnhin_b8be56');
+      mapInsightText = context.tr('map_btgpsbnhin_b8be56');
       mapAlert = context.tr('map_btgpsbtucp_89df3c');
     }
 

@@ -224,8 +224,10 @@ class GlobalSearchService {
   }
 
   String _stripVietnameseMarks(String value) {
-    const withMarks = 'đàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹ';
-    const withoutMarks = 'daaaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooooooooouuuuuuuuuuuyyyyy';
+    const withMarks =
+        'đàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹ';
+    const withoutMarks =
+        'daaaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooooooooouuuuuuuuuuuyyyyy';
     final buf = StringBuffer();
     for (var i = 0; i < value.length; i++) {
       final ch = value.toLowerCase()[i];

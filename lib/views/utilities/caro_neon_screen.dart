@@ -111,14 +111,16 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
       }
       _myRole = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
       final fallbackNameU1 = settings.nameU1.trim();
-      _user1Name = fallbackNameU1.isEmpty || fallbackNameU1.toLowerCase() == 'bạn nam'
-          ? context.tr('male_role_default')
-          : fallbackNameU1;
+      _user1Name =
+          fallbackNameU1.isEmpty || fallbackNameU1.toLowerCase() == 'bạn nam'
+              ? context.tr('male_role_default')
+              : fallbackNameU1;
 
       final fallbackNameU2 = settings.nameU2.trim();
-      _user2Name = fallbackNameU2.isEmpty || fallbackNameU2.toLowerCase() == 'bạn nữ'
-          ? context.tr('female_role_default')
-          : fallbackNameU2;
+      _user2Name =
+          fallbackNameU2.isEmpty || fallbackNameU2.toLowerCase() == 'bạn nữ'
+              ? context.tr('female_role_default')
+              : fallbackNameU2;
       _soundEnabled = UiPrefs.notifier.value.touchSound;
       _isLoading = false;
     });
@@ -137,7 +139,9 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
   int _boardSizeFor(int winLength) => winLength == 5 ? 10 : 3;
 
   String _modeLabel(int winLength) {
-    return winLength == 5 ? context.tr('util_5thng_5e66bf') : context.tr('util_3thng_080f34');
+    return winLength == 5
+        ? context.tr('util_5thng_5e66bf')
+        : context.tr('util_3thng_080f34');
   }
 
   String _botStyleLabel(_BotStyle style) {
@@ -383,7 +387,12 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
       _focusArenaViewport();
       unawaited(_playAlertFx());
       _showSnack(
-        L10nService().format('util_caro_table_opened_invite', {'mode': winLength == 5 ? context.tr('util_5thng_5e66bf') : context.tr('util_3thng_080f34'), 'name': _partnerName}),
+        L10nService().format('util_caro_table_opened_invite', {
+          'mode': winLength == 5
+              ? context.tr('util_5thng_5e66bf')
+              : context.tr('util_3thng_080f34'),
+          'name': _partnerName
+        }),
       );
     });
   }
@@ -402,7 +411,9 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
         _focusArenaViewport();
       }
       unawaited(_playAlertFx());
-      _showSnack(joined ? context.tr('util_vobnc_cb57cb') : context.tr('util_khngththam_254fbc'));
+      _showSnack(joined
+          ? context.tr('util_vobnc_cb57cb')
+          : context.tr('util_khngththam_254fbc'));
     });
   }
 
@@ -440,7 +451,8 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
         winLength: winLength,
       );
       if (!mounted) return;
-      _showSnack(L10nService().format('util_caro_new_match_opened', {'mode': _modeLabel(winLength).toLowerCase()}));
+      _showSnack(L10nService().format('util_caro_new_match_opened',
+          {'mode': _modeLabel(winLength).toLowerCase()}));
       unawaited(_playAlertFx());
     });
   }
@@ -646,19 +658,26 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
 
   String _statusText(CaroRoom? room) {
     if (room == null) {
-      return L10nService().format('util_caro_start_private_hint', {'name': _partnerName});
+      return L10nService()
+          .format('util_caro_start_private_hint', {'name': _partnerName});
     }
     if (room.isWaiting) {
       if (room.createdByRole == _myRole) {
-        return L10nService().format('util_caro_waiting_partner', {'name': _partnerName, 'mode': _modeLabel(room.winLength)});
+        return L10nService().format('util_caro_waiting_partner',
+            {'name': _partnerName, 'mode': _modeLabel(room.winLength)});
       }
-      return L10nService().format('util_caro_inviting_you', {'name': _displayNameForRole(room.createdByRole), 'mode': _modeLabel(room.winLength)});
+      return L10nService().format('util_caro_inviting_you', {
+        'name': _displayNameForRole(room.createdByRole),
+        'mode': _modeLabel(room.winLength)
+      });
     }
     if (room.isActive) {
       if (room.turnRole == _myRole) {
-        return L10nService().format('util_caro_your_turn_place', {'symbol': room.symbolForRole(_myRole)});
+        return L10nService().format('util_caro_your_turn_place',
+            {'symbol': room.symbolForRole(_myRole)});
       }
-      return L10nService().format('util_caro_waiting_turn', {'name': _displayNameForRole(room.turnRole)});
+      return L10nService().format('util_caro_waiting_turn',
+          {'name': _displayNameForRole(room.turnRole)});
     }
     if (room.isDraw) {
       return context.tr('util_vnnyhabnct_77070f');
@@ -666,7 +685,8 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
     if (room.winnerRole == _myRole) {
       return context.tr('util_bnvathngto_d13e30');
     }
-    return L10nService().format('util_caro_winner_round', {'name': _displayNameForRole(room.winnerRole)});
+    return L10nService().format('util_caro_winner_round',
+        {'name': _displayNameForRole(room.winnerRole)});
   }
 
   String _botStatusText(CaroRoom? room) {
@@ -719,15 +739,21 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
     }
     if (room.isWaiting) {
       if (room.createdByRole == _myRole) {
-        return L10nService().format('util_caro_opened_waiting', {'mode': _modeLabel(room.winLength), 'name': _partnerName});
+        return L10nService().format('util_caro_opened_waiting',
+            {'mode': _modeLabel(room.winLength), 'name': _partnerName});
       }
-      return L10nService().format('util_caro_opened_for_you', {'name': _displayNameForRole(room.createdByRole), 'mode': _modeLabel(room.winLength)});
+      return L10nService().format('util_caro_opened_for_you', {
+        'name': _displayNameForRole(room.createdByRole),
+        'mode': _modeLabel(room.winLength)
+      });
     }
     if (room.isActive) {
       if (room.turnRole == _myRole) {
-        return L10nService().format('util_caro_your_turn_tap', {'symbol': room.symbolForRole(_myRole)});
+        return L10nService().format(
+            'util_caro_your_turn_tap', {'symbol': room.symbolForRole(_myRole)});
       }
-      return L10nService().format('util_caro_waiting_move', {'name': _displayNameForRole(room.turnRole)});
+      return L10nService().format('util_caro_waiting_move',
+          {'name': _displayNameForRole(room.turnRole)});
     }
     if (room.isDraw) {
       return context.tr('util_vnnyhacthm_5b064f');
@@ -735,7 +761,8 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
     if (room.winnerRole == _myRole) {
       return context.tr('util_bnvathngvn_5a2b5b');
     }
-    return L10nService().format('util_caro_winner_just_won', {'name': _displayNameForRole(room.winnerRole)});
+    return L10nService().format('util_caro_winner_just_won',
+        {'name': _displayNameForRole(room.winnerRole)});
   }
 
   Future<void> _openStartChooser({
@@ -827,7 +854,9 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
           : context.tr('util_climiangch_b68066');
     }
     if (room.isDone) {
-      return isBotMode ? context.tr('util_mvnmivibot_a7f0ea') : context.tr('util_btuvnmi_084494');
+      return isBotMode
+          ? context.tr('util_mvnmivibot_a7f0ea')
+          : context.tr('util_btuvnmi_084494');
     }
     return context.tr('util_tiptcbnu_546b49');
   }
@@ -841,12 +870,15 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
     if (room == null) {
       return isBotMode
           ? context.tr('util_bmbturichn_459e3f')
-          : L10nService().format('util_caro_start_invite_desc', {'name': _partnerName});
+          : L10nService()
+              .format('util_caro_start_invite_desc', {'name': _partnerName});
     }
     if (room.isWaiting) {
       return room.createdByRole == _myRole
-          ? L10nService().format('util_caro_invite_sent_desc', {'name': _partnerName})
-          : L10nService().format('util_caro_partner_opened_desc', {'mode': modeText});
+          ? L10nService()
+              .format('util_caro_invite_sent_desc', {'name': _partnerName})
+          : L10nService()
+              .format('util_caro_partner_opened_desc', {'mode': modeText});
     }
     if (room.isDone) {
       return isBotMode
@@ -904,20 +936,23 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
     }
     if (room.isWaiting) {
       return room.createdByRole == _myRole
-          ? L10nService().format('util_caro_table_waiting_short', {'name': _partnerName})
+          ? L10nService()
+              .format('util_caro_table_waiting_short', {'name': _partnerName})
           : context.tr('util_limisnsngb_b65f70');
     }
     if (room.isActive) {
       return room.turnRole == _myRole
           ? context.tr('util_tiltbnchmt_8fabaf')
-          : L10nService().format('util_caro_waiting_move', {'name': _displayNameForRole(room.turnRole)});
+          : L10nService().format('util_caro_waiting_move',
+              {'name': _displayNameForRole(room.turnRole)});
     }
     if (room.isDraw) {
       return context.tr('util_vnnyhacthc_71bb39');
     }
     return room.winnerRole == _myRole
         ? context.tr('util_bnvathngvn_5a2b5b')
-        : L10nService().format('util_caro_winner_short', {'name': _displayNameForRole(room.winnerRole)});
+        : L10nService().format('util_caro_winner_short',
+            {'name': _displayNameForRole(room.winnerRole)});
   }
 
   Widget _buildScreenBody() {
@@ -949,7 +984,8 @@ class _CaroNeonScreenState extends State<CaroNeonScreen>
   }) {
     final accent =
         isBotMode ? const Color(0xFFFF5E9E) : const Color(0xFF4EDBFF);
-    final roomLabel = isBotMode ? 'BOT NEON' : context.tr('util_khnggianri_165062');
+    final roomLabel =
+        isBotMode ? 'BOT NEON' : context.tr('util_khnggianri_165062');
 
     return LayoutBuilder(
       builder: (context, constraints) {

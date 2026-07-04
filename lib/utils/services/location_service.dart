@@ -40,8 +40,7 @@ class LocationService {
   static Position? _lastAcceptedPosition;
   static int _lastAcceptedTs = 0;
   static Map<String, dynamic>? _lastGpsPayload;
-  static final Map<String, int> _historyCleanupTsByScope =
-      <String, int>{};
+  static final Map<String, int> _historyCleanupTsByScope = <String, int>{};
   static StreamSubscription? _partnerMapVisibilitySub;
   static bool _partnerIsViewingMap = false;
 
@@ -102,7 +101,8 @@ class LocationService {
       return true;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('LocationService.requestPermission error: ${AppErrorMapper.resolve(
+        debugPrint(
+            'LocationService.requestPermission error: ${AppErrorMapper.resolve(
           e,
           fallbackMessage: 'Không thể xin quyền vị trí lúc này.',
         ).message}');
@@ -178,11 +178,13 @@ class LocationService {
       final initialPosition = await Geolocator.getCurrentPosition(
         locationSettings: LocationSettings(accuracy: _bestForegroundAccuracy),
       ).timeout(_kInitialPositionTimeout);
-      await _handlePositionUpdate(normalizedHouseId, normalizedRole, initialPosition,
+      await _handlePositionUpdate(
+          normalizedHouseId, normalizedRole, initialPosition,
           forceWrite: true);
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('LocationService.getCurrentPosition error: ${AppErrorMapper.resolve(
+        debugPrint(
+            'LocationService.getCurrentPosition error: ${AppErrorMapper.resolve(
           e,
           fallbackMessage: 'Không thể lấy vị trí hiện tại lúc này.',
         ).message}');
@@ -190,12 +192,14 @@ class LocationService {
       try {
         final lastKnown = await Geolocator.getLastKnownPosition();
         if (lastKnown != null && _isFreshEnoughLastKnown(lastKnown)) {
-          await _handlePositionUpdate(normalizedHouseId, normalizedRole, lastKnown,
+          await _handlePositionUpdate(
+              normalizedHouseId, normalizedRole, lastKnown,
               forceWrite: true);
         }
       } catch (e) {
         if (kDebugMode) {
-          debugPrint('LocationService.getLastKnownPosition error: ${AppErrorMapper.resolve(
+          debugPrint(
+              'LocationService.getLastKnownPosition error: ${AppErrorMapper.resolve(
             e,
             fallbackMessage: 'Không thể đọc vị trí gần nhất lúc này.',
           ).message}');
@@ -213,7 +217,8 @@ class LocationService {
           _handlePositionUpdate(normalizedHouseId, normalizedRole, position),
       onError: (e, st) {
         if (kDebugMode) {
-          debugPrint('LocationService.positionStream error: ${AppErrorMapper.resolve(
+          debugPrint(
+              'LocationService.positionStream error: ${AppErrorMapper.resolve(
             e,
             fallbackMessage: 'Luồng vị trí gặp lỗi.',
           ).message}');
@@ -295,7 +300,8 @@ class LocationService {
         intervalDuration: const Duration(seconds: 10),
         foregroundNotificationConfig: const ForegroundNotificationConfig(
           notificationTitle: 'SoulLocket đang chia sẻ vị trí nền',
-          notificationText: 'Vị trí của bạn đang được cập nhật cho bản đồ chung.',
+          notificationText:
+              'Vị trí của bạn đang được cập nhật cho bản đồ chung.',
           enableWakeLock: true,
         ),
       );
@@ -383,13 +389,12 @@ class LocationService {
   bool _shouldWritePosition(Position position, Position? previous, int now) {
     if (_lastFirebaseUpdateTs <= 0 || previous == null) return true;
 
-    final isRealtime = _partnerIsViewingMap || MapScreen.isMapScreenActive.value;
-    final minIntervalMs = isRealtime 
-        ? const Duration(seconds: 120).inMilliseconds 
+    final isRealtime =
+        _partnerIsViewingMap || MapScreen.isMapScreenActive.value;
+    final minIntervalMs = isRealtime
+        ? const Duration(seconds: 120).inMilliseconds
         : const Duration(minutes: 30).inMilliseconds;
-    final minDistance = isRealtime 
-        ? 30.0 
-        : 300.0;
+    final minDistance = isRealtime ? 30.0 : 300.0;
 
     final elapsedMs = now - _lastFirebaseUpdateTs;
     final movedMeters = Geolocator.distanceBetween(
@@ -482,7 +487,8 @@ class LocationService {
         _dbRef.child('gps_history/$houseId/$role/$dateStr').push().key ??
             now.toString();
 
-    final isBackground = WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed;
+    final isBackground =
+        WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed;
     if (isBackground) {
       await FirebaseDatabase.instance.goOnline();
     }
@@ -505,7 +511,8 @@ class LocationService {
       });
     } on FirebaseException catch (e) {
       if (e.code == 'permission-denied') {
-        debugPrint('Location write blocked (permission-denied). Silently failing.');
+        debugPrint(
+            'Location write blocked (permission-denied). Silently failing.');
       } else {
         rethrow;
       }
@@ -587,7 +594,8 @@ class LocationService {
       );
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('LocationService._maybeTrimGpsHistory error: ${AppErrorMapper.resolve(
+        debugPrint(
+            'LocationService._maybeTrimGpsHistory error: ${AppErrorMapper.resolve(
           e,
           fallbackMessage: 'Không thể dọn lịch sử GPS lúc này.',
         ).message}');
@@ -626,10 +634,8 @@ class LocationService {
     required String dateKey,
   }) async {
     final dayPath = 'gps_history/$houseId/$role/$dateKey';
-    final snap = await _dbRef
-        .child(dayPath)
-        .get()
-        .timeout(const Duration(seconds: 10));
+    final snap =
+        await _dbRef.child(dayPath).get().timeout(const Duration(seconds: 10));
     final raw = _toStringDynamicMap(snap.value);
     if (raw.length <= _kGpsHistoryMaxPointsPerDay) {
       return;

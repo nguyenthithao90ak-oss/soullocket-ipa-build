@@ -66,7 +66,8 @@ class CaroGameService {
     final normalizedHouseId = houseId.trim();
     final normalizedRole = _normalizeRole(myRole);
     if (normalizedHouseId.isEmpty || normalizedRole == null) return false;
-    final tx = await _roomRef(normalizedHouseId).runTransaction((Object? current) {
+    final tx =
+        await _roomRef(normalizedHouseId).runTransaction((Object? current) {
       final data = _asMap(current);
       if (data == null) return Transaction.abort();
       if ((data['status']?.toString() ?? '') != 'waiting') {
@@ -104,7 +105,8 @@ class CaroGameService {
       );
     }
 
-    final tx = await _roomRef(normalizedHouseId).runTransaction((Object? current) {
+    final tx =
+        await _roomRef(normalizedHouseId).runTransaction((Object? current) {
       final data = _asMap(current);
       if (data == null) {
         message = 'Ván chơi không tồn tại.';
@@ -170,7 +172,8 @@ class CaroGameService {
         return Transaction.success(data);
       }
 
-      data['turnRole'] = normalizedRole == playerXRole ? playerORole : playerXRole;
+      data['turnRole'] =
+          normalizedRole == playerXRole ? playerORole : playerXRole;
       data['winnerRole'] = '';
       data['winnerSymbol'] = '';
       data['winningCells'] = <String>[];
@@ -286,6 +289,7 @@ class CaroGameService {
       (key, item) => MapEntry(key.toString(), item?.toString() ?? ''),
     );
   }
+
   String? _normalizeRole(String value) {
     final role = value.trim();
     if (role == 'user1' || role == 'user2') return role;

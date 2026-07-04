@@ -174,7 +174,8 @@ class GameDownloadService extends ChangeNotifier {
           // Tải từ Cloudflare R2 (public domain)
           final fullStoragePath = '${config.storagePath}/$fileName';
           CloudflareR2Service.instance.init();
-          final remoteUrl = '${CloudflareR2Service.publicDomain}/$fullStoragePath';
+          final remoteUrl =
+              '${CloudflareR2Service.publicDomain}/$fullStoragePath';
 
           await _dio.download(
             remoteUrl,

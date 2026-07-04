@@ -1,4 +1,3 @@
-
 part of '../../main_home_tab.dart';
 
 extension _MainHomeTabPresenceSection on _MainHomeTabState {
@@ -108,7 +107,8 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                     child: isSingle
                         ? _buildModernUserColumn(
                             name: '',
-                            avatarUrl: '', // Will fall back to placeholder or empty
+                            avatarUrl:
+                                '', // Will fall back to placeholder or empty
                             zodiacEmoji: '',
                             zodiacName: '',
                             ageDays: '--',
@@ -128,7 +128,8 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                             isUser1: false,
                             hideMeta: false,
                             customOnTap: () => _changeAvatar(isUser1: false),
-                            customOnLongPress: () => _changeAvatar(isUser1: false),
+                            customOnLongPress: () =>
+                                _changeAvatar(isUser1: false),
                           ),
                   ),
                 ],
@@ -149,7 +150,8 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                                 emoji: flight.emoji,
                                 assetPath: flight.assetPath,
                                 imageUrl: flight.imageUrl,
-                                onComplete: () => _removeReactionFlight(flight.id),
+                                onComplete: () =>
+                                    _removeReactionFlight(flight.id),
                               ),
                             ),
                           ),
@@ -201,7 +203,8 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             onTap: customOnTap,
             onLongPress: customOnLongPress,
             isUploading: _uploadingAvatarRole == role,
-            uploadProgress: _uploadingAvatarRole == role ? _avatarUploadProgress : null,
+            uploadProgress:
+                _uploadingAvatarRole == role ? _avatarUploadProgress : null,
             size: avatarSize,
             isSinglePlaceholder: true,
           )
@@ -213,7 +216,8 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             onTap: customOnTap,
             onLongPress: customOnLongPress,
             isUploading: _uploadingAvatarRole == role,
-            uploadProgress: _uploadingAvatarRole == role ? _avatarUploadProgress : null,
+            uploadProgress:
+                _uploadingAvatarRole == role ? _avatarUploadProgress : null,
             size: avatarSize,
           ),
         SizedBox(height: compactMeta ? 8 : 12),

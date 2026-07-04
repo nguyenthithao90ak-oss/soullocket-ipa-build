@@ -91,7 +91,8 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
     VideoPlayerController controller;
     File? cachedFile;
     try {
-      final fileInfo = await AppCacheManager.instance.getFileFromCache(_mediaUrl);
+      final fileInfo =
+          await AppCacheManager.instance.getFileFromCache(_mediaUrl);
       if (fileInfo != null) {
         cachedFile = fileInfo.file;
       } else {
@@ -628,7 +629,8 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                                       maxScale: 4,
                                       child: SizedBox.expand(
                                         child: CachedNetworkImage(
-                                          cacheManager: AppCacheManager.instance,
+                                          cacheManager:
+                                              AppCacheManager.instance,
                                           memCacheWidth: 2400,
                                           imageUrl: _mediaUrl,
                                           fit: BoxFit.contain,

@@ -62,20 +62,34 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
 
     if (houseId.isNotEmpty) {
       try {
-        final securitySnap = await FirebaseDatabase.instance.ref('houses/$houseId/security').get();
+        final securitySnap = await FirebaseDatabase.instance
+            .ref('houses/$houseId/security')
+            .get();
         final security = securitySnap.exists && securitySnap.value is Map
             ? Map<String, dynamic>.from(securitySnap.value as Map)
             : <String, dynamic>{};
 
-        final bannedSnap = await FirebaseDatabase.instance.ref('houses/$houseId/banned').get();
-        final isBannedSnap = await FirebaseDatabase.instance.ref('houses/$houseId/isBanned').get();
-        final banned = (bannedSnap.value == true) || (isBannedSnap.value == true);
+        final bannedSnap =
+            await FirebaseDatabase.instance.ref('houses/$houseId/banned').get();
+        final isBannedSnap = await FirebaseDatabase.instance
+            .ref('houses/$houseId/isBanned')
+            .get();
+        final banned =
+            (bannedSnap.value == true) || (isBannedSnap.value == true);
 
-        final bannedUntilSnap = await FirebaseDatabase.instance.ref('houses/$houseId/bannedUntil').get();
-        final banUntilSnap = await FirebaseDatabase.instance.ref('houses/$houseId/banUntil').get();
-        final bannedUntil = ((bannedUntilSnap.value ?? banUntilSnap.value) as num?)?.toInt() ?? 0;
+        final bannedUntilSnap = await FirebaseDatabase.instance
+            .ref('houses/$houseId/bannedUntil')
+            .get();
+        final banUntilSnap = await FirebaseDatabase.instance
+            .ref('houses/$houseId/banUntil')
+            .get();
+        final bannedUntil =
+            ((bannedUntilSnap.value ?? banUntilSnap.value) as num?)?.toInt() ??
+                0;
 
-        final houseNameSnap = await FirebaseDatabase.instance.ref('houses/$houseId/settings/houseName').get();
+        final houseNameSnap = await FirebaseDatabase.instance
+            .ref('houses/$houseId/settings/houseName')
+            .get();
         final houseNameVal = houseNameSnap.value?.toString().trim();
         if (houseNameVal != null && houseNameVal.isNotEmpty) {
           houseName = houseNameVal;
@@ -545,7 +559,8 @@ class _LockAppealScreenState extends State<LockAppealScreen> {
                       final map = doc.data() as Map<String, dynamic>;
                       map['id'] = doc.id;
                       if (map['ts'] is Timestamp) {
-                        map['ts'] = (map['ts'] as Timestamp).millisecondsSinceEpoch;
+                        map['ts'] =
+                            (map['ts'] as Timestamp).millisecondsSinceEpoch;
                       }
                       return map;
                     })

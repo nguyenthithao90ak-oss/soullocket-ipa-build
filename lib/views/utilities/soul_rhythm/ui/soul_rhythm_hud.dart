@@ -219,12 +219,14 @@ extension _SoulRhythmHud on _SoulRhythmGameState {
           color: active ? null : Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: active ? Colors.white.withValues(alpha: 0.55) : Colors.white24,
+            color:
+                active ? Colors.white.withValues(alpha: 0.55) : Colors.white24,
           ),
           boxShadow: active
               ? [
                   BoxShadow(
-                    color: _SoulRhythmGameState._unityPink.withValues(alpha: 0.30),
+                    color:
+                        _SoulRhythmGameState._unityPink.withValues(alpha: 0.30),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -385,7 +387,8 @@ extension _SoulRhythmHud on _SoulRhythmGameState {
             ),
           ],
         ),
-        child: Icon(icon, color: Colors.white.withValues(alpha: 0.95), size: 16),
+        child:
+            Icon(icon, color: Colors.white.withValues(alpha: 0.95), size: 16),
       ),
     );
   }

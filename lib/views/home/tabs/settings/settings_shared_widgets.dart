@@ -262,101 +262,104 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     Widget? footer,
   }) {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradient,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: border, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: border.withValues(alpha: 0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: gradient,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          key: key,
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(icon, color: textColor, size: 26),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          label,
-                          style: SLTheme.quicksand(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF243041),
-                          ),
-                        ),
-                      ),
-                      if (badgeText != null)
-                        Container(
-                          margin: const EdgeInsets.only(left: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFF5252),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            badgeText,
-                            style: SLTheme.quicksand(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    desc,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF66758A),
-                      height: 1.3,
-                    ),
-                  ),
-                  if (footer != null) ...[
-                    const SizedBox(height: 6),
-                    footer,
-                  ],
-                ],
-              ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: border, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: border.withValues(alpha: 0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-            const SizedBox(width: 10),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFFC1C8D4)),
           ],
         ),
-      ),
-    )));
+        child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: InkWell(
+              key: key,
+              onTap: onTap,
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(icon, color: textColor, size: 26),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  label,
+                                  style: SLTheme.quicksand(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w800,
+                                    color: const Color(0xFF243041),
+                                  ),
+                                ),
+                              ),
+                              if (badgeText != null)
+                                Container(
+                                  margin: const EdgeInsets.only(left: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFF5252),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    badgeText,
+                                    style: SLTheme.quicksand(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            desc,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: SLTheme.quicksand(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF66758A),
+                              height: 1.3,
+                            ),
+                          ),
+                          if (footer != null) ...[
+                            const SizedBox(height: 6),
+                            footer,
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Icon(Icons.arrow_forward_ios_rounded,
+                        size: 14, color: Color(0xFFC1C8D4)),
+                  ],
+                ),
+              ),
+            )));
   }
 
   Widget _buildSectionBlock({
@@ -678,7 +681,9 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     required VoidCallback onTap,
   }) {
     final effectiveLabel = icon == Icons.heart_broken
-        ? (_isBreakupBusy ? context.tr('home_angxlyucu_0b316c') : _breakupActionLabel)
+        ? (_isBreakupBusy
+            ? context.tr('home_angxlyucu_0b316c')
+            : _breakupActionLabel)
         : label;
     final color = contentColor ?? Colors.white;
     return Container(
@@ -777,7 +782,9 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  isMine ? context.tr('home_tikhonangc_66e7e3') : context.tr('home_nhangcyucu_460ec8'),
+                  isMine
+                      ? context.tr('home_tikhonangc_66e7e3')
+                      : context.tr('home_nhangcyucu_460ec8'),
                   style: SLTheme.quicksand(
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
@@ -804,22 +811,23 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
               child: TextButton.icon(
                 onPressed: () async {
                   try {
-                    SLNotice.showInfo(context, context.tr('home_anghontc_b7c262'));
+                    SLNotice.showInfo(
+                        context, context.tr('home_anghontc_b7c262'));
                     await _authService.undoScheduledDeletion();
                     if (!mounted) return;
                     setState(() {
                       _pendingAccountDeletionAtMs = 0;
                       _pendingAccountDeletionUid = '';
                     });
-                    SLNotice.showSuccess(context, context.tr('home_hontcxathn_58b732'));
+                    SLNotice.showSuccess(
+                        context, context.tr('home_hontcxathn_58b732'));
                   } catch (e) {
                     if (!mounted) return;
                     SLNotice.showError(
                       context,
                       AppErrorMapper.resolve(
                         e,
-                        fallbackMessage:
-                            context.tr('home_chathhontc_cd8493'),
+                        fallbackMessage: context.tr('home_chathhontc_cd8493'),
                       ).message,
                     );
                   }
@@ -1194,7 +1202,8 @@ class _SettingsToggleRow extends StatelessWidget {
             Checkbox(
               value: checkValue ?? false,
               activeColor: iconColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5)),
               side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.5),
               onChanged: onCheckChanged,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

@@ -26,9 +26,6 @@ class CapsuleScreen extends StatefulWidget {
 }
 
 class _CapsuleScreenState extends State<CapsuleScreen> {
-
-
-
   static const String _pendingUploadKeyPrefix = 'capsule_';
   static const Color _backgroundTop = Color(0xFFB224EF);
   static const Color _backgroundBottom = Color(0xFF7579FF);
@@ -157,8 +154,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
     final title = _titleController.text.trim();
 
     if (widget.houseId.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(context.tr('util_chatmthynh_da24d0'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr('util_chatmthynh_da24d0'))));
       return;
     }
 
@@ -168,11 +165,10 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       return;
     }
 
-    if (_selectedImage != null &&
-        !await File(_selectedImage!.path).exists()) {
+    if (_selectedImage != null && !await File(_selectedImage!.path).exists()) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(context.tr('util_nhchnkhngc_321118'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr('util_nhchnkhngc_321118'))));
       return;
     }
 
@@ -351,7 +347,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                       ),
                       SLSpacing.h20,
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 16),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
@@ -363,7 +360,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                           ),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: const Color(0xFF8B5CF6).withValues(alpha: 0.25),
+                            color:
+                                const Color(0xFF8B5CF6).withValues(alpha: 0.25),
                             width: 1.5,
                           ),
                         ),
@@ -372,10 +370,12 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+                                color: const Color(0xFF8B5CF6)
+                                    .withValues(alpha: 0.15),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.local_post_office_rounded, color: Color(0xFF8B5CF6), size: 24),
+                              child: const Icon(Icons.local_post_office_rounded,
+                                  color: Color(0xFF8B5CF6), size: 24),
                             ),
                             SLSpacing.w16,
                             Expanded(
@@ -383,7 +383,11 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    L10nService().format('util_capsule_from', {'sender': updated['sender_uid'] == 'me' ? context.tr('util_ti_a843eb') : context.tr('util_ngiy_5bab37')}),
+                                    L10nService().format('util_capsule_from', {
+                                      'sender': updated['sender_uid'] == 'me'
+                                          ? context.tr('util_ti_a843eb')
+                                          : context.tr('util_ngiy_5bab37')
+                                    }),
                                     style: SLTheme.quicksand(
                                       fontWeight: FontWeight.w800,
                                       color: _textPrimary,
@@ -392,7 +396,12 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                   ),
                                   SLSpacing.h4,
                                   Text(
-                                    L10nService().format('util_capsule_open_date', {'date': DateFormat('dd/MM/yyyy').format(DateTime.fromMillisecondsSinceEpoch(updated['unlock_time_ms'] ?? 0))}),
+                                    L10nService()
+                                        .format('util_capsule_open_date', {
+                                      'date': DateFormat('dd/MM/yyyy').format(
+                                          DateTime.fromMillisecondsSinceEpoch(
+                                              updated['unlock_time_ms'] ?? 0))
+                                    }),
                                     style: SLTheme.quicksand(
                                       color: _textMuted,
                                       fontSize: 12,
@@ -429,7 +438,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                       .toString()
                                       .isNotEmpty) ...[
                                 GestureDetector(
-                                  onTap: () => _showImageFullScreen(context, updated['image_url']),
+                                  onTap: () => _showImageFullScreen(
+                                      context, updated['image_url']),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(16),
                                     child: Stack(
@@ -441,17 +451,21 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                           height: 220,
                                           fit: BoxFit.cover,
                                           filterQuality: FilterQuality.medium,
-                                          placeholder: (_, __) => const SizedBox(
+                                          placeholder: (_, __) =>
+                                              const SizedBox(
                                             height: 220,
                                             child: Center(
-                                              child: CircularProgressIndicator(strokeWidth: 2),
+                                              child: CircularProgressIndicator(
+                                                  strokeWidth: 2),
                                             ),
                                           ),
-                                          errorWidget: (_, __, ___) => const SizedBox(
+                                          errorWidget: (_, __, ___) =>
+                                              const SizedBox(
                                             height: 220,
                                             child: Center(
                                               child: Icon(
-                                                Icons.image_not_supported_outlined,
+                                                Icons
+                                                    .image_not_supported_outlined,
                                                 color: Colors.white70,
                                               ),
                                             ),
@@ -463,10 +477,14 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                           child: Container(
                                             padding: const EdgeInsets.all(6),
                                             decoration: BoxDecoration(
-                                              color: Colors.black.withValues(alpha: 0.5),
+                                              color: Colors.black
+                                                  .withValues(alpha: 0.5),
                                               shape: BoxShape.circle,
                                             ),
-                                            child: const Icon(Icons.zoom_out_map, color: Colors.white, size: 16),
+                                            child: const Icon(
+                                                Icons.zoom_out_map,
+                                                color: Colors.white,
+                                                size: 16),
                                           ),
                                         ),
                                       ],
@@ -532,27 +550,37 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         backgroundColor: const Color(0xFF1B2A36),
         title: Text(
           'Hộp thời gian',
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900, color: Colors.white),
+          style: SLTheme.quicksand(
+              fontWeight: FontWeight.w900, color: Colors.white),
         ),
         content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+              Text('Tính năng:',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.white)),
               SizedBox(height: 4),
-              Text('- Gửi gắm một thông điệp, hình ảnh, hoặc video vào tương lai.\n- Hộp sẽ bị khóa cứng và không ai (kể cả bạn) có thể mở ra xem trước thời hạn.', style: TextStyle(color: Colors.white70)),
+              Text(
+                  '- Gửi gắm một thông điệp, hình ảnh, hoặc video vào tương lai.\n- Hộp sẽ bị khóa cứng và không ai (kể cả bạn) có thể mở ra xem trước thời hạn.',
+                  style: TextStyle(color: Colors.white70)),
               SizedBox(height: 12),
-              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+              Text('Cách sử dụng:',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.white)),
               SizedBox(height: 4),
-              Text('- Bấm Tạo hộp mới, chọn thời gian mở khóa (ví dụ: kỷ niệm 10 năm).\n- Thêm lời nhắn, ảnh, video, sau đó bấm Niêm phong.\n- Cả hai sẽ nhận được thông báo khi hộp thời gian đến ngày mở khóa.', style: TextStyle(color: Colors.white70)),
+              Text(
+                  '- Bấm Tạo hộp mới, chọn thời gian mở khóa (ví dụ: kỷ niệm 10 năm).\n- Thêm lời nhắn, ảnh, video, sau đó bấm Niêm phong.\n- Cả hai sẽ nhận được thông báo khi hộp thời gian đến ngày mở khóa.',
+                  style: TextStyle(color: Colors.white70)),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu', style: TextStyle(color: Color(0xFF64B5F6))),
+            child: const Text('Đã hiểu',
+                style: TextStyle(color: Color(0xFF64B5F6))),
           ),
         ],
       ),
@@ -592,7 +620,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
+            icon: const Icon(Icons.info_outline_rounded,
+                color: Colors.white, size: 22),
             onPressed: () => _showInfoDialog(context),
           ),
         ],
@@ -701,8 +730,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                   ],
                 ),
                 SLSpacing.h16,
-                _buildTextField(
-                    _titleController, context.tr('util_tiuth_e1af07'), Icons.title),
+                _buildTextField(_titleController,
+                    context.tr('util_tiuth_e1af07'), Icons.title),
                 SLSpacing.h10,
                 _buildTextField(
                   _contentController,
@@ -730,7 +759,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(22),
-                        side: BorderSide(color: Colors.white.withValues(alpha: 0.26)),
+                        side: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.26)),
                       ),
                     ),
                     onPressed: _isUploading ? null : _addCapsule,
@@ -746,7 +776,9 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                           )
                         : const Icon(Icons.lock_clock_rounded),
                     label: Text(
-                      _isUploading ? context.tr('util_angkhath_ab590c') : context.tr('util_khathvotng_8d8f0b'),
+                      _isUploading
+                          ? context.tr('util_angkhath_ab590c')
+                          : context.tr('util_khathvotng_8d8f0b'),
                       style: SLTheme.quicksand(
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
@@ -774,14 +806,19 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: hasImage
-                ? [Colors.white.withValues(alpha: 0.36), Colors.white.withValues(alpha: 0.18)]
+                ? [
+                    Colors.white.withValues(alpha: 0.36),
+                    Colors.white.withValues(alpha: 0.18)
+                  ]
                 : [const Color(0x33FFFFFF), const Color(0x1FFFFFFF)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: hasImage ? const Color(0xFFFFD1E3) : Colors.white.withValues(alpha: 0.32),
+            color: hasImage
+                ? const Color(0xFFFFD1E3)
+                : Colors.white.withValues(alpha: 0.32),
             width: hasImage ? 1.4 : 1,
           ),
         ),
@@ -803,7 +840,10 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(18),
                         gradient: LinearGradient(
-                          colors: [Colors.transparent, Colors.black.withValues(alpha: 0.44)],
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.44)
+                          ],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                         ),
@@ -816,7 +856,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                     bottom: 10,
                     child: Row(
                       children: [
-                        const Icon(Icons.image_rounded, color: Colors.white, size: 18),
+                        const Icon(Icons.image_rounded,
+                            color: Colors.white, size: 18),
                         SLSpacing.gapW(6),
                         Expanded(
                           child: Text(
@@ -829,7 +870,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 5),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.20),
                             borderRadius: SLRadius.pillAll,
@@ -857,7 +899,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.18),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.26)),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.26)),
                     ),
                     child: const Icon(Icons.add_photo_alternate_rounded,
                         color: Colors.white, size: 24),
@@ -903,7 +946,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         maxLines: maxLines,
         cursorColor: _textPrimary,
         style: SLTheme.quicksand(
-          color: const Color(0xFF2B1F66), // Dark purple for visibility on white background
+          color: const Color(
+              0xFF2B1F66), // Dark purple for visibility on white background
           fontWeight: FontWeight.w700,
         ),
         decoration: InputDecoration(
@@ -933,13 +977,18 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
           gradient: LinearGradient(
             colors: hasDate
                 ? [const Color(0xFFFFD1E3), const Color(0xFFFF8AA0)]
-                : [Colors.white.withValues(alpha: 0.32), Colors.white.withValues(alpha: 0.16)],
+                : [
+                    Colors.white.withValues(alpha: 0.32),
+                    Colors.white.withValues(alpha: 0.16)
+                  ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: hasDate ? Colors.white.withValues(alpha: 0.46) : Colors.white.withValues(alpha: 0.30),
+            color: hasDate
+                ? Colors.white.withValues(alpha: 0.46)
+                : Colors.white.withValues(alpha: 0.30),
           ),
           boxShadow: hasDate
               ? [
@@ -960,12 +1009,16 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: hasDate ? 0.26 : 0.16),
+                    color:
+                        Colors.white.withValues(alpha: hasDate ? 0.26 : 0.16),
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.24)),
                   ),
                   child: Icon(
-                    hasDate ? Icons.event_available_rounded : Icons.calendar_month_rounded,
+                    hasDate
+                        ? Icons.event_available_rounded
+                        : Icons.calendar_month_rounded,
                     color: hasDate ? const Color(0xFF5B2B6F) : Colors.white,
                     size: 21,
                   ),
@@ -973,7 +1026,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                 const Spacer(),
                 if (hasDate)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.24),
                       borderRadius: SLRadius.pillAll,
@@ -991,7 +1045,9 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
             ),
             const Spacer(),
             Text(
-              hasDate ? DateFormat('dd/MM/yyyy').format(_unlockDate!) : context.tr('util_chnngym_02d57f'),
+              hasDate
+                  ? DateFormat('dd/MM/yyyy').format(_unlockDate!)
+                  : context.tr('util_chnngym_02d57f'),
               style: SLTheme.quicksand(
                 color: hasDate ? const Color(0xFF5B2B6F) : _textPrimary,
                 fontWeight: FontWeight.w900,
@@ -1001,7 +1057,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
             SLSpacing.h4,
             Text(
               hasDate
-                  ? L10nService().format('util_capsule_days_left', {'days': daysLeft})
+                  ? L10nService()
+                      .format('util_capsule_days_left', {'days': daysLeft})
                   : context.tr('util_khitingyny_6a6df1'),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -1065,209 +1122,280 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                     children: [
                       Icon(Icons.delete_rounded, color: Colors.white, size: 28),
                       SizedBox(height: 4),
-                      Text('Xóa', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12)),
+                      Text('Xóa',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12)),
                     ],
                   ),
                 ),
                 child: _CapsuleTouchWrapper(
                   margin: const EdgeInsets.only(bottom: 18),
                   child: ClipRRect(
-                  borderRadius: BorderRadius.circular(22),
-                  child: FastBackdropFilter(
-                    filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                    child: Container(
-                      padding: EdgeInsets.zero,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: isOpen 
-                            ? [Colors.white.withValues(alpha: 0.3), Colors.white.withValues(alpha: 0.15)]
-                            : [Colors.white.withValues(alpha: 0.15), Colors.white.withValues(alpha: 0.05)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                    borderRadius: BorderRadius.circular(22),
+                    child: FastBackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      child: Container(
+                        padding: EdgeInsets.zero,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: isOpen
+                                ? [
+                                    Colors.white.withValues(alpha: 0.3),
+                                    Colors.white.withValues(alpha: 0.15)
+                                  ]
+                                : [
+                                    Colors.white.withValues(alpha: 0.15),
+                                    Colors.white.withValues(alpha: 0.05)
+                                  ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(
+                            color: isOpen
+                                ? Colors.white.withValues(alpha: 0.45)
+                                : Colors.white.withValues(alpha: 0.2),
+                            width: 1.2,
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(
-                          color: isOpen 
-                            ? Colors.white.withValues(alpha: 0.45)
-                            : Colors.white.withValues(alpha: 0.2),
-                          width: 1.2,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (isOpen && capsule['image_url'] != null && capsule['image_url'].toString().isNotEmpty)
-                            GestureDetector(
-                              onTap: () => _showImageFullScreen(context, capsule['image_url']),
-                              child: ClipRRect(
-                                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                                child: Stack(
-                                  children: [
-                                    SizedBox(
-                                      height: 150,
-                                      width: double.infinity,
-                                      child: CachedNetworkImage(
-                                        imageUrl: capsule['image_url'],
-                                        fit: BoxFit.cover,
-                                        placeholder: (context, url) => Container(
-                                          color: Colors.white.withValues(alpha: 0.1),
-                                          child: const Center(
-                                            child: SizedBox(
-                                              width: 24, height: 24, 
-                                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70)
-                                            )
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (isOpen &&
+                                capsule['image_url'] != null &&
+                                capsule['image_url'].toString().isNotEmpty)
+                              GestureDetector(
+                                onTap: () => _showImageFullScreen(
+                                    context, capsule['image_url']),
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(20)),
+                                  child: Stack(
+                                    children: [
+                                      SizedBox(
+                                        height: 150,
+                                        width: double.infinity,
+                                        child: CachedNetworkImage(
+                                          imageUrl: capsule['image_url'],
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) =>
+                                              Container(
+                                            color: Colors.white
+                                                .withValues(alpha: 0.1),
+                                            child: const Center(
+                                                child: SizedBox(
+                                                    width: 24,
+                                                    height: 24,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                            strokeWidth: 2,
+                                                            color: Colors
+                                                                .white70))),
+                                          ),
+                                          errorWidget: (context, url, error) =>
+                                              Container(
+                                            color: Colors.white
+                                                .withValues(alpha: 0.1),
+                                            child: const Icon(
+                                                Icons.broken_image_rounded,
+                                                color: Colors.white38,
+                                                size: 40),
                                           ),
                                         ),
-                                        errorWidget: (context, url, error) => Container(
-                                          color: Colors.white.withValues(alpha: 0.1),
-                                          child: const Icon(Icons.broken_image_rounded, color: Colors.white38, size: 40),
+                                      ),
+                                      Positioned(
+                                        top: 10,
+                                        right: 10,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(6),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black
+                                                .withValues(alpha: 0.4),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                              Icons.zoom_out_map_rounded,
+                                              color: Colors.white,
+                                              size: 16),
                                         ),
                                       ),
-                                    ),
-                                    Positioned(
-                                      top: 10, right: 10,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(6),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black.withValues(alpha: 0.4),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(Icons.zoom_out_map_rounded, color: Colors.white, size: 16),
-                                      ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          Padding(
-                            padding: const EdgeInsets.all(18),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(isOpen ? Icons.mark_email_read_rounded : Icons.lock_clock_rounded, 
-                                          size: 16, color: isOpen ? Colors.white : Colors.white60),
-                                        SLSpacing.w8,
-                                        Text(
-                                          L10nService().format('util_capsule_open_short', {'date': DateFormat('dd/MM/yyyy').format(DateTime.fromMillisecondsSinceEpoch(unlockDate))}),
-                                          style: SLTheme.quicksand(
-                                              color: isOpen ? Colors.white : Colors.white70,
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w800),
-                                        ),
-                                      ],
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 5),
-                                      decoration: BoxDecoration(
-                                        color: isOpen
-                                            ? const Color(0xFF10B981).withValues(alpha: 0.25)
-                                            : const Color(0xFFF59E0B).withValues(alpha: 0.25),
-                                        borderRadius: SLRadius.pillAll,
-                                        border: Border.all(
-                                          color: isOpen
-                                              ? const Color(0xFF10B981).withValues(alpha: 0.5)
-                                              : const Color(0xFFF59E0B).withValues(alpha: 0.5),
-                                        )
-                                      ),
-                                      child: Text(
-                                        isOpen ? context.tr('util_m_7b4530') : context.tr('util_angkha_d004dc'),
-                                        style: SLTheme.quicksand(
-                                          color: isOpen
-                                              ? const Color(0xFF6EE7B7)
-                                              : const Color(0xFFFCD34D),
-                                          fontWeight: FontWeight.w900,
-                                          fontSize: 10,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 14),
-                                if (isOpen)
-                                  Text(
-                                    capsule['title'] ?? capsule['content'] ?? '',
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: SLTheme.quicksand(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700),
-                                  )
-                                else
-                                  Text(
-                                    context.tr('util_nidungsmng_ea25c0'),
-                                    style: SLTheme.quicksand(
-                                        color: Colors.white.withValues(alpha: 0.5),
-                                        fontSize: 14,
-                                        fontStyle: FontStyle.italic,
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                SLSpacing.h16,
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: GestureDetector(
-                                    onTap:
-                                        isOpen ? () => _openCapsule(capsule) : null,
-                                    child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 200),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 18, vertical: 10),
-                                      decoration: BoxDecoration(
-                                        gradient: isOpen ? const LinearGradient(
-                                          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ) : null,
-                                        color: isOpen
-                                            ? null
-                                            : Colors.white.withValues(alpha: 0.1),
-                                        borderRadius: SLRadius.pillAll,
-                                        boxShadow: isOpen ? [
-                                          BoxShadow(
-                                            color: const Color(0xFF6366F1).withValues(alpha: 0.4),
-                                            blurRadius: 10,
-                                            offset: const Offset(0, 4),
-                                          )
-                                        ] : null,
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
+                            Padding(
+                              padding: const EdgeInsets.all(18),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
                                         children: [
+                                          Icon(
+                                              isOpen
+                                                  ? Icons
+                                                      .mark_email_read_rounded
+                                                  : Icons.lock_clock_rounded,
+                                              size: 16,
+                                              color: isOpen
+                                                  ? Colors.white
+                                                  : Colors.white60),
+                                          SLSpacing.w8,
                                           Text(
-                                            context.tr('util_mth_e6d950'),
+                                            L10nService().format(
+                                                'util_capsule_open_short', {
+                                              'date': DateFormat('dd/MM/yyyy')
+                                                  .format(DateTime
+                                                      .fromMillisecondsSinceEpoch(
+                                                          unlockDate))
+                                            }),
                                             style: SLTheme.quicksand(
-                                              fontWeight: FontWeight.w900,
-                                              color:
-                                                  isOpen ? Colors.white : Colors.white38,
-                                              fontSize: 12,
-                                            ),
+                                                color: isOpen
+                                                    ? Colors.white
+                                                    : Colors.white70,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w800),
                                           ),
-                                          if (isOpen) ...[
-                                            const SizedBox(width: 6),
-                                            const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 14),
-                                          ]
                                         ],
                                       ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 5),
+                                        decoration: BoxDecoration(
+                                            color: isOpen
+                                                ? const Color(0xFF10B981)
+                                                    .withValues(alpha: 0.25)
+                                                : const Color(0xFFF59E0B)
+                                                    .withValues(alpha: 0.25),
+                                            borderRadius: SLRadius.pillAll,
+                                            border: Border.all(
+                                              color: isOpen
+                                                  ? const Color(0xFF10B981)
+                                                      .withValues(alpha: 0.5)
+                                                  : const Color(0xFFF59E0B)
+                                                      .withValues(alpha: 0.5),
+                                            )),
+                                        child: Text(
+                                          isOpen
+                                              ? context.tr('util_m_7b4530')
+                                              : context
+                                                  .tr('util_angkha_d004dc'),
+                                          style: SLTheme.quicksand(
+                                            color: isOpen
+                                                ? const Color(0xFF6EE7B7)
+                                                : const Color(0xFFFCD34D),
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 14),
+                                  if (isOpen)
+                                    Text(
+                                      capsule['title'] ??
+                                          capsule['content'] ??
+                                          '',
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: SLTheme.quicksand(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700),
+                                    )
+                                  else
+                                    Text(
+                                      context.tr('util_nidungsmng_ea25c0'),
+                                      style: SLTheme.quicksand(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.5),
+                                          fontSize: 14,
+                                          fontStyle: FontStyle.italic,
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                  SLSpacing.h16,
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: GestureDetector(
+                                      onTap: isOpen
+                                          ? () => _openCapsule(capsule)
+                                          : null,
+                                      child: AnimatedContainer(
+                                        duration:
+                                            const Duration(milliseconds: 200),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 18, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          gradient: isOpen
+                                              ? const LinearGradient(
+                                                  colors: [
+                                                    Color(0xFF6366F1),
+                                                    Color(0xFF8B5CF6)
+                                                  ],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                )
+                                              : null,
+                                          color: isOpen
+                                              ? null
+                                              : Colors.white
+                                                  .withValues(alpha: 0.1),
+                                          borderRadius: SLRadius.pillAll,
+                                          boxShadow: isOpen
+                                              ? [
+                                                  BoxShadow(
+                                                    color:
+                                                        const Color(0xFF6366F1)
+                                                            .withValues(
+                                                                alpha: 0.4),
+                                                    blurRadius: 10,
+                                                    offset: const Offset(0, 4),
+                                                  )
+                                                ]
+                                              : null,
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              context.tr('util_mth_e6d950'),
+                                              style: SLTheme.quicksand(
+                                                fontWeight: FontWeight.w900,
+                                                color: isOpen
+                                                    ? Colors.white
+                                                    : Colors.white38,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                            if (isOpen) ...[
+                                              const SizedBox(width: 6),
+                                              const Icon(
+                                                  Icons.arrow_forward_rounded,
+                                                  color: Colors.white,
+                                                  size: 14),
+                                            ]
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
           );
   }
 
@@ -1281,20 +1409,27 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'Xóa hòm thời gian?',
-          style: SLTheme.quicksand(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 17),
+          style: SLTheme.quicksand(
+              color: Colors.white, fontWeight: FontWeight.w800, fontSize: 17),
         ),
         content: Text(
           'Hành động này không thể hoàn tác. Nội dung trong hòm sẽ bị xóa vĩnh viễn.',
-          style: SLTheme.quicksand(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 14),
+          style: SLTheme.quicksand(
+              color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Hủy', style: SLTheme.quicksand(color: Colors.white54, fontWeight: FontWeight.w700)),
+            child: Text('Hủy',
+                style: SLTheme.quicksand(
+                    color: Colors.white54, fontWeight: FontWeight.w700)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Xóa', style: SLTheme.quicksand(color: const Color(0xFFEF4444), fontWeight: FontWeight.w900)),
+            child: Text('Xóa',
+                style: SLTheme.quicksand(
+                    color: const Color(0xFFEF4444),
+                    fontWeight: FontWeight.w900)),
           ),
         ],
       ),
@@ -1306,7 +1441,9 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Xóa thất bại: ${AppErrorMapper.resolve(e).message}')),
+          SnackBar(
+              content:
+                  Text('Xóa thất bại: ${AppErrorMapper.resolve(e).message}')),
         );
       }
       return false;

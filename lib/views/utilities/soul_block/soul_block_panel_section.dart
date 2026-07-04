@@ -263,11 +263,15 @@ class _LeaderboardTile extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: badgeColor.withValues(alpha: 0.2),
-              border: isTop3Any ? Border.all(color: badgeColor.withValues(alpha: 0.5), width: 1.5) : null,
+              border: isTop3Any
+                  ? Border.all(
+                      color: badgeColor.withValues(alpha: 0.5), width: 1.5)
+                  : null,
             ),
             child: Center(
               child: isTop1
-                  ? const Icon(Icons.emoji_events_rounded, color: Color(0xFFFFD700), size: 22)
+                  ? const Icon(Icons.emoji_events_rounded,
+                      color: Color(0xFFFFD700), size: 22)
                   : Text(
                       '$rank',
                       style: SLTheme.quicksand(

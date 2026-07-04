@@ -347,7 +347,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
         title: const Text('Xoá thông báo'),
         content: const Text('Bạn có chắc chắn muốn xoá thông báo này?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);

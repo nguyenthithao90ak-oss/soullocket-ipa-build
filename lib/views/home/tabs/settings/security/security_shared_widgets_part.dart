@@ -68,8 +68,12 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     required Color backgroundColor,
     required List<Widget> children,
   }) {
-    final cardBg = backgroundColor == Colors.white ? const Color(0xFFF8FAFC) : backgroundColor;
-    final borderTint = borderColor == Colors.transparent ? const Color(0xFFE2E8F0) : borderColor;
+    final cardBg = backgroundColor == Colors.white
+        ? const Color(0xFFF8FAFC)
+        : backgroundColor;
+    final borderTint = borderColor == Colors.transparent
+        ? const Color(0xFFE2E8F0)
+        : borderColor;
 
     return Container(
       width: double.infinity,
@@ -98,7 +102,9 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
             style: SLTheme.quicksand(
               fontSize: 15,
               fontWeight: FontWeight.w900,
-              color: borderColor == Colors.transparent ? const Color(0xFFD81B60) : borderColor.withValues(alpha: 0.95),
+              color: borderColor == Colors.transparent
+                  ? const Color(0xFFD81B60)
+                  : borderColor.withValues(alpha: 0.95),
             ),
           ),
           if (subtitle != null && subtitle.trim().isNotEmpty) ...[
@@ -134,9 +140,14 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     VoidCallback? onSecondaryAction,
     String? secondaryActionLabel,
   }) {
-    final statusText = statusLabel ?? (isVerified ? context.tr('home_xcthc_a8bcec') : context.tr('home_chaxcthc_54490d'));
-    final statusBg = isVerified ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0);
-    final statusFg = isVerified ? const Color(0xFF2E7D32) : const Color(0xFFE65100);
+    final statusText = statusLabel ??
+        (isVerified
+            ? context.tr('home_xcthc_a8bcec')
+            : context.tr('home_chaxcthc_54490d'));
+    final statusBg =
+        isVerified ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0);
+    final statusFg =
+        isVerified ? const Color(0xFF2E7D32) : const Color(0xFFE65100);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -191,7 +202,8 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
                 ),
               ),
               if (showCheckmark && isVerified)
-                const Icon(Icons.check_circle_rounded, color: Color(0xFF4CAF50), size: 20)
+                const Icon(Icons.check_circle_rounded,
+                    color: Color(0xFF4CAF50), size: 20)
               else if (statusLabel != null || !isVerified)
                 _buildSecurityBadge(
                   statusText,
@@ -207,17 +219,21 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
                 if (onSecondaryAction != null)
                   Expanded(
                     child: _buildCompactActionBtn(
-                      label: secondaryActionLabel ?? context.tr('home_thayi_d4d9d8'),
+                      label: secondaryActionLabel ??
+                          context.tr('home_thayi_d4d9d8'),
                       onTap: onSecondaryAction,
                       isPrimary: false,
                     ),
                   ),
-                if (onSecondaryAction != null && (onAction != null || isLoading))
+                if (onSecondaryAction != null &&
+                    (onAction != null || isLoading))
                   const SizedBox(width: 8),
                 if (onAction != null || isLoading)
                   Expanded(
                     child: _buildCompactActionBtn(
-                      label: isLoading ? context.tr('home_angxl_5d4018') : actionLabel,
+                      label: isLoading
+                          ? context.tr('home_angxl_5d4018')
+                          : actionLabel,
                       onTap: isLoading ? null : onAction,
                       isPrimary: true,
                       accentColor: accentColor,
@@ -247,7 +263,8 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
           decoration: BoxDecoration(
             color: isPrimary ? accentColor : Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: isPrimary ? null : Border.all(color: const Color(0xFFE2E8F0)),
+            border:
+                isPrimary ? null : Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: Text(
             label,
@@ -269,7 +286,8 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.viewInsetsOf(context).bottom + 20),
+        padding: EdgeInsets.fromLTRB(
+            20, 20, 20, MediaQuery.viewInsetsOf(context).bottom + 20),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
@@ -307,10 +325,13 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
               ),
             ),
             const SizedBox(height: 24),
-            _buildInput(_secondaryEmailCtrl, context.tr('home_nhpemailph_9c0bf7')),
+            _buildInput(
+                _secondaryEmailCtrl, context.tr('home_nhpemailph_9c0bf7')),
             const SizedBox(height: 16),
             _buildGradientBtn(
-              label: _secondaryEmail.isEmpty ? context.tr('home_thmemailph_cdc362') : context.tr('home_cpnht_c81e30'),
+              label: _secondaryEmail.isEmpty
+                  ? context.tr('home_thmemailph_cdc362')
+                  : context.tr('home_cpnht_c81e30'),
               gradient: const [Color(0xFF8E24AA), Color(0xFF6A1B9A)],
               onTap: () {
                 Navigator.pop(context);
@@ -327,4 +348,3 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     );
   }
 }
-

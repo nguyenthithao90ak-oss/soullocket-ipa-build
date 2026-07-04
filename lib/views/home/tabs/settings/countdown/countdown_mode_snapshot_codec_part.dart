@@ -207,7 +207,8 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
     _centerIconType = snapshot.centerIconType;
   }
 
-  bool _isIncomingSnapshotNewer(String scope, _CountdownSpaceSnapshot incoming) {
+  bool _isIncomingSnapshotNewer(
+      String scope, _CountdownSpaceSnapshot incoming) {
     final current = _spaceSnapshots[scope];
     if (current == null) {
       return true;
@@ -235,10 +236,12 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
         : (widget.fallbackBottomLabel.trim().isNotEmpty
             ? widget.fallbackBottomLabel.trim()
             : L10nService().translate('home_ngy_41ec10'));
-    final defaultNameU1 =
-        widget.nameU1.trim().isEmpty ? L10nService().translate('home_bn_1fd75b') : widget.nameU1.trim();
-    final defaultNameU2 =
-        widget.nameU2.trim().isEmpty ? L10nService().translate('home_ngiy_5bab37') : widget.nameU2.trim();
+    final defaultNameU1 = widget.nameU1.trim().isEmpty
+        ? L10nService().translate('home_bn_1fd75b')
+        : widget.nameU1.trim();
+    final defaultNameU2 = widget.nameU2.trim().isEmpty
+        ? L10nService().translate('home_ngiy_5bab37')
+        : widget.nameU2.trim();
     final defaultThemeKey =
         ui.themeKey.trim().isEmpty ? 'theme-auto' : ui.themeKey.trim();
     final defaultStyleKey = ui.countdownStyleKey.trim().isEmpty
@@ -278,10 +281,12 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
           defaultBottomLabel,
       nameU1: scope == _selfSpaceHouseId
           ? defaultNameU1
-          : (prefs.getString(_prefKey('name_u1', scope: scope)) ?? defaultNameU1),
+          : (prefs.getString(_prefKey('name_u1', scope: scope)) ??
+              defaultNameU1),
       nameU2: scope == _selfSpaceHouseId
           ? defaultNameU2
-          : (prefs.getString(_prefKey('name_u2', scope: scope)) ?? defaultNameU2),
+          : (prefs.getString(_prefKey('name_u2', scope: scope)) ??
+              defaultNameU2),
       avatarUrl1: scope == _selfSpaceHouseId
           ? widget.avatarUrl1.trim()
           : (prefs.getString(_prefKey('avatar_1', scope: scope)) ??
@@ -321,8 +326,12 @@ extension _CountdownModeSnapshotCodec on _CountdownModeIndependentScreenState {
         : (widget.fallbackBottomLabel.trim().isNotEmpty
             ? widget.fallbackBottomLabel.trim()
             : L10nService().translate('home_ngy_41ec10'));
-    _nameU1 = widget.nameU1.trim().isEmpty ? L10nService().translate('home_bn_1fd75b') : widget.nameU1.trim();
-    _nameU2 = widget.nameU2.trim().isEmpty ? L10nService().translate('home_ngiy_5bab37') : widget.nameU2.trim();
+    _nameU1 = widget.nameU1.trim().isEmpty
+        ? L10nService().translate('home_bn_1fd75b')
+        : widget.nameU1.trim();
+    _nameU2 = widget.nameU2.trim().isEmpty
+        ? L10nService().translate('home_ngiy_5bab37')
+        : widget.nameU2.trim();
     _avatarUrl1 = widget.avatarUrl1.trim();
     _avatarUrl2 = widget.avatarUrl2.trim();
     _themeKey = ui.themeKey.trim().isEmpty ? 'theme-auto' : ui.themeKey.trim();

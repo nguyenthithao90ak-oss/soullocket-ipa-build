@@ -943,15 +943,18 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
     await _bgPlayer.stop();
     if (desiredTrack == 'custom') {
       final fileName = p.basename(_customTrackAssetPath);
-      final localPath = await GameDownloadService().getLocalPath('soul_rhythm', fileName);
+      final localPath =
+          await GameDownloadService().getLocalPath('soul_rhythm', fileName);
       if (await File(localPath).exists()) {
         debugPrint('Soul Rhythm: Using LOCAL track: $localPath');
         await _bgPlayer.play(DeviceFileSource(localPath));
         return;
       }
-      final fallbackBytes = _gameState == 'PLAYING' ? _gameLoopBytes : _menuLoopBytes;
+      final fallbackBytes =
+          _gameState == 'PLAYING' ? _gameLoopBytes : _menuLoopBytes;
       if (fallbackBytes != null && fallbackBytes.isNotEmpty) {
-        debugPrint('Soul Rhythm: Local track missing, using generated fallback.');
+        debugPrint(
+            'Soul Rhythm: Local track missing, using generated fallback.');
         await _bgPlayer.play(
           BytesSource(
             fallbackBytes,
@@ -1343,8 +1346,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
       _spawnTouchBurst(
         resolvedPlayArea.width / 2,
         resolvedPlayArea.height * 0.54,
-        const Color(0xFFFF0055)
-            .withValues(alpha: _isLowGraphics ? 0.34 : 0.46),
+        const Color(0xFFFF0055).withValues(alpha: _isLowGraphics ? 0.34 : 0.46),
       );
 
       if (_lives <= 0) {
@@ -1461,8 +1463,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-              context.tr('util_cquynprohi_0db3f1')),
+          content: Text(context.tr('util_cquynprohi_0db3f1')),
           backgroundColor: const Color(0xFFE040FB),
         ),
       );
@@ -1479,8 +1480,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-              context.tr('util_chaticqung_d632bb')),
+          content: Text(context.tr('util_chaticqung_d632bb')),
         ),
       );
       return;

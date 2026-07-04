@@ -1,4 +1,3 @@
-
 part of '../../soul_rhythm_game.dart';
 
 extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
@@ -197,8 +196,8 @@ extension _SoulRhythmMenuScreen on _SoulRhythmGameState {
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.055),
                           borderRadius: BorderRadius.circular(22),
-                          border:
-                              Border.all(color: Colors.white.withValues(alpha: 0.09)),
+                          border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.09)),
                         ),
                         child: Column(
                           children: [

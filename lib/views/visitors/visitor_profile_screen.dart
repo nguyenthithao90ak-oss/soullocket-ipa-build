@@ -292,7 +292,6 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         maxWidth: 1080,
         maxHeight: 1080,
         uiSettings: [
-
           IOSUiSettings(
             title: 'Cắt avatar hồ sơ',
             aspectRatioLockEnabled: true,
@@ -569,17 +568,26 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
               : {};
         }
       } catch (e) {
-        debugPrint('Lỗi tải house_profiles: ${AppErrorMapper.resolve(e).message}');
+        debugPrint(
+            'Lỗi tải house_profiles: ${AppErrorMapper.resolve(e).message}');
       }
 
       if (_targetData.isEmpty) {
         try {
           // Chỉ fetch field cần, không load toàn bộ settings node (~10KB)
           const kSettingsFields = [
-            'bio', 'privacy', 'proUntil', 'relationshipMode',
-            'avtUser1', 'avtUser2', 'hideLikeCount',
-            'likedVisibility', 'locketVisibility',
-            'profileHeaderImageUrl', 'profileHeaderThemeKey', 'profileAvatarSizePx',
+            'bio',
+            'privacy',
+            'proUntil',
+            'relationshipMode',
+            'avtUser1',
+            'avtUser2',
+            'hideLikeCount',
+            'likedVisibility',
+            'locketVisibility',
+            'profileHeaderImageUrl',
+            'profileHeaderThemeKey',
+            'profileAvatarSizePx',
           ];
           final base = 'houses/${widget.targetHouseId}';
           final allSnaps = await Future.wait([
@@ -754,7 +762,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
           .where((p) => p.imageUrl.isNotEmpty || p.videoUrl.isNotEmpty)
           .toList();
     } catch (e) {
-      debugPrint('Error loading private posts: ${AppErrorMapper.resolve(e).message}');
+      debugPrint(
+          'Error loading private posts: ${AppErrorMapper.resolve(e).message}');
     } finally {
       if (mounted) setState(() => _isLoadingPrivate = false);
     }
@@ -780,7 +789,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         return true;
       }).toList();
     } catch (e) {
-      debugPrint('Error loading locket posts: ${AppErrorMapper.resolve(e).message}');
+      debugPrint(
+          'Error loading locket posts: ${AppErrorMapper.resolve(e).message}');
     } finally {
       if (mounted) setState(() => _isLoadingLocket = false);
     }
@@ -792,7 +802,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       _likedPosts =
           await _socialService.fetchLikedFeedPage(widget.targetHouseId);
     } catch (e) {
-      debugPrint('Error loading liked posts: ${AppErrorMapper.resolve(e).message}');
+      debugPrint(
+          'Error loading liked posts: ${AppErrorMapper.resolve(e).message}');
     } finally {
       if (mounted) setState(() => _isLoadingLiked = false);
     }

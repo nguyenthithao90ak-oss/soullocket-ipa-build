@@ -84,8 +84,7 @@ class _SecurityProtectionRolloutPanelState
       setState(() {
         _errorText = AppErrorMapper.resolve(
           error,
-          fallbackMessage:
-              context.tr('admin_chathtidli_9e9397'),
+          fallbackMessage: context.tr('admin_chathtidli_9e9397'),
         ).message;
       });
     } finally {
@@ -128,8 +127,7 @@ class _SecurityProtectionRolloutPanelState
       if (!mounted) return;
       final message = AppErrorMapper.resolve(
         error,
-        fallbackMessage:
-            context.tr('admin_chathlurol_15b46b'),
+        fallbackMessage: context.tr('admin_chathlurol_15b46b'),
       ).message;
       setState(() {
         _errorText = message;
@@ -309,8 +307,7 @@ class _SecurityProtectionRolloutPanelState
             fontWeight: FontWeight.w700,
           ),
           decoration: InputDecoration(
-            hintText:
-                context.tr('admin_vdwarnover_2b82ce'),
+            hintText: context.tr('admin_vdwarnover_2b82ce'),
             hintStyle: SLTheme.quicksand(
               color: const Color(0xFF6F7E9E),
               fontSize: 13,
@@ -534,29 +531,25 @@ class _SecurityProtectionRolloutPanelState
         OverviewListTile(
           icon: Icons.screen_share_rounded,
           title: context.tr('admin_nuldolscre_f03866'),
-          subtitle:
-              context.tr('admin_yucungidng_c8eddc'),
+          subtitle: context.tr('admin_yucungidng_c8eddc'),
         ),
         SLSpacing.h12,
         OverviewListTile(
           icon: Icons.touch_app_rounded,
           title: context.tr('admin_nuldolover_0584c2'),
-          subtitle:
-              context.tr('admin_hirappbong_7e1e8e'),
+          subtitle: context.tr('admin_hirappbong_7e1e8e'),
         ),
         SLSpacing.h12,
         OverviewListTile(
           icon: Icons.download_done_rounded,
           title: context.tr('admin_nuldolbuil_8e87ca'),
-          subtitle:
-              context.tr('admin_yucucilibn_f0f10d'),
+          subtitle: context.tr('admin_yucucilibn_f0f10d'),
         ),
         SLSpacing.h12,
         OverviewListTile(
           icon: Icons.health_and_safety_rounded,
           title: context.tr('admin_nuldolmalw_3246e8'),
-          subtitle:
-              context.tr('admin_bongidngqu_c32dda'),
+          subtitle: context.tr('admin_bongidngqu_c32dda'),
         ),
       ],
     );
@@ -694,7 +687,9 @@ class _SecurityProtectionRolloutPanelState
                       )
                     : const Icon(Icons.save_rounded),
                 label: Text(
-                  _isSaving ? context.tr('admin_anglu_4d30b6') : context.tr('admin_lurollout_d1f7ef'),
+                  _isSaving
+                      ? context.tr('admin_anglu_4d30b6')
+                      : context.tr('admin_lurollout_d1f7ef'),
                   style: SLTheme.quicksand(
                     color: Colors.white,
                     fontSize: 14,
@@ -745,8 +740,9 @@ class _StageOptionCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color:
-              isSelected ? accent.withValues(alpha: 0.12) : const Color(0xFF0F172A),
+          color: isSelected
+              ? accent.withValues(alpha: 0.12)
+              : const Color(0xFF0F172A),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isSelected ? accent : const Color(0xFF23304B),

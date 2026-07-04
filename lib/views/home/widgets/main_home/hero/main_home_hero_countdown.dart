@@ -104,19 +104,25 @@ class HeartClipper extends CustomClipper<Path> {
     final path = Path();
     final double width = size.width;
     final double height = size.height;
-    
+
     path.moveTo(width / 2, height * 0.28);
     // Left half of the heart
     path.cubicTo(
-      width * 0.2, -height * 0.08,
-      -width * 0.08, height * 0.28,
-      width / 2, height * 0.95,
+      width * 0.2,
+      -height * 0.08,
+      -width * 0.08,
+      height * 0.28,
+      width / 2,
+      height * 0.95,
     );
     // Right half of the heart
     path.cubicTo(
-      width * 1.08, height * 0.28,
-      width * 0.8, -height * 0.08,
-      width / 2, height * 0.28,
+      width * 1.08,
+      height * 0.28,
+      width * 0.8,
+      -height * 0.08,
+      width / 2,
+      height * 0.28,
     );
     path.close();
     return path;
@@ -141,20 +147,26 @@ class HeartBorderPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final double width = size.width;
     final double height = size.height;
-    
+
     final path = Path();
     path.moveTo(width / 2, height * 0.28);
     // Left half
     path.cubicTo(
-      width * 0.2, -height * 0.08,
-      -width * 0.08, height * 0.28,
-      width / 2, height * 0.95,
+      width * 0.2,
+      -height * 0.08,
+      -width * 0.08,
+      height * 0.28,
+      width / 2,
+      height * 0.95,
     );
     // Right half
     path.cubicTo(
-      width * 1.08, height * 0.28,
-      width * 0.8, -height * 0.08,
-      width / 2, height * 0.28,
+      width * 1.08,
+      height * 0.28,
+      width * 0.8,
+      -height * 0.08,
+      width / 2,
+      height * 0.28,
     );
     path.close();
 
@@ -187,7 +199,8 @@ class HomeExplodingPhotoWidget extends StatefulWidget {
   const HomeExplodingPhotoWidget({super.key, required this.photo});
 
   @override
-  State<HomeExplodingPhotoWidget> createState() => _HomeExplodingPhotoWidgetState();
+  State<HomeExplodingPhotoWidget> createState() =>
+      _HomeExplodingPhotoWidgetState();
 }
 
 class _HomeExplodingPhotoWidgetState extends State<HomeExplodingPhotoWidget>
@@ -360,10 +373,12 @@ class _MainHomeHeroCountdownCircle extends StatefulWidget {
   });
 
   @override
-  State<_MainHomeHeroCountdownCircle> createState() => _MainHomeHeroCountdownCircleState();
+  State<_MainHomeHeroCountdownCircle> createState() =>
+      _MainHomeHeroCountdownCircleState();
 }
 
-class _MainHomeHeroCountdownCircleState extends State<_MainHomeHeroCountdownCircle> {
+class _MainHomeHeroCountdownCircleState
+    extends State<_MainHomeHeroCountdownCircle> {
   final List<HomeExplodingPhoto> _activeExplosions = [];
   List<String> _cachedPhotoUrls = [];
   bool _isFetchingPhotos = false;
@@ -374,7 +389,7 @@ class _MainHomeHeroCountdownCircleState extends State<_MainHomeHeroCountdownCirc
     try {
       final houseId = widget.state._houseId;
       if (houseId == null || houseId.isEmpty) return;
-      
+
       final firestore = FirebaseFirestore.instance;
       final List<String> urls = [];
       final Set<String> seen = {};
@@ -410,7 +425,13 @@ class _MainHomeHeroCountdownCircleState extends State<_MainHomeHeroCountdownCirc
             .get();
         for (var doc in albumSnap.docs) {
           final data = doc.data();
-          for (final key in <String>['url', 'imageUrl', 'photoUrl', 'mediaUrl', 'thumbUrl']) {
+          for (final key in <String>[
+            'url',
+            'imageUrl',
+            'photoUrl',
+            'mediaUrl',
+            'thumbUrl'
+          ]) {
             final url = (data[key] as String? ?? '').trim();
             if (url.isNotEmpty && url.startsWith('http') && seen.add(url)) {
               urls.add(url);
@@ -433,7 +454,12 @@ class _MainHomeHeroCountdownCircleState extends State<_MainHomeHeroCountdownCirc
             .get();
         for (var doc in memoriesSnap.docs) {
           final data = doc.data();
-          for (final key in <String>['url', 'imageUrl', 'photoUrl', 'mediaUrl']) {
+          for (final key in <String>[
+            'url',
+            'imageUrl',
+            'photoUrl',
+            'mediaUrl'
+          ]) {
             final url = (data[key] as String? ?? '').trim();
             if (url.isNotEmpty && url.startsWith('http') && seen.add(url)) {
               urls.add(url);
@@ -471,9 +497,11 @@ class _MainHomeHeroCountdownCircleState extends State<_MainHomeHeroCountdownCirc
           : _cachedPhotoUrls[random.nextInt(_cachedPhotoUrls.length)];
 
       // Pointing upwards and rightwards (e.g. -70 to 20 degrees) to go towards the circle center
-      final double baseAngle = (-70.0 + random.nextDouble() * 90.0) * pi / 180.0;
+      final double baseAngle =
+          (-70.0 + random.nextDouble() * 90.0) * pi / 180.0;
 
-      final double distance = 100.0 + random.nextDouble() * 120.0; // Burst distance 100 to 220 px
+      final double distance =
+          100.0 + random.nextDouble() * 120.0; // Burst distance 100 to 220 px
       final double targetX = cos(baseAngle) * distance;
       final double targetY = sin(baseAngle) * distance;
 
@@ -506,17 +534,19 @@ class _MainHomeHeroCountdownCircleState extends State<_MainHomeHeroCountdownCirc
     final transparentMode = UiPrefs.notifier.value.transparentMode;
     final countdownVisual =
         _CountdownVisualSpec.resolve(widget.countdownStyleKey, transparentMode);
-        
+
     final countdownTextColorStr = UiPrefs.notifier.value.countdownTextColor;
     Color? customTextColor;
     if (countdownTextColorStr.isNotEmpty) {
       try {
-        customTextColor = Color(int.parse(countdownTextColorStr.replaceFirst('#', '0xFF')));
+        customTextColor =
+            Color(int.parse(countdownTextColorStr.replaceFirst('#', '0xFF')));
       } catch (_) {}
     }
 
     final labelHeight = (widget.circleSize * 0.15).clamp(38.0, 64.0).toDouble();
-    final numberHeight = (widget.circleSize * 0.38).clamp(80.0, 150.0).toDouble();
+    final numberHeight =
+        (widget.circleSize * 0.38).clamp(80.0, 150.0).toDouble();
     final topLabelWidth = widget.circleSize * 0.68;
     final bottomLabelWidth = widget.circleSize * 0.64;
     final numberWidth = widget.circleSize * 0.72;
@@ -568,7 +598,8 @@ class _MainHomeHeroCountdownCircleState extends State<_MainHomeHeroCountdownCirc
                           child: RepaintBoundary(
                             child: AnimatedWaveBackground(
                               styleKey: (transparentMode ||
-                                      UiPrefs.notifier.value.fallingEffectKey == 'off' ||
+                                      UiPrefs.notifier.value.fallingEffectKey ==
+                                          'off' ||
                                       UiPrefs.notifier.value.liteMode)
                                   ? 'plain'
                                   : widget.countdownStyleKey,
@@ -586,12 +617,14 @@ class _MainHomeHeroCountdownCircleState extends State<_MainHomeHeroCountdownCirc
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Padding(
-                          padding:
-                              EdgeInsets.symmetric(horizontal: widget.circleSize * 0.16),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: widget.circleSize * 0.16),
                           child: _MainHomeHeroCountdownTapTarget(
                             circleSize: widget.circleSize,
-                            onTap: widget.isSingle ? null : widget.onEditTopLabel,
-                            onLongPress: widget.state._showCountdownQuickCustomizeSheet,
+                            onTap:
+                                widget.isSingle ? null : widget.onEditTopLabel,
+                            onLongPress:
+                                widget.state._showCountdownQuickCustomizeSheet,
                             constraints: BoxConstraints(
                               minWidth: topLabelWidth,
                               maxWidth: topLabelWidth,
@@ -604,14 +637,18 @@ class _MainHomeHeroCountdownCircleState extends State<_MainHomeHeroCountdownCirc
                                 widget.circleTopLabel,
                                 maxLines: 1,
                                 textAlign: TextAlign.center,
-                                style: widget.state._uiTextStyle(
-                                  fontSize: (widget.circleSize * 0.075).clamp(16.0, 22.0),
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.2,
-                                  color: customTextColor ?? countdownVisual.topLabelColor,
-                                ).copyWith(
-                                  shadows: countdownVisual.labelShadows,
-                                ),
+                                style: widget.state
+                                    ._uiTextStyle(
+                                      fontSize: (widget.circleSize * 0.075)
+                                          .clamp(16.0, 22.0),
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.2,
+                                      color: customTextColor ??
+                                          countdownVisual.topLabelColor,
+                                    )
+                                    .copyWith(
+                                      shadows: countdownVisual.labelShadows,
+                                    ),
                               ),
                             ),
                           ),
@@ -619,8 +656,10 @@ class _MainHomeHeroCountdownCircleState extends State<_MainHomeHeroCountdownCirc
                         SizedBox(height: topGap),
                         _MainHomeHeroCountdownTapTarget(
                           circleSize: widget.circleSize,
-                          onTap: widget.isSingle ? null : widget.onEditStartDate,
-                          onLongPress: widget.state._showCountdownQuickCustomizeSheet,
+                          onTap:
+                              widget.isSingle ? null : widget.onEditStartDate,
+                          onLongPress:
+                              widget.state._showCountdownQuickCustomizeSheet,
                           constraints: BoxConstraints(
                             minWidth: numberWidth,
                             maxWidth: numberWidth,
@@ -642,27 +681,33 @@ class _MainHomeHeroCountdownCircleState extends State<_MainHomeHeroCountdownCirc
                                 widget.circleValue,
                                 maxLines: 1,
                                 textAlign: TextAlign.center,
-                                style: widget.state._uiTextStyle(
-                                  fontSize: (widget.circleSize * 0.36).clamp(56.0, 132.0),
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                  height: 0.96,
-                                  letterSpacing: 4.0,
-                                ).copyWith(
-                                  shadows: countdownVisual.numberShadows,
-                                ),
+                                style: widget.state
+                                    ._uiTextStyle(
+                                      fontSize: (widget.circleSize * 0.36)
+                                          .clamp(56.0, 132.0),
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                      height: 0.96,
+                                      letterSpacing: 4.0,
+                                    )
+                                    .copyWith(
+                                      shadows: countdownVisual.numberShadows,
+                                    ),
                               ),
                             ),
                           ),
                         ),
                         SizedBox(height: bottomGap),
                         Padding(
-                          padding:
-                              EdgeInsets.symmetric(horizontal: widget.circleSize * 0.18),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: widget.circleSize * 0.18),
                           child: _MainHomeHeroCountdownTapTarget(
                             circleSize: widget.circleSize,
-                            onTap: widget.isSingle ? null : widget.onEditBottomLabel,
-                            onLongPress: widget.state._showCountdownQuickCustomizeSheet,
+                            onTap: widget.isSingle
+                                ? null
+                                : widget.onEditBottomLabel,
+                            onLongPress:
+                                widget.state._showCountdownQuickCustomizeSheet,
                             constraints: BoxConstraints(
                               minWidth: bottomLabelWidth,
                               maxWidth: bottomLabelWidth,
@@ -675,14 +720,18 @@ class _MainHomeHeroCountdownCircleState extends State<_MainHomeHeroCountdownCirc
                                 widget.circleBottomLabel,
                                 maxLines: 1,
                                 textAlign: TextAlign.center,
-                                style: widget.state._uiTextStyle(
-                                  fontSize: (widget.circleSize * 0.082).clamp(17.0, 24.0),
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.1,
-                                  color: customTextColor ?? countdownVisual.bottomLabelColor,
-                                ).copyWith(
-                                  shadows: countdownVisual.labelShadows,
-                                ),
+                                style: widget.state
+                                    ._uiTextStyle(
+                                      fontSize: (widget.circleSize * 0.082)
+                                          .clamp(17.0, 24.0),
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.1,
+                                      color: customTextColor ??
+                                          countdownVisual.bottomLabelColor,
+                                    )
+                                    .copyWith(
+                                      shadows: countdownVisual.labelShadows,
+                                    ),
                               ),
                             ),
                           ),
@@ -717,7 +766,8 @@ class _MainHomeHeroCountdownCircleState extends State<_MainHomeHeroCountdownCirc
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
-                    _triggerExplosion(Offset(widget.circleSize * 0.1, widget.circleSize * 1.1));
+                    _triggerExplosion(Offset(
+                        widget.circleSize * 0.1, widget.circleSize * 1.1));
                   },
                   child: Icon(
                     Icons.favorite_rounded,
@@ -737,8 +787,6 @@ class _MainHomeHeroCountdownCircleState extends State<_MainHomeHeroCountdownCirc
     );
   }
 }
-
-
 
 class _MainHomeHeroCountdownTapTarget extends StatelessWidget {
   final double circleSize;

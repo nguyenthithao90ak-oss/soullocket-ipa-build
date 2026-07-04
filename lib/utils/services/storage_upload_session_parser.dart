@@ -33,7 +33,8 @@ Map<String, dynamic> parseFinalizeResponse(
   Object? data, {
   required String label,
 }) {
-  final normalizedLabel = label.trim().isEmpty ? 'hoàn tất tải lên' : label.trim();
+  final normalizedLabel =
+      label.trim().isEmpty ? 'hoàn tất tải lên' : label.trim();
   if (data is! Map) {
     throw Exception('Phản hồi $normalizedLabel không hợp lệ.');
   }

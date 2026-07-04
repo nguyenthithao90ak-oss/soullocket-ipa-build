@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:math';
 
@@ -252,7 +251,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (role == 'user1' || role == 'user2') {
       await prefs.setString('il_role', role!);
-      await SecureStorageService.instance.write(SecureStorageService.keyRole, role);
+      await SecureStorageService.instance
+          .write(SecureStorageService.keyRole, role);
     }
 
     final shouldSaveRecovery = _showSecurityQuestion &&
@@ -324,7 +324,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('il_role', role);
-    await SecureStorageService.instance.write(SecureStorageService.keyRole, role);
+    await SecureStorageService.instance
+        .write(SecureStorageService.keyRole, role);
     await _authService.savePendingRelationshipModeForCurrentUser(
       relationshipMode,
     );
@@ -488,7 +489,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (sessionRole == 'user1' || sessionRole == 'user2') {
           await prefs.setString('il_role', sessionRole!);
-          await SecureStorageService.instance.write(SecureStorageService.keyRole, sessionRole);
+          await SecureStorageService.instance
+              .write(SecureStorageService.keyRole, sessionRole);
         }
 
         final user = FirebaseAuth.instance.currentUser;
@@ -500,8 +502,10 @@ class _LoginScreenState extends State<LoginScreen> {
             if (houseId != null && houseId.isNotEmpty) {
               await prefs.setString('il_house_id', houseId);
               await prefs.setString('il_auth_uid', user.uid);
-              await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
-              await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, user.uid);
+              await SecureStorageService.instance
+                  .write(SecureStorageService.keyHouseId, houseId);
+              await SecureStorageService.instance
+                  .write(SecureStorageService.keyAuthUid, user.uid);
             }
           } catch (_) {}
         }
@@ -742,7 +746,8 @@ class _LoginScreenState extends State<LoginScreen> {
       final prefs = await SharedPreferences.getInstance();
       if (storedRole == 'user1' || storedRole == 'user2') {
         await prefs.setString('il_role', storedRole!);
-        await SecureStorageService.instance.write(SecureStorageService.keyRole, storedRole);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyRole, storedRole);
       }
 
       final user = result.user;
@@ -754,8 +759,10 @@ class _LoginScreenState extends State<LoginScreen> {
           if (houseId != null && houseId.isNotEmpty) {
             await prefs.setString('il_house_id', houseId);
             await prefs.setString('il_auth_uid', user.uid);
-            await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
-            await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, user.uid);
+            await SecureStorageService.instance
+                .write(SecureStorageService.keyHouseId, houseId);
+            await SecureStorageService.instance
+                .write(SecureStorageService.keyAuthUid, user.uid);
           }
         } catch (_) {}
       }

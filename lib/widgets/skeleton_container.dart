@@ -59,7 +59,7 @@ class _SkeletonContainerState extends State<SkeletonContainer>
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     )..repeat(reverse: true);
-    
+
     _initAnimation();
   }
 
@@ -73,7 +73,7 @@ class _SkeletonContainerState extends State<SkeletonContainer>
   @override
   void didUpdateWidget(SkeletonContainer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.baseColor != oldWidget.baseColor || 
+    if (widget.baseColor != oldWidget.baseColor ||
         widget.highlightColor != oldWidget.highlightColor) {
       _initAnimation();
     }

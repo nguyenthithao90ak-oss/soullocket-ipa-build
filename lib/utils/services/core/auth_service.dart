@@ -7,7 +7,8 @@ import 'package:soullocket_app/utils/services/auth/auth_house_context_service.da
 import 'package:soullocket_app/utils/services/auth/play_integrity_service.dart';
 import 'package:soullocket_app/utils/services/auth/auth_recovery_service.dart';
 import 'package:soullocket_app/utils/services/auth/auth_sign_in_service.dart';
-import 'package:soullocket_app/utils/services/auth/auth_support.dart' as auth_support;
+import 'package:soullocket_app/utils/services/auth/auth_support.dart'
+    as auth_support;
 import 'package:soullocket_app/utils/services/consent_service.dart';
 
 export 'package:soullocket_app/utils/services/auth/play_integrity_service.dart'

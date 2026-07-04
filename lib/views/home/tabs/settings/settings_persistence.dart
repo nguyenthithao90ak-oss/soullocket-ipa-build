@@ -44,7 +44,9 @@ extension _SettingsTabPersistence on _SettingsTabState {
     _uiPrefsDebounceTimer?.cancel();
     if (mounted) {
       _uiPrefsDebounceTimer = Timer(
-        syncPreview ? const Duration(milliseconds: 1) : const Duration(milliseconds: 80),
+        syncPreview
+            ? const Duration(milliseconds: 1)
+            : const Duration(milliseconds: 80),
         () {
           if (!mounted) return;
           _applyThemeDraftToUiPrefsPreview();
@@ -343,12 +345,10 @@ extension _SettingsTabPersistence on _SettingsTabState {
       final vipActive = access.isVip;
       final planCode = access.planId;
       final isLifetimeVip = access.isLifetime;
-      final planLabel = vipActive
-          ? _labelForVipPlan(planCode)
-          : basicAccountLabel;
-      final expiryLabel = vipActive
-          ? _formatVipExpiry(access.expiresAtMs)
-          : nonVipExpiryLabel;
+      final planLabel =
+          vipActive ? _labelForVipPlan(planCode) : basicAccountLabel;
+      final expiryLabel =
+          vipActive ? _formatVipExpiry(access.expiresAtMs) : nonVipExpiryLabel;
 
       if (mounted) {
         setState(() {
@@ -389,9 +389,8 @@ extension _SettingsTabPersistence on _SettingsTabState {
 
           vipActive = vip['isVip'] == true;
           planLabel = _labelForVipPlan(vip['plan']?.toString());
-          expiryLabel = vipActive
-              ? activatedByPartnerLabel
-              : inactiveVipExpiryLabel;
+          expiryLabel =
+              vipActive ? activatedByPartnerLabel : inactiveVipExpiryLabel;
         }
         if (!vipActive) {
           final legacyProSnap = await _dbRef
@@ -483,22 +482,27 @@ extension _SettingsTabPersistence on _SettingsTabState {
 
     if (daysLeft > 0) {
       return hoursLeft > 0
-          ? context.tr('vip_remaining_days_hours')
+          ? context
+              .tr('vip_remaining_days_hours')
               .replaceAll('{days}', daysLeft.toString())
               .replaceAll('{hours}', hoursLeft.toString())
-          : context.tr('vip_remaining_days')
+          : context
+              .tr('vip_remaining_days')
               .replaceAll('{days}', daysLeft.toString());
     }
     if (hoursLeft > 0) {
       return minutesLeft > 0
-          ? context.tr('vip_remaining_hours_minutes')
+          ? context
+              .tr('vip_remaining_hours_minutes')
               .replaceAll('{hours}', hoursLeft.toString())
               .replaceAll('{minutes}', minutesLeft.toString())
-          : context.tr('vip_remaining_hours')
+          : context
+              .tr('vip_remaining_hours')
               .replaceAll('{hours}', hoursLeft.toString());
     }
     if (minutesLeft > 0) {
-      return context.tr('vip_remaining_minutes')
+      return context
+          .tr('vip_remaining_minutes')
           .replaceAll('{minutes}', minutesLeft.toString());
     }
     return context.tr('home_sphthnhmna_470d6c');
@@ -562,9 +566,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
         if (vipDetected) {
           if (!mounted) return;
           _showToast(
-            wasVipActive
-                ? activeVipMsg
-                : restoreSuccessMsg,
+            wasVipActive ? activeVipMsg : restoreSuccessMsg,
             success: true,
           );
         } else {
@@ -598,8 +600,14 @@ extension _SettingsTabPersistence on _SettingsTabState {
       final currentUser = _auth.currentUser;
       final security = await _authService.getHouseSecurityData(_houseId!);
       final snaps = await Future.wait([
-        _dbRef.child('houses/$_houseId/security').get().timeout(const Duration(seconds: 3)),
-        _dbRef.child('houses/$_houseId/settings').get().timeout(const Duration(seconds: 3)),
+        _dbRef
+            .child('houses/$_houseId/security')
+            .get()
+            .timeout(const Duration(seconds: 3)),
+        _dbRef
+            .child('houses/$_houseId/settings')
+            .get()
+            .timeout(const Duration(seconds: 3)),
       ]);
       final securitySnap = snaps[0];
       final settingsSnap = snaps[1];
@@ -737,8 +745,8 @@ extension _SettingsTabPersistence on _SettingsTabState {
 
     if (!_isSupportedSettingsEmail(normalized)) {
       _showToast(
-          supportedEmailsOnlyMsg
-              .replaceAll('{domains}', _settingsSupportedEmailDomainsLabel()),
+          supportedEmailsOnlyMsg.replaceAll(
+              '{domains}', _settingsSupportedEmailDomainsLabel()),
           success: false);
       return;
     }

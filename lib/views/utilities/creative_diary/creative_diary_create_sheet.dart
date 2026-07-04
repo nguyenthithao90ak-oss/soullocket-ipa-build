@@ -95,7 +95,8 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
                         onPressed: _isSaving
                             ? null
                             : () async {
-                                final fallbackPrompt = context.tr('util_hythmmtchi_6eddec');
+                                final fallbackPrompt =
+                                    context.tr('util_hythmmtchi_6eddec');
                                 final navigator = Navigator.of(sheetContext);
                                 final title = titleCtrl.text.trim();
                                 final memory = memoryCtrl.text.trim();
@@ -113,8 +114,8 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
                                   var imageUrl = '';
                                   final image = selectedImage;
                                   if (image != null) {
-                                    final upload = await _storageService
-                                        .uploadGiftImage(
+                                    final upload =
+                                        await _storageService.uploadGiftImage(
                                       _houseId!,
                                       image,
                                       minWidth: 1440,
@@ -169,7 +170,9 @@ extension _CreativeDiaryCreateSheetPart on _CreativeDiaryScreenState {
                           ),
                         ),
                         child: Text(
-                          _isSaving ? context.tr('util_anglu_4d30b6') : context.tr('util_luvostay_0f0952'),
+                          _isSaving
+                              ? context.tr('util_anglu_4d30b6')
+                              : context.tr('util_luvostay_0f0952'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w800,
                             fontSize: 14,
@@ -237,7 +240,9 @@ class _DiaryImagePickerTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    image == null ? context.tr('util_nhnhkm_035065') : context.tr('util_chnnh_d05e7e'),
+                    image == null
+                        ? context.tr('util_nhnhkm_035065')
+                        : context.tr('util_chnnh_d05e7e'),
                     style: SLTheme.quicksand(
                       fontSize: 13,
                       fontWeight: FontWeight.w900,

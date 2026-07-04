@@ -21,35 +21,28 @@ final List<TarotCard> _allCards = [
   TarotCard(
       name: 'The Magician',
       symbol: '✨',
-      uprightMeaning:
-          L10nService().translate('util_bnckhnngbi_222433'),
+      uprightMeaning: L10nService().translate('util_bnckhnngbi_222433'),
       reversedMeaning: L10nService().translate('util_nnglngangb_eb5169')),
   TarotCard(
       name: 'The High Priestess',
       symbol: '🔮',
-      uprightMeaning:
-          L10nService().translate('util_trcgicrtmn_b7f63e'),
+      uprightMeaning: L10nService().translate('util_trcgicrtmn_b7f63e'),
       reversedMeaning: L10nService().translate('util_bnangbquat_917c34')),
   TarotCard(
       name: 'The Empress',
       symbol: '🌷',
       uprightMeaning: L10nService().translate('util_nnglngnuid_fe7eee'),
-      reversedMeaning:
-          L10nService().translate('util_schmscangm_1aee7f')),
+      reversedMeaning: L10nService().translate('util_schmscangm_1aee7f')),
   TarotCard(
       name: 'The Emperor',
       symbol: '🛡️',
-      uprightMeaning:
-          L10nService().translate('util_srrngranhg_ff9c12'),
-      reversedMeaning:
-          L10nService().translate('util_kimsotquta_562f9a')),
+      uprightMeaning: L10nService().translate('util_srrngranhg_ff9c12'),
+      reversedMeaning: L10nService().translate('util_kimsotquta_562f9a')),
   TarotCard(
       name: 'The Lovers',
       symbol: '💞',
-      uprightMeaning:
-          L10nService().translate('util_tnhcmlachn_c55c2e'),
-      reversedMeaning:
-          L10nService().translate('util_mtcnbnghoc_8bd0c6')),
+      uprightMeaning: L10nService().translate('util_tnhcmlachn_c55c2e'),
+      reversedMeaning: L10nService().translate('util_mtcnbnghoc_8bd0c6')),
   TarotCard(
       name: 'The Chariot',
       symbol: '🏹',
@@ -58,8 +51,7 @@ final List<TarotCard> _allCards = [
   TarotCard(
       name: 'Strength',
       symbol: '🦁',
-      uprightMeaning:
-          L10nService().translate('util_sdummnhbit_22f465'),
+      uprightMeaning: L10nService().translate('util_sdummnhbit_22f465'),
       reversedMeaning: L10nService().translate('util_btananglmb_fb948e')),
   TarotCard(
       name: 'The Hermit',
@@ -84,8 +76,7 @@ final List<TarotCard> _allCards = [
   TarotCard(
       name: 'Death',
       symbol: '🦋',
-      uprightMeaning:
-          L10nService().translate('util_mtlpcmxcca_f51277'),
+      uprightMeaning: L10nService().translate('util_mtlpcmxcca_f51277'),
       reversedMeaning: L10nService().translate('util_bnangnumti_7d7304')),
   TarotCard(
       name: 'Temperance',
@@ -95,8 +86,7 @@ final List<TarotCard> _allCards = [
   TarotCard(
       name: 'The Devil',
       symbol: '⛓️',
-      uprightMeaning:
-          L10nService().translate('util_smnhdnhmch_b6b4b3'),
+      uprightMeaning: L10nService().translate('util_smnhdnhmch_b6b4b3'),
       reversedMeaning: L10nService().translate('util_bnangcchig_3dfb60')),
   TarotCard(
       name: 'The Tower',
@@ -117,8 +107,7 @@ final List<TarotCard> _allCards = [
       name: 'The Sun',
       symbol: '🌞',
       uprightMeaning: L10nService().translate('util_ssngrmpvcm_2cea33'),
-      reversedMeaning:
-          L10nService().translate('util_nimvuiangb_a50170')),
+      reversedMeaning: L10nService().translate('util_nimvuiangb_a50170')),
   TarotCard(
       name: 'Judgement',
       symbol: '🎺',
@@ -1609,4 +1598,3 @@ class _TarotScreenState extends State<TarotScreen>
     return const [Color(0xFF5D4BFF), Color(0xFFFF5D8F)];
   }
 }
-

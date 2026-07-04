@@ -1,4 +1,3 @@
-
 part of '../../main_home_tab.dart';
 
 extension _MainHomeTabDialogs on _MainHomeTabState {
@@ -11,26 +10,22 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
       (
         icon: Icons.favorite_rounded,
         title: context.tr('home_chomngbnnv_7ffc51'),
-        body:
-            context.tr('home_ylhngdnnha_b558ac'),
+        body: context.tr('home_ylhngdnnha_b558ac'),
       ),
       (
         icon: Icons.track_changes_rounded,
         title: context.tr('home_vngmngyyu_68e244'),
-        body:
-            context.tr('home_vngckhoanh_623126'),
+        body: context.tr('home_vngckhoanh_623126'),
       ),
       (
         icon: Icons.edit_calendar_rounded,
         title: context.tr('home_bmvochnhch_0d6ef0'),
-        body:
-            context.tr('home_bmsngychnh_cf2261'),
+        body: context.tr('home_bmsngychnh_cf2261'),
       ),
       (
         icon: Icons.apps_rounded,
         title: context.tr('home_cckhuvcchn_6df4cf'),
-        body:
-            context.tr('home_nhtkalbumk_6c939f'),
+        body: context.tr('home_nhtkalbumk_6c939f'),
       ),
     ];
     await showDialog<void>(
@@ -342,8 +337,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                               maxWidth: 404,
                               minHeight: 224,
                             ),
-                            margin:
-                                const EdgeInsets.symmetric(horizontal: 16),
+                            margin: const EdgeInsets.symmetric(horizontal: 16),
                             padding: const EdgeInsets.fromLTRB(
                               20,
                               20,
@@ -374,10 +368,8 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                               children: [
                                 GridView.builder(
                                   shrinkWrap: true,
-                                  physics:
-                                      const NeverScrollableScrollPhysics(),
-                                  itemCount:
-                                      _interactionDragMenuOptions.length,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: _interactionDragMenuOptions.length,
                                   gridDelegate:
                                       const SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: 4,
@@ -789,7 +781,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           startCooldown: startCooldown,
         );
         if (!mounted) return;
-        
+
         // Optimistic UI update
         _safeSetState(() {
           if (_houseSettings != null) {
@@ -818,9 +810,12 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
     if (_houseId == null) return;
 
     final controller = TextEditingController(text: currentLabel);
-    final dialogTitle =
-        editTopLabel ? context.tr('home_ichphatrn_2b9989') : context.tr('home_ichphadi_5a1c20');
-    final hintText = editTopLabel ? context.tr('home_vdbnnhau_998f24') : context.tr('home_vdngyyu_f3c8aa');
+    final dialogTitle = editTopLabel
+        ? context.tr('home_ichphatrn_2b9989')
+        : context.tr('home_ichphadi_5a1c20');
+    final hintText = editTopLabel
+        ? context.tr('home_vdbnnhau_998f24')
+        : context.tr('home_vdngyyu_f3c8aa');
 
     showDialog<String>(
       context: context,

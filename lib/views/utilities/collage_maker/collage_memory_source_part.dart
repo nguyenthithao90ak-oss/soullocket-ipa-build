@@ -7,7 +7,6 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
     return raw?.toString().trim() ?? '';
   }
 
-
   Map<String, dynamic>? _normalizePhotoItem(Map<String, dynamic> item) {
     final rawUrl = item['url'] ?? item['imageUrl'] ?? item['downloadUrl'];
     if (rawUrl is! String || rawUrl.trim().isEmpty) {
@@ -120,7 +119,8 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
         _scheduleAutoGenerate(immediate: true);
       }
     } catch (e) {
-      debugPrint('Error fetching memory photos: ${AppErrorMapper.resolve(e).message}');
+      debugPrint(
+          'Error fetching memory photos: ${AppErrorMapper.resolve(e).message}');
     }
   }
 
@@ -244,7 +244,8 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
                   child: Column(
                     children: [
                       Container(
-                        width: 40, height: 4,
+                        width: 40,
+                        height: 4,
                         decoration: BoxDecoration(
                           color: Colors.grey.shade300,
                           borderRadius: BorderRadius.circular(2),
@@ -272,7 +273,8 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
                       Expanded(
                         child: GridView.builder(
                           controller: scrollController,
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: compact ? 3 : 4,
                             crossAxisSpacing: 8,
                             mainAxisSpacing: 8,
@@ -298,13 +300,16 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(14),
                                   border: Border.all(
-                                    color: isSelected ? _paperRoseDeep : _paperLine,
+                                    color: isSelected
+                                        ? _paperRoseDeep
+                                        : _paperLine,
                                     width: isSelected ? 2.5 : 1,
                                   ),
                                   boxShadow: isSelected
                                       ? [
                                           BoxShadow(
-                                            color: _paperRoseDeep.withValues(alpha: 0.25),
+                                            color: _paperRoseDeep.withValues(
+                                                alpha: 0.25),
                                             blurRadius: 12,
                                           ),
                                         ]
@@ -322,7 +327,8 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
                                       ),
                                       if (isSelected)
                                         Positioned(
-                                          top: 4, right: 4,
+                                          top: 4,
+                                          right: 4,
                                           child: Container(
                                             padding: const EdgeInsets.all(4),
                                             decoration: const BoxDecoration(
@@ -350,8 +356,8 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
                               : () {
                                   Navigator.pop(ctx);
                                   for (final url in selectedUrls) {
-                                    final existing = _deviceFiles.any(
-                                        (f) => f.path == url);
+                                    final existing =
+                                        _deviceFiles.any((f) => f.path == url);
                                     if (!existing) {
                                       _deviceFiles.add(XFile(url));
                                     }

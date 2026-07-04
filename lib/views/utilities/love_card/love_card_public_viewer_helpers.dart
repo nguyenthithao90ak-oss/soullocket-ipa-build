@@ -50,7 +50,11 @@ class _LoveCardViewerTheme {
           tearHint: L10nService().translate('util_koxdiquvxe_a06353'),
           signatureFallback: L10nService().translate('util_chcmngsinh_1db118'),
           effectLabel: L10nService().translate('util_phogiybngn_b5a4e9'),
-          background: const [Color(0xFFFAD0C4), Color(0xFFFFD1FF), Color(0xFFFFF0F5)],
+          background: const [
+            Color(0xFFFAD0C4),
+            Color(0xFFFFD1FF),
+            Color(0xFFFFF0F5)
+          ],
           accent: const Color(0xFFFF7DB0),
           envelope: const Color(0xFFFFD8E5),
           envelopeLight: const Color(0xFFFFF2F6),
@@ -70,7 +74,11 @@ class _LoveCardViewerTheme {
           tearHint: L10nService().translate('util_koxvlractm_cfd029'),
           signatureFallback: L10nService().translate('util_mtngyngnhc_02e59f'),
           effectLabel: L10nService().translate('util_hoquangkc_1a4d18'),
-          background: const [Color(0xFFA1C4FD), Color(0xFFC2E9FB), Color(0xFFE6F3FF)],
+          background: const [
+            Color(0xFFA1C4FD),
+            Color(0xFFC2E9FB),
+            Color(0xFFE6F3FF)
+          ],
           accent: const Color(0xFF6A9DFE),
           envelope: const Color(0xFFCCE4FF),
           envelopeLight: const Color(0xFFEDF6FF),
@@ -84,14 +92,17 @@ class _LoveCardViewerTheme {
       case 'miss':
         return _LoveCardViewerTheme(
           badge: L10nService().translate('util_nhnhau_5dc5c1'),
-          headline:
-              L10nService().translate('util_linhthngxu_de9d2c'),
+          headline: L10nService().translate('util_linhthngxu_de9d2c'),
           headerTitle: 'Miss You Card',
           openHint: L10nService().translate('util_chmmlinhth_3f9037'),
           tearHint: L10nService().translate('util_koxdigiyvc_ae668f'),
           signatureFallback: L10nService().translate('util_nhbnnhiulm_fcda3f'),
           effectLabel: L10nService().translate('util_msaodum_19d800'),
-          background: const [Color(0xFFBDB2FF), Color(0xFFFFC6FF), Color(0xFFFFF0FF)],
+          background: const [
+            Color(0xFFBDB2FF),
+            Color(0xFFFFC6FF),
+            Color(0xFFFFF0FF)
+          ],
           accent: const Color(0xFF8B5CF6),
           envelope: const Color(0xFFE8D8FF),
           envelopeLight: const Color(0xFFF7F3FF),
@@ -111,7 +122,11 @@ class _LoveCardViewerTheme {
           tearHint: L10nService().translate('util_koxdigiyvl_f36b97'),
           signatureFallback: L10nService().translate('util_tngilunnhb_c60ef5'),
           effectLabel: L10nService().translate('util_tritimlpln_02cb79'),
-          background: const [Color(0xFFFF8A9A), Color(0xFFFFB7B2), Color(0xFFFFF1F2)],
+          background: const [
+            Color(0xFFFF8A9A),
+            Color(0xFFFFB7B2),
+            Color(0xFFFFF1F2)
+          ],
           accent: const Color(0xFFFF5E8B),
           envelope: const Color(0xFFFFD5DD),
           envelopeLight: const Color(0xFFFFF0F3),
@@ -627,7 +642,8 @@ class _ThemeAmbientPainter extends CustomPainter {
             Offset(x, y),
             Size(i.isEven ? 12 : 8, i.isEven ? 4 : 8),
             (i.isEven ? 0.42 : -0.52) + (i * 0.03),
-            Color.lerp(accent, softAccent, i / 8)!.withValues(alpha: 0.28 * reveal),
+            Color.lerp(accent, softAccent, i / 8)!
+                .withValues(alpha: 0.28 * reveal),
           );
         }
         break;

@@ -316,8 +316,10 @@ extension _SettingsTabShell on _SettingsTabState {
                                         _buildActionBtn(
                                           icon: Icons.swap_horiz_rounded,
                                           label: _activeRoleKey == 'user1'
-                                              ? context.tr('settings_swap_role_to_female')
-                                              : context.tr('settings_swap_role_to_male'),
+                                              ? context.tr(
+                                                  'settings_swap_role_to_female')
+                                              : context.tr(
+                                                  'settings_swap_role_to_male'),
                                           gradient: const [
                                             Color(0xFF42A5F5),
                                             Color(0xFF1E88E5),
@@ -362,7 +364,8 @@ extension _SettingsTabShell on _SettingsTabState {
                                       const SizedBox(height: 12),
                                       _buildActionBtn(
                                         icon: Icons.delete_forever_rounded,
-                                        label: context.tr('settings_delete_account_data'),
+                                        label: context
+                                            .tr('settings_delete_account_data'),
                                         gradient: const [
                                           Color(0xFFB71C1C),
                                           Color(0xFF7F0000),
@@ -393,14 +396,17 @@ extension _SettingsTabShell on _SettingsTabState {
             ),
           ),
         ),
-],
+      ],
     );
   }
 
   Widget _buildSettingsHeader() {
     final uiState = UiPrefs.notifier.value;
-    final isDark = uiState.themeKey == 'theme-night' || uiState.themeKey == 'theme-dark' || uiState.themeKey == 'theme-true-black';
-    final headerBgColor = (isDark ? Colors.black : _kSettingsHeaderBg).withValues(alpha: 0.65);
+    final isDark = uiState.themeKey == 'theme-night' ||
+        uiState.themeKey == 'theme-dark' ||
+        uiState.themeKey == 'theme-true-black';
+    final headerBgColor =
+        (isDark ? Colors.black : _kSettingsHeaderBg).withValues(alpha: 0.65);
 
     return RepaintBoundary(
       child: ClipRect(
@@ -432,59 +438,60 @@ extension _SettingsTabShell on _SettingsTabState {
               ),
             ),
             child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: _kSettingsHeaderSurface,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: _kSettingsHeaderBorder,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: _kSettingsHeaderSurface,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: _kSettingsHeaderBorder,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new,
+                      color: SLColors.primaryActive,
+                      size: 15,
+                    ),
                   ),
-                ],
-              ),
-              child: const Icon(
-                Icons.arrow_back_ios_new,
-                color: SLColors.primaryActive,
-                size: 15,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: SLTheme.titleGradient(context.tr('settings'), fontSize: 18),
-          ),
-          _buildHeaderAction(
-            icon: Icons.search_rounded,
-            onTap: () {
-              final houseId = _houseId?.trim() ?? '';
-              if (houseId.isEmpty) {
-                return;
-              }
-              slPush(
-                context,
-                GlobalSearchScreen(
-                  houseId: houseId,
-                  relationshipMode: _relationshipMode,
-                  allowedUtilityIds: _settingsSearchableUtilityIds(),
-                  onResultSelected: (result) async {
-                    Navigator.of(context).pop();
-                    await _openSearchResultFromSettings(result);
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: SLTheme.titleGradient(context.tr('settings'),
+                      fontSize: 18),
+                ),
+                _buildHeaderAction(
+                  icon: Icons.search_rounded,
+                  onTap: () {
+                    final houseId = _houseId?.trim() ?? '';
+                    if (houseId.isEmpty) {
+                      return;
+                    }
+                    slPush(
+                      context,
+                      GlobalSearchScreen(
+                        houseId: houseId,
+                        relationshipMode: _relationshipMode,
+                        allowedUtilityIds: _settingsSearchableUtilityIds(),
+                        onResultSelected: (result) async {
+                          Navigator.of(context).pop();
+                          await _openSearchResultFromSettings(result);
+                        },
+                      ),
+                    );
                   },
                 ),
-              );
-            },
-          ),
-        ],
+              ],
             ),
           ),
         ),
@@ -573,7 +580,8 @@ extension _SettingsTabShell on _SettingsTabState {
           Icons.schedule_rounded,
         ],
         label: '${context.tr('settings_notifications_label')} & Tương tác',
-        desc: 'Quản lý thông báo, lời nhắc kỷ niệm và cài đặt hiển thị thời tiết, đồng hồ, trạng thái hoạt động.',
+        desc:
+            'Quản lý thông báo, lời nhắc kỷ niệm và cài đặt hiển thị thời tiết, đồng hồ, trạng thái hoạt động.',
         gradient: const [Color(0xFFDFF3E2), Color(0xFFA8D9B0)],
         border: const Color(0xFFA4D7A9),
         textColor: const Color(0xFF2F8A48),
@@ -597,10 +605,12 @@ extension _SettingsTabShell on _SettingsTabState {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
-        children: cards.map((card) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: card,
-        )).toList(),
+        children: cards
+            .map((card) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: card,
+                ))
+            .toList(),
       ),
     );
   }
@@ -704,8 +714,7 @@ extension _SettingsTabShell on _SettingsTabState {
                         child: RepaintBoundary(
                           child: SingleChildScrollView(
                             physics: const ClampingScrollPhysics(),
-                            padding:
-                                const EdgeInsets.only(top: 0, bottom: 24),
+                            padding: const EdgeInsets.only(top: 0, bottom: 24),
                             child: _buildStandalonePanelContent(sectionId),
                           ),
                         ),

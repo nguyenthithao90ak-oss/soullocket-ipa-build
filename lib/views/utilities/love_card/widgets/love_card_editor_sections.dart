@@ -69,7 +69,8 @@ class _LoveCardCreateView extends StatelessWidget {
                     children: [
                       Container(
                         margin: const EdgeInsets.only(left: 4, bottom: 6),
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.amber.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
@@ -85,7 +86,8 @@ class _LoveCardCreateView extends StatelessWidget {
                       ),
                       RepaintBoundary(
                         child: GestureDetector(
-                          onTap: () => state._showFullScreenPreview(context, theme, colors),
+                          onTap: () => state._showFullScreenPreview(
+                              context, theme, colors),
                           child: _LoveCardPreviewPanel(
                             state: state,
                             theme: theme,
@@ -161,7 +163,8 @@ class _LoveCardCreateStickyFooter extends StatelessWidget {
           colors: [
             const Color(0x00FFFFFF),
             colors.last.withValues(alpha: 0.82),
-            Color.lerp(colors.last, colors.first, 0.18)!.withValues(alpha: 0.98),
+            Color.lerp(colors.last, colors.first, 0.18)!
+                .withValues(alpha: 0.98),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -291,8 +294,10 @@ class _LoveCardThemePicker extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      themeColors.first.withValues(alpha: isSelected ? 0.92 : 0.58),
-                      themeColors.last.withValues(alpha: isSelected ? 0.88 : 0.46),
+                      themeColors.first
+                          .withValues(alpha: isSelected ? 0.92 : 0.58),
+                      themeColors.last
+                          .withValues(alpha: isSelected ? 0.88 : 0.46),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -1096,7 +1101,10 @@ class _LoveCardComposerPanel extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [colors.first.withValues(alpha: 0.30), colors.last.withValues(alpha: 0.15)],
+                    colors: [
+                      colors.first.withValues(alpha: 0.30),
+                      colors.last.withValues(alpha: 0.15)
+                    ],
                   ),
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -1118,7 +1126,10 @@ class _LoveCardComposerPanel extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.82),
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
-              shadows: [Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 4)],
+              shadows: [
+                Shadow(
+                    color: Colors.black.withValues(alpha: 0.3), blurRadius: 4)
+              ],
             ),
           ),
           const SizedBox(height: 14),
@@ -1247,79 +1258,79 @@ class _LoveCardMetaFieldState extends State<_LoveCardMetaField> {
                   ]
                 : null,
           ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                child: Icon(
-                  widget.icon,
-                  color: _isFocused
-                      ? primaryColor
-                      : Colors.white.withValues(alpha: 0.7),
-                  size: 14,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      widget.icon,
+                      color: _isFocused
+                          ? primaryColor
+                          : Colors.white.withValues(alpha: 0.7),
+                      size: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 200),
+                      style: SLTheme.quicksand(
+                        color: _isFocused
+                            ? primaryColor.withValues(alpha: 0.95)
+                            : Colors.white.withValues(alpha: 0.7),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                      child: Text(widget.label),
+                    ),
+                  ),
+                  if (_isFocused)
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: primaryColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              TextField(
+                controller: widget.controller,
+                focusNode: _focusNode,
+                minLines: widget.minLines,
+                maxLines: widget.maxLines,
+                maxLength: widget.maxLength,
+                cursorColor: primaryColor,
+                onChanged: widget.onChanged,
+                textAlignVertical: TextAlignVertical.center,
+                style: SLTheme.quicksand(
+                  color: Colors.white,
+                  fontSize: 15,
+                  height: 1.35,
+                  fontWeight: FontWeight.w800,
+                ),
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: widget.hintText,
+                  hintStyle: SLTheme.quicksand(
+                    color: Colors.white.withValues(alpha: 0.36),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  border: InputBorder.none,
+                  counterText: '',
+                  contentPadding: const EdgeInsets.symmetric(vertical: 6),
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 200),
-                  style: SLTheme.quicksand(
-                    color: _isFocused
-                        ? primaryColor.withValues(alpha: 0.95)
-                        : Colors.white.withValues(alpha: 0.7),
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w800,
-                  ),
-                  child: Text(widget.label),
-                ),
-              ),
-              if (_isFocused)
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: primaryColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
             ],
           ),
-          const SizedBox(height: 2),
-          TextField(
-            controller: widget.controller,
-            focusNode: _focusNode,
-            minLines: widget.minLines,
-            maxLines: widget.maxLines,
-            maxLength: widget.maxLength,
-            cursorColor: primaryColor,
-            onChanged: widget.onChanged,
-            textAlignVertical: TextAlignVertical.center,
-            style: SLTheme.quicksand(
-              color: Colors.white,
-              fontSize: 15,
-              height: 1.35,
-              fontWeight: FontWeight.w800,
-            ),
-            decoration: InputDecoration(
-              isDense: true,
-              hintText: widget.hintText,
-              hintStyle: SLTheme.quicksand(
-                color: Colors.white.withValues(alpha: 0.36),
-                fontWeight: FontWeight.w600,
-              ),
-              border: InputBorder.none,
-              counterText: '',
-              contentPadding: const EdgeInsets.symmetric(vertical: 6),
-            ),
-          ),
-        ],
-      ),
-      ),
+        ),
       ),
     );
   }
@@ -1358,7 +1369,8 @@ class _LoveCardContentEditorState extends State<_LoveCardContentEditor>
   @override
   void initState() {
     super.initState();
-    _focusNode.addListener(() => setState(() => _isFocused = _focusNode.hasFocus));
+    _focusNode
+        .addListener(() => setState(() => _isFocused = _focusNode.hasFocus));
     _glowCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),

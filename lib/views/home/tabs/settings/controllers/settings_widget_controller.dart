@@ -42,7 +42,8 @@ class SettingsWidgetController {
       draft.draftWidgetThemeKey ?? 'pink',
     );
     await prefs.setString('il_widget_style_$accountKey', draft.widgetStyleKey);
-    await prefs.setBool('il_widget_show_diary_$accountKey', draft.showDiaryOnWidget);
+    await prefs.setBool(
+        'il_widget_show_diary_$accountKey', draft.showDiaryOnWidget);
     await prefs.setBool(
       'il_widget_heart_animated_$accountKey',
       draft.widgetHeartAnimated,

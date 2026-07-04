@@ -262,7 +262,8 @@ class _CommentSheetState extends State<_CommentSheet> {
   Widget _buildCommentItem(Map<String, dynamic> c) {
     final authorId = c['author_id']?.toString() ?? '';
     final authorAvt = c['author_avt']?.toString() ?? '';
-    final authorName = c['author_name']?.toString() ?? context.tr('home_ngidng_3bf886');
+    final authorName =
+        c['author_name']?.toString() ?? context.tr('home_ngidng_3bf886');
 
     return InkWell(
       onLongPress: () => _showCommentOptions(c),
@@ -400,7 +401,8 @@ class _CommentSheetState extends State<_CommentSheet> {
   }
 
   void _showCommentOptions(Map<String, dynamic> c) {
-    final authorName = c['author_name']?.toString() ?? context.tr('home_ngidng_3bf886');
+    final authorName =
+        c['author_name']?.toString() ?? context.tr('home_ngidng_3bf886');
     final authorId = c['author_id']?.toString() ?? '';
     final isMyComment = authorId == widget.houseId;
 
@@ -426,7 +428,8 @@ class _CommentSheetState extends State<_CommentSheet> {
               ),
               ListTile(
                 leading: const Icon(Icons.reply_rounded),
-                title: Text(context.tr('home_trli_4c5df0'), style: SLTheme.quicksand()),
+                title: Text(context.tr('home_trli_4c5df0'),
+                    style: SLTheme.quicksand()),
                 onTap: () {
                   Navigator.pop(context);
                   _focusNode.requestFocus();
@@ -438,7 +441,8 @@ class _CommentSheetState extends State<_CommentSheet> {
               ),
               ListTile(
                 leading: const Icon(Icons.copy_rounded),
-                title: Text(context.tr('home_saochp_cbfba9'), style: SLTheme.quicksand()),
+                title: Text(context.tr('home_saochp_cbfba9'),
+                    style: SLTheme.quicksand()),
                 onTap: () {
                   Navigator.pop(context);
                   Clipboard.setData(
@@ -449,7 +453,8 @@ class _CommentSheetState extends State<_CommentSheet> {
               ),
               ListTile(
                 leading: const Icon(Icons.flag_rounded, color: Colors.orange),
-                title: Text(context.tr('home_bocobnhlun_7e340e'), style: SLTheme.quicksand()),
+                title: Text(context.tr('home_bocobnhlun_7e340e'),
+                    style: SLTheme.quicksand()),
                 onTap: () async {
                   Navigator.pop(context);
                   final msgReportOk = context.tr('home_gibocobnhl_48e423');

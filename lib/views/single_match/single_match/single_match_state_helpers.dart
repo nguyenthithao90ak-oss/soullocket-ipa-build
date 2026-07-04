@@ -242,7 +242,8 @@ class _StreamGroup {
           debugPrint(
             '[SingleMatch] merged stream failed: ${AppErrorMapper.resolve(
               error,
-              fallbackMessage: L10nService().translate('match_khngthtidl_74b99d'),
+              fallbackMessage:
+                  L10nService().translate('match_khngthtidl_74b99d'),
             ).message}',
           );
         },

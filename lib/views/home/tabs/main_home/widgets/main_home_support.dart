@@ -1,4 +1,3 @@
-
 part of '../../main_home_tab.dart';
 
 class _BlinkingAvatarHint extends StatefulWidget {
@@ -105,14 +104,17 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 2400), // Increased duration for smoothness
+      duration: const Duration(
+          milliseconds: 2400), // Increased duration for smoothness
       vsync: this,
     );
 
     final random = Random();
     const particleCount = 4; // Slightly more particles
-    final hasAsset = widget.assetPath != null && widget.assetPath!.trim().isNotEmpty;
-    final hasImage = widget.imageUrl != null && widget.imageUrl!.trim().isNotEmpty;
+    final hasAsset =
+        widget.assetPath != null && widget.assetPath!.trim().isNotEmpty;
+    final hasImage =
+        widget.imageUrl != null && widget.imageUrl!.trim().isNotEmpty;
 
     // 4 hạt tim thông thường
     for (int i = 0; i < particleCount; i++) {
@@ -120,7 +122,8 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
         delay: random.nextDouble() * 0.35, // More spread out
         flightDuration: 0.65,
         peakHeight: random.nextDouble() * 1.1 + 0.8, // Slightly higher arch
-        size: random.nextDouble() * 20 + 45, // Significantly larger size (45-65)
+        size:
+            random.nextDouble() * 20 + 45, // Significantly larger size (45-65)
         baseRotation: (random.nextDouble() - 0.5) * 0.72,
       ));
     }
@@ -303,7 +306,8 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
                         '✨',
                         style: TextStyle(fontSize: 14),
                       )
-                    : (widget.assetPath != null && widget.assetPath!.trim().isNotEmpty
+                    : (widget.assetPath != null &&
+                            widget.assetPath!.trim().isNotEmpty
                         ? Image.asset(
                             widget.assetPath!,
                             width: 14,
@@ -554,7 +558,9 @@ class _FallingItem {
       required this.rotationSpeed,
       required this.opacity})
       : rotation = 0.0;
-}class _FallingPainter extends CustomPainter {
+}
+
+class _FallingPainter extends CustomPainter {
   final List<_FallingItem> items;
   final String type;
   final bool isDark;
@@ -568,7 +574,8 @@ class _FallingItem {
   @override
   void paint(Canvas canvas, Size size) {
     // Disable anti-alias for simple small particles to boost rendering speed
-    final isSimpleEffect = type == 'snow' || type == 'bubbles' || type == 'sparkles';
+    final isSimpleEffect =
+        type == 'snow' || type == 'bubbles' || type == 'sparkles';
     _paint.isAntiAlias = !isSimpleEffect;
 
     for (var item in items) {
@@ -839,7 +846,8 @@ class _InteractionSuccessDialog extends StatelessWidget {
                                     height: 1,
                                     shadows: [
                                       Shadow(
-                                        color: Colors.black.withValues(alpha: 0.1),
+                                        color:
+                                            Colors.black.withValues(alpha: 0.1),
                                         blurRadius: 10,
                                         offset: const Offset(0, 4),
                                       ),
@@ -961,7 +969,10 @@ class _MissYouAlertPayload {
       title: map['title']?.toString() ?? '',
       message: map['message']?.toString() ?? '',
       body: map['body']?.toString() ?? '',
-      fromName: (map['from'] ?? map['fromName'] ?? L10nService().translate('home_ngiy_5bab37')).toString(),
+      fromName: (map['from'] ??
+              map['fromName'] ??
+              L10nService().translate('home_ngiy_5bab37'))
+          .toString(),
       fromAvatar: map['fromAvatar']?.toString() ?? '',
       toName: map['toName']?.toString() ?? '',
       sentAtMs: (() {
@@ -1235,8 +1246,8 @@ class __MissYouScreenState extends State<_MissYouScreen>
                                         iconColor: accent,
                                         emojiShadows: [
                                           Shadow(
-                                            color:
-                                                Colors.black.withValues(alpha: 0.14),
+                                            color: Colors.black
+                                                .withValues(alpha: 0.14),
                                             blurRadius: 16,
                                             offset: const Offset(0, 6),
                                           ),
@@ -1255,7 +1266,8 @@ class __MissYouScreenState extends State<_MissYouScreen>
                                       iconColor: accent,
                                       emojiShadows: [
                                         Shadow(
-                                          color: Colors.black.withValues(alpha: 0.14),
+                                          color: Colors.black
+                                              .withValues(alpha: 0.14),
                                           blurRadius: 16,
                                           offset: const Offset(0, 6),
                                         ),

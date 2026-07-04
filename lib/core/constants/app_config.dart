@@ -1,5 +1,3 @@
-
-
 class AppConfig {
   static const String _defaultFirebaseAuthLinkHost =
       'soullockket.firebaseapp.com';
@@ -69,8 +67,7 @@ class AppConfig {
   static const String appStoreId = '6764673408';
   static const String androidStoreUrl =
       'https://play.google.com/store/apps/details?id=$androidPackageName';
-  static const String iOSStoreUrl =
-      'https://apps.apple.com/app/id$appStoreId';
+  static const String iOSStoreUrl = 'https://apps.apple.com/app/id$appStoreId';
   static const String iOSBundleId = String.fromEnvironment(
     'IOS_BUNDLE_ID',
     defaultValue: 'com.soullocket.app',
@@ -222,11 +219,15 @@ class AppConfig {
     defaultValue:
         'https://us-central1-soullockket.cloudfunctions.net/reportAdResolutionHttp',
   );
-  static const String deleteAccountPageUrl = 'https://soullocketwitget.web.app/delete-account.html';
+  static const String deleteAccountPageUrl =
+      'https://soullocketwitget.web.app/delete-account.html';
   static const String supportPageUrl = '$webBaseUrl/support.html';
-  static const String privacyPolicyUrl = 'https://soullocketwitget.web.app/privacy.html';
-  static const String termsOfUseUrl = 'https://soullocketwitget.web.app/terms.html';
-  static const String cookiePolicyUrl = 'https://soullocketwitget.web.app/cookie-policy.html';
+  static const String privacyPolicyUrl =
+      'https://soullocketwitget.web.app/privacy.html';
+  static const String termsOfUseUrl =
+      'https://soullocketwitget.web.app/terms.html';
+  static const String cookiePolicyUrl =
+      'https://soullocketwitget.web.app/cookie-policy.html';
 
   // ── TIKTOK ADS CONFIG (iOS) ─────────────────────────────────────────
   static const String tiktokIosAppId = String.fromEnvironment(

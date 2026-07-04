@@ -95,7 +95,8 @@ class AuthRecoveryService {
       return (token ?? '').trim().isNotEmpty;
     } catch (error) {
       if (kDebugMode) {
-        debugPrint('AuthRecoveryService App Check warm-up failed: ${AppErrorMapper.resolve(
+        debugPrint(
+            'AuthRecoveryService App Check warm-up failed: ${AppErrorMapper.resolve(
           error,
           fallbackMessage: 'Không thể chuẩn bị App Check.',
         ).message}');
@@ -203,10 +204,22 @@ class AuthRecoveryService {
   Future<Map<String, dynamic>?> getHouseSecurityData(String houseId) async {
     try {
       final snaps = await Future.wait([
-        _db.child('houses/$houseId/security').get().timeout(const Duration(seconds: 3)),
-        _db.child('houses/$houseId/recovery_q').get().timeout(const Duration(seconds: 3)),
-        _db.child('houses/$houseId/recovery_a').get().timeout(const Duration(seconds: 3)),
-        _db.child('houses/$houseId/email').get().timeout(const Duration(seconds: 3)),
+        _db
+            .child('houses/$houseId/security')
+            .get()
+            .timeout(const Duration(seconds: 3)),
+        _db
+            .child('houses/$houseId/recovery_q')
+            .get()
+            .timeout(const Duration(seconds: 3)),
+        _db
+            .child('houses/$houseId/recovery_a')
+            .get()
+            .timeout(const Duration(seconds: 3)),
+        _db
+            .child('houses/$houseId/email')
+            .get()
+            .timeout(const Duration(seconds: 3)),
       ]);
 
       final securitySnap = snaps[0];
@@ -379,8 +392,7 @@ class AuthRecoveryService {
           error,
           fallbackMessage: 'Không gửi được mã xác nhận.',
           permissionDeniedMessage: 'Yêu cầu bị từ chối. Thử lại sau.',
-          failedPreconditionMessage:
-              'Máy chủ OTP chưa được cấu hình xong.',
+          failedPreconditionMessage: 'Máy chủ OTP chưa được cấu hình xong.',
           resourceExhaustedMessage:
               'Bạn yêu cầu mã quá nhiều lần. Hãy chờ rồi thử lại.',
           unauthenticatedMessage:

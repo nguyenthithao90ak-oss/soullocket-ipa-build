@@ -1,6 +1,7 @@
 part of '../../consent_gate.dart';
 
-Widget _buildStartupCookieStorageSection(BuildContext context, {
+Widget _buildStartupCookieStorageSection(
+  BuildContext context, {
   required String cookieLevel,
   required ValueChanged<String> onChanged,
 }) {
@@ -63,8 +64,7 @@ Widget _buildStartupCookieStorageSection(BuildContext context, {
           groupValue: cookieLevel,
           accent: _accentBlue,
           title: context.tr('consent_thityu_cd979a'),
-          subtitle:
-              context.tr('consent_gingnhpcon_189e36'),
+          subtitle: context.tr('consent_gingnhpcon_189e36'),
           bullets: [
             context.tr('consent_tigindliul_a475c3'),
             context.tr('consent_phhpnubnmu_d29e36'),
@@ -77,8 +77,7 @@ Widget _buildStartupCookieStorageSection(BuildContext context, {
           groupValue: cookieLevel,
           accent: _accentGreen,
           title: context.tr('consent_ttc_d8586d'),
-          subtitle:
-              context.tr('consent_thmcnhnhac_f0e289'),
+          subtitle: context.tr('consent_thmcnhnhac_f0e289'),
           bullets: [
             context.tr('consent_phhpnubnmu_4875ce'),
             context.tr('consent_cthlunhiud_1e2ff6'),
@@ -90,8 +89,10 @@ Widget _buildStartupCookieStorageSection(BuildContext context, {
         _buildInlineDocLink(
           accent: _accentBlue,
           label: context.tr('consent_xemchnhsch_10073b'),
-          onTap: () =>
-              _openDoc(context, context.tr('consent_chnhschcoo_9209d0'), 'assets/docs/cookie-policy.html'),
+          onTap: () => _openDoc(
+              context,
+              context.tr('consent_chnhschcoo_9209d0'),
+              'assets/docs/cookie-policy.html'),
         ),
       ],
     ),
@@ -119,9 +120,8 @@ Widget _buildCookieChoiceCard({
           ? const EdgeInsets.fromLTRB(11, 13, 13, 13)
           : const EdgeInsets.fromLTRB(9, 11, 11, 11),
       decoration: BoxDecoration(
-        color: selected
-            ? Color.lerp(Colors.white, accent, 0.10)
-            : _cardBackground,
+        color:
+            selected ? Color.lerp(Colors.white, accent, 0.10) : _cardBackground,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: selected ? accent.withValues(alpha: 0.28) : _panelBorder,
@@ -188,7 +188,8 @@ Widget _buildCookieChoiceCard({
                       decoration: BoxDecoration(
                         color: accent.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: accent.withValues(alpha: 0.18)),
+                        border:
+                            Border.all(color: accent.withValues(alpha: 0.18)),
                       ),
                       child: Text(
                         badge,

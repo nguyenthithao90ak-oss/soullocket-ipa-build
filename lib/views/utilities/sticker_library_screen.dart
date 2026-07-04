@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import '../../core/sl_theme.dart';
 
 class StickerLibraryScreen extends StatelessWidget {
-
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
       tooltip: 'Hướng dẫn',
-      icon: const Icon(Icons.info_outline_rounded, color: Color(0xFF24324A), size: 22),
+      icon: const Icon(Icons.info_outline_rounded,
+          color: Color(0xFF24324A), size: 22),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -27,18 +27,22 @@ class StickerLibraryScreen extends StatelessWidget {
             children: [
               Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text('- Nơi quản lý và thêm các bộ nhãn dán độc quyền dùng để ném vào người ấy trên màn hình chính.\n- Mở khóa nhãn dán hiếm thông qua vòng quay hoặc điểm tình yêu.'),
+              Text(
+                  '- Nơi quản lý và thêm các bộ nhãn dán độc quyền dùng để ném vào người ấy trên màn hình chính.\n- Mở khóa nhãn dán hiếm thông qua vòng quay hoặc điểm tình yêu.'),
               SizedBox(height: 12),
-              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Cách sử dụng:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text('- Duyệt qua các bộ nhãn dán, bấm Tải về để thêm vào bộ sưu tập.\n- Tại màn hình chính, mở ngăn kéo nhãn dán và ném chúng để tạo hiệu ứng tương tác.'),
+              Text(
+                  '- Duyệt qua các bộ nhãn dán, bấm Tải về để thêm vào bộ sưu tập.\n- Tại màn hình chính, mở ngăn kéo nhãn dán và ném chúng để tạo hiệu ứng tương tác.'),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+            child: const Text('Đã hiểu',
+                style: TextStyle(color: SLColors.primary)),
           ),
         ],
       ),

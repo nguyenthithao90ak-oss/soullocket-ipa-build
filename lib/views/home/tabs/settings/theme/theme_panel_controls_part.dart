@@ -354,44 +354,64 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
   Widget _buildCountdownStyleStrip(String selectedKey, bool hasAdPass) {
     final items = [
       (
-        context.tr('countdown_default'), 'default',
-        const [Color(0xFFFFF0F7), Color(0xFFFFDDEF), Color(0xFFFFC8DE)], false,
+        context.tr('countdown_default'),
+        'default',
+        const [Color(0xFFFFF0F7), Color(0xFFFFDDEF), Color(0xFFFFC8DE)],
+        false,
       ),
       (
-        context.tr('countdown_glass'), 'glass',
-        const [Color(0xFFF5FAFF), Color(0xFFE6F7FF)], false,
+        context.tr('countdown_glass'),
+        'glass',
+        const [Color(0xFFF5FAFF), Color(0xFFE6F7FF)],
+        false,
       ),
       (
-        context.tr('countdown_glow'), 'glow',
-        const [Color(0xFFFFF5FA), Color(0xFFFFD9E8)], false,
+        context.tr('countdown_glow'),
+        'glow',
+        const [Color(0xFFFFF5FA), Color(0xFFFFD9E8)],
+        false,
       ),
       (
-        context.tr('countdown_candy'), 'candy',
-        const [Color(0xFFFFE3F3), Color(0xFFE0F7FF), Color(0xFFFFF4C8)], false,
+        context.tr('countdown_candy'),
+        'candy',
+        const [Color(0xFFFFE3F3), Color(0xFFE0F7FF), Color(0xFFFFF4C8)],
+        false,
       ),
       (
-        context.tr('countdown_floating_hearts'), 'floating_hearts',
-        const [Color(0xFFFFF5F8), Color(0xFFFFF0F5)], true,
+        context.tr('countdown_floating_hearts'),
+        'floating_hearts',
+        const [Color(0xFFFFF5F8), Color(0xFFFFF0F5)],
+        true,
       ),
       (
-        context.tr('countdown_galaxy'), 'galaxy',
-        const [Color(0xFF120024), Color(0xFF05000F)], true,
+        context.tr('countdown_galaxy'),
+        'galaxy',
+        const [Color(0xFF120024), Color(0xFF05000F)],
+        true,
       ),
       (
-        context.tr('countdown_aurora'), 'aurora',
-        const [Color(0xFF001B2E), Color(0xFF021A10)], true,
+        context.tr('countdown_aurora'),
+        'aurora',
+        const [Color(0xFF001B2E), Color(0xFF021A10)],
+        true,
       ),
       (
-        context.tr('countdown_crystal'), 'crystal',
-        const [Color(0xFFE8F4FF), Color(0xFFF6EAFF), Color(0xFFFFF8E7)], true,
+        context.tr('countdown_crystal'),
+        'crystal',
+        const [Color(0xFFE8F4FF), Color(0xFFF6EAFF), Color(0xFFFFF8E7)],
+        true,
       ),
       (
-        context.tr('countdown_fireworks'), 'fireworks',
-        const [Color(0xFF140026), Color(0xFF06000F)], true,
+        context.tr('countdown_fireworks'),
+        'fireworks',
+        const [Color(0xFF140026), Color(0xFF06000F)],
+        true,
       ),
       (
-        context.tr('countdown_lava'), 'lava',
-        const [Color(0xFF1A0502), Color(0xFF4A1103)], true,
+        context.tr('countdown_lava'),
+        'lava',
+        const [Color(0xFF1A0502), Color(0xFF4A1103)],
+        true,
       ),
     ];
 
@@ -418,7 +438,9 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
               decoration: BoxDecoration(
                 gradient: locked
                     ? LinearGradient(
-                        colors: item.$3.map((c) => c.withValues(alpha: 0.50)).toList())
+                        colors: item.$3
+                            .map((c) => c.withValues(alpha: 0.50))
+                            .toList())
                     : LinearGradient(colors: item.$3),
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
@@ -430,7 +452,8 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
                 boxShadow: selected
                     ? [
                         BoxShadow(
-                          color: const Color(0xFFD81B60).withValues(alpha: 0.28),
+                          color:
+                              const Color(0xFFD81B60).withValues(alpha: 0.28),
                           blurRadius: 20,
                           spreadRadius: 1,
                           offset: const Offset(0, 6),
@@ -455,7 +478,8 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
                   ),
                   if (locked) ...[
                     const SizedBox(width: 4),
-                    const Icon(Icons.play_circle_fill_rounded, size: 14, color: Color(0xFFD81B60)),
+                    const Icon(Icons.play_circle_fill_rounded,
+                        size: 14, color: Color(0xFFD81B60)),
                   ],
                 ],
               ),
@@ -742,9 +766,24 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
     final items = <(String, String, IconData, Color)>[
       ('Không', 'off', Icons.block_rounded, const Color(0xFFBDBDBD)),
       ('Tròn', 'circle', Icons.circle_rounded, const Color(0xFF2563EB)),
-      ('Bo góc', 'rounded', Icons.rounded_corner_rounded, const Color(0xFFEC4899)),
-      ('Squircle', 'squircle', Icons.crop_square_rounded, const Color(0xFF8B5CF6)),
-      ('Ngọc trai', 'pearl', Icons.blur_circular_rounded, const Color(0xFFD4A520)),
+      (
+        'Bo góc',
+        'rounded',
+        Icons.rounded_corner_rounded,
+        const Color(0xFFEC4899)
+      ),
+      (
+        'Squircle',
+        'squircle',
+        Icons.crop_square_rounded,
+        const Color(0xFF8B5CF6)
+      ),
+      (
+        'Ngọc trai',
+        'pearl',
+        Icons.blur_circular_rounded,
+        const Color(0xFFD4A520)
+      ),
       ('Thủy tinh', 'glass', Icons.water_drop_rounded, const Color(0xFF06B6D4)),
       if (AppConfig.isPurchaseEnabled)
         (

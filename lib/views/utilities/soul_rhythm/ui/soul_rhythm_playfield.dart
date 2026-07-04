@@ -20,7 +20,6 @@ class _SoulPlayfieldGeometry {
   final Rect hitWindowRect;
 }
 
-
 extension _SoulRhythmPlayfield on _SoulRhythmGameState {
   _SoulPlayfieldGeometry _buildPlayfieldGeometry(
       Rect playArea, double hitLineY) {
@@ -184,7 +183,8 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.05 + (bgPulse * 0.06)),
+                    color:
+                        Colors.white.withValues(alpha: 0.05 + (bgPulse * 0.06)),
                     width: 2,
                   ),
                   boxShadow: [
@@ -318,7 +318,8 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.white.withValues(alpha: index.isEven ? 0.025 : 0.016),
+                        Colors.white
+                            .withValues(alpha: index.isEven ? 0.025 : 0.016),
                         Colors.transparent,
                         Colors.black.withValues(alpha: 0.08),
                       ],
@@ -328,7 +329,8 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                     border: showDivider
                         ? Border(
                             right: BorderSide(
-                              color: const Color(0xFFB8F2FF).withValues(alpha: 0.18),
+                              color: const Color(0xFFB8F2FF)
+                                  .withValues(alpha: 0.18),
                               width: 1,
                             ),
                           )
@@ -426,12 +428,13 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
     final loopDuration = max(1, _gameChartLoopDurationMs).toDouble();
     final currentLoopProgress = (_chartElapsedMs % loopDuration) / loopDuration;
     final nextEventDelta = max(0.0, _nextChartEventMs - _chartElapsedMs);
-    final beatEnergy = (1.0 - (nextEventDelta / 340).clamp(0.0, 1.0)).toDouble();
+    final beatEnergy =
+        (1.0 - (nextEventDelta / 340).clamp(0.0, 1.0)).toDouble();
     final strongBeat = _chartEventIndex % 4 == 0;
-    final pulseOpacity = (0.16 + (beatEnergy * (strongBeat ? 0.34 : 0.24)) +
-            (bgPulse * 0.08))
-        .clamp(0.0, strongBeat ? 0.56 : 0.44)
-        .toDouble();
+    final pulseOpacity =
+        (0.16 + (beatEnergy * (strongBeat ? 0.34 : 0.24)) + (bgPulse * 0.08))
+            .clamp(0.0, strongBeat ? 0.56 : 0.44)
+            .toDouble();
     final markerCount = min(24, max(8, _gameChartEvents.length));
 
     return IgnorePointer(
@@ -492,13 +495,13 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: List.generate(markerCount, (index) {
                         final isMajor = index % 4 == 0;
-                        final normalized = markerCount <= 1
-                            ? 0.0
-                            : index / (markerCount - 1);
+                        final normalized =
+                            markerCount <= 1 ? 0.0 : index / (markerCount - 1);
                         final passed = normalized <= currentLoopProgress;
                         return Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 1.5),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 1.5),
                             child: Align(
                               alignment: Alignment.bottomCenter,
                               child: AnimatedContainer(
@@ -538,7 +541,8 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                             ? const Color(0xFFFFC94D)
                             : const Color(0xFFFF6EC7))
                         .withValues(alpha: pulseOpacity),
-                    const Color(0xFF6FE8FF).withValues(alpha: pulseOpacity * 0.76),
+                    const Color(0xFF6FE8FF)
+                        .withValues(alpha: pulseOpacity * 0.76),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.48, 1.0],
@@ -662,14 +666,16 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                                   gradient: LinearGradient(
                                     colors: [
                                       Colors.white.withValues(alpha: 0.98),
-                                      Color.lerp(tile.color, Colors.white, 0.40)!,
+                                      Color.lerp(
+                                          tile.color, Colors.white, 0.40)!,
                                     ],
                                     begin: Alignment.topCenter,
                                     end: Alignment.bottomCenter,
                                   ),
                                   border: Border(
                                     bottom: BorderSide(
-                                      color: Colors.white.withValues(alpha: 0.32),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.32),
                                     ),
                                   ),
                                 ),
@@ -719,14 +725,17 @@ extension _SoulRhythmPlayfield on _SoulRhythmGameState {
                                 top: capHeight + 12,
                                 right: 10,
                                 child: Container(
-                                  width: min(18.0, max(10.0, tile.width * 0.18)),
-                                  height: min(18.0, max(10.0, tile.width * 0.18)),
+                                  width:
+                                      min(18.0, max(10.0, tile.width * 0.18)),
+                                  height:
+                                      min(18.0, max(10.0, tile.width * 0.18)),
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: Colors.white.withValues(alpha: 0.18),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.white.withValues(alpha: 0.28),
+                                        color: Colors.white
+                                            .withValues(alpha: 0.28),
                                         blurRadius: shineBlur * 0.65,
                                       ),
                                     ],
@@ -931,18 +940,21 @@ class _SoulRhythmStagePainter extends CustomPainter {
         ],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-      ).createShader(Rect.fromLTWH(0, floorTop, size.width, size.height - floorTop));
+      ).createShader(
+          Rect.fromLTWH(0, floorTop, size.width, size.height - floorTop));
     canvas.drawPath(floor, floorPaint);
 
     final gridPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
-      ..color = const Color(0xFF6FE8FF).withValues(alpha: lowGraphics ? 0.08 : 0.16);
+      ..color =
+          const Color(0xFF6FE8FF).withValues(alpha: lowGraphics ? 0.08 : 0.16);
     for (int i = 0; i <= 8; i++) {
       final t = i / 8;
       final xTop = (size.width * 0.22) + ((size.width * 0.56) * t);
       final xBottom = (size.width * -0.08) + ((size.width * 1.16) * t);
-      canvas.drawLine(Offset(xTop, floorTop), Offset(xBottom, size.height), gridPaint);
+      canvas.drawLine(
+          Offset(xTop, floorTop), Offset(xBottom, size.height), gridPaint);
     }
     for (int i = 0; i < 8; i++) {
       final t = i / 8;
@@ -964,7 +976,9 @@ class _SoulRhythmStagePainter extends CustomPainter {
         ..lineTo(size.width * (0.50 + (side * 0.23)), size.height)
         ..lineTo(size.width * (side < 0 ? -0.05 : 1.05), size.height)
         ..close();
-      beamPaint.color = (side < 0 ? const Color(0xFFFF3D81) : const Color(0xFF6FE8FF))
+      beamPaint.color = (side < 0
+              ? const Color(0xFFFF3D81)
+              : const Color(0xFF6FE8FF))
           .withValues(alpha: lowGraphics ? 0.035 : 0.075 + (bgPulse * 0.05));
       canvas.drawPath(beam, beamPaint);
     }

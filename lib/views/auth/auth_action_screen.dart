@@ -167,14 +167,12 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
         _canSubmitPassword = false;
         _isSuccess = true;
         _title = L10nService().translate('auth_action_reset_success_title');
-        _message =
-            L10nService().translate('auth_action_reset_success_message');
+        _message = L10nService().translate('auth_action_reset_success_message');
       });
     } on FirebaseAuthException catch (error) {
       _showSnack(_mapResetPasswordError(error));
     } catch (_) {
-      _showSnack(
-          L10nService().translate('auth_action_generic_reset_error'));
+      _showSnack(L10nService().translate('auth_action_generic_reset_error'));
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -267,7 +265,8 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
                           enabled: !_isSubmitting,
                           textInputAction: TextInputAction.next,
                           decoration: InputDecoration(
-                            labelText: context.tr('auth_action_new_password_label'),
+                            labelText:
+                                context.tr('auth_action_new_password_label'),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
@@ -290,7 +289,8 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
                           enabled: !_isSubmitting,
                           onSubmitted: (_) => _submitPasswordReset(),
                           decoration: InputDecoration(
-                            labelText: context.tr('auth_action_confirm_password_label'),
+                            labelText: context
+                                .tr('auth_action_confirm_password_label'),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
@@ -327,7 +327,8 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : Text(context.tr('auth_action_update_password_btn')),
+                              : Text(context
+                                  .tr('auth_action_update_password_btn')),
                         ),
                       ],
                       if (!_isBusy && !_canSubmitPassword) ...[
@@ -340,10 +341,9 @@ class _AuthActionScreenState extends State<AuthActionScreen> {
                               borderRadius: BorderRadius.circular(16),
                             ),
                           ),
-                          child: Text(
-                              _isSuccess
-                                  ? context.tr('auth_action_open_login_btn')
-                                  : context.tr('auth_action_back_to_login_btn')),
+                          child: Text(_isSuccess
+                              ? context.tr('auth_action_open_login_btn')
+                              : context.tr('auth_action_back_to_login_btn')),
                         ),
                       ],
                     ],

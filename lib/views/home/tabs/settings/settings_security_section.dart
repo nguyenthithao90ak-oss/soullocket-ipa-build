@@ -93,10 +93,12 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   ),
                   const SizedBox(height: 12),
                   GestureDetector(
-                    onTap: _houseIdChanged ? null : () => _showChangeHouseIdDialog(),
+                    onTap: _houseIdChanged
+                        ? null
+                        : () => _showChangeHouseIdDialog(),
                     child: Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(12),
@@ -694,10 +696,12 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                             await _loadVipStatus();
                             if (!mounted) return;
                             if (!_isVipActive) {
-                              _showToast(context.tr('vault_style_pro_required'), success: false);
+                              _showToast(context.tr('vault_style_pro_required'),
+                                  success: false);
                               final houseId = _houseId?.trim();
                               if (houseId == null || houseId.isEmpty) {
-                                _showToast(context.tr('home_hyvonhtrck_c33334'), success: false);
+                                _showToast(context.tr('home_hyvonhtrck_c33334'),
+                                    success: false);
                                 return;
                               }
                               await Navigator.push(
@@ -705,8 +709,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                                 MaterialPageRoute(
                                   builder: (_) => PremiumStoreScreen(
                                     houseId: houseId,
-                                    myName: _nameU1.trim().isEmpty 
-                                        ? context.tr('home_bn_1fd75b') 
+                                    myName: _nameU1.trim().isEmpty
+                                        ? context.tr('home_bn_1fd75b')
                                         : _nameU1.trim(),
                                   ),
                                 ),
@@ -717,8 +721,9 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                               return;
                             }
                           }
-                          
-                          await UiPrefs.saveState(UiPrefs.notifier.value.copyWith(vaultHomeStyle: val));
+
+                          await UiPrefs.saveState(UiPrefs.notifier.value
+                              .copyWith(vaultHomeStyle: val));
                           if (!mounted) return;
                           _showToast(context.tr('saved_local_only'));
                         },
@@ -857,7 +862,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 value: _useBiometrics,
                 activeThumbColor: const Color(0xFFD81B60),
                 onChanged: (v) async {
-                  final msgBioNotSupported = context.tr('home_thitbkhngh_75b1e3');
+                  final msgBioNotSupported =
+                      context.tr('home_thitbkhngh_75b1e3');
                   final msgBioFailed = context.tr('home_xcthcsinht_2fd95b');
                   final requiresExistingLock =
                       _isAppLockEnabled && _storedLockSecret.trim().isNotEmpty;
@@ -871,15 +877,13 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     final canBio =
                         await _militaryLockService.canUseBiometrics();
                     if (!canBio) {
-                      _showToast(msgBioNotSupported,
-                          success: false);
+                      _showToast(msgBioNotSupported, success: false);
                       return;
                     }
                     final testAuth = await _militaryLockService
                         .authenticateWithDeviceForTest();
                     if (!testAuth) {
-                      _showToast(msgBioFailed,
-                          success: false);
+                      _showToast(msgBioFailed, success: false);
                       return;
                     }
                   }

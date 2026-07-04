@@ -1,4 +1,5 @@
-import 'package:firebase_database/firebase_database.dart' hide Query, Transaction;
+import 'package:firebase_database/firebase_database.dart'
+    hide Query, Transaction;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:soullocket_app/models/diary_post.dart';
 import 'connectivity_service.dart';
@@ -95,7 +96,7 @@ class DiaryService {
     final docRef = _diariesRef(houseId).doc(postId);
     final snap = await docRef.get();
     if (!snap.exists) throw 'Bài viết không tồn tại.';
-    
+
     final data = snap.data()!;
     final owner = (data['authorId'] ?? '').toString();
     if (owner.isNotEmpty && owner != requestingAuthorId) {
@@ -153,14 +154,18 @@ class DiaryService {
   }
 
   // ── LẤY theo trang (phân trang) ─────────────────────────────────────────
-  Future<({List<DiaryPost> posts, DocumentSnapshot<Map<String, dynamic>>? lastDoc, bool hasMore})> fetchDiaryPage(
+  Future<
+      ({
+        List<DiaryPost> posts,
+        DocumentSnapshot<Map<String, dynamic>>? lastDoc,
+        bool hasMore
+      })> fetchDiaryPage(
     String houseId, {
     int limit = 10,
     DocumentSnapshot<Map<String, dynamic>>? startAfter,
   }) async {
-    Query<Map<String, dynamic>> query = _diariesRef(houseId)
-        .orderBy('ts', descending: true)
-        .limit(limit);
+    Query<Map<String, dynamic>> query =
+        _diariesRef(houseId).orderBy('ts', descending: true).limit(limit);
 
     if (startAfter != null) {
       query = query.startAfterDocument(startAfter);
@@ -189,8 +194,11 @@ class DiaryService {
   Future<void> migrateDiariesFromRTDB(String houseId) async {
     // Chỉ migrate nếu chưa từng migrate — dùng flag nhẹ
     final migrateFlag = await _firestore
-        .collection('houses').doc(houseId)
-        .collection('_meta').doc('diary_migration').get();
+        .collection('houses')
+        .doc(houseId)
+        .collection('_meta')
+        .doc('diary_migration')
+        .get();
     if (migrateFlag.exists && migrateFlag.data()?['done'] == true) return;
 
     final snap = await _rtdb.child('houses/$houseId/diary').get();
@@ -198,8 +206,10 @@ class DiaryService {
       // Ghi flag để không gọi lại
       try {
         await _firestore
-            .collection('houses').doc(houseId)
-            .collection('_meta').doc('diary_migration')
+            .collection('houses')
+            .doc(houseId)
+            .collection('_meta')
+            .doc('diary_migration')
             .set({'done': true, 'ts': DateTime.now().millisecondsSinceEpoch});
       } catch (_) {}
       return;
@@ -214,7 +224,8 @@ class DiaryService {
     raw.forEach((key, value) {
       if (value is Map) {
         final docRef = _diariesRef(houseId).doc(key.toString());
-        batch.set(docRef, Map<String, dynamic>.from(value), SetOptions(merge: true));
+        batch.set(
+            docRef, Map<String, dynamic>.from(value), SetOptions(merge: true));
         count++;
       }
     });
@@ -229,8 +240,10 @@ class DiaryService {
     // Ghi flag
     try {
       await _firestore
-          .collection('houses').doc(houseId)
-          .collection('_meta').doc('diary_migration')
+          .collection('houses')
+          .doc(houseId)
+          .collection('_meta')
+          .doc('diary_migration')
           .set({'done': true, 'ts': DateTime.now().millisecondsSinceEpoch});
     } catch (_) {}
   }

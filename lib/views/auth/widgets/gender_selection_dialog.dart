@@ -35,7 +35,8 @@ class GenderSelectionDialog extends StatelessWidget {
             borderRadius: BorderRadius.circular(32),
             border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 40),
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.5), blurRadius: 40),
             ],
           ),
           child: SingleChildScrollView(
@@ -98,7 +99,8 @@ class GenderSelectionDialog extends StatelessWidget {
                         SizedBox(
                           width: optionWidth,
                           child: _buildOption(
-                            assetPath: 'assets/images/interaction_stickers/custom/numbered/sticker_092.png',
+                            assetPath:
+                                'assets/images/interaction_stickers/custom/numbered/sticker_092.png',
                             title: L10nService().translate('Nam'),
                             desc:
                                 L10nService().translate('Giao diện đằng trai'),
@@ -110,7 +112,8 @@ class GenderSelectionDialog extends StatelessWidget {
                         SizedBox(
                           width: optionWidth,
                           child: _buildOption(
-                            assetPath: 'assets/images/interaction_stickers/custom/numbered/sticker_086.png',
+                            assetPath:
+                                'assets/images/interaction_stickers/custom/numbered/sticker_086.png',
                             title: L10nService().translate('Nữ'),
                             desc: L10nService().translate('Giao diện đằng gái'),
                             color: const Color(0xFFFF4081),

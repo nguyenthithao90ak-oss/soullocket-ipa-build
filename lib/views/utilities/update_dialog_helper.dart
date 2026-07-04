@@ -20,7 +20,7 @@ class UpdateDialogHelper {
       barrierDismissible: !forceUpdate,
       builder: (context) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        
+
         return PopScope(
           canPop: !forceUpdate,
           child: Dialog(
@@ -31,8 +31,8 @@ class UpdateDialogHelper {
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: isDark 
-                      ? Colors.black.withValues(alpha: 0.6) 
+                  color: isDark
+                      ? Colors.black.withValues(alpha: 0.6)
                       : Colors.white.withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(
@@ -41,7 +41,8 @@ class UpdateDialogHelper {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.12),
+                      color:
+                          Colors.black.withValues(alpha: isDark ? 0.4 : 0.12),
                       blurRadius: 28,
                       offset: const Offset(0, 10),
                     )
@@ -85,8 +86,8 @@ class UpdateDialogHelper {
                         fontSize: 14.5,
                         fontWeight: FontWeight.w600,
                         height: 1.5,
-                        color: isDark 
-                            ? Colors.white.withValues(alpha: 0.8) 
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.8)
                             : Colors.black.withValues(alpha: 0.7),
                       ),
                     ),
@@ -98,12 +99,13 @@ class UpdateDialogHelper {
                             child: GestureDetector(
                               onTap: () => Navigator.pop(context),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: isDark 
-                                        ? Colors.white.withValues(alpha: 0.2) 
+                                    color: isDark
+                                        ? Colors.white.withValues(alpha: 0.2)
                                         : Colors.black.withValues(alpha: 0.1),
                                   ),
                                 ),
@@ -114,8 +116,8 @@ class UpdateDialogHelper {
                                       fontFamily: 'Quicksand',
                                       fontSize: 15,
                                       fontWeight: FontWeight.w800,
-                                      color: isDark 
-                                          ? Colors.white.withValues(alpha: 0.7) 
+                                      color: isDark
+                                          ? Colors.white.withValues(alpha: 0.7)
                                           : Colors.black.withValues(alpha: 0.6),
                                     ),
                                   ),
@@ -130,19 +132,23 @@ class UpdateDialogHelper {
                             onTap: () async {
                               final uri = Uri.parse(storeUrl);
                               if (await canLaunchUrl(uri)) {
-                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                await launchUrl(uri,
+                                    mode: LaunchMode.externalApplication);
                               }
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFFFF85C0), Color(0xFFFF4D94)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
+                                borderRadius: BorderRadius.circular(16),
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFFFF85C0),
+                                    Color(0xFFFF4D94)
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
+                              ),
                               child: Center(
                                 child: Text(
                                   _tr('home_cập_nhật_ngay', 'Cập nhật ngay'),

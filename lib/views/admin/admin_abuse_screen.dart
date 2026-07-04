@@ -202,7 +202,10 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
 
   Future<void> _loadBannedWords() async {
     try {
-      final snap = await _db.child('admin_system/banned_words').get().timeout(const Duration(seconds: 5));
+      final snap = await _db
+          .child('admin_system/banned_words')
+          .get()
+          .timeout(const Duration(seconds: 5));
       if (snap.exists && snap.value is List) {
         final List<dynamic> list = snap.value as List<dynamic>;
         setState(() {
@@ -268,7 +271,10 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
     });
 
     try {
-      final snap = await _db.child('admin_system/abuse_logs').get().timeout(const Duration(seconds: 8));
+      final snap = await _db
+          .child('admin_system/abuse_logs')
+          .get()
+          .timeout(const Duration(seconds: 8));
       final logs = <Map<String, dynamic>>[];
 
       if (snap.exists) {
@@ -315,9 +321,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
     try {
       if (actionType == 'ban') {
         await _db.child('houses/$uid/isBanned').set(true);
-        await _db
-            .child('houses/$uid/banReason')
-            .set(banReason);
+        await _db.child('houses/$uid/banReason').set(banReason);
       }
 
       await _db.child('admin_system/audit_log').push().set({

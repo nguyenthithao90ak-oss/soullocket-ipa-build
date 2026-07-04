@@ -803,7 +803,8 @@ class _HealthScreenState extends State<HealthScreen>
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.16)),
                   ),
                   child: Text(
                     'Dự báo chu kỳ chỉ mang tính tham khảo, không thay thế tư vấn y tế. Nếu chu kỳ bất thường kéo dài hoặc bạn thấy không ổn, hãy đi khám để được tư vấn chính xác hơn.',
@@ -845,7 +846,8 @@ class _HealthScreenState extends State<HealthScreen>
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.16),
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.22)),
                     ),
                     child: Text(
                       DateFormat('dd/MM/yyyy').format(item),
@@ -879,7 +881,8 @@ class _HealthScreenState extends State<HealthScreen>
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: SLRadius.lgAll,
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -932,8 +935,8 @@ class WaterDropPainter extends CustomPainter {
     }
 
     final paint = Paint()
-      ..color = dropColor
-          .withValues(alpha: 0.6 + 0.2 * math.sin(animationValue * 2 * math.pi))
+      ..color = dropColor.withValues(
+          alpha: 0.6 + 0.2 * math.sin(animationValue * 2 * math.pi))
       ..style = PaintingStyle.fill;
 
     final path = Path();

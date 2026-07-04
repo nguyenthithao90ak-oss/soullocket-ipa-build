@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FloatingBubbleWidget extends StatefulWidget {
@@ -34,7 +36,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
   List<dynamic> _chatHistory = [];
   String _myRole = 'user1';
   String _partnerName = 'Người ấy';
-  
+
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   StreamSubscription<dynamic>? _overlayListenerSub;
@@ -47,6 +49,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
   int _tempBlockSecondsLeft = 0;
   Timer? _tempBlockTimer;
   String? _spamWarning;
+  Timer? _syncCheckTimer;
 
   @override
   void initState() {
@@ -66,12 +69,13 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     _animController.forward();
 
     _startListeningFirebaseChat();
+    _startSyncCheckLoop();
 
     // Listen to data from the main app
     _overlayListenerSub = FlutterOverlayWindow.overlayListener.listen((event) {
       if (event is String && event.isNotEmpty) {
         if (event == 'launch_app') return;
-        
+
         try {
           if (event.startsWith('{')) {
             final data = jsonDecode(event);
@@ -111,7 +115,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                 });
                 // Resize for preview
                 FlutterOverlayWindow.resizeOverlay(240, 80, true);
-                
+
                 // Shrink back after 4 seconds
                 Future.delayed(const Duration(seconds: 4), () {
                   if (mounted && !_isExpanded) {
@@ -136,7 +140,8 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     _soulMessagesSub?.cancel();
     final hId = _houseId;
     if (hId == null || hId.isEmpty) {
-      debugPrint('[Overlay] _houseId is null or empty, cannot start listening chat');
+      debugPrint(
+          '[Overlay] _houseId is null or empty, cannot start listening chat');
       return;
     }
     _soulMessagesSub = FirebaseDatabase.instance
@@ -180,14 +185,43 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     });
   }
 
+  void _startSyncCheckLoop() {
+    _syncCheckTimer = Timer.periodic(const Duration(seconds: 2), (t) async {
+      if (_houseId != null && _houseId!.isNotEmpty) {
+        t.cancel();
+        return;
+      }
+      try {
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/overlay_sync.json');
+        if (await file.exists()) {
+          final data = jsonDecode(await file.readAsString());
+          final hId = data['houseId']?.toString();
+          if (hId != null && hId.isNotEmpty) {
+            if (mounted) {
+              setState(() {
+                _houseId = hId;
+                _myRole = data['role']?.toString() ?? 'user1';
+                _partnerName = data['partnerName']?.toString() ?? 'Người ấy';
+              });
+            }
+            _startListeningFirebaseChat();
+            t.cancel();
+          }
+        }
+      } catch (_) {}
+    });
+  }
+
   @override
   void dispose() {
     _animController.dispose();
     _textController.dispose();
     _scrollController.dispose();
+    _syncCheckTimer?.cancel();
+    _tempBlockTimer?.cancel();
     _overlayListenerSub?.cancel();
     _soulMessagesSub?.cancel();
-    _tempBlockTimer?.cancel();
     super.dispose();
   }
 
@@ -197,7 +231,8 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
       _showPreview = false;
     });
     // Expand overlay to fit the chat box panel and enable keyboard focus
-    FlutterOverlayWindow.resizeOverlay(WindowSize.matchParent, WindowSize.matchParent, true);
+    FlutterOverlayWindow.resizeOverlay(
+        WindowSize.matchParent, WindowSize.matchParent, true);
     FlutterOverlayWindow.updateFlag(OverlayFlag.focusPointer);
     _scrollToBottom();
   }
@@ -218,7 +253,8 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
       final remainingMs = blockUntil - now;
       final remainingMin = (remainingMs / 60000).ceil();
       setState(() {
-        _spamWarning = 'Thao tác quá nhanh! Bị chặn trong $remainingMin phút nữa.';
+        _spamWarning =
+            'Thao tác quá nhanh! Bị chặn trong $remainingMin phút nữa.';
       });
       Timer(const Duration(seconds: 3), () {
         if (mounted) setState(() => _spamWarning = null);
@@ -229,7 +265,8 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     // 2. Check 5s countdown
     if (_tempBlockSecondsLeft > 0) {
       setState(() {
-        _spamWarning = 'Thao tác quá nhanh! Vui lòng đợi $_tempBlockSecondsLeft giây đếm ngược.';
+        _spamWarning =
+            'Thao tác quá nhanh! Vui lòng đợi $_tempBlockSecondsLeft giây đếm ngược.';
       });
       return true;
     }
@@ -239,9 +276,10 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     if (_msgTimestamps.length >= 3) {
       _tempBlockSecondsLeft = 5;
       _tempBlockTimer?.cancel();
-      
+
       setState(() {
-        _spamWarning = 'Thao tác quá nhanh! Đang đếm ngược $_tempBlockSecondsLeft giây.';
+        _spamWarning =
+            'Thao tác quá nhanh! Đang đếm ngược $_tempBlockSecondsLeft giây.';
       });
 
       _tempBlockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -252,7 +290,8 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
               _spamWarning = null;
               timer.cancel();
             } else {
-              _spamWarning = 'Thao tác quá nhanh! Đang đếm ngược $_tempBlockSecondsLeft giây.';
+              _spamWarning =
+                  'Thao tác quá nhanh! Đang đếm ngược $_tempBlockSecondsLeft giây.';
             }
           });
         } else {
@@ -409,6 +448,15 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     );
   }
 
+  void _shrinkOverlay() {
+    setState(() {
+      _isExpanded = false;
+      _showPreview = false;
+    });
+    FlutterOverlayWindow.resizeOverlay(80, 80, true);
+    FlutterOverlayWindow.updateFlag(OverlayFlag.defaultFlag);
+  }
+
   Widget _buildExpandedChat() {
     return Container(
       width: double.infinity,
@@ -416,7 +464,8 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
       color: Colors.transparent,
       alignment: Alignment.center,
       child: Container(
-        width: MediaQuery.of(context).size.width,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        width: double.infinity,
         height: MediaQuery.of(context).size.height * 0.85,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -424,264 +473,295 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
             end: Alignment.bottomRight,
             colors: [Color(0xEE160B1F), Color(0xF20F0514)],
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: const Color(0xFFFF4F93).withValues(alpha: 0.2),
+            color: const Color(0x33FF4F93),
             width: 1.0,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.7),
-              blurRadius: 30,
-              offset: const Offset(0, 16),
-              spreadRadius: 4,
-            ),
-          ],
         ),
         child: Column(
           children: [
             // Header
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.06),
+            GestureDetector(
+              onVerticalDragUpdate: (details) {
+                if (details.primaryDelta != null && details.primaryDelta! > 5) {
+                  _shrinkOverlay();
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      width: 1.0,
+                    ),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.favorite_rounded,
+                          color: Color(0xFFFF4F93),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Thì thầm với $_partnerName',
+                            style: GoogleFonts.quicksand(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        // Maximize / Open Main App
+                        IconButton(
+                          icon: const Icon(Icons.open_in_new_rounded,
+                              color: Colors.white70, size: 18),
+                          onPressed: () {
+                            FlutterOverlayWindow.shareData('launch_app');
+                            FlutterOverlayWindow.closeOverlay();
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded,
+                              color: Colors.white70, size: 18),
+                          onPressed: _shrinkOverlay,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Messages list
+            Expanded(
+              child: (_houseId == null || _houseId!.isEmpty)
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          'Đang đồng bộ dữ liệu...\nVui lòng mở lại ứng dụng nếu chờ lâu 💕',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Colors.white.withOpacity(0.6),
+                              fontSize: 13,
+                              height: 1.5),
+                        ),
+                      ),
+                    )
+                  : _chatHistory.isEmpty
+                      ? Center(
+                          child: Text(
+                            'Hãy gửi lời thì thầm tâm hồn... 💕',
+                            style: GoogleFonts.quicksand(
+                              color: Colors.white.withValues(alpha: 0.4),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 10),
+                          itemCount: _chatHistory.length,
+                          itemBuilder: (context, index) {
+                            final msg = _chatHistory[index];
+                            final text = msg['text']?.toString() ?? '';
+                            final sender = msg['sender']?.toString() ?? '';
+                            final isSelf = (sender == _myRole);
+
+                            return Align(
+                              alignment: isSelf
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
+                                constraints:
+                                    const BoxConstraints(maxWidth: 270),
+                                decoration: BoxDecoration(
+                                  gradient: isSelf
+                                      ? const LinearGradient(
+                                          colors: [
+                                            Color(0xFFFF4F93),
+                                            Color(0xFFE2528F)
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        )
+                                      : const LinearGradient(
+                                          colors: [
+                                            Color(0xFF2C2C2E),
+                                            Color(0xFF1E1E20)
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x26000000),
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    )
+                                  ],
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: const Radius.circular(22),
+                                    topRight: const Radius.circular(22),
+                                    bottomLeft: isSelf
+                                        ? const Radius.circular(22)
+                                        : const Radius.circular(6),
+                                    bottomRight: isSelf
+                                        ? const Radius.circular(6)
+                                        : const Radius.circular(22),
+                                  ),
+                                ),
+                                child: Text(
+                                  text,
+                                  style: GoogleFonts.quicksand(
+                                    color: Colors.white,
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+            ),
+
+            if (_spamWarning != null)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF4F4F).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFFFF4F4F).withValues(alpha: 0.3),
                     width: 1.0,
                   ),
                 ),
-              ),
-              child: Row(
-                children: [
-                const Icon(
-                  Icons.favorite_rounded,
-                  color: Color(0xFFFF4F93),
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Thì thầm với $_partnerName',
-                    style: GoogleFonts.quicksand(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Color(0xFFFF4F4F),
+                      size: 14,
                     ),
-                  ),
-                ),
-                // Maximize / Open Main App
-                IconButton(
-                  icon: const Icon(Icons.open_in_new_rounded, color: Colors.white70, size: 18),
-                  onPressed: () {
-                    FlutterOverlayWindow.shareData('launch_app');
-                    FlutterOverlayWindow.closeOverlay();
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 18),
-                  onPressed: () {
-                    setState(() {
-                      _isExpanded = false;
-                      _showPreview = false;
-                    });
-                    FlutterOverlayWindow.resizeOverlay(80, 80, true);
-                    FlutterOverlayWindow.updateFlag(OverlayFlag.defaultFlag);
-                  },
-                ),
-              ],
-            ),
-          ),
-
-          // Messages list
-          Expanded(
-            child: (_houseId == null || _houseId!.isEmpty)
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                    const SizedBox(width: 6),
+                    Expanded(
                       child: Text(
-                        'Đang đồng bộ dữ liệu...\nVui lòng mở lại ứng dụng nếu chờ lâu 💕',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13, height: 1.5),
+                        _spamWarning!,
+                        style: GoogleFonts.quicksand(
+                          color: const Color(0xFFFFD1D1),
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  )
-                : _chatHistory.isEmpty
-                    ? Center(
-                        child: Text(
-                          'Hãy gửi lời thì thầm tâm hồn... 💕',
-                          style: GoogleFonts.quicksand(
-                            color: Colors.white.withValues(alpha: 0.4),
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      )
-                    : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    itemCount: _chatHistory.length,
-                    itemBuilder: (context, index) {
-                      final msg = _chatHistory[index];
-                      final text = msg['text']?.toString() ?? '';
-                      final sender = msg['sender']?.toString() ?? '';
-                      final isSelf = (sender == _myRole);
-                      
-                      return Align(
-                        alignment: isSelf ? Alignment.centerRight : Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          constraints: const BoxConstraints(maxWidth: 270),
-                          decoration: BoxDecoration(
-                            gradient: isSelf
-                                ? const LinearGradient(
-                                    colors: [Color(0xFFFF4F93), Color(0xFFE2528F)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  )
-                                : const LinearGradient(
-                                    colors: [Color(0xFF2C2C2E), Color(0xFF1E1E20)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.15),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              )
-                            ],
-                            borderRadius: BorderRadius.only(
-                              topLeft: const Radius.circular(22),
-                              topRight: const Radius.circular(22),
-                              bottomLeft: isSelf ? const Radius.circular(22) : const Radius.circular(6),
-                              bottomRight: isSelf ? const Radius.circular(6) : const Radius.circular(22),
-                            ),
-                          ),
-                          child: Text(
-                            text,
-                            style: GoogleFonts.quicksand(
-                              color: Colors.white,
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
+                  ],
+                ),
+              ),
 
-          if (_spamWarning != null)
+            // Footer Text Input
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
               decoration: BoxDecoration(
-                color: const Color(0xFFFF4F4F).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: const Color(0xFFFF4F4F).withValues(alpha: 0.3),
-                  width: 1.0,
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    width: 1.0,
+                  ),
+                ),
+                color: Colors.white.withValues(alpha: 0.02),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
                 ),
               ),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.warning_amber_rounded,
-                    color: Color(0xFFFF4F4F),
-                    size: 14,
-                  ),
-                  const SizedBox(width: 6),
+                  Icon(Icons.add_circle_outline_rounded,
+                      color: Colors.white.withValues(alpha: 0.5), size: 24),
+                  const SizedBox(width: 10),
+                  Icon(Icons.camera_alt_outlined,
+                      color: Colors.white.withValues(alpha: 0.5), size: 24),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      _spamWarning!,
-                      style: GoogleFonts.quicksand(
-                        color: const Color(0xFFFFD1D1),
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          width: 1.0,
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 4),
+                      child: TextField(
+                        controller: _textController,
+                        style: GoogleFonts.quicksand(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Nhắn tin...',
+                          hintStyle: GoogleFonts.quicksand(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            fontSize: 14,
+                          ),
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 8),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: _sendMessage,
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFFFF4F93), Color(0xFFE2528F)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.send_rounded,
+                        color: Colors.white,
+                        size: 18,
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-
-          // Footer Text Input
-          Container(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  width: 1.0,
-                ),
-              ),
-              color: Colors.white.withValues(alpha: 0.02),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(32),
-                bottomRight: Radius.circular(32),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.add_circle_outline_rounded, color: Colors.white.withValues(alpha: 0.5), size: 24),
-                const SizedBox(width: 10),
-                Icon(Icons.camera_alt_outlined, color: Colors.white.withValues(alpha: 0.5), size: 24),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        width: 1.0,
-                      ),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    child: TextField(
-                      controller: _textController,
-                      style: GoogleFonts.quicksand(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Nhắn tin...',
-                        hintStyle: GoogleFonts.quicksand(
-                          color: Colors.white.withValues(alpha: 0.4),
-                          fontSize: 14,
-                        ),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: _sendMessage,
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFFF4F93), Color(0xFFE2528F)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.send_rounded,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
           ],
         ),
       ),

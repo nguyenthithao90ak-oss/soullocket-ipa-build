@@ -371,7 +371,9 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                 color: _paperRoseDeep,
               ),
               label: Text(
-                _showAllStickerOptions ? context.tr('util_thugn_5d7176') : context.tr('util_xemthm_129410'),
+                _showAllStickerOptions
+                    ? context.tr('util_thugn_5d7176')
+                    : context.tr('util_xemthm_129410'),
                 style: SLTheme.quicksand(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
@@ -613,8 +615,8 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
                             color: Colors.white.withValues(alpha: 0.72),
                             borderRadius: BorderRadius.circular(999),
                             border: Border.all(
-                              color: preset.accent.withValues(alpha: 
-                                selected ? 0.42 : 0.22,
+                              color: preset.accent.withValues(
+                                alpha: selected ? 0.42 : 0.22,
                               ),
                             ),
                           ),
@@ -667,10 +669,6 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
       ],
     );
   }
-
-
-
-
 
   /// Đơn giản — 2 nút: chọn từ máy / chọn từ kỷ niệm
   Widget _buildSimplePhotoSource({required bool compact}) {

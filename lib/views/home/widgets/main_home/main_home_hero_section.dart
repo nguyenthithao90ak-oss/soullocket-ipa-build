@@ -184,12 +184,15 @@ class _ModernHomeBody extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        SizedBox(height: MediaQuery.paddingOf(context).top + 36),
+                        SizedBox(
+                            height: MediaQuery.paddingOf(context).top + 36),
                         state.widget.isSwipingListenable == null
                             ? buildCountdown(false)
                             : ValueListenableBuilder<bool>(
-                                valueListenable: state.widget.isSwipingListenable!,
-                                builder: (context, isSwiping, _) => buildCountdown(isSwiping),
+                                valueListenable:
+                                    state.widget.isSwipingListenable!,
+                                builder: (context, isSwiping, _) =>
+                                    buildCountdown(isSwiping),
                               ),
                         SLSpacing.h8,
                         state._buildModernAvatarSection(
@@ -201,7 +204,8 @@ class _ModernHomeBody extends StatelessWidget {
                         ),
                         SLSpacing.h20,
                         RepaintBoundary(
-                          child: _ChatReminderBanner(state: state, isSingle: isSingle),
+                          child: _ChatReminderBanner(
+                              state: state, isSingle: isSingle),
                         ),
                         if (!isSingle) ...[
                           SLSpacing.h20,
@@ -225,8 +229,10 @@ class _ModernHomeBody extends StatelessWidget {
                         state.widget.isSwipingListenable == null
                             ? buildInsight(false)
                             : ValueListenableBuilder<bool>(
-                                valueListenable: state.widget.isSwipingListenable!,
-                                builder: (context, isSwiping, _) => buildInsight(isSwiping),
+                                valueListenable:
+                                    state.widget.isSwipingListenable!,
+                                builder: (context, isSwiping, _) =>
+                                    buildInsight(isSwiping),
                               ),
                         SLSpacing.h20,
                         RepaintBoundary(
@@ -269,7 +275,8 @@ class _ChatReminderBanner extends StatelessWidget {
     final diffMs = now - ts;
     const oneDayMs = 86400000;
     const threeDaysMs = 259200000;
-    if (diffMs < oneDayMs || diffMs > threeDaysMs) return const SizedBox.shrink();
+    if (diffMs < oneDayMs || diffMs > threeDaysMs)
+      return const SizedBox.shrink();
 
     final days = (diffMs / oneDayMs).floor();
     final label = days == 1
@@ -312,7 +319,8 @@ class _ChatReminderBanner extends StatelessWidget {
             GestureDetector(
               onTap: () => state._openDirectChat(),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: SLColors.primary.withValues(alpha: 0.22),
                   borderRadius: SLRadius.pillAll,
@@ -333,7 +341,6 @@ class _ChatReminderBanner extends StatelessWidget {
     );
   }
 }
-
 
 class _HomeDecorGlow extends StatelessWidget {
   final double size;

@@ -216,7 +216,8 @@ class DrawingStudioPresence {
   final int colorValue;
   final int updatedAt;
 
-  factory DrawingStudioPresence.fromMap(String uid, Map<dynamic, dynamic>? map) {
+  factory DrawingStudioPresence.fromMap(
+      String uid, Map<dynamic, dynamic>? map) {
     return DrawingStudioPresence(
       uid: uid,
       name: (map?['name'] ?? '').toString().trim(),
@@ -457,7 +458,7 @@ class DrawingStudioService {
   Future<List<DrawingStudioGalleryItem>> _loadLocalGallery() async {
     try {
       final prefs = OfflineCacheService.getPrefsSync() ??
-        await SharedPreferences.getInstance();
+          await SharedPreferences.getInstance();
       final raw = prefs.getString(_galleryPrefsKey);
       if (raw == null || raw.isEmpty) {
         return const <DrawingStudioGalleryItem>[];

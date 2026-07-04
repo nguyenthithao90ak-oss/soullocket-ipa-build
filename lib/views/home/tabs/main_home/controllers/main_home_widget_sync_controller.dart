@@ -218,15 +218,25 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
         settings['dayUnit']?.toString(),
         L10nService().translate('home_ngy_b9474a'),
       );
-      final rawNameU1 = (settings['nameU1']?.toString().trim().isNotEmpty ?? false)
-          ? settings['nameU1'].toString().trim()
-          : L10nService().translate('home_bn_1fd75b');
-      final rawNameU2 = (settings['nameU2']?.toString().trim().isNotEmpty ?? false)
-          ? settings['nameU2'].toString().trim()
-          : L10nService().translate('home_ngiy_5bab37');
-          
-      final nameU1 = rawNameU1.toLowerCase() == 'bạn nam' ? L10nService().translate('male_role_default') : (rawNameU1.toLowerCase() == 'bạn nữ' ? L10nService().translate('female_role_default') : rawNameU1);
-      final nameU2 = rawNameU2.toLowerCase() == 'bạn nữ' ? L10nService().translate('female_role_default') : (rawNameU2.toLowerCase() == 'bạn nam' ? L10nService().translate('male_role_default') : rawNameU2);
+      final rawNameU1 =
+          (settings['nameU1']?.toString().trim().isNotEmpty ?? false)
+              ? settings['nameU1'].toString().trim()
+              : L10nService().translate('home_bn_1fd75b');
+      final rawNameU2 =
+          (settings['nameU2']?.toString().trim().isNotEmpty ?? false)
+              ? settings['nameU2'].toString().trim()
+              : L10nService().translate('home_ngiy_5bab37');
+
+      final nameU1 = rawNameU1.toLowerCase() == 'bạn nam'
+          ? L10nService().translate('male_role_default')
+          : (rawNameU1.toLowerCase() == 'bạn nữ'
+              ? L10nService().translate('female_role_default')
+              : rawNameU1);
+      final nameU2 = rawNameU2.toLowerCase() == 'bạn nữ'
+          ? L10nService().translate('female_role_default')
+          : (rawNameU2.toLowerCase() == 'bạn nam'
+              ? L10nService().translate('male_role_default')
+              : rawNameU2);
 
       final configuredBucket = AppConfig.firebaseStorageBucket.trim();
       final defaultMaleAvatarUrl = configuredBucket.isEmpty
@@ -272,14 +282,23 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
 
       // Battery: partner battery from notifier
       final partnerBatteryData = _homePartnerBatteryNotifier.value;
-      final partnerBattery = (partnerBatteryData?['level'] as num?)?.toInt() ?? -1;
+      final partnerBattery =
+          (partnerBatteryData?['level'] as num?)?.toInt() ?? -1;
       final partnerIsCharging = partnerBatteryData?['isCharging'] == true;
 
       // Map battery per role for widget slots (battery1 = user1, battery2 = user2)
-      final battery1 = _currentRole == 'user1' ? -1 : (_partnerRole == 'user1' ? partnerBattery : -1);
-      final isCharging1 = _currentRole == 'user2' && _partnerRole == 'user1' ? partnerIsCharging : false;
-      final battery2 = _currentRole == 'user2' ? -1 : (_partnerRole == 'user2' ? partnerBattery : -1);
-      final isCharging2 = _currentRole == 'user1' && _partnerRole == 'user2' ? partnerIsCharging : false;
+      final battery1 = _currentRole == 'user1'
+          ? -1
+          : (_partnerRole == 'user1' ? partnerBattery : -1);
+      final isCharging1 = _currentRole == 'user2' && _partnerRole == 'user1'
+          ? partnerIsCharging
+          : false;
+      final battery2 = _currentRole == 'user2'
+          ? -1
+          : (_partnerRole == 'user2' ? partnerBattery : -1);
+      final isCharging2 = _currentRole == 'user1' && _partnerRole == 'user2'
+          ? partnerIsCharging
+          : false;
 
       final widgetSignature = jsonEncode({
         'houseId': houseId,

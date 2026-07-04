@@ -182,7 +182,9 @@ class ActivityHistoryEntry {
   }
 
   String get displayLine {
-    final who = role == 'user2' ? L10nService().translate('female_role_default') : L10nService().translate('male_role_default');
+    final who = role == 'user2'
+        ? L10nService().translate('female_role_default')
+        : L10nService().translate('male_role_default');
     if (isPrivate && !revealed) {
       return '$who ${placeholder.isNotEmpty ? placeholder : L10nService().translate('home_activity_performed')}';
     }
@@ -257,7 +259,8 @@ class ActivityHistoryService {
     } catch (e) {
       debugPrint('ActivityHistory remote load failed: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: L10nService().translate('home_activity_history_load_error'),
+        fallbackMessage:
+            L10nService().translate('home_activity_history_load_error'),
       ).message}');
     }
 
@@ -405,13 +408,15 @@ class ActivityHistoryService {
         debugPrint(
             'ActivityHistory album restore failed: ${AppErrorMapper.resolve(
           e,
-          fallbackMessage: L10nService().translate('home_activity_album_restore_error'),
+          fallbackMessage:
+              L10nService().translate('home_activity_album_restore_error'),
         ).message}');
         return false;
       }
 
       await add(
-        L10nService().format('home_activity_restored', {'label': entry.effectiveSourceLabel.toLowerCase()}),
+        L10nService().format('home_activity_restored',
+            {'label': entry.effectiveSourceLabel.toLowerCase()}),
         houseId: entry.houseId,
         role: entry.role,
         title: L10nService().translate('home_activity_restored_title'),
@@ -438,7 +443,8 @@ class ActivityHistoryService {
         final isNotFound = errorText.contains('firebase_functions/not-found') ||
             errorText.contains('not-found') ||
             errorText.contains('NOT_FOUND') ||
-            errorText.contains(L10nService().translate('home_activity_memory_not_found'));
+            errorText.contains(
+                L10nService().translate('home_activity_memory_not_found'));
         final payload = Map<String, dynamic>.from(entry.restorePayload);
         final payloadPurgeAt = (payload['purgeAt'] as num?)?.toInt() ?? 0;
         final effectiveExpiry = entry.restoreExpiresAt > 0
@@ -453,7 +459,8 @@ class ActivityHistoryService {
           debugPrint(
               'ActivityHistory diary memory restore failed: ${AppErrorMapper.resolve(
             e,
-            fallbackMessage: L10nService().translate('home_activity_memory_restore_error'),
+            fallbackMessage:
+                L10nService().translate('home_activity_memory_restore_error'),
           ).message}');
           return false;
         }
@@ -485,7 +492,8 @@ class ActivityHistoryService {
       }
 
       await add(
-        L10nService().format('home_activity_restored', {'label': entry.effectiveSourceLabel.toLowerCase()}),
+        L10nService().format('home_activity_restored',
+            {'label': entry.effectiveSourceLabel.toLowerCase()}),
         houseId: entry.houseId,
         role: entry.role,
         title: L10nService().translate('home_activity_restored_title'),
@@ -509,7 +517,8 @@ class ActivityHistoryService {
     await _db.ref(entry.restorePath).set(payload);
 
     await add(
-      L10nService().format('home_activity_restored', {'label': entry.effectiveSourceLabel.toLowerCase()}),
+      L10nService().format('home_activity_restored',
+          {'label': entry.effectiveSourceLabel.toLowerCase()}),
       houseId: entry.houseId,
       role: entry.role,
       title: L10nService().translate('home_activity_restored_title'),

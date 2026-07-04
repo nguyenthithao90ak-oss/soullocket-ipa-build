@@ -1,4 +1,3 @@
-
 part of '../../main_home_tab.dart';
 
 const Color _mainHomeAccentColor = Color(0xFFD81B60);

@@ -15,27 +15,32 @@ class DiaryComposerController {
   List<Map<String, dynamic>> get moods => <Map<String, dynamic>>[
         {
           'icon': '😍',
-          'label': L10nService().translate(L10nService().translate('home_vuiv_2d8b13')),
+          'label': L10nService()
+              .translate(L10nService().translate('home_vuiv_2d8b13')),
           'color': const Color(0xFFFF4B72),
         },
         {
           'icon': '💖',
-          'label': L10nService().translate(L10nService().translate('home_hnhphc_2a902f')),
+          'label': L10nService()
+              .translate(L10nService().translate('home_hnhphc_2a902f')),
           'color': const Color(0xFFD81B60),
         },
         {
           'icon': '🤩',
-          'label': L10nService().translate(L10nService().translate('home_hngkhi_eef2c4')),
+          'label': L10nService()
+              .translate(L10nService().translate('home_hngkhi_eef2c4')),
           'color': const Color(0xFFFF8F00),
         },
         {
           'icon': '🤒',
-          'label': L10nService().translate(L10nService().translate('home_m_6872a7')),
+          'label':
+              L10nService().translate(L10nService().translate('home_m_6872a7')),
           'color': const Color(0xFF43A047),
         },
         {
           'icon': '🌧️',
-          'label': L10nService().translate(L10nService().translate('home_su_9a7d8d')),
+          'label': L10nService()
+              .translate(L10nService().translate('home_su_9a7d8d')),
           'color': const Color(0xFF546E7A),
         },
       ];
@@ -54,7 +59,8 @@ class DiaryComposerController {
 
     if (content.isEmpty) {
       showSnackBar(
-        L10nService().translate(L10nService().translate('home_vitnidungt_62c71e')),
+        L10nService()
+            .translate(L10nService().translate('home_vitnidungt_62c71e')),
         backgroundColor: const Color(0xFFEF6C57),
       );
       return;
@@ -75,7 +81,8 @@ class DiaryComposerController {
       final houseId = await feedController.resolveHouseId();
       if (houseId == null) {
         showSnackBar(
-          L10nService().translate(L10nService().translate('home_chatmthymn_54ac3c')),
+          L10nService()
+              .translate(L10nService().translate('home_chatmthymn_54ac3c')),
           backgroundColor: const Color(0xFFE53935),
         );
         return;
@@ -103,7 +110,8 @@ class DiaryComposerController {
           backgroundColor: const Color(0xFFF39C12),
         );
       } else {
-        showSnackBar(L10nService().translate(L10nService().translate('home_ngtmsmi_f60808')));
+        showSnackBar(L10nService()
+            .translate(L10nService().translate('home_ngtmsmi_f60808')));
         ActivityHistoryService.instance.add(
           L10nService().translate('home_vitmtnhtkm_2ae1bc'),
           houseId: houseId,
@@ -112,7 +120,8 @@ class DiaryComposerController {
         );
         // Gửi push notification tới người bên kia kèm nội dung nhật ký
         final mood = selectedMoodVN.value;
-        final preview = content.length > 60 ? '${content.substring(0, 60)}...' : content;
+        final preview =
+            content.length > 60 ? '${content.substring(0, 60)}...' : content;
         NotificationService().sendPartnerNotification(
           houseId: houseId,
           title: '$authorName $mood vừa viết tâm sự!',
@@ -124,8 +133,8 @@ class DiaryComposerController {
       showSnackBar(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              L10nService().translate(L10nService().translate('home_khngthngbi_6d6c5a')),
+          fallbackMessage: L10nService()
+              .translate(L10nService().translate('home_khngthngbi_6d6c5a')),
         ).message,
         backgroundColor: const Color(0xFFE53935),
       );

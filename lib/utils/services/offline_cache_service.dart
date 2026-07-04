@@ -15,7 +15,8 @@ class OfflineCacheService {
 
   /// Đặt dữ liệu vào RAM Cache với thời gian sống (TTL).
   static void setMemoryCache(String key, dynamic data, Duration ttl) {
-    if (!_memoryCache.containsKey(key) && _memoryCache.length >= _memoryCacheMaxSize) {
+    if (!_memoryCache.containsKey(key) &&
+        _memoryCache.length >= _memoryCacheMaxSize) {
       // LRU eviction: xoá entry sắp hết hạn nhất
       String? oldestKey;
       DateTime? oldestTime;
@@ -127,7 +128,8 @@ class OfflineCacheService {
   static Future<void> clearAllCache() async {
     clearAllMemoryCache();
     final prefs = await getPrefs();
-    final keys = prefs.getKeys().where((k) => k.startsWith('offline_cache_')).toList();
+    final keys =
+        prefs.getKeys().where((k) => k.startsWith('offline_cache_')).toList();
     for (final key in keys) {
       await prefs.remove(key);
     }

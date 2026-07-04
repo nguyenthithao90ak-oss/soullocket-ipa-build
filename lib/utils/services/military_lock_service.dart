@@ -652,20 +652,19 @@ class MilitaryLockService {
                                       : Icons.fingerprint_rounded,
                                   color: const Color(0xFFD81B60),
                                 ),
-                                onPressed:
-                                    remainingLockSeconds > 0 || isSubmitting
-                                        ? null
-                                        : () async {
-                                            final bioSuccess =
-                                                await _authenticateWithDevice(
-                                              localizedReason: reason,
-                                            );
-                                            if (bioSuccess &&
-                                                dialogContext.mounted) {
-                                              Navigator.of(dialogContext)
-                                                  .pop(true);
-                                            }
-                                          },
+                                onPressed: remainingLockSeconds > 0 ||
+                                        isSubmitting
+                                    ? null
+                                    : () async {
+                                        final bioSuccess =
+                                            await _authenticateWithDevice(
+                                          localizedReason: reason,
+                                        );
+                                        if (bioSuccess &&
+                                            dialogContext.mounted) {
+                                          Navigator.of(dialogContext).pop(true);
+                                        }
+                                      },
                               ),
                               SLSpacing.w8,
                             ],

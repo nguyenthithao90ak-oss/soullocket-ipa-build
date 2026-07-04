@@ -40,8 +40,7 @@ class CreativeDiaryService {
         voiceNote.name.isNotEmpty ? voiceNote.name : voiceNote.path;
     final extension = p.extension(originalFileName).toLowerCase();
     final safeExtension = extension.isNotEmpty ? extension : '.m4a';
-    final fileName =
-        '${DateTime.now().millisecondsSinceEpoch}$safeExtension';
+    final fileName = '${DateTime.now().millisecondsSinceEpoch}$safeExtension';
     final mimeType = _detectMimeType(safeExtension);
     final bytes = await _readVoiceBytes(voiceNote);
     if (bytes == null || bytes.isEmpty) {
