@@ -480,11 +480,12 @@ class HouseService {
 
   Future<void> joinHouseWithCoupleCode(String coupleCode) async {
     try {
-      final code = coupleCode.trim().toLowerCase();
+      final code = coupleCode.trim();
       if (code.isEmpty) {
         throw Exception('Vui lòng nhập mã ghép nối.');
       }
       
+      await _refreshCallableSecurityContext(force: true);
       final response = await CloudFunctionsHelper.callSecure<dynamic>(
         'joinHouseSecure',
         payload: <String, dynamic>{
