@@ -457,7 +457,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   }
 
   List<Widget> _buildSparkles() {
-    const double radius = 78;
+    const double radius = 45;
     // 4 sparkles thay vì 6 — tiết kiệm render
     const fixedSizes = [6.0, 4.5, 6.0, 4.5];
     const sparkleColors = [
@@ -479,9 +479,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           (i % 2 == 0 ? (0.3 + 0.65 * pulseVal) : (0.95 - 0.65 * pulseVal))
               .clamp(0.0, 1.0);
       return Positioned(
-        // 100 = half of the 200px SizedBox — static center
-        left: 100 + dx - size / 2,
-        top: 100 + dy - size / 2,
+        // 50 = half of the 100px SizedBox — static center
+        left: 50 + dx - size / 2,
+        top: 50 + dy - size / 2,
         child: IgnorePointer(
           child: Opacity(
             opacity: opacity,
@@ -491,14 +491,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: sparkleColors[i % sparkleColors.length],
-                boxShadow: [
-                  BoxShadow(
-                    color: sparkleColors[i % sparkleColors.length]
-                        .withValues(alpha: 0.7),
-                    blurRadius: size * 2.0,
-                    spreadRadius: 0.5,
-                  ),
-                ],
+                // BoxShadow removed for Flat performance
               ),
             ),
           ),
@@ -901,22 +894,22 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                         child: ScaleTransition(
                           scale: _pulseAnim,
                           child: SizedBox(
-                            width: 160,
-                            height: 160,
+                            width: 100,
+                            height: 100,
                             child: Stack(
                               alignment: Alignment.center,
                               children: [
                                 // Cute sticker heart
                                 Image.asset(
                                   'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
-                                  width: 130,
-                                  height: 130,
+                                  width: 80,
+                                  height: 80,
                                   fit: BoxFit.contain,
                                   filterQuality: FilterQuality.medium,
                                   errorBuilder: (_, __, ___) => const Icon(
                                     Icons.favorite_rounded,
                                     color: Color(0xFFFF80B3),
-                                    size: 120,
+                                    size: 70,
                                   ),
                                 ),
                                 // Sparkle dots

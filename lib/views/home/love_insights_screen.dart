@@ -335,10 +335,12 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
   }
 
   String _favoriteActivityLabel(LoveInsightData insight) {
-    if (insight.diaryTotal > insight.albumTotal)
+    if (insight.diaryTotal > insight.albumTotal) {
       return L10nService().translate('insight_habit_diary');
-    if (insight.diaryTotal < insight.albumTotal)
+    }
+    if (insight.diaryTotal < insight.albumTotal) {
       return L10nService().translate('insight_habit_album');
+    }
     return L10nService().translate('insight_habit_balance');
   }
 

@@ -118,25 +118,7 @@ class _CountdownVisualSpec {
           ),
           outerBorder: Border.all(
               color: Colors.white.withValues(alpha: 0.92), width: 4.5),
-          shadows: [
-            BoxShadow(
-              color: const Color(0xFFFF5E9D).withValues(alpha: 0.30),
-              blurRadius: 46,
-              spreadRadius: 2,
-              offset: const Offset(0, 18),
-            ),
-            BoxShadow(
-              color: const Color(0xFF8A4CFF).withValues(alpha: 0.10),
-              blurRadius: 28,
-              offset: const Offset(0, 8),
-            ),
-            BoxShadow(
-              color: Colors.white.withValues(alpha: 0.90),
-              blurRadius: 14,
-              spreadRadius: 1,
-              offset: const Offset(-4, -4),
-            ),
-          ],
+          shadows: const [],
           innerColor: null,
           innerGradient: LinearGradient(
             colors: [
@@ -152,24 +134,8 @@ class _CountdownVisualSpec {
           numberGradient: const [Color(0xFFFFF7FB), Color(0xFFFFD7E8)],
           topLabelColor: Colors.white,
           bottomLabelColor: Colors.white.withValues(alpha: 0.94),
-          labelShadows: [
-            Shadow(
-                color: const Color(0xFF9D315F).withValues(alpha: 0.32),
-                blurRadius: 10),
-            Shadow(color: Colors.white.withValues(alpha: 0.72), blurRadius: 4),
-          ],
-          numberShadows: [
-            Shadow(
-              color: const Color(0xFF8D365B).withValues(alpha: 0.30),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-            Shadow(
-              color: Colors.white.withValues(alpha: 0.60),
-              blurRadius: 4,
-              offset: const Offset(-1, -2),
-            ),
-          ],
+          labelShadows: const [],
+          numberShadows: const [],
         );
       case 'glass':
         return _CountdownVisualSpec(

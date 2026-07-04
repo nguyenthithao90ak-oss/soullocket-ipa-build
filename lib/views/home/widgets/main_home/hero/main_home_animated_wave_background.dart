@@ -191,7 +191,7 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
 
   @override
   Widget build(BuildContext context) {
-    if (!AnimatedWaveBackground.hasMotion(widget.styleKey)) {
+    if (!widget.enableMotion || !AnimatedWaveBackground.hasMotion(widget.styleKey)) {
       return const SizedBox.expand();
     }
     final isBasicStyle = widget.styleKey == 'default' ||
@@ -205,7 +205,7 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
       state: uiState,
       isWeb: kIsWeb,
     );
-    final quality = effectProfile.graphicsQualityKey;
+    const quality = 'low';
 
     final result = AnimatedBuilder(
       animation: _controller,

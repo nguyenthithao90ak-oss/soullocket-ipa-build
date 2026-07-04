@@ -1004,8 +1004,9 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                   Color eventColor;
                   try {
                     final buffer = StringBuffer();
-                    if (colorHex.length == 6 || colorHex.length == 7)
+                    if (colorHex.length == 6 || colorHex.length == 7) {
                       buffer.write('ff');
+                    }
                     buffer.write(colorHex.replaceFirst('#', ''));
                     eventColor = Color(int.parse(buffer.toString(), radix: 16));
                   } catch (_) {

@@ -243,8 +243,9 @@ class RankingService {
         final settingsMap = <String, dynamic>{};
         for (var i = 0; i < settingsFields.length; i++) {
           final s = snaps[rootFields.length + i];
-          if (s.exists && s.value != null)
+          if (s.exists && s.value != null) {
             settingsMap[settingsFields[i]] = s.value;
+          }
         }
         if (settingsMap.isNotEmpty) result['settings'] = settingsMap;
       } catch (_) {}

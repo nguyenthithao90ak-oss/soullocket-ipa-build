@@ -1618,22 +1618,34 @@ extension _MapLocationLogicExt on _MapScreenState {
     if (!_isSingleRelationship &&
         _routeSnapshot != null &&
         _routeSnapshot!.points.length >= 2) {
-      livePolylines.add(
-        _buildGlowPolyline(
-          points: _routeSnapshot!.points,
-          color: _kMapRouteGlow,
-          strokeWidth: 9.5,
-        ),
-      );
-      livePolylines.add(
-        _buildSharpPolyline(
-          points: _routeSnapshot!.points,
-          color: _kMapPinkDeep,
-          gradientColors: const [_kMapPinkSoft, _kMapPinkDeep],
-          strokeWidth: 5.8,
-          borderStrokeWidth: 2.3,
-        ),
-      );
+      final validPoints = _routeSnapshot!.points
+          .where((p) =>
+              !p.latitude.isNaN &&
+              !p.longitude.isNaN &&
+              p.latitude <= 90.0 &&
+              p.latitude >= -90.0 &&
+              p.longitude <= 180.0 &&
+              p.longitude >= -180.0)
+          .toList(growable: false);
+      
+      if (validPoints.length >= 2) {
+        livePolylines.add(
+          _buildGlowPolyline(
+            points: validPoints,
+            color: _kMapRouteGlow,
+            strokeWidth: 9.5,
+          ),
+        );
+        livePolylines.add(
+          _buildSharpPolyline(
+            points: validPoints,
+            color: _kMapPinkDeep,
+            gradientColors: const [_kMapPinkSoft, _kMapPinkDeep],
+            strokeWidth: 5.8,
+            borderStrokeWidth: 2.3,
+          ),
+        );
+      }
     }
 
     if (!mounted) return;

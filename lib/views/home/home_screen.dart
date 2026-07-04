@@ -614,8 +614,9 @@ class _HomeScreenState extends State<HomeScreen>
     final startDateSnap = await FirebaseDatabase.instance
         .ref('houses/$houseId/settings/startDate')
         .get();
-    if (!mounted || !startDateSnap.exists || startDateSnap.value == null)
+    if (!mounted || !startDateSnap.exists || startDateSnap.value == null) {
       return;
+    }
     final startDate = DateTime.tryParse(startDateSnap.value.toString());
     if (startDate != null) {
       NotificationService().checkAnniversaryReminder(houseId, startDate);

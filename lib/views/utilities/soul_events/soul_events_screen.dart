@@ -174,8 +174,9 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
         child: StreamBuilder<List<SoulEvent>>(
           stream: SoulEventService().streamEvents(_houseId!),
           builder: (context, snapshot) {
-            if (!snapshot.hasData)
+            if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
+            }
             final events = snapshot.data!;
             if (events.isEmpty) {
               return Center(

@@ -268,8 +268,9 @@ class GiftMakerService {
         .orderByChild('ts')
         .onValue
         .map((event) {
-      if (!event.snapshot.exists || event.snapshot.value is! Map)
+      if (!event.snapshot.exists || event.snapshot.value is! Map) {
         return <GiftData>[];
+      }
       final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
       return data.entries.where((e) => e.value is Map).map((e) {
         final map = Map<String, dynamic>.from(e.value as Map);
@@ -292,8 +293,9 @@ class GiftMakerService {
         .limitToLast(30)
         .onValue
         .map((event) {
-      if (!event.snapshot.exists || event.snapshot.value is! Map)
+      if (!event.snapshot.exists || event.snapshot.value is! Map) {
         return <GiftData>[];
+      }
       final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
       return data.entries.where((e) => e.value is Map).map((e) {
         final map = Map<String, dynamic>.from(e.value as Map);

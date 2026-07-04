@@ -158,8 +158,9 @@ class CloudflareR2Service {
   /// Lấy object name từ public URL
   String? _extractObjectName(String url) {
     final normalized = url.trim();
-    if (publicDomain.isEmpty || !normalized.startsWith(publicDomain))
+    if (publicDomain.isEmpty || !normalized.startsWith(publicDomain)) {
       return null;
+    }
 
     const prefix = '$publicDomain/';
     if (!normalized.startsWith(prefix)) return null;

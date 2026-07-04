@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/material.dart';
 
+import '../../../../../utils/app_cache_manager.dart';
 import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/app_error_mapper.dart';
 import '../../../../../utils/services/l10n_service.dart';
@@ -87,93 +88,36 @@ class DiaryMemorySection extends StatefulWidget {
 }
 
 class _DiaryMemorySectionState extends State<DiaryMemorySection> {
-  static const int _thumbnailWarmupCount = 15;
-  static const int _prefetchAheadCount = 20;
-  static const double _loadMoreThreshold = 1500;
-  static const Duration _scrollDebounceDuration = Duration(milliseconds: 150);
+  static const int _thumbnailWarmupCount = 18;
   PreparedDiaryMemoryFeed? _lastPreparedFeed;
   String _thumbnailWarmupSignature = '';
-  String _prefetchedSignature = '';
   bool _isUploadingMemory = false;
   final ScrollController _scrollController = ScrollController();
-  Timer? _scrollDebounceTimer;
 
   // Month filter state
-  DateTime? _selectedMonth;
+  DateTime? _selectedMonth; // only year/month used, day = 1
   List<DateTime> _availableMonths = [];
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScrollDebounced);
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScrollDebounced);
-    _scrollDebounceTimer?.cancel();
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
 
-  /// Debounced scroll handler — tránh gọi prefetch 50 ảnh mỗi pixel scroll
-  void _onScrollDebounced() {
+  void _onScroll() {
     if (!_scrollController.hasClients) return;
-    final pos = _scrollController.position;
-    final maxScroll = pos.maxScrollExtent;
-    final currentScroll = pos.pixels;
-
-    // Load more không cần debounce (chỉ fire 1 lần)
-    if (maxScroll - currentScroll <= _loadMoreThreshold &&
-        !widget.isLoadingMoreMemories) {
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+    if (maxScroll - currentScroll <= 400 && !widget.isLoadingMoreMemories) {
       widget.onLoadMore();
     }
-
-    // Debounce prefetch để tránh spam khi scroll nhanh
-    _scrollDebounceTimer?.cancel();
-    _scrollDebounceTimer = Timer(_scrollDebounceDuration, () {
-      if (!mounted) return;
-      _maybePrefetchNextThumbnails(currentScroll, maxScroll);
-    });
-  }
-
-  /// Warmup thumbnail của 50 ảnh tiếp theo dựa trên vị trí scroll hiện tại
-  void _maybePrefetchNextThumbnails(double currentScroll, double maxScroll) {
-    final photos = _lastPreparedFeed?.photos;
-    if (photos == null || photos.isEmpty || !mounted) return;
-    if (maxScroll <= 0) return;
-
-    // Tính index ảnh đang xem dựa trên tỷ lệ scroll
-    final ratio = (currentScroll / maxScroll).clamp(0.0, 1.0);
-    final visibleStartIndex = (ratio * photos.length).toInt();
-    final prefetchStart = visibleStartIndex;
-    final prefetchEnd =
-        (prefetchStart + _prefetchAheadCount).clamp(0, photos.length);
-
-    if (prefetchEnd <= prefetchStart) return;
-    final upcoming = photos.sublist(prefetchStart, prefetchEnd);
-    final urls = <String>[
-      for (final photo in upcoming) (photo['url']?.toString() ?? '').trim(),
-    ]..removeWhere((url) => url.isEmpty);
-    if (urls.isEmpty) return;
-
-    final sig = '${widget.thumbnailCacheWidth}|$prefetchStart|${urls.length}';
-    if (_prefetchedSignature == sig) return;
-    _prefetchedSignature = sig;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      for (final url in urls) {
-        unawaited(
-          precacheImage(
-            _DiaryMemoryImageProviders.thumbnail(
-                url, widget.thumbnailCacheWidth),
-            context,
-            onError: (_, __) {},
-          ),
-        );
-      }
-    });
   }
 
   /// Extract available months from photos list
@@ -228,8 +172,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color:
-                          isSelected ? Colors.white : const Color(0xFF8A5B76),
+                      color: isSelected ? Colors.white : const Color(0xFF8A5B76),
                     ),
                   ),
                   selected: isSelected,
@@ -466,23 +409,18 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                     if (item.isHeader) {
                                       final highlights = item.highlights;
                                       if (highlights.isNotEmpty) {
-                                        return RepaintBoundary(
-                                          child: _DiaryMemorySpecialHeader(
-                                            icon: highlights.first['icon'] ??
-                                                '💖',
-                                            title:
-                                                highlights.first['text'] ?? '',
-                                            dateString: item.dateString ?? '',
-                                            totalPhotos: item.totalPhotos ?? 0,
-                                          ),
+                                        return _DiaryMemorySpecialHeader(
+                                          icon:
+                                              highlights.first['icon'] ?? '💖',
+                                          title: highlights.first['text'] ?? '',
+                                          dateString: item.dateString ?? '',
+                                          totalPhotos: item.totalPhotos ?? 0,
                                         );
                                       }
 
-                                      return RepaintBoundary(
-                                        child: _DiaryMemoryDateHeader(
-                                          dateString: item.dateString ?? '',
-                                          totalPhotos: item.totalPhotos ?? 0,
-                                        ),
+                                      return _DiaryMemoryDateHeader(
+                                        dateString: item.dateString ?? '',
+                                        totalPhotos: item.totalPhotos ?? 0,
                                       );
                                     }
 
@@ -509,8 +447,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                             bodySlivers.add(
                               SliverToBoxAdapter(
                                 child: Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 40),
+                                  padding: const EdgeInsets.symmetric(vertical: 40),
                                   child: Center(
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
@@ -967,7 +904,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
   @override
   Widget build(BuildContext context) {
     if (widget.rowPhotos.isEmpty) return const SizedBox.shrink();
-
+    
     // Compute optimal crossAxisCount based on number of items
     int crossAxisCount = 3;
     if (widget.rowPhotos.length == 1) {
@@ -987,24 +924,18 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
         itemCount: widget.rowPhotos.length,
         itemBuilder: (context, index) {
           final photo = widget.rowPhotos[index];
-          // RepaintBoundary: isolate từng ảnh, tránh repaint cả row
-          return RepaintBoundary(
-            child: _buildPhotoItem(context, photo, index),
-          );
+          return _buildPhotoItem(context, photo, index);
         },
       ),
     );
   }
 
-  Widget _buildPhotoItem(
-      BuildContext context, Map<String, dynamic> photo, int index) {
+  Widget _buildPhotoItem(BuildContext context, Map<String, dynamic> photo, int index) {
     final photoUrl = _resolvePhotoUrl(photo);
     final photoId = photo['id']?.toString() ?? 'unknown_$index';
-
+    
     // Detect potential transparent images (PNGs from iOS cutout often have png extension or cutout flag)
-    final isStickerOrPng = photoUrl.toLowerCase().contains('.png') ||
-        photo['isSticker'] == true ||
-        photo['isCutout'] == true;
+    final isStickerOrPng = photoUrl.toLowerCase().contains('.png') || photo['isSticker'] == true || photo['isCutout'] == true;
 
     if (photoUrl.isEmpty) {
       final retries = _retryCount[photoId] ?? 0;
@@ -1048,79 +979,76 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
       valueListenable: widget.selectionListenable,
       child: Container(
         decoration: BoxDecoration(
-          color: isStickerOrPng ? Colors.transparent : Colors.black,
           borderRadius: BorderRadius.circular(18),
           // Remove strong white shadow for stickers to prevent ugly white box behind transparent images
-          boxShadow: isStickerOrPng
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: const Color(0xFF5C71D8).withValues(alpha: 0.14),
-                    blurRadius: 14,
-                    offset: const Offset(0, 6),
-                  ),
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.72),
-                    blurRadius: 8,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
+          boxShadow: isStickerOrPng ? [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ] : [
+            BoxShadow(
+              color: const Color(0xFF5C71D8).withValues(alpha: 0.14),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+            BoxShadow(
+              color: Colors.white.withValues(alpha: 0.72),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(18),
-          child: AspectRatio(
-            aspectRatio: 0.75,
-            child: Hero(
-              tag: 'memory_image_${photo['id']}',
-              child: CachedNetworkImage(
-                imageUrl: photoUrl,
-                memCacheWidth: widget.thumbnailCacheWidth,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.low,
-                placeholder: (context, url) => Container(
-                  color: isStickerOrPng ? Colors.transparent : Colors.black,
-                ),
-                errorWidget: (context, url, error) {
-                  final retries = _retryCount[photoId] ?? 0;
-                  if (retries < 2) {
-                    _retryCount[photoId] = retries + 1;
-                    WidgetsBinding.instance.addPostFrameCallback((_) async {
-                      if (!mounted) return;
-                      try {
-                        if (retries >= 1) {
-                          photo['broken'] = true;
-                        } else {
-                          await _refreshStalePhotoUrl(photo);
-                        }
-                      } catch (_) {
-                        photo['broken'] = true;
-                      }
-                    });
-                  }
-                  if (retries >= 2 || photo['broken'] == true) {
-                    return const SizedBox.shrink();
-                  }
-                  return Container(
-                    color: const Color(0xFFF8FAFC),
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.refresh_rounded,
-                          color: Color(0xFF94A3B8),
-                          size: 24,
-                        ),
-                      ],
-                    ),
-                  );
-                },
+          child: Hero(
+            tag: 'memory_image_${photo['id']}',
+            child: CachedNetworkImage(
+              imageUrl: photoUrl,
+              memCacheWidth: widget.thumbnailCacheWidth,
+              cacheManager: AppCacheManager.instance,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.low,
+              fadeInDuration: const Duration(milliseconds: 150),
+              fadeOutDuration: Duration.zero,
+              placeholder: (context, url) => Container(
+                color: isStickerOrPng ? Colors.transparent : const Color(0xFFF1F5F9),
               ),
+              errorWidget: (context, url, error) {
+                final retries = _retryCount[photoId] ?? 0;
+                if (retries < 2) {
+                  _retryCount[photoId] = retries + 1;
+                  WidgetsBinding.instance.addPostFrameCallback((_) async {
+                    if (!mounted) return;
+                    try {
+                      if (retries >= 1) {
+                        photo['broken'] = true;
+                      } else {
+                        await _refreshStalePhotoUrl(photo);
+                      }
+                    } catch (_) {
+                      photo['broken'] = true;
+                    }
+                  });
+                }
+                if (retries >= 2 || photo['broken'] == true) {
+                  return const SizedBox.shrink();
+                }
+                return Container(
+                  color: const Color(0xFFF8FAFC),
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.refresh_rounded,
+                        color: Color(0xFF94A3B8),
+                        size: 24,
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -1427,6 +1355,7 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                             height: 1.4,
                           ),
                         ),
+
                       ],
                     ),
                   ),
@@ -1685,6 +1614,7 @@ class _DiaryMemoryAddButton extends StatelessWidget {
     );
   }
 }
+
 
 class _DiaryMemoryInlineLoading extends StatelessWidget {
   const _DiaryMemoryInlineLoading();

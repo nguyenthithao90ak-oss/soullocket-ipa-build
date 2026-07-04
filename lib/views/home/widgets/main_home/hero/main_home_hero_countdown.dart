@@ -575,7 +575,6 @@ class _MainHomeHeroCountdownCircleState
                   color: countdownVisual.outerColor,
                   gradient: countdownVisual.outerGradient,
                   border: countdownVisual.outerBorder,
-                  boxShadow: countdownVisual.shadows,
                 ),
                 child: Stack(
                   alignment: Alignment.center,
@@ -645,9 +644,6 @@ class _MainHomeHeroCountdownCircleState
                                       letterSpacing: 1.2,
                                       color: customTextColor ??
                                           countdownVisual.topLabelColor,
-                                    )
-                                    .copyWith(
-                                      shadows: countdownVisual.labelShadows,
                                     ),
                               ),
                             ),
@@ -689,9 +685,6 @@ class _MainHomeHeroCountdownCircleState
                                       color: Colors.white,
                                       height: 0.96,
                                       letterSpacing: 4.0,
-                                    )
-                                    .copyWith(
-                                      shadows: countdownVisual.numberShadows,
                                     ),
                               ),
                             ),
@@ -728,9 +721,6 @@ class _MainHomeHeroCountdownCircleState
                                       letterSpacing: 1.1,
                                       color: customTextColor ??
                                           countdownVisual.bottomLabelColor,
-                                    )
-                                    .copyWith(
-                                      shadows: countdownVisual.labelShadows,
                                     ),
                               ),
                             ),

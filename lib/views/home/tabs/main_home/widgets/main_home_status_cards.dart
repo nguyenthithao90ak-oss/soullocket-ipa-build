@@ -156,14 +156,18 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     final dobU2 = _houseSettings?['dobU2']?.toString() ?? '';
     String nameU1 = _houseSettings?['nameU1']?.toString() ?? 'Bạn';
     String nameU2 = _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
-    if (nameU1.toLowerCase() == 'bạn nam')
+    if (nameU1.toLowerCase() == 'bạn nam') {
       nameU1 = context.tr('male_role_default');
-    if (nameU1.toLowerCase() == 'bạn nữ')
+    }
+    if (nameU1.toLowerCase() == 'bạn nữ') {
       nameU1 = context.tr('female_role_default');
-    if (nameU2.toLowerCase() == 'bạn nam')
+    }
+    if (nameU2.toLowerCase() == 'bạn nam') {
       nameU2 = context.tr('male_role_default');
-    if (nameU2.toLowerCase() == 'bạn nữ')
+    }
+    if (nameU2.toLowerCase() == 'bạn nữ') {
       nameU2 = context.tr('female_role_default');
+    }
 
     void addBirthday(String dob, String name) {
       if (dob.isEmpty) return;
@@ -257,14 +261,18 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     String myNameSetting = _houseSettings?['nameU1']?.toString() ?? 'Bạn';
     String partnerNameSetting =
         _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
-    if (myNameSetting.toLowerCase() == 'bạn nam')
+    if (myNameSetting.toLowerCase() == 'bạn nam') {
       myNameSetting = context.tr('male_role_default');
-    if (myNameSetting.toLowerCase() == 'bạn nữ')
+    }
+    if (myNameSetting.toLowerCase() == 'bạn nữ') {
       myNameSetting = context.tr('female_role_default');
-    if (partnerNameSetting.toLowerCase() == 'bạn nam')
+    }
+    if (partnerNameSetting.toLowerCase() == 'bạn nam') {
       partnerNameSetting = context.tr('male_role_default');
-    if (partnerNameSetting.toLowerCase() == 'bạn nữ')
+    }
+    if (partnerNameSetting.toLowerCase() == 'bạn nữ') {
       partnerNameSetting = context.tr('female_role_default');
+    }
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,

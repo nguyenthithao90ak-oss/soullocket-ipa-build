@@ -121,7 +121,7 @@ class _IncomingCallOverlayState extends State<IncomingCallOverlay>
                   child: ClipOval(
                     child: widget.callerAvatar.isNotEmpty
                         ? CachedNetworkImage(
-                            memCacheWidth: 720,
+                            memCacheWidth: 250,
                             imageUrl: widget.callerAvatar,
                             fit: BoxFit.cover,
                             filterQuality: FilterQuality.medium,
@@ -486,7 +486,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
             child: ClipOval(
               child: widget.partnerAvatar.isNotEmpty
                   ? CachedNetworkImage(
-                      memCacheWidth: 720,
+                      memCacheWidth: 250,
                       imageUrl: widget.partnerAvatar,
                       fit: BoxFit.cover,
                       filterQuality: FilterQuality.medium,

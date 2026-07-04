@@ -5,7 +5,7 @@ import SwiftUI
 
 // Định nghĩa cấu hình thuộc tính cho Live Activity dùng chung giữa Extension và Main App
 @available(iOS 16.1, *)
-public struct SoulLocketActivityAttributes: ActivityAttributes {
+public struct LiveActivitiesAppAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
         public var endTime: Date
         public var label: String
@@ -21,7 +21,7 @@ public struct SoulLocketActivityAttributes: ActivityAttributes {
 @available(iOS 16.1, *)
 struct SoulLocketLiveActivity: Widget {
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: SoulLocketActivityAttributes.self) { context in
+        ActivityConfiguration(for: LiveActivitiesAppAttributes.self) { context in
             // Giao diện hiển thị trên Màn hình khóa (Lock Screen) và Thông báo (Banner)
             VStack(spacing: 8) {
                 HStack {

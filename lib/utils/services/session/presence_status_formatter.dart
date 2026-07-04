@@ -21,17 +21,21 @@ class PresenceStatusFormatter {
     );
 
     if (diff.inSeconds < 60) return justDisconnectedLabel();
-    if (diff.inMinutes < 60)
+    if (diff.inMinutes < 60) {
       return L10nService()
           .format('core_presence_minutes_ago', {'count': diff.inMinutes});
-    if (diff.inHours < 24)
+    }
+    if (diff.inHours < 24) {
       return L10nService()
           .format('core_presence_hours_ago', {'count': diff.inHours});
-    if (diff.inDays == 1)
+    }
+    if (diff.inDays == 1) {
       return L10nService().translate('core_presence_yesterday');
-    if (diff.inDays < 30)
+    }
+    if (diff.inDays < 30) {
       return L10nService()
           .format('core_presence_days_ago', {'count': diff.inDays});
+    }
     return L10nService().translate('core_presence_long_ago');
   }
 }

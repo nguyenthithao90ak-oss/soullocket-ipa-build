@@ -121,10 +121,12 @@ class _AgeZodiacScreenState extends State<AgeZodiacScreen> {
       months += 12;
     }
     final sb = StringBuffer();
-    if (years > 0)
+    if (years > 0) {
       sb.write(L10nService().format('util_age_years', {'count': years}));
-    if (months > 0)
+    }
+    if (months > 0) {
       sb.write(L10nService().format('util_age_months', {'count': months}));
+    }
     sb.write(L10nService().format('util_age_days', {'count': days}));
     return sb.toString();
   }

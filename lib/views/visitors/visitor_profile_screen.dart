@@ -1323,10 +1323,11 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       child: Stack(fit: StackFit.expand, children: [
         if (img.isNotEmpty)
           CachedNetworkImage(
-              memCacheWidth: 720,
+              memCacheWidth: 300,
               imageUrl: img,
               fit: BoxFit.cover,
-              filterQuality: FilterQuality.high,
+              filterQuality: FilterQuality.low,
+              fadeInDuration: const Duration(milliseconds: 150),
               placeholder: (_, __) => Container(color: SLColors.borderLight),
               errorWidget: (_, __, ___) => Container(color: SLColors.border))
         else

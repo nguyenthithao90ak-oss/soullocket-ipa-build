@@ -268,8 +268,9 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
         break;
       }
       final ext = p.extension(xfile.name).toLowerCase();
-      if (!['.mp4', '.mov', '.avi', '.mkv', '.webm', '.3gp'].contains(ext))
+      if (!['.mp4', '.mov', '.avi', '.mkv', '.webm', '.3gp'].contains(ext)) {
         continue;
+      }
       // Kiểm tra dung lượng
       final srcFile = File(xfile.path);
       final size = await srcFile.length();
@@ -351,8 +352,9 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
         ));
       }
     }
-    if (videoAdded > 0)
+    if (videoAdded > 0) {
       await _incrementTodayVideoCount(todayCount + videoAdded);
+    }
     await _saveItems();
     _applyFilters();
     setState(() {});
@@ -1042,9 +1044,10 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
     try {
       final file = File(_filePath(_currentIndex));
       if (!await file.exists()) {
-        if (mounted)
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('File không tồn tại')));
+        }
         return;
       }
       final bytes = await file.readAsBytes();

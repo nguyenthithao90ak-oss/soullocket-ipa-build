@@ -45,8 +45,9 @@ class PinnedHttpClient {
     if (!isConfigured) throw StateError('SSL pinning is not configured.');
     final request = http.Request(method, uri);
     if (headers != null) request.headers.addAll(headers);
-    if (body != null)
+    if (body != null) {
       request.bodyBytes = (encoding ?? utf8).encode(body.toString());
+    }
     final ioClient = _createIoClient();
     try {
       final streamedResponse = await ioClient
@@ -68,9 +69,10 @@ class PinnedHttpClient {
           return false;
         }
         final matched = pinnedSpkiFingerprints.contains(fingerprint);
-        if (!matched && kDebugMode)
+        if (!matched && kDebugMode) {
           debugPrint(
               '[PinnedHttpClient] Pinning failed for $host: $fingerprint');
+        }
         return matched;
       });
   }
@@ -84,9 +86,10 @@ class PinnedHttpClient {
       if (spki == null) return null;
       return base64.encode(sha256.convert(spki).bytes).toUpperCase();
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
             '[PinnedHttpClient] Error: ${AppErrorMapper.resolve(e).message}');
+      }
       return null;
     }
   }

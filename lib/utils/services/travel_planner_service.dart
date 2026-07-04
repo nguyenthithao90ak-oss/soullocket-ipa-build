@@ -96,15 +96,17 @@ class TravelPlannerService {
   /// Stream danh sách tất cả địa điểm (để vẽ markers trên bản đồ)
   Stream<List<TravelPin>> streamTravelPins(String houseId) {
     final normalizedHouseId = houseId.trim();
-    if (normalizedHouseId.isEmpty)
+    if (normalizedHouseId.isEmpty) {
       return Stream<List<TravelPin>>.value(const []);
+    }
     return _db
         .ref('houses/$normalizedHouseId/travel_pins')
         .orderByChild('ts')
         .onValue
         .map((event) {
-      if (!event.snapshot.exists || event.snapshot.value is! Map)
+      if (!event.snapshot.exists || event.snapshot.value is! Map) {
         return <TravelPin>[];
+      }
       final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
       final pins = <TravelPin>[];
       for (final e in data.entries) {

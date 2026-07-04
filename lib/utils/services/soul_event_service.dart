@@ -27,8 +27,9 @@ class SoulEventService {
     }
 
     yield* _db.child('houses/$houseId/soul_events').onValue.map((event) {
-      if (!event.snapshot.exists || event.snapshot.value is! Map)
+      if (!event.snapshot.exists || event.snapshot.value is! Map) {
         return <SoulEvent>[];
+      }
       final raw = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
       final events = <SoulEvent>[];
       raw.forEach((key, value) {

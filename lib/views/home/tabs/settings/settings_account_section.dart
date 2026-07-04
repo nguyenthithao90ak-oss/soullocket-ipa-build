@@ -537,8 +537,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
   }
 
   String _accountTierSubtitle() {
-    if (!AppConfig.isPurchaseEnabled)
+    if (!AppConfig.isPurchaseEnabled) {
       return context.tr('home_thngtinhs_ee5e18');
+    }
     if (!_isVipActive) return context.tr('home_gicbn_1a2d12');
     if (_isLifetimeVip) return context.tr('vip_lifetime');
     return _vipPlanLabel;
@@ -552,8 +553,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
   }
 
   String _accountMemoryLimitLabel() {
-    if (!AppConfig.isPurchaseEnabled)
+    if (!AppConfig.isPurchaseEnabled) {
       return context.tr('home_khoknimcnh_0f4166');
+    }
     if (_isVipActive) {
       return _isLifetimeVip
           ? context.tr('home_1000nhknim_df7663')

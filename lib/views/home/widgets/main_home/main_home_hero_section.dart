@@ -275,8 +275,9 @@ class _ChatReminderBanner extends StatelessWidget {
     final diffMs = now - ts;
     const oneDayMs = 86400000;
     const threeDaysMs = 259200000;
-    if (diffMs < oneDayMs || diffMs > threeDaysMs)
+    if (diffMs < oneDayMs || diffMs > threeDaysMs) {
       return const SizedBox.shrink();
+    }
 
     final days = (diffMs / oneDayMs).floor();
     final label = days == 1

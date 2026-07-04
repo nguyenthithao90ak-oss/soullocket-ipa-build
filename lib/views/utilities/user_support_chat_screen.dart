@@ -543,7 +543,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         await _db
             .ref('support_tickets/$_ticketId')
             .update(updates)
-            .timeout(const Duration(seconds: 5));
+            .timeout(const Duration(seconds: 15));
       } catch (e) {
         debugPrint('Error updating ticket metadata: $e');
       }
@@ -590,7 +590,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
               'Người dùng vừa gửi tin nhắn hỗ trợ Admin: $userText\n${context.tr('util_hytrlinhtr_e42d19')}',
               context.tr('util_bnltrlailp_9d5e23'),
             )
-            .timeout(const Duration(seconds: 6));
+            .timeout(const Duration(seconds: 15));
       } catch (_) {}
 
       await _saveBotReply(
@@ -615,7 +615,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
             aiPrompt,
             context.tr('util_bnltrlailp_6890a8'),
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 15));
 
       if (aiReply != null && aiReply.trim().isNotEmpty) {
         await _saveBotReply(

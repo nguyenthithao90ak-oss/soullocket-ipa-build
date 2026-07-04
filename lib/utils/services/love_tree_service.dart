@@ -73,8 +73,9 @@ class LoveTreeService {
 
   Stream<Map<dynamic, dynamic>> listenToTreeStatus(String houseId) {
     final normalizedHouseId = houseId.trim();
-    if (normalizedHouseId.isEmpty)
+    if (normalizedHouseId.isEmpty) {
       return Stream<Map<dynamic, dynamic>>.value({});
+    }
     return _db.ref('houses/$normalizedHouseId/love_tree').onValue.map((event) {
       if (event.snapshot.value is! Map) return {};
       return Map<dynamic, dynamic>.from(event.snapshot.value as Map);

@@ -69,8 +69,9 @@ class NoteService {
   // Lấy Stream danh sách Note theo thời gian thực (Realtime Board)
   Stream<List<SharedNote>> streamNotes(String houseId) {
     final normalizedHouseId = houseId.trim();
-    if (normalizedHouseId.isEmpty)
+    if (normalizedHouseId.isEmpty) {
       return Stream<List<SharedNote>>.value(const []);
+    }
     return _dbRef
         .child('houses/$normalizedHouseId/utilities/notes')
         .onValue

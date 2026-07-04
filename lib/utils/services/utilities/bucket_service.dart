@@ -9,8 +9,9 @@ class BucketService {
   Future<void> addItem(String houseId, String title) async {
     final normalizedHouseId = houseId.trim();
     final normalizedTitle = title.trim();
-    if (normalizedHouseId.isEmpty)
+    if (normalizedHouseId.isEmpty) {
       throw Exception('Thiếu mã nhà để thêm bucket.');
+    }
     if (normalizedTitle.isEmpty) throw Exception('Hãy nhập nội dung bucket.');
     final ref = _dbRef.child('houses/$normalizedHouseId/utilities/bucket');
     final snapshot = await ref.get();

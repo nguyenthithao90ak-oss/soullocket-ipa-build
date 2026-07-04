@@ -90,8 +90,9 @@ class MiniGamesService {
   /// Stream state game realtime
   Stream<WhoIsState> streamWhoIsState(String houseId) {
     final normalizedHouseId = houseId.trim();
-    if (normalizedHouseId.isEmpty)
+    if (normalizedHouseId.isEmpty) {
       return Stream<WhoIsState>.value(WhoIsState(question: ''));
+    }
     return _db.ref('houses/$normalizedHouseId/game_whois').onValue.map((event) {
       if (!event.snapshot.exists || event.snapshot.value is! Map) {
         return WhoIsState(question: '');
@@ -149,8 +150,9 @@ class MiniGamesService {
 
   Stream<List<QuizData>> streamQuizzes(String houseId) {
     final normalizedHouseId = houseId.trim();
-    if (normalizedHouseId.isEmpty)
+    if (normalizedHouseId.isEmpty) {
       return Stream<List<QuizData>>.value(const []);
+    }
     return _db
         .ref('houses/$normalizedHouseId/quiz')
         .orderByChild('ts')
