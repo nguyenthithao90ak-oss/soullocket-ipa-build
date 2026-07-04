@@ -64,7 +64,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
 
   String _formatCode(String code) {
     if (code.length != 12) return code;
-    return '${code.substring(0, 4)} ${code.substring(4, 8)} ${code.substring(8, 12)}';
+    return '${code.substring(0, 4)}-${code.substring(4, 8)}-${code.substring(8, 12)}';
   }
 
   @override
@@ -256,6 +256,18 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFF48FB1)),
+                ),
+              ),
+              SLSpacing.h16,
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Để sau',
+                  style: SLTheme.quicksand(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.grey.shade600,
+                  ),
                 ),
               ),
             ],

@@ -28,7 +28,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
   }
 
   Future<void> _sendRequest() async {
-    final code = _codeCtrl.text.trim().replaceAll(' ', '');
+    final code = _codeCtrl.text.replaceAll('-', '').replaceAll(' ', '');
     if (code.length != 12) {
       setState(() => _errorMsg = 'Vui lòng nhập đủ 12 số.');
       return;
@@ -162,8 +162,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
           autofocus: true,
           keyboardType: TextInputType.number,
           inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-            LengthLimitingTextInputFormatter(12),
+            _PairingCodeInputFormatter(),
           ],
           style: SLTheme.quicksand(
             fontSize: 24,
@@ -173,7 +172,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
           ),
           textAlign: TextAlign.center,
           decoration: InputDecoration(
-            hintText: 'XXXX XXXX XXXX',
+            hintText: 'XXXX-XXXX-XXXX',
             hintStyle: SLTheme.quicksand(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -339,6 +338,25 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
           child: Text('Thử lại', style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
         )
       ],
+    );
+  }
+}
+
+class _PairingCodeInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    var text = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (text.length > 12) text = text.substring(0, 12);
+    
+    var formatted = '';
+    for (var i = 0; i < text.length; i++) {
+      if (i > 0 && i % 4 == 0) formatted += '-';
+      formatted += text[i];
+    }
+    
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }

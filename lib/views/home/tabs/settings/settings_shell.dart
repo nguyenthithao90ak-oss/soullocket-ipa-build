@@ -547,7 +547,7 @@ extension _SettingsTabShell on _SettingsTabState {
             title: 'Ghép nối tổ ấm',
             subtitle: 'Tham gia không gian chung với người ấy',
             isDark: isDark,
-            onTap: () => JoinHouseDialog.show(context),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PairingDashboardScreen())),
           ),
           _buildDivider(isDark),
           _buildiOSRow(

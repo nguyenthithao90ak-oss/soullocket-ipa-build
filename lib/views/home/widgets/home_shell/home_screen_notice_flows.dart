@@ -986,6 +986,28 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
               ),
             ),
           ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFD81B60),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const PairingDashboardScreen()),
+              );
+            },
+            child: Text(
+              'Ghép nối ngay',
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -1032,15 +1054,32 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           ),
         ),
         actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Để sau',
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w700,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFFF9800),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const PairingDashboardScreen()),
+              );
+            },
             child: Text(
-              'Đã hiểu',
+              'Ghép nối ngay',
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.w800,
                 color: Colors.white,

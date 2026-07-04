@@ -4,7 +4,7 @@ import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/pairing_service.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_create_code_sheet.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_enter_code_sheet.dart';
-import 'package:soullocket_app/utils/views/cached_avatar_image.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class PairingDashboardScreen extends StatefulWidget {
   const PairingDashboardScreen({super.key});
@@ -23,7 +23,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   }
 
   Future<void> _loadHouseId() async {
-    final houseId = await HouseService().getHouseIdFromCacheOrPrefs();
+    final houseId = await HouseService().getCurrentHouseId();
     if (mounted) {
       setState(() {
         _myHouseId = houseId;
@@ -248,7 +248,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
             backgroundColor: Colors.grey.shade200,
             child: request.guestAvatar.isNotEmpty
                 ? ClipOval(
-                    child: CachedAvatarImage(
+                    child: CachedNetworkImage(
                       imageUrl: request.guestAvatar,
                       width: 48,
                       height: 48,

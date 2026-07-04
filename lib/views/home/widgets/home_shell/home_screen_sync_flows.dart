@@ -104,20 +104,22 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
       if (!mounted) return;
       final pendingRequests = requests.where((r) => r.status == 'pending').toList();
       if (pendingRequests.isNotEmpty) {
-        // Show a banner or dialog for the first pending request
+        // Show a dialog for the first pending request
         final request = pendingRequests.first;
-        SLNotice.showInfo(
+        SLNotice.showConfirmDialog(
           context,
-          'Có yêu cầu ghép nối từ ${request.guestName}.',
-          actionLabel: 'XEM',
-          onAction: () {
+          title: 'Yêu cầu ghép nối',
+          message: 'Có yêu cầu ghép nối từ ${request.guestName}. Bạn có muốn xem không?',
+          confirmText: 'Xem',
+          cancelText: 'Đóng',
+        ).then((value) {
+          if (value == true && mounted) {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const PairingDashboardScreen()),
             );
-          },
-          duration: const Duration(seconds: 10),
-        );
+          }
+        });
       }
     });
 

@@ -3,7 +3,7 @@ import 'dart:math';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/foundation.dart';
+
 import 'package:soullocket_app/utils/services/house_service.dart';
 
 class PairingRequest {
@@ -53,7 +53,7 @@ class PairingService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Chưa đăng nhập');
 
-    final houseId = await HouseService().getHouseId(user.uid);
+    final houseId = await HouseService().getCurrentHouseId();
     if (houseId == null || houseId.isEmpty) throw Exception('Chưa có nhà');
 
     final code = _generate12DigitCode();

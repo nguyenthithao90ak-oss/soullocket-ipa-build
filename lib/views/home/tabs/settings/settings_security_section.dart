@@ -106,30 +106,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  OutlinedButton.icon(
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PairingDashboardScreen())),
-                    icon: const Icon(Icons.link_rounded, size: 18),
-                    label: Text(
-                      'Nhập mã ghép nối',
-                      style: SLTextStyles.quicksand(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFD81B60),
-                      side: const BorderSide(color: Color(0xFFD81B60)),
-                      backgroundColor: Colors.white.withValues(alpha: 0.6),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                    ),
-                  ),
+
                 ],
               ),
             ),
