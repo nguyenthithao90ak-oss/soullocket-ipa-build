@@ -915,4 +915,140 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
       ),
     );
   }
+
+  Future<void> _maybeShowDailyPairingNotice() async {
+    if (!mounted) return;
+    final prefs = await OfflineCacheService.getPrefs();
+    final lastShownKey = 'il_last_pairing_notice_date';
+    final now = DateTime.now();
+    final lastDateStr = prefs.getString(lastShownKey);
+
+    if (lastDateStr != null) {
+      final lastDate = DateTime.tryParse(lastDateStr);
+      if (lastDate != null &&
+          lastDate.year == now.year &&
+          lastDate.month == now.month &&
+          lastDate.day == now.day) {
+        // Đã hiển thị hôm nay
+        return;
+      }
+    }
+
+    await prefs.setString(lastShownKey, now.toIso8601String());
+
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFD81B60).withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.favorite_border_rounded,
+                  color: Color(0xFFD81B60), size: 24),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Nhắc nhở ghép nối',
+                style: SLTheme.quicksand(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: SLColors.textPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Bạn chưa ghép nối! Hãy chia sẻ mã nhà cho người ấy ở Cài Đặt để cùng nhau xây dựng tổ ấm nhé.',
+          style: SLTheme.quicksand(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: SLColors.textSecondary,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Để sau',
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w700,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPairingRequiredDialog() {
+    if (!mounted) return;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF9800).withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.lock_person_rounded,
+                  color: Color(0xFFFF9800), size: 24),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Tính năng bị khóa',
+                style: SLTheme.quicksand(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: SLColors.textPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Bạn cần ghép nối với người ấy để dùng tính năng này. Hãy vào mục Cài Đặt lấy mã để chia sẻ nhé!',
+          style: SLTheme.quicksand(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: SLColors.textSecondary,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFFF9800),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Đã hiểu',
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

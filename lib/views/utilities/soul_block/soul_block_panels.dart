@@ -940,7 +940,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
-              child: BackdropFilter(
+              child: FastBackdropFilter(
                 filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                 child: Container(
                   decoration: BoxDecoration(

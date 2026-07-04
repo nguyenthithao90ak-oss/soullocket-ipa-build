@@ -253,7 +253,7 @@ class DrawingStudioService {
   static const String _migratedPrefix = 'drawing_studio_gallery_migrated_v1_';
 
   DatabaseReference _studioRef(String houseId) =>
-      _db.ref('houses/${houseId.trim()}/drawing_studio');
+      _db.ref('drawing_studio/${houseId.trim()}');
 
   Stream<DrawingStudioBackground> streamBackground(String houseId) {
     return _studioRef(houseId).child('background').onValue.map((event) {

@@ -50,7 +50,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
   Timer? _notificationsDebounce;
   String _lastNotificationsFingerprint = '';
 
-  static const int _notificationsLimit = 50;
+  static const int _notificationsLimit = 30;
 
   @override
   void initState() {

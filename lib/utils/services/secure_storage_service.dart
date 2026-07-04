@@ -20,19 +20,29 @@ class SecureStorageService {
   static const String keyRole = 'il_role';
   static const String keyRelMode = 'il_rel_mode';
   Future<void> write(String key, String value) async {
-    await _storage.write(key: key, value: value);
+    try {
+      await _storage.write(key: key, value: value).timeout(const Duration(seconds: 2));
+    } catch (_) {}
   }
 
   Future<String?> read(String key) async {
-    return await _storage.read(key: key);
+    try {
+      return await _storage.read(key: key).timeout(const Duration(seconds: 2));
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> delete(String key) async {
-    await _storage.delete(key: key);
+    try {
+      await _storage.delete(key: key).timeout(const Duration(seconds: 2));
+    } catch (_) {}
   }
 
   Future<void> deleteAll() async {
-    await _storage.deleteAll();
+    try {
+      await _storage.deleteAll().timeout(const Duration(seconds: 2));
+    } catch (_) {}
   }
 
   /// Migrates a key from SharedPreferences to SecureStorage if it exists

@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';

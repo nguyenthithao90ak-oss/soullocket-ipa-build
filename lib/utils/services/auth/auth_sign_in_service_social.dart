@@ -18,6 +18,18 @@ extension AuthSignInServiceSocial on AuthSignInService {
     return _isProviderLinkedCurrentUser('google.com');
   }
 
+  String? getGoogleLinkedEmail() {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+    final providerData = user.providerData;
+    for (final provider in providerData) {
+      if (provider.providerId == 'google.com') {
+        return provider.email;
+      }
+    }
+    return null;
+  }
+
   Future<bool> isAppleLinkedCurrentUser() {
     return _isProviderLinkedCurrentUser('apple.com');
   }

@@ -317,20 +317,24 @@ class _StableShellBackgroundImageState
   }
 
   ImageProvider<Object> _buildNetworkProvider(String url) {
+    final mediaQuery = MediaQuery.maybeOf(context);
     final view = WidgetsBinding.instance.platformDispatcher.views.isNotEmpty
         ? WidgetsBinding.instance.platformDispatcher.views.first
         : null;
-    final devicePixelRatio = view?.devicePixelRatio ?? 1.0;
-    final logicalSize = view?.physicalSize != null
-        ? Size(
-            view!.physicalSize.width / devicePixelRatio,
-            view.physicalSize.height / devicePixelRatio,
-          )
-        : const Size(430, 932);
-    final cacheWidth =
-        (logicalSize.width * devicePixelRatio).round().clamp(1080, 2160);
-    final cacheHeight =
-        (logicalSize.height * devicePixelRatio).round().clamp(1920, 3840);
+    final devicePixelRatio =
+        mediaQuery?.devicePixelRatio ?? view?.devicePixelRatio ?? 1.0;
+    final logicalWidth = mediaQuery?.size.width ??
+        ((view?.physicalSize.width ?? 0) / devicePixelRatio);
+    final logicalHeight = mediaQuery?.size.height ??
+        ((view?.physicalSize.height ?? 0) / devicePixelRatio);
+    final qualityScale = devicePixelRatio >= 2.5 ? 0.75 : 0.85;
+    final cacheWidth = (logicalWidth * devicePixelRatio * qualityScale)
+        .round()
+        .clamp(600, 1280);
+    final cacheHeight = (logicalHeight * devicePixelRatio * qualityScale)
+        .round()
+        .clamp(960, 1920);
+
     final provider = CachedNetworkImageProvider(
       url,
       maxWidth: cacheWidth,

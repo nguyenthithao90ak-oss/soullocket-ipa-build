@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../settings_tab.dart';
 
 const CropAspectRatio _themeBackgroundAspectRatio =
@@ -390,7 +391,6 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       max: UiPrefs.maxCountdownSizePx,
                       onChanged: (value) {
                         _draftCountdownSizePx = value;
-                        _panelRebuildNotifier.value++;
                       },
                       onChangeEnd: (value) {
                         _updateThemeDraft(() => _draftCountdownSizePx = value,
@@ -851,7 +851,6 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF27AE60),
                                 foregroundColor: Colors.white,
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 12),

@@ -98,11 +98,16 @@ class MyApp extends StatelessWidget {
             scaffoldBackgroundColor: SLColors.bgMain,
             dividerColor: SLColors.border,
             shadowColor: Colors.black.withValues(alpha: 0.08),
-            splashFactory: InkRipple.splashFactory,
+            splashFactory: NoSplash.splashFactory,
             splashColor: SLColors.primary.withValues(alpha: 0.05),
             highlightColor: SLColors.primary.withValues(alpha: 0.02),
             hoverColor: SLColors.primary.withValues(alpha: 0.02),
             focusColor: SLColors.primary.withValues(alpha: 0.03),
+            pageTransitionsTheme: const PageTransitionsTheme(
+              builders: <TargetPlatform, PageTransitionsBuilder>{
+                TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+              },
+            ),
             textTheme: SLTypography.textTheme(baseTextTheme),
             appBarTheme: AppBarTheme(
               systemOverlayStyle: const SystemUiOverlayStyle(

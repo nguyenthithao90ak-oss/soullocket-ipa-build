@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'dart:io';
@@ -374,6 +375,7 @@ class _HomeScreenState extends State<HomeScreen>
   bool _didCheckFirstSetupGuide = false;
   bool _didCheckPendingDeviceNotice = false;
   bool _isShowingBreakupEntryNotice = false;
+  bool _isHouseUnpairedCache = false;
   final _houseService = HouseService();
   final _houseSettingsService = HouseSettingsService();
   final _breakupService = BreakupService();
@@ -609,6 +611,15 @@ class _HomeScreenState extends State<HomeScreen>
 
     final houseId = await HouseService().getCurrentHouseId();
     if (!mounted || houseId == null) return;
+    final isUnpaired = await HouseService().isHouseUnpaired(houseId);
+    if (mounted) {
+      setState(() {
+        _isHouseUnpairedCache = isUnpaired;
+      });
+      if (isUnpaired) {
+        _maybeShowDailyPairingNotice();
+      }
+    }
     unawaited(_syncIncomingCallListener(houseId));
     unawaited(_checkExpiredProGracePeriod(houseId));
     final startDateSnap = await FirebaseDatabase.instance
@@ -1136,6 +1147,12 @@ class _HomeScreenState extends State<HomeScreen>
     if (!throttle.isAllowed && throttle.isSuspiciousBurst) return;
     final nextIndex = index.clamp(0, _navItems.length - 1);
     if (!mounted) return;
+    
+    if (_isHouseUnpairedCache && nextIndex != 0) {
+      _showPairingRequiredDialog();
+      return;
+    }
+
     final oldIndex = _currentIndex;
     if (_currentIndex != nextIndex) {
       _currentIndex = nextIndex;
@@ -1343,79 +1360,6 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildHomeMessengerBubble() {
-    return Positioned(
-      right: 16,
-      bottom: 110 + MediaQuery.paddingOf(context).bottom,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _openHomeMessenger,
-          borderRadius: BorderRadius.circular(22),
-          child: Ink(
-            width: 64,
-            height: 74,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFFFF6EAD),
-                  Color(0xFFFF4D97),
-                  Color(0xFFE23C83),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.26),
-                width: 1.1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFD81B60).withValues(alpha: 0.22),
-                  blurRadius: 18,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(13),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.20),
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.forum_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Iu ơi',
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: SLTheme.quicksand(
-                    color: Colors.white,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildShellBody({
     required Widget foregroundChild,
@@ -1512,7 +1456,9 @@ class _HomeScreenState extends State<HomeScreen>
             dragStartBehavior: DragStartBehavior.start,
             // 🛑 TẮT VƯỢT: NeverScrollableScrollPhysics để chỉ chuyển tab bằng nút bottom nav.
             // ✅ BẬT LẠI: đổi thành `const SLPagePhysics(parent: ClampingScrollPhysics())`
-            physics: const SLPagePhysics(parent: ClampingScrollPhysics()),
+            physics: _isHouseUnpairedCache 
+                ? const NeverScrollableScrollPhysics() 
+                : const SLPagePhysics(parent: ClampingScrollPhysics()),
             children: List<Widget>.generate(
               _navItems.length,
               _tabPageForIndex,

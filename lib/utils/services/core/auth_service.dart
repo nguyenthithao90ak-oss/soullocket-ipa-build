@@ -190,6 +190,10 @@ class AuthService {
     return _signInService.isGoogleLinkedCurrentUser();
   }
 
+  String? getGoogleLinkedEmail() {
+    return _signInService.getGoogleLinkedEmail();
+  }
+
   Future<bool> isAppleLinkedCurrentUser() {
     return _signInService.isAppleLinkedCurrentUser();
   }

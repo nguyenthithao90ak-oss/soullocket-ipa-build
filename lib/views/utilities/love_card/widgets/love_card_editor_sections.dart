@@ -1230,7 +1230,7 @@ class _LoveCardMetaFieldState extends State<_LoveCardMetaField> {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
+      child: FastBackdropFilter(
         filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),

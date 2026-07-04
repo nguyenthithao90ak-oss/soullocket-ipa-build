@@ -932,7 +932,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
 
     if (isNetwork) {
       return CachedNetworkImage(
-        memCacheWidth: 1440,
+        memCacheWidth: 720,
         imageUrl: url,
         fit: BoxFit.cover,
         filterQuality: FilterQuality.medium,
@@ -975,7 +975,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
 
   Widget _buildContainedImage(
     String url, {
-    int memCacheWidth = 1440,
+    int memCacheWidth = 720,
     double errorIconSize = 30,
   }) {
     final isNetwork = url.startsWith('http://') || url.startsWith('https://');

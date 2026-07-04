@@ -164,7 +164,6 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             ),
             FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFD81B60),
                 foregroundColor: Colors.white,
               ),
               onPressed: () {
@@ -418,7 +417,6 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       title: showHeaderCard
           ? context.tr('advanced')
           : context.tr('notification_center'),
-      borderColor: const Color(0xFF006064),
       flatMode: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

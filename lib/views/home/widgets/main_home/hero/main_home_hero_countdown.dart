@@ -535,6 +535,11 @@ class _MainHomeHeroCountdownCircleState
     final countdownVisual =
         _CountdownVisualSpec.resolve(widget.countdownStyleKey, transparentMode);
 
+    final selectedFont = UiPrefs.notifier.value.fontKey;
+    final labelFont = (selectedFont.isEmpty || selectedFont == 'default')
+        ? 'comfortaa'
+        : selectedFont;
+
     final countdownTextColorStr = UiPrefs.notifier.value.countdownTextColor;
     Color? customTextColor;
     if (countdownTextColorStr.isNotEmpty) {
@@ -544,14 +549,14 @@ class _MainHomeHeroCountdownCircleState
       } catch (_) {}
     }
 
-    final labelHeight = (widget.circleSize * 0.15).clamp(38.0, 64.0).toDouble();
+    final labelHeight = (widget.circleSize * 0.15).clamp(24.0, 72.0).toDouble();
     final numberHeight =
-        (widget.circleSize * 0.38).clamp(80.0, 150.0).toDouble();
+        (widget.circleSize * 0.38).clamp(60.0, 160.0).toDouble();
     final topLabelWidth = widget.circleSize * 0.68;
     final bottomLabelWidth = widget.circleSize * 0.64;
     final numberWidth = widget.circleSize * 0.72;
-    final topGap = (widget.circleSize * 0.05).clamp(12.0, 20.0).toDouble();
-    final bottomGap = (widget.circleSize * 0.035).clamp(8.0, 16.0).toDouble();
+    final topGap = (widget.circleSize * 0.05).clamp(8.0, 24.0).toDouble();
+    final bottomGap = (widget.circleSize * 0.035).clamp(6.0, 18.0).toDouble();
 
     return KeyedSubtree(
       key: widget.firstGuideHeroKey,
@@ -636,15 +641,15 @@ class _MainHomeHeroCountdownCircleState
                                 widget.circleTopLabel,
                                 maxLines: 1,
                                 textAlign: TextAlign.center,
-                                style: widget.state
-                                    ._uiTextStyle(
-                                      fontSize: (widget.circleSize * 0.075)
-                                          .clamp(16.0, 22.0),
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 1.2,
-                                      color: customTextColor ??
-                                          countdownVisual.topLabelColor,
-                                    ),
+                                style: SLTheme.textStyleForKey(
+                                  labelFont,
+                                  fontSize: (widget.circleSize * 0.088)
+                                      .clamp(15.0, 36.0),
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5,
+                                  color: customTextColor ??
+                                      countdownVisual.topLabelColor,
+                                ),
                               ),
                             ),
                           ),
@@ -680,7 +685,7 @@ class _MainHomeHeroCountdownCircleState
                                 style: widget.state
                                     ._uiTextStyle(
                                       fontSize: (widget.circleSize * 0.36)
-                                          .clamp(56.0, 132.0),
+                                          .clamp(52.0, 160.0),
                                       fontWeight: FontWeight.w900,
                                       color: Colors.white,
                                       height: 0.96,
@@ -713,15 +718,15 @@ class _MainHomeHeroCountdownCircleState
                                 widget.circleBottomLabel,
                                 maxLines: 1,
                                 textAlign: TextAlign.center,
-                                style: widget.state
-                                    ._uiTextStyle(
-                                      fontSize: (widget.circleSize * 0.082)
-                                          .clamp(17.0, 24.0),
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 1.1,
-                                      color: customTextColor ??
-                                          countdownVisual.bottomLabelColor,
-                                    ),
+                                style: SLTheme.textStyleForKey(
+                                  labelFont,
+                                  fontSize: (widget.circleSize * 0.096)
+                                      .clamp(16.0, 38.0),
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5,
+                                  color: customTextColor ??
+                                      countdownVisual.bottomLabelColor,
+                                ),
                               ),
                             ),
                           ),

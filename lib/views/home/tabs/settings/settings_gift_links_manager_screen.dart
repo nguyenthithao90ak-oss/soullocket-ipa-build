@@ -112,7 +112,6 @@ class _SettingsGiftLinksManagerScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4F8),
       appBar: AppBar(
         title: Text(
           context.tr('home_qunllinkt_df5d77'),

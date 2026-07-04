@@ -16,6 +16,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:in_app_review/in_app_review.dart';
 import '../../login_screen.dart';
 import '../../app_entry.dart';
+import '../../auth/widgets/join_house_dialog.dart';
 import 'package:soullocket_app/views/chat/chat_detail_screen.dart';
 import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart'
     show TapHeartsOverlay, TapHeartsOverlayState;
@@ -417,6 +418,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _isVipActive = false;
   bool _isRestoringVip = false;
   bool _googleLinked = false;
+  String _googleLinkedEmail = '';
   bool _passwordLinked = false;
   bool _isMainEmailVerified = false;
   bool _hasRecoveryAnswer = false;
@@ -463,7 +465,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   String _securityEmail = '';
   String _secondaryEmail = '';
   String _securityQuestion = '';
-  String _activeRoleKey = '';
+  String _activeRoleKey = RoleUtils.currentRoleSync();
   String _selectedSecurityQuestion =
       L10nService().translate('home_ngysinhcab_82062b');
   String _housePin = '';
@@ -646,13 +648,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _startEmailVerifyTimer();
-    // ⚡ Khởi tạo activeRoleKey ngay từ local để tránh nhảy lộn khi fetch Firebase
-    SharedPreferences.getInstance().then((prefs) {
-      if (!mounted) return;
-      final localRole =
-          prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
-      setState(() => _activeRoleKey = localRole);
-    });
+    // ⚡ _activeRoleKey has already been initialized synchronously
     _scheduleSettingsBootstrap();
   }
 

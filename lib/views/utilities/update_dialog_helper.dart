@@ -2,6 +2,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 
 class UpdateDialogHelper {
   static String _tr(String key, String fallback) {
@@ -26,7 +27,7 @@ class UpdateDialogHelper {
           child: Dialog(
             backgroundColor: Colors.transparent,
             insetPadding: const EdgeInsets.symmetric(horizontal: 28),
-            child: BackdropFilter(
+            child: FastBackdropFilter(
               filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
               child: Container(
                 padding: const EdgeInsets.all(24),

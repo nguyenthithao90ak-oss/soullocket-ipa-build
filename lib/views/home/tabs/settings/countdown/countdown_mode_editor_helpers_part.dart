@@ -364,7 +364,6 @@ extension _CountdownModeEditorHelpersPart on _CountdownModeEditorScreenState {
                   ElevatedButton(
                     onPressed: submit,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD81B60),
                       foregroundColor: Colors.white,
                     ),
                     child: Text(context.tr('ok')),

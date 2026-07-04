@@ -547,7 +547,6 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       hideBackButton: hideBackButton,
       id: 'supportLegal',
       title: context.tr('support_legal'),
-      borderColor: const Color(0xFF5E35B1),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../../settings_tab.dart';
 
 class _SettingsCountdownModeScreen extends StatelessWidget {
@@ -858,7 +859,6 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                 child: ElevatedButton.icon(
                   onPressed: _openSelectedSpace,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4BA7FF),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     shape: RoundedRectangleBorder(

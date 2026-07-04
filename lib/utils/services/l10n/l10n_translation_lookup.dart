@@ -104,11 +104,15 @@ class _L10nTranslationLookup {
     if (result == null && webParity.containsKey(rawKey)) {
       result = webParity[rawKey];
     }
-    if (result == null && map.containsKey(rawKey)) result = map[rawKey];
+    if (result == null && map.containsKey(rawKey)) {
+      result = map[rawKey];
+    }
 
     if (result == null) {
       final commonMap = _commonTranslations[lang] ?? const {};
-      if (commonMap.containsKey(canonicalKey)) result = commonMap[canonicalKey];
+      if (commonMap.containsKey(canonicalKey)) {
+        result = commonMap[canonicalKey];
+      }
       if (result == null && commonMap.containsKey(rawKey)) {
         result = commonMap[rawKey];
       }
@@ -116,8 +120,12 @@ class _L10nTranslationLookup {
 
     if (result == null) {
       final enMap = _resolvedEn(assetMaps['en'] ?? const {});
-      if (enMap.containsKey(canonicalKey)) result = enMap[canonicalKey];
-      if (result == null && enMap.containsKey(rawKey)) result = enMap[rawKey];
+      if (enMap.containsKey(canonicalKey)) {
+        result = enMap[canonicalKey];
+      }
+      if (result == null && enMap.containsKey(rawKey)) {
+        result = enMap[rawKey];
+      }
     }
 
     result ??= rawKey;

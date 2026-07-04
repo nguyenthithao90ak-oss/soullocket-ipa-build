@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../settings_tab.dart';
 
 const List<String> _kSettingsSupportedEmailDomains = <String>[
@@ -182,7 +183,6 @@ Future<bool> _showManagedSettingsEmailOtpDialog({
                 ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD81B60),
                   disabledBackgroundColor: Colors.grey.shade300,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -437,7 +437,6 @@ Future<bool> _showManagedSettingsPasswordResetOtpDialog(
                 ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD81B60),
                   disabledBackgroundColor: Colors.grey.shade300,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

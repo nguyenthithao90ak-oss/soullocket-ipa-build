@@ -655,6 +655,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
               .toString()
               .trim();
       final linkedGoogle = await _authService.isGoogleLinkedCurrentUser();
+      final googleLinkedEmail = linkedGoogle ? (_authService.getGoogleLinkedEmail() ?? '') : '';
       final linkedPassword = await _authService.isPasswordLinkedCurrentUser();
       final settingsMap = settingsSnap.exists && settingsSnap.value is Map
           ? Map<dynamic, dynamic>.from(settingsSnap.value as Map)
@@ -703,6 +704,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
         _housePin = hasHousePinConfigured ? 'â€¢â€¢â€¢â€¢' : '';
         _hasRecoveryAnswer = recoveryAnswerHash.isNotEmpty;
         _googleLinked = linkedGoogle;
+        _googleLinkedEmail = googleLinkedEmail;
         _passwordLinked = linkedPassword;
         _isMainEmailVerified = currentUser?.emailVerified ?? false;
         // ⚡ KHÔNG ghi đè _activeRoleKey — _fetchSettingsData() đã set giá trị đúng từ Firebase.

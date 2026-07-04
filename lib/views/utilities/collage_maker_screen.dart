@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -1176,7 +1177,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     await _showZoomPreview(
       child: url.startsWith('http')
           ? CachedNetworkImage(
-              memCacheWidth: 1440,
+              memCacheWidth: 720,
               imageUrl: url,
               fit: BoxFit.contain,
               filterQuality: FilterQuality.medium,

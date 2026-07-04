@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/single_match_service.dart';
+import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 
 class SingleMatchFindingScreen extends StatefulWidget {
   final String currentHouseId;
@@ -280,7 +281,7 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen>
                   const SizedBox(height: 50),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(30),
-                    child: BackdropFilter(
+                    child: FastBackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                       child: Container(
                         padding: const EdgeInsets.symmetric(

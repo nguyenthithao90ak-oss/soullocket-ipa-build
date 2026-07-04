@@ -1119,7 +1119,6 @@ extension _SettingsDataHealthSection on _SettingsTabState {
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, passwordCtrl.text.trim()),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1565C0),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -1220,7 +1219,6 @@ extension _SettingsDataHealthSection on _SettingsTabState {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1565C0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -1314,7 +1312,6 @@ extension _SettingsDataHealthSection on _SettingsTabState {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1565C0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),

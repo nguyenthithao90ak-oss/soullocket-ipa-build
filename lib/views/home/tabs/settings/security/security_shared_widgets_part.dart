@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../../settings_tab.dart';
 
 extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
@@ -7,16 +8,16 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     required Color foreground,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         label,
         style: SLTheme.quicksand(
           fontSize: 11,
-          fontWeight: FontWeight.w900,
+          fontWeight: FontWeight.w700,
           color: foreground,
         ),
       ),
@@ -31,29 +32,23 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Opacity(
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
         opacity: onTap == null ? 0.5 : 1.0,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            gradient: LinearGradient(colors: gradient),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: gradient.last.withValues(alpha: 0.18),
-                blurRadius: 12,
-                offset: const Offset(0, 5),
-              ),
-            ],
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               fontSize: 13,
-              fontWeight: FontWeight.w900,
-              color: textColor,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF0F172A),
             ),
           ),
         ),
@@ -64,63 +59,65 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
   Widget _buildSecurityCard({
     required String title,
     String? subtitle,
-    required Color borderColor,
-    required Color backgroundColor,
+    Color? backgroundColor,
     required List<Widget> children,
   }) {
-    final cardBg = backgroundColor == Colors.white
-        ? const Color(0xFFF8FAFC)
-        : backgroundColor;
-    final borderTint = borderColor == Colors.transparent
-        ? const Color(0xFFE2E8F0)
-        : borderColor;
+    final uiState = UiPrefs.notifier.value;
+    final isDark = uiState.themeKey == 'theme-night' ||
+        uiState.themeKey == 'theme-dark' ||
+        uiState.themeKey == 'theme-true-black';
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: borderTint.withValues(alpha: 0.18),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: borderTint.withValues(alpha: 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      margin: const EdgeInsets.only(bottom: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: SLTheme.quicksand(
-              fontSize: 15,
-              fontWeight: FontWeight.w900,
-              color: borderColor == Colors.transparent
-                  ? const Color(0xFFD81B60)
-                  : borderColor.withValues(alpha: 0.95),
+          Padding(
+            padding: const EdgeInsets.only(left: 16, bottom: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title.toUpperCase(),
+                  style: SLTheme.quicksand(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                if (subtitle != null && subtitle.trim().isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: SLTheme.quicksand(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
-          if (subtitle != null && subtitle.trim().isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: SLTheme.quicksand(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF7A6A74),
-                height: 1.5,
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFE2E8F0),
+                width: 0.5,
               ),
             ),
-          ],
-          const SizedBox(height: 12),
-          ...children,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: children,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -134,116 +131,98 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     required VoidCallback? onAction,
     required String actionLabel,
     String? statusLabel,
-    Color accentColor = const Color(0xFFD81B60),
+    Color accentColor = const Color(0xFF3B82F6),
     bool isLoading = false,
     bool showCheckmark = true,
     VoidCallback? onSecondaryAction,
     String? secondaryActionLabel,
+    bool showDivider = true,
   }) {
     final statusText = statusLabel ??
         (isVerified
             ? context.tr('home_xcthc_a8bcec')
             : context.tr('home_chaxcthc_54490d'));
     final statusBg =
-        isVerified ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0);
+        isVerified ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2);
     final statusFg =
-        isVerified ? const Color(0xFF2E7D32) : const Color(0xFFE65100);
+        isVerified ? const Color(0xFF059669) : const Color(0xFFDC2626);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
+    return Column(
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: const Color(0xFF64748B), size: 24),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: SLTheme.quicksand(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: SLTheme.quicksand(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (showCheckmark && isVerified)
+              const Icon(Icons.check, color: Color(0xFF10B981), size: 20)
+            else if (statusLabel != null || !isVerified)
+              _buildSecurityBadge(
+                statusText,
+                background: statusBg,
+                foreground: statusFg,
+              ),
+          ],
+        ),
+        if (onAction != null || onSecondaryAction != null || isLoading) ...[
+          const SizedBox(height: 16),
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
+              if (onSecondaryAction != null)
+                Expanded(
+                  child: _buildCompactActionBtn(
+                    label: secondaryActionLabel ??
+                        context.tr('home_thayi_d4d9d8'),
+                    onTap: onSecondaryAction,
+                    isPrimary: false,
+                  ),
                 ),
-                child: Icon(icon, color: accentColor, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: SLTheme.quicksand(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF94A3B8),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      value,
-                      style: SLTheme.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF334155),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (showCheckmark && isVerified)
-                const Icon(Icons.check_circle_rounded,
-                    color: Color(0xFF4CAF50), size: 20)
-              else if (statusLabel != null || !isVerified)
-                _buildSecurityBadge(
-                  statusText,
-                  background: statusBg,
-                  foreground: statusFg,
+              if (onSecondaryAction != null &&
+                  (onAction != null || isLoading))
+                const SizedBox(width: 12),
+              if (onAction != null || isLoading)
+                Expanded(
+                  child: _buildCompactActionBtn(
+                    label: isLoading
+                        ? context.tr('home_angxl_5d4018')
+                        : actionLabel,
+                    onTap: isLoading ? null : onAction,
+                    isPrimary: true,
+                    accentColor: accentColor,
+                  ),
                 ),
             ],
           ),
-          if (onAction != null || onSecondaryAction != null || isLoading) ...[
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                if (onSecondaryAction != null)
-                  Expanded(
-                    child: _buildCompactActionBtn(
-                      label: secondaryActionLabel ??
-                          context.tr('home_thayi_d4d9d8'),
-                      onTap: onSecondaryAction,
-                      isPrimary: false,
-                    ),
-                  ),
-                if (onSecondaryAction != null &&
-                    (onAction != null || isLoading))
-                  const SizedBox(width: 8),
-                if (onAction != null || isLoading)
-                  Expanded(
-                    child: _buildCompactActionBtn(
-                      label: isLoading
-                          ? context.tr('home_angxl_5d4018')
-                          : actionLabel,
-                      onTap: isLoading ? null : onAction,
-                      isPrimary: true,
-                      accentColor: accentColor,
-                    ),
-                  ),
-              ],
-            ),
-          ],
         ],
-      ),
+        if (showDivider)
+          const Padding(
+            padding: EdgeInsets.only(top: 16),
+            child: Divider(height: 1, color: Color(0xFFF1F5F9)),
+          ),
+      ],
     );
   }
 
@@ -251,28 +230,30 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     required String label,
     required VoidCallback? onTap,
     bool isPrimary = true,
-    Color accentColor = const Color(0xFFD81B60),
+    Color accentColor = const Color(0xFF3B82F6),
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Opacity(
-        opacity: onTap == null ? 0.6 : 1.0,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: onTap == null ? 0.5 : 1.0,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: isPrimary ? accentColor : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border:
-                isPrimary ? null : Border.all(color: const Color(0xFFE2E8F0)),
+            color: isPrimary ? accentColor.withValues(alpha: 0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isPrimary ? accentColor.withValues(alpha: 0.2) : const Color(0xFFE2E8F0),
+            ),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
-              color: isPrimary ? Colors.white : const Color(0xFF64748B),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: isPrimary ? accentColor : const Color(0xFF475569),
             ),
           ),
         ),
@@ -287,10 +268,10 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: EdgeInsets.fromLTRB(
-            20, 20, 20, MediaQuery.viewInsetsOf(context).bottom + 20),
+            24, 24, 24, MediaQuery.viewInsetsOf(context).bottom + 24),
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -298,7 +279,7 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
           children: [
             Center(
               child: Container(
-                width: 40,
+                width: 36,
                 height: 4,
                 decoration: BoxDecoration(
                   color: const Color(0xFFE2E8F0),
@@ -306,13 +287,13 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Text(
               context.tr('home_emaildphng_60bcd4'),
               style: SLTheme.quicksand(
                 fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFF1E293B),
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 8),
@@ -320,19 +301,20 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
               context.tr('home_dngnhnmkhi_7efdcc'),
               style: SLTheme.quicksand(
                 fontSize: 14,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w500,
                 color: const Color(0xFF64748B),
+                height: 1.5,
               ),
             ),
             const SizedBox(height: 24),
             _buildInput(
                 _secondaryEmailCtrl, context.tr('home_nhpemailph_9c0bf7')),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             _buildGradientBtn(
               label: _secondaryEmail.isEmpty
                   ? context.tr('home_thmemailph_cdc362')
                   : context.tr('home_cpnht_c81e30'),
-              gradient: const [Color(0xFF8E24AA), Color(0xFF6A1B9A)],
+              gradient: const [Color(0xFF3B82F6), Color(0xFF2563EB)],
               onTap: () {
                 Navigator.pop(context);
                 Future.delayed(const Duration(milliseconds: 300), () {

@@ -326,7 +326,6 @@ class HouseService {
       }
       return createdHouseId;
     }
-
     try {
       final response = await _callCreateHouseSecureWithRetry(<String, dynamic>{
         'email': normalizedEmail,
@@ -364,10 +363,16 @@ class HouseService {
       }
       return createdHouseId;
     } on HouseCreationOtpRequiredException {
+      if (kDebugMode) {
+        return await createAdminDebugFallback();
+      }
       rethrow;
     } on FirebaseFunctionsException catch (error) {
       final otpRequired = _otpRequiredFromError(error);
       if (otpRequired != null) {
+        if (kDebugMode) {
+          return await createAdminDebugFallback();
+        }
         throw otpRequired;
       }
       if (_isDebugAppCheckFailure(error) && _allowLegacyDirectCreateFallback) {
@@ -479,6 +484,37 @@ class HouseService {
     }
   }
 
+  Future<void> joinHouseWithCoupleCode(String coupleCode) async {
+    try {
+      final code = coupleCode.trim().toLowerCase();
+      if (code.isEmpty) {
+        throw Exception('Vui lòng nhập mã ghép nối.');
+      }
+      
+      final response = await CloudFunctionsHelper.callSecure<dynamic>(
+        'joinHouseSecure',
+        payload: <String, dynamic>{
+          'houseId': code,
+        },
+      );
+      
+      final map = _asStringDynamicMap(response.data);
+      if (map != null && map['houseId'] != null) {
+        // Success
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('il_house_id', map['houseId'].toString());
+        if (map['assignedRole'] != null) {
+          await prefs.setString('il_role', map['assignedRole'].toString());
+        }
+        return;
+      }
+      throw Exception('Không thể ghép nối mã nhà lúc này.');
+    } catch (e) {
+      debugPrint('[HouseService] joinHouse error: $e');
+      throw Exception(AppErrorMapper.resolve(e, fallbackMessage: 'Mã ghép nối không hợp lệ hoặc đã hết hạn.').message);
+    }
+  }
+
   Future<String?> getCurrentHouseId({bool preferFresh = false}) async {
     final user = _auth.currentUser;
     if (user == null) {
@@ -553,6 +589,18 @@ class HouseService {
       _syncHouseIdToFirestore(user.uid, resolved).catchError((_) => null);
     }
     return resolved;
+  }
+
+  Future<bool> isHouseUnpaired(String houseId) async {
+    try {
+      final snap = await _dbRef.child('houses/$houseId/members').get();
+      if (snap.exists && snap.value is Map) {
+        return (snap.value as Map).length <= 1;
+      }
+    } catch (e) {
+      debugPrint('[HouseService] isHouseUnpaired error: $e');
+    }
+    return true; // Default to unpaired if we can't fetch or it has 1/0 members.
   }
 
   Future<String?> _fetchAndCacheHouseId(

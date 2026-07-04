@@ -125,8 +125,8 @@ class _IncomingCallOverlayState extends State<IncomingCallOverlay>
                             imageUrl: widget.callerAvatar,
                             fit: BoxFit.cover,
                             filterQuality: FilterQuality.medium,
-                            placeholder: (context, url) => const Center(
-                                child: CircularProgressIndicator()),
+                            placeholder: (context, url) =>
+                                Container(color: const Color(0xFF1F2937)),
                             errorWidget: (context, url, error) =>
                                 _defaultAvatar(),
                           )
@@ -491,7 +491,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                       fit: BoxFit.cover,
                       filterQuality: FilterQuality.medium,
                       placeholder: (context, url) =>
-                          const Center(child: CircularProgressIndicator()),
+                          Container(color: const Color(0xFF1F2937)),
                       errorWidget: (context, url, error) => _defaultAvatar(),
                     )
                   : _defaultAvatar(),

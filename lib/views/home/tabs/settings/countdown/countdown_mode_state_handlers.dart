@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../../settings_tab.dart';
 
 extension _CountdownModeIndependentScreenStatePart
@@ -373,83 +374,6 @@ extension _CountdownModeIndependentScreenStatePart
       _spaceSnapshots[scope] = snapshot;
       _applySnapshot(snapshot);
     });
-    return;
-    final ui = UiPrefs.notifier.value;
-    final defaultSingleMode = widget.relationshipMode.trim() == 'single';
-    final defaultTopLabel = defaultSingleMode
-        ? (ui.countdownTopLabel.trim().isNotEmpty
-            ? ui.countdownTopLabel.trim()
-            : context.tr('home_tuicati_5c654c'))
-        : (widget.fallbackTopLabel.trim().isNotEmpty
-            ? widget.fallbackTopLabel.trim()
-            : context.tr('home_yunhau_501102'));
-    final defaultBottomLabel = defaultSingleMode
-        ? (ui.countdownBottomLabel.trim().isNotEmpty
-            ? ui.countdownBottomLabel.trim()
-            : context.tr('home_ngytui_22bed4'))
-        : (widget.fallbackBottomLabel.trim().isNotEmpty
-            ? widget.fallbackBottomLabel.trim()
-            : context.tr('home_ngy_41ec10'));
-    final defaultNameU1 = widget.nameU1.trim().isEmpty
-        ? context.tr('home_bn_1fd75b')
-        : widget.nameU1.trim();
-    final defaultNameU2 = widget.nameU2.trim().isEmpty
-        ? context.tr('home_ngiy_5bab37')
-        : widget.nameU2.trim();
-    final defaultThemeKey =
-        ui.themeKey.trim().isEmpty ? 'theme-auto' : ui.themeKey.trim();
-    final defaultStyleKey = ui.countdownStyleKey.trim().isEmpty
-        ? 'default'
-        : ui.countdownStyleKey.trim();
-    final defaultFrameKey =
-        ui.avatarFrameKey.trim().isEmpty ? 'circle' : ui.avatarFrameKey.trim();
-    final rawDate =
-        prefs.getString(_prefKey('anchor_date', scope: scope)) ?? '';
-    final parsedDate = DateInputUtils.parse(rawDate) ??
-        _resolveInitialAnchorDate(defaultSingleMode);
-    if (!mounted) return;
-    _safeSetState(() {
-      _singleMode = prefs.getBool(_prefKey('single_mode', scope: scope)) ??
-          defaultSingleMode;
-      _themeKey = prefs.getString(_prefKey('theme_key', scope: scope)) ??
-          defaultThemeKey;
-      _countdownStyleKey =
-          prefs.getString(_prefKey('style_key', scope: scope)) ??
-              defaultStyleKey;
-      _fontKey = prefs.getString(_prefKey('font_key', scope: scope)) ??
-          SLTheme.normalizeFontKey(ui.fontKey);
-      _avatarFrameKey =
-          prefs.getString(_prefKey('avatar_frame_key', scope: scope)) ??
-              defaultFrameKey;
-      _transparentMode = prefs.getBool(
-            _prefKey('transparent_mode', scope: scope),
-          ) ??
-          ui.transparentMode;
-      _countdownSizePx = (prefs.getDouble(_prefKey('size_px', scope: scope)) ??
-              ui.countdownSizePx)
-          .clamp(200.0, UiPrefs.maxCountdownSizePx)
-          .toDouble();
-      _customBackgroundUrl =
-          prefs.getString(_prefKey('bg_url', scope: scope)) ??
-              ui.customBackgroundUrl.trim();
-      _centerIconType =
-          prefs.getString(_prefKey('center_icon_type', scope: scope)) ??
-              'heart';
-      _topLabelText = prefs.getString(_prefKey('top_label', scope: scope)) ??
-          defaultTopLabel;
-      _bottomLabelText =
-          prefs.getString(_prefKey('bottom_label', scope: scope)) ??
-              defaultBottomLabel;
-      _nameU1 =
-          prefs.getString(_prefKey('name_u1', scope: scope)) ?? defaultNameU1;
-      _nameU2 =
-          prefs.getString(_prefKey('name_u2', scope: scope)) ?? defaultNameU2;
-      _avatarUrl1 = prefs.getString(_prefKey('avatar_1', scope: scope)) ??
-          widget.avatarUrl1.trim();
-      _avatarUrl2 = prefs.getString(_prefKey('avatar_2', scope: scope)) ??
-          widget.avatarUrl2.trim();
-      _anchorDate = parsedDate;
-    });
   }
 
   Future<void> _saveLocalSettings() async {
@@ -789,7 +713,6 @@ extension _CountdownModeIndependentScreenStatePart
                   ElevatedButton(
                     onPressed: submit,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD81B60),
                       foregroundColor: Colors.white,
                     ),
                     child: Text(context.tr('ok')),
@@ -1447,8 +1370,7 @@ extension _CountdownModeIndependentScreenStatePart
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFC62828),
-            ),
+              ),
             child: Text(context.tr('home_xangay_dc07fa')),
           ),
         ],

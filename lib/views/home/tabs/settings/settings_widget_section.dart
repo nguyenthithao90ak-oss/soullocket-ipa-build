@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../settings_tab.dart';
 
 // Shell-ready extraction target for shared draft state:
@@ -99,11 +100,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
 
   Widget _buildWidgetPanelTabBar() {
     final items = <(String, String, IconData)>[
-      (
-        WidgetService.defaultWidgetStyleKey,
-        context.tr('home_mcnh_a57a8e'),
-        Icons.widgets_rounded
-      ),
+      (WidgetService.defaultWidgetStyleKey, context.tr('home_mcnh_a57a8e'), Icons.widgets_rounded),
       ('countdown', context.tr('home_mngy_5500cb'), Icons.timer_outlined),
       ('soulevent', 'Kỷ niệm', Icons.celebration_rounded),
     ];
@@ -153,14 +150,12 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color:
-                                const Color(0xFFFF5E92).withValues(alpha: 0.32),
+                            color: const Color(0xFFFF5E92).withValues(alpha: 0.32),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
                           BoxShadow(
-                            color:
-                                const Color(0xFFFF8AB8).withValues(alpha: 0.14),
+                            color: const Color(0xFFFF8AB8).withValues(alpha: 0.14),
                             blurRadius: 4,
                             offset: const Offset(0, 1),
                           ),
@@ -363,95 +358,24 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           const SizedBox(height: 14),
           if (_widgetPanelTabKey == 'soulevent') ...[
             _buildWidgetSectionCard(
-              icon: Icons.celebration_rounded,
-              title: 'Cấu hình Sự kiện & Kỷ niệm',
+              icon: Icons.info_outline_rounded,
+              title: 'Cấu hình Sự kiện',
               subtitle: null,
               iconGradient: const [
                 Color(0xFF3B82F6),
                 Color(0xFF60A5FA),
               ],
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildWidgetToggleTile(
-                    icon: Icons.edit_note_rounded,
-                    title: 'Tự nhập nội dung tùy chỉnh',
-                    subtitle:
-                        'Tự gõ tiêu đề và ngày thay vì lấy từ danh sách kỷ niệm.',
-                    value: _useCustomWidgetEvent,
-                    accentColor: const Color(0xFF3B82F6),
-                    onChanged: (v) async {
-                      setState(() => _useCustomWidgetEvent = v);
-                      await _saveCustomWidgetEventSettings();
-                    },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  'Màu sắc và chủ đề của Tiện ích được lấy trực tiếp từ sự kiện bạn chọn ghim hoặc sự kiện gần nhất trong danh sách Sự Kiện & Kỷ Niệm.',
+                  style: SLTheme.quicksand(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF64748B),
+                    height: 1.4,
                   ),
-                  if (_useCustomWidgetEvent) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      'Tiêu đề sự kiện',
-                      style: SLTheme.quicksand(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF475467),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: _customWidgetEventTitleCtrl,
-                      onChanged: (_) async => _saveCustomWidgetEventSettings(),
-                      style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w700, fontSize: 14),
-                      decoration: SLTheme.authInputDecoration(
-                        hintText: 'Ví dụ: Ngày cưới, Sinh nhật của em...',
-                        focusColor: const Color(0xFF3B82F6),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Ngày diễn ra (ngày/tháng/năm)',
-                      style: SLTheme.quicksand(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF475467),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: _customWidgetEventDateCtrl,
-                      keyboardType: TextInputType.datetime,
-                      inputFormatters: const [FlexibleDateInputFormatter()],
-                      onChanged: (_) async => _saveCustomWidgetEventSettings(),
-                      style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w700, fontSize: 14),
-                      decoration: SLTheme.authInputDecoration(
-                        hintText: 'dd/MM/yyyy (ví dụ: 14/02/2026)',
-                        focusColor: const Color(0xFF3B82F6),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Màu sắc chủ đề',
-                      style: SLTheme.quicksand(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF475467),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildCustomEventColorPicker(),
-                  ] else ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      'Màu sắc và chủ đề của Tiện ích được lấy trực tiếp từ sự kiện bạn chọn ghim hoặc sự kiện gần nhất trong danh sách Sự Kiện & Kỷ Niệm.',
-                      style: SLTheme.quicksand(
-                        fontSize: 12.8,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF64748B),
-                        height: 1.45,
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
           ] else ...[
@@ -534,15 +458,14 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
             _buildWidgetSectionCard(
               icon: Icons.timer_rounded,
               title: context.tr('home_widgetmngy_92c2bc'),
-              subtitle: context.tr('home_chnyutinsn_20a566'),
+              subtitle:
+                  context.tr('home_chnyutinsn_20a566'),
               iconGradient: const [
                 Color(0xFFFFB84D),
                 Color(0xFFFF7A59),
               ],
               child: Text(
-                context
-                    .tr('widget_using_style')
-                    .replaceAll('{style}', _widgetStyleLabel(_widgetStyleKey)),
+                context.tr('widget_using_style').replaceAll('{style}', _widgetStyleLabel(_widgetStyleKey)),
                 style: SLTheme.quicksand(
                   fontSize: 12.8,
                   fontWeight: FontWeight.w800,
@@ -575,120 +498,120 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           ],
           const SizedBox(height: 14),
           _buildWidgetSectionCard(
-            icon: Icons.add_to_home_screen_rounded,
-            title: Theme.of(context).platform == TargetPlatform.iOS
-                ? '${context.tr('settings_widget_label')}:'
-                : context.tr('android_real_widget'),
-            subtitle: context.tr('add_widget_desc'),
-            iconGradient: const [
-              Color(0xFF14B8A6),
-              Color(0xFF06B6D4),
-            ],
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final useColumn = constraints.maxWidth < 330;
-                    final showPinButton =
-                        Theme.of(context).platform != TargetPlatform.iOS;
-                    final updateButton = _buildGradientBtn(
-                      label: context.tr('update_widget'),
-                      gradient: const [
-                        Color(0xFFFF7898),
-                        Color(0xFFD81B60),
-                      ],
-                      onTap: handleRefreshWidget,
-                    );
-                    if (!showPinButton) {
-                      return updateButton;
-                    }
-                    final addButton = _buildGradientBtn(
-                      label: context.tr('add_widget'),
-                      gradient: const [
-                        Color(0xFF10C8E6),
-                        Color(0xFF0E9EB0),
-                      ],
-                      onTap: handlePinWidget,
-                    );
-                    if (useColumn) {
-                      return Column(
+              icon: Icons.add_to_home_screen_rounded,
+              title: Theme.of(context).platform == TargetPlatform.iOS
+                  ? '${context.tr('settings_widget_label')}:'
+                  : context.tr('android_real_widget'),
+              subtitle: context.tr('add_widget_desc'),
+              iconGradient: const [
+                Color(0xFF14B8A6),
+                Color(0xFF06B6D4),
+              ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final useColumn = constraints.maxWidth < 330;
+                      final showPinButton =
+                          Theme.of(context).platform != TargetPlatform.iOS;
+                      final updateButton = _buildGradientBtn(
+                        label: context.tr('update_widget'),
+                        gradient: const [
+                          Color(0xFFFF7898),
+                          Color(0xFFD81B60),
+                        ],
+                        onTap: handleRefreshWidget,
+                      );
+                      if (!showPinButton) {
+                        return updateButton;
+                      }
+                      final addButton = _buildGradientBtn(
+                        label: context.tr('add_widget'),
+                        gradient: const [
+                          Color(0xFF10C8E6),
+                          Color(0xFF0E9EB0),
+                        ],
+                        onTap: handlePinWidget,
+                      );
+                      if (useColumn) {
+                        return Column(
+                          children: [
+                            addButton,
+                            const SizedBox(height: 10),
+                            updateButton,
+                          ],
+                        );
+                      }
+
+                      return Row(
                         children: [
-                          addButton,
-                          const SizedBox(height: 10),
-                          updateButton,
+                          Expanded(child: addButton),
+                          const SizedBox(width: 12),
+                          Expanded(child: updateButton),
                         ],
                       );
-                    }
-
-                    return Row(
-                      children: [
-                        Expanded(child: addButton),
-                        const SizedBox(width: 12),
-                        Expanded(child: updateButton),
-                      ],
-                    );
-                  },
-                ),
-                if (Theme.of(context).platform == TargetPlatform.iOS) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF5FBFF),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFCAEAF3)),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color:
-                                const Color(0xFF0EA5C6).withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.info_outline_rounded,
-                            color: Color(0xFF0B7285),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                context.tr('home_hngdnios_522391'),
-                                style: SLTheme.quicksand(
-                                  fontSize: 12.6,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF0B7285),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                context.tr('widget_ios_guide'),
-                                style: SLTheme.quicksand(
-                                  fontSize: 11.8,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF667085),
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                    },
                   ),
+                  if (Theme.of(context).platform == TargetPlatform.iOS) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF5FBFF),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFCAEAF3)),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color:
+                                  const Color(0xFF0EA5C6).withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.info_outline_rounded,
+                              color: Color(0xFF0B7285),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  context.tr('home_hngdnios_522391'),
+                                  style: SLTheme.quicksand(
+                                    fontSize: 12.6,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFF0B7285),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  context.tr('widget_ios_guide'),
+                                  style: SLTheme.quicksand(
+                                    fontSize: 11.8,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF667085),
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -697,56 +620,34 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
   /// Decorative icon for each widget theme swatch.
   IconData _widgetThemeSwatchIcon(String key) {
     switch (key) {
-      case 'pink':
-        return Icons.favorite_rounded;
-      case 'white':
-        return Icons.ac_unit_rounded;
-      case 'dark':
-        return Icons.dark_mode_rounded;
-      case 'blue':
-        return Icons.waves;
-      case 'orange':
-        return Icons.wb_sunny_rounded;
-      case 'purple':
-        return Icons.auto_awesome_rounded;
-      case 'green':
-        return Icons.eco_rounded;
-      case 'red':
-        return Icons.local_fire_department_rounded;
-      case 'premium':
-        return Icons.brightness_auto_rounded;
-      case 'cosmic':
-        return Icons.star_rounded;
-      default:
-        return Icons.palette_rounded;
+      case 'pink':    return Icons.favorite_rounded;
+      case 'white':   return Icons.ac_unit_rounded;
+      case 'dark':    return Icons.dark_mode_rounded;
+      case 'blue':    return Icons.waves;
+      case 'orange':  return Icons.wb_sunny_rounded;
+      case 'purple':  return Icons.auto_awesome_rounded;
+      case 'green':   return Icons.eco_rounded;
+      case 'red':     return Icons.local_fire_department_rounded;
+      case 'premium': return Icons.brightness_auto_rounded;
+      case 'cosmic':  return Icons.star_rounded;
+      default:        return Icons.palette_rounded;
     }
   }
 
   /// Decorative emoji accent for each widget theme swatch.
   String _widgetThemeSwatchEmoji(String key) {
     switch (key) {
-      case 'pink':
-        return '🌸';
-      case 'white':
-        return '❄️';
-      case 'dark':
-        return '🌙';
-      case 'blue':
-        return '🌊';
-      case 'orange':
-        return '🌅';
-      case 'purple':
-        return '✨';
-      case 'green':
-        return '🍀';
-      case 'red':
-        return '🔥';
-      case 'premium':
-        return '💎';
-      case 'cosmic':
-        return '🌌';
-      default:
-        return '🎨';
+      case 'pink':    return '🌸';
+      case 'white':   return '❄️';
+      case 'dark':    return '🌙';
+      case 'blue':    return '🌊';
+      case 'orange':  return '🌅';
+      case 'purple':  return '✨';
+      case 'green':   return '🍀';
+      case 'red':     return '🔥';
+      case 'premium': return '💎';
+      case 'cosmic':  return '🌌';
+      default:        return '🎨';
     }
   }
 
@@ -754,84 +655,17 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
   Widget _buildWidgetThemeSwatchGrid(_WidgetPanelConfig config) {
     // Map themeKey -> (gradient colors, label)
     final swatches = <(String, List<Color>, String)>[
-      (
-        'pink',
-        [const Color(0xFFFFB6CA), const Color(0xFFFF7098)],
-        config.themeOptions
-            .firstWhere((o) => o.$2 == 'pink', orElse: () => ('Hồng', 'pink'))
-            .$1
-      ),
-      (
-        'white',
-        [const Color(0xFFF8F8F8), const Color(0xFFE8EDF5)],
-        config.themeOptions
-            .firstWhere((o) => o.$2 == 'white',
-                orElse: () => ('Trắng', 'white'))
-            .$1
-      ),
-      (
-        'dark',
-        [const Color(0xFF3A3A4A), const Color(0xFF1C1C2E)],
-        config.themeOptions
-            .firstWhere((o) => o.$2 == 'dark', orElse: () => ('Tối', 'dark'))
-            .$1
-      ),
-      (
-        'blue',
-        [const Color(0xFF90CAF9), const Color(0xFF1565C0)],
-        config.themeOptions
-            .firstWhere((o) => o.$2 == 'blue',
-                orElse: () => ('Xanh lam', 'blue'))
-            .$1
-      ),
-      (
-        'orange',
-        [const Color(0xFFFFCC80), const Color(0xFFEF6C00)],
-        config.themeOptions
-            .firstWhere((o) => o.$2 == 'orange',
-                orElse: () => ('Cam', 'orange'))
-            .$1
-      ),
-      (
-        'purple',
-        [const Color(0xFFCE93D8), const Color(0xFF6A1B9A)],
-        config.themeOptions
-            .firstWhere((o) => o.$2 == 'purple',
-                orElse: () => ('Tím', 'purple'))
-            .$1
-      ),
-      (
-        'green',
-        [const Color(0xFFA5D6A7), const Color(0xFF2E7D32)],
-        config.themeOptions
-            .firstWhere((o) => o.$2 == 'green',
-                orElse: () => ('Xanh lá', 'green'))
-            .$1
-      ),
-      (
-        'red',
-        [const Color(0xFFEF9A9A), const Color(0xFFB71C1C)],
-        config.themeOptions
-            .firstWhere((o) => o.$2 == 'red', orElse: () => ('Đỏ', 'red'))
-            .$1
-      ),
+      ('pink',    [const Color(0xFFFFB6CA), const Color(0xFFFF7098)], config.themeOptions.firstWhere((o) => o.$2 == 'pink', orElse: () => ('Hồng', 'pink')).$1),
+      ('white',   [const Color(0xFFF8F8F8), const Color(0xFFE8EDF5)], config.themeOptions.firstWhere((o) => o.$2 == 'white', orElse: () => ('Trắng', 'white')).$1),
+      ('dark',    [const Color(0xFF3A3A4A), const Color(0xFF1C1C2E)], config.themeOptions.firstWhere((o) => o.$2 == 'dark', orElse: () => ('Tối', 'dark')).$1),
+      ('blue',    [const Color(0xFF90CAF9), const Color(0xFF1565C0)], config.themeOptions.firstWhere((o) => o.$2 == 'blue', orElse: () => ('Xanh lam', 'blue')).$1),
+      ('orange',  [const Color(0xFFFFCC80), const Color(0xFFEF6C00)], config.themeOptions.firstWhere((o) => o.$2 == 'orange', orElse: () => ('Cam', 'orange')).$1),
+      ('purple',  [const Color(0xFFCE93D8), const Color(0xFF6A1B9A)], config.themeOptions.firstWhere((o) => o.$2 == 'purple', orElse: () => ('Tím', 'purple')).$1),
+      ('green',   [const Color(0xFFA5D6A7), const Color(0xFF2E7D32)], config.themeOptions.firstWhere((o) => o.$2 == 'green', orElse: () => ('Xanh lá', 'green')).$1),
+      ('red',     [const Color(0xFFEF9A9A), const Color(0xFFB71C1C)], config.themeOptions.firstWhere((o) => o.$2 == 'red', orElse: () => ('Đỏ', 'red')).$1),
       if (AppConfig.isPurchaseEnabled) ...[
-        (
-          'premium',
-          [const Color(0xFFFBC2EB), const Color(0xFFA6C1EE)],
-          config.themeOptions
-              .firstWhere((o) => o.$2 == 'premium',
-                  orElse: () => ('Aurora PRO', 'premium'))
-              .$1
-        ),
-        (
-          'cosmic',
-          [const Color(0xFF0F0C20), const Color(0xFFFFD700)],
-          config.themeOptions
-              .firstWhere((o) => o.$2 == 'cosmic',
-                  orElse: () => ('Vũ trụ PRO', 'cosmic'))
-              .$1
-        ),
+        ('premium', [const Color(0xFFFBC2EB), const Color(0xFFA6C1EE)], config.themeOptions.firstWhere((o) => o.$2 == 'premium', orElse: () => ('Aurora PRO', 'premium')).$1),
+        ('cosmic',  [const Color(0xFF0F0C20), const Color(0xFFFFD700)], config.themeOptions.firstWhere((o) => o.$2 == 'cosmic', orElse: () => ('Vũ trụ PRO', 'cosmic')).$1),
       ],
     ];
 
@@ -962,13 +796,11 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                                       width: 22,
                                       height: 22,
                                       decoration: BoxDecoration(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.92),
+                                        color: Colors.white.withValues(alpha: 0.92),
                                         shape: BoxShape.circle,
                                         boxShadow: [
                                           BoxShadow(
-                                            color: colors.last
-                                                .withValues(alpha: 0.30),
+                                            color: colors.last.withValues(alpha: 0.30),
                                             blurRadius: 6,
                                             offset: const Offset(0, 2),
                                           ),
@@ -1047,12 +879,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                             overflow: TextOverflow.ellipsis,
                             style: SLTheme.quicksand(
                               fontSize: 10.4,
-                              fontWeight: isSelected
-                                  ? FontWeight.w900
-                                  : FontWeight.w700,
-                              color: isSelected
-                                  ? colors.last
-                                  : const Color(0xFF64748B),
+                              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                              color: isSelected ? colors.last : const Color(0xFF64748B),
                             ),
                           ),
                         ),
@@ -1062,55 +890,6 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 ],
               ),
             ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildCustomEventColorPicker() {
-    final colors = [
-      '#EC4899', // Pink
-      '#EF4444', // Red
-      '#F97316', // Orange
-      '#8B5CF6', // Purple
-      '#3B82F6', // Blue
-      '#10B981', // Green
-    ];
-    return Wrap(
-      spacing: 10,
-      children: colors.map((colorHex) {
-        final buffer = StringBuffer();
-        if (colorHex.length == 6 || colorHex.length == 7) buffer.write('ff');
-        buffer.write(colorHex.replaceFirst('#', ''));
-        final color = Color(int.parse(buffer.toString(), radix: 16));
-        final isSelected = _customWidgetEventColorHex == colorHex;
-
-        return GestureDetector(
-          onTap: () async {
-            setState(() => _customWidgetEventColorHex = colorHex);
-            await _saveCustomWidgetEventSettings();
-          },
-          child: Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              border: isSelected
-                  ? Border.all(color: const Color(0xFF1F2937), width: 3)
-                  : Border.all(color: Colors.white, width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: isSelected
-                ? const Icon(Icons.check_rounded, color: Colors.white, size: 16)
-                : null,
           ),
         );
       }).toList(),

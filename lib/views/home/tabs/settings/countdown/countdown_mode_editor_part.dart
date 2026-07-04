@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../../settings_tab.dart';
 
 Future<XFile?> _cropCountdownModeAvatarFile(XFile file) async {
@@ -1259,8 +1260,6 @@ class _CountdownModeEditorScreenState
                                       ElevatedButton.icon(
                                         onPressed: _pickAnchorDate,
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              const Color(0xFFD81B60),
                                           foregroundColor: Colors.white,
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 14,
@@ -1451,8 +1450,6 @@ class _CountdownModeEditorScreenState
                                               ),
                                             ),
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  const Color(0xFFD81B60),
                                               foregroundColor: Colors.white,
                                               padding:
                                                   const EdgeInsets.symmetric(
@@ -1547,8 +1544,6 @@ class _CountdownModeEditorScreenState
                                           ),
                                         ),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              const Color(0xFFD81B60),
                                           foregroundColor: Colors.white,
                                           padding: const EdgeInsets.symmetric(
                                             vertical: 14,
@@ -1580,8 +1575,6 @@ class _CountdownModeEditorScreenState
                                           ),
                                         ),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              const Color(0xFFC62828),
                                           foregroundColor: Colors.white,
                                           padding: const EdgeInsets.symmetric(
                                             vertical: 14,
@@ -1621,7 +1614,6 @@ class _CountdownModeEditorScreenState
                                       ),
                                     ),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFFD81B60),
                                       foregroundColor: Colors.white,
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 14,

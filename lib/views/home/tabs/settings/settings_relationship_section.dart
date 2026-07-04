@@ -110,7 +110,6 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
           ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFD81B60),
               foregroundColor: Colors.white,
             ),
             child: Text(confirmLabel),
@@ -298,7 +297,6 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
       hideBackButton: hideBackButton,
       id: 'relationship',
       title: context.tr('relationship_status'),
-      borderColor: const Color(0xFFf48fb1),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

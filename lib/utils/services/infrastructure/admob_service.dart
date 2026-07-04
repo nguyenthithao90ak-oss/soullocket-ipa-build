@@ -21,6 +21,8 @@ import 'package:soullocket_app/utils/services/revenue_security_telemetry_service
 import 'package:soullocket_app/utils/services/ad_suppression_guard.dart';
 import 'package:soullocket_app/utils/services/texas_age_gate_service.dart';
 import 'package:soullocket_app/utils/services/ad_unit_config.dart';
+import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/notification_service.dart';
 
 /// ============================================================
 ///  AdMobService — GRA (Phase Production)
@@ -178,7 +180,7 @@ class AdMobService {
   bool _isAppOpenLoading = false;
   bool _isShowingAppOpenAd = false;
   int _lastFullscreenAdShownMs = 0;
-  static const int _fullscreenAdCooldownMs = 5 * 60 * 1000;
+  static const int _fullscreenAdCooldownMs = 7 * 60 * 1000; // 7 minutes
   Completer<void>? _initializeCompleter;
   Completer<bool>? _appOpenLoadCompleter;
   bool _sdkInitialized = false;
@@ -994,6 +996,22 @@ class AdMobService {
           'AdMobService: Interstitial ad suppressed by AdSuppressionGuard.');
       return false;
     }
+
+    // -- BẢO VỆ "TUYẾN PHÒNG THỦ" (CHỐNG HIỂN THỊ BẤT NGỜ / CLICK TẶC) --
+    final context = NotificationService.navigatorKey.currentContext;
+    if (context != null) {
+      try {
+        final viewInsets = MediaQuery.of(context).viewInsets;
+        if (viewInsets.bottom > 0) {
+          debugPrint(
+              'AdMobService: Interstitial ad suppressed due to active keyboard.');
+          return false;
+        }
+      } catch (_) {
+        // Ignored if MediaQuery is not accessible
+      }
+    }
+
     await initialize();
     if (!_sdkInitialized) return false;
     if (_interstitialAd == null) {

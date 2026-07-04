@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../settings_tab.dart';
 
 extension _SettingsTabSharedWidgets on _SettingsTabState {
@@ -257,47 +258,44 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     required Color textColor,
     required VoidCallback onTap,
     Key? key,
-    List<IconData> accentIcons = const [],
     String? badgeText,
     Widget? footer,
   }) {
+    final uiState = UiPrefs.notifier.value;
+    final isDark = uiState.themeKey == 'theme-night' ||
+        uiState.themeKey == 'theme-dark' ||
+        uiState.themeKey == 'theme-true-black';
+
     return Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: gradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: border, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: border.withValues(alpha: 0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: InkWell(
-              key: key,
-              onTap: onTap,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(icon, color: textColor, size: 26),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? const Color(0xFF38383A) : const Color(0xFFE2E8F0), width: 1.0),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          key: key,
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: gradient,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    const SizedBox(width: 16),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 22),
+                ),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,7 +308,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                                   style: SLTheme.quicksand(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF243041),
+                                    color: isDark ? Colors.white : const Color(0xFF243041),
                                   ),
                                 ),
                               ),
@@ -342,7 +340,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                             style: SLTheme.quicksand(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFF66758A),
+                              color: isDark ? Colors.grey[500] : const Color(0xFF66758A),
                               height: 1.3,
                             ),
                           ),
@@ -367,19 +365,16 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     required Color colorTint,
     EdgeInsetsGeometry padding = const EdgeInsets.all(16),
   }) {
+    final uiState = UiPrefs.notifier.value;
+    final isDark = uiState.themeKey == 'theme-night' ||
+        uiState.themeKey == 'theme-dark' ||
+        uiState.themeKey == 'theme-true-black';
+
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: colorTint.withValues(alpha: 0.25),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorTint.withValues(alpha: 0.4), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: colorTint.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: child,
     );
@@ -428,15 +423,20 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     Color? backgroundColor,
     Color? borderColor,
   }) {
+    final uiState = UiPrefs.notifier.value;
+    final isDark = uiState.themeKey == 'theme-night' ||
+        uiState.themeKey == 'theme-dark' ||
+        uiState.themeKey == 'theme-true-black';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: backgroundColor ?? const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(18),
+        color: backgroundColor ?? (isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF8FAFC)),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: borderColor ?? const Color(0xFFE2E8F0),
-          width: 1.2,
+          color: borderColor ?? (isDark ? const Color(0xFF38383A) : const Color(0xFFE2E8F0)),
+          width: 1.0,
         ),
       ),
       child: Column(
@@ -449,52 +449,49 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
   Widget _buildPanel({
     required String id,
     required String title,
-    required Color borderColor,
+    Color? borderColor,
     required Widget child,
     bool hideBackButton = false,
     Widget? titleBadge,
     bool flatMode = false,
   }) {
+    final uiState = UiPrefs.notifier.value;
+    final isDark = uiState.themeKey == 'theme-night' ||
+        uiState.themeKey == 'theme-dark' ||
+        uiState.themeKey == 'theme-true-black';
+
     final isStandalone = Navigator.of(context).canPop();
     final showBack = isStandalone && !hideBackButton;
     final showExpand = !isStandalone;
     final shortestSide = MediaQuery.sizeOf(context).shortestSide;
     final isMobile = shortestSide < 600;
 
-    final margin = (flatMode || (isMobile && isStandalone))
-        ? const EdgeInsets.symmetric(horizontal: 0, vertical: 6)
+    final margin = flatMode
+        ? const EdgeInsets.symmetric(horizontal: 0, vertical: 0)
         : const EdgeInsets.symmetric(horizontal: 16, vertical: 8);
 
-    final borderRadius = (isMobile && isStandalone)
-        ? BorderRadius.zero
-        : BorderRadius.circular(24);
+    final borderRadius = BorderRadius.circular(24);
 
-    final border = (isMobile && isStandalone)
+    final border = flatMode
         ? null
         : Border.all(
-            color: borderColor.withValues(alpha: 0.18),
+            color: isDark ? const Color(0xFF38383A) : (borderColor ?? const Color(0xFFE2E8F0)).withValues(alpha: 0.18),
             width: 1.5,
           );
-
-    final boxShadow = (isMobile && isStandalone)
-        ? null
-        : [
-            BoxShadow(
-              color: borderColor.withValues(alpha: 0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ];
 
     return Container(
       margin: margin,
       decoration: BoxDecoration(
-        color: (isMobile && isStandalone)
-            ? Colors.white
-            : Colors.white.withValues(alpha: 0.96),
+        color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
         borderRadius: borderRadius,
         border: border,
-        boxShadow: boxShadow,
+        boxShadow: flatMode ? null : [
+          BoxShadow(
+            color: isDark ? Colors.black26 : const Color(0xFF6a1b9a).withValues(alpha: 0.05),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -510,23 +507,23 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: borderColor.withValues(alpha: 0.10),
+                        color: (borderColor ?? const Color(0xFF64748B)).withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color: borderColor.withValues(alpha: 0.2)),
+                            color: (borderColor ?? const Color(0xFF64748B)).withValues(alpha: 0.2)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.arrow_back_rounded,
-                              size: 16, color: borderColor),
+                              size: 16, color: borderColor ?? const Color(0xFF64748B)),
                           const SizedBox(width: 6),
                           Text(
                             context.tr('home_quayli_69043b'),
                             style: SLTheme.quicksand(
                               fontSize: 11,
                               fontWeight: FontWeight.w900,
-                              color: borderColor,
+                              color: borderColor ?? const Color(0xFF64748B),
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -547,7 +544,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                         style: SLTheme.quicksand(
                           fontSize: 15,
                           fontWeight: FontWeight.w900,
-                          color: borderColor,
+                          color: borderColor ?? const Color(0xFF64748B),
                           letterSpacing: 0.8,
                         ),
                       ),
@@ -575,7 +572,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Divider(
-              color: borderColor.withValues(alpha: 0.18),
+              color: (borderColor ?? const Color(0xFFE2E8F0)).withValues(alpha: 0.18),
               height: 1,
               thickness: 1,
             ),
@@ -990,30 +987,33 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     VoidCallback? onTap,
     bool ignoreDirectSwitchTap = false,
   }) {
+    final uiState = UiPrefs.notifier.value;
+    final isDark = uiState.themeKey == 'theme-night' ||
+        uiState.themeKey == 'theme-dark' ||
+        uiState.themeKey == 'theme-true-black';
+
     final switchWidget = Switch(
       value: value,
       onChanged: onChanged,
-      activeThumbColor: const Color(0xFFD81B60),
+      activeColor: Colors.white,
+      activeTrackColor: const Color(0xFF34C759),
+      inactiveTrackColor: isDark ? const Color(0xFF39393D) : const Color(0xFFE9E9EB),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: value
-                ? const Color(0xFFD81B60).withValues(alpha: 0.05)
-                : const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(14),
+            color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: value
-                  ? const Color(0xFFD81B60).withValues(alpha: 0.2)
-                  : const Color(0xFFE2E8F0),
-              width: 1.2,
+              color: isDark ? const Color(0xFF38383A) : const Color(0xFFE2E8F0),
+              width: 1.0,
             ),
           ),
           child: Row(
@@ -1027,8 +1027,8 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                       label,
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        color: const Color(0xFF1A1A2E),
+                        fontSize: 15,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A2E),
                       ),
                     ),
                     if (helperText != null && helperText.trim().isNotEmpty) ...[
@@ -1036,10 +1036,10 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                       Text(
                         helperText.trim(),
                         style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 11.4,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
                           height: 1.35,
-                          color: const Color(0xFF64748B),
+                          color: isDark ? Colors.grey[500] : const Color(0xFF64748B),
                         ),
                       ),
                     ],

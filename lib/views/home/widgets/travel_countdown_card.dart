@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
@@ -75,7 +76,7 @@ class TravelCountdownCard extends StatelessWidget {
               ),
 
               // ─── Glassmorphism Frosted Cover ──────────────────────────────
-              BackdropFilter(
+              FastBackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
                 child: Container(
                   padding: const EdgeInsets.all(20),
@@ -99,8 +100,9 @@ class TravelCountdownCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: RepaintBoundary(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // ─── Left Section: Big Glowing Countdown ──────────────
                       Column(
@@ -336,6 +338,7 @@ class TravelCountdownCard extends StatelessWidget {
                     ],
                   ),
                 ),
+              ),
               ),
             ],
           ),

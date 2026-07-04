@@ -6,22 +6,14 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
     switch (themeKey) {
       case 'dark':
         return (
-          colors: const [
-            Color(0xFF0F172A),
-            Color(0xFF1E1E38),
-            Color(0xFF0F172A)
-          ],
+          colors: const [Color(0xFF0F172A), Color(0xFF1E1E38), Color(0xFF0F172A)],
           textColor: Colors.white,
           borderColor: const Color(0xFF475569),
           premium: false,
         );
       case 'white':
         return (
-          colors: const [
-            Color(0xFFFFFFFF),
-            Color(0xFFF8FAFC),
-            Color(0xFFF1F5F9)
-          ],
+          colors: const [Color(0xFFFFFFFF), Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
           textColor: const Color(0xFF1F2937),
           borderColor: const Color(0xFFE2E8F0),
           premium: false,
@@ -178,8 +170,8 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
         decoration: BoxDecoration(
           color: textColor.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(outerRadius),
-          border: Border.all(
-              color: Colors.white.withValues(alpha: 0.62), width: 0.95),
+          border:
+              Border.all(color: Colors.white.withValues(alpha: 0.62), width: 0.95),
         ),
         child: Center(
           child: Icon(
@@ -203,10 +195,8 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
 
   Widget _buildWidgetHeartStylePicker() {
     final selectedKey = _normalizeWidgetHeartStyleKey(_widgetHeartStyleKey);
-    final visibleHeartStyles =
-        _widgetHeartStyleKeys.take(12).toList(growable: false);
-    final hiddenCount =
-        _widgetHeartStyleKeys.length - visibleHeartStyles.length;
+    final visibleHeartStyles = _widgetHeartStyleKeys.take(12).toList(growable: false);
+    final hiddenCount = _widgetHeartStyleKeys.length - visibleHeartStyles.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,8 +237,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: const Color(0xFFFF6B97)
-                                  .withValues(alpha: 0.16),
+                              color: const Color(0xFFFF6B97).withValues(alpha: 0.16),
                               blurRadius: 12,
                               offset: const Offset(0, 5),
                             ),
@@ -320,8 +309,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    L10nService()
-                                        .translate('home_tat_ca_kieu_trai_tim'),
+                                    L10nService().translate('home_tat_ca_kieu_trai_tim'),
                                     style: SLTheme.quicksand(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w900,
@@ -341,8 +329,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                                 shrinkWrap: true,
                                 physics: const ClampingScrollPhysics(),
                                 itemCount: _widgetHeartStyleKeys.length,
-                                gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 4,
                                   crossAxisSpacing: 10,
                                   mainAxisSpacing: 10,
@@ -356,22 +343,19 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                                     child: InkWell(
                                       borderRadius: BorderRadius.circular(18),
                                       onTap: () async {
-                                        await _handleWidgetHeartStyleChanged(
-                                            heart);
+                                        await _handleWidgetHeartStyleChanged(heart);
                                         if (sheetContext.mounted) {
                                           Navigator.pop(sheetContext);
                                         }
                                       },
                                       child: AnimatedContainer(
-                                        duration:
-                                            const Duration(milliseconds: 220),
+                                        duration: const Duration(milliseconds: 220),
                                         curve: Curves.easeOut,
                                         decoration: BoxDecoration(
                                           color: isSelected
                                               ? const Color(0xFFFFEEF5)
                                               : const Color(0xFFF8FAFC),
-                                          borderRadius:
-                                              BorderRadius.circular(18),
+                                          borderRadius: BorderRadius.circular(18),
                                           border: Border.all(
                                             color: isSelected
                                                 ? const Color(0xFFFF6B97)
@@ -381,8 +365,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                                         ),
                                         child: Center(
                                           child: ShaderMask(
-                                            shaderCallback: (bounds) =>
-                                                const LinearGradient(
+                                            shaderCallback: (bounds) => const LinearGradient(
                                               colors: [
                                                 Color(0xFFFF4D8D),
                                                 Color(0xFFFFB86B),
@@ -417,9 +400,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
               },
               icon: const Icon(Icons.more_horiz_rounded),
               label: Text(
-                L10nService()
-                    .translate('home_xem_them')
-                    .replaceAll('{count}', hiddenCount.toString()),
+                L10nService().translate('home_xem_them').replaceAll('{count}', hiddenCount.toString()),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w800,
                   color: const Color(0xFFD81B60),
@@ -561,8 +542,8 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                       color: Colors.white,
                       shadows: [
                         Shadow(
-                          color: primary.withValues(
-                              alpha: _widgetHeartAnimated ? 0.28 : 0.16),
+                          color: primary
+                              .withValues(alpha: _widgetHeartAnimated ? 0.28 : 0.16),
                           blurRadius: size * 0.18,
                           offset: const Offset(0, 3),
                         ),
@@ -780,7 +761,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
     if (themeKey == 'premium') return const SizedBox.shrink();
 
     final isDark = themeKey == 'dark';
-
+    
     return Positioned.fill(
       child: IgnorePointer(
         child: Stack(
@@ -991,22 +972,19 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
               return FutureBuilder<Map<String, String>>(
                 future: _loadSoulEventPreviewData(),
                 builder: (context, snapshot) {
-                  final data = snapshot.data ??
-                      {
-                        'title': 'Chưa có sự kiện',
-                        'date': '--/--/----',
-                        'days': '0',
-                        'label': 'ngày nữa',
-                        'color': '#EC4899',
-                      };
+                  final data = snapshot.data ?? {
+                    'title': 'Chưa có sự kiện',
+                    'date': '--/--/----',
+                    'days': '0',
+                    'label': 'ngày nữa',
+                    'color': '#EC4899',
+                  };
 
                   final colorHex = data['color']!;
                   Color eventColor;
                   try {
                     final buffer = StringBuffer();
-                    if (colorHex.length == 6 || colorHex.length == 7) {
-                      buffer.write('ff');
-                    }
+                    if (colorHex.length == 6 || colorHex.length == 7) buffer.write('ff');
                     buffer.write(colorHex.replaceFirst('#', ''));
                     eventColor = Color(int.parse(buffer.toString(), radix: 16));
                   } catch (_) {
@@ -1074,8 +1052,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                                         borderRadius: BorderRadius.circular(12),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black
-                                                .withValues(alpha: 0.03),
+                                            color: Colors.black.withValues(alpha: 0.03),
                                             blurRadius: 4,
                                             offset: const Offset(0, 2),
                                           ),
@@ -1089,8 +1066,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             eventTitle,
@@ -1395,48 +1371,6 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
   }
 
   Future<Map<String, String>> _loadSoulEventPreviewData() async {
-    if (_useCustomWidgetEvent) {
-      final customTitle = _customWidgetEventTitleCtrl.text.trim();
-      final customDateStr = _customWidgetEventDateCtrl.text.trim();
-      final colorHex = _customWidgetEventColorHex;
-
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      DateTime? parsedDate =
-          DateInputUtils.parse(customDateStr, firstYear: 1900, lastYear: 2100);
-
-      String daysStr = '0';
-      String labelStr = 'ngày nữa';
-      if (parsedDate != null) {
-        var nextDate =
-            DateTime(parsedDate.year, parsedDate.month, parsedDate.day);
-        if (nextDate.isBefore(today)) {
-          nextDate = DateTime(today.year, parsedDate.month, parsedDate.day);
-          if (nextDate.isBefore(today)) {
-            nextDate =
-                DateTime(today.year + 1, parsedDate.month, parsedDate.day);
-          }
-        }
-        final diff = nextDate.difference(today).inDays;
-        final isToday = nextDate.isAtSameMomentAs(today);
-        if (isToday) {
-          daysStr = 'HÔM NAY';
-          labelStr = '🎉';
-        } else {
-          daysStr = diff.toString();
-          labelStr = 'ngày nữa';
-        }
-      }
-
-      return {
-        'title': customTitle.isEmpty ? 'Sự kiện & Kỷ niệm' : customTitle,
-        'date': customDateStr.isEmpty ? '--/--/----' : customDateStr,
-        'days': daysStr,
-        'label': labelStr,
-        'color': colorHex,
-      };
-    }
-
     final houseId = _houseId ?? '';
     if (houseId.isEmpty) {
       return {
@@ -1452,10 +1386,10 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
       final events = await SoulEventService().getEvents(houseId);
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
-
+      
       SoulEvent? topEvent;
       int minDays = 99999;
-
+      
       for (final event in events) {
         if (!event.isPinned) continue;
         final nextDate = event.calculateNextOccurrence(today);
@@ -1467,7 +1401,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
           }
         }
       }
-
+      
       if (topEvent == null && events.isNotEmpty) {
         for (final event in events) {
           final nextDate = event.calculateNextOccurrence(today);
@@ -1484,11 +1418,9 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
       if (topEvent != null) {
         final nextDate = topEvent.calculateNextOccurrence(today)!;
         final isToday = nextDate.isAtSameMomentAs(today);
-        final dateStr =
-            '${nextDate.day.toString().padLeft(2, '0')}/${nextDate.month.toString().padLeft(2, '0')}/${nextDate.year}';
-        final colorHex =
-            topEvent.colorHex.isNotEmpty ? topEvent.colorHex : '#EC4899';
-
+        final dateStr = '${nextDate.day.toString().padLeft(2, '0')}/${nextDate.month.toString().padLeft(2, '0')}/${nextDate.year}';
+        final colorHex = topEvent.colorHex.isNotEmpty ? topEvent.colorHex : '#EC4899';
+        
         return {
           'title': topEvent.title,
           'date': dateStr,
@@ -1597,12 +1529,16 @@ class _WidgetDiaryPreviewStream extends StatefulWidget {
 class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
   static const double _outerRadius = 18;
 
-  late Stream<DatabaseEvent> _memoriesStream;
+  late Future<List<String>> _imageUrlsFuture;
+  Timer? _rotationTimer;
 
   @override
   void initState() {
     super.initState();
     _updateStream();
+    _rotationTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -1613,11 +1549,14 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
     }
   }
 
+  @override
+  void dispose() {
+    _rotationTimer?.cancel();
+    super.dispose();
+  }
+
   void _updateStream() {
-    _memoriesStream = widget.state._dbRef
-        .child('houses/${widget.houseId}/memories')
-        .limitToLast(8)
-        .onValue;
+    _imageUrlsFuture = widget.state._loadWidgetDiaryUrls(limit: 24);
   }
 
   Widget _buildEmptyPreview() {
@@ -1684,34 +1623,27 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<DatabaseEvent>(
-      stream: _memoriesStream,
+    return FutureBuilder<List<String>>(
+      future: _imageUrlsFuture,
       builder: (context, snapshot) {
-        final imageLimit = switch (widget.layoutKey) {
-          'grid' => 4,
-          'duo' => 2,
-          _ => 1,
-        };
-        final imageUrls = widget.state._extractWidgetDiaryUrls(
-          snapshot.data?.snapshot.value,
-          limit: imageLimit,
-        );
+        final imageUrls = snapshot.data ?? const <String>[];
         if (imageUrls.isEmpty) {
           return _buildEmptyPreview();
         }
 
-        final previewKey = '${widget.layoutKey}_${imageUrls.join('|')}';
+        final timeOffset = (DateTime.now().millisecondsSinceEpoch ~/ 60000);
         final filledUrls = switch (widget.layoutKey) {
           'grid' => List<String?>.generate(
               4,
-              (index) => index < imageUrls.length ? imageUrls[index] : null,
+              (index) => imageUrls[(index + timeOffset) % imageUrls.length],
             ),
           'duo' => List<String?>.generate(
               2,
-              (index) => index < imageUrls.length ? imageUrls[index] : null,
+              (index) => imageUrls[(index + timeOffset) % imageUrls.length],
             ),
-          _ => <String?>[imageUrls.first],
+          _ => <String?>[imageUrls[timeOffset % imageUrls.length]],
         };
+        final previewKey = '${widget.layoutKey}_${filledUrls.join('|')}';
 
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 320),
