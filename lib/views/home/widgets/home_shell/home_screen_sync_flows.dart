@@ -99,6 +99,28 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
 
     FriendsService().initGlobalSync(houseId);
 
+    _pairingSub?.cancel();
+    _pairingSub = PairingService.instance.listenToIncomingRequests(houseId).listen((requests) {
+      if (!mounted) return;
+      final pendingRequests = requests.where((r) => r.status == 'pending').toList();
+      if (pendingRequests.isNotEmpty) {
+        // Show a banner or dialog for the first pending request
+        final request = pendingRequests.first;
+        SLNotice.showInfo(
+          context,
+          'Có yêu cầu ghép nối từ ${request.guestName}.',
+          actionLabel: 'XEM',
+          onAction: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PairingDashboardScreen()),
+            );
+          },
+          duration: const Duration(seconds: 10),
+        );
+      }
+    });
+
     _settingsSub =
         _houseSettingsService.streamSettings(houseId).listen((settings) {
       if (settings != null && mounted) {

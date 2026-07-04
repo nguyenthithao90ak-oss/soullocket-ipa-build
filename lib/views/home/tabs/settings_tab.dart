@@ -115,7 +115,7 @@ import 'settings/controllers/settings_identity_controller.dart';
 import 'settings/controllers/settings_notifications_controller.dart';
 import 'settings/controllers/settings_widget_controller.dart';
 import 'settings/relationship/relationship_actions.dart';
-
+import 'settings/pairing/pairing_dashboard_screen.dart';
 part 'settings/settings_shared_widgets.dart';
 part 'settings/settings_state_helpers.dart';
 part 'settings/settings_persistence.dart';

@@ -60,6 +60,8 @@ import 'tabs/utilities_tab.dart';
 import '../utilities/utility_sticker_icon.dart';
 import '../../utils/services/widget_service.dart';
 import '../../utils/sl_notice.dart';
+import '../../utils/services/pairing_service.dart';
+import '../../views/home/tabs/settings/pairing/pairing_dashboard_screen.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../widgets/first_setup_spotlight_guide.dart';
 import '../../core/fast_backdrop_filter.dart';
@@ -400,6 +402,7 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _musicController;
 
   StreamSubscription? _callSub;
+  StreamSubscription? _pairingSub;
   StreamSubscription? _settingsSub;
   StreamSubscription<WidgetLaunchAction>? _widgetActionSub;
   StreamSubscription<DatabaseEvent>? _notificationBadgeSub;
@@ -947,6 +950,7 @@ class _HomeScreenState extends State<HomeScreen>
     RoleUtils.roleNotifier.removeListener(_handleGlobalRoleChanged);
     RoleUtils.duplicateRoleNotifier.removeListener(_handleDuplicateRoleWarning);
     _callSub?.cancel();
+    _pairingSub?.cancel();
     _settingsSub?.cancel();
     _widgetActionSub?.cancel();
     _detachNotificationBadgeListener(resetCounter: true);

@@ -108,7 +108,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   ),
                   const SizedBox(height: 16),
                   OutlinedButton.icon(
-                    onPressed: () => JoinHouseDialog.show(context),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PairingDashboardScreen())),
                     icon: const Icon(Icons.link_rounded, size: 18),
                     label: Text(
                       'Nhập mã ghép nối',
@@ -158,7 +158,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
-                      onPressed: () => JoinHouseDialog.show(context),
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PairingDashboardScreen())),
                       icon: const Icon(Icons.link_rounded, size: 18),
                       label: Text(
                         'Ghép nối ngay',
