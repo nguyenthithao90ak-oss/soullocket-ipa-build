@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:soullocket_app/models/diary_post.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -133,10 +135,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           try {
             final data = jsonDecode(event);
             if (data['action'] == 'send_msg') {
-              final txt = data['text']?.toString() ?? '';
-              if (txt.isNotEmpty) {
-                _sendSoulMessage(txt, bypassSpamCheck: true);
-              }
+              // Overlay now sends messages directly to Firebase, no action needed here.
             }
           } catch (e) {
             debugPrint('[SoulMergeScreen] overlayListener error: $e');
@@ -246,6 +245,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             });
           }
         }
+        _sendOverlaySyncPayload();
       }
     } catch (e) {
       debugPrint('[SoulMergeScreen] _initUserInfo error: $e');
@@ -1550,13 +1550,35 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
     FlutterOverlayWindow.isActive().then((active) {
       if (active) {
-        final payload = jsonEncode({
+        final credentialsPayload = jsonEncode({
+          'type': 'sync_credentials',
+          'houseId': _houseId ?? '',
+          'role': _myRole,
+          'partnerName': _partnerName,
+        });
+        FlutterOverlayWindow.shareData(credentialsPayload);
+
+        final chatPayload = jsonEncode({
           'type': 'update_chat',
           'history': _chatHistory,
           'myRole': _myRole,
           'partnerName': _partnerName,
         });
-        FlutterOverlayWindow.shareData(payload);
+        FlutterOverlayWindow.shareData(chatPayload);
+      }
+      
+      try {
+        final payloadText = jsonEncode({
+          'houseId': _houseId ?? '',
+          'role': _myRole,
+          'partnerName': _partnerName,
+        });
+        getApplicationDocumentsDirectory().then((dir) {
+          final file = File('${dir.path}/overlay_sync.json');
+          file.writeAsString(payloadText);
+        });
+      } catch (e) {
+        debugPrint('[SoulMergeScreen] File IO save error: $e');
       }
     });
   }

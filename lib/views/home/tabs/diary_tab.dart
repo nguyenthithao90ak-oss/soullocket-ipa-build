@@ -932,6 +932,9 @@ class _DiaryTabState extends State<DiaryTab>
   Future<void> _prepareDiaryOnMount() async {
     await _guardController.loadPrivacyNoticeState();
     final resolvedHouseId = await _feedController.resolveHouseId();
+    if (!mounted) {
+      return;
+    }
     _handleFeedControllerChange();
 
     await _guardController.prepareAccessState(

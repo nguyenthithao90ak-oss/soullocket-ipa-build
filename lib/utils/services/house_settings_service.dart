@@ -73,8 +73,7 @@ class HouseSettingsService {
   }
 
   Stream<HouseSettings?> streamSettings(String houseId) {
-    return _dbRef.child('houses/$houseId/settings').onValue.map((event) {
-      final snapshot = event.snapshot;
+    return Stream.fromFuture(_dbRef.child('houses/$houseId/settings').get()).map((snapshot) {
       if (!snapshot.exists || snapshot.value == null) return null;
       final raw = snapshot.value;
       if (raw is! Map) return null;

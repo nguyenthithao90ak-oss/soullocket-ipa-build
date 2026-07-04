@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -37,6 +38,8 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   StreamSubscription<dynamic>? _overlayListenerSub;
+  String? _houseId;
+  StreamSubscription<DatabaseEvent>? _soulMessagesSub;
 
   // Anti-spam state variables
   final List<int> _msgTimestamps = [];
@@ -48,6 +51,10 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
   @override
   void initState() {
     super.initState();
+    _myRole = widget.initialRole ?? 'user1';
+    _partnerName = widget.initialPartnerName ?? 'Người ấy';
+    _houseId = widget.initialHouseId;
+
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -58,6 +65,8 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     );
     _animController.forward();
 
+    _startListeningFirebaseChat();
+
     // Listen to data from the main app
     _overlayListenerSub = FlutterOverlayWindow.overlayListener.listen((event) {
       if (event is String && event.isNotEmpty) {
@@ -67,14 +76,31 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
           if (event.startsWith('{')) {
             final data = jsonDecode(event);
             final type = data['type'];
-            if (type == 'update_chat') {
+            if (type == 'sync_credentials') {
+              final hId = data['houseId']?.toString() ?? '';
+              final r = data['role']?.toString() ?? 'user1';
+              final pName = data['partnerName']?.toString() ?? 'Người ấy';
+              if (hId.isNotEmpty) {
+                if (mounted) {
+                  setState(() {
+                    _houseId = hId;
+                    _myRole = r;
+                    _partnerName = pName;
+                  });
+                }
+                SharedPreferences.getInstance().then((prefs) {
+                  prefs.setString('overlay_house_id', hId);
+                  prefs.setString('overlay_role', r);
+                  prefs.setString('overlay_partner_name', pName);
+                });
+                _startListeningFirebaseChat();
+              }
+            } else if (type == 'update_chat') {
               if (mounted) {
                 setState(() {
-                  _chatHistory = data['history'] ?? [];
                   _myRole = data['myRole'] ?? 'user1';
                   _partnerName = data['partnerName'] ?? 'Người ấy';
                 });
-                _scrollToBottom();
               }
             } else if (type == 'new_msg_preview') {
               final text = data['text']?.toString() ?? '';
@@ -103,6 +129,47 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
         }
       }
     });
+    FlutterOverlayWindow.shareData('request_sync');
+  }
+
+  void _startListeningFirebaseChat() {
+    _soulMessagesSub?.cancel();
+    final hId = _houseId;
+    if (hId == null || hId.isEmpty) {
+      debugPrint('[Overlay] _houseId is null or empty, cannot start listening chat');
+      return;
+    }
+    _soulMessagesSub = FirebaseDatabase.instance
+        .ref('houses/$hId/soul_merge/chat')
+        .orderByChild('timestamp')
+        .limitToLast(50)
+        .onValue
+        .listen((event) {
+      final data = event.snapshot.value;
+      final list = <Map<String, dynamic>>[];
+      if (data is Map) {
+        data.forEach((key, val) {
+          if (val is Map) {
+            final msg = Map<String, dynamic>.from(val);
+            msg['id'] = key.toString();
+            list.add(msg);
+          }
+        });
+        list.sort((a, b) {
+          final t1 = a['timestamp'] as int? ?? 0;
+          final t2 = b['timestamp'] as int? ?? 0;
+          return t1.compareTo(t2);
+        });
+      }
+      if (mounted) {
+        setState(() {
+          _chatHistory = list;
+        });
+        _scrollToBottom();
+      }
+    }, onError: (e) {
+      debugPrint('[Overlay] watch messages error: $e');
+    });
   }
 
   void _scrollToBottom() {
@@ -119,6 +186,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
     _textController.dispose();
     _scrollController.dispose();
     _overlayListenerSub?.cancel();
+    _soulMessagesSub?.cancel();
     _tempBlockTimer?.cancel();
     super.dispose();
   }
@@ -129,7 +197,8 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
       _showPreview = false;
     });
     // Expand overlay to fit the chat box panel and enable keyboard focus
-    FlutterOverlayWindow.resizeOverlay(320, 420, true);
+    FlutterOverlayWindow.resizeOverlay(WindowSize.matchParent, WindowSize.matchParent, true);
+    FlutterOverlayWindow.updateFlag(OverlayFlag.focusPointer);
     _scrollToBottom();
   }
 
@@ -217,17 +286,35 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
   }
 
   void _sendMessage() async {
-    if (await _checkSpamAndMaybeBlock()) return;
-
     final text = _textController.text.trim();
     if (text.isEmpty) return;
+
+    final hId = _houseId;
+    if (hId == null || hId.isEmpty) {
+      debugPrint('[Overlay] houseId is empty, cannot send message');
+      return;
+    }
+
+    if (await _checkSpamAndMaybeBlock()) return;
+
     _textController.clear();
 
-    final payload = jsonEncode({
-      'action': 'send_msg',
-      'text': text,
-    });
-    FlutterOverlayWindow.shareData(payload);
+    try {
+      final ref = FirebaseDatabase.instance.ref('houses/$hId/soul_merge/chat');
+      await ref.push().set({
+        'text': text,
+        'sender': _myRole,
+        'timestamp': ServerValue.timestamp,
+      });
+
+      final payload = jsonEncode({
+        'action': 'overlay_sent_msg',
+        'text': text,
+      });
+      FlutterOverlayWindow.shareData(payload);
+    } catch (e) {
+      debugPrint('[Overlay] send message error: $e');
+    }
   }
 
   @override
@@ -282,6 +369,10 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
         // Heart bubble icon
         GestureDetector(
           onTap: _onTapBubble,
+          onDoubleTap: () {
+            FlutterOverlayWindow.shareData('launch_app');
+            FlutterOverlayWindow.closeOverlay();
+          },
           child: Container(
             width: 60,
             height: 60,
@@ -320,38 +411,48 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
 
   Widget _buildExpandedChat() {
     return Container(
-      width: 320,
-      height: 420,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E0E2C).withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFFFF4F93).withValues(alpha: 0.3),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+      width: double.infinity,
+      height: double.infinity,
+      color: Colors.transparent,
+      alignment: Alignment.center,
+      child: Container(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xEE160B1F), Color(0xF20F0514)],
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.08),
-                  width: 1.0,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color(0xFFFF4F93).withValues(alpha: 0.2),
+            width: 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.7),
+              blurRadius: 30,
+              offset: const Offset(0, 16),
+              spreadRadius: 4,
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.06),
+                    width: 1.0,
+                  ),
                 ),
               ),
-            ),
-            child: Row(
-              children: [
+              child: Row(
+                children: [
                 const Icon(
                   Icons.favorite_rounded,
                   color: Color(0xFFFF4F93),
@@ -376,7 +477,6 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                     FlutterOverlayWindow.closeOverlay();
                   },
                 ),
-                // Collapse Back to Bubble
                 IconButton(
                   icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 18),
                   onPressed: () {
@@ -385,6 +485,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                       _showPreview = false;
                     });
                     FlutterOverlayWindow.resizeOverlay(80, 80, true);
+                    FlutterOverlayWindow.updateFlag(OverlayFlag.defaultFlag);
                   },
                 ),
               ],
@@ -393,20 +494,31 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
 
           // Messages list
           Expanded(
-            child: _chatHistory.isEmpty
+            child: (_houseId == null || _houseId!.isEmpty)
                 ? Center(
-                    child: Text(
-                      'Hãy gửi lời thì thầm tâm hồn... 💕',
-                      style: GoogleFonts.quicksand(
-                        color: Colors.white.withValues(alpha: 0.4),
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        'Đang đồng bộ dữ liệu...\nVui lòng mở lại ứng dụng nếu chờ lâu 💕',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13, height: 1.5),
                       ),
                     ),
                   )
-                : ListView.builder(
+                : _chatHistory.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Hãy gửi lời thì thầm tâm hồn... 💕',
+                          style: GoogleFonts.quicksand(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     itemCount: _chatHistory.length,
                     itemBuilder: (context, index) {
                       final msg = _chatHistory[index];
@@ -417,30 +529,41 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                       return Align(
                         alignment: isSelf ? Alignment.centerRight : Alignment.centerLeft,
                         child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          constraints: const BoxConstraints(maxWidth: 200),
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          constraints: const BoxConstraints(maxWidth: 270),
                           decoration: BoxDecoration(
                             gradient: isSelf
                                 ? const LinearGradient(
                                     colors: [Color(0xFFFF4F93), Color(0xFFE2528F)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   )
                                 : const LinearGradient(
-                                    colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
+                                    colors: [Color(0xFF2C2C2E), Color(0xFF1E1E20)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.15),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              )
+                            ],
                             borderRadius: BorderRadius.only(
-                              topLeft: const Radius.circular(16),
-                              topRight: const Radius.circular(16),
-                              bottomLeft: isSelf ? const Radius.circular(16) : Radius.zero,
-                              bottomRight: isSelf ? Radius.zero : const Radius.circular(16),
+                              topLeft: const Radius.circular(22),
+                              topRight: const Radius.circular(22),
+                              bottomLeft: isSelf ? const Radius.circular(22) : const Radius.circular(6),
+                              bottomRight: isSelf ? const Radius.circular(6) : const Radius.circular(22),
                             ),
                           ),
                           child: Text(
                             text,
                             style: GoogleFonts.quicksand(
                               color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -451,8 +574,8 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
 
           if (_spamWarning != null)
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: const Color(0xFFFF4F4F).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
@@ -474,7 +597,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                       _spamWarning!,
                       style: GoogleFonts.quicksand(
                         color: const Color(0xFFFFD1D1),
-                        fontSize: 10.5,
+                        fontSize: 11,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -485,62 +608,82 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
 
           // Footer Text Input
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
             decoration: BoxDecoration(
               border: Border(
                 top: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: Colors.white.withValues(alpha: 0.05),
                   width: 1.0,
                 ),
+              ),
+              color: Colors.white.withValues(alpha: 0.02),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(32),
+                bottomRight: Radius.circular(32),
               ),
             ),
             child: Row(
               children: [
+                Icon(Icons.add_circle_outline_rounded, color: Colors.white.withValues(alpha: 0.5), size: 24),
+                const SizedBox(width: 10),
+                Icon(Icons.camera_alt_outlined, color: Colors.white.withValues(alpha: 0.5), size: 24),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.white.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        width: 1.0,
+                      ),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     child: TextField(
                       controller: _textController,
                       style: GoogleFonts.quicksand(
                         color: Colors.white,
-                        fontSize: 13,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Thì thầm...',
+                        hintText: 'Nhắn tin...',
                         hintStyle: GoogleFonts.quicksand(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          fontSize: 13,
+                          color: Colors.white.withValues(alpha: 0.4),
+                          fontSize: 14,
                         ),
                         border: InputBorder.none,
                         isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 GestureDetector(
                   onTap: _sendMessage,
                   child: Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(10),
                     decoration: const BoxDecoration(
-                      color: Color(0xFFFF4F93),
+                      gradient: LinearGradient(
+                        colors: [Color(0xFFFF4F93), Color(0xFFE2528F)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.send_rounded,
                       color: Colors.white,
-                      size: 16,
+                      size: 18,
                     ),
                   ),
                 ),
               ],
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

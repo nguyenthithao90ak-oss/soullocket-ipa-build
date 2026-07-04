@@ -345,7 +345,7 @@ class DiaryMemoryController extends ChangeNotifier {
     _resetMemoriesPagination();
     _resetMemoriesStreamCache();
     _exitSelectionMode(notify: false);
-    notifyListeners();
+    _notifyIfActive();
     unawaited(_restorePendingUploadState());
   }
 

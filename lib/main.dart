@@ -22,6 +22,9 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/services/connectivity_service.dart';
@@ -180,25 +183,58 @@ void overlayMain() async {
     debugPrint('[Overlay] Firebase init error: $e');
   }
 
-  // Đọc houseId + role từ SharedPreferences
   String? houseId;
   String? role;
   String? partnerName;
   try {
-    final prefs = await SharedPreferences.getInstance();
-    houseId = prefs.getString('il_house_id');
-    role = prefs.getString('il_role') ?? 'user1';
-    // Đọc tên partner từ settings nếu có
     try {
-      final houseIdLocal = houseId;
-      if (houseIdLocal != null && houseIdLocal.isNotEmpty) {
-        final snap = await FirebaseDatabase.instance
-            .ref('houses/$houseIdLocal/settings')
-            .child(role == 'user2' ? 'nameU1' : 'nameU2')
-            .get();
-        partnerName = snap.value?.toString();
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/overlay_sync.json');
+      if (await file.exists()) {
+        final data = jsonDecode(await file.readAsString());
+        houseId = data['houseId']?.toString();
+        role = data['role']?.toString();
+        partnerName = data['partnerName']?.toString();
       }
     } catch (_) {}
+
+    if (houseId == null || houseId.isEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.reload(); // Đảm bảo lấy dữ liệu mới nhất từ isolate chính
+      houseId = prefs.getString('overlay_house_id') ?? prefs.getString('il_house_id');
+      role = prefs.getString('overlay_role') ?? prefs.getString('il_role') ?? 'user1';
+      partnerName = prefs.getString('overlay_partner_name');
+    }
+
+    if (houseId == null || houseId.isEmpty) {
+      try {
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        if (uid != null) {
+          final snap = await FirebaseDatabase.instance.ref('users/$uid').get();
+          final userData = snap.value as Map?;
+          if (userData != null) {
+            houseId = userData['houseId']?.toString();
+            role = userData['role']?.toString() ?? 'user1';
+          }
+        }
+      } catch (e) {
+        debugPrint('[Overlay] Fallback Firebase fetch error: $e');
+      }
+    }
+    
+    if (partnerName == null || partnerName.isEmpty) {
+      // Đọc tên partner từ settings nếu có
+      try {
+        final houseIdLocal = houseId;
+        if (houseIdLocal != null && houseIdLocal.isNotEmpty) {
+          final snap = await FirebaseDatabase.instance
+              .ref('houses/$houseIdLocal/settings')
+              .child(role == 'user2' ? 'nameU1' : 'nameU2')
+              .get();
+          partnerName = snap.value?.toString();
+        }
+      } catch (_) {}
+    }
   } catch (e) {
     debugPrint('[Overlay] prefs read error: $e');
   }
