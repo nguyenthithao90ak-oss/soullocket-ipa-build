@@ -419,14 +419,15 @@ struct WidgetCenterVisualView: View {
     let diaryHeight: CGFloat
 
     var body: some View {
-        if data.showDiaryOnWidget {
-            DiaryCenterPreview(
-                paths: data.diaryImagePaths,
-                theme: theme,
-                width: diaryWidth,
-                height: diaryHeight
-            )
-        } else {
+        ZStack {
+            if data.showDiaryOnWidget {
+                DiaryCenterPreview(
+                    paths: data.diaryImagePaths,
+                    theme: theme,
+                    width: diaryWidth,
+                    height: diaryHeight
+                )
+            }
             if data.heartAnimated {
                 TimelineView(.periodic(from: .now, by: 6)) { context in
                     HeartClusterView(
@@ -437,7 +438,7 @@ struct WidgetCenterVisualView: View {
                         referenceDate: context.date
                     )
                 }
-            } else {
+            } else if !data.showDiaryOnWidget {
                 HeartClusterView(
                     styleKey: data.heartStyleKey,
                     animated: false,
@@ -855,34 +856,55 @@ struct LockScreenWidgetView: View {
     var body: some View {
         switch family {
         case .accessoryRectangular:
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 4) {
-                    Image(systemName: "heart.fill")
-                        .font(.system(size: 14))
-                    Text("SoulLocket")
-                        .font(.system(size: 14, weight: .bold))
+            HStack(alignment: .center, spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 12))
+                        Text("\(data.name1) & \(data.name2)")
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .lineLimit(1)
+                    }
+                    Text(data.resolvedDaysText())
+                        .font(.system(size: 18, weight: .heavy, design: .rounded))
+                    
+                    if !data.status2.isEmpty || !data.status1.isEmpty {
+                        Text(data.status2.isEmpty ? data.status1 : data.status2)
+                            .font(.system(size: 11, weight: .medium))
+                            .lineLimit(1)
+                            .opacity(0.8)
+                    }
                 }
-                Text(data.resolvedDaysText())
-                    .font(.system(size: 18, weight: .bold))
-                if !data.status2.isEmpty {
-                    Text(data.status2)
-                        .font(.system(size: 10))
-                        .lineLimit(1)
+                Spacer()
+                if data.battery2 >= 0 {
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Image(systemName: data.isCharging2 ? "battery.100.bolt" : "battery.50")
+                            .font(.system(size: 14))
+                        Text("\(data.battery2)%")
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                    }
+                    .opacity(0.7)
                 }
             }
             .modifier(TransparentWidgetBackground())
         case .accessoryCircular:
-            VStack(spacing: 2) {
+            let numberStr = String(data.resolvedDaysText().split(separator: " ").first ?? "0")
+            let days = Double(numberStr) ?? 0.0
+            let nextMilestone = days < 100 ? 100.0 : (days < 365 ? 365.0 : ceil(days / 365.0) * 365.0)
+            let progress = days > 0 ? (days / nextMilestone) : 0.0
+            
+            Gauge(value: progress) {
                 Image(systemName: "heart.fill")
                     .font(.system(size: 14))
-                let numberStr = String(data.resolvedDaysText().split(separator: " ").first ?? "0")
+            } currentValueLabel: {
                 Text(numberStr)
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
                     .minimumScaleFactor(0.5)
             }
+            .gaugeStyle(.accessoryCircular)
             .modifier(TransparentWidgetBackground())
         case .accessoryInline:
-            Text("💕 \(data.resolvedDaysText())")
+            Text("💕 \(data.name1) & \(data.name2) - \(data.resolvedDaysText())")
         default:
             EmptyView()
         }
@@ -959,13 +981,13 @@ struct SmallWidgetView: View {
 
             HStack(spacing: 5) {
                 ZStack(alignment: .bottomTrailing) {
-                    AvatarView(path: data.avatar1Path, name: data.name1, size: 36, accentColor: theme.accentColor)
+                    AvatarView(path: data.avatar1Path, name: data.name1, size: 42, accentColor: theme.accentColor)
                     OnlineDot(isOnline: data.isOnline1)
                         .offset(x: 2, y: 2)
                 }
 
                 ZStack(alignment: .bottomTrailing) {
-                    AvatarView(path: data.avatar2Path, name: data.name2, size: 36, accentColor: theme.accentColor)
+                    AvatarView(path: data.avatar2Path, name: data.name2, size: 42, accentColor: theme.accentColor)
                     OnlineDot(isOnline: data.isOnline2)
                         .offset(x: 2, y: 2)
                 }
@@ -999,7 +1021,7 @@ struct MediumWidgetView: View {
                 stars: data.stars1,
                 avatarPath: data.avatar1Path,
                 theme: theme,
-                avatarSize: 60,
+                avatarSize: 76,
                 battery: data.battery1,
                 isCharging: data.isCharging1
             )
@@ -1031,7 +1053,7 @@ struct MediumWidgetView: View {
                 stars: data.stars2,
                 avatarPath: data.avatar2Path,
                 theme: theme,
-                avatarSize: 60,
+                avatarSize: 76,
                 battery: data.battery2,
                 isCharging: data.isCharging2
             )
@@ -1061,7 +1083,7 @@ struct LargeWidgetView: View {
                     stars: data.stars1,
                     avatarPath: data.avatar1Path,
                     theme: theme,
-                    avatarSize: 60,
+                    avatarSize: 76,
                     battery: data.battery1,
                     isCharging: data.isCharging1
                 )
@@ -1093,7 +1115,7 @@ struct LargeWidgetView: View {
                     stars: data.stars2,
                     avatarPath: data.avatar2Path,
                     theme: theme,
-                    avatarSize: 60,
+                    avatarSize: 76,
                     battery: data.battery2,
                     isCharging: data.isCharging2
                 )
@@ -1123,7 +1145,7 @@ struct DiaryPhotosView: View {
     let theme: WidgetTheme
 
     private var displayPaths: [String] {
-        Array(paths.prefix(4))
+        Array(paths.prefix(12))
     }
 
     var body: some View {

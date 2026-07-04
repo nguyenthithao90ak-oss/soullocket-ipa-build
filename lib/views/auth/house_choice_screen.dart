@@ -136,7 +136,7 @@ class _HouseChoiceScreenState extends State<HouseChoiceScreen> {
                       onPressed: _isLoading ? null : _startCreateNewHouse,
                       icon: const Icon(Icons.add_home_rounded, size: 20),
                       label: Text(
-                        'Tạo Không Gian Mới',
+                        'Tạo Mã Ghép Nối',
                         style: SLTheme.quicksand(
                           fontSize: 15,
                           fontWeight: FontWeight.w900,

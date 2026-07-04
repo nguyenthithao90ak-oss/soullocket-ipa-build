@@ -363,16 +363,10 @@ class HouseService {
       }
       return createdHouseId;
     } on HouseCreationOtpRequiredException {
-      if (kDebugMode) {
-        return await createAdminDebugFallback();
-      }
       rethrow;
     } on FirebaseFunctionsException catch (error) {
       final otpRequired = _otpRequiredFromError(error);
       if (otpRequired != null) {
-        if (kDebugMode) {
-          return await createAdminDebugFallback();
-        }
         throw otpRequired;
       }
       if (_isDebugAppCheckFailure(error) && _allowLegacyDirectCreateFallback) {

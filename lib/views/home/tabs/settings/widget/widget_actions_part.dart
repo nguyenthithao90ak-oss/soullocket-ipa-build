@@ -98,18 +98,12 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
   Future<void> _handleWidgetDiaryVisibilityChanged(bool value) async {
     await _updateWidgetAppearanceDraft(() {
       _showDiaryOnWidget = value;
-      if (value) {
-        _widgetHeartAnimated = false;
-      }
     });
   }
 
   Future<void> _handleWidgetHeartAnimatedChanged(bool value) async {
     await _updateWidgetAppearanceDraft(() {
       _widgetHeartAnimated = value;
-      if (value) {
-        _showDiaryOnWidget = false;
-      }
     });
   }
 }

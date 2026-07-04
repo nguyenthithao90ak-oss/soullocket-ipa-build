@@ -542,6 +542,15 @@ extension _SettingsTabShell on _SettingsTabState {
           ),
           _buildDivider(isDark),
           _buildiOSRow(
+            icon: Icons.link_rounded,
+            iconBgColor: const Color(0xFFD81B60),
+            title: 'Ghép nối tổ ấm',
+            subtitle: 'Tham gia không gian chung với người ấy',
+            isDark: isDark,
+            onTap: () => JoinHouseDialog.show(context),
+          ),
+          _buildDivider(isDark),
+          _buildiOSRow(
             icon: Icons.palette_rounded,
             iconBgColor: const Color(0xFF8ABAF5),
             title: context.tr('theme'),
