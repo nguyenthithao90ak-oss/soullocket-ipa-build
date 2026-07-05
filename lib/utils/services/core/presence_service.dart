@@ -506,13 +506,38 @@ class PresenceService {
     }
   }
 
-  // ignore: unused_element
   Future<void> _removeCurrentUidGhostSessions({
     required int nowMs,
   }) async {
-    // Vô hiệu hóa: Cả 2 người dùng chung 1 tài khoản Firebase Auth (cùng UID)
-    // nhưng hoạt động ở 2 vai trò chéo nhau, tránh xóa phiên của nhau.
-    return;
+    final uid = _currentUid;
+    final houseId = _activeHouseId;
+    final myRole = _activeRole;
+    if (uid == null || houseId == null || myRole == null) return;
+
+    final oppositeRole = myRole == 'user1' ? 'user2' : 'user1';
+    try {
+      final snap = await _dbRef
+          .child('houses/$houseId/presence/$oppositeRole/sessions')
+          .get()
+          .timeout(const Duration(seconds: 3));
+      final raw = snap.value;
+      if (raw is Map) {
+        final updates = <String, dynamic>{};
+        raw.forEach((key, value) {
+          if (_readSessionUid(value) == uid) {
+            updates[key.toString()] = null;
+          }
+        });
+        if (updates.isNotEmpty) {
+          await _dbRef
+              .child('houses/$houseId/presence/$oppositeRole/sessions')
+              .update(updates);
+          debugPrint('[Presence] Removed ghost sessions for uid=$uid in $oppositeRole');
+        }
+      }
+    } catch (e) {
+      debugPrint('[Presence] Failed to remove ghost sessions: $e');
+    }
   }
 
   Future<void> _refreshAggregatePresence(
@@ -592,8 +617,8 @@ class PresenceService {
     _mySessionId ??= '${now}_${_dbRef.push().key}';
 
     try {
-      // Vô hiệu hóa xóa ghost session chéo vì 2 người dùng chung tài khoản
-      // await _removeCurrentUidGhostSessions(nowMs: now);
+      // Vì giờ 2 người dùng tài khoản riêng, ta bật lại tính năng xóa ghost session chéo
+      await _removeCurrentUidGhostSessions(nowMs: now);
 
       // Dọn dẹp stale sessions cho cả 2 vai trò để tránh hiển thị sai trạng thái khi 1 người offline
       await _pruneStaleSessions(

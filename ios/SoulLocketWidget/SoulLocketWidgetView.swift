@@ -855,9 +855,19 @@ struct LockScreenWidgetView: View {
         case .accessoryRectangular:
             HStack(alignment: .center, spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("\(data.name1) ❤️ \(data.name2)")
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .lineLimit(1)
+                    HStack(spacing: 2) {
+                        Text(data.name1)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .minimumScaleFactor(0.6)
+                        Text(data.heartStyleKey)
+                            .layoutPriority(1)
+                        Text(data.name2)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .minimumScaleFactor(0.6)
+                    }
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
                     Text(data.resolvedDaysText())
                         .font(.system(size: 18, weight: .heavy, design: .rounded))
                 }
@@ -890,7 +900,7 @@ struct LockScreenWidgetView: View {
             .gaugeStyle(.accessoryCircular)
             .modifier(TransparentWidgetBackground())
         case .accessoryInline:
-            Text("💕 \(data.name1) ❤️ \(data.name2) - \(data.resolvedDaysText())")
+            Text("\(data.name1) \(data.heartStyleKey) \(data.name2) - \(data.resolvedDaysText())")
         default:
             EmptyView()
         }

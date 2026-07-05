@@ -89,6 +89,11 @@ class PairingService {
     final houseId = data['houseId']?.toString();
     if (houseId == null) throw Exception('Mã ghép nối bị lỗi (không tìm thấy houseId).');
 
+    final myHouseId = await HouseService().getCurrentHouseId();
+    if (myHouseId != null && houseId == myHouseId) {
+      throw Exception('Bạn không thể nhập mã của chính mình.');
+    }
+
     // Get current user's profile info
     final guestName = user.displayName ?? 'Khách';
     final guestAvatar = user.photoURL ?? '';

@@ -206,7 +206,7 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
       state: uiState,
       isWeb: kIsWeb,
     );
-    const quality = 'low';
+    final quality = effectProfile.graphicsQualityKey;
 
     final result = AnimatedBuilder(
       animation: _controller,

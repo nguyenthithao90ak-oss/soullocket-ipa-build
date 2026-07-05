@@ -1162,11 +1162,14 @@ class __MissYouScreenState extends State<_MissYouScreen>
           width: double.infinity,
           height: double.infinity,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: gradient,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: gradient.isNotEmpty ? gradient.first : Colors.black87,
+            gradient: gradient.length >= 2
+                ? LinearGradient(
+                    colors: gradient,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
           ),
           child: SafeArea(
             child: LayoutBuilder(

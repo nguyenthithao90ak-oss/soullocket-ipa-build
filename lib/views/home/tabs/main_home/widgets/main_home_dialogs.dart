@@ -655,7 +655,18 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
       );
   }
 
-  void _showMissYouScreen(_MissYouAlertPayload payload) {
+  void _showMissYouScreen(_MissYouAlertPayload payload) async {
+    final prefs = await OfflineCacheService.getPrefs();
+    final lastTimeMs = prefs.getInt('il_last_missyou_time_v2') ?? 0;
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    
+    if (nowMs - lastTimeMs < 3600000) {
+      return;
+    }
+    
+    await prefs.setInt('il_last_missyou_time_v2', nowMs);
+    if (!mounted) return;
+
     if (_incomingInteractionDialogVisible) {
       _incomingInteractionQueue.add(payload);
       return;

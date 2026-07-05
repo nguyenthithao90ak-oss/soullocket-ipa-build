@@ -314,29 +314,9 @@ class _UtilitiesTabState extends State<UtilitiesTab>
   }
 
   void _loadBottomBanner() async {
-    if (kIsWeb || ModalRoute.of(context)?.isCurrent != true) return;
-
-    await _adMob.initialize();
-    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
-
-    // Nếu là tk Pro thì không hiển thị banner
-    if (await _adMob.isProUser()) {
-      _bottomBannerAd?.dispose();
-      _bottomBannerAd = null;
-      if (!mounted) return;
-      setState(() => _isBottomBannerReady = false);
-      return;
-    }
-
-    _bottomBannerAd?.dispose();
-    _bottomBannerAd = null;
-    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
-    _bottomBannerAd = await _adMob.createBannerAd(
-      onAdLoaded: (_) {
-        if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
-        setState(() => _isBottomBannerReady = true);
-      },
-    );
+    // Disabled to prevent white screen crashes on emulator / unverified environments.
+    if (!mounted) return;
+    setState(() => _isBottomBannerReady = false);
   }
 
   @override

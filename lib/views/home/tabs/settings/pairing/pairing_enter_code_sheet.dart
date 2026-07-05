@@ -69,10 +69,13 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
         try {
           await PairingService.instance.finalizeMerge(code);
           if (mounted) {
-            Navigator.of(context).pop(); // Close sheet when merged
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Ghép nối thành công!', style: SLTheme.quicksand())),
-            );
+            setState(() {
+              _status = 'success_animation';
+            });
+            await Future.delayed(const Duration(milliseconds: 2500));
+            if (mounted) {
+              Navigator.of(context).pop(); // Close sheet
+            }
           }
         } catch (e) {
           if (mounted) {
@@ -127,6 +130,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
             if (_status == 'waiting') _buildWaitingState(),
             if (_status == 'accepted') _buildAcceptedState(),
             if (_status == 'rejected') _buildRejectedState(),
+            if (_status == 'success_animation') _buildSuccessAnimationState(),
           ],
         ),
       ),
@@ -365,6 +369,51 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
           child: Text('Thử lại', style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
         )
       ],
+    );
+  }
+
+  Widget _buildSuccessAnimationState() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 1.0, end: 0.0),
+      duration: const Duration(milliseconds: 2500),
+      curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+      builder: (context, opacity, child) {
+        return Opacity(
+          opacity: opacity,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE91E63).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.favorite_rounded, size: 64, color: Color(0xFFE91E63)),
+              ),
+              SLSpacing.h24,
+              Text(
+                'Ghép Nối Thành Công!',
+                style: SLTheme.quicksand(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFFE91E63),
+                ),
+              ),
+              SLSpacing.h8,
+              Text(
+                'Tổ ấm của hai bạn đã sẵn sàng.',
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              SLSpacing.h32,
+            ],
+          ),
+        );
+      },
     );
   }
 }
