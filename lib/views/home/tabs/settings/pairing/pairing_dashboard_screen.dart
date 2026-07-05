@@ -23,6 +23,13 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   bool _isPaired = false;
   String? _partnerName;
   bool _isLoading = true;
+
+  int _daysLove = 0;
+  int _diaryCount = 0;
+  String? _avatarU1;
+  String? _avatarU2;
+  String? _nameU1;
+  String? _nameU2;
   StreamSubscription? _settingsSub;
 
   @override
@@ -59,8 +66,13 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       if (!snap.exists) return;
       final settings = Map<String, dynamic>.from(snap.value as Map);
 
-      // Trong mô hình Shared Account, chỉ cần có houseId là xem như đã ghép nối.
-      bool isPaired = true;
+      bool isPaired = settings['isPaired'] == true;
+      // Dành cho nhà cũ đã ghép nhưng chưa có cờ isPaired:
+      // Nếu tên người dùng đã được đổi khác với mặc định thì chứng tỏ đã ghép
+      if (!isPaired && settings['nameU2'] != null && 
+          settings['nameU2'] != 'Bạn Nữ' && settings['nameU2'] != 'Bạn Nam') {
+        isPaired = true;
+      }
       String? pName;
 
       if (isPaired) {
@@ -73,8 +85,36 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           _isPaired = isPaired;
           _partnerName = pName ?? 'Người ấy';
           _isLoading = false;
+
+          _nameU1 = settings['nameU1']?.toString() ?? 'Bạn Nam';
+          _nameU2 = settings['nameU2']?.toString() ?? 'Bạn Nữ';
+          _avatarU1 = settings['avatarU1']?.toString();
+          _avatarU2 = settings['avatarU2']?.toString();
+
+          final startDateStr = settings['startDate']?.toString();
+          if (startDateStr != null && startDateStr.isNotEmpty) {
+            try {
+              final startDate = DateTime.parse(startDateStr);
+              final now = DateTime.now();
+              final normalizedStart = DateTime(startDate.year, startDate.month, startDate.day);
+              final normalizedNow = DateTime(now.year, now.month, now.day);
+              _daysLove = normalizedNow.difference(normalizedStart).inDays;
+            } catch (_) {}
+          }
         });
       }
+
+      try {
+        final diaryRef = FirebaseDatabase.instance.ref('houses/$houseId/diary');
+        final diarySnap = await diaryRef.get();
+        if (diarySnap.exists && diarySnap.value is Map) {
+          if (mounted) {
+            setState(() {
+              _diaryCount = (diarySnap.value as Map).length;
+            });
+          }
+        }
+      } catch (_) {}
     });
   }
 
@@ -111,7 +151,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          'Ghép Nối Tổ Ấm',
+          'Kết Nối Nửa Kia',
           style: SLTheme.quicksand(
             fontSize: 18,
             fontWeight: FontWeight.w900,
@@ -167,41 +207,136 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFD81B60).withOpacity(0.15),
-                  blurRadius: 30,
-                  offset: const Offset(0, 10),
-                )
-              ],
-            ),
-            child: const Icon(Icons.favorite_rounded, color: Color(0xFFD81B60), size: 64),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildAvatarWidget(_avatarU1, _nameU1 ?? 'Bạn Nam'),
+              const SizedBox(width: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFD81B60).withOpacity(0.15),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    )
+                  ],
+                ),
+                child: const Icon(Icons.favorite_rounded, color: Color(0xFFD81B60), size: 36),
+              ),
+              const SizedBox(width: 16),
+              _buildAvatarWidget(_avatarU2, _nameU2 ?? 'Bạn Nữ'),
+            ],
           ),
           SLSpacing.h32,
           Text(
-            'Đang ghép nối với',
+            'Tổ ấm đã trải qua',
             style: SLTheme.quicksand(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               color: Colors.grey.shade600,
             ),
           ),
           SLSpacing.h8,
-          Text(
-            _partnerName ?? 'Người ấy',
-            style: SLTheme.quicksand(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFFD81B60),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '$_daysLove',
+                style: SLTheme.quicksand(
+                  fontSize: 48,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFFD81B60),
+                  height: 1,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  'ngày yêu',
+                  style: SLTheme.quicksand(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFFD81B60).withOpacity(0.8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SLSpacing.h16,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFD81B60).withOpacity(0.08),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.photo_library_rounded, color: Color(0xFFD81B60), size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Cùng $_diaryCount khoảnh khắc nhật ký',
+                  style: SLTheme.quicksand(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFFD81B60),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAvatarWidget(String? url, String label) {
+    return Column(
+      children: [
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 4),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            color: Colors.grey.shade100,
+          ),
+          child: url != null && url.isNotEmpty
+              ? ClipOval(
+                  child: CachedNetworkImage(
+                    imageUrl: url,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => const Icon(Icons.person, color: Colors.grey, size: 40),
+                    errorWidget: (context, url, error) => const Icon(Icons.person, color: Colors.grey, size: 40),
+                  ),
+                )
+              : const Icon(Icons.person, color: Colors.grey, size: 40),
+        ),
+        SLSpacing.h8,
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: SLTheme.quicksand(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: const Color(0xFF2C1B22),
+          ),
+        ),
+      ],
     );
   }
 

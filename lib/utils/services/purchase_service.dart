@@ -374,9 +374,13 @@ class PurchaseService {
         continue;
       }
 
-      if (purchase.status == PurchaseStatus.error ||
-          purchase.status == PurchaseStatus.canceled) {
+      if (purchase.status == PurchaseStatus.error) {
         _statusController.add(VipPurchaseState.error);
+        if (purchase.pendingCompletePurchase) {
+          await _iap.completePurchase(purchase);
+        }
+      } else if (purchase.status == PurchaseStatus.canceled) {
+        _statusController.add(VipPurchaseState.idle);
         if (purchase.pendingCompletePurchase) {
           await _iap.completePurchase(purchase);
         }

@@ -1330,8 +1330,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         : (showPresetsBefore ? presetsBefore : <String>[]);
 
     return Padding(
-      padding:
-          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.zero,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

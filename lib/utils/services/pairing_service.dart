@@ -133,6 +133,7 @@ class PairingService {
 
     await HouseService().joinHouseWithCoupleCode(houseId);
     await _dbRef.child('pairing_requests/${user.uid}/status').set('merged');
+    await _dbRef.child('houses/$houseId/settings/isPaired').set(true);
   }
 
   /// Listens to incoming requests for my house

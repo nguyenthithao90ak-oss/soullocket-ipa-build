@@ -544,7 +544,7 @@ extension _SettingsTabShell on _SettingsTabState {
           _buildiOSRow(
             icon: Icons.link_rounded,
             iconBgColor: const Color(0xFFD81B60),
-            title: 'Ghép nối tổ ấm',
+            title: 'Kết nối nửa kia',
             subtitle: 'Tham gia không gian chung với người ấy',
             isDark: isDark,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PairingDashboardScreen())),
