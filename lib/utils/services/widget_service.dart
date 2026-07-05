@@ -208,14 +208,8 @@ class WidgetService {
     required bool showDiaryOnWidget,
     required bool heartAnimated,
   }) {
-    if (showDiaryOnWidget) {
-      return (
-        showDiaryOnWidget: true,
-        heartAnimated: false,
-      );
-    }
     return (
-      showDiaryOnWidget: false,
+      showDiaryOnWidget: showDiaryOnWidget,
       heartAnimated: heartAnimated,
     );
   }

@@ -313,10 +313,8 @@ class _UtilitiesTabState extends State<UtilitiesTab>
     super.dispose();
   }
 
-  void _loadBottomBanner() async {
+  void _loadBottomBanner() {
     // Disabled to prevent white screen crashes on emulator / unverified environments.
-    if (!mounted) return;
-    setState(() => _isBottomBannerReady = false);
   }
 
   @override

@@ -429,13 +429,6 @@ struct WidgetCenterVisualView: View {
                     referenceDate: context.date
                 )
             }
-        } else if data.showDiaryOnWidget {
-            DiaryCenterPreview(
-                paths: data.diaryImagePaths,
-                theme: theme,
-                width: diaryWidth,
-                height: diaryHeight
-            )
         } else {
             HeartClusterView(
                 styleKey: data.heartStyleKey,
@@ -773,14 +766,12 @@ struct PersonCard: View {
             }
 
             Text(name)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .font(.system(size: 15, weight: .bold, design: .rounded))
                 .foregroundColor(theme.textColor)
                 .lineLimit(1)
-                .minimumScaleFactor(0.8)
+                .minimumScaleFactor(0.7)
 
-            if let label = batteryLabel {
-                InfoChip(label: label, theme: theme)
-            } else if !weather.isEmpty {
+            if !weather.isEmpty {
                 InfoChip(label: weather, theme: theme)
             }
 
