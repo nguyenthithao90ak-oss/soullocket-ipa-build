@@ -59,9 +59,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       if (!snap.exists) return;
       final settings = Map<String, dynamic>.from(snap.value as Map);
 
-      final u1 = settings['u1']?.toString() ?? '';
-      final u2 = settings['u2']?.toString() ?? '';
-      bool isPaired = u1.isNotEmpty && u2.isNotEmpty;
+      // Trong mô hình Shared Account, chỉ cần có houseId là xem như đã ghép nối.
+      bool isPaired = true;
       String? pName;
 
       if (isPaired) {

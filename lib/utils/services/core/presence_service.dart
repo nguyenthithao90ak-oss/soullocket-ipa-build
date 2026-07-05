@@ -99,18 +99,14 @@ class PresenceService {
     String? ignoreUid,
   }) {
     var count = 0;
-    final normalizedIgnoredUid = ignoreUid?.trim();
     for (final value in sessions.values) {
-      if (normalizedIgnoredUid != null &&
-          normalizedIgnoredUid.isNotEmpty &&
-          _readSessionUid(value) == normalizedIgnoredUid) {
-        continue;
-      }
       final ts = _readSessionTimestamp(value);
-      if (ts != null &&
-          nowMs - ts >= 0 &&
-          nowMs - ts <= onlineFreshness.inMilliseconds) {
-        count += 1;
+      if (ts != null) {
+        final diff = nowMs - ts;
+        // Cho phép lệch đồng hồ giữa Client và Server (chấp nhận client chậm hơn server tối đa 2 phút)
+        if (diff >= -120000 && diff <= onlineFreshness.inMilliseconds) {
+          count += 1;
+        }
       }
     }
     return count;
@@ -219,13 +215,9 @@ class PresenceService {
     if (lastSeen == null) {
       final activeSessionCount = data?['activeSessionCount'];
       if (activeSessionCount is num && activeSessionCount.toInt() > 0) {
-        return _statusFormatter.justDisconnectedLabel();
+        return _statusFormatter.formatLastSeen(now - 60000);
       }
       return _statusFormatter.neverConnectedLabel();
-    }
-    if (now - lastSeen >= 0 &&
-        now - lastSeen <= justDisconnectedThreshold.inMilliseconds) {
-      return _statusFormatter.justDisconnectedLabel();
     }
     return _statusFormatter.formatLastSeen(lastSeen);
   }
@@ -509,35 +501,10 @@ class PresenceService {
   Future<void> _removeCurrentUidGhostSessions({
     required int nowMs,
   }) async {
-    final uid = _currentUid;
-    final houseId = _activeHouseId;
-    final myRole = _activeRole;
-    if (uid == null || houseId == null || myRole == null) return;
-
-    final oppositeRole = myRole == 'user1' ? 'user2' : 'user1';
-    try {
-      final snap = await _dbRef
-          .child('houses/$houseId/presence/$oppositeRole/sessions')
-          .get()
-          .timeout(const Duration(seconds: 3));
-      final raw = snap.value;
-      if (raw is Map) {
-        final updates = <String, dynamic>{};
-        raw.forEach((key, value) {
-          if (_readSessionUid(value) == uid) {
-            updates[key.toString()] = null;
-          }
-        });
-        if (updates.isNotEmpty) {
-          await _dbRef
-              .child('houses/$houseId/presence/$oppositeRole/sessions')
-              .update(updates);
-          debugPrint('[Presence] Removed ghost sessions for uid=$uid in $oppositeRole');
-        }
-      }
-    } catch (e) {
-      debugPrint('[Presence] Failed to remove ghost sessions: $e');
-    }
+    // [Vô hiệu hóa] Theo rule dự án Shared Account, 2 user dùng chung 1 UID.
+    // Nếu xóa ghost sessions của vai đối diện theo UID,
+    // người này online sẽ đá trạng thái online của người kia.
+    return;
   }
 
   Future<void> _refreshAggregatePresence(

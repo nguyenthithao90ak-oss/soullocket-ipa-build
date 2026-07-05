@@ -20,7 +20,10 @@ class PresenceStatusFormatter {
       DateTime.fromMillisecondsSinceEpoch(lastSeenMs),
     );
 
-    if (diff.inSeconds < 60) return justDisconnectedLabel();
+    if (diff.inSeconds < 60) {
+      return L10nService()
+          .format('core_presence_minutes_ago', {'count': 1});
+    }
     if (diff.inMinutes < 60) {
       return L10nService()
           .format('core_presence_minutes_ago', {'count': diff.inMinutes});

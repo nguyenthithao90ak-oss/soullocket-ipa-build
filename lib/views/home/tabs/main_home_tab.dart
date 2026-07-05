@@ -3791,6 +3791,11 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
   void _showFloatingMessage(String text) {
     if (!mounted) return;
     if (!_showHeartNotif) return;
+    
+    // [Fix] Chỉ hiển thị thông báo bong bóng khi ở màn hình chính (tab 0) 
+    // theo yêu cầu của người dùng, tránh đè lên các tính năng ở tab khác.
+    if (widget.activeIndex != 0) return;
+
     setState(() {
       _bubbleText = text;
       _showBubble = true;
