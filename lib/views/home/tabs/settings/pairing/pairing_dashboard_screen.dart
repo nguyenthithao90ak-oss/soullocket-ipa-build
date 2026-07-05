@@ -7,6 +7,9 @@ import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_create_c
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_enter_code_sheet.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:lottie/lottie.dart';
+import 'dart:async';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:soullocket_app/core/constants/app_firebase_paths.dart';
 
 class PairingDashboardScreen extends StatefulWidget {
   const PairingDashboardScreen({super.key});
@@ -20,11 +23,18 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   bool _isPaired = false;
   String? _partnerName;
   bool _isLoading = true;
+  StreamSubscription? _settingsSub;
 
   @override
   void initState() {
     super.initState();
     _loadHouseId();
+  }
+
+  @override
+  void dispose() {
+    _settingsSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadHouseId() async {
@@ -34,28 +44,39 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       return;
     }
 
-    final settings = await HouseService().getHouseSettings(houseId);
-    bool isPaired = false;
-    String? pName;
+    if (mounted) {
+      setState(() {
+        _myHouseId = houseId;
+      });
+    }
 
-    if (settings != null) {
+    _settingsSub?.cancel();
+    _settingsSub = FirebaseDatabase.instance
+        .ref(AppFirebasePaths.houseSettings(houseId))
+        .onValue
+        .listen((event) async {
+      final snap = event.snapshot;
+      if (!snap.exists) return;
+      final settings = Map<String, dynamic>.from(snap.value as Map);
+
       final u1 = settings['u1']?.toString() ?? '';
       final u2 = settings['u2']?.toString() ?? '';
-      isPaired = u1.isNotEmpty && u2.isNotEmpty;
+      bool isPaired = u1.isNotEmpty && u2.isNotEmpty;
+      String? pName;
+
       if (isPaired) {
         final myRole = await RoleUtils.currentRole();
         pName = myRole == 'user1' ? settings['nameU2'] : settings['nameU1'];
       }
-    }
 
-    if (mounted) {
-      setState(() {
-        _myHouseId = houseId;
-        _isPaired = isPaired;
-        _partnerName = pName ?? 'Người ấy';
-        _isLoading = false;
-      });
-    }
+      if (mounted) {
+        setState(() {
+          _isPaired = isPaired;
+          _partnerName = pName ?? 'Người ấy';
+          _isLoading = false;
+        });
+      }
+    });
   }
 
   void _showCreateCodeSheet() {

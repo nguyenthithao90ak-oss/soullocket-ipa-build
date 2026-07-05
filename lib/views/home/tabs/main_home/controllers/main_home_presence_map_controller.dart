@@ -55,9 +55,6 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
   }
 
   String? _ignoredPresenceUidForRole(String role) {
-    if (role != _currentRole) {
-      return _auth.currentUser?.uid;
-    }
     return null;
   }
 
