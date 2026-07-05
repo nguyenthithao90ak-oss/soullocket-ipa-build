@@ -862,11 +862,12 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
           if (!_isMerged)
             Align(
-              alignment: const Alignment(0, -0.96),
+              alignment: const Alignment(0, -0.70),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Listener(
+                    behavior: HitTestBehavior.opaque,
                     onPointerDown: (event) {
                       _onTapDown(event.position);
                     },
@@ -893,9 +894,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                         curve: Curves.easeOut,
                         child: ScaleTransition(
                           scale: _pulseAnim,
-                          child: SizedBox(
-                            width: 100,
-                            height: 100,
+                          child: Container(
+                            width: 160,
+                            height: 160,
+                            color: Colors.transparent,
                             child: Stack(
                               alignment: Alignment.center,
                               children: [

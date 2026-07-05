@@ -156,6 +156,33 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
             color: Colors.grey.shade600,
           ),
         ),
+        SLSpacing.h16,
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF4E5),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFFFB74D), width: 1.5),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Color(0xFFE65100), size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'CẢNH BÁO: Bạn là NGƯỜI NHẬP MÃ. Khi quá trình liên kết hoàn tất, toàn bộ hình ảnh và dữ liệu ở tài khoản hiện tại của bạn sẽ bị thay thế hoàn toàn bởi dữ liệu của người tạo mã.',
+                  style: SLTheme.quicksand(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFFE65100),
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
         SLSpacing.h24,
         TextField(
           controller: _codeCtrl,

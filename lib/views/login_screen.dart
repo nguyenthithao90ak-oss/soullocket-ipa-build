@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
+
 import 'dart:async';
 import 'dart:math';
 
@@ -94,9 +94,9 @@ class _LoginScreenState extends State<LoginScreen> {
     await Future<void>.delayed(const Duration(milliseconds: 1200));
     if (!mounted || _isLoading) return;
     final prefs = await SharedPreferences.getInstance();
-    final hasSeen = prefs.getBool('il_has_seen_sync_guide') ?? false;
+    final hasSeen = prefs.getBool('il_has_seen_sync_guide_v2') ?? false;
     if (!hasSeen) {
-      await prefs.setBool('il_has_seen_sync_guide', true);
+      await prefs.setBool('il_has_seen_sync_guide_v2', true);
       if (!mounted) return;
       _showSyncGuideDialog(context, enforceDelay: true);
     }
@@ -252,8 +252,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (role == 'user1' || role == 'user2') {
       await prefs.setString('il_role', role!);
-      await SecureStorageService.instance
-          .write(SecureStorageService.keyRole, role);
+      await SecureStorageService.instance.write(SecureStorageService.keyRole, role);
     }
 
     final shouldSaveRecovery = _showSecurityQuestion &&
@@ -325,8 +324,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('il_role', role);
-    await SecureStorageService.instance
-        .write(SecureStorageService.keyRole, role);
+    await SecureStorageService.instance.write(SecureStorageService.keyRole, role);
     await _authService.savePendingRelationshipModeForCurrentUser(
       relationshipMode,
     );
@@ -490,8 +488,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (sessionRole == 'user1' || sessionRole == 'user2') {
           await prefs.setString('il_role', sessionRole!);
-          await SecureStorageService.instance
-              .write(SecureStorageService.keyRole, sessionRole);
+          await SecureStorageService.instance.write(SecureStorageService.keyRole, sessionRole);
         }
 
         final user = FirebaseAuth.instance.currentUser;
@@ -503,10 +500,8 @@ class _LoginScreenState extends State<LoginScreen> {
             if (houseId != null && houseId.isNotEmpty) {
               await prefs.setString('il_house_id', houseId);
               await prefs.setString('il_auth_uid', user.uid);
-              await SecureStorageService.instance
-                  .write(SecureStorageService.keyHouseId, houseId);
-              await SecureStorageService.instance
-                  .write(SecureStorageService.keyAuthUid, user.uid);
+              await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
+              await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, user.uid);
             }
           } catch (_) {}
         }
@@ -747,8 +742,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final prefs = await SharedPreferences.getInstance();
       if (storedRole == 'user1' || storedRole == 'user2') {
         await prefs.setString('il_role', storedRole!);
-        await SecureStorageService.instance
-            .write(SecureStorageService.keyRole, storedRole);
+        await SecureStorageService.instance.write(SecureStorageService.keyRole, storedRole);
       }
 
       final user = result.user;
@@ -760,10 +754,8 @@ class _LoginScreenState extends State<LoginScreen> {
           if (houseId != null && houseId.isNotEmpty) {
             await prefs.setString('il_house_id', houseId);
             await prefs.setString('il_auth_uid', user.uid);
-            await SecureStorageService.instance
-                .write(SecureStorageService.keyHouseId, houseId);
-            await SecureStorageService.instance
-                .write(SecureStorageService.keyAuthUid, user.uid);
+            await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
+            await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, user.uid);
           }
         } catch (_) {}
       }
@@ -976,8 +968,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 ),
                                                 const SizedBox(width: 6),
                                                 Text(
-                                                  l10n.translate(
-                                                      'auth_sync_guide_button'),
+                                                  'Cách đồng bộ',
                                                   style: SLTheme.quicksand(
                                                     fontSize: 12,
                                                     fontWeight: FontWeight.w900,
@@ -1112,7 +1103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         alignment: Alignment.bottomCenter,
                         child: Padding(
                           padding: EdgeInsets.only(
-                              bottom: MediaQuery.paddingOf(context).bottom > 0
+                              bottom: MediaQuery.of(context).padding.bottom > 0
                                   ? 8
                                   : 16),
                           child: Text(
@@ -1212,7 +1203,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              l10n.translate('auth_sync_guide_title'),
+                              'Cách đồng bộ dữ liệu',
                               style: SLTheme.quicksand(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w900,
@@ -1224,7 +1215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 18),
                       Text(
-                        l10n.translate('auth_sync_guide_intro'),
+                        'SoulLocket đã nâng cấp tính năng đồng bộ. Mỗi người cần dùng tài khoản riêng biệt để ghép đôi với nhau!',
                         style: SLTheme.quicksand(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -1235,20 +1226,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 14),
                       _buildSyncStep(
                         number: '1',
-                        text: l10n.translate('auth_sync_guide_step1'),
+                        text: 'Tạo tài khoản: Cả hai tự tạo tài khoản riêng biệt của mình và đăng nhập vào ứng dụng.',
                       ),
                       const SizedBox(height: 12),
                       _buildSyncStep(
                         number: '2',
-                        text: l10n.translate('auth_sync_guide_step2'),
+                        text: 'Ghép đôi: Vào phần Cài đặt -> Ghép nối dữ liệu. Một người Tạo mã, người kia Nhập mã để tiến hành đồng bộ và liên kết dữ liệu với nhau.',
                       ),
                       const SizedBox(height: 22),
                       SizedBox(
                         width: double.infinity,
                         child: SLTheme.authPrimaryButton(
                           label: countdown > 0
-                              ? '${l10n.translate('auth_sync_guide_gotit')} ($countdown)'
-                              : l10n.translate('auth_sync_guide_gotit'),
+                              ? 'Đã hiểu ($countdown)'
+                              : 'Đã hiểu',
                           onPressed: countdown > 0
                               ? null
                               : () {

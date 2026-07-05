@@ -419,34 +419,31 @@ struct WidgetCenterVisualView: View {
     let diaryHeight: CGFloat
 
     var body: some View {
-        ZStack {
-            if data.showDiaryOnWidget {
-                DiaryCenterPreview(
-                    paths: data.diaryImagePaths,
-                    theme: theme,
-                    width: diaryWidth,
-                    height: diaryHeight
-                )
-            }
-            if data.heartAnimated {
-                TimelineView(.periodic(from: .now, by: 6)) { context in
-                    HeartClusterView(
-                        styleKey: data.heartStyleKey,
-                        animated: true,
-                        palette: palette,
-                        size: heartSize,
-                        referenceDate: context.date
-                    )
-                }
-            } else if !data.showDiaryOnWidget {
+        if data.heartAnimated {
+            TimelineView(.periodic(from: .now, by: 6)) { context in
                 HeartClusterView(
                     styleKey: data.heartStyleKey,
-                    animated: false,
+                    animated: true,
                     palette: palette,
                     size: heartSize,
-                    referenceDate: Date()
+                    referenceDate: context.date
                 )
             }
+        } else if data.showDiaryOnWidget {
+            DiaryCenterPreview(
+                paths: data.diaryImagePaths,
+                theme: theme,
+                width: diaryWidth,
+                height: diaryHeight
+            )
+        } else {
+            HeartClusterView(
+                styleKey: data.heartStyleKey,
+                animated: false,
+                palette: palette,
+                size: heartSize,
+                referenceDate: Date()
+            )
         }
     }
 }
@@ -858,22 +855,11 @@ struct LockScreenWidgetView: View {
         case .accessoryRectangular:
             HStack(alignment: .center, spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "heart.fill")
-                            .font(.system(size: 12))
-                        Text("\(data.name1) & \(data.name2)")
-                            .font(.system(size: 14, weight: .bold, design: .rounded))
-                            .lineLimit(1)
-                    }
+                    Text("\(data.name1) ❤️ \(data.name2)")
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .lineLimit(1)
                     Text(data.resolvedDaysText())
                         .font(.system(size: 18, weight: .heavy, design: .rounded))
-                    
-                    if !data.status2.isEmpty || !data.status1.isEmpty {
-                        Text(data.status2.isEmpty ? data.status1 : data.status2)
-                            .font(.system(size: 11, weight: .medium))
-                            .lineLimit(1)
-                            .opacity(0.8)
-                    }
                 }
                 Spacer()
                 if data.battery2 >= 0 {
@@ -904,7 +890,7 @@ struct LockScreenWidgetView: View {
             .gaugeStyle(.accessoryCircular)
             .modifier(TransparentWidgetBackground())
         case .accessoryInline:
-            Text("💕 \(data.name1) & \(data.name2) - \(data.resolvedDaysText())")
+            Text("💕 \(data.name1) ❤️ \(data.name2) - \(data.resolvedDaysText())")
         default:
             EmptyView()
         }
@@ -1129,7 +1115,7 @@ struct LargeWidgetView: View {
                 .frame(height: 1)
                 .padding(.horizontal, 16)
 
-            if data.showDiaryOnWidget && !data.diaryImagePaths.isEmpty {
+            if !data.diaryImagePaths.isEmpty {
                 DiaryPhotosView(paths: data.diaryImagePaths, theme: theme)
             } else {
                 StatusSection(data: data, theme: theme)
