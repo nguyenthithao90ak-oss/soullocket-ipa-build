@@ -368,17 +368,24 @@ extension _MainHomeInteractions on _MainHomeTabState {
         'timestamp': ServerValue.timestamp,
       });
       try {
-        await _notificationService.sendPartnerNotification(
-          houseId: _houseId!,
-          title: title,
-          body: notificationBody,
-          data: {
-            'screen': 'home',
-            'type': 'partner_care',
-            'careType': type,
-            'houseId': _houseId!,
-          },
-        );
+        final prefs = await OfflineCacheService.getPrefs();
+        final lastFCM = prefs.getInt('il_last_sent_fcm_push_v2') ?? 0;
+        final nowMs = DateTime.now().millisecondsSinceEpoch;
+        
+        if (nowMs - lastFCM >= 3600000) {
+          await prefs.setInt('il_last_sent_fcm_push_v2', nowMs);
+          await _notificationService.sendPartnerNotification(
+            houseId: _houseId!,
+            title: title,
+            body: notificationBody,
+            data: {
+              'screen': 'home',
+              'type': 'partner_care',
+              'careType': type,
+              'houseId': _houseId!,
+            },
+          );
+        }
       } catch (_) {}
 
       // Record daily quest progress

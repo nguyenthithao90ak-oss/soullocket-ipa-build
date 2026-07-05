@@ -1998,18 +1998,25 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _MissYouAlertPayload payload, {
     String? removalPath,
   }) async {
-    await _notificationService.showLocalNotification(
-      title: payload.title,
-      body: payload.body.isNotEmpty ? payload.body : payload.message,
-      data: {
-        'screen': 'home',
-        'type': 'partner_care',
-        'careType': payload.type,
-        if (_houseId != null) 'houseId': _houseId!,
-      },
-      dedupeKey:
-          '${payload.fromUid}|${payload.fromRole}|${payload.sentAtMs}|${payload.type}|${payload.title}',
-    );
+    final prefs = await OfflineCacheService.getPrefs();
+    final lastLocalMs = prefs.getInt('il_last_local_push_time_v2') ?? 0;
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    
+    if (nowMs - lastLocalMs >= 3600000) {
+      await prefs.setInt('il_last_local_push_time_v2', nowMs);
+      await _notificationService.showLocalNotification(
+        title: payload.title,
+        body: payload.body.isNotEmpty ? payload.body : payload.message,
+        data: {
+          'screen': 'home',
+          'type': 'partner_care',
+          'careType': payload.type,
+          if (_houseId != null) 'houseId': _houseId!,
+        },
+        dedupeKey:
+            '${payload.fromUid}|${payload.fromRole}|${payload.sentAtMs}|${payload.type}|${payload.title}',
+      );
+    }
     if (!mounted) return;
     _showMissYouScreen(payload);
     if (removalPath != null) {

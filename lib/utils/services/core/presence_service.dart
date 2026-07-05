@@ -702,7 +702,6 @@ class PresenceService {
     if (sessionId != null) {
       try {
         await ref
-            .child('sessions/$sessionId')
             .onDisconnect()
             .cancel()
             .timeout(const Duration(seconds: 3));
