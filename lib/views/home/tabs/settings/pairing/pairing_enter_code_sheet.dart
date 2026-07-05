@@ -21,6 +21,35 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
   StreamSubscription? _statusSub;
 
   @override
+  void initState() {
+    super.initState();
+    _restoreState();
+  }
+
+  Future<void> _restoreState() async {
+    setState(() => _isLoading = true);
+    try {
+      final req = await PairingService.instance.getMyPendingOrAcceptedRequest();
+      if (mounted) {
+        if (req != null) {
+          final houseId = req['houseId']?.toString();
+          final status = req['status']?.toString();
+          if (status == 'pending') {
+            setState(() {
+              _status = 'waiting';
+            });
+            _listenToStatusBase(houseId: houseId);
+          } else if (status == 'accepted') {
+            _handleAcceptedState(houseId: houseId);
+          }
+        }
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   void dispose() {
     _codeCtrl.dispose();
     _statusSub?.cancel();
@@ -59,32 +88,15 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
   }
 
   void _listenToStatus(String code) {
+    _listenToStatusBase(code: code);
+  }
+
+  void _listenToStatusBase({String? code, String? houseId}) {
     _statusSub?.cancel();
     _statusSub = PairingService.instance.listenToMyRequestStatus().listen((status) async {
       if (!mounted) return;
       if (status == 'accepted') {
-        setState(() {
-          _status = 'accepted';
-        });
-        try {
-          await PairingService.instance.finalizeMerge(code);
-          if (mounted) {
-            setState(() {
-              _status = 'success_animation';
-            });
-            await Future.delayed(const Duration(milliseconds: 2500));
-            if (mounted) {
-              Navigator.of(context).pop(); // Close sheet
-            }
-          }
-        } catch (e) {
-          if (mounted) {
-            setState(() {
-              _errorMsg = AppErrorMapper.resolve(e, fallbackMessage: 'Lỗi đồng bộ.').message;
-              _status = 'input';
-            });
-          }
-        }
+        _handleAcceptedState(code: code, houseId: houseId);
       } else if (status == 'rejected') {
         setState(() {
           _status = 'rejected';
@@ -95,6 +107,31 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
         });
       }
     });
+  }
+
+  Future<void> _handleAcceptedState({String? code, String? houseId}) async {
+    setState(() {
+      _status = 'accepted';
+    });
+    try {
+      await PairingService.instance.finalizeMerge(code: code, targetHouseId: houseId);
+      if (mounted) {
+        setState(() {
+          _status = 'success_animation';
+        });
+        await Future.delayed(const Duration(milliseconds: 2500));
+        if (mounted) {
+          Navigator.of(context).pop(); // Close sheet
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMsg = AppErrorMapper.resolve(e, fallbackMessage: 'Lỗi đồng bộ.').message;
+          _status = 'input';
+        });
+      }
+    }
   }
 
   @override

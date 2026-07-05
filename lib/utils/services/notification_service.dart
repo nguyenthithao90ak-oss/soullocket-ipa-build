@@ -242,10 +242,17 @@ class NotificationService {
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
     final type = message.data['type']?.toString() ?? '';
     final screen = message.data['screen']?.toString() ?? '';
-    final isOverlayTarget = type == 'soul_merge' ||
+    final isInteractionOrMerge = type == 'soul_merge' ||
         screen == 'soul_merge' ||
-        type == 'chat' ||
-        screen == 'chat';
+        type == 'partner_care' ||
+        type == 'interaction' ||
+        type == 'photo_shot';
+
+    // Yêu cầu: Không hiện thông báo in-app (Overlay/Heads-up) khi đang trong app đối với sự kiện gửi icon/bắn tim/tương tác (ôm, hôn...)
+    // Chỉ hiện thông báo Push Notification của Hệ thống khi khóa màn hình hoặc thoát app.
+    if (isInteractionOrMerge) return;
+
+    final isOverlayTarget = type == 'chat' || screen == 'chat';
 
     // 1. Luôn hiển thị bong bóng (nếu được cấp quyền) ngay cả khi không có notification block (Data-only FCM)
     if (isOverlayTarget) {

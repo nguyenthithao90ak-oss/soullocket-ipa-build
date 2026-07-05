@@ -201,19 +201,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<String?> _readSavedGender([String? accountKey]) async {
-    final prefs = await SharedPreferences.getInstance();
-
-    String? savedGender;
-    if (accountKey != null && accountKey.isNotEmpty) {
-      final normalizedAccountKey = accountKey.trim().toLowerCase();
-      savedGender = prefs.getString('il_saved_gender_$normalizedAccountKey');
-    } else {
-      savedGender = prefs.getString('il_saved_gender');
-    }
-
-    if (savedGender == 'user1' || savedGender == 'user2') {
-      return savedGender;
-    }
+    // LUÔN LUÔN BẮT CHỌN GIỚI TÍNH KHI ĐĂNG NHẬP MỚI.
+    // Tránh lỗi iCloud / Google Backup đồng bộ SharedPreferences giữa 2 máy cùng tài khoản
+    // dẫn đến máy B (Nữ) tự động bị ép lấy vai của máy A (Nam) mà không được phép chọn.
     return null;
   }
 

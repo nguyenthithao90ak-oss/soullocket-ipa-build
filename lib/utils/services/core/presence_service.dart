@@ -103,8 +103,8 @@ class PresenceService {
       final ts = _readSessionTimestamp(value);
       if (ts != null) {
         final diff = nowMs - ts;
-        // Cho phép lệch đồng hồ giữa Client và Server (chấp nhận client chậm hơn server tối đa 2 phút)
-        if (diff >= -120000 && diff <= onlineFreshness.inMilliseconds) {
+        // Cho phép lệch đồng hồ giữa các thiết bị (không giới hạn chênh lệch âm nếu thiết bị kia nhanh hơn)
+        if (diff <= onlineFreshness.inMilliseconds) {
           count += 1;
         }
       }
@@ -355,15 +355,9 @@ class PresenceService {
         'deviceId': deviceId,
       }).timeout(const Duration(seconds: 3));
 
-      // Prune stale sessions for BOTH roles to ensure accurate online statuses
-      final houseId = _activeHouseId ?? '';
-      if (houseId.isNotEmpty) {
-        await _pruneStaleSessions(
-            _dbRef.child('houses/$houseId/presence/user1'),
-            nowMs: now);
-        await _pruneStaleSessions(
-            _dbRef.child('houses/$houseId/presence/user2'),
-            nowMs: now);
+      // Prune stale sessions cho chính role của mình để đảm bảo status chính xác
+      if (_myPresenceRef != null) {
+        await _pruneStaleSessions(_myPresenceRef!, nowMs: now);
       }
 
       await _refreshAggregatePresence(
@@ -372,14 +366,7 @@ class PresenceService {
         preferredDevice: _activeDeviceType,
       );
 
-      // Also refresh the aggregate presence of the opposite role in case we pruned its sessions
-      if (houseId.isNotEmpty) {
-        final oppositeRole = _activeRole == 'user1' ? 'user2' : 'user1';
-        await _refreshAggregatePresence(
-          _dbRef.child('houses/$houseId/presence/$oppositeRole'),
-          nowMs: now,
-        );
-      }
+      // Không refresh AggregatePresence của đối phương để tránh đè trạng thái do lệch đồng hồ
 
       // Phát hiện trùng vai
       await _checkDuplicateRole(nowMs: now);
@@ -587,13 +574,8 @@ class PresenceService {
       // Vì giờ 2 người dùng tài khoản riêng, ta bật lại tính năng xóa ghost session chéo
       await _removeCurrentUidGhostSessions(nowMs: now);
 
-      // Dọn dẹp stale sessions cho cả 2 vai trò để tránh hiển thị sai trạng thái khi 1 người offline
-      await _pruneStaleSessions(
-          _dbRef.child('houses/$_activeHouseId/presence/user1'),
-          nowMs: now);
-      await _pruneStaleSessions(
-          _dbRef.child('houses/$_activeHouseId/presence/user2'),
-          nowMs: now);
+      // Chỉ dọn dẹp stale sessions cho bản thân, không dọn cho người kia để tránh lệch giờ làm xoá nhầm
+      await _pruneStaleSessions(_myPresenceRef!, nowMs: now);
 
       final deviceId =
           await DeviceManagerService().getCurrentDeviceIdentifier();
@@ -617,12 +599,7 @@ class PresenceService {
         preferredDevice: _activeDeviceType,
       );
 
-      // Cập nhật lại aggregate presence cho vai trò đối diện
-      final oppositeRole = _activeRole == 'user1' ? 'user2' : 'user1';
-      await _refreshAggregatePresence(
-        _dbRef.child('houses/$_activeHouseId/presence/$oppositeRole'),
-        nowMs: now,
-      );
+      // Không cập nhật lại aggregate presence cho vai trò đối diện để tránh ghi đè sai lệch
 
       _heartbeatCount = 0;
       debugPrint('Presence online for $_activeRole in $_activeHouseId');

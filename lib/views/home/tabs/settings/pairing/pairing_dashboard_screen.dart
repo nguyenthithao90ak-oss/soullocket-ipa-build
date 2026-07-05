@@ -10,6 +10,8 @@ import 'package:lottie/lottie.dart';
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:soullocket_app/core/constants/app_firebase_paths.dart';
+import 'package:soullocket_app/utils/services/storage_picker_service.dart';
+import 'package:soullocket_app/utils/services/infrastructure/storage_service.dart';
 
 class PairingDashboardScreen extends StatefulWidget {
   const PairingDashboardScreen({super.key});
@@ -30,6 +32,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   String? _avatarU2;
   String? _nameU1;
   String? _nameU2;
+  String? _startDateStr;
+  bool _hasCheckedMembers = false;
   StreamSubscription? _settingsSub;
 
   @override
@@ -67,6 +71,22 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       final settings = Map<String, dynamic>.from(snap.value as Map);
 
       bool isPaired = settings['isPaired'] == true;
+
+      // Check real members count to guarantee paired status
+      if (!isPaired && !_hasCheckedMembers) {
+        _hasCheckedMembers = true;
+        try {
+          final membersSnap = await FirebaseDatabase.instance.ref('houses/$houseId/members').get();
+          if (membersSnap.exists && membersSnap.value is Map) {
+            if ((membersSnap.value as Map).length >= 2) {
+              isPaired = true;
+              // Background update
+              FirebaseDatabase.instance.ref('houses/$houseId/settings/isPaired').set(true);
+            }
+          }
+        } catch (_) {}
+      }
+
       // Dành cho nhà cũ đã ghép nhưng chưa có cờ isPaired:
       // Nếu tên người dùng đã được đổi khác với mặc định thì chứng tỏ đã ghép
       if (!isPaired && settings['nameU2'] != null && 
@@ -91,14 +111,11 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           _avatarU1 = settings['avatarU1']?.toString();
           _avatarU2 = settings['avatarU2']?.toString();
 
-          final startDateStr = settings['startDate']?.toString();
-          if (startDateStr != null && startDateStr.isNotEmpty) {
+          final rawDate = settings['createdAt'];
+          if (rawDate != null) {
             try {
-              final startDate = DateTime.parse(startDateStr);
-              final now = DateTime.now();
-              final normalizedStart = DateTime(startDate.year, startDate.month, startDate.day);
-              final normalizedNow = DateTime(now.year, now.month, now.day);
-              _daysLove = normalizedNow.difference(normalizedStart).inDays;
+              final startDate = DateTime.fromMillisecondsSinceEpoch(int.parse(rawDate.toString()));
+              _startDateStr = '${startDate.day.toString().padLeft(2, '0')}/${startDate.month.toString().padLeft(2, '0')}/${startDate.year}';
             } catch (_) {}
           }
         });
@@ -203,70 +220,79 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   }
 
   Widget _buildPairedState() {
-    return Center(
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFFFFF0F5),
+            const Color(0xFFFFE4E1).withOpacity(0.5),
+            const Color(0xFFF0F8FF),
+          ],
+        ),
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildAvatarWidget(_avatarU1, _nameU1 ?? 'Bạn Nam'),
+              _buildAvatarWidget(_avatarU1, _nameU1 ?? 'Bạn Nam', 'user1'),
               const SizedBox(width: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFD81B60).withOpacity(0.15),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    )
+              SizedBox(
+                width: 64,
+                height: 64,
+                child: Stack(
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.none,
+                  children: const [
+                    Icon(Icons.favorite_rounded, color: Color(0xFFD81B60), size: 52),
+                    Positioned(
+                      top: -10,
+                      left: -10,
+                      child: Text('✨', style: TextStyle(fontSize: 22)),
+                    ),
+                    Positioned(
+                      bottom: -5,
+                      right: -10,
+                      child: Text('🎀', style: TextStyle(fontSize: 20)),
+                    ),
+                    Positioned(
+                      top: 5,
+                      right: -15,
+                      child: Text('💖', style: TextStyle(fontSize: 18)),
+                    ),
+                    Positioned(
+                      bottom: -10,
+                      left: 5,
+                      child: Text('🌸', style: TextStyle(fontSize: 20)),
+                    ),
                   ],
                 ),
-                child: const Icon(Icons.favorite_rounded, color: Color(0xFFD81B60), size: 36),
               ),
               const SizedBox(width: 16),
-              _buildAvatarWidget(_avatarU2, _nameU2 ?? 'Bạn Nữ'),
+              _buildAvatarWidget(_avatarU2, _nameU2 ?? 'Bạn Nữ', 'user2'),
             ],
           ),
           SLSpacing.h32,
           Text(
-            'Tổ ấm đã trải qua',
+            'Ngày bắt đầu ghép nối',
             style: SLTheme.quicksand(
               fontSize: 14,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
               color: Colors.grey.shade600,
             ),
           ),
           SLSpacing.h8,
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '$_daysLove',
-                style: SLTheme.quicksand(
-                  fontSize: 48,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFFD81B60),
-                  height: 1,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Text(
-                  'ngày yêu',
-                  style: SLTheme.quicksand(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFFD81B60).withOpacity(0.8),
-                  ),
-                ),
-              ),
-            ],
+          Text(
+            _startDateStr ?? 'Chưa có thông tin',
+            style: SLTheme.quicksand(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFFD81B60),
+            ),
           ),
           SLSpacing.h16,
           Container(
@@ -296,35 +322,77 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     );
   }
 
-  Widget _buildAvatarWidget(String? url, String label) {
-    return Column(
-      children: [
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 4),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+  Future<void> _updateAvatar(String role) async {
+    if (_myHouseId == null) return;
+    final picker = StoragePickerService();
+    final xFile = await picker.pickImage();
+    if (xFile == null) return;
+
+    if (mounted) setState(() => _isLoading = true);
+    try {
+      final url = await StorageService.instance.uploadImage(
+        _myHouseId!,
+        'avatars',
+        xFile,
+      );
+      if (url != null) {
+        final key = role == 'user1' ? 'avatarU1' : 'avatarU2';
+        await FirebaseDatabase.instance
+            .ref(AppFirebasePaths.houseSettings(_myHouseId!))
+            .child(key)
+            .set(url);
+      }
+    } catch (e) {
+      debugPrint('Upload avatar error: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Widget _buildAvatarWidget(String? url, String label, String role) {
+    return GestureDetector(
+      onTap: () => _updateAvatar(role),
+      child: Column(
+        children: [
+          Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 4),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  color: Colors.grey.shade100,
+                ),
+                child: url != null && url.isNotEmpty
+                    ? ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl: url,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Icon(Icons.person, color: Colors.grey, size: 40),
+                          errorWidget: (context, url, error) => const Icon(Icons.person, color: Colors.grey, size: 40),
+                        ),
+                      )
+                    : const Icon(Icons.person, color: Colors.grey, size: 40),
+              ),
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.camera_alt_rounded, color: Color(0xFFD81B60), size: 16),
               ),
             ],
-            color: Colors.grey.shade100,
           ),
-          child: url != null && url.isNotEmpty
-              ? ClipOval(
-                  child: CachedNetworkImage(
-                    imageUrl: url,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => const Icon(Icons.person, color: Colors.grey, size: 40),
-                    errorWidget: (context, url, error) => const Icon(Icons.person, color: Colors.grey, size: 40),
-                  ),
-                )
-              : const Icon(Icons.person, color: Colors.grey, size: 40),
-        ),
         SLSpacing.h8,
         Text(
           label,
@@ -337,8 +405,9 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           ),
         ),
       ],
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildActionCard({
     required String title,

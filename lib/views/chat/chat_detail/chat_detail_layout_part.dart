@@ -207,7 +207,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [

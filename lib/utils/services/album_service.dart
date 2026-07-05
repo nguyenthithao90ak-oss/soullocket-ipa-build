@@ -420,6 +420,15 @@ class AlbumService {
 
   // ── SCRIPT MIGRATION TỰ ĐỘNG ──────────────────────────────────────────
   Future<void> migrateAlbumFromRTDB(String houseId) async {
+    // Kiểm tra xem đã migrate chưa để tránh tốn tiền Firestore Writes
+    final existingCount = await FirebaseFirestore.instance
+        .collection('houses')
+        .doc(houseId)
+        .collection('album')
+        .limit(1)
+        .get();
+    if (existingCount.docs.isNotEmpty) return;
+
     final snap = await _dbRef.child('houses/$houseId/album').get();
     if (!snap.exists || snap.value == null) return;
 

@@ -119,19 +119,46 @@ class PairingService {
     });
   }
 
+  /// Retrieves the current pending or accepted request for the current user
+  Future<Map<String, dynamic>?> getMyPendingOrAcceptedRequest() async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+
+    final snap = await _dbRef.child('pairing_requests/${user.uid}').get();
+    if (snap.exists) {
+      final data = snap.value as Map<dynamic, dynamic>;
+      final status = data['status']?.toString();
+      if (status == 'pending' || status == 'accepted') {
+        return {
+          'houseId': data['houseId']?.toString(),
+          'status': status,
+        };
+      }
+    }
+    return null;
+  }
+
   /// Called by the requester after 'accepted' to finalize the merge
-  Future<void> finalizeMerge(String code) async {
+  Future<void> finalizeMerge({String? code, String? targetHouseId}) async {
     final user = _auth.currentUser;
     if (user == null) return;
 
-    final codeSnap = await _dbRef.child('pairing_codes/$code').get();
-    if (!codeSnap.exists) return;
+    String? houseId = targetHouseId;
+    if (houseId == null && code != null) {
+      final codeSnap = await _dbRef.child('pairing_codes/$code').get();
+      if (codeSnap.exists) {
+        final data = codeSnap.value as Map<dynamic, dynamic>;
+        houseId = data['houseId']?.toString();
+      }
+    }
     
-    final data = codeSnap.value as Map<dynamic, dynamic>;
-    final houseId = data['houseId']?.toString();
     if (houseId == null) return;
 
     await HouseService().joinHouseWithCoupleCode(houseId);
+    
+    // Bắt buộc phải refresh token để Cloud Functions cấp quyền ghi vào houseId mới trước khi đánh cờ isPaired
+    await user.getIdToken(true);
+
     await _dbRef.child('pairing_requests/${user.uid}/status').set('merged');
     await _dbRef.child('houses/$houseId/settings/isPaired').set(true);
   }
