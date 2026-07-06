@@ -325,10 +325,23 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
           child: CircularProgressIndicator(strokeWidth: 3, color: Color(0xFF4CAF50)),
         ),
         SLSpacing.h24,
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text('Đóng', style: SLTheme.quicksand(fontWeight: FontWeight.w800, color: Colors.grey)),
-        )
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+              onPressed: () {
+                PairingService.instance.cancelMyRequest();
+                setState(() => _status = 'input');
+              },
+              child: Text('Hủy yêu cầu', style: SLTheme.quicksand(fontWeight: FontWeight.w800, color: Colors.red)),
+            ),
+            const SizedBox(width: 24),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Đóng', style: SLTheme.quicksand(fontWeight: FontWeight.w800, color: Colors.grey)),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -392,6 +405,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
         SLSpacing.h24,
         ElevatedButton(
           onPressed: () {
+            PairingService.instance.cancelMyRequest();
             setState(() {
               _status = 'input';
             });

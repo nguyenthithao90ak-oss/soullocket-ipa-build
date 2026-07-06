@@ -2937,6 +2937,32 @@ class _CountdownQuickCustomizeSheetContentState
       return;
     }
 
+    if (!widget.isVip && !kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      final lastAdTimeStr = prefs.getString('last_bg_ad_time');
+      bool shouldShowAd = true;
+      if (lastAdTimeStr != null) {
+        final lastAdTime = DateTime.parse(lastAdTimeStr);
+        if (DateTime.now().difference(lastAdTime).inMinutes < 15) {
+          shouldShowAd = false;
+        }
+      }
+
+      if (shouldShowAd) {
+        final adMob = AdMobService();
+        final adSuccess = await adMob.showRewardedAd(
+          ignoreCooldown: true,
+          loadTimeout: const Duration(seconds: 12),
+        );
+        if (!mounted) return;
+        if (!adSuccess) {
+          homeState._showLatestSnackBar('Cần xem hết quảng cáo để thay đổi ảnh nền.');
+          return;
+        }
+        await prefs.setString('last_bg_ad_time', DateTime.now().toIso8601String());
+      }
+    }
+
     try {
       final pickedFile = await homeState._storageService.pickImage();
       if (pickedFile == null || !mounted) return;

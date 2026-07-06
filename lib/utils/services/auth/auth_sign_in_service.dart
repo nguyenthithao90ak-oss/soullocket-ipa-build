@@ -28,6 +28,10 @@ import 'package:soullocket_app/utils/services/app_check_http_headers.dart';
 import 'package:soullocket_app/utils/services/revenue_security_telemetry_service.dart';
 import 'package:soullocket_app/utils/services/settings_sync_service.dart';
 import 'package:soullocket_app/utils/services/security_verdict_cache_service.dart';
+import 'package:soullocket_app/utils/services/notification_service.dart';
+import 'package:soullocket_app/utils/services/role_utils.dart';
+import 'package:soullocket_app/utils/services/core/presence_service.dart';
+import 'package:soullocket_app/utils/services/house_service.dart';
 import 'play_integrity_service.dart';
 import 'auth_admin_service.dart';
 import 'auth_house_context_service.dart';
@@ -1162,6 +1166,19 @@ class AuthSignInService {
   Future<void> signOut() async {
     final prefs = await _prefs;
     try {
+      final houseId = await HouseService().getCurrentHouseId();
+      final role = RoleUtils.currentRoleSync();
+      if (houseId != null && houseId.isNotEmpty && role != null) {
+        await PresenceService().goOffline(
+          houseId: houseId,
+          role: role,
+        );
+      }
+    } catch (_) {}
+    try {
+      await NotificationService().clearTokenOnSignOut();
+    } catch (_) {}
+    try {
       if (!kIsWeb) {
         await _googleSignIn?.signOut();
       }
@@ -1172,13 +1189,16 @@ class AuthSignInService {
     try {
       await _auth.signOut();
     } finally {
-      await SettingsSyncService().clearLocalSyncedSettings();
-      await _clearSensitiveLocalData(prefs);
+      try { await SettingsSyncService().clearLocalSyncedSettings(); } catch (_) {}
+      try { await _clearSensitiveLocalData(prefs); } catch (_) {}
+      try { await SecureStorageService.instance.deleteAll(); } catch (_) {}
+      try { RoleUtils.roleNotifier.value = null; } catch (_) {}
+      try { RoleUtils.duplicateRoleNotifier.value = false; } catch (_) {}
       // ⚡ Clear all offline cache to prevent data leakage to next user
-      await OfflineCacheService.clearAllCache();
-      EncryptionService().clearCache();
-      PaintingBinding.instance.imageCache.clear();
-      PaintingBinding.instance.imageCache.clearLiveImages();
+      try { await OfflineCacheService.clearAllCache(); } catch (_) {}
+      try { EncryptionService().clearCache(); } catch (_) {}
+      try { PaintingBinding.instance.imageCache.clear(); } catch (_) {}
+      try { PaintingBinding.instance.imageCache.clearLiveImages(); } catch (_) {}
     }
   }
 

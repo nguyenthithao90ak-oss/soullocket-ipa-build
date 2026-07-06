@@ -229,13 +229,53 @@ class NotificationService {
     }
   }
 
-  /// Khi FCM Token thay đổi (đổi máy, cài lại App...)
   Future<void> _onTokenRefresh(String newToken) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     await FirebaseDatabase.instance
         .ref('users/${user.uid}/fcmToken')
         .set(newToken);
+
+    // Dùng cache trước, fallback RTDB nếu cache miss
+    String? houseId = await AuthHouseContextService.quickHouseId();
+    if (houseId == null || houseId.isEmpty) {
+      final houseIdSnap = await FirebaseDatabase.instance
+          .ref('users/${user.uid}/houseId')
+          .get();
+      houseId = houseIdSnap.value?.toString();
+      if (houseId == null || houseId.isEmpty) {
+        final houseSnap = await FirebaseDatabase.instance
+            .ref('users/${user.uid}/house_id')
+            .get();
+        houseId = houseSnap.value?.toString();
+      }
+      if (houseId != null && houseId.isNotEmpty) {
+        AuthHouseContextService.setMemHouseId(houseId);
+      }
+    }
+
+    if (houseId != null && houseId.isNotEmpty) {
+      await FirebaseDatabase.instance
+          .ref('houses/$houseId/fcmTokens/${user.uid}')
+          .set(newToken);
+    }
+  }
+
+  /// Dọn dẹp FCM token khi người dùng đăng xuất
+  Future<void> clearTokenOnSignOut() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final houseId = await HouseService().getCurrentHouseId();
+        if (houseId != null && houseId.isNotEmpty) {
+          await FirebaseDatabase.instance
+              .ref('houses/$houseId/fcmTokens/${user.uid}')
+              .remove();
+        }
+      }
+    } catch (e) {
+      debugPrint('[NotificationService] clearTokenOnSignOut error: $e');
+    }
   }
 
   /// Xử lý thông báo khi App đang mở — hiển thị Local Notification

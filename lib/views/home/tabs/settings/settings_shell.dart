@@ -610,15 +610,7 @@ extension _SettingsTabShell on _SettingsTabState {
 
         _buildSectionTitle(context.tr('settings_other_features_title'), topPadding: 16),
         _buildiOSSectionCard([
-          _buildiOSRow(
-            icon: Icons.swap_horiz_rounded,
-            iconBgColor: const Color(0xFF42A5F5),
-            title: _activeRoleKey == 'user1' ? context.tr('settings_swap_role_to_female') : context.tr('settings_swap_role_to_male'),
-            subtitle: 'Vai hiện tại: ${_activeRoleKey == 'user1' ? 'Bạn Nam' : 'Bạn Nữ'}',
-            isDark: isDark,
-            onTap: _swapUserRole,
-          ),
-          _buildDivider(isDark),
+
           _buildiOSRow(
             icon: Icons.support_agent_rounded,
             iconBgColor: const Color(0xFF4FC3F7),

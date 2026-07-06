@@ -159,8 +159,20 @@ class PairingService {
     // Bắt buộc phải refresh token để Cloud Functions cấp quyền ghi vào houseId mới trước khi đánh cờ isPaired
     await user.getIdToken(true);
 
-    await _dbRef.child('pairing_requests/${user.uid}/status').set('merged');
     await _dbRef.child('houses/$houseId/settings/isPaired').set(true);
+    
+    // Xoá dữ liệu rác sau khi ghép nối thành công
+    await _dbRef.child('pairing_requests/${user.uid}').remove();
+    if (code != null) {
+      await _dbRef.child('pairing_codes/$code').remove();
+    }
+  }
+
+  /// Guest cancels their own pending request
+  Future<void> cancelMyRequest() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    await _dbRef.child('pairing_requests/${user.uid}').remove();
   }
 
   /// Listens to incoming requests for my house
