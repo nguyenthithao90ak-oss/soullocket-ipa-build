@@ -17,12 +17,12 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
   static const List<String> _cuteStickers = [
     'assets/images/interaction_stickers/custom/numbered/sticker_001.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_003.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_006.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_007.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_011.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_015.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_018.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
   ];
 
   late int _currentStickerIndex;

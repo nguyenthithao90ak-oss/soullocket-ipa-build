@@ -24,6 +24,7 @@ import 'package:soullocket_app/views/map/map_screen.dart';
 import 'package:soullocket_app/views/relationship/couple_connect_screen.dart';
 import 'package:soullocket_app/views/single_match/single_match_hub_screen.dart';
 import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart';
+import 'package:soullocket_app/widgets/animated_rabbit_sticker.dart';
 import 'package:soullocket_app/utils/services/soul_merge_service.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -84,6 +85,7 @@ import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/widgets/legacy_web_ui.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
 import 'package:soullocket_app/utils/services/admob_service.dart';
+import 'package:soullocket_app/utils/app_cache_manager.dart';
 
 import 'package:soullocket_app/views/home/love_insights_screen.dart';
 import 'package:soullocket_app/views/home/milestones_screen.dart';
@@ -180,22 +182,22 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   BoxDecoration _homeCardDecoration({double radius = 24}) {
     final tone = UiPrefs.notifier.value.homeBlockToneKey;
     final color = switch (tone) {
-      'mist' => const Color(0xFFEEF4FF).withValues(alpha: 0.42),
-      'rose' => const Color(0xFFFFE1EC).withValues(alpha: 0.38),
-      'glass' => const Color(0xFF3A2434).withValues(alpha: 0.22),
-      _ => const Color(0xFF43293A).withValues(alpha: 0.20),
+      'mist' => const Color(0xFFEEF4FF).withValues(alpha: 0.72),
+      'rose' => const Color(0xFFFFE1EC).withValues(alpha: 0.68),
+      'glass' => Colors.white.withValues(alpha: 0.14),
+      _ => Colors.white.withValues(alpha: 0.82),
     };
     final borderColor = switch (tone) {
-      'mist' => const Color(0xFFDAE8FF).withValues(alpha: 0.62),
-      'rose' => const Color(0xFFFFC7DA).withValues(alpha: 0.60),
-      'glass' => Colors.white.withValues(alpha: 0.22),
-      _ => const Color(0xFFFFD6E4).withValues(alpha: 0.26),
+      'mist' => const Color(0xFFB8D4FF).withValues(alpha: 0.70),
+      'rose' => const Color(0xFFFFA8C8).withValues(alpha: 0.65),
+      'glass' => Colors.white.withValues(alpha: 0.28),
+      _ => const Color(0xFFFFCEE0).withValues(alpha: 0.80),
     };
     final shadowColor = switch (tone) {
-      'mist' => const Color(0xFF64B5F6).withValues(alpha: 0.10),
-      'rose' => SLColors.primary.withValues(alpha: 0.12),
-      'glass' => Colors.black.withValues(alpha: 0.14),
-      _ => const Color(0xFF2C1623).withValues(alpha: 0.16),
+      'mist' => const Color(0xFF64B5F6).withValues(alpha: 0.12),
+      'rose' => SLColors.primary.withValues(alpha: 0.14),
+      'glass' => Colors.black.withValues(alpha: 0.18),
+      _ => const Color(0xFFFF6DA0).withValues(alpha: 0.10),
     };
 
     return BoxDecoration(
@@ -204,11 +206,17 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       boxShadow: [
         BoxShadow(
           color: shadowColor,
-          blurRadius: 28,
-          offset: const Offset(0, 10),
+          blurRadius: 24,
+          offset: const Offset(0, 8),
+        ),
+        BoxShadow(
+          color: Colors.white.withValues(alpha: 0.60),
+          blurRadius: 0,
+          offset: const Offset(0, 0),
+          spreadRadius: 0,
         ),
       ],
-      border: Border.all(color: borderColor, width: 1.2),
+      border: Border.all(color: borderColor, width: 1.0),
     );
   }
 
@@ -454,11 +462,16 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         ]);
       } catch (_) {}
     }());
-    // Pre-cache sticker assets để tránh white flash
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Pre-cache sticker assets deferred and chunked to avoid startup stutter
+    Timer(const Duration(seconds: 4), () async {
       if (!mounted) return;
-      for (final path in _kHomeStickerAssets) {
-        precacheImage(AssetImage(path), context);
+      for (var i = 0; i < _kHomeStickerAssets.length; i++) {
+        if (!mounted) break;
+        precacheImage(AssetImage(_kHomeStickerAssets[i]), context);
+        // Chia nhỏ mỗi đợt 10 ảnh, nghỉ 50ms để không block UI thread
+        if (i % 10 == 9) {
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
       }
     });
     unawaited(_syncHomeCardFirstTapHintState());
@@ -1142,6 +1155,13 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         maxWidth: 1080,
         maxHeight: 1080,
         uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
+            toolbarColor: const Color(0xFFD81B60),
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.square,
+            lockAspectRatio: true,
+          ),
           IOSUiSettings(
             title: isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
             aspectRatioLockEnabled: true,
@@ -2977,6 +2997,13 @@ class _CountdownQuickCustomizeSheetContentState
           maxWidth: 1440,
           maxHeight: 3200,
           uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Chỉnh sửa ảnh nền',
+              toolbarColor: const Color(0xFFD81B60),
+              toolbarWidgetColor: Colors.white,
+              initAspectRatio: CropAspectRatioPreset.ratio16x9,
+              lockAspectRatio: true,
+            ),
             IOSUiSettings(
               title: 'Chỉnh sửa ảnh nền',
               // Using ratio16x9 since ratio9x16 was removed in image_cropper v7

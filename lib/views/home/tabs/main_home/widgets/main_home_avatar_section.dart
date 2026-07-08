@@ -252,7 +252,7 @@ class _StableAvatarNetworkImageState extends State<_StableAvatarNetworkImage> {
 
   Future<void> _loadDiskCachedProvider(String url) async {
     try {
-      final cachedFile = await DefaultCacheManager().getFileFromCache(url);
+      final cachedFile = await AppCacheManager.instance.getFileFromCache(url);
       if (!mounted || _currentUrl != url) return;
       final file = cachedFile?.file;
       if (file == null || !await file.exists()) return;

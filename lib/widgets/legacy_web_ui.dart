@@ -986,7 +986,7 @@ class SlAvatarFrame extends StatelessWidget {
             top: -size * 0.08,
             left: -size * 0.08,
             child: Image.asset(
-              'assets/images/interaction_stickers/custom/numbered/sticker_012.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -996,7 +996,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             right: -size * 0.08,
             child: Image.asset(
-              'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -1010,7 +1010,7 @@ class SlAvatarFrame extends StatelessWidget {
             top: -size * 0.08,
             right: -size * 0.08,
             child: Image.asset(
-              'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -1071,7 +1071,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             left: -size * 0.08,
             child: Image.asset(
-              'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
               width: size * 0.3,
               height: size * 0.3,
               fit: BoxFit.contain,
@@ -1081,7 +1081,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             right: -size * 0.08,
             child: Image.asset(
-              'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
               width: size * 0.3,
               height: size * 0.3,
               fit: BoxFit.contain,
@@ -1096,7 +1096,7 @@ class SlAvatarFrame extends StatelessWidget {
             top: -size * 0.08,
             left: -size * 0.08,
             child: Image.asset(
-              'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
               width: size * 0.32,
               height: size * 0.32,
               fit: BoxFit.contain,

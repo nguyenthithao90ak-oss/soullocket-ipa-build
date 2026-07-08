@@ -5,11 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:permission_handler/permission_handler.dart' as app_permission;
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:soullocket_app/utils/services/auth/auth_house_context_service.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:soullocket_app/views/app_entry.dart';
@@ -78,11 +77,7 @@ class NotificationService {
       return true;
     }
 
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      final androidStatus =
-          await app_permission.Permission.notification.request();
-      if (!androidStatus.isGranted) return false;
-    }
+
 
     final settings = await _fcm.requestPermission(
       alert: true,
@@ -204,29 +199,8 @@ class NotificationService {
         .ref('users/${user.uid}/fcmToken')
         .set(token);
 
-    // Dùng cache trước, fallback RTDB nếu cache miss
-    String? houseId = await AuthHouseContextService.quickHouseId();
-    if (houseId == null || houseId.isEmpty) {
-      final houseIdSnap = await FirebaseDatabase.instance
-          .ref('users/${user.uid}/houseId')
-          .get();
-      houseId = houseIdSnap.value?.toString();
-      if (houseId == null || houseId.isEmpty) {
-        final houseSnap = await FirebaseDatabase.instance
-            .ref('users/${user.uid}/house_id')
-            .get();
-        houseId = houseSnap.value?.toString();
-      }
-      if (houseId != null && houseId.isNotEmpty) {
-        AuthHouseContextService.setMemHouseId(houseId);
-      }
-    }
-
-    if (houseId != null && houseId.isNotEmpty) {
-      await FirebaseDatabase.instance
-          .ref('houses/$houseId/fcmTokens/${user.uid}')
-          .set(token);
-    }
+    // FCM token giờ chỉ lưu độc lập tại users/{uid}/fcmToken
+    // Không lưu gộp vào houses/{houseId}/fcmTokens nữa để tách biệt hoàn toàn thiết bị theo UID
   }
 
   Future<void> _onTokenRefresh(String newToken) async {
@@ -236,29 +210,8 @@ class NotificationService {
         .ref('users/${user.uid}/fcmToken')
         .set(newToken);
 
-    // Dùng cache trước, fallback RTDB nếu cache miss
-    String? houseId = await AuthHouseContextService.quickHouseId();
-    if (houseId == null || houseId.isEmpty) {
-      final houseIdSnap = await FirebaseDatabase.instance
-          .ref('users/${user.uid}/houseId')
-          .get();
-      houseId = houseIdSnap.value?.toString();
-      if (houseId == null || houseId.isEmpty) {
-        final houseSnap = await FirebaseDatabase.instance
-            .ref('users/${user.uid}/house_id')
-            .get();
-        houseId = houseSnap.value?.toString();
-      }
-      if (houseId != null && houseId.isNotEmpty) {
-        AuthHouseContextService.setMemHouseId(houseId);
-      }
-    }
-
-    if (houseId != null && houseId.isNotEmpty) {
-      await FirebaseDatabase.instance
-          .ref('houses/$houseId/fcmTokens/${user.uid}')
-          .set(newToken);
-    }
+    // FCM token giờ chỉ lưu độc lập tại users/{uid}/fcmToken
+    // Không lưu gộp vào houses/{houseId}/fcmTokens nữa để tách biệt hoàn toàn thiết bị theo UID
   }
 
   /// Dọn dẹp FCM token khi người dùng đăng xuất

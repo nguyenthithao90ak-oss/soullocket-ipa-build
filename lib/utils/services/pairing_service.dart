@@ -108,14 +108,19 @@ class PairingService {
     });
   }
 
-  /// Listens to the status of a request sent by the current user
+  /// Listens to the status of a request sent by the current user.
+  /// Lắng nghe toàn bộ node để detect khi node bị xóa (host từ chối và remove).
+  /// Khi node không tồn tại → trả về 'rejected' thay vì 'pending'.
   Stream<String> listenToMyRequestStatus() {
     final user = _auth.currentUser;
     if (user == null) return const Stream.empty();
 
-    return _dbRef.child('pairing_requests/${user.uid}/status').onValue.map((event) {
-      final val = event.snapshot.value?.toString();
-      return val ?? 'pending';
+    return _dbRef.child('pairing_requests/${user.uid}').onValue.map((event) {
+      final snap = event.snapshot;
+      // Node bị xóa → coi như bị từ chối
+      if (!snap.exists || snap.value == null) return 'rejected';
+      final data = snap.value as Map<dynamic, dynamic>? ?? {};
+      return data['status']?.toString() ?? 'pending';
     });
   }
 
@@ -151,7 +156,6 @@ class PairingService {
         houseId = data['houseId']?.toString();
       }
     }
-    
     if (houseId == null) return;
 
     await HouseService().joinHouseWithCoupleCode(houseId);
@@ -160,6 +164,13 @@ class PairingService {
     await user.getIdToken(true);
 
     await _dbRef.child('houses/$houseId/settings/isPaired').set(true);
+    await _dbRef.child('houses/$houseId/settings/relationshipMode').set('couple');
+    
+    // Tắt tính năng Single Match cho nhà mới vì đã ghép đôi
+    try {
+      await _dbRef.child('single_match_active_pool/$houseId').remove();
+      await _dbRef.child('houses/$houseId/settings/singleMatch/enabled').set(false);
+    } catch (_) {}
     
     // Xoá dữ liệu rác sau khi ghép nối thành công
     await _dbRef.child('pairing_requests/${user.uid}').remove();
@@ -205,9 +216,9 @@ class PairingService {
     await _dbRef.child('pairing_requests/$requestId/status').set('accepted');
   }
 
-  /// Reject a request
+  /// Reject a request — xóa luôn để tránh rác dữ liệu trong stream
   Future<void> rejectRequest(String requestId) async {
-    await _dbRef.child('pairing_requests/$requestId/status').set('rejected');
+    await _dbRef.child('pairing_requests/$requestId').remove();
   }
 
   /// Delete a code

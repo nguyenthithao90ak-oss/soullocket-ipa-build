@@ -16,7 +16,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:in_app_review/in_app_review.dart';
 import '../../login_screen.dart';
 import '../../app_entry.dart';
-import '../../auth/widgets/join_house_dialog.dart';
 import 'package:soullocket_app/views/chat/chat_detail_screen.dart';
 import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart'
     show TapHeartsOverlay, TapHeartsOverlayState;
@@ -411,7 +410,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   String _settingsBackupStatusError = '';
   bool _isSavingAdvanced = false;
   bool _isSecurityLocked = false;
-  bool _isCheckingSecurityLock = true;
+  bool _isCheckingSecurityLock = false;
   bool _isDevicePending = false;
   String _devicePendingMessage = '';
   int _devicePendingUnlockAtMs = 0;

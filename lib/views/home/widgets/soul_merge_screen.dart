@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -505,69 +505,67 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       final houseId = await _mergeService.getCurrentHouseId();
       if (houseId == null || houseId.isEmpty) return const [];
 
-      final dbRef = FirebaseDatabase.instance.ref();
-      final memoriesSnap =
-          await dbRef.child('houses/$houseId/memories').limitToLast(15).get();
-      final diarySnap =
-          await dbRef.child('houses/$houseId/diary').limitToLast(15).get();
+      final memoriesSnap = await FirebaseFirestore.instance
+          .collection('houses')
+          .doc(houseId)
+          .collection('album')
+          .orderBy('ts', descending: true)
+          .limit(15)
+          .get();
+
+      final diarySnap = await FirebaseFirestore.instance
+          .collection('houses')
+          .doc(houseId)
+          .collection('diaries')
+          .orderBy('ts', descending: true)
+          .limit(15)
+          .get();
 
       final List<Map<String, String>> items = [];
 
-      if (memoriesSnap.value is Map) {
-        final map = memoriesSnap.value as Map;
-        map.forEach((key, val) {
-          if (val is Map) {
-            final imageUrl =
-                (val['url'] ?? val['imageUrl'] ?? val['thumbUrl'] ?? '')
-                    .toString()
-                    .trim();
-            final tsRaw = val['timestamp'] ?? val['ts'];
-            String dateStr = '';
-            if (tsRaw is int) {
-              final dt = DateTime.fromMillisecondsSinceEpoch(tsRaw);
-              dateStr =
-                  '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}';
-            }
-            if (imageUrl.isNotEmpty) {
-              items.add({
-                'url': imageUrl,
-                'text': '',
-                'type': 'photo',
-                'mood': '💖',
-                'dateStr': dateStr,
-              });
-            }
-          }
-        });
+      for (var doc in memoriesSnap.docs) {
+        final val = doc.data();
+        final imageUrl = (val['url'] ?? val['imageUrl'] ?? val['thumbUrl'] ?? '').toString().trim();
+        final tsRaw = val['timestamp'] ?? val['ts'];
+        String dateStr = '';
+        if (tsRaw is int) {
+          final dt = DateTime.fromMillisecondsSinceEpoch(tsRaw);
+          dateStr = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}';
+        }
+        if (imageUrl.isNotEmpty) {
+          items.add({
+            'url': imageUrl,
+            'text': '',
+            'type': 'photo',
+            'mood': '💖',
+            'dateStr': dateStr,
+          });
+        }
       }
 
-      if (diarySnap.value is Map) {
-        final map = diarySnap.value as Map;
-        map.forEach((key, val) {
-          if (val is Map) {
-            final post = DiaryPost.fromJson(key.toString(), val);
-            final dt = post.timestamp;
-            final dateStr =
-                '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}';
-            if (post.imageUrl.isNotEmpty) {
-              items.add({
-                'url': post.imageUrl,
-                'text': post.content,
-                'type': 'photo',
-                'mood': post.mood,
-                'dateStr': dateStr,
-              });
-            } else if (post.content.isNotEmpty) {
-              items.add({
-                'url': '',
-                'text': post.content,
-                'type': 'text',
-                'mood': post.mood,
-                'dateStr': dateStr,
-              });
-            }
-          }
-        });
+      for (var doc in diarySnap.docs) {
+        final val = doc.data();
+        final post = DiaryPost.fromJson(doc.id, val);
+        final dt = post.timestamp;
+        final dateStr = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}';
+        
+        if (post.imageUrl.isNotEmpty) {
+          items.add({
+            'url': post.imageUrl,
+            'text': post.content,
+            'type': 'photo',
+            'mood': post.mood,
+            'dateStr': dateStr,
+          });
+        } else if (post.content.isNotEmpty) {
+          items.add({
+            'url': '',
+            'text': post.content,
+            'type': 'text',
+            'mood': post.mood,
+            'dateStr': dateStr,
+          });
+        }
       }
 
       if (items.isEmpty) {
@@ -1404,12 +1402,12 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                   : RepaintBoundary(
                       child: ListView.builder(
                         controller: _chatScrollController,
-                        shrinkWrap: true,
+                        reverse: true,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),
                         itemCount: _chatHistory.length,
                         itemBuilder: (context, index) {
-                          final msg = _chatHistory[index];
+                          final msg = _chatHistory.reversed.elementAt(index);
                           final sender = (msg['sender'] ?? '').toString();
                           final isSelf = (sender == _myRole);
                           final text = (msg['text'] ?? '').toString();
@@ -1422,47 +1420,22 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                 : Alignment.centerLeft,
                             child: Container(
                               margin: EdgeInsets.only(
-                                top: 4,
-                                bottom: 4,
+                                top: 2,
+                                bottom: 2,
                                 left: isSelf ? 48 : 0,
                                 right: isSelf ? 0 : 48,
                               ),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
+                              padding: EdgeInsets.all(imageUrl.isNotEmpty ? 4 : 10),
                               decoration: BoxDecoration(
-                                gradient: isSelf
-                                    ? const LinearGradient(
-                                        colors: [
-                                          Color(0xFFFF4F93),
-                                          Color(0xFFE2528F)
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      )
-                                    : const LinearGradient(
-                                        colors: [
-                                          Color(0xFF8E2DE2),
-                                          Color(0xFF4A00E0)
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
+                                color: isSelf 
+                                  ? const Color(0xFFFF4F93) 
+                                  : Colors.white.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.only(
-                                  topLeft: const Radius.circular(14),
-                                  topRight: const Radius.circular(14),
-                                  bottomLeft: Radius.circular(isSelf ? 14 : 2),
-                                  bottomRight: Radius.circular(isSelf ? 2 : 14),
+                                  topLeft: const Radius.circular(18),
+                                  topRight: const Radius.circular(18),
+                                  bottomLeft: Radius.circular(isSelf ? 18 : 4),
+                                  bottomRight: Radius.circular(isSelf ? 4 : 18),
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: (isSelf
-                                            ? const Color(0xFFFF4F93)
-                                            : const Color(0xFF8E2DE2))
-                                        .withValues(alpha: 0.2),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
                               ),
                               child: Column(
                                 crossAxisAlignment: isSelf
@@ -1471,41 +1444,62 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   if (imageUrl.isNotEmpty)
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                          bottom: text.isNotEmpty ? 4.0 : 0),
-                                      child: Text(
-                                        '🖼️ Đã gửi ảnh',
-                                        style: SLTheme.quicksand(
-                                          color: isSelf
-                                              ? Colors.white70
-                                              : Colors.white54,
-                                          fontSize: 12,
-                                          fontStyle: FontStyle.italic,
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: CachedNetworkImage(
+                                        imageUrl: imageUrl,
+                                        fit: BoxFit.cover,
+                                        width: 200,
+                                        placeholder: (context, url) => Container(
+                                          width: 200, height: 150, color: Colors.white12,
+                                          child: const Center(child: CircularProgressIndicator(color: Colors.white54, strokeWidth: 2)),
+                                        ),
+                                        errorWidget: (context, url, error) => Container(
+                                          width: 200, height: 150, color: Colors.white12,
+                                          child: const Icon(Icons.broken_image, color: Colors.white54),
                                         ),
                                       ),
                                     ),
                                   if (text.isNotEmpty)
-                                    Text(
-                                      text,
-                                      style: SLTheme.quicksand(
-                                        color: Colors.white,
-                                        fontSize: 13.5,
-                                        fontWeight: FontWeight.w600,
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                          top: imageUrl.isNotEmpty ? 6 : 0,
+                                          left: imageUrl.isNotEmpty ? 4 : 0,
+                                          right: imageUrl.isNotEmpty ? 4 : 0,
+                                          bottom: 2),
+                                      child: Text(
+                                        text,
+                                        style: SLTheme.quicksand(
+                                          color: Colors.white,
+                                          fontSize: 14.5,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                     ),
-                                  if (timeStr.isNotEmpty) ...[
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      timeStr,
-                                      style: SLTheme.quicksand(
-                                        color:
-                                            Colors.white.withValues(alpha: 0.5),
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
+                                  if (timeStr.isNotEmpty)
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                          left: imageUrl.isNotEmpty ? 4 : 0,
+                                          right: imageUrl.isNotEmpty ? 4 : 0,
+                                          top: 2, bottom: imageUrl.isNotEmpty ? 4 : 0),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            timeStr,
+                                            style: SLTheme.quicksand(
+                                              color: Colors.white.withValues(alpha: 0.6),
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          if (isSelf) ...[
+                                            const SizedBox(width: 4),
+                                            Icon(Icons.check_circle, size: 10, color: Colors.white.withValues(alpha: 0.6)),
+                                          ],
+                                        ],
                                       ),
                                     ),
-                                  ],
                                 ],
                               ),
                             ),

@@ -704,7 +704,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     }
 
     if (text == '2') {
-      return '🔗 HỖ TRỢ GHÉP ĐÔI & LỖI MẤT KẾT NỐI\n\n* Cách ghép đôi QR dễ nhất:\nBước 1: Lấy điện thoại của người kia, mở màn hình có mã QR to đùng lên.\nBước 2: Lấy điện thoại của bạn, bấm nút ${context.tr('util_qutcamera_0e07a1')} và đưa camera soi vào khung QR của người kia.\\n\\n* Hiện lỗi ${context.tr('util_vamithotof_9440a3')} sai lệch:\\nĐây không phải lỗi mất kết nối nhà nha! Xảy ra do đường truyền mạng chậm đi vài giây. Bạn chỉ cần thử tắt 4G/Wifi rồi bật lại hoặc kệ nó 1 lúc là app sẽ tự cập nhật đồng bộ lại chữ "Online".\n\n${context.tr('util_nulmtheom2_b875c9')}';
+      return '🔗 HỖ TRỢ GHÉP ĐÔI & LỖI MẤT KẾT NỐI\n\n* Cách ghép đôi dễ nhất:\nBước 1: Điện thoại của người kia vào mục Cài đặt -> Lấy Mã Nhà gồm 12 số.\nBước 2: Máy của bạn bấm nút Ghép Đôi và nhập 12 số đó vào.\\n\\n* Hiện lỗi ${context.tr('util_vamithotof_9440a3')} sai lệch:\\nĐây không phải lỗi mất kết nối nhà nha! Xảy ra do đường truyền mạng chậm đi vài giây. Bạn chỉ cần thử tắt 4G/Wifi rồi bật lại hoặc kệ nó 1 lúc là app sẽ tự cập nhật đồng bộ lại chữ "Online".\n\n${context.tr('util_nulmtheom2_b875c9')}';
     }
 
     if (text == '3') {

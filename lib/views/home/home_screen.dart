@@ -66,6 +66,7 @@ import '../../utils/app_error_mapper.dart';
 import '../../widgets/first_setup_spotlight_guide.dart';
 import '../../core/fast_backdrop_filter.dart';
 import '../../core/sl_page_physics.dart';
+import '../../utils/app_cache_manager.dart';
 
 part 'widgets/home_shell/home_screen_sync_flows.dart';
 part 'widgets/home_shell/home_screen_notice_flows.dart';
@@ -425,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen>
   static const String _lastTabPrefsKey = 'il_home_last_tab_v1';
   static const String _countdownPinnedLaunchPrefsKey =
       'il_countdown_mode_pinned_launch_v1';
-  static const int _notificationBadgeLimit = 75;
+  static const int _notificationBadgeLimit = 30;
   static const Duration _homeStartupTaskDelay = Duration(milliseconds: 700);
   static const Duration _homeStartupAnimationDelay =
       Duration(milliseconds: 900);
@@ -585,9 +586,9 @@ class _HomeScreenState extends State<HomeScreen>
             )
           : const Size(430, 932);
       final cacheWidth =
-          (logicalSize.width * devicePixelRatio).round().clamp(720, 1440);
+          (logicalSize.width * devicePixelRatio).round().clamp(480, 1080);
       final cacheHeight =
-          (logicalSize.height * devicePixelRatio).round().clamp(1280, 2560);
+          (logicalSize.height * devicePixelRatio).round().clamp(853, 1920);
 
       final provider = CachedNetworkImageProvider(
         backgroundUrl,

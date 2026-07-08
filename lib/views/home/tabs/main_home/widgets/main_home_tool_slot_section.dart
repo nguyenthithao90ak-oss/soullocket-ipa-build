@@ -619,10 +619,12 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
 
   bool _isRequestingUnlock = true;
   bool _isUnlocked = false;
+  late final Stream<bool> _vipStatusStream;
 
   @override
   void initState() {
     super.initState();
+    _vipStatusStream = PurchaseService().vipStatusStream();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
@@ -665,7 +667,7 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
     }
 
     return StreamBuilder<bool>(
-      stream: PurchaseService().vipStatusStream(),
+      stream: _vipStatusStream,
       initialData: false,
       builder: (context, snapshot) {
         final isVip = (snapshot.data ?? false);

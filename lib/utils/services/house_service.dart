@@ -486,6 +486,10 @@ class HouseService {
       }
       
       await _refreshCallableSecurityContext(force: true);
+      
+      final prefs = await SharedPreferences.getInstance();
+      final oldHouseId = prefs.getString('il_house_id');
+      
       final response = await CloudFunctionsHelper.callSecure<dynamic>(
         'joinHouseSecure',
         payload: <String, dynamic>{
@@ -496,8 +500,20 @@ class HouseService {
       final map = _asStringDynamicMap(response.data);
       if (map != null && map['houseId'] != null) {
         // Success
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('il_house_id', map['houseId'].toString());
+        final newHouseId = map['houseId'].toString();
+        
+        // Dọn dẹp nhà cũ (nhà độc thân) trước khi nhận token mới
+        if (oldHouseId != null && oldHouseId.isNotEmpty && oldHouseId != newHouseId) {
+          try {
+            final oldMembersSnap = await FirebaseDatabase.instance.ref('houses/$oldHouseId/members').get();
+            if (!oldMembersSnap.exists || (oldMembersSnap.value is Map && (oldMembersSnap.value as Map).length <= 1)) {
+              await FirebaseDatabase.instance.ref('houses/$oldHouseId').remove();
+              await FirebaseDatabase.instance.ref('houses_public/$oldHouseId').remove();
+            }
+          } catch (_) {}
+        }
+        
+        await prefs.setString('il_house_id', newHouseId);
         if (map['assignedRole'] != null) {
           await prefs.setString('il_role', map['assignedRole'].toString());
         }

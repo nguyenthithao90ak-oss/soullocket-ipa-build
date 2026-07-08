@@ -201,7 +201,17 @@ class AuthRecoveryService {
     }
   }
 
+  Map<String, dynamic>? _cachedSecurityData;
+  DateTime? _lastSecurityCacheTime;
+
   Future<Map<String, dynamic>?> getHouseSecurityData(String houseId) async {
+    final now = DateTime.now();
+    if (_cachedSecurityData != null && 
+        _lastSecurityCacheTime != null && 
+        now.difference(_lastSecurityCacheTime!).inSeconds < 5) {
+      return _cachedSecurityData;
+    }
+
     try {
       final snaps = await Future.wait([
         _db
@@ -277,6 +287,8 @@ class AuthRecoveryService {
         security['secondaryEmail'] = backupEmail;
       }
 
+      _cachedSecurityData = security;
+      _lastSecurityCacheTime = now;
       return security;
     } catch (_) {
       return null;

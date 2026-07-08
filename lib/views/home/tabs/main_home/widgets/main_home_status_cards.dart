@@ -287,20 +287,26 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             Row(
               children: [
                 Container(
-                  width: 42,
-                  height: 42,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [Color(0xFFFFD7E6), Color(0xFFFFEEF5)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(15),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFFD7E6).withValues(alpha: 0.5),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: const Icon(
-                    Icons.auto_awesome_rounded,
-                    color: SLColors.primary,
-                    size: 20,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: const AnimatedRabbitSticker('assets/images/interaction_stickers/custom/numbered/sticker_056.png'),
                   ),
                 ),
                 SLSpacing.w12,
@@ -342,8 +348,26 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF5F9),
-                borderRadius: BorderRadius.circular(16),
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFFFFF5F9),
+                    Color(0xFFFFECF3),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: const Color(0xFFFFCEE0),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF89B6).withValues(alpha: 0.12),
+                    blurRadius: 14,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
@@ -392,13 +416,34 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             ),
 
             const SizedBox(height: 14),
-            Text(
-              _buildCountdownText(isSingle: isSingle, startDate: startDate),
-              style: SLTheme.quicksand(
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-                color: SLColors.primary,
-                height: 1.4,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF6D97), Color(0xFFFF9EBA)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF6D97).withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  _buildCountdownText(isSingle: isSingle, startDate: startDate),
+                  style: SLTheme.quicksand(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
           ],
@@ -465,20 +510,26 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFFDDF5FF), Color(0xFFF0FAFF)],
+                      colors: [Color(0xFF80DEEA), Color(0xFF26C6DA)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(16),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF26C6DA).withValues(alpha: 0.35),
+                        blurRadius: 12,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
                   ),
-                  child: const Icon(
-                    Icons.map_rounded,
-                    color: SLColors.secondary,
-                    size: 22,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Image.asset('assets/images/interaction_stickers/custom/numbered/sticker_162.png'),
                   ),
                 ),
                 SLSpacing.w12,
@@ -557,10 +608,25 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.72),
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFFE0FAFA),
+                                Color(0xFFF0FEFF),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.82)),
+                              color: const Color(0xFF80DEEA).withValues(alpha: 0.55),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF26C6DA).withValues(alpha: 0.08),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Row(
                             children: [
@@ -570,7 +636,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                                   style: SLTheme.quicksand(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF4B5B6E),
+                                    color: const Color(0xFF2A5F6E),
                                     height: 1.4,
                                   ),
                                 ),
@@ -581,7 +647,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                                 style: SLTheme.quicksand(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w900,
-                                  color: SLColors.secondary,
+                                  color: const Color(0xFF00ACC1),
                                 ),
                               ),
                             ],
@@ -644,10 +710,10 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
           children: [
             Row(
               children: [
-                const Icon(
-                  Icons.auto_awesome_rounded,
-                  color: SLColors.accent,
-                  size: 18,
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Image.asset('assets/images/interaction_stickers/custom/numbered/sticker_160.png'),
                 ),
                 SLSpacing.w8,
                 Flexible(

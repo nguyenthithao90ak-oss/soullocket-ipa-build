@@ -81,7 +81,7 @@ class _UtilitiesTabState extends State<UtilitiesTab>
   bool _isEditMode = false;
   int _currentSegment = 0;
   BannerAd? _bottomBannerAd;
-  bool _isBottomBannerReady = false;
+  final bool _isBottomBannerReady = false;
   List<UtilityApp> _pinnedApps = const <UtilityApp>[];
   List<UtilityApp> _recentApps = const <UtilityApp>[];
 

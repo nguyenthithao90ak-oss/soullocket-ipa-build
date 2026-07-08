@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/utils/services/ai_counselor_service.dart';
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
@@ -293,25 +294,32 @@ class LoveInsightService {
     }
     final monthStart = DateTime(now.year, now.month, 1);
 
+    final firestore = FirebaseFirestore.instance;
+    final cutoff45Days = now.subtract(const Duration(days: 45)).millisecondsSinceEpoch;
+
     try {
       final results = await Future.wait([
-        _dbRef.child('houses/$houseId/diary').get(),
-        _dbRef.child('houses/$houseId/album').get(),
+        firestore.collection('houses').doc(houseId).collection('diaries').where('ts', isGreaterThanOrEqualTo: cutoff45Days).get(),
+        firestore.collection('houses').doc(houseId).collection('album').where('ts', isGreaterThanOrEqualTo: cutoff45Days).get(),
         _dbRef.child('houses/$houseId/settings').get(),
         _dbRef.child('houses/$houseId/presence').get(),
         _dbRef.child('houses/$houseId/metrics/diary_views').get(),
         _dbRef.child('houses/$houseId/metrics/app_open').get(),
-      ]).timeout(const Duration(seconds: 5));
+        firestore.collection('houses').doc(houseId).collection('diaries').count().get(),
+        firestore.collection('houses').doc(houseId).collection('album').count().get(),
+      ]).timeout(const Duration(seconds: 8));
 
       final data = await _processInsightData(
         relationshipMode,
         monthStart,
-        results[0].value,
-        results[1].value,
-        results[2].value,
-        results[3].value,
-        results[4].value,
-        results[5].value,
+        (results[0] as QuerySnapshot).docs,
+        (results[1] as QuerySnapshot).docs,
+        (results[2] as DataSnapshot).value,
+        (results[3] as DataSnapshot).value,
+        (results[4] as DataSnapshot).value,
+        (results[5] as DataSnapshot).value,
+        (results[6] as AggregateQuerySnapshot).count ?? 0,
+        (results[7] as AggregateQuerySnapshot).count ?? 0,
       );
       await _saveInsightCache(houseId, relationshipMode, data);
       // Cập nhật in-memory cache
@@ -400,16 +408,18 @@ class LoveInsightService {
   Future<LoveInsightData> _processInsightData(
     String relationshipMode,
     DateTime monthStart,
-    dynamic diaryValue,
-    dynamic albumValue,
+    List<QueryDocumentSnapshot> diaryDocs,
+    List<QueryDocumentSnapshot> albumDocs,
     dynamic settingsValue,
     dynamic presenceValue,
     dynamic diaryViewsValue,
     dynamic appOpensValue,
+    int totalDiaryCount,
+    int totalAlbumCount,
   ) async {
     final now = DateTime.now();
-    final diaryList = _mapToList(diaryValue);
-    final albumList = _mapToList(albumValue);
+    final diaryList = diaryDocs.map((e) => e.data() as Map<String, dynamic>).toList();
+    final albumList = albumDocs.map((e) => e.data() as Map<String, dynamic>).toList();
     final settings = _asMap(settingsValue);
     final presence = _asMap(presenceValue);
     final diaryViews = _intMap(diaryViewsValue);
@@ -437,9 +447,9 @@ class LoveInsightService {
             ? L10nService().translate('male_role_default')
             : rawNameU2);
 
-    var diaryTotal = 0;
+    var diaryTotal = totalDiaryCount;
     var diaryMonth = 0;
-    var albumTotal = 0;
+    var albumTotal = totalAlbumCount;
     var albumMonth = 0;
     var moodTotal = 0;
     var positiveMoodTotal = 0;
@@ -484,7 +494,6 @@ class LoveInsightService {
     var latestU2TouchTs = 0;
 
     for (final item in diaryList) {
-      diaryTotal++;
       final owner = _resolveOwner(item, nameU1, nameU2);
       final ts = _toTimestamp(item);
       if (ts > 0) {
@@ -574,7 +583,6 @@ class LoveInsightService {
     }
 
     for (final item in albumList) {
-      albumTotal++;
       final owner = _resolveOwner(item, nameU1, nameU2);
       final ts = _toTimestamp(item);
       if (ts > 0) {
@@ -1333,10 +1341,7 @@ class LoveInsightService {
     return map.map((key, data) => MapEntry(key, _toInt(data)));
   }
 
-  List<Map<String, dynamic>> _mapToList(Object? value) {
-    final map = _asMap(value);
-    return map.values.whereType<Map>().map((entry) => _asMap(entry)).toList();
-  }
+
 
   String _string(dynamic value, {String fallback = ''}) {
     final text = value?.toString().trim() ?? '';

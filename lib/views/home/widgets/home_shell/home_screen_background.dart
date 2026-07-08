@@ -305,7 +305,7 @@ class _StableShellBackgroundImageState
     }).catchError((_) {});
 
     try {
-      final cachedFile = await DefaultCacheManager().getFileFromCache(url);
+      final cachedFile = await AppCacheManager.instance.getFileFromCache(url);
       if (!mounted || _currentUrl != url) return;
       final file = cachedFile?.file;
       if (file != null && await file.exists()) {

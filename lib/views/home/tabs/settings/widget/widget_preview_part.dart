@@ -1369,8 +1369,18 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
       },
     );
   }
+  static Future<Map<String, String>>? _cachedSoulEventPreviewFuture;
 
   Future<Map<String, String>> _loadSoulEventPreviewData() async {
+    if (_cachedSoulEventPreviewFuture != null) {
+      return _cachedSoulEventPreviewFuture!;
+    }
+    
+    _cachedSoulEventPreviewFuture = _loadSoulEventPreviewDataInternal();
+    return _cachedSoulEventPreviewFuture!;
+  }
+
+  Future<Map<String, String>> _loadSoulEventPreviewDataInternal() async {
     final houseId = _houseId ?? '';
     if (houseId.isEmpty) {
       return {

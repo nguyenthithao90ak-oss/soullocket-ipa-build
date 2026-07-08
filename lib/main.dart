@@ -480,8 +480,8 @@ Future<void> _initializeFirebaseBootstrap() async {
   if (!kIsWeb) {
     try {
       FirebaseDatabase.instance.setPersistenceEnabled(true);
-      // ⚡ Reduced from 10MB → 5MB to save RAM on startup
-      FirebaseDatabase.instance.setPersistenceCacheSizeBytes(5000000);
+      // ⚡ Increased from 5MB → 40MB to significantly improve offline chat/diary caching and reduce bandwidth
+      FirebaseDatabase.instance.setPersistenceCacheSizeBytes(41943040);
     } catch (e) {
       debugPrint('Firebase persistence error: ${AppErrorMapper.resolve(
         e,

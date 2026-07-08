@@ -336,7 +336,7 @@ extension _SettingsTabShell on _SettingsTabState {
     return RepaintBoundary(
       child: ClipRect(
         child: FastBackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           fallbackColor: isDark ? Colors.black87 : _kSettingsHeaderBg,
           child: Container(
             width: double.infinity,

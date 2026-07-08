@@ -1172,22 +1172,22 @@ class AuthSignInService {
         await PresenceService().goOffline(
           houseId: houseId,
           role: role,
-        );
+        ).timeout(const Duration(seconds: 3));
       }
     } catch (_) {}
     try {
-      await NotificationService().clearTokenOnSignOut();
+      await NotificationService().clearTokenOnSignOut().timeout(const Duration(seconds: 3));
     } catch (_) {}
     try {
       if (!kIsWeb) {
-        await _googleSignIn?.signOut();
+        await _googleSignIn?.signOut().timeout(const Duration(seconds: 3));
       }
     } catch (_) {}
     try {
-      await _facebookAuth.logOut();
+      await _facebookAuth.logOut().timeout(const Duration(seconds: 3));
     } catch (_) {}
     try {
-      await _auth.signOut();
+      await _auth.signOut().timeout(const Duration(seconds: 5));
     } finally {
       try { await SettingsSyncService().clearLocalSyncedSettings(); } catch (_) {}
       try { await _clearSensitiveLocalData(prefs); } catch (_) {}

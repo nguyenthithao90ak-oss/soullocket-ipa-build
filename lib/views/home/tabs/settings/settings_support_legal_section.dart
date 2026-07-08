@@ -244,9 +244,12 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       return;
     }
     if (confirm == true) {
+      debugPrint('[LOGOUT] confirm == true. Starting signOut...');
       try {
         await _authService.signOut();
-      } catch (_) {
+        debugPrint('[LOGOUT] signOut success');
+      } catch (e, st) {
+        debugPrint('[LOGOUT] signOut error: $e\n$st');
         if (!mounted) return;
         SLNotice.showError(
           context,
@@ -254,13 +257,19 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         );
         return;
       }
-      if (!mounted) return;
+      if (!mounted) {
+        debugPrint('[LOGOUT] Widget not mounted after signOut!');
+        return;
+      }
       try {
-        Navigator.of(context).pushAndRemoveUntil(
+        debugPrint('[LOGOUT] Navigating to LoginScreen...');
+        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const LoginScreen()),
           (route) => false,
         );
-      } catch (_) {}
+      } catch (e, st) {
+        debugPrint('[LOGOUT] Navigator error: $e\n$st');
+      }
     }
   }
 
@@ -510,7 +519,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           }
           SLNotice.showSuccess(
             context,
-            'Yêu cầu thành công. Tài khoản đã được lên lịch xóa sau $days ngày. Khi đã xóa thì không thể khôi phục.',
+            context.tr('settings_delete_account_success_with_days').replaceAll('{days}', days.toString()),
           );
 
           try {

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
@@ -29,21 +30,40 @@ class AuthPanelShell extends StatelessWidget {
     final l10n = L10nService();
     final textScale = MediaQuery.textScalerOf(context).scale(1);
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 320),
-      curve: Curves.easeOutCubic,
-      padding: EdgeInsets.fromLTRB(
-        compact ? 18 : 28,
-        compact ? 22 : 28,
-        compact ? 18 : 28,
-        compact ? 18 : 24,
-      ),
-      child: Stack(
-        children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(32),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.45),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.6),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFF1C3D3).withValues(alpha: 0.2),
+                blurRadius: 40,
+                offset: const Offset(0, 16),
+              )
+            ],
+          ),
+          padding: EdgeInsets.fromLTRB(
+            compact ? 18 : 28,
+            compact ? 22 : 28,
+            compact ? 18 : 28,
+            compact ? 18 : 24,
+          ),
+          child: Stack(
             children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
               // --- brand micro-header ---
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
@@ -188,6 +208,8 @@ class AuthPanelShell extends StatelessWidget {
             ],
           ),
         ],
+      ),
+        ),
       ),
     );
   }

@@ -1269,36 +1269,10 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       backgroundColor: Colors.transparent,
       builder: (context) {
         final stickerGroups = <String, List<String>>{
-          'Trái tim': [
-            'assets/images/interaction_stickers/custom/numbered/sticker_018.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_006.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_001.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_001.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_003.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
-          ],
-          'Giận': [
-            'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_006.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_007.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_009.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_010.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_011.png',
-          ],
-          'Tinh nghịch': [
-            'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_012.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_013.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_014.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_015.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_016.png',
-            'assets/images/interaction_stickers/custom/numbered/sticker_017.png',
-          ],
+          'Bộ 1': List.generate(40, (i) => 'assets/images/interaction_stickers/custom/numbered/sticker_${(i + 1).toString().padLeft(3, '0')}.png'),
+          'Bộ 2': List.generate(40, (i) => 'assets/images/interaction_stickers/custom/numbered/sticker_${(i + 41).toString().padLeft(3, '0')}.png'),
+          'Bộ 3': List.generate(40, (i) => 'assets/images/interaction_stickers/custom/numbered/sticker_${(i + 81).toString().padLeft(3, '0')}.png'),
+          'Bộ 4': List.generate(44, (i) => 'assets/images/interaction_stickers/custom/numbered/sticker_${(i + 121).toString().padLeft(3, '0')}.png'),
         };
         final labels = stickerGroups.keys.toList();
 
@@ -1358,6 +1332,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                     children: labels.map((label) {
                       final stickers = stickerGroups[label]!;
                       return GridView.builder(
+                        clipBehavior: Clip.none,
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 4,

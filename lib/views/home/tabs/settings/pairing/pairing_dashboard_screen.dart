@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/pairing_service.dart';
-import 'package:soullocket_app/utils/services/role_utils.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_create_code_sheet.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_enter_code_sheet.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:lottie/lottie.dart';
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:soullocket_app/core/constants/app_firebase_paths.dart';
 import 'package:soullocket_app/utils/services/storage_picker_service.dart';
 import 'package:soullocket_app/utils/services/infrastructure/storage_service.dart';
@@ -23,10 +22,7 @@ class PairingDashboardScreen extends StatefulWidget {
 class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   String? _myHouseId;
   bool _isPaired = false;
-  String? _partnerName;
   bool _isLoading = true;
-
-  int _daysLove = 0;
   int _diaryCount = 0;
   String? _avatarU1;
   String? _avatarU2;
@@ -35,6 +31,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   String? _startDateStr;
   bool _hasCheckedMembers = false;
   StreamSubscription? _settingsSub;
+  Stream<List<PairingRequest>>? _incomingRequestsStream;
 
   @override
   void initState() {
@@ -58,6 +55,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     if (mounted) {
       setState(() {
         _myHouseId = houseId;
+        _incomingRequestsStream ??= PairingService.instance.listenToIncomingRequests(houseId);
       });
     }
 
@@ -82,35 +80,24 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
               isPaired = true;
               // Background update
               FirebaseDatabase.instance.ref('houses/$houseId/settings/isPaired').set(true);
+              FirebaseDatabase.instance.ref('houses/$houseId/settings/relationshipMode').set('couple');
+              try {
+                FirebaseDatabase.instance.ref('single_match_active_pool/$houseId').remove();
+                FirebaseDatabase.instance.ref('houses/$houseId/settings/singleMatch/enabled').set(false);
+              } catch (_) {}
             }
           }
         } catch (_) {}
       }
 
-      // Dành cho nhà cũ đã ghép nhưng chưa có cờ isPaired:
-      // Nếu tên người dùng đã được đổi khác với mặc định thì chứng tỏ đã ghép
-      if (!isPaired && settings['nameU2'] != null && 
-          settings['nameU2'] != 'Bạn Nữ' && settings['nameU2'] != 'Bạn Nam') {
-        isPaired = true;
-      }
-      String? pName;
-
-      if (isPaired) {
-        final myRole = await RoleUtils.currentRole();
-        pName = myRole == 'user1' ? settings['nameU2'] : settings['nameU1'];
-      }
-
       if (mounted) {
         setState(() {
           _isPaired = isPaired;
-          _partnerName = pName ?? 'Người ấy';
           _isLoading = false;
-
           _nameU1 = settings['nameU1']?.toString() ?? 'Bạn Nam';
           _nameU2 = settings['nameU2']?.toString() ?? 'Bạn Nữ';
           _avatarU1 = settings['avatarU1']?.toString();
           _avatarU2 = settings['avatarU2']?.toString();
-
           final rawDate = settings['createdAt'];
           if (rawDate != null) {
             try {
@@ -120,19 +107,23 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           }
         });
       }
-
-      try {
-        final diaryRef = FirebaseDatabase.instance.ref('houses/$houseId/diary');
-        final diarySnap = await diaryRef.get();
-        if (diarySnap.exists && diarySnap.value is Map) {
-          if (mounted) {
-            setState(() {
-              _diaryCount = (diarySnap.value as Map).length;
-            });
-          }
-        }
-      } catch (_) {}
     });
+
+    // Chỉ đếm số lượng nhật ký (Firestore) 1 lần khi tải trang, không bỏ vào listener RTDB
+    try {
+      final countQuery = await FirebaseFirestore.instance
+          .collection('houses')
+          .doc(houseId)
+          .collection('diaries')
+          .count()
+          .get();
+      if (mounted) {
+        setState(() {
+          final count = countQuery.count ?? 0;
+          _diaryCount = count >= 300 ? 300 : count;
+        });
+      }
+    } catch (_) {}
   }
 
   void _showCreateCodeSheet() {
@@ -307,7 +298,9 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                 const Icon(Icons.photo_library_rounded, color: Color(0xFFD81B60), size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  'Cùng $_diaryCount khoảnh khắc nhật ký',
+                  _diaryCount >= 300 
+                      ? 'Cùng hơn 300 khoảnh khắc nhật ký' 
+                      : 'Cùng $_diaryCount khoảnh khắc nhật ký',
                   style: SLTheme.quicksand(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -377,6 +370,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                         child: CachedNetworkImage(
                           imageUrl: url,
                           fit: BoxFit.cover,
+                          memCacheWidth: 200,
+                          memCacheHeight: 200,
                           placeholder: (context, url) => const Icon(Icons.person, color: Colors.grey, size: 40),
                           errorWidget: (context, url, error) => const Icon(Icons.person, color: Colors.grey, size: 40),
                         ),
@@ -474,53 +469,19 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   }
 
   Widget _buildRequestsList() {
+    if (_incomingRequestsStream == null) return const SizedBox.shrink();
+
     return StreamBuilder<List<PairingRequest>>(
-      stream: PairingService.instance.listenToIncomingRequests(_myHouseId!),
+      stream: _incomingRequestsStream,
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Center(
-              child: Column(
-                children: [
-                  Icon(Icons.inbox_rounded, size: 48, color: Colors.grey.shade300),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Không có yêu cầu nào',
-                    style: SLTheme.quicksand(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
+          return _buildEmptyRequestsView();
         }
 
         final requests = snapshot.data!.where((r) => r.status == 'pending').toList();
 
         if (requests.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Center(
-              child: Column(
-                children: [
-                  Icon(Icons.inbox_rounded, size: 48, color: Colors.grey.shade300),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Không có yêu cầu nào',
-                    style: SLTheme.quicksand(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
+          return _buildEmptyRequestsView();
         }
 
         return Column(
@@ -530,71 +491,190 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     );
   }
 
+  Widget _buildEmptyRequestsView() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF0F2F5), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F9FB),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.mail_outline_rounded, size: 36, color: Colors.grey.shade400),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Chưa có yêu cầu nào',
+            style: SLTheme.quicksand(
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF2C1B22),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Các yêu cầu xin ghép nối sẽ hiển thị tại đây.',
+            textAlign: TextAlign.center,
+            style: SLTheme.quicksand(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRequestTile(PairingRequest request) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD81B60).withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        border: Border.all(color: const Color(0xFFFFF0F5), width: 1.5),
       ),
-      child: Row(
+      child: Column(
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: Colors.grey.shade200,
-            child: request.guestAvatar.isNotEmpty
-                ? ClipOval(
-                    child: CachedNetworkImage(
-                      imageUrl: request.guestAvatar,
-                      width: 48,
-                      height: 48,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : const Icon(Icons.person, color: Colors.grey),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  request.guestName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: SLTheme.quicksand(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF2C1B22),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Muốn ghép nối với bạn',
-                  style: SLTheme.quicksand(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
           Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              IconButton(
-                icon: const Icon(Icons.close_rounded, color: Colors.grey),
-                onPressed: () => PairingService.instance.rejectRequest(request.requestId),
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFFFE4E1), width: 2),
+                ),
+                child: CircleAvatar(
+                  radius: 24,
+                  backgroundColor: Colors.grey.shade100,
+                  child: request.guestAvatar.isNotEmpty
+                      ? ClipOval(
+                          child: CachedNetworkImage(
+                            imageUrl: request.guestAvatar,
+                            width: 48,
+                            height: 48,
+                            fit: BoxFit.cover,
+                            memCacheWidth: 150,
+                            memCacheHeight: 150,
+                          ),
+                        )
+                      : const Icon(Icons.person_rounded, color: Colors.grey),
+                ),
               ),
-              IconButton(
-                icon: const Icon(Icons.check_circle_rounded, color: Color(0xFF4CAF50)),
-                onPressed: () => PairingService.instance.acceptRequest(request.requestId),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      request.guestName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SLTheme.quicksand(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF2C1B22),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Đã gửi yêu cầu ghép nối',
+                      style: SLTheme.quicksand(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFFD81B60),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
-          )
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => PairingService.instance.rejectRequest(request.requestId),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F7FA),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Từ chối',
+                      style: SLTheme.quicksand(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: InkWell(
+                  onTap: () => PairingService.instance.acceptRequest(request.requestId),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF8FB1), Color(0xFFD81B60)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFD81B60).withOpacity(0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Chấp nhận',
+                      style: SLTheme.quicksand(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

@@ -45,7 +45,6 @@ class PresenceService {
 
   String? get _currentUid => FirebaseAuth.instance.currentUser?.uid;
 
-  // ignore: unused_element
   DatabaseReference _presenceRoleRef(String houseId, String role) {
     return _dbRef.child('houses/$houseId/presence/$role');
   }

@@ -620,14 +620,14 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               filled: true,
               fillColor: Colors.white.withValues(alpha: 0.08),
               hintStyle: const TextStyle(color: Colors.white38),
-              labelStyle: const TextStyle(color: const Color(0xFF64748B)),
+              labelStyle: const TextStyle(color: Color(0xFF64748B)),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: const Color(0xFFCBD5E1)),
+                borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: const Color(0xFFCBD5E1)),
+                borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -658,10 +658,10 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                       counterText: '',
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: const Color(0xFFCBD5E1))),
+                          borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
                       enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: const Color(0xFFCBD5E1))),
+                          borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: SLColors.danger)),
@@ -680,7 +680,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                           },
                           checkColor: Colors.white,
                           activeColor: SLColors.danger,
-                          side: const BorderSide(color: const Color(0xFF94A3B8)),
+                          side: const BorderSide(color: Color(0xFF94A3B8)),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -858,14 +858,14 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             filled: true,
             fillColor: Colors.white.withValues(alpha: 0.08),
             hintStyle: const TextStyle(color: Colors.white38),
-            labelStyle: const TextStyle(color: const Color(0xFF64748B)),
+            labelStyle: const TextStyle(color: Color(0xFF64748B)),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: const Color(0xFFCBD5E1)),
+              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: const Color(0xFFCBD5E1)),
+              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -924,11 +924,11 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: const Color(0xFFCBD5E1)),
+                        borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: const Color(0xFFCBD5E1)),
+                        borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -962,11 +962,11 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: const Color(0xFFCBD5E1)),
+                          borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: const Color(0xFFCBD5E1)),
+                          borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -1041,14 +1041,14 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             filled: true,
             fillColor: Colors.white.withValues(alpha: 0.08),
             hintStyle: const TextStyle(color: Colors.white38),
-            labelStyle: const TextStyle(color: const Color(0xFF64748B)),
+            labelStyle: const TextStyle(color: Color(0xFF64748B)),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: const Color(0xFFCBD5E1)),
+              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: const Color(0xFFCBD5E1)),
+              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -1286,7 +1286,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.style_outlined, color: const Color(0xFF334155)),
+                leading: const Icon(Icons.style_outlined, color: Color(0xFF334155)),
                 title: Text(context.tr('vault_style_title'),
                     style: SLTheme.quicksand(color: const Color(0xFF334155))),
                 subtitle: ValueListenableBuilder<UiPrefsState>(
@@ -1298,7 +1298,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                         isExpanded: true,
                         dropdownColor: Colors.white,
                         style: SLTheme.quicksand(color: const Color(0xFF3B82F6), fontWeight: FontWeight.w700),
-                        icon: const Icon(Icons.arrow_drop_down, color: const Color(0xFF94A3B8)),
+                        icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF94A3B8)),
                         items: [
                           DropdownMenuItem(value: 'soft', child: Text(context.tr('vault_style_soft'))),
                           DropdownMenuItem(value: 'secure', child: Text(context.tr('vault_style_secure'))),
@@ -1313,7 +1313,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   }
                 ),
               ),
-              const Divider(color: const Color(0xFFF1F5F9)),
+              const Divider(color: Color(0xFFF1F5F9)),
               ListTile(
                 leading: Icon(
                   _hasPendingReset
@@ -1352,7 +1352,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.key_rounded, color: const Color(0xFF3B82F6)),
+                leading: const Icon(Icons.key_rounded, color: Color(0xFF3B82F6)),
                 title: Text(
                   _hasRecoveryCode
                       ? context.tr('util_tolimkhiph_6a2c38')
@@ -1412,14 +1412,14 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             filled: true,
             fillColor: Colors.white.withValues(alpha: 0.08),
             hintStyle: const TextStyle(color: Colors.white38),
-            labelStyle: const TextStyle(color: const Color(0xFF64748B)),
+            labelStyle: const TextStyle(color: Color(0xFF64748B)),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: const Color(0xFFCBD5E1)),
+              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: const Color(0xFFCBD5E1)),
+              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -1453,7 +1453,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                       filled: true,
                       fillColor: Colors.white12,
                       labelText: context.tr('util_mtkhuc_36b0a2'),
-                      labelStyle: const TextStyle(color: const Color(0xFF64748B)),
+                      labelStyle: const TextStyle(color: Color(0xFF64748B)),
                       counterText: '',
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -1478,7 +1478,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                       filled: true,
                       fillColor: Colors.white12,
                       labelText: context.tr('util_mtkhumi_ccef95'),
-                      labelStyle: const TextStyle(color: const Color(0xFF64748B)),
+                      labelStyle: const TextStyle(color: Color(0xFF64748B)),
                       counterText: '',
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -1503,7 +1503,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                       filled: true,
                       fillColor: Colors.white12,
                       labelText: context.tr('util_nhplimtkhu_82a9a4'),
-                      labelStyle: const TextStyle(color: const Color(0xFF64748B)),
+                      labelStyle: const TextStyle(color: Color(0xFF64748B)),
                       counterText: '',
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12)),
@@ -1749,7 +1749,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             children: [
               Text('Tính năng:',
                   style: TextStyle(
-                      fontWeight: FontWeight.bold, color: const Color(0xFF64748B))),
+                      fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
               SizedBox(height: 4),
               Text(
                   '- Nơi an toàn nhất để cất giữ hình ảnh và video nhạy cảm, riêng tư.\n- Bảo vệ bằng mã PIN hoặc FaceID/Vân tay.\n- Tùy chọn "Mã PIN giả" để hiển thị một hầm trống khi bị ép buộc mở.',
@@ -1757,7 +1757,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
               SizedBox(height: 12),
               Text('Cách sử dụng:',
                   style: TextStyle(
-                      fontWeight: FontWeight.bold, color: const Color(0xFF64748B))),
+                      fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
               SizedBox(height: 4),
               Text(
                   '- Thiết lập mã PIN lần đầu khi truy cập.\n- Bấm biểu tượng + để thêm ảnh/video từ thư viện máy.\n- Bật tính năng Mã PIN giả trong phần cài đặt của hầm để tăng cường bảo mật.',

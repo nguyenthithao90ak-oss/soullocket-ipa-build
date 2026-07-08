@@ -378,10 +378,60 @@ class _MainHomeHeroCountdownCircle extends StatefulWidget {
 }
 
 class _MainHomeHeroCountdownCircleState
-    extends State<_MainHomeHeroCountdownCircle> {
+    extends State<_MainHomeHeroCountdownCircle>
+    with SingleTickerProviderStateMixin {
   final List<HomeExplodingPhoto> _activeExplosions = [];
   List<String> _cachedPhotoUrls = [];
   bool _isFetchingPhotos = false;
+
+  late AnimationController _countController;
+  late Animation<double> _countAnimation;
+  int _targetValue = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _targetValue = int.tryParse(widget.circleValue) ?? 0;
+    _countController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
+    _countAnimation = Tween<double>(
+      begin: 0.0,
+      end: _targetValue.toDouble(),
+    ).animate(CurvedAnimation(
+      parent: _countController,
+      curve: Curves.easeOutCubic,
+    ));
+    _countController.forward();
+  }
+
+  @override
+  void didUpdateWidget(covariant _MainHomeHeroCountdownCircle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.circleValue != oldWidget.circleValue) {
+      final oldVal = int.tryParse(oldWidget.circleValue) ?? 0;
+      final newVal = int.tryParse(widget.circleValue) ?? 0;
+      if (oldVal != newVal) {
+        _targetValue = newVal;
+        final currentVal = _countAnimation.value;
+        _countAnimation = Tween<double>(
+          begin: currentVal,
+          end: _targetValue.toDouble(),
+        ).animate(CurvedAnimation(
+          parent: _countController,
+          curve: Curves.easeOutCubic,
+        ));
+        _countController.forward(from: 0.0);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _countController.dispose();
+    super.dispose();
+  }
 
   Future<void> _ensurePhotosLoaded() async {
     if (_cachedPhotoUrls.isNotEmpty || _isFetchingPhotos) return;
@@ -552,8 +602,8 @@ class _MainHomeHeroCountdownCircleState
     final labelHeight = (widget.circleSize * 0.15).clamp(24.0, 72.0).toDouble();
     final numberHeight =
         (widget.circleSize * 0.38).clamp(60.0, 160.0).toDouble();
-    final topLabelWidth = widget.circleSize * 0.68;
-    final bottomLabelWidth = widget.circleSize * 0.64;
+    final topLabelWidth = widget.circleSize * 0.82;
+    final bottomLabelWidth = widget.circleSize * 0.80;
     final numberWidth = widget.circleSize * 0.72;
     final topGap = (widget.circleSize * 0.05).clamp(8.0, 24.0).toDouble();
     final bottomGap = (widget.circleSize * 0.035).clamp(6.0, 18.0).toDouble();
@@ -641,8 +691,8 @@ class _MainHomeHeroCountdownCircleState
                                 textAlign: TextAlign.center,
                                 style: SLTheme.textStyleForKey(
                                   labelFont,
-                                  fontSize: (widget.circleSize * 0.088)
-                                      .clamp(15.0, 36.0),
+                                  fontSize: (widget.circleSize * 0.11)
+                                      .clamp(18.0, 42.0),
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 0.5,
                                   color: customTextColor ??
@@ -676,19 +726,28 @@ class _MainHomeHeroCountdownCircleState
                                 end: Alignment.bottomRight,
                               ).createShader(bounds),
                               blendMode: BlendMode.srcIn,
-                              child: Text(
-                                widget.circleValue,
-                                maxLines: 1,
-                                textAlign: TextAlign.center,
-                                style: widget.state
-                                    ._uiTextStyle(
-                                      fontSize: (widget.circleSize * 0.36)
-                                          .clamp(52.0, 160.0),
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.white,
-                                      height: 0.96,
-                                      letterSpacing: 4.0,
-                                    ),
+                              child: AnimatedBuilder(
+                                animation: _countAnimation,
+                                builder: (context, child) {
+                                  final parsed = int.tryParse(widget.circleValue);
+                                  final displayVal = parsed == null
+                                      ? widget.circleValue
+                                      : _countAnimation.value.round().toString();
+                                  return Text(
+                                    displayVal,
+                                    maxLines: 1,
+                                    textAlign: TextAlign.center,
+                                    style: widget.state
+                                        ._uiTextStyle(
+                                          fontSize: (widget.circleSize * 0.36)
+                                              .clamp(52.0, 160.0),
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                          height: 0.96,
+                                          letterSpacing: 4.0,
+                                        ),
+                                  );
+                                },
                               ),
                             ),
                           ),
@@ -718,8 +777,8 @@ class _MainHomeHeroCountdownCircleState
                                 textAlign: TextAlign.center,
                                 style: SLTheme.textStyleForKey(
                                   labelFont,
-                                  fontSize: (widget.circleSize * 0.096)
-                                      .clamp(16.0, 38.0),
+                                  fontSize: (widget.circleSize * 0.12)
+                                      .clamp(20.0, 46.0),
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 0.5,
                                   color: customTextColor ??
