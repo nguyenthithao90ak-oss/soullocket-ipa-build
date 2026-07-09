@@ -120,9 +120,9 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
 
   Widget _buildMapStatusChips() {
     return Positioned(
-      top: 56,
-      left: 12,
-      right: 84,
+      top: MediaQuery.paddingOf(context).top + 12,
+      left: 16,
+      right: 72,
       child: ValueListenableBuilder<_LiveUiSnapshot>(
         valueListenable: _liveUiVN,
         builder: (context, uiSnap, _) {
@@ -132,7 +132,6 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                     icon: Icons.my_location_rounded,
                     label: uiSnap.distanceText,
                     accent: _kMapPinkDeep,
-                    expand: true,
                   ),
                 ]
               : <Widget>[
@@ -160,26 +159,19 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                   ),
                 ];
 
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              if (_isSingleRelationship) {
-                return chips.first;
-              }
-
-              final double chipWidth = (constraints.maxWidth - 8) / 2;
-              return Wrap(
-                spacing: 8,
-                runSpacing: 6,
-                children: chips
-                    .map(
-                      (chip) => SizedBox(
-                        width: chipWidth,
-                        child: chip,
-                      ),
-                    )
-                    .toList(growable: false),
-              );
-            },
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            clipBehavior: Clip.none,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (int i = 0; i < chips.length; i++) ...[
+                  chips[i],
+                  if (i < chips.length - 1) const SizedBox(width: 8),
+                ],
+              ],
+            ),
           );
         },
       ),
@@ -364,11 +356,11 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                   ),
                   SLSpacing.h12,
                   _buildSummaryCard(),
-                  SLSpacing.h12,
+                  SLSpacing.h8,
                   _buildPeopleStatusRow(),
-                  SLSpacing.h12,
+                  SLSpacing.h8,
                   _buildHistoryCard(),
-                  SLSpacing.h12,
+                  SLSpacing.h8,
                   _buildMemoryAndCheckinCard(),
                 ],
               ),

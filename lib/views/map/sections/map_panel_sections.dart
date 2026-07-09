@@ -40,20 +40,20 @@ extension _MapPanelSectionsExt on _MapScreenState {
     return Row(
       children: [
         Container(
-          width: 34,
-          height: 34,
+          width: 30,
+          height: 30,
           decoration: BoxDecoration(
-            color: accent.withValues(alpha: 0.14),
-            borderRadius: SLRadius.lgAll,
+            color: accent.withValues(alpha: 0.12),
+            borderRadius: SLRadius.mdAll,
           ),
-          child: Icon(icon, color: accent, size: 18),
+          child: Icon(icon, color: accent, size: 16),
         ),
-        SLSpacing.w10,
+        SLSpacing.w8,
         Expanded(
           child: Text(
             title,
             style: SLTheme.quicksand(
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.w900,
               color: Colors.white,
             ),
@@ -240,28 +240,28 @@ extension _MapPanelSectionsExt on _MapScreenState {
       builder: (context, uiSnap, child) {
         final showGpsAction = !uiSnap.myIsLive && !_isBootstrappingLocation;
         return ClipRRect(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(24),
           clipBehavior: Clip.antiAlias,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xEE1A2436), Color(0xDD291B2C)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.06), width: 0.8),
               boxShadow: [
                 BoxShadow(
-                  color: _kMapPinkDeep.withValues(alpha: 0.14),
-                  blurRadius: 30,
-                  offset: const Offset(0, 14),
+                  color: _kMapPinkDeep.withValues(alpha: 0.08),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
                 ),
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.24),
-                  blurRadius: 26,
-                  offset: const Offset(0, 12),
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
@@ -572,24 +572,24 @@ extension _MapPanelSectionsExt on _MapScreenState {
     required Color accent,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            accent.withValues(alpha: 0.22),
-            accent.withValues(alpha: 0.08),
-            const Color(0xFF0D1117).withValues(alpha: 0.80),
+            accent.withValues(alpha: 0.15),
+            accent.withValues(alpha: 0.05),
+            const Color(0xFF0D1117).withValues(alpha: 0.85),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accent.withValues(alpha: 0.42), width: 1.2),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accent.withValues(alpha: 0.25), width: 0.8),
         boxShadow: [
           BoxShadow(
-            color: accent.withValues(alpha: 0.16),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
+            color: accent.withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -601,19 +601,19 @@ extension _MapPanelSectionsExt on _MapScreenState {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: SLTheme.quicksand(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w900,
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
               color: accent,
-              letterSpacing: 0.4,
+              letterSpacing: 0.2,
             ),
           ),
-          SLSpacing.h6,
+          SLSpacing.h4,
           Text(
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: SLTheme.quicksand(
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w900,
               color: Colors.white,
             ),
@@ -656,7 +656,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                       hasHistory: uiSnap.myHasHistory,
                     ),
                   ),
-                  SLSpacing.w12,
+                  SLSpacing.w8,
                   Expanded(
                     child: _buildPeopleCard(
                       name: widget.partnerName,
@@ -698,29 +698,29 @@ extension _MapPanelSectionsExt on _MapScreenState {
     final accuracyUi = _gpsAccuracyPresentation(gpsPoint?.accuracy);
     final accuracyHint = _gpsAccuracyHint(gpsPoint?.accuracy);
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
             const Color(0xFF0E1520),
-            roleColor.withValues(alpha: 0.18),
-            const Color(0xFF111827).withValues(alpha: 0.92),
+            roleColor.withValues(alpha: 0.10),
+            const Color(0xFF111827).withValues(alpha: 0.95),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: roleColor.withValues(alpha: 0.38), width: 1.2),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: roleColor.withValues(alpha: 0.25), width: 0.8),
         boxShadow: [
           BoxShadow(
-            color: roleColor.withValues(alpha: 0.20),
-            blurRadius: 22,
-            offset: const Offset(0, 10),
+            color: roleColor.withValues(alpha: 0.10),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.30),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.20),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -866,24 +866,24 @@ extension _MapPanelSectionsExt on _MapScreenState {
 
   Widget _buildHistoryCard() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
             const Color(0xFF0A1628),
-            _kMapBlue.withValues(alpha: 0.10),
+            _kMapBlue.withValues(alpha: 0.06),
             const Color(0xFF111827).withValues(alpha: 0.95),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: SLRadius.xlAll,
-        border: Border.all(color: _kMapBlue.withValues(alpha: 0.28), width: 1.1),
+        border: Border.all(color: _kMapBlue.withValues(alpha: 0.20), width: 0.8),
         boxShadow: [
           BoxShadow(
-            color: _kMapBlue.withValues(alpha: 0.10),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: _kMapBlue.withValues(alpha: 0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -973,24 +973,24 @@ extension _MapPanelSectionsExt on _MapScreenState {
 
   Widget _buildMemoryAndCheckinCard() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
             const Color(0xFF1A0D1E),
-            _kMapPinkDeep.withValues(alpha: 0.12),
+            _kMapPinkDeep.withValues(alpha: 0.08),
             const Color(0xFF111827).withValues(alpha: 0.95),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: SLRadius.xlAll,
-        border: Border.all(color: _kMapPinkDeep.withValues(alpha: 0.28), width: 1.1),
+        border: Border.all(color: _kMapPinkDeep.withValues(alpha: 0.20), width: 0.8),
         boxShadow: [
           BoxShadow(
-            color: _kMapPinkDeep.withValues(alpha: 0.10),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: _kMapPinkDeep.withValues(alpha: 0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
           ),
         ],
       ),

@@ -1340,6 +1340,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       extendBodyBehindAppBar: true,
       backgroundColor: const Color(0xFF0B1020),
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         toolbarHeight: 62,
         elevation: 0,
         scrolledUnderElevation: 0,
