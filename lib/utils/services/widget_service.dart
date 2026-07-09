@@ -65,7 +65,7 @@ class WidgetService {
   );
 
   // Optimization constants
-  static const int maxDiaryImagesForWidget = 10; // 10 ảnh gần nhất
+  static const int maxDiaryImagesForWidget = 12; // 12 ảnh gần nhất
   static const int widgetImageMaxWidth = 320; // Tăng một chút cho chất lượng
   static const int widgetImageMaxHeight = 250;
   static const int widgetImageQuality = 78; // 78% chất lượng JPEG

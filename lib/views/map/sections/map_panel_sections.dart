@@ -55,7 +55,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             style: SLTheme.quicksand(
               fontSize: 14,
               fontWeight: FontWeight.w900,
-              color: Colors.white,
+              color: SLColors.textPrimary,
             ),
           ),
         ),
@@ -110,7 +110,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                     style: SLTheme.quicksand(
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
+                      color: SLColors.textPrimary,
                     ),
                   ),
                 )
@@ -125,7 +125,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             decoration: BoxDecoration(
               color: statusColor,
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF242526), width: 2),
+              border: Border.all(color: SLColors.borderLight, width: 2),
             ),
           ),
         ),
@@ -144,7 +144,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
-        color: const Color(0x4D1E293B),
+        color: SLColors.bgMuted,
         borderRadius: SLRadius.lgAll,
         border: Border.all(color: accent.withValues(alpha: 0.18)),
       ),
@@ -226,7 +226,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
       child: FloatingActionButton(
         heroTag: heroTag,
         mini: true,
-        backgroundColor: const Color(0xE618191A),
+        backgroundColor: SLColors.bgElevated,
         elevation: 0,
         onPressed: onTap,
         child: Icon(icon, color: onTap == null ? _kMapTextMuted : color),
@@ -246,7 +246,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xEE1A2436), Color(0xDD291B2C)],
+                colors: [SLColors.secondarySoft, SLColors.primarySoft],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -305,7 +305,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                                   style: SLTheme.quicksand(
                                     fontSize: 15.5,
                                     fontWeight: FontWeight.w900,
-                                    color: Colors.white,
+                                    color: SLColors.textPrimary,
                                   ),
                                 ),
                               ),
@@ -322,7 +322,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                             style: SLTheme.quicksand(
                               fontSize: 11.1,
                               fontWeight: FontWeight.w700,
-                              color: Colors.white.withValues(alpha: 0.66),
+                              color: SLColors.textSecond,
                               height: 1.35,
                             ),
                           ),
@@ -497,7 +497,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                                     style: SLTheme.quicksand(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: Colors.white.withValues(alpha: 0.84),
+                                      color: SLColors.textPrimary,
                                       height: 1.4,
                                     ),
                                   ),
@@ -578,7 +578,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
           colors: [
             accent.withValues(alpha: 0.15),
             accent.withValues(alpha: 0.05),
-            const Color(0xFF0D1117).withValues(alpha: 0.85),
+            SLColors.bgMain.withValues(alpha: 0.85),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -615,7 +615,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             style: SLTheme.quicksand(
               fontSize: 13,
               fontWeight: FontWeight.w900,
-              color: Colors.white,
+              color: SLColors.textPrimary,
             ),
           ),
         ],
@@ -702,9 +702,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF0E1520),
+            SLColors.bgCard,
             roleColor.withValues(alpha: 0.10),
-            const Color(0xFF111827).withValues(alpha: 0.95),
+            SLColors.bgElevated.withValues(alpha: 0.95),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -749,7 +749,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                       style: SLTheme.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
-                        color: Colors.white,
+                        color: SLColors.textPrimary,
                       ),
                     ),
                     SLSpacing.h4,
@@ -784,7 +784,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             style: SLTheme.quicksand(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
-              color: Colors.white.withValues(alpha: 0.80),
+              color: SLColors.textSecond,
               height: 1.38,
             ),
           ),
@@ -870,9 +870,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF0A1628),
+            SLColors.bgCard,
             _kMapBlue.withValues(alpha: 0.06),
-            const Color(0xFF111827).withValues(alpha: 0.95),
+            SLColors.bgElevated.withValues(alpha: 0.95),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -977,9 +977,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF1A0D1E),
+            SLColors.bgCard,
             _kMapPinkDeep.withValues(alpha: 0.08),
-            const Color(0xFF111827).withValues(alpha: 0.95),
+            SLColors.bgElevated.withValues(alpha: 0.95),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -1133,7 +1133,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
-        color: const Color(0x4D1E293B),
+        color: SLColors.bgMuted,
         borderRadius: SLRadius.lgAll,
         border: Border.all(color: _kMapPanelBorder.withValues(alpha: 0.72)),
       ),

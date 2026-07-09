@@ -1338,28 +1338,30 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      backgroundColor: const Color(0xFF0B1020),
+      backgroundColor: SLColors.bgMain,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leadingWidth: 64,
         leading: Padding(
           padding: const EdgeInsets.only(left: 12),
           child: Center(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: FastBackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xB3121A2B),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: SLColors.borderLight),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back_rounded, size: 22),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ),
+                ],
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_rounded, size: 22),
+                color: SLColors.textPrimary,
+                onPressed: () => Navigator.of(context).pop(),
               ),
             ),
           ),
@@ -1368,30 +1370,31 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         elevation: 0,
         scrolledUnderElevation: 0,
         backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
+        foregroundColor: SLColors.textPrimary,
         surfaceTintColor: Colors.transparent,
         titleSpacing: 0,
         title: const SizedBox.shrink(),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 10),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: FastBackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xB3121A2B),
-                    borderRadius: BorderRadius.circular(18),
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.10)),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: SLColors.borderLight),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
-                  child: IconButton(
-                    tooltip: context.tr('map_vvtrcabn_bc0bdb'),
-                    onPressed: _focusCameraNearMe,
-                    icon: const Icon(Icons.my_location_rounded),
-                  ),
-                ),
+                ],
+              ),
+              child: IconButton(
+                tooltip: context.tr('map_vvtrcabn_bc0bdb'),
+                onPressed: _focusCameraNearMe,
+                color: SLColors.textPrimary,
+                icon: const Icon(Icons.my_location_rounded),
               ),
             ),
           ),
@@ -1505,15 +1508,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                         border: Border.all(color: marker.color, width: 3.0),
                         boxShadow: [
                           BoxShadow(
-                            color: marker.color.withValues(alpha: 0.45),
-                            blurRadius: 18,
-                            spreadRadius: 1,
-                            offset: const Offset(0, 6),
-                          ),
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.15),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
+                            color: marker.color.withValues(alpha: 0.25),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),

@@ -75,7 +75,7 @@ class SLColors {
 
   // ─── Gradients ───────────────────────────────────────────────
   static const primaryGradient = LinearGradient(
-    colors: [Color(0xFFF3D2C7), primary],
+    colors: [primary, primary],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -628,10 +628,10 @@ class SLTheme {
   static Color glassBorderThin = const Color(0x40D7E1E8);
 
   static const List<Color> defaultGradient = [
-    Color(0xFFF2D1C5),
+    SLColors.primary,
     SLColors.primary
   ];
-  static const List<Color> btnGradient = [Color(0xFFF0D0C2), SLColors.primary];
+  static const List<Color> btnGradient = [SLColors.primary, SLColors.primary];
 
   static List<BoxShadow> cardShadow = SLShadow.glass;
   static List<BoxShadow> btnShadow = SLShadow.primary;
@@ -935,9 +935,9 @@ class SLTheme {
     required VoidCallback? onPressed,
     bool isLoading = false,
     List<Color> colors = const <Color>[
-      Color(0xFFFF8FB1),
-      Color(0xFFD81B60),
-      Color(0xFFC2185B),
+      SLColors.primary,
+      SLColors.primary,
+      SLColors.primary,
     ],
   }) {
     final bool isDisabled = onPressed == null;

@@ -356,8 +356,10 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           const SizedBox(height: 10),
           _buildWidgetPreview(),
           const SizedBox(height: 14),
-          _buildWidgetPanelTabBar(),
-          const SizedBox(height: 14),
+          if (Theme.of(context).platform != TargetPlatform.iOS) ...[
+            _buildWidgetPanelTabBar(),
+            const SizedBox(height: 14),
+          ],
           if (_widgetPanelTabKey == 'soulevent') ...[
             _buildWidgetSectionCard(
               icon: Icons.info_outline_rounded,

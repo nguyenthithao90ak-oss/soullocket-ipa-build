@@ -3,26 +3,20 @@ part of '../map_screen.dart';
 extension _MapSurfaceSectionsExt on _MapScreenState {
   Widget _buildMapLoadingState() {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF111827), Color(0xFF231827), Color(0xFF18191A)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+      color: SLColors.bgMain,
       child: Center(
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 28),
           padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
           decoration: BoxDecoration(
-            color: const Color(0xE6242526),
+            color: SLColors.bgElevated,
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            border: Border.all(color: SLColors.borderLight),
             boxShadow: [
               BoxShadow(
-                color: _kMapPinkDeep.withValues(alpha: 0.14),
-                blurRadius: 34,
-                offset: const Offset(0, 18),
+                color: SLColors.primaryLight.withValues(alpha: 0.5),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
@@ -31,7 +25,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
             height: 26,
             child: CircularProgressIndicator(
               strokeWidth: 2.6,
-              color: _kMapPinkDeep,
+              color: SLColors.primary,
             ),
           ),
         ),
@@ -66,10 +60,10 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              const Color(0xFF0F172A).withValues(alpha: 0.20),
+              SLColors.bgMain.withValues(alpha: 0.8),
               Colors.transparent,
               Colors.transparent,
-              const Color(0xFF0F172A).withValues(alpha: 0.50),
+              SLColors.bgMain.withValues(alpha: 0.6),
             ],
             stops: const [0, 0.22, 0.62, 1],
             begin: Alignment.topCenter,
@@ -88,7 +82,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      _kMapPinkDeep.withValues(alpha: 0.16),
+                      SLColors.primaryLight.withValues(alpha: 0.6),
                       Colors.transparent,
                     ],
                   ),
@@ -99,13 +93,30 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
               left: -82,
               bottom: 110,
               child: Container(
-                width: 210,
-                height: 210,
+                width: 280,
+                height: 280,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      _kMapBlue.withValues(alpha: 0.13),
+                      SLColors.secondarySoft.withValues(alpha: 0.6),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              right: -60,
+              bottom: -40,
+              child: Container(
+                width: 240,
+                height: 240,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      SLColors.tertiarySoft.withValues(alpha: 0.6),
                       Colors.transparent,
                     ],
                   ),
@@ -192,7 +203,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
           width: expand ? double.infinity : null,
           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
           decoration: BoxDecoration(
-            color: const Color(0xD918191A),
+            color: SLColors.bgElevated.withValues(alpha: 0.9),
             borderRadius: SLRadius.pillAll,
             border: Border.all(color: accent.withValues(alpha: 0.24)),
             boxShadow: [
@@ -217,7 +228,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                   style: SLTheme.quicksand(
                     fontSize: 11.3,
                     fontWeight: FontWeight.w900,
-                    color: Colors.white,
+                    color: SLColors.textPrimary,
                     height: 1.12,
                   ),
                 ),
@@ -242,7 +253,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
               decoration: BoxDecoration(
-                color: const Color(0xD918191A),
+                color: SLColors.bgElevated.withValues(alpha: 0.9),
                 borderRadius: SLRadius.pillAll,
                 border:
                     Border.all(color: _kMapPinkDeep.withValues(alpha: 0.20)),
@@ -271,7 +282,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                     style: SLTheme.quicksand(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white,
+                      color: SLColors.textPrimary,
                     ),
                   ),
                 ],
@@ -308,62 +319,43 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
       builder: (context, scrollController) {
         return ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-          child: FastBackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xA60F172A), Color(0x9909090B)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-                border: Border(
-                  top: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-                ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x4D000000),
-                    blurRadius: 40,
-                    offset: Offset(0, -10),
-                  ),
-                  // old shadow replaced
-                  BoxShadow(
-                    color: Color(0x4D000000),
-                    blurRadius: 40,
-                    offset: Offset(0, -10),
-                  ),
-                  // old shadow replaced
-                  BoxShadow(
-                    color: Color(0x33000000),
-                    blurRadius: 28,
-                    offset: Offset(0, -8),
-                  ),
-                ],
+          child: Container(
+            decoration: BoxDecoration(
+              color: SLColors.bgElevated.withValues(alpha: 0.95),
+              border: Border(
+                top: BorderSide(color: SLColors.borderLight),
               ),
-              child: ListView(
-                controller: scrollController,
-                padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
-                children: [
-                  Center(
-                    child: Container(
-                      width: 54,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.22),
-                        borderRadius: SLRadius.pillAll,
-                      ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: ListView(
+              controller: scrollController,
+              padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
+              children: [
+                Center(
+                  child: Container(
+                    width: 54,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: SLColors.border,
+                      borderRadius: SLRadius.pillAll,
                     ),
                   ),
-                  SLSpacing.h12,
-                  _buildSummaryCard(),
-                  SLSpacing.h8,
-                  _buildPeopleStatusRow(),
-                  SLSpacing.h8,
-                  _buildHistoryCard(),
-                  SLSpacing.h8,
-                  _buildMemoryAndCheckinCard(),
-                ],
-              ),
+                ),
+                SLSpacing.h12,
+                _buildSummaryCard(),
+                SLSpacing.h8,
+                _buildPeopleStatusRow(),
+                SLSpacing.h8,
+                _buildHistoryCard(),
+                SLSpacing.h8,
+                _buildMemoryAndCheckinCard(),
+              ],
             ),
           ),
         );
@@ -487,7 +479,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF242526).withValues(alpha: 0.96),
+                    color: SLColors.bgElevated.withValues(alpha: 0.96),
                     borderRadius: BorderRadius.circular(28),
                     border: Border.all(color: const Color(0xFFFFD3E1)),
                     boxShadow: [
@@ -512,7 +504,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                         ),
                         child: const Icon(
                           Icons.map_rounded,
-                          color: Color(0xFF242526),
+                          color: SLColors.bgElevated,
                           size: 32,
                         ),
                       ),
@@ -523,7 +515,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                         style: SLTheme.quicksand(
                           fontSize: 18,
                           fontWeight: FontWeight.w900,
-                          color: Colors.white,
+                          color: SLColors.textPrimary,
                         ),
                       ),
                       SLSpacing.h8,
