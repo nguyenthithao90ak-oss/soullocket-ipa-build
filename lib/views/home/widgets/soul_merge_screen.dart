@@ -3,9 +3,11 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:soullocket_app/models/diary_post.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -51,7 +53,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   String _myName = 'Người ấy';
   bool _iHaveBumped = false;
   bool _partnerHasBumped = false;
-  final GlobalKey<TapHeartsOverlayState> _heartsOverlayKey = GlobalKey<TapHeartsOverlayState>();
+  final GlobalKey<TapHeartsOverlayState> _heartsOverlayKey =
+      GlobalKey<TapHeartsOverlayState>();
   double _interactiveScale = 1.0;
   Timer? _continuousHeartsTimer;
   Offset _lastTapPosition = Offset.zero;
@@ -83,7 +86,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
   String _activeStyle = 'basic';
   bool _showHeartNotif = false;
-  bool _showHeartGlobal = false;
   bool _isVip = false;
   StreamSubscription<bool>? _vipSub;
 
@@ -123,20 +125,19 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     });
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      _sharedOverlayStream ??= FlutterOverlayWindow.overlayListener.asBroadcastStream();
+      _sharedOverlayStream ??=
+          FlutterOverlayWindow.overlayListener.asBroadcastStream();
       _overlayListenerSub = _sharedOverlayStream!.listen((event) {
         if (event == 'launch_app') {
-          const MethodChannel('soul_locket/app_control').invokeMethod('bringToForeground');
+          const MethodChannel('soul_locket/app_control')
+              .invokeMethod('bringToForeground');
         } else if (event == 'request_sync') {
           _sendOverlaySyncPayload();
         } else if (event is String && event.startsWith('{')) {
           try {
             final data = jsonDecode(event);
             if (data['action'] == 'send_msg') {
-              final txt = data['text']?.toString() ?? '';
-              if (txt.isNotEmpty) {
-                _sendSoulMessage(txt, bypassSpamCheck: true);
-              }
+              // Overlay now sends messages directly to Firebase, no action needed here.
             }
           } catch (e) {
             debugPrint('[SoulMergeScreen] overlayListener error: $e');
@@ -158,7 +159,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       // Dùng role ('user1'/'user2') làm key — không dùng uid vì 2 người chung 1 uid.
       final prefs = SharedPreferences.getInstance();
       prefs.then((p) {
-        final myRole = p.getString('il_role')?.trim() == 'user2' ? 'user2' : 'user1';
+        final myRole =
+            p.getString('il_role')?.trim() == 'user2' ? 'user2' : 'user1';
         final partnerRole = myRole == 'user2' ? 'user1' : 'user2';
         final iBumped = mergeTimes.containsKey(myRole);
         final partnerBumped = mergeTimes.containsKey(partnerRole);
@@ -198,14 +200,18 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         final prefs = await SharedPreferences.getInstance();
         final myRole = prefs.getString('il_role') ?? 'user1';
         final partnerRole = myRole == 'user2' ? 'user1' : 'user2';
-        
-        final defaultMyName = myRole == 'user2' ? L10nService().translate('female_role_default') : L10nService().translate('male_role_default');
-        final defaultPartnerName = partnerRole == 'user2' ? L10nService().translate('female_role_default') : L10nService().translate('male_role_default');
-        
+
+        final defaultMyName = myRole == 'user2'
+            ? L10nService().translate('female_role_default')
+            : L10nService().translate('male_role_default');
+        final defaultPartnerName = partnerRole == 'user2'
+            ? L10nService().translate('female_role_default')
+            : L10nService().translate('male_role_default');
+
         final localLastSeen = prefs.getInt('soul_merge_last_seen_msg_ts') ?? 0;
         final remoteLastSeen = await _mergeService.getLastSeenTimestamp();
         final lastSeen = math.max(localLastSeen, remoteLastSeen);
-        
+
         final isUserVip = await PurchaseService().isVip();
         var savedStyle = prefs.getString('soul_merge_heart_style') ?? 'basic';
         // Tạm thời mở miễn phí để test
@@ -215,7 +221,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         // }
 
         final showNotif = prefs.getBool('soul_merge_show_heart_notif') ?? false;
-        final showGlobal = prefs.getBool('soul_merge_show_heart_global') ?? false;
 
         setState(() {
           _myRole = myRole;
@@ -225,7 +230,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           _isVip = isUserVip;
           _activeStyle = savedStyle;
           _showHeartNotif = showNotif;
-          _showHeartGlobal = showGlobal;
         });
 
         final settings = await HouseService().getHouseSettings(_houseId!);
@@ -246,6 +250,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             });
           }
         }
+        _sendOverlaySyncPayload();
       }
     } catch (e) {
       debugPrint('[SoulMergeScreen] _initUserInfo error: $e');
@@ -254,21 +259,21 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
   // Tap hearts logic is now completely isolated within the _TapHeartsOverlay widget
 
-
-
   void _sendManualNudgeNotification() async {
     if (_houseId == null || _houseId!.isEmpty) return;
-    
+
     final size = MediaQuery.of(context).size;
-    _heartsOverlayKey.currentState?.spawnExplosion(Offset(size.width / 2, size.height / 2), count: 8);
-    
+    _heartsOverlayKey.currentState
+        ?.spawnExplosion(Offset(size.width / 2, size.height / 2), count: 8);
+
     await NotificationService().sendPartnerNotification(
       houseId: _houseId!,
       title: '💕 Bạn ơi, $_myName đang nhớ bạn!',
-      body: '$_myName đang đợi bạn chạm vào trái tim để ghép đôi tâm hồn trong ứng dụng đó! 💖',
+      body:
+          '$_myName đang đợi bạn chạm vào trái tim để ghép đôi tâm hồn trong ứng dụng đó! 💖',
       data: const {'screen': 'soul_merge', 'type': 'soul_merge'},
     );
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -278,7 +283,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           ),
           backgroundColor: const Color(0xFFFF4F93),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -291,15 +297,15 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       final prefs = await SharedPreferences.getInstance();
       final now = DateTime.now();
       final todayStr = '${now.year}-${now.month}-${now.day}';
-      
+
       final savedDate = prefs.getString('il_sm_photo_date');
       int currentCount = prefs.getInt('il_sm_photo_count') ?? 0;
-      
+
       if (savedDate != todayStr) {
         currentCount = 0;
         await prefs.setString('il_sm_photo_date', todayStr);
       }
-      
+
       final maxPhotos = _isVip ? 50 : 20;
       if (currentCount >= maxPhotos) {
         if (mounted) {
@@ -312,7 +318,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
               ),
               backgroundColor: const Color(0xFFFF4F4F),
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
           );
         }
@@ -320,11 +327,12 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       }
 
       final picker = ImagePicker();
-      final image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
+      final image =
+          await picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
       if (image == null) return;
-      
+
       setState(() => _isUploadingPhoto = true);
-      
+
       final houseId = _houseId ?? '';
       final uploadResult = await StorageService.instance.uploadPublicImage(
         houseId,
@@ -332,7 +340,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         XFile(image.path),
         quality: 50,
       );
-      
+
       final url = uploadResult?.downloadUrl;
       if (url != null && url.isNotEmpty) {
         _mergeService.sendSoulMessage('', imageUrl: url);
@@ -351,11 +359,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     });
     _lastTapPosition = globalPosition;
     _lastSpawnedPosition = globalPosition;
-    _spawnRandomEffect(globalPosition, count: 6);
+    _heartsOverlayKey.currentState?.spawnExplosion(globalPosition);
     _handleLocalBump();
 
     final now = DateTime.now();
-    if (_showHeartNotif && (_lastManualNudgeTime == null || now.difference(_lastManualNudgeTime!).inMinutes >= 10)) {
+    if (_showHeartNotif &&
+        (_lastManualNudgeTime == null ||
+            now.difference(_lastManualNudgeTime!).inMinutes >= 10)) {
       _lastManualNudgeTime = now;
       _sendManualNudgeNotification();
     }
@@ -364,11 +374,15 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       final randomItem = _memoriesData[_random.nextInt(_memoriesData.length)];
       if (randomItem['url'] != null && randomItem['url']!.isNotEmpty) {
         _mergeService.sendInteractiveEvent(
-           type: 'photo_shot',
-           url: randomItem['url'],
-           x: globalPosition.dx,
-           y: globalPosition.dy,
+          type: 'photo_shot',
+          url: randomItem['url'],
+          x: globalPosition.dx,
+          y: globalPosition.dy,
         );
+        _spawnPhotoExplosion(
+            specificItem: randomItem,
+            specificPosition:
+                Offset(globalPosition.dx, globalPosition.dy - 100));
       }
     }
 
@@ -379,14 +393,17 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     // Continuous heart spawning & haptic feedback timer - optimized for performance
     _continuousHeartsTimer?.cancel();
     int tickCount = 0;
-    _continuousHeartsTimer = Timer.periodic(const Duration(milliseconds: 90), (timer) {
+    _continuousHeartsTimer =
+        Timer.periodic(const Duration(milliseconds: 90), (timer) {
       if (!mounted || _isMerged) {
         timer.cancel();
         return;
       }
-      _spawnRandomEffect(_lastTapPosition, count: 4);
+      _heartsOverlayKey.currentState
+          ?.spawnExplosion(_lastTapPosition, count: 5);
       tickCount++;
-      if (tickCount % 5 == 0) { // Limit haptics to every ~450ms
+      if (tickCount % 5 == 0) {
+        // Limit haptics to every ~450ms
         HapticFeedback.lightImpact();
       }
     });
@@ -436,7 +453,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   }
 
   List<Widget> _buildSparkles() {
-    const double radius = 78;
+    const double radius = 45;
     // 4 sparkles thay vì 6 — tiết kiệm render
     const fixedSizes = [6.0, 4.5, 6.0, 4.5];
     const sparkleColors = [
@@ -454,11 +471,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       // Use FIXED size for position math — positions never shift
       final size = fixedSizes[i];
       // Alternate sparkles breathe in/out opposite phases
-      final opacity = (i % 2 == 0 ? (0.3 + 0.65 * pulseVal) : (0.95 - 0.65 * pulseVal)).clamp(0.0, 1.0);
+      final opacity =
+          (i % 2 == 0 ? (0.3 + 0.65 * pulseVal) : (0.95 - 0.65 * pulseVal))
+              .clamp(0.0, 1.0);
       return Positioned(
-        // 100 = half of the 200px SizedBox — static center
-        left: 100 + dx - size / 2,
-        top: 100 + dy - size / 2,
+        // 80 = half of the 160px Container — static center
+        left: 80 + dx - size / 2,
+        top: 80 + dy - size / 2,
         child: IgnorePointer(
           child: Opacity(
             opacity: opacity,
@@ -468,13 +487,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: sparkleColors[i % sparkleColors.length],
-                boxShadow: [
-                  BoxShadow(
-                    color: sparkleColors[i % sparkleColors.length].withValues(alpha: 0.7),
-                    blurRadius: size * 2.0,
-                    spreadRadius: 0.5,
-                  ),
-                ],
+                // BoxShadow removed for Flat performance
               ),
             ),
           ),
@@ -488,62 +501,67 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       final houseId = await _mergeService.getCurrentHouseId();
       if (houseId == null || houseId.isEmpty) return const [];
 
-      final dbRef = FirebaseDatabase.instance.ref();
-      final memoriesSnap = await dbRef.child('houses/$houseId/memories').limitToLast(15).get();
-      final diarySnap = await dbRef.child('houses/$houseId/diary').limitToLast(15).get();
+      final memoriesSnap = await FirebaseFirestore.instance
+          .collection('houses')
+          .doc(houseId)
+          .collection('album')
+          .orderBy('ts', descending: true)
+          .limit(15)
+          .get();
+
+      final diarySnap = await FirebaseFirestore.instance
+          .collection('houses')
+          .doc(houseId)
+          .collection('diaries')
+          .orderBy('ts', descending: true)
+          .limit(15)
+          .get();
 
       final List<Map<String, String>> items = [];
 
-      if (memoriesSnap.value is Map) {
-        final map = memoriesSnap.value as Map;
-        map.forEach((key, val) {
-          if (val is Map) {
-            final imageUrl = (val['url'] ?? val['imageUrl'] ?? val['thumbUrl'] ?? '').toString().trim();
-            final tsRaw = val['timestamp'] ?? val['ts'];
-            String dateStr = '';
-            if (tsRaw is int) {
-              final dt = DateTime.fromMillisecondsSinceEpoch(tsRaw);
-              dateStr = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}';
-            }
-            if (imageUrl.isNotEmpty) {
-              items.add({
-                'url': imageUrl,
-                'text': '',
-                'type': 'photo',
-                'mood': '💖',
-                'dateStr': dateStr,
-              });
-            }
-          }
-        });
+      for (var doc in memoriesSnap.docs) {
+        final val = doc.data();
+        final imageUrl = (val['url'] ?? val['imageUrl'] ?? val['thumbUrl'] ?? '').toString().trim();
+        final tsRaw = val['timestamp'] ?? val['ts'];
+        String dateStr = '';
+        if (tsRaw is int) {
+          final dt = DateTime.fromMillisecondsSinceEpoch(tsRaw);
+          dateStr = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}';
+        }
+        if (imageUrl.isNotEmpty) {
+          items.add({
+            'url': imageUrl,
+            'text': '',
+            'type': 'photo',
+            'mood': '💖',
+            'dateStr': dateStr,
+          });
+        }
       }
 
-      if (diarySnap.value is Map) {
-        final map = diarySnap.value as Map;
-        map.forEach((key, val) {
-          if (val is Map) {
-            final post = DiaryPost.fromJson(key.toString(), val);
-            final dt = post.timestamp;
-            final dateStr = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}';
-            if (post.imageUrl.isNotEmpty) {
-              items.add({
-                'url': post.imageUrl,
-                'text': post.content,
-                'type': 'photo',
-                'mood': post.mood,
-                'dateStr': dateStr,
-              });
-            } else if (post.content.isNotEmpty) {
-              items.add({
-                'url': '',
-                'text': post.content,
-                'type': 'text',
-                'mood': post.mood,
-                'dateStr': dateStr,
-              });
-            }
-          }
-        });
+      for (var doc in diarySnap.docs) {
+        final val = doc.data();
+        final post = DiaryPost.fromJson(doc.id, val);
+        final dt = post.timestamp;
+        final dateStr = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}';
+        
+        if (post.imageUrl.isNotEmpty) {
+          items.add({
+            'url': post.imageUrl,
+            'text': post.content,
+            'type': 'photo',
+            'mood': post.mood,
+            'dateStr': dateStr,
+          });
+        } else if (post.content.isNotEmpty) {
+          items.add({
+            'url': '',
+            'text': post.content,
+            'type': 'text',
+            'mood': post.mood,
+            'dateStr': dateStr,
+          });
+        }
       }
 
       if (items.isEmpty) {
@@ -610,10 +628,12 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     });
   }
 
-  void _spawnPhotoExplosion({Map<String, String>? specificItem, Offset? specificPosition}) {
+  void _spawnPhotoExplosion(
+      {Map<String, String>? specificItem, Offset? specificPosition}) {
     if (_memoriesData.isEmpty && specificItem == null) return;
-    final randomItem = specificItem ?? _memoriesData[_random.nextInt(_memoriesData.length)];
-    
+    final randomItem =
+        specificItem ?? _memoriesData[_random.nextInt(_memoriesData.length)];
+
     final size = MediaQuery.of(context).size;
     final double x = 30 + _random.nextDouble() * (size.width - 200);
     final double y = 140 + _random.nextDouble() * (size.height - 380);
@@ -640,7 +660,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     Future.delayed(const Duration(milliseconds: 1000), () {
       if (mounted) {
         setState(() {
-          _activeParticleExplosions.removeWhere((item) => item.id == particleId);
+          _activeParticleExplosions
+              .removeWhere((item) => item.id == particleId);
         });
       }
     });
@@ -652,42 +673,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         });
       }
     });
-  }
-
-  void _spawnRandomEffect(Offset position, {int count = 5}) {
-    if (_memoriesData.isEmpty) {
-      _heartsOverlayKey.currentState?.spawnExplosion(position, count: count);
-      return;
-    }
-
-    int heartCount = 0;
-    int photoCount = 0;
-    
-    for (int i = 0; i < count; i++) {
-      if (_random.nextDouble() < 0.25) {
-        photoCount++;
-      } else {
-        heartCount++;
-      }
-    }
-
-    if (heartCount > 0) {
-      _heartsOverlayKey.currentState?.spawnExplosion(position, count: heartCount);
-    }
-
-    if (photoCount > 0 && _activePhotos.length < 6) {
-      final spawnCount = math.min(photoCount, 2);
-      for (int i = 0; i < spawnCount; i++) {
-        final randomItem = _memoriesData[_random.nextInt(_memoriesData.length)];
-        final double offsetX = (_random.nextDouble() - 0.5) * 60;
-        final double offsetY = (_random.nextDouble() - 0.5) * 60 - 80;
-        
-        _spawnPhotoExplosion(
-          specificItem: randomItem,
-          specificPosition: Offset(position.dx + offsetX, position.dy + offsetY),
-        );
-      }
-    }
   }
 
   @override
@@ -711,8 +696,12 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final photoMessages = _chatHistory.where((m) => (m['imageUrl']?.toString() ?? '').isNotEmpty).toList();
-    final latestPhotos = photoMessages.length > 3 ? photoMessages.sublist(photoMessages.length - 3) : photoMessages;
+    final photoMessages = _chatHistory
+        .where((m) => (m['imageUrl']?.toString() ?? '').isNotEmpty)
+        .toList();
+    final latestPhotos = photoMessages.length > 3
+        ? photoMessages.sublist(photoMessages.length - 3)
+        : photoMessages;
 
     return Scaffold(
       backgroundColor: const Color(0xFF1A0533),
@@ -733,7 +722,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             IconButton(
               onPressed: _toggleOverlaySetting,
               icon: Icon(
-                _overlayEnabled ? Icons.chat_bubble_rounded : Icons.chat_bubble_outline_rounded,
+                _overlayEnabled
+                    ? Icons.chat_bubble_rounded
+                    : Icons.chat_bubble_outline_rounded,
                 color: _overlayEnabled ? const Color(0xFFFF4F93) : Colors.white,
               ),
               tooltip: 'Bong bóng nổi ngoài app',
@@ -744,20 +735,20 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background Gradient — cute pastel pink-purple
+          // Background Gradient — premium deep velvet night
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFF3D0F5E),
-                  Color(0xFF7B1C6A),
-                  Color(0xFFB33076),
-                  Color(0xFFE8517F),
-                  Color(0xFFF78DA7),
+                  Color(0xFF200F3A), // Deep dark violet
+                  Color(0xFF45133E), // Rich plum
+                  Color(0xFF6B184F), // Velvet magenta
+                  Color(0xFF91275E), // Warm rose magenta
+                  Color(0xFF380825), // Elegant dark bottom
                 ],
-                stops: [0.0, 0.25, 0.52, 0.78, 1.0],
+                stops: [0.0, 0.3, 0.55, 0.8, 1.0],
               ),
             ),
           ),
@@ -851,97 +842,152 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             key: _heartsOverlayKey,
             style: _activeStyle,
           ),
-          
+
           // 4. Floating message bubbles
           for (final msg in _floatingMessages)
             FloatingMessageWidget(key: msg.id, message: msg),
 
           for (int i = 0; i < latestPhotos.length; i++)
-            PersistentFloatingPhotoWidget(key: ValueKey(latestPhotos[i]['id']?.toString() ?? latestPhotos[i]['timestamp'].toString()), url: latestPhotos[i]['imageUrl'].toString(), index: i),
+            PersistentFloatingPhotoWidget(
+                key: ValueKey(latestPhotos[i]['id']?.toString() ??
+                    latestPhotos[i]['timestamp'].toString()),
+                url: latestPhotos[i]['imageUrl'].toString(),
+                index: i),
 
           if (!_isMerged)
             Align(
-              alignment: const Alignment(0, -0.96),
+              alignment: const Alignment(0, -0.70),
               child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Listener(
-                      onPointerDown: (event) {
-                        _onTapDown(event.position);
-                      },
-                      onPointerMove: (event) {
-                        _lastTapPosition = event.position;
-                        final lastPos = _lastSpawnedPosition;
-                        if (lastPos == null || (event.position - lastPos).distance > 18.0) {
-                          _lastSpawnedPosition = event.position;
-                          _heartsOverlayKey.currentState?.spawnExplosion(event.position, count: 3);
-                        }
-                      },
-                      onPointerUp: (event) {
-                        _onTapUp();
-                      },
-                      onPointerCancel: (event) {
-                        _onTapCancel();
-                      },
-                      child: RepaintBoundary(
-                        child: AnimatedScale(
-                          scale: _interactiveScale,
-                          duration: const Duration(milliseconds: 100),
-                          curve: Curves.easeOut,
-                          child: ScaleTransition(
-                            scale: _pulseAnim,
-                            child: SizedBox(
-                              width: 160,
-                              height: 160,
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  // Cute sticker heart
-                                  Image.asset(
-                                    'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
-                                    width: 130,
-                                    height: 130,
-                                    fit: BoxFit.contain,
-                                    filterQuality: FilterQuality.medium,
-                                    errorBuilder: (_, __, ___) => const Icon(
-                                      Icons.favorite_rounded,
-                                      color: Color(0xFFFF80B3),
-                                      size: 120,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Listener(
+                    behavior: HitTestBehavior.opaque,
+                    onPointerDown: (event) {
+                      _onTapDown(event.position);
+                    },
+                    onPointerMove: (event) {
+                      _lastTapPosition = event.position;
+                      final lastPos = _lastSpawnedPosition;
+                      if (lastPos == null ||
+                          (event.position - lastPos).distance > 18.0) {
+                        _lastSpawnedPosition = event.position;
+                        _heartsOverlayKey.currentState
+                            ?.spawnExplosion(event.position, count: 3);
+                      }
+                    },
+                    onPointerUp: (event) {
+                      _onTapUp();
+                    },
+                    onPointerCancel: (event) {
+                      _onTapCancel();
+                    },
+                    child: RepaintBoundary(
+                      child: AnimatedScale(
+                        scale: _interactiveScale,
+                        duration: const Duration(milliseconds: 100),
+                        curve: Curves.easeOut,
+                        child: ScaleTransition(
+                          scale: _pulseAnim,
+                          child: Container(
+                            width: 160,
+                            height: 160,
+                            color: Colors.transparent,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // Vòng neon thở bên ngoài (Breathing neon ring)
+                                AnimatedBuilder(
+                                  animation: _pulseAnim,
+                                  builder: (context, _) {
+                                    final scale = _pulseAnim.value; // dao động từ 1.0 -> 1.15
+                                    // Chuyển đổi thành tỉ lệ từ 0.0 -> 1.0 để làm mờ dần khi mở rộng
+                                    final normalized = (scale - 1.0) / 0.15;
+                                    return Container(
+                                      width: 120 * scale,
+                                      height: 120 * scale,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: const Color(0xFFFF4F93).withValues(
+                                            alpha: (0.6 * (1.0 - normalized)).clamp(0.0, 1.0),
+                                          ),
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                // Đĩa kính mờ phát sáng trung tâm (Glowing glassmorphic core)
+                                Container(
+                                  width: 110,
+                                  height: 110,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white.withValues(alpha: 0.12),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.35),
+                                      width: 1.5,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFFFF4F93).withValues(alpha: 0.45),
+                                        blurRadius: 24,
+                                        spreadRadius: 2,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(55),
+                                      child: Image.asset(
+                                        'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+                                        width: 82,
+                                        height: 82,
+                                        fit: BoxFit.contain,
+                                        filterQuality: FilterQuality.medium,
+                                        errorBuilder: (_, __, ___) => const Icon(
+                                          Icons.favorite_rounded,
+                                          color: Color(0xFFFF80B3),
+                                          size: 60,
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                  // Sparkle dots
-                                  AnimatedBuilder(
-                                    animation: _pulseAnim,
-                                    builder: (context, _) => Stack(
-                                      children: _buildSparkles(),
-                                    ),
+                                ),
+                                // Sparkle dots
+                                AnimatedBuilder(
+                                  animation: _pulseAnim,
+                                  builder: (context, _) => Stack(
+                                    children: _buildSparkles(),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 40),
-                      child: Column(
-                        children: [
-                          SizedBox(height: 24),
-                          // Connection status line removed as per user request
-                          // Nudge button removed, integrated into cat tap
-                          // Removed toggle card from bottom as it is now in the AppBar
-                        ],
-                      ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 40),
+                    child: Column(
+                      children: [
+                        SizedBox(height: 24),
+                        // Connection status line removed as per user request
+                        // Nudge button removed, integrated into cat tap
+                        // Removed toggle card from bottom as it is now in the AppBar
+                      ],
                     ),
-                  ],
-                ),
-              )
+                  ),
+                ],
+              ),
+            )
           else ...[
             // 1. Particle explosions (behind photos)
             for (final explosion in _activeParticleExplosions)
-              ParticleExplosionWidget(key: explosion.id, position: explosion.position),
+              ParticleExplosionWidget(
+                  key: explosion.id, position: explosion.position),
 
             // 2. Popping Polaroids (foreground)
             for (final photo in _activePhotos)
@@ -963,7 +1009,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                         fontWeight: FontWeight.w900,
                         shadows: [
                           Shadow(
-                            color: const Color(0xFFFF4F93).withValues(alpha: 0.5),
+                            color:
+                                const Color(0xFFFF4F93).withValues(alpha: 0.5),
                             blurRadius: 15,
                           ),
                         ],
@@ -998,35 +1045,43 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
   void _listenInteractiveEvents() {
     _interactiveEventsSub?.cancel();
-    _interactiveEventsSub = _mergeService.watchInteractiveEvents().listen((event) {
+    _interactiveEventsSub =
+        _mergeService.watchInteractiveEvents().listen((event) {
       if (!mounted) return;
       if (event.isEmpty) return;
       final sender = event['sender']?.toString();
       if (sender == _myRole) return; // ignore my own
-      
+
       final type = event['type']?.toString();
       if (type == 'photo_shot') {
         final url = event['url']?.toString() ?? '';
         final x = (event['x'] as num?)?.toDouble() ?? 0.0;
         final y = (event['y'] as num?)?.toDouble() ?? 0.0;
-        
-        final pos = Offset(x > 0 ? x : MediaQuery.of(context).size.width / 2, y > 0 ? y : MediaQuery.of(context).size.height / 2);
+
+        final pos = Offset(x > 0 ? x : MediaQuery.of(context).size.width / 2,
+            y > 0 ? y : MediaQuery.of(context).size.height / 2);
         _heartsOverlayKey.currentState?.spawnExplosion(pos, count: 5);
         if (url.isNotEmpty) {
-           _spawnPhotoExplosion(
-             specificItem: {'url': url, 'type': 'photo', 'mood': '💖', 'text': '', 'dateStr': ''},
-             specificPosition: Offset(pos.dx, pos.dy - 100),
-           );
+          _spawnPhotoExplosion(
+            specificItem: {
+              'url': url,
+              'type': 'photo',
+              'mood': '💖',
+              'text': '',
+              'dateStr': ''
+            },
+            specificPosition: Offset(pos.dx, pos.dy - 100),
+          );
         }
       } else if (type == 'persistent_photo') {
         final url = event['url']?.toString() ?? '';
         if (url.isNotEmpty) {
-           setState(() {
-             _persistentPhotos.add(url);
-             if (_persistentPhotos.length > 3) {
-               _persistentPhotos.removeAt(0);
-             }
-           });
+          setState(() {
+            _persistentPhotos.add(url);
+            if (_persistentPhotos.length > 3) {
+              _persistentPhotos.removeAt(0);
+            }
+          });
         }
       }
     });
@@ -1090,7 +1145,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
               if (!isSelf) {
                 _spawnFloatingMessage(text, false);
 
-                if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+                if (!kIsWeb &&
+                    defaultTargetPlatform == TargetPlatform.android) {
                   FlutterOverlayWindow.isActive().then((active) {
                     if (active) {
                       final payload = jsonEncode({
@@ -1133,7 +1189,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       // Scroll to bottom
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_chatScrollController.hasClients) {
-          _chatScrollController.jumpTo(_chatScrollController.position.maxScrollExtent);
+          _chatScrollController
+              .jumpTo(_chatScrollController.position.maxScrollExtent);
         }
       });
     });
@@ -1184,7 +1241,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       final remainingMs = blockUntil - now;
       final remainingMin = (remainingMs / 60000).ceil();
       setState(() {
-        _spamWarning = 'Thao tác quá nhanh! Bị chặn trong $remainingMin phút nữa.';
+        _spamWarning =
+            'Thao tác quá nhanh! Bị chặn trong $remainingMin phút nữa.';
       });
       Timer(const Duration(seconds: 3), () {
         if (mounted) setState(() => _spamWarning = null);
@@ -1195,7 +1253,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     // 2. Check 5s countdown
     if (_tempBlockSecondsLeft > 0) {
       setState(() {
-        _spamWarning = 'Thao tác quá nhanh! Vui lòng đợi $_tempBlockSecondsLeft giây đếm ngược.';
+        _spamWarning =
+            'Thao tác quá nhanh! Vui lòng đợi $_tempBlockSecondsLeft giây đếm ngược.';
       });
       return true;
     }
@@ -1205,9 +1264,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     if (_msgTimestamps.length >= 3) {
       _tempBlockSecondsLeft = 5;
       _tempBlockTimer?.cancel();
-      
+
       setState(() {
-        _spamWarning = 'Thao tác quá nhanh! Đang đếm ngược $_tempBlockSecondsLeft giây.';
+        _spamWarning =
+            'Thao tác quá nhanh! Đang đếm ngược $_tempBlockSecondsLeft giây.';
       });
 
       _tempBlockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -1218,7 +1278,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
               _spamWarning = null;
               timer.cancel();
             } else {
-              _spamWarning = 'Thao tác quá nhanh! Đang đếm ngược $_tempBlockSecondsLeft giây.';
+              _spamWarning =
+                  'Thao tác quá nhanh! Đang đếm ngược $_tempBlockSecondsLeft giây.';
             }
           });
         } else {
@@ -1251,7 +1312,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     return false;
   }
 
-  Future<void> _sendSoulMessage(String text, {bool bypassSpamCheck = false}) async {
+  Future<void> _sendSoulMessage(String text,
+      {bool bypassSpamCheck = false}) async {
     if (!bypassSpamCheck && await _checkSpamAndMaybeBlock()) return;
 
     final trimmed = text.trim();
@@ -1298,13 +1360,17 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     final presetsAfter = ['Yêu bạn 😘', 'Nhớ quá! 💖', 'Ú òa! 👻'];
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    final hoursSinceLastMsg = _lastAnyMsgTimestamp == 0 ? 999 : (now - _lastAnyMsgTimestamp) / (1000 * 60 * 60);
+    final hoursSinceLastMsg = _lastAnyMsgTimestamp == 0
+        ? 999
+        : (now - _lastAnyMsgTimestamp) / (1000 * 60 * 60);
     final showPresetsBefore = hoursSinceLastMsg >= 24;
 
-    final presets = _isMerged ? presetsAfter : (showPresetsBefore ? presetsBefore : <String>[]);
+    final presets = _isMerged
+        ? presetsAfter
+        : (showPresetsBefore ? presetsBefore : <String>[]);
 
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.zero,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1376,99 +1442,130 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       ),
                     )
                   : RepaintBoundary(
-                    child: ListView.builder(
-                      controller: _chatScrollController,
-                      shrinkWrap: true,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      itemCount: _chatHistory.length,
-                      itemBuilder: (context, index) {
-                        final msg = _chatHistory[index];
-                        final sender = (msg['sender'] ?? '').toString();
-                        final isSelf = (sender == _myRole);
-                        final text = (msg['text'] ?? '').toString();
-                        final imageUrl = (msg['imageUrl'] ?? '').toString();
-                        final timeStr = _formatTime(msg['timestamp'] as int?);
+                      child: ListView.builder(
+                        controller: _chatScrollController,
+                        reverse: true,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        itemCount: _chatHistory.length,
+                        itemBuilder: (context, index) {
+                          final msg = _chatHistory.reversed.elementAt(index);
+                          final sender = (msg['sender'] ?? '').toString();
+                          final isSelf = (sender == _myRole);
+                          final text = (msg['text'] ?? '').toString();
+                          final imageUrl = (msg['imageUrl'] ?? '').toString();
+                          final timeStr = _formatTime(msg['timestamp'] as int?);
 
-                        return Align(
-                          alignment: isSelf ? Alignment.centerRight : Alignment.centerLeft,
-                          child: Container(
-                            margin: EdgeInsets.only(
-                              top: 4,
-                              bottom: 4,
-                              left: isSelf ? 48 : 0,
-                              right: isSelf ? 0 : 48,
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              gradient: isSelf
-                                  ? const LinearGradient(
-                                      colors: [Color(0xFFFF4F93), Color(0xFFE2528F)],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    )
-                                  : const LinearGradient(
-                                      colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                              borderRadius: BorderRadius.only(
-                                topLeft: const Radius.circular(14),
-                                topRight: const Radius.circular(14),
-                                bottomLeft: Radius.circular(isSelf ? 14 : 2),
-                                bottomRight: Radius.circular(isSelf ? 2 : 14),
+                          return Align(
+                            alignment: isSelf
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            child: Container(
+                              margin: EdgeInsets.only(
+                                top: 2,
+                                bottom: 2,
+                                left: isSelf ? 48 : 0,
+                                right: isSelf ? 0 : 48,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: (isSelf ? const Color(0xFFFF4F93) : const Color(0xFF8E2DE2))
-                                      .withValues(alpha: 0.2),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 3),
+                              padding: imageUrl.isNotEmpty
+                                  ? const EdgeInsets.all(6)
+                                  : const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+                              decoration: BoxDecoration(
+                                color: isSelf 
+                                  ? const Color(0xFFFF4F93) 
+                                  : Colors.white.withValues(alpha: 0.22),
+                                borderRadius: BorderRadius.only(
+                                  topLeft: const Radius.circular(20),
+                                  topRight: const Radius.circular(20),
+                                  bottomLeft: Radius.circular(isSelf ? 20 : 4),
+                                  bottomRight: Radius.circular(isSelf ? 4 : 20),
                                 ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment:
-                                  isSelf ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (imageUrl.isNotEmpty)
-                                  Padding(
-                                    padding: EdgeInsets.only(bottom: text.isNotEmpty ? 4.0 : 0),
-                                    child: Text(
-                                      '🖼️ Đã gửi ảnh',
-                                      style: SLTheme.quicksand(
-                                        color: isSelf ? Colors.white70 : Colors.white54,
-                                        fontSize: 12,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                    ),
-                                  ),
-                                if (text.isNotEmpty)
-                                  Text(
-                                    text,
-                                    style: SLTheme.quicksand(
-                                      color: Colors.white,
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                if (timeStr.isNotEmpty) ...[
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    timeStr,
-                                    style: SLTheme.quicksand(
-                                      color: Colors.white.withValues(alpha: 0.5),
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                border: Border.all(
+                                  color: isSelf
+                                      ? Colors.white.withValues(alpha: 0.15)
+                                      : Colors.white.withValues(alpha: 0.25),
+                                  width: 1.0,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: isSelf
+                                        ? const Color(0xFFFF4F93).withValues(alpha: 0.25)
+                                        : Colors.black.withValues(alpha: 0.08),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
                                   ),
                                 ],
-                              ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: isSelf
+                                    ? CrossAxisAlignment.end
+                                    : CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (imageUrl.isNotEmpty)
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: CachedNetworkImage(
+                                        imageUrl: imageUrl,
+                                        fit: BoxFit.cover,
+                                        width: 200,
+                                        placeholder: (context, url) => Container(
+                                          width: 200, height: 150, color: Colors.white12,
+                                          child: const Center(child: CircularProgressIndicator(color: Colors.white54, strokeWidth: 2)),
+                                        ),
+                                        errorWidget: (context, url, error) => Container(
+                                          width: 200, height: 150, color: Colors.white12,
+                                          child: const Icon(Icons.broken_image, color: Colors.white54),
+                                        ),
+                                      ),
+                                    ),
+                                  if (text.isNotEmpty)
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                          top: imageUrl.isNotEmpty ? 6 : 0,
+                                          left: imageUrl.isNotEmpty ? 4 : 0,
+                                          right: imageUrl.isNotEmpty ? 4 : 0,
+                                          bottom: 2),
+                                      child: Text(
+                                        text,
+                                        style: SLTheme.quicksand(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          height: 1.3,
+                                        ),
+                                      ),
+                                    ),
+                                  if (timeStr.isNotEmpty)
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                          left: imageUrl.isNotEmpty ? 4 : 0,
+                                          right: imageUrl.isNotEmpty ? 4 : 0,
+                                          top: 2, bottom: imageUrl.isNotEmpty ? 4 : 0),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            timeStr,
+                                            style: SLTheme.quicksand(
+                                              color: Colors.white.withValues(alpha: 0.6),
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          if (isSelf) ...[
+                                            const SizedBox(width: 4),
+                                            Icon(Icons.check_circle, size: 10, color: Colors.white.withValues(alpha: 0.6)),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
                     ),
             ),
           ),
@@ -1477,54 +1574,87 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: presets.map((text) {
-                return Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  child: InkWell(
-                    onTap: () => _sendSoulMessage(text),
-                    borderRadius: BorderRadius.circular(20),
-                    child: Ink(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.15),
+                  return Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    child: InkWell(
+                      onTap: () => _sendSoulMessage(text),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Ink(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFFFF758F).withValues(alpha: 0.25),
+                              const Color(0xFFFF4F93).withValues(alpha: 0.15),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: const Color(0xFFFF758F).withValues(alpha: 0.4),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFF4F93).withValues(alpha: 0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                      ),
-                      child: Text(
-                        text,
-                        style: SLTheme.quicksand(
-                          color: Colors.white,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.bold,
+                        child: Text(
+                          text,
+                          style: SLTheme.quicksand(
+                            color: Colors.white,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                }).toList(),
+              ),
             ),
-          ),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.35),
-              borderRadius: BorderRadius.circular(24),
+              color: Colors.white.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(28),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.15),
-                width: 1.0,
+                color: Colors.white.withValues(alpha: 0.25),
+                width: 1.2,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               children: [
                 GestureDetector(
                   onTap: _pickAndSendChatImage,
                   child: Container(
+                    margin: const EdgeInsets.only(left: 4),
                     padding: const EdgeInsets.all(8),
-                    child: _isUploadingPhoto 
-                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFFF4F93)))
-                       : const Icon(Icons.add_photo_alternate_rounded, color: Colors.white70, size: 24),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
+                    child: _isUploadingPhoto
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Color(0xFFFF4F93)))
+                        : const Icon(Icons.add_photo_alternate_rounded,
+                            color: Colors.white, size: 22),
                   ),
                 ),
                 Expanded(
@@ -1557,20 +1687,28 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                 GestureDetector(
                   onTap: _sendCustomMessage,
                   child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: const BoxDecoration(
+                    width: 38,
+                    height: 38,
+                    margin: const EdgeInsets.only(right: 2),
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFFF4F93), Color(0xFFE2528F)],
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF4F93), Color(0xFFFF758F)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF4F93).withValues(alpha: 0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: const Icon(
                       Icons.send_rounded,
                       color: Colors.white,
-                      size: 16,
+                      size: 18,
                     ),
                   ),
                 ),
@@ -1581,17 +1719,40 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       ),
     );
   }
+
   void _sendOverlaySyncPayload() {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
     FlutterOverlayWindow.isActive().then((active) {
       if (active) {
-        final payload = jsonEncode({
+        final credentialsPayload = jsonEncode({
+          'type': 'sync_credentials',
+          'houseId': _houseId ?? '',
+          'role': _myRole,
+          'partnerName': _partnerName,
+        });
+        FlutterOverlayWindow.shareData(credentialsPayload);
+
+        final chatPayload = jsonEncode({
           'type': 'update_chat',
           'history': _chatHistory,
           'myRole': _myRole,
           'partnerName': _partnerName,
         });
-        FlutterOverlayWindow.shareData(payload);
+        FlutterOverlayWindow.shareData(chatPayload);
+      }
+
+      try {
+        final payloadText = jsonEncode({
+          'houseId': _houseId ?? '',
+          'role': _myRole,
+          'partnerName': _partnerName,
+        });
+        getApplicationDocumentsDirectory().then((dir) {
+          final file = File('${dir.path}/overlay_sync.json');
+          file.writeAsString(payloadText);
+        });
+      } catch (e) {
+        debugPrint('[SoulMergeScreen] File IO save error: $e');
       }
     });
   }
@@ -1611,14 +1772,15 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                 ),
                 backgroundColor: Colors.redAccent,
                 behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
               ),
             );
           }
           return;
         }
       }
-      
+
       await FlutterOverlayWindow.showOverlay(
         enableDrag: true,
         height: 80,
@@ -1640,7 +1802,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             ),
             backgroundColor: const Color(0xFFFF4F93),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
         );
       }
@@ -1658,7 +1821,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             ),
             backgroundColor: Colors.grey.shade800,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
         );
       }
@@ -1718,7 +1882,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Kiểu hiệu ứng thả tim',
+                      L10nService().translate('heart_style_title'),
                       textAlign: TextAlign.center,
                       style: SLTheme.quicksand(
                         color: Colors.white,
@@ -1728,7 +1892,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Chọn phong cách tim bay cao cấp dành riêng cho bạn',
+                      L10nService().translate('heart_style_desc'),
                       textAlign: TextAlign.center,
                       style: SLTheme.quicksand(
                         color: Colors.white60,
@@ -1736,7 +1900,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Tab selector dạng Pill
                     Container(
                       height: 42,
@@ -1764,7 +1928,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                   borderRadius: BorderRadius.circular(17),
                                 ),
                                 child: Text(
-                                  'Hiệu ứng',
+                                  L10nService().translate('heart_style_tab_effect'),
                                   style: SLTheme.quicksand(
                                     color: Colors.white,
                                     fontSize: 13.5,
@@ -1791,7 +1955,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                   borderRadius: BorderRadius.circular(17),
                                 ),
                                 child: Text(
-                                  'Cấu hình',
+                                  L10nService().translate('heart_style_tab_config'),
                                   style: SLTheme.quicksand(
                                     color: Colors.white,
                                     fontSize: 13.5,
@@ -1809,8 +1973,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                     // Nội dung từng Tab
                     if (activeTab == 0) ...[
                       _buildStyleItem(
-                        title: 'Basic Pink',
-                        desc: 'Hiệu ứng màu hồng pastel ngọt ngào cơ bản',
+                        title: L10nService().translate('heart_style_basic_title'),
+                        desc: L10nService().translate('heart_style_basic_desc'),
                         styleKey: 'basic',
                         isPremium: false,
                         color: const Color(0xFFFFB7D5),
@@ -1818,8 +1982,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       ),
                       const SizedBox(height: 12),
                       _buildStyleItem(
-                        title: 'Neon Aurora 🌟',
-                        desc: 'Tim phát sáng đổi màu neon lung linh kèm vệt sao lấp lánh',
+                        title: L10nService().translate('heart_style_aurora_title'),
+                        desc: L10nService().translate('heart_style_aurora_desc'),
                         styleKey: 'aurora',
                         isPremium: false,
                         color: const Color(0xFF00FFCC),
@@ -1827,8 +1991,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       ),
                       const SizedBox(height: 12),
                       _buildStyleItem(
-                        title: 'Cosmic Sparkle ✨',
-                        desc: 'Tim nhịp điệu vũ trụ bay lắc lư hình sin và vòng sáng tinh tú',
+                        title: L10nService().translate('heart_style_cosmic_title'),
+                        desc: L10nService().translate('heart_style_cosmic_desc'),
                         styleKey: 'cosmic',
                         isPremium: false,
                         color: const Color(0xFFFFD700),
@@ -1836,33 +2000,18 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       ),
                     ] else ...[
                       _buildToggleRow(
-                        title: 'Hiển thị câu thoại của mèo',
-                        subtitle: 'Ẩn hoặc hiện bong bóng lời thoại, gợi ý của mèo',
+                        title: L10nService().translate('heart_style_show_cat_dialog'),
+                        subtitle: L10nService().translate('heart_style_show_cat_dialog_desc'),
                         value: _showHeartNotif,
                         onChanged: (val) async {
                           final prefs = await SharedPreferences.getInstance();
-                          await prefs.setBool('soul_merge_show_heart_notif', val);
+                          await prefs.setBool(
+                              'soul_merge_show_heart_notif', val);
                           setSheetState(() {
                             _showHeartNotif = val;
                           });
                           setState(() {
                             _showHeartNotif = val;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      _buildToggleRow(
-                        title: 'Xuất hiện ở toàn bộ màn hình',
-                        subtitle: 'Hiển thị mèo cưng và hiệu ứng tim bay trên tất cả các màn hình',
-                        value: _showHeartGlobal,
-                        onChanged: (val) async {
-                          final prefs = await SharedPreferences.getInstance();
-                          await prefs.setBool('soul_merge_show_heart_global', val);
-                          setSheetState(() {
-                            _showHeartGlobal = val;
-                          });
-                          setState(() {
-                            _showHeartGlobal = val;
                           });
                         },
                       ),
@@ -1945,7 +2094,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       if (isPremium && !_isVip) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: const Color(0xFF00E676),
                             borderRadius: BorderRadius.circular(6),
@@ -2047,7 +2197,7 @@ class ExplodingPhoto {
   final double angle;
   final double targetScale;
   final UniqueKey id = UniqueKey();
-  
+
   ExplodingPhoto({
     required this.url,
     this.text = '',
@@ -2170,7 +2320,8 @@ class _ExplodingPhotoWidgetState extends State<ExplodingPhotoWidget>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(widget.photo.mood, style: const TextStyle(fontSize: 14)),
+                        Text(widget.photo.mood,
+                            style: const TextStyle(fontSize: 14)),
                         if (widget.photo.dateStr.isNotEmpty)
                           Text(
                             widget.photo.dateStr,
@@ -2230,7 +2381,8 @@ class _ExplodingPhotoWidgetState extends State<ExplodingPhotoWidget>
                                 height: 24,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.purple),
                                 ),
                               ),
                             ),
@@ -2281,7 +2433,7 @@ class Particle {
   final Offset velocity;
   final Color color;
   double scale;
-  
+
   Particle({
     required this.velocity,
     required this.color,
@@ -2294,7 +2446,8 @@ class ParticleExplosionWidget extends StatefulWidget {
   const ParticleExplosionWidget({super.key, required this.position});
 
   @override
-  State<ParticleExplosionWidget> createState() => _ParticleExplosionWidgetState();
+  State<ParticleExplosionWidget> createState() =>
+      _ParticleExplosionWidgetState();
 }
 
 class _ParticleExplosionWidgetState extends State<ParticleExplosionWidget>
@@ -2344,7 +2497,7 @@ class _ParticleExplosionWidgetState extends State<ParticleExplosionWidget>
   Widget build(BuildContext context) {
     return Positioned(
       left: widget.position.dx + 70, // Center of the 140 width polaroid
-      top: widget.position.dy + 85,  // Center of the 170 height polaroid
+      top: widget.position.dy + 85, // Center of the 170 height polaroid
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
@@ -2370,12 +2523,12 @@ class _ParticlePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..style = PaintingStyle.fill;
-    
+
     for (final particle in particles) {
       final offset = particle.velocity * (progress * 40.0);
       final opacity = 1.0 - progress;
       paint.color = particle.color.withValues(alpha: opacity);
-      
+
       final radius = particle.scale * (1.0 - progress * 0.5);
       canvas.drawCircle(offset, radius, paint);
     }
@@ -2410,8 +2563,8 @@ class TinyHeart {
     required this.size,
     required this.color,
     required this.style,
-  }) : startX = x,
-       swayPhase = math.Random().nextDouble() * math.pi * 2;
+  })  : startX = x,
+        swayPhase = math.Random().nextDouble() * math.pi * 2;
 }
 
 class TapHeartsOverlay extends StatefulWidget {
@@ -2451,7 +2604,8 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
         heart.lifeTimeProgress += dt;
 
         if (heart.style == 'cosmic') {
-          final double sway = math.sin(heart.lifeTimeProgress * 10.0 + heart.swayPhase) * 1.5;
+          final double sway =
+              math.sin(heart.lifeTimeProgress * 10.0 + heart.swayPhase) * 1.5;
           heart.x += math.cos(heart.angle) * heart.speed + sway;
           heart.y += math.sin(heart.angle) * heart.speed - 1.5;
         } else if (heart.style == 'aurora') {
@@ -2459,7 +2613,8 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
           if (heart.trail.length > 10) {
             heart.trail.removeAt(0);
           }
-          final double wave = math.sin(heart.lifeTimeProgress * 15.0 + heart.swayPhase) * 0.8;
+          final double wave =
+              math.sin(heart.lifeTimeProgress * 15.0 + heart.swayPhase) * 0.8;
           heart.x += math.cos(heart.angle) * heart.speed + wave;
           heart.y += math.sin(heart.angle) * heart.speed - 1.8;
 
@@ -2467,7 +2622,8 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
           final newHue = (hsl.hue + 2.5) % 360;
           heart.color = hsl.withHue(newHue).toColor();
         } else {
-          final double sway = math.sin(heart.lifeTimeProgress * 5.0 + heart.swayPhase) * 0.8;
+          final double sway =
+              math.sin(heart.lifeTimeProgress * 5.0 + heart.swayPhase) * 0.8;
           heart.x += math.cos(heart.angle) * heart.speed + sway;
           heart.y += math.sin(heart.angle) * heart.speed - 1.2;
         }
@@ -2490,25 +2646,57 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
     }
 
     const palettes = [
-      [Color(0xFFFFB7D5), Color(0xFFFF8FB7), Color(0xFFFFD6EE), Color(0xFFFF6BA8)],
-      [Color(0xFFD8A4FF), Color(0xFFC680FF), Color(0xFFEDD5FF), Color(0xFFB85EFF)],
-      [Color(0xFFA8C8FF), Color(0xFF7AABFF), Color(0xFFCCE0FF), Color(0xFF5591FF)],
-      [Color(0xFFFFEAA0), Color(0xFFFFD966), Color(0xFFFFF3CC), Color(0xFFFFCB33)],
-      [Color(0xFFA8F0D0), Color(0xFF6EDBB4), Color(0xFFCCF7E5), Color(0xFF3DC98E)],
-      [Color(0xFFFFCBA4), Color(0xFFFFAA77), Color(0xFFFFE3CC), Color(0xFFFF8844)],
+      [
+        Color(0xFFFFB7D5),
+        Color(0xFFFF8FB7),
+        Color(0xFFFFD6EE),
+        Color(0xFFFF6BA8)
+      ],
+      [
+        Color(0xFFD8A4FF),
+        Color(0xFFC680FF),
+        Color(0xFFEDD5FF),
+        Color(0xFFB85EFF)
+      ],
+      [
+        Color(0xFFA8C8FF),
+        Color(0xFF7AABFF),
+        Color(0xFFCCE0FF),
+        Color(0xFF5591FF)
+      ],
+      [
+        Color(0xFFFFEAA0),
+        Color(0xFFFFD966),
+        Color(0xFFFFF3CC),
+        Color(0xFFFFCB33)
+      ],
+      [
+        Color(0xFFA8F0D0),
+        Color(0xFF6EDBB4),
+        Color(0xFFCCF7E5),
+        Color(0xFF3DC98E)
+      ],
+      [
+        Color(0xFFFFCBA4),
+        Color(0xFFFFAA77),
+        Color(0xFFFFE3CC),
+        Color(0xFFFF8844)
+      ],
     ];
 
     try {
       final localPosition = renderBox.globalToLocal(globalPosition);
       final random = math.Random();
       final palette = palettes[random.nextInt(palettes.length)];
-      
+
       setState(() {
         for (int i = 0; i < count; i++) {
           final angle = random.nextDouble() * math.pi * 2;
           final speed = 1.5 + random.nextDouble() * 3.0;
-          final size = 16.0 + random.nextDouble() * 20.0; // Slightly larger to compensate for fewer hearts
-          
+          final size = 16.0 +
+              random.nextDouble() *
+                  20.0; // Slightly larger to compensate for fewer hearts
+
           _hearts.add(
             TinyHeart(
               x: localPosition.dx,
@@ -2533,24 +2721,54 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
   void spawnLocalExplosion(Offset localPosition, {int count = 8}) {
     if (!mounted) return;
     const palettes = [
-      [Color(0xFFFFB7D5), Color(0xFFFF8FB7), Color(0xFFFFD6EE), Color(0xFFFF6BA8)],
-      [Color(0xFFD8A4FF), Color(0xFFC680FF), Color(0xFFEDD5FF), Color(0xFFB85EFF)],
-      [Color(0xFFA8C8FF), Color(0xFF7AABFF), Color(0xFFCCE0FF), Color(0xFF5591FF)],
-      [Color(0xFFFFEAA0), Color(0xFFFFD966), Color(0xFFFFF3CC), Color(0xFFFFCB33)],
-      [Color(0xFFA8F0D0), Color(0xFF6EDBB4), Color(0xFFCCF7E5), Color(0xFF3DC98E)],
-      [Color(0xFFFFCBA4), Color(0xFFFFAA77), Color(0xFFFFE3CC), Color(0xFFFF8844)],
+      [
+        Color(0xFFFFB7D5),
+        Color(0xFFFF8FB7),
+        Color(0xFFFFD6EE),
+        Color(0xFFFF6BA8)
+      ],
+      [
+        Color(0xFFD8A4FF),
+        Color(0xFFC680FF),
+        Color(0xFFEDD5FF),
+        Color(0xFFB85EFF)
+      ],
+      [
+        Color(0xFFA8C8FF),
+        Color(0xFF7AABFF),
+        Color(0xFFCCE0FF),
+        Color(0xFF5591FF)
+      ],
+      [
+        Color(0xFFFFEAA0),
+        Color(0xFFFFD966),
+        Color(0xFFFFF3CC),
+        Color(0xFFFFCB33)
+      ],
+      [
+        Color(0xFFA8F0D0),
+        Color(0xFF6EDBB4),
+        Color(0xFFCCF7E5),
+        Color(0xFF3DC98E)
+      ],
+      [
+        Color(0xFFFFCBA4),
+        Color(0xFFFFAA77),
+        Color(0xFFFFE3CC),
+        Color(0xFFFF8844)
+      ],
     ];
 
     try {
       final random = math.Random();
       final palette = palettes[random.nextInt(palettes.length)];
-      
+
       setState(() {
         for (int i = 0; i < count; i++) {
           final angle = random.nextDouble() * math.pi * 2;
           final speed = 1.5 + random.nextDouble() * 3.0;
           final size = 16.0 + random.nextDouble() * 20.0;
-          
+
           _hearts.add(
             TinyHeart(
               x: localPosition.dx,
@@ -2630,28 +2848,29 @@ class HeartsPainter extends CustomPainter {
 
       if (heart.style == 'cosmic') {
         drawSize = heart.size * (1.0 + 0.15 * math.sin(progress * 18.0));
-        
+
         // Vẽ 1 sao bay quanh (giảm từ 2 xuống 1 để chống lag)
         final double orbitAngle = progress * 8.0;
         final double orbitRadius = drawSize * 0.8;
         final double sx = heart.x + math.cos(orbitAngle) * orbitRadius;
         final double sy = heart.y + math.sin(orbitAngle) * orbitRadius;
-        
+
         final trailPaint = Paint()
           ..style = PaintingStyle.fill
-          ..color = const Color(0xFFFFD700).withValues(alpha: heart.opacity * 0.4);
+          ..color =
+              const Color(0xFFFFD700).withValues(alpha: heart.opacity * 0.4);
         _drawStar(canvas, trailPaint, sx, sy, drawSize * 0.25);
 
         // Chỉ vẽ 1 lớp Glow thay vì 2 lớp
-        final glowColor = const Color(0xFFBF55EC).withValues(alpha: heart.opacity * 0.15);
+        final glowColor =
+            const Color(0xFFBF55EC).withValues(alpha: heart.opacity * 0.15);
         final glowPaint = Paint()
           ..style = PaintingStyle.fill
           ..color = glowColor;
         _drawHeartShape(canvas, glowPaint, heart.x, heart.y, drawSize * 1.3);
-        
+
         mainPaint.color = heart.color.withValues(alpha: heart.opacity);
         _drawHeartShape(canvas, mainPaint, heart.x, heart.y, drawSize);
-
       } else if (heart.style == 'aurora') {
         // Rút gọn Trail của Aurora (chỉ vẽ 1 điểm đuôi dài nhất để chống lag)
         if (heart.trail.isNotEmpty) {
@@ -2671,7 +2890,6 @@ class HeartsPainter extends CustomPainter {
 
         mainPaint.color = heart.color.withValues(alpha: heart.opacity);
         _drawHeartShape(canvas, mainPaint, heart.x, heart.y, drawSize);
-
       } else {
         drawSize = heart.size * (1.0 + 0.08 * math.sin(progress * 12.0));
         mainPaint.color = heart.color.withValues(alpha: heart.opacity);
@@ -2680,7 +2898,8 @@ class HeartsPainter extends CustomPainter {
     }
   }
 
-  void _drawHeartShape(Canvas canvas, Paint paint, double x, double y, double size) {
+  void _drawHeartShape(
+      Canvas canvas, Paint paint, double x, double y, double size) {
     canvas.save();
     canvas.translate(x, y);
     canvas.scale(size, size);
@@ -2688,7 +2907,8 @@ class HeartsPainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawStar(Canvas canvas, Paint paint, double x, double y, double radius) {
+  void _drawStar(
+      Canvas canvas, Paint paint, double x, double y, double radius) {
     canvas.save();
     canvas.translate(x, y);
     canvas.scale(radius, radius);
@@ -2848,13 +3068,16 @@ class _FloatingMessageWidgetState extends State<FloatingMessageWidget>
 class PersistentFloatingPhotoWidget extends StatefulWidget {
   final String url;
   final int index;
-  const PersistentFloatingPhotoWidget({super.key, required this.url, required this.index});
+  const PersistentFloatingPhotoWidget(
+      {super.key, required this.url, required this.index});
 
   @override
-  State<PersistentFloatingPhotoWidget> createState() => _PersistentFloatingPhotoWidgetState();
+  State<PersistentFloatingPhotoWidget> createState() =>
+      _PersistentFloatingPhotoWidgetState();
 }
 
-class _PersistentFloatingPhotoWidgetState extends State<PersistentFloatingPhotoWidget> {
+class _PersistentFloatingPhotoWidgetState
+    extends State<PersistentFloatingPhotoWidget> {
   double _x = 0;
   double _y = 0;
   double _angle = 0;
@@ -2867,7 +3090,8 @@ class _PersistentFloatingPhotoWidgetState extends State<PersistentFloatingPhotoW
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _randomizePosition();
-      _timer = Timer.periodic(const Duration(seconds: 8), (_) => _randomizePosition());
+      _timer = Timer.periodic(
+          const Duration(seconds: 8), (_) => _randomizePosition());
     });
   }
 
@@ -2890,7 +3114,7 @@ class _PersistentFloatingPhotoWidgetState extends State<PersistentFloatingPhotoW
   @override
   Widget build(BuildContext context) {
     if (_x == 0 && _y == 0) return const SizedBox();
-    
+
     Widget content = Listener(
       behavior: HitTestBehavior.opaque,
       onPointerDown: (event) {
@@ -2908,12 +3132,14 @@ class _PersistentFloatingPhotoWidgetState extends State<PersistentFloatingPhotoW
       onPointerUp: (event) {
         setState(() => _isDragging = false);
         _timer?.cancel();
-        _timer = Timer.periodic(const Duration(seconds: 8), (_) => _randomizePosition());
+        _timer = Timer.periodic(
+            const Duration(seconds: 8), (_) => _randomizePosition());
       },
       onPointerCancel: (event) {
         setState(() => _isDragging = false);
         _timer?.cancel();
-        _timer = Timer.periodic(const Duration(seconds: 8), (_) => _randomizePosition());
+        _timer = Timer.periodic(
+            const Duration(seconds: 8), (_) => _randomizePosition());
       },
       child: Transform.rotate(
         angle: _angle,
@@ -2941,7 +3167,7 @@ class _PersistentFloatingPhotoWidgetState extends State<PersistentFloatingPhotoW
     if (_isDragging) {
       return Positioned(left: _x, top: _y, child: content);
     }
-    
+
     return AnimatedPositioned(
       duration: const Duration(seconds: 8),
       curve: Curves.easeInOutSine,
@@ -2984,7 +3210,8 @@ class _CuteBgPatternPainter extends CustomPainter {
         _drawHeart(canvas, heartPaint, cx, cy, 7.0);
 
         // Chấm tròn nhỏ lân cận
-        dotPaint.color = colors[(colorIdx + 2) % colors.length].withValues(alpha: 0.09);
+        dotPaint.color =
+            colors[(colorIdx + 2) % colors.length].withValues(alpha: 0.09);
         canvas.drawCircle(Offset(cx + 14, cy + 8), 3.0, dotPaint);
 
         // Dấu x nhỏ (sparkle) offset khác
@@ -3011,15 +3238,20 @@ class _CuteBgPatternPainter extends CustomPainter {
     final path = Path();
     // Trái tim đơn giản bằng cubic bezier
     path.moveTo(cx, cy + r * 0.4);
-    path.cubicTo(cx, cy - r * 0.5, cx - r * 1.4, cy - r * 0.5, cx - r * 1.4, cy + r * 0.2);
-    path.cubicTo(cx - r * 1.4, cy + r * 0.9, cx, cy + r * 1.5, cx, cy + r * 1.5);
-    path.cubicTo(cx, cy + r * 1.5, cx + r * 1.4, cy + r * 0.9, cx + r * 1.4, cy + r * 0.2);
-    path.cubicTo(cx + r * 1.4, cy - r * 0.5, cx, cy - r * 0.5, cx, cy + r * 0.4);
+    path.cubicTo(cx, cy - r * 0.5, cx - r * 1.4, cy - r * 0.5, cx - r * 1.4,
+        cy + r * 0.2);
+    path.cubicTo(
+        cx - r * 1.4, cy + r * 0.9, cx, cy + r * 1.5, cx, cy + r * 1.5);
+    path.cubicTo(cx, cy + r * 1.5, cx + r * 1.4, cy + r * 0.9, cx + r * 1.4,
+        cy + r * 0.2);
+    path.cubicTo(
+        cx + r * 1.4, cy - r * 0.5, cx, cy - r * 0.5, cx, cy + r * 0.4);
     path.close();
     canvas.drawPath(path, paint);
   }
 
-  void _drawSparkle(Canvas canvas, Color color, double cx, double cy, double r) {
+  void _drawSparkle(
+      Canvas canvas, Color color, double cx, double cy, double r) {
     final paint = Paint()
       ..color = color
       ..strokeWidth = 1.0
@@ -3028,8 +3260,10 @@ class _CuteBgPatternPainter extends CustomPainter {
     // Dấu + xoay 45°
     canvas.drawLine(Offset(cx - r, cy), Offset(cx + r, cy), paint);
     canvas.drawLine(Offset(cx, cy - r), Offset(cx, cy + r), paint);
-    canvas.drawLine(Offset(cx - r * 0.7, cy - r * 0.7), Offset(cx + r * 0.7, cy + r * 0.7), paint);
-    canvas.drawLine(Offset(cx + r * 0.7, cy - r * 0.7), Offset(cx - r * 0.7, cy + r * 0.7), paint);
+    canvas.drawLine(Offset(cx - r * 0.7, cy - r * 0.7),
+        Offset(cx + r * 0.7, cy + r * 0.7), paint);
+    canvas.drawLine(Offset(cx + r * 0.7, cy - r * 0.7),
+        Offset(cx - r * 0.7, cy + r * 0.7), paint);
   }
 
   @override

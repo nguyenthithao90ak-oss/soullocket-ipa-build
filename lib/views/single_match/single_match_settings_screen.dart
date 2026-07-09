@@ -13,7 +13,8 @@ class SingleMatchSettingsScreen extends StatefulWidget {
   });
 
   @override
-  State<SingleMatchSettingsScreen> createState() => _SingleMatchSettingsScreenState();
+  State<SingleMatchSettingsScreen> createState() =>
+      _SingleMatchSettingsScreenState();
 }
 
 class _SingleMatchSettingsScreenState extends State<SingleMatchSettingsScreen> {
@@ -42,7 +43,9 @@ class _SingleMatchSettingsScreenState extends State<SingleMatchSettingsScreen> {
 
   Future<void> _loadSettings() async {
     try {
-      final snap = await _dbRef.child('houses/${widget.houseId}/settings/singleMatch').get();
+      final snap = await _dbRef
+          .child('houses/${widget.houseId}/settings/singleMatch')
+          .get();
       if (!mounted) return;
 
       if (snap.exists && snap.value is Map) {
@@ -69,7 +72,9 @@ class _SingleMatchSettingsScreenState extends State<SingleMatchSettingsScreen> {
 
   Future<void> _saveSettings() async {
     try {
-      await _dbRef.child('houses/${widget.houseId}/settings/singleMatch').update({
+      await _dbRef
+          .child('houses/${widget.houseId}/settings/singleMatch')
+          .update({
         'enabled': _enabled,
         'allowAudioCalls': _allowAudioCalls,
         'allowVideoCalls': _allowVideoCalls,
@@ -111,7 +116,8 @@ class _SingleMatchSettingsScreenState extends State<SingleMatchSettingsScreen> {
           style: SLTypography.titleMedium.copyWith(color: SLColors.textPrimary),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: SLColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: SLColors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
@@ -127,10 +133,13 @@ class _SingleMatchSettingsScreenState extends State<SingleMatchSettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(SLSpacing.md),
         children: [
-          _buildSectionHeader(L10nService().translate('match_poolvmodeg_7fc33d')),
+          _buildSectionHeader(
+              L10nService().translate('match_poolvmodeg_7fc33d')),
           SwitchListTile(
-            title: Text(L10nService().translate('match_xuthintron_5ab706'), style: SLTypography.bodyLarge),
-            subtitle: Text(L10nService().translate('match_khitthscab_87be09'), style: SLTypography.bodySmall),
+            title: Text(L10nService().translate('match_xuthintron_5ab706'),
+                style: SLTypography.bodyLarge),
+            subtitle: Text(L10nService().translate('match_khitthscab_87be09'),
+                style: SLTypography.bodySmall),
             value: _enabled,
             activeThumbColor: SLColors.primary,
             onChanged: (val) {
@@ -138,11 +147,13 @@ class _SingleMatchSettingsScreenState extends State<SingleMatchSettingsScreen> {
             },
           ),
           SLSpacing.h16,
-
-          _buildSectionHeader(L10nService().translate('match_chophpgith_5a78ca')),
+          _buildSectionHeader(
+              L10nService().translate('match_chophpgith_5a78ca')),
           SwitchListTile(
-            title: Text(L10nService().translate('match_chophpgith_5a78ca'), style: SLTypography.bodyLarge),
-            subtitle: Text(L10nService().translate('match_gimodenhdb_dfbb74'), style: SLTypography.bodySmall),
+            title: Text(L10nService().translate('match_chophpgith_5a78ca'),
+                style: SLTypography.bodyLarge),
+            subtitle: Text(L10nService().translate('match_gimodenhdb_dfbb74'),
+                style: SLTypography.bodySmall),
             value: _allowAudioCalls,
             activeThumbColor: SLColors.primary,
             onChanged: (val) {
@@ -150,8 +161,10 @@ class _SingleMatchSettingsScreenState extends State<SingleMatchSettingsScreen> {
             },
           ),
           SwitchListTile(
-            title: Text(L10nService().translate('match_chophpgivi_95d26f'), style: SLTypography.bodyLarge),
-            subtitle: Text(L10nService().translate('match_chbtkhibnm_10d366'), style: SLTypography.bodySmall),
+            title: Text(L10nService().translate('match_chophpgivi_95d26f'),
+                style: SLTypography.bodyLarge),
+            subtitle: Text(L10nService().translate('match_chbtkhibnm_10d366'),
+                style: SLTypography.bodySmall),
             value: _allowVideoCalls,
             activeThumbColor: SLColors.primary,
             onChanged: (val) {
@@ -159,8 +172,8 @@ class _SingleMatchSettingsScreenState extends State<SingleMatchSettingsScreen> {
             },
           ),
           SLSpacing.h16,
-
-          _buildSectionHeader(L10nService().translate('match_limukhimat_05cb9f')),
+          _buildSectionHeader(
+              L10nService().translate('match_limukhimat_05cb9f')),
           TextField(
             controller: _introController,
             maxLines: 3,

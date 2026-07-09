@@ -95,7 +95,8 @@ class BlockedScaffold extends StatelessWidget {
                           if (onAppeal != null)
                             ElevatedButton(
                               onPressed: onAppeal,
-                              child: Text(context.tr('app_entry_khngngh_ac8a56')),
+                              child:
+                                  Text(context.tr('app_entry_khngngh_ac8a56')),
                             ),
                         ],
                       ),

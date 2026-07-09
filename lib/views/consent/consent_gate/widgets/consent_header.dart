@@ -1,6 +1,7 @@
 part of '../../consent_gate.dart';
 
-Widget _buildStartupConsentHeader(BuildContext context, {required bool compact}) {
+Widget _buildStartupConsentHeader(BuildContext context,
+    {required bool compact}) {
   return Container(
     width: double.infinity,
     padding: EdgeInsets.fromLTRB(16, compact ? 14 : 16, 16, 16),
@@ -90,7 +91,8 @@ Widget _buildStartupConsentHeader(BuildContext context, {required bool compact})
   );
 }
 
-Widget _buildHeaderIcon(BuildContext context, {
+Widget _buildHeaderIcon(
+  BuildContext context, {
   required Color accent,
   required IconData icon,
 }) {

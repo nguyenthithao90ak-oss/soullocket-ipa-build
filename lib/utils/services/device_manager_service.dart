@@ -36,7 +36,11 @@ class DeviceTrustState {
     required this.isAdmin,
   });
 
-  bool get isTrusted => status == 'approved' || status == 'pending' || status == 'unknown' || status == 'blocked';
+  bool get isTrusted =>
+      status == 'approved' ||
+      status == 'pending' ||
+      status == 'unknown' ||
+      status == 'blocked';
   bool get isPendingApproval => false;
   bool get isBlocked => false;
 
@@ -398,7 +402,7 @@ class DeviceManagerService {
       final shouldCheckAutoTrustedLimit = isNew || existingStatus == 'pending';
       if (shouldCheckAutoTrustedLimit) {
         final devicesSnap =
-            await _db.ref('houses/$houseId/security/devices').get();
+            await _db.ref('houses/$houseId/security/devices').limitToFirst(20).get();
         existingDevices = _snapshotDeviceRecords(devicesSnap);
         trustedDeviceCount = _countTrustedActiveDevices(existingDevices);
       }
@@ -848,6 +852,7 @@ class DeviceManagerService {
 
     final snap = await _db
         .ref('houses/$houseId/security/devices')
+        .limitToFirst(20)
         .get()
         .timeout(const Duration(seconds: 10));
     if (!snap.exists) {
@@ -884,14 +889,24 @@ class DeviceManagerService {
 
     final merged = <String, Map<String, dynamic>>{};
     for (final device in legacyDevices) {
-      final id = device['deviceId']?.toString().trim() ?? '';
-      if (id.isEmpty) continue;
-      merged[id] = device;
+      final key =
+          "${device['model']}_${device['platform']}_${device['os']}_${device['ip']}";
+      final currentTs = (device['last_seen'] as num?)?.toInt() ?? 0;
+      final existing = merged[key];
+      if (existing == null ||
+          ((existing['last_seen'] as num?)?.toInt() ?? 0) < currentTs) {
+        merged[key] = device;
+      }
     }
     for (final device in functionDevices ?? const <Map<String, dynamic>>[]) {
-      final id = device['deviceId']?.toString().trim() ?? '';
-      if (id.isEmpty) continue;
-      merged[id] = device;
+      final key =
+          "${device['model']}_${device['platform']}_${device['os']}_${device['ip']}";
+      final currentTs = (device['last_seen'] as num?)?.toInt() ?? 0;
+      final existing = merged[key];
+      if (existing == null ||
+          ((existing['last_seen'] as num?)?.toInt() ?? 0) < currentTs) {
+        merged[key] = device;
+      }
     }
 
     final devices = merged.values.toList(growable: false)
@@ -901,7 +916,7 @@ class DeviceManagerService {
         return bTs.compareTo(aTs);
       });
 
-    return devices.isEmpty ? (functionDevices ?? []) : devices;
+    return devices;
   }
 
   Future<List<Map<String, dynamic>>?> _loadDevicesFromFunction() async {
@@ -1032,17 +1047,27 @@ class DeviceManagerService {
 
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    await SecureStorageService.instance.migrateFromPrefs(SecureStorageService.keyHouseId, prefs.getString(_prefHouseId));
-    await SecureStorageService.instance.migrateFromPrefs(SecureStorageService.keyAuthUid, prefs.getString(_prefAuthUid));
-    final cachedHouseId = (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
-    final cachedAuthUid = (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? '';
+    await SecureStorageService.instance.migrateFromPrefs(
+        SecureStorageService.keyHouseId, prefs.getString(_prefHouseId));
+    await SecureStorageService.instance.migrateFromPrefs(
+        SecureStorageService.keyAuthUid, prefs.getString(_prefAuthUid));
+    final cachedHouseId = (await SecureStorageService.instance
+                .read(SecureStorageService.keyHouseId))
+            ?.trim() ??
+        '';
+    final cachedAuthUid = (await SecureStorageService.instance
+                .read(SecureStorageService.keyAuthUid))
+            ?.trim() ??
+        '';
     if (cachedHouseId.isNotEmpty) {
       if (cachedAuthUid == uid) {
         _rememberHouseId(cachedHouseId, uid: uid);
         return cachedHouseId;
       }
-      await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
-      await SecureStorageService.instance.delete(SecureStorageService.keyAuthUid);
+      await SecureStorageService.instance
+          .delete(SecureStorageService.keyHouseId);
+      await SecureStorageService.instance
+          .delete(SecureStorageService.keyAuthUid);
       await SecureStorageService.instance.delete(SecureStorageService.keyRole);
       await prefs.remove(_prefHouseId);
       await prefs.remove(_prefAuthUid);
@@ -1081,8 +1106,10 @@ class DeviceManagerService {
     }
 
     _rememberHouseId(houseId, uid: uid);
-    await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
-    await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
+    await SecureStorageService.instance
+        .write(SecureStorageService.keyHouseId, houseId);
+    await SecureStorageService.instance
+        .write(SecureStorageService.keyAuthUid, uid);
     await prefs.remove(_prefHouseId);
     await prefs.remove(_prefAuthUid);
     return houseId;
@@ -1163,6 +1190,7 @@ class DeviceManagerService {
   Future<int> _countTrustedDevicesForHouse(String houseId) async {
     final devicesSnap = await _db
         .ref('houses/$houseId/security/devices')
+        .limitToFirst(20)
         .get()
         .timeout(const Duration(seconds: 5));
     return _countTrustedActiveDevices(_snapshotDeviceRecords(devicesSnap));

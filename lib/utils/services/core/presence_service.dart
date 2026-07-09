@@ -6,7 +6,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:soullocket_app/utils/services/session/presence_status_formatter.dart';
-import 'package:soullocket_app/utils\app_error_mapper.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/role_utils.dart';
 import 'package:soullocket_app/utils/services/device_manager_service.dart';
 

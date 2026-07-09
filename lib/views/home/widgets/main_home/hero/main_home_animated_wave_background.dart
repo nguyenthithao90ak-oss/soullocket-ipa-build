@@ -489,8 +489,9 @@ class _WavePainter extends CustomPainter {
       final yBase = height * verticalOffset + (tiltY * 0.75);
       final tiltAmount = tiltX * 3.5;
 
+      final step = quality == 'high' ? 8.0 : 16.0;
       final path = Path()..moveTo(0, height);
-      for (double i = 0; i <= width; i += 4.0) {
+      for (double i = 0; i <= width; i += step) {
         final relX = i / width;
         final wave = sin(
                   (relX * frequency * pi * 2) +
@@ -557,22 +558,6 @@ class _WavePainter extends CustomPainter {
       drawWave(const Color(0xFFFFC6DA).withValues(alpha: 0.32), 18 * shakeAmpMultiplier, 1.0, 0, 0.55);
       drawWave(const Color(0xFFFF9EBB).withValues(alpha: 0.26), 14 * shakeAmpMultiplier, 1.2, pi / 2, 0.60);
       drawWave(const Color(0xFFFFB1CA).withValues(alpha: 0.40), 10 * shakeAmpMultiplier, 1.5, pi, 0.65);
-    }
-
-    // Bubbles nhẹ - bỏ maskFilter.blur (nặng GPU)
-    final bubbleAlpha = quality == 'balanced' ? 0.18 : 0.28;
-    final bubblePaint = Paint()
-      ..color = Colors.white.withValues(alpha: bubbleAlpha)
-      ..style = PaintingStyle.fill;
-
-    final bubbleY1 = height - (height * ((animationValue + 0.2) % 1.0)) + tiltY * 0.8;
-    final bubbleX1 = width * 0.3 + sin(animationValue * pi * 4) * 10 + tiltX * 0.8;
-    canvas.drawCircle(Offset(bubbleX1, bubbleY1), 5, bubblePaint);
-
-    if (quality != 'low') {
-      final bubbleY2 = height - (height * ((animationValue + 0.65) % 1.0)) + tiltY * 0.8;
-      final bubbleX2 = width * 0.68 + cos(animationValue * pi * 4) * 12 + tiltX * 0.8;
-      canvas.drawCircle(Offset(bubbleX2, bubbleY2), 7, bubblePaint);
     }
   }
 
@@ -649,57 +634,6 @@ class _WavePainter extends CustomPainter {
         swirl2,
       );
     }
-
-    final starPaint = Paint()..style = PaintingStyle.fill;
-    final starPositions = quality == 'low'
-        ? const [
-            [0.15, 0.20], [0.72, 0.15], [0.38, 0.08], [0.85, 0.42], [0.10, 0.55], [0.60, 0.75]
-          ]
-        : (quality == 'balanced'
-            ? const [
-                [0.15, 0.20], [0.72, 0.15], [0.38, 0.08], [0.85, 0.42], [0.10, 0.55],
-                [0.60, 0.75], [0.25, 0.82], [0.80, 0.68], [0.45, 0.35], [0.55, 0.60]
-              ]
-            : const [
-                [0.15, 0.20], [0.72, 0.15], [0.38, 0.08], [0.85, 0.42], [0.10, 0.55],
-                [0.60, 0.75], [0.25, 0.82], [0.80, 0.68], [0.45, 0.35], [0.55, 0.60],
-                [0.30, 0.45], [0.68, 0.30], [0.90, 0.25], [0.05, 0.75], [0.50, 0.90],
-                [0.78, 0.85]
-              ]);
-
-    for (var i = 0; i < starPositions.length; i++) {
-      final twinkle = (sin((animationValue * pi * 4) + i * 1.3) + 1) / 2;
-      final starR = (1.5 + (i % 3) * 1.0) * (0.6 + twinkle * 0.4);
-      starPaint.color = Colors.white.withValues(alpha: 0.4 + twinkle * 0.6);
-      canvas.drawCircle(
-        Offset(width * starPositions[i][0], height * starPositions[i][1]),
-        starR,
-        starPaint,
-      );
-    }
-
-    if (quality == 'high') {
-      final shootProgress = (animationValue * 1.5) % 1.0;
-      if (shootProgress < 0.35) {
-        final t = shootProgress / 0.35;
-        final sx = width * 0.1 + t * width * 0.8;
-        final sy = height * 0.15 + t * height * 0.3;
-        final trailPaint = Paint()
-          ..shader = LinearGradient(
-            colors: [Colors.white.withValues(alpha: 0.9 * (1 - t)), Colors.transparent],
-          ).createShader(
-            Rect.fromPoints(Offset(sx - 30, sy - 10), Offset(sx, sy)),
-          )
-          ..strokeWidth = 2.0
-          ..style = PaintingStyle.stroke;
-        canvas.drawLine(Offset(sx - 30, sy - 10), Offset(sx, sy), trailPaint);
-        canvas.drawCircle(
-          Offset(sx, sy),
-          2.5,
-          Paint()..color = Colors.white.withValues(alpha: 1 - t),
-        );
-      }
-    }
   }
 
   void _drawNeonParty(
@@ -763,41 +697,6 @@ class _WavePainter extends CustomPainter {
       }
       canvas.drawCircle(center, ringR, paint);
     }
-
-    final sparkCount = quality == 'low' ? 3 : (quality == 'balanced' ? 5 : 8);
-    for (var i = 0; i < sparkCount; i++) {
-      final sparkAngle = animationValue * pi * (i.isEven ? 2 : -2) + i * pi / 4;
-      final sparkR = radius * (0.35 + (i % 3) * 0.15);
-      final pulse = (sin(animationValue * pi * 8 + i) + 1) / 2;
-      final paint = Paint()
-        ..color =
-            barColors[i % barColors.length].withValues(alpha: 0.7 + pulse * 0.3);
-      if (quality == 'high') {
-        paint.maskFilter = MaskFilter.blur(BlurStyle.normal, 3 + pulse * 3);
-      }
-      canvas.drawCircle(
-        Offset(
-          center.dx + cos(sparkAngle) * sparkR,
-          center.dy + sin(sparkAngle) * sparkR,
-        ),
-        2.5 + pulse * 2.5,
-        paint,
-      );
-    }
-
-    canvas.drawCircle(
-      center,
-      radius * 0.25,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
-            Colors.white.withValues(alpha: 
-              0.35 + sin(animationValue * pi * 4).abs() * 0.2,
-            ),
-            Colors.transparent,
-          ],
-        ).createShader(Rect.fromCircle(center: center, radius: radius * 0.25)),
-    );
   }
 
   void _drawAurora(
@@ -885,15 +784,6 @@ class _WavePainter extends CustomPainter {
       canvas.drawPath(path, paint);
     }
 
-    final starPaint = Paint()..style = PaintingStyle.fill;
-    final starCount = quality == 'low' ? 8 : (quality == 'balanced' ? 14 : 22);
-    for (var i = 0; i < starCount; i++) {
-      final sx = width * ((i * 0.13 + 0.04) % 1.0);
-      final sy = height * ((i * 0.19 + 0.03) % 0.35);
-      final twinkle = (sin(animationValue * pi * 3 + i * 1.7) + 1) / 2;
-      starPaint.color = Colors.white.withValues(alpha: 0.3 + twinkle * 0.5);
-      canvas.drawCircle(Offset(sx, sy), 1.0 + (i % 2), starPaint);
-    }
   }
 
   void _drawCrystal(

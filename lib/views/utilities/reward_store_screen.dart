@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:intl/intl.dart';
 import '../../utils/services/admob_service.dart';
 import '../../utils/services/daily_quest_service.dart';
@@ -23,8 +24,6 @@ class RewardStoreScreen extends StatefulWidget {
 }
 
 class _RewardStoreScreenState extends State<RewardStoreScreen> {
-
-
   final AdMobService _adMob = AdMobService();
   final DailyQuestService _dailyQuestService = DailyQuestService();
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
@@ -52,7 +51,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       title: L10nService().translate('util_gi12gi_9c0202'),
       subtitle: L10nService().translate('util_tngnhanhth_1c7acb'),
       icon: '12h',
-      points: 300,
+      points: 600,
       duration: const Duration(hours: 12),
     ),
     _RewardPlan(
@@ -60,7 +59,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       title: L10nService().translate('util_gi1ngy_a2dd38'),
       subtitle: L10nService().translate('util_dngchodpcb_e94421'),
       icon: '1d',
-      points: 500,
+      points: 1000,
       duration: const Duration(days: 1),
     ),
     _RewardPlan(
@@ -68,7 +67,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       title: L10nService().translate('util_gi3ngy_5c09fc'),
       subtitle: L10nService().translate('util_cuitunngtn_9e3793'),
       icon: '3d',
-      points: 1000,
+      points: 2000,
       duration: const Duration(days: 3),
     ),
     _RewardPlan(
@@ -76,7 +75,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       title: L10nService().translate('util_gi7ngy_c8c2d1'),
       subtitle: L10nService().translate('util_mttunmfull_fdb897'),
       icon: '7d',
-      points: 2000,
+      points: 4000,
       duration: const Duration(days: 7),
     ),
     _RewardPlan(
@@ -84,7 +83,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       title: L10nService().translate('util_gi1thng_1e6ebe'),
       subtitle: L10nService().translate('util_lachntitki_ad5ee5'),
       icon: '30d',
-      points: 5000,
+      points: 10000,
       duration: const Duration(days: 30),
     ),
   ];
@@ -135,7 +134,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
           final nextDays = _parseCheckinDays(data);
           final nextCheckedInToday = nextDays[_todayKey()] == true;
           final nextStreak = _calculateStreak(nextDays);
-          
+
           if (_isCheckingIn && !nextCheckedInToday) {
             return;
           }
@@ -557,9 +556,10 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
           navigator.pop();
         }
 
-        // Fallback for debug mode if real ad fails to play
-        if (!worked && kDebugMode) {
-          debugPrint('AdMobService: Real ad failed to load/play in debug mode. Falling back to simulated web ad dialog.');
+        // Fallback for real ad if it fails to play (no fill)
+        if (!worked) {
+          debugPrint(
+              'AdMobService: Real ad failed to load/play. Falling back to simulated web ad dialog.');
           if (mounted) {
             worked = await _showWebRewardDialog();
           }
@@ -572,27 +572,28 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
 
         // Fallback points grant in debug mode if claim fails
         if (!result.ok && kDebugMode) {
-          final user = _auth.currentUser;
-          if (user != null) {
-            try {
-              const debugPoints = AdMobService.rewardedMainPoints;
-              await _dbRef.update({
-                'users/${user.uid}/points': ServerValue.increment(debugPoints),
-              });
-              await _adMob.incrementDailyRewardedAdCountDebug();
-              result = const RewardClaimResult(
-                ok: true,
-                granted: debugPoints,
-              );
-              debugPrint('AdMobService: Debug mode fallback points grant succeeded (+50 points).');
-            } catch (fallbackError) {
-              debugPrint('AdMobService: Debug mode fallback points grant failed: $fallbackError');
-              // FALLBACK SUCCESS MOCK: Vẫn trả về thành công để có thể test UI dù DB từ chối
+          try {
+            final debugRes = await FirebaseFunctions.instance
+                .httpsCallable('grantRewardPointsHttp')
+                .call({
+              'source': 'debug_ad',
+              'debug_secret': 'SoulLocketTest2026',
+            });
+            if (debugRes.data != null && debugRes.data['ok'] == true) {
               result = const RewardClaimResult(
                 ok: true,
                 granted: AdMobService.rewardedMainPoints,
               );
+              debugPrint(
+                  'AdMobService: Debug mode fallback points grant succeeded (+50 points).');
+              await _adMob.incrementDailyRewardedAdCountDebug();
+            } else {
+              debugPrint(
+                  'AdMobService: Debug mode fallback points grant failed from server.');
             }
+          } catch (fallbackError) {
+            debugPrint(
+                'AdMobService: Debug mode fallback points grant exception: $fallbackError');
           }
         }
 
@@ -888,7 +889,8 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                 builder: (context, pointSnapshot) {
                   final points = pointSnapshot.data ?? 0;
                   return ListView(
-                    scrollCacheExtent: const ScrollCacheExtent.pixels(900.0), padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                    scrollCacheExtent: const ScrollCacheExtent.pixels(900.0),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                     children: [
                       _buildWatchAdCard(proUntil),
                       SLSpacing.h20,
@@ -1717,8 +1719,6 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                     Expanded(
                       child: Text(
                         'Cần $planPointText điểm',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                         style: SLTheme.quicksand(
                           fontSize: compact ? 11.5 : 12,
                           fontWeight: FontWeight.w900,
@@ -1726,18 +1726,19 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                         ),
                       ),
                     ),
-                    Text(
-                      affordable
-                          ? L10nService().translate('util_im_e5cb90')
-                          : 'Thiếu $missingPointText điểm',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: SLTheme.quicksand(
-                        fontSize: compact ? 10.5 : 11,
-                        fontWeight: FontWeight.w900,
-                        color: affordable
-                            ? const Color(0xFF2E7D32)
-                            : SLTheme.primary,
+                    Expanded(
+                      child: Text(
+                        affordable
+                            ? L10nService().translate('util_im_e5cb90')
+                            : 'Thiếu $missingPointText điểm',
+                        textAlign: TextAlign.right,
+                        style: SLTheme.quicksand(
+                          fontSize: compact ? 10.5 : 11,
+                          fontWeight: FontWeight.w900,
+                          color: affordable
+                              ? const Color(0xFF2E7D32)
+                              : SLTheme.primary,
+                        ),
                       ),
                     ),
                   ],
@@ -1745,8 +1746,6 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                 SLSpacing.gapH(3),
                 Text(
                   'Bạn có $balancePointText điểm',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: SLTheme.quicksand(
                     fontSize: compact ? 10.5 : 11,
                     fontWeight: FontWeight.w700,

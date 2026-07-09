@@ -1,4 +1,4 @@
-
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
@@ -40,7 +40,8 @@ const Color _dialogBackgroundTop = Color(0xFFFFFCFE);
 const Color _dialogBackgroundBottom = Color(0xFFFFF6FB);
 const Color _cardBackground = Color(0xFFFFFDFE);
 
-Future<void> _openDoc(BuildContext context, String title, String assetPath) async {
+Future<void> _openDoc(
+    BuildContext context, String title, String assetPath) async {
   await Navigator.of(context).push(
     MaterialPageRoute(
       builder: (_) => DocumentViewerScreen(
@@ -109,7 +110,8 @@ class _ConsentGateState extends State<ConsentGate> {
         try {
           await widget.onReady?.call();
         } catch (e) {
-          debugPrint('ConsentGate onReady error: ${AppErrorMapper.resolve(e).message}');
+          debugPrint(
+              'ConsentGate onReady error: ${AppErrorMapper.resolve(e).message}');
         }
       });
     } catch (e) {
@@ -195,9 +197,11 @@ class _ConsentGateState extends State<ConsentGate> {
                                   onNotification: (notification) {
                                     final shouldShow =
                                         notification.metrics.pixels <= 8 &&
-                                            notification.metrics.maxScrollExtent >
+                                            notification
+                                                    .metrics.maxScrollExtent >
                                                 16;
-                                    if (showScrollHintNotifier.value != shouldShow) {
+                                    if (showScrollHintNotifier.value !=
+                                        shouldShow) {
                                       showScrollHintNotifier.value = shouldShow;
                                     }
                                     return false;
@@ -217,26 +221,33 @@ class _ConsentGateState extends State<ConsentGate> {
                                             compact: compact),
                                         const SizedBox(height: 18),
                                         _buildStartupSectionLabel(
-                                          title: context.tr('consent_trckhibtu_9c9c70'),
-                                          subtitle:
-                                              context.tr('consent_bncnxemcct_f14d22'),
+                                          title: context
+                                              .tr('consent_trckhibtu_9c9c70'),
+                                          subtitle: context
+                                              .tr('consent_bncnxemcct_f14d22'),
                                         ),
                                         const SizedBox(height: 10),
                                         _buildStartupLegalSection(
                                           accent: _accentRose,
                                           icon: Icons.gavel_rounded,
-                                          title: context.tr('consent_iukhonsdng_9a9c73'),
-                                          subtitle:
-                                              context.tr('consent_tmttcchdng_0cbb57'),
+                                          title: context
+                                              .tr('consent_iukhonsdng_9a9c73'),
+                                          subtitle: context
+                                              .tr('consent_tmttcchdng_0cbb57'),
                                           bullets: [
-                                            context.tr('consent_pdngchotik_f63a41'),
-                                            context.tr('consent_bncndngapp_4f1851'),
-                                            context.tr('consent_appcthgiih_057f23'),
+                                            context.tr(
+                                                'consent_pdngchotik_f63a41'),
+                                            context.tr(
+                                                'consent_bncndngapp_4f1851'),
+                                            context.tr(
+                                                'consent_appcthgiih_057f23'),
                                           ],
-                                          actionLabel: context.tr('consent_xemiukhon_5d9f36'),
+                                          actionLabel: context
+                                              .tr('consent_xemiukhon_5d9f36'),
                                           onTap: () => _openDoc(
                                             ctx,
-                                            context.tr('consent_iukhonsdng_9a9c73'),
+                                            context.tr(
+                                                'consent_iukhonsdng_9a9c73'),
                                             'assets/docs/terms.html',
                                           ),
                                         ),
@@ -244,18 +255,24 @@ class _ConsentGateState extends State<ConsentGate> {
                                         _buildStartupLegalSection(
                                           accent: _accentLavender,
                                           icon: Icons.privacy_tip_rounded,
-                                          title: context.tr('consent_chnhschbom_98b319'),
-                                          subtitle:
-                                              context.tr('consent_tmttdliuap_7cebb7'),
+                                          title: context
+                                              .tr('consent_chnhschbom_98b319'),
+                                          subtitle: context
+                                              .tr('consent_tmttdliuap_7cebb7'),
                                           bullets: [
-                                            context.tr('consent_cthgmtikho_a5b115'),
-                                            context.tr('consent_dliudngngn_4e0d61'),
-                                            context.tr('consent_bncthiquyn_e84865'),
+                                            context.tr(
+                                                'consent_cthgmtikho_a5b115'),
+                                            context.tr(
+                                                'consent_dliudngngn_4e0d61'),
+                                            context.tr(
+                                                'consent_bncthiquyn_e84865'),
                                           ],
-                                          actionLabel: context.tr('consent_xembomt_eaa9ec'),
+                                          actionLabel: context
+                                              .tr('consent_xembomt_eaa9ec'),
                                           onTap: () => _openDoc(
                                             context,
-                                            context.tr('consent_chnhschbom_98b319'),
+                                            context.tr(
+                                                'consent_chnhschbom_98b319'),
                                             'assets/docs/privacy.html',
                                           ),
                                         ),
@@ -263,19 +280,22 @@ class _ConsentGateState extends State<ConsentGate> {
                                         _buildStartupAcknowledgement(ctx),
                                         const SizedBox(height: 22),
                                         _buildStartupSectionLabel(
-                                          title: context.tr('consent_tychnlutr_ffd19f'),
-                                          subtitle:
-                                              context.tr('consent_chnmccooki_16d2d1'),
+                                          title: context
+                                              .tr('consent_tychnlutr_ffd19f'),
+                                          subtitle: context
+                                              .tr('consent_chnmccooki_16d2d1'),
                                         ),
                                         const SizedBox(height: 10),
-                                        _buildStartupCookieStorageSection(ctx,
+                                        _buildStartupCookieStorageSection(
+                                          ctx,
                                           cookieLevel: cookieLevel,
                                           onChanged: (value) => setState(() {
                                             cookieLevel = value;
                                           }),
                                         ),
                                         const SizedBox(height: 24),
-                                        _buildStartupAgreeBar(ctx,
+                                        _buildStartupAgreeBar(
+                                          ctx,
                                           compact: compact,
                                           bottomInset: mediaPadding.bottom,
                                           cookieLevel: cookieLevel,
@@ -324,35 +344,30 @@ class _ConsentGateState extends State<ConsentGate> {
     );
   }
 
-Future<bool?> _showPrivacyDialog() {
+  Future<bool?> _showPrivacyDialog() {
     return _showConsentDialog(
       title: context.tr('consent_chnhschbom_98b319'),
-      subtitle:
-          context.tr('consent_bngnytmttd_7ba1b0'),
+      subtitle: context.tr('consent_bngnytmttd_7ba1b0'),
       actionLabel: context.tr('consent_xemchititb_d4c7c5'),
       assetPath: 'assets/docs/privacy.html',
-      checkboxLabel:
-          context.tr('consent_ticvngvich_383523'),
+      checkboxLabel: context.tr('consent_ticvngvich_383523'),
       leadingIcon: Icons.privacy_tip_rounded,
       accent: _accentLavender,
       highlightItems: [
         _ConsentHighlight(
           icon: Icons.folder_shared_rounded,
           title: context.tr('consent_dliucxl_cbc4d9'),
-          description:
-              context.tr('consent_baogmnhvgp_7cae8c'),
+          description: context.tr('consent_baogmnhvgp_7cae8c'),
         ),
         _ConsentHighlight(
           icon: Icons.lock_outline_rounded,
           title: context.tr('consent_mcchsdng_803f65'),
-          description:
-              context.tr('consent_dngktnicpi_abde74'),
+          description: context.tr('consent_dngktnicpi_abde74'),
         ),
         _ConsentHighlight(
           icon: Icons.manage_accounts_rounded,
           title: context.tr('consent_quynkimsot_363315'),
-          description:
-              context.tr('consent_bncthttgps_338c10'),
+          description: context.tr('consent_bncthttgps_338c10'),
         ),
       ],
     );
@@ -403,7 +418,8 @@ Future<bool?> _showPrivacyDialog() {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildHeaderIcon(ctx,
+                        _buildHeaderIcon(
+                          ctx,
                           accent: _accentGreen,
                           icon: Icons.verified_user_rounded,
                         ),
@@ -436,25 +452,23 @@ Future<bool?> _showPrivacyDialog() {
                       ],
                     ),
                     SLSpacing.h12,
-                    _buildHighlightList(ctx,
+                    _buildHighlightList(
+                      ctx,
                       [
                         _ConsentHighlight(
                           icon: Icons.phone_iphone_rounded,
                           title: context.tr('consent_dliuclu_f572e2'),
-                          description:
-                              context.tr('consent_modelmyhiu_a0b2e6'),
+                          description: context.tr('consent_modelmyhiu_a0b2e6'),
                         ),
                         _ConsentHighlight(
                           icon: Icons.public_rounded,
                           title: context.tr('consent_vtrgnngtip_a84a67'),
-                          description:
-                              context.tr('consent_chsuyramct_3cfdc0'),
+                          description: context.tr('consent_chsuyramct_3cfdc0'),
                         ),
                         _ConsentHighlight(
                           icon: Icons.security_rounded,
                           title: context.tr('consent_mcchsdng_803f65'),
-                          description:
-                              context.tr('consent_cnhbongnhp_c8f63c'),
+                          description: context.tr('consent_cnhbongnhp_c8f63c'),
                         ),
                       ],
                       accent: _accentGreen,
@@ -481,7 +495,8 @@ Future<bool?> _showPrivacyDialog() {
                       ),
                     ),
                     SLSpacing.h12,
-                    _buildPrimaryButton(ctx,
+                    _buildPrimaryButton(
+                      ctx,
                       accent: _accentGreen,
                       label: context.tr('consent_xemchititc_1cad13'),
                       icon: Icons.open_in_new_rounded,
@@ -516,7 +531,8 @@ Future<bool?> _showPrivacyDialog() {
                         ),
                         SLSpacing.w8,
                         Expanded(
-                          child: _buildPrimaryButton(ctx,
+                          child: _buildPrimaryButton(
+                            ctx,
                             accent: _accentGreen,
                             label: context.tr('consent_btbovthitb_ce67e5'),
                             icon: Icons.shield_rounded,
@@ -598,7 +614,8 @@ Future<bool?> _showPrivacyDialog() {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildHeaderIcon(ctx, accent: accent, icon: leadingIcon),
+                            _buildHeaderIcon(ctx,
+                                accent: accent, icon: leadingIcon),
                             SLSpacing.w12,
                             Expanded(
                               child: Column(
@@ -628,9 +645,11 @@ Future<bool?> _showPrivacyDialog() {
                           ],
                         ),
                         SLSpacing.h12,
-                        _buildHighlightList(ctx,highlightItems, accent: accent),
+                        _buildHighlightList(ctx, highlightItems,
+                            accent: accent),
                         SLSpacing.h12,
-                        _buildPrimaryButton(ctx,
+                        _buildPrimaryButton(
+                          ctx,
                           accent: accent,
                           label: actionLabel,
                           icon: Icons.open_in_new_rounded,
@@ -701,7 +720,7 @@ Future<bool?> _showPrivacyDialog() {
                         ),
                         if (showRequiredHint) ...[
                           const SizedBox(height: 10),
-                          _buildRequiredConsentHint(ctx,accent: accent),
+                          _buildRequiredConsentHint(ctx, accent: accent),
                         ],
                         SLSpacing.h12,
                         Row(
@@ -727,7 +746,8 @@ Future<bool?> _showPrivacyDialog() {
                             const Spacer(),
                             SizedBox(
                               width: 138,
-                              child: _buildPrimaryButton(ctx,
+                              child: _buildPrimaryButton(
+                                ctx,
                                 accent: accent,
                                 label: context.tr('consent_tiptc_555f1f'),
                                 icon: Icons.check_rounded,
@@ -814,7 +834,8 @@ Future<bool?> _showPrivacyDialog() {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildHeaderIcon(ctx,
+                            _buildHeaderIcon(
+                              ctx,
                               accent: _accentBlue,
                               icon: Icons.cookie_rounded,
                             ),
@@ -852,8 +873,7 @@ Future<bool?> _showPrivacyDialog() {
                           groupValue: level,
                           accent: _accentBlue,
                           title: context.tr('consent_thityu_cd979a'),
-                          subtitle:
-                              context.tr('consent_gingnhpcon_525036'),
+                          subtitle: context.tr('consent_gingnhpcon_525036'),
                           bullets: [
                             context.tr('consent_btbucappho_b21b5b'),
                             context.tr('consent_phhpnubnmu_575815'),
@@ -869,8 +889,7 @@ Future<bool?> _showPrivacyDialog() {
                           groupValue: level,
                           accent: _accentGreen,
                           title: context.tr('consent_ttc_d8586d'),
-                          subtitle:
-                              context.tr('consent_baogmthity_291746'),
+                          subtitle: context.tr('consent_baogmthity_291746'),
                           bullets: [
                             context.tr('consent_phhpnubnmu_4875ce'),
                             context.tr('consent_chophpnhiu_2f2045'),
@@ -883,10 +902,11 @@ Future<bool?> _showPrivacyDialog() {
                         ),
                         if (showRequiredHint) ...[
                           const SizedBox(height: 10),
-                          _buildRequiredConsentHint(ctx,accent: _accentBlue),
+                          _buildRequiredConsentHint(ctx, accent: _accentBlue),
                         ],
                         SLSpacing.h12,
-                        _buildPrimaryButton(ctx,
+                        _buildPrimaryButton(
+                          ctx,
                           accent: _accentBlue,
                           label: context.tr('consent_xemchititc_de27c6'),
                           icon: Icons.open_in_new_rounded,
@@ -920,7 +940,8 @@ Future<bool?> _showPrivacyDialog() {
                             const Spacer(),
                             SizedBox(
                               width: 138,
-                              child: _buildPrimaryButton(ctx,
+                              child: _buildPrimaryButton(
+                                ctx,
                                 accent:
                                     level == 'all' ? _accentGreen : _accentBlue,
                                 label: context.tr('consent_xcnhn_1e2eb2'),

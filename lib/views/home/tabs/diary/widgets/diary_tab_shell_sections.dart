@@ -78,7 +78,7 @@ class DiaryHeaderSection extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(
         10,
-        MediaQuery.of(context).padding.top + 10,
+        MediaQuery.paddingOf(context).top + 10,
         10,
         6,
       ),
@@ -95,7 +95,6 @@ class DiaryHeaderSection extends StatelessWidget {
     );
   }
 }
-
 
 class DiaryTabSectionSwitcher extends StatelessWidget {
   final String currentTab;

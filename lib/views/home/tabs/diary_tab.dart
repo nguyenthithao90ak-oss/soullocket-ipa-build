@@ -1,4 +1,4 @@
-
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -71,6 +71,8 @@ class _DiaryTabState extends State<DiaryTab>
       MemoryShareAllowanceService();
   final ScrollController _diaryScrollController = ScrollController();
   Timer? _diaryScrollDebounce;
+  Timer? _diaryActiveTimer;
+  int _activeSecondsInDiary = 0;
   bool _isTabActive = false;
   bool _isActivatingTab = false;
   bool _deferMemoryLoad = true;
@@ -111,20 +113,28 @@ class _DiaryTabState extends State<DiaryTab>
     _memoryController.syncHouseId(houseId);
   }
 
+  Timer? _rebuildThrottleTimer;
+
   void _handleFeedControllerChange() {
     _syncMemoryControllerHouse();
-    // ⚡ Skip rebuild while tab is inactive to avoid jank during swipe animations
-    if (mounted && _isTabActive) {
-      setState(() {});
-    }
+    _throttledRebuild();
   }
 
   void _handleControllerChange() {
     _syncSelectionOverlayVisibility();
-    // ⚡ Skip rebuild while tab is inactive to avoid jank during swipe animations
-    if (mounted && _isTabActive) {
-      setState(() {});
-    }
+    _throttledRebuild();
+  }
+
+  /// Throttle rebuild tối đa 1 lần mỗi frame (16ms) — tránh cascade
+  /// setState khi upload batch, controller notify, và listener fire
+  void _throttledRebuild() {
+    if (!mounted || !_isTabActive) return;
+    _rebuildThrottleTimer?.cancel();
+    _rebuildThrottleTimer = Timer(const Duration(milliseconds: 16), () {
+      if (mounted && _isTabActive) {
+        setState(() {});
+      }
+    });
   }
 
   void _syncSelectionOverlayVisibility() {
@@ -720,7 +730,6 @@ class _DiaryTabState extends State<DiaryTab>
   }
 
   BannerAd? _bottomBannerAd;
-  // ignore: unused_field
   bool _isBottomBannerReady = false;
 
   void _loadBottomBanner() async {
@@ -740,15 +749,19 @@ class _DiaryTabState extends State<DiaryTab>
     _bottomBannerAd?.dispose();
     _bottomBannerAd = null;
     if (!mounted) return;
-    _bottomBannerAd = await adMob.createBannerAd(
+    final banner = await adMob.createBannerAd(
       onAdLoaded: (_) {
         if (!mounted) return;
         setState(() => _isBottomBannerReady = true);
       },
     );
+    if (!mounted) {
+      banner?.dispose();
+      return;
+    }
+    _bottomBannerAd = banner;
   }
 
-  // ignore: unused_element
   Widget _buildBottomAdBanner(BannerAd bannerAd) {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
@@ -785,10 +798,50 @@ class _DiaryTabState extends State<DiaryTab>
     );
   }
 
+  void _startDiaryActiveTimer() {
+    _diaryActiveTimer?.cancel();
+    _diaryActiveTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      if (!mounted || !_isTabActive) {
+        timer.cancel();
+        return;
+      }
+      _activeSecondsInDiary += 10;
+      if (_activeSecondsInDiary >= 15 * 60) {
+        _showForcedDiaryAd();
+      }
+    });
+  }
+
+  void _stopDiaryActiveTimer() {
+    _diaryActiveTimer?.cancel();
+    _diaryActiveTimer = null;
+  }
+
+  Future<void> _showForcedDiaryAd() async {
+    final adMob = AdMobService();
+    if (await adMob.isProUser()) return;
+
+    final hasRecent =
+        adMob.hasRecentFullscreenAd(cooldown: const Duration(minutes: 15));
+    if (hasRecent) {
+      return;
+    }
+
+    debugPrint(
+        'DiaryTab: Showing forced interstitial ad after 15 minutes of activity.');
+    final shown = await adMob.showInterstitialAd();
+    if (shown) {
+      _activeSecondsInDiary = 0;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _isTabActive = widget.isActiveListenable.value;
+    if (_isTabActive) {
+      _startDiaryActiveTimer();
+    }
     widget.isActiveListenable.addListener(_onActiveChanged);
     _feedController.addListener(_handleFeedControllerChange);
     _memoryController.addListener(_handleControllerChange);
@@ -832,6 +885,7 @@ class _DiaryTabState extends State<DiaryTab>
 
   @override
   void dispose() {
+    _stopDiaryActiveTimer();
     _bottomBannerAd?.dispose();
     widget.onSelectionOverlayChanged?.call(false);
     widget.isActiveListenable.removeListener(_onActiveChanged);
@@ -840,6 +894,7 @@ class _DiaryTabState extends State<DiaryTab>
     _guardController.removeListener(_handleControllerChange);
     _diaryScrollController.removeListener(_onDiaryScroll);
     _diaryScrollDebounce?.cancel();
+    _rebuildThrottleTimer?.cancel();
     _diaryScrollController.dispose();
     _feedController.dispose();
     _memoryController.dispose();
@@ -852,6 +907,7 @@ class _DiaryTabState extends State<DiaryTab>
     _isTabActive = isActive;
     _syncSelectionOverlayVisibility();
     if (isActive) {
+      _startDiaryActiveTimer();
       // ⚡ Defer memory section load until after swipe animation
       if (_deferMemoryLoad) {
         Future.delayed(const Duration(milliseconds: 400), () {
@@ -873,12 +929,17 @@ class _DiaryTabState extends State<DiaryTab>
           unawaited(_activateDiaryTab());
         });
       }
+    } else {
+      _stopDiaryActiveTimer();
     }
   }
 
   Future<void> _prepareDiaryOnMount() async {
     await _guardController.loadPrivacyNoticeState();
     final resolvedHouseId = await _feedController.resolveHouseId();
+    if (!mounted) {
+      return;
+    }
     _handleFeedControllerChange();
 
     await _guardController.prepareAccessState(
@@ -1150,8 +1211,9 @@ class _DiaryTabState extends State<DiaryTab>
                       return ValueListenableBuilder<double>(
                         valueListenable: bgOpacityNotifier,
                         builder: (context, dragOpacity, _) {
+                          // Nền xung quanh tối hẳn (1.0) để làm nổi bật ảnh
                           final double opacity =
-                              0.92 * dragOpacity * animation.value;
+                              1.0 * dragOpacity * animation.value;
                           return Container(
                             color: Colors.black.withValues(alpha: opacity),
                           );
@@ -1236,14 +1298,16 @@ class _DiaryTabState extends State<DiaryTab>
                                                     end: Alignment.bottomCenter,
                                                     colors: [
                                                       Colors.black.withValues(
-                                                          alpha: 0.62),
+                                                          alpha: 0.45),
+                                                      Colors.transparent,
                                                       Colors.transparent,
                                                       Colors.black.withValues(
-                                                          alpha: 0.58),
+                                                          alpha: 0.45),
                                                     ],
                                                     stops: const [
                                                       0.0,
-                                                      0.22,
+                                                      0.15,
+                                                      0.85,
                                                       1.0
                                                     ],
                                                   ),
@@ -1358,28 +1422,17 @@ class _DiaryTabState extends State<DiaryTab>
                                             top: MediaQuery.of(context)
                                                     .padding
                                                     .top +
-                                                14,
-                                            left: 18,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: Colors.black
-                                                    .withValues(alpha: 0.42),
-                                                shape: BoxShape.circle,
-                                                border: Border.all(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.12),
-                                                ),
-                                              ),
-                                              child: IconButton(
-                                                tooltip: context
-                                                    .tr('home_ng_f63d1e'),
-                                                onPressed: () => Navigator.pop(
-                                                    dialogContext),
-                                                icon: const Icon(
-                                                  Icons.close_rounded,
-                                                  color: Colors.white,
-                                                  size: 22,
-                                                ),
+                                                16,
+                                            left: 12,
+                                            child: IconButton(
+                                              tooltip: context
+                                                  .tr('home_ng_f63d1e'),
+                                              onPressed: () => Navigator.pop(
+                                                  dialogContext),
+                                              icon: const Icon(
+                                                Icons.close_rounded,
+                                                color: Colors.white,
+                                                size: 26,
                                               ),
                                             ),
                                           ),
@@ -1387,28 +1440,9 @@ class _DiaryTabState extends State<DiaryTab>
                                             top: MediaQuery.of(context)
                                                     .padding
                                                     .top +
-                                                14,
-                                            right: 18,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: Colors.black
-                                                    .withValues(alpha: 0.42),
-                                                shape: BoxShape.circle,
-                                                border: Border.all(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.12),
-                                                ),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withValues(
-                                                            alpha: 0.22),
-                                                    blurRadius: 18,
-                                                    offset: const Offset(0, 8),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: PopupMenuButton<String>(
+                                                16,
+                                            right: 12,
+                                            child: PopupMenuButton<String>(
                                                 tooltip: context
                                                     .tr('home_tychnnh_5e18e0'),
                                                 padding:
@@ -1554,7 +1588,6 @@ class _DiaryTabState extends State<DiaryTab>
                                                   }
                                                 },
                                               ),
-                                            ),
                                           ),
                                         ],
                                       ),
@@ -1903,9 +1936,8 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                     panEnabled: panEnabled,
                     minScale: 1.0,
                     maxScale: 4.5,
-                    boundaryMargin: panEnabled
-                        ? const EdgeInsets.all(24)
-                        : EdgeInsets.zero,
+                    boundaryMargin:
+                        panEnabled ? const EdgeInsets.all(24) : EdgeInsets.zero,
                     clipBehavior: Clip.none,
                     interactionEndFrictionCoefficient: 0.00008,
                     child: Hero(

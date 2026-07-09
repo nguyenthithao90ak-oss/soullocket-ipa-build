@@ -200,9 +200,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       }
 
       if (count >= 5) {
-        _showToast(
-            limitCountErr,
-            success: false);
+        _showToast(limitCountErr, success: false);
         return;
       }
 
@@ -546,8 +544,8 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       final statuses = <String, bool>{};
       final settingsLockedPermissions = <String>[];
 
-      statuses['GPS'] = await LocationService()
-          .requestPermission(context: context);
+      statuses['GPS'] =
+          await LocationService().requestPermission(context: context);
 
       if (!kIsWeb) {
         final camera =
@@ -608,8 +606,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       _showToast(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              fallbackErrMsg,
+          fallbackMessage: fallbackErrMsg,
         ).message,
         success: false,
       );
@@ -633,7 +630,8 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
   }
 
   bool _isBirthQuestion(String question) {
-    return question.trim().toLowerCase() == context.tr('home_ngysinhcab_9bdbf2');
+    return question.trim().toLowerCase() ==
+        context.tr('home_ngysinhcab_9bdbf2');
   }
 
   Future<String?> _promptEmailDialog({
@@ -685,74 +683,6 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         TextSelection.collapsed(offset: normalized.length);
   }
 
-  Future<void> _swapUserRole() async {
-    final fallbackErrMsg = context.tr('home_clixyra_775791');
-    final houseId = _houseId?.trim();
-    if (houseId != null &&
-        houseId.isNotEmpty &&
-        !await _ensureCanModifySharedInfo()) {
-      return;
-    }
-    if (!mounted) return;
-    final roleChangeTitle = context.tr('change_role');
-    final previousRole = _activeRoleKey == 'user2' ? 'user2' : 'user1';
-    final nextRole = _activeRoleKey == 'user1' ? 'user2' : 'user1';
-    final roleTerm = _displayNameForRole(nextRole);
-
-    final prefs = await SharedPreferences.getInstance();
-
-    setState(() {
-      _activeRoleKey = nextRole;
-    });
-
-    await prefs.setString('il_role', nextRole);
-    await prefs.setString('il_user_name', _displayNameForRole(nextRole));
-    RoleUtils.roleNotifier.value = nextRole;
-
-    if (_relationshipMode == 'single') {
-      _showToast(
-        'Chế độ độc thân không hỗ trợ đổi vai Nam/Nữ.',
-        success: false,
-      );
-    } else {
-      _showToast(
-        'Đã đổi thành công sang vai $roleTerm 🎉',
-        success: true,
-      );
-    }
-
-    final resolvedHouseId =
-        (_houseId ?? await _houseService.getCurrentHouseId())?.trim();
-    if (resolvedHouseId != null && resolvedHouseId.isNotEmpty) {
-      try {
-        await PresenceService().goOffline(
-          houseId: resolvedHouseId,
-          role: previousRole,
-        );
-      } catch (e) {
-        debugPrint(
-          'swap role presence cleanup failed: ${AppErrorMapper.resolve(
-            e,
-            fallbackMessage: fallbackErrMsg,
-          ).message}',
-        );
-      }
-      unawaited(
-        PushNotificationHelper.systemEvent(
-          toHouseId: resolvedHouseId,
-          type: 'role_change',
-          title: roleChangeTitle,
-          content:
-              'Thiết bị này vừa chuyển từ ${_displayNameForRole(previousRole)} sang ${_displayNameForRole(nextRole)} trong phần Cài đặt.',
-          extra: {
-            'previousRole': previousRole,
-            'role': nextRole,
-          },
-        ),
-      );
-    }
-  }
-
 
   Future<void> _linkGoogleAccount() async {
     if (_isLinkingGoogle) return;
@@ -784,8 +714,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
       _showToast(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              context.tr('home_chathlinkt_9871a1'),
+          fallbackMessage: context.tr('home_chathlinkt_9871a1'),
         ).message,
         success: false,
       );
@@ -958,8 +887,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
   Future<void> _sendPasswordResetLink() async {
     final email = _auth.currentUser?.email?.trim();
     if (email == null || email.isEmpty) {
-      _showToast(context.tr('home_khngtmthye_1f3420'),
-          success: false);
+      _showToast(context.tr('home_khngtmthye_1f3420'), success: false);
       return;
     }
 
@@ -998,8 +926,7 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         _showToast(
           AppErrorMapper.resolve(
             e,
-            fallbackMessage:
-                context.tr('home_mtkhuinhng_454b1b'),
+            fallbackMessage: context.tr('home_mtkhuinhng_454b1b'),
           ).message,
           success: false,
         );

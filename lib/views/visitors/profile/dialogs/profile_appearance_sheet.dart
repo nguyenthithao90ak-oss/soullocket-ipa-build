@@ -35,7 +35,7 @@ Future<void> showVisitorProfileAppearanceSheet({
                 20,
                 16,
                 20,
-                16 + MediaQuery.of(context).viewInsets.bottom,
+                16 + MediaQuery.viewInsetsOf(context).bottom,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,

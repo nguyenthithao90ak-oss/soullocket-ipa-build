@@ -149,8 +149,7 @@ _TilePalette _getTilePalette(List<Color> colors) {
   return _paletteCache.putIfAbsent(key, () {
     final shellStart =
         Color.lerp(colors.first, colors.last, 0.16) ?? colors.first;
-    final shellEnd =
-        Color.lerp(colors.last, colors.first, 0.10) ?? colors.last;
+    final shellEnd = Color.lerp(colors.last, colors.first, 0.10) ?? colors.last;
     final shellBorder =
         Color.lerp(colors.last, SLColors.textPrimary, 0.10) ?? colors.last;
     final innerBorder =
@@ -161,9 +160,8 @@ _TilePalette _getTilePalette(List<Color> colors) {
         Color.lerp(colors.first, colors.last, 0.14) ?? colors.first;
     final innerOverlayStart =
         Color.lerp(colors.first, colors.last, 0.22) ?? colors.first;
-    final labelColor =
-        Color.lerp(colors.last, SLColors.textPrimary, 0.72) ??
-            SLColors.textPrimary;
+    final labelColor = Color.lerp(colors.last, SLColors.textPrimary, 0.72) ??
+        SLColors.textPrimary;
     return _TilePalette(
       shellStart: shellStart,
       shellEnd: shellEnd,

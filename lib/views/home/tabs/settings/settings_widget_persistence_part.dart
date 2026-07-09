@@ -1,5 +1,5 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../settings_tab.dart';
-
 
 extension _SettingsTabWidgetPersistence on _SettingsTabState {
   int _widgetMemorySortValue(dynamic raw) {
@@ -73,5 +73,39 @@ extension _SettingsTabWidgetPersistence on _SettingsTabState {
       birthday2: _dobU2,
       diaryImageUrls: diaryImageUrls,
     );
+  }
+
+  Future<void> _saveCustomWidgetEventSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final currentUid = _auth.currentUser?.uid ?? 'guest';
+    final houseIdKey = _houseId ?? 'local';
+    final accountKey = '${currentUid}_$houseIdKey';
+
+    await prefs.setBool(
+        'il_widget_use_custom_event_$accountKey', _useCustomWidgetEvent);
+    await prefs.setString('il_widget_custom_event_title_$accountKey',
+        _customWidgetEventTitleCtrl.text);
+    await prefs.setString('il_widget_custom_event_date_$accountKey',
+        _customWidgetEventDateCtrl.text);
+    await prefs.setString(
+        'il_widget_custom_event_color_$accountKey', _customWidgetEventColorHex);
+
+    // Also save under non-account specific keys for WidgetService to read directly
+    await prefs.setBool('widget_use_custom_event', _useCustomWidgetEvent);
+    await prefs.setString(
+        'widget_custom_event_title', _customWidgetEventTitleCtrl.text);
+    await prefs.setString(
+        'widget_custom_event_date', _customWidgetEventDateCtrl.text);
+    await prefs.setString(
+        'widget_custom_event_color', _customWidgetEventColorHex);
+
+    // Trigger widget preview tick to rebuild preview
+    _widgetPreviewTickNotifier.value = _widgetPreviewTickNotifier.value + 1;
+
+    // Sync widget data
+    final houseId = _houseId ?? '';
+    if (houseId.isNotEmpty) {
+      await WidgetService.syncSoulEventWidgetData(houseId: houseId);
+    }
   }
 }

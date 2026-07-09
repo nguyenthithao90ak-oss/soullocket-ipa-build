@@ -8,7 +8,8 @@ class _L10nTranslationLookup {
   final LinkedHashMap<String, String> _resultCache =
       LinkedHashMap<String, String>();
 
-  String _cacheKey(String lang, String rawKey, bool isSingle) => '$lang|$rawKey|$isSingle';
+  String _cacheKey(String lang, String rawKey, bool isSingle) =>
+      '$lang|$rawKey|$isSingle';
 
   String translate(
     String key, {
@@ -60,39 +61,71 @@ class _L10nTranslationLookup {
       final singleCanonicalKey = '${canonicalKey}_single';
       final singleRawKey = '${rawKey}_single';
 
-      if (webParity.containsKey(singleCanonicalKey)) result = webParity[singleCanonicalKey];
-      if (result == null && map.containsKey(singleCanonicalKey)) result = map[singleCanonicalKey];
-      if (result == null && webParity.containsKey(singleRawKey)) result = webParity[singleRawKey];
-      if (result == null && map.containsKey(singleRawKey)) result = map[singleRawKey];
+      if (webParity.containsKey(singleCanonicalKey)) {
+        result = webParity[singleCanonicalKey];
+      }
+      if (result == null && map.containsKey(singleCanonicalKey)) {
+        result = map[singleCanonicalKey];
+      }
+      if (result == null && webParity.containsKey(singleRawKey)) {
+        result = webParity[singleRawKey];
+      }
+      if (result == null && map.containsKey(singleRawKey)) {
+        result = map[singleRawKey];
+      }
 
       if (result == null) {
         final commonMap = _commonTranslations[lang] ?? const {};
-        if (commonMap.containsKey(singleCanonicalKey)) result = commonMap[singleCanonicalKey];
-        if (result == null && commonMap.containsKey(singleRawKey)) result = commonMap[singleRawKey];
+        if (commonMap.containsKey(singleCanonicalKey)) {
+          result = commonMap[singleCanonicalKey];
+        }
+        if (result == null && commonMap.containsKey(singleRawKey)) {
+          result = commonMap[singleRawKey];
+        }
       }
 
       if (result == null) {
         final enMap = _resolvedEn(assetMaps['en'] ?? const {});
-        if (enMap.containsKey(singleCanonicalKey)) result = enMap[singleCanonicalKey];
-        if (result == null && enMap.containsKey(singleRawKey)) result = enMap[singleRawKey];
+        if (enMap.containsKey(singleCanonicalKey)) {
+          result = enMap[singleCanonicalKey];
+        }
+        if (result == null && enMap.containsKey(singleRawKey)) {
+          result = enMap[singleRawKey];
+        }
       }
     }
 
-    if (result == null && webParity.containsKey(canonicalKey)) result = webParity[canonicalKey];
-    if (result == null && map.containsKey(canonicalKey)) result = map[canonicalKey];
-    if (result == null && webParity.containsKey(rawKey)) result = webParity[rawKey];
-    if (result == null && map.containsKey(rawKey)) result = map[rawKey];
+    if (result == null && webParity.containsKey(canonicalKey)) {
+      result = webParity[canonicalKey];
+    }
+    if (result == null && map.containsKey(canonicalKey)) {
+      result = map[canonicalKey];
+    }
+    if (result == null && webParity.containsKey(rawKey)) {
+      result = webParity[rawKey];
+    }
+    if (result == null && map.containsKey(rawKey)) {
+      result = map[rawKey];
+    }
 
     if (result == null) {
       final commonMap = _commonTranslations[lang] ?? const {};
-      if (commonMap.containsKey(canonicalKey)) result = commonMap[canonicalKey];
-      if (result == null && commonMap.containsKey(rawKey)) result = commonMap[rawKey];
+      if (commonMap.containsKey(canonicalKey)) {
+        result = commonMap[canonicalKey];
+      }
+      if (result == null && commonMap.containsKey(rawKey)) {
+        result = commonMap[rawKey];
+      }
     }
 
     if (result == null) {
       final enMap = _resolvedEn(assetMaps['en'] ?? const {});
-      if (enMap.containsKey(canonicalKey)) result = enMap[canonicalKey];
-      if (result == null && enMap.containsKey(rawKey)) result = enMap[rawKey];
+      if (enMap.containsKey(canonicalKey)) {
+        result = enMap[canonicalKey];
+      }
+      if (result == null && enMap.containsKey(rawKey)) {
+        result = enMap[rawKey];
+      }
     }
 
     result ??= rawKey;

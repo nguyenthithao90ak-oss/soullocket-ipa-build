@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../settings_tab.dart';
 
 const Color _settingsAccountAccentColor = Color(0xFFD81B60);
@@ -306,7 +307,6 @@ extension _SettingsTabAccountSection on _SettingsTabState {
       _nameU1 = draft.normalizedNameU1;
       _nameU2 = draft.normalizedNameU2;
       _loveUnit = draft.normalizedDayUnit;
-      _openPanel = null;
     });
 
     try {
@@ -555,229 +555,215 @@ extension _SettingsTabAccountSection on _SettingsTabState {
     return context.tr('home_365nhknim_57d20f');
   }
 
+  
   Widget _buildVipPanel({bool hideBackButton = false}) {
+    final isPremium = _isVipActive;
+    
     return _buildPanel(
       hideBackButton: hideBackButton,
       id: 'vip',
-      title: AppConfig.isPurchaseEnabled
-          ? context.tr('account_vip_plan')
-          : context.tr('home_thngtintik_f57634'),
-      borderColor: const Color(0xFFffb300),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: _isVipActive
-                    ? const [Color(0xFFFFFDE7), Color(0xFFFFF59D), Color(0xFFFFE082)]
-                    : const [Color(0xFFFFFFFF), Color(0xFFECEFF1)],
-              ),
-              borderRadius: SLRadius.lgAll,
-              border: Border.all(
-                color: _isVipActive
-                    ? const Color(0xFFFFD54F)
-                    : Colors.white.withValues(alpha: 0.5),
-                width: 1.0,
-              ),
-              boxShadow: _isVipActive ? [
-                BoxShadow(
-                  color: const Color(0xFFFFC107).withValues(alpha: 0.15),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ] : [],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      title: AppConfig.isPurchaseEnabled ? context.tr('account_vip_plan') : context.tr('home_thngtintik_f57634'),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isPremium ? const Color(0xFFFFF9C4) : const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isPremium ? const Color(0xFFFFD54F) : const Color(0xFFE2E8F0),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isPremium ? const Color(0xFFFFE082) : const Color(0xFFE2E8F0),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isPremium ? Icons.workspace_premium_rounded : Icons.account_circle_outlined,
+                    color: isPremium ? const Color(0xFFF57F17) : const Color(0xFF64748B),
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
                         _accountTierTitle(),
                         style: SLTextStyles.quicksand(
                           fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          color: _isVipActive
-                              ? const Color(0xFF7A5200)
-                              : const Color(0xFF424242),
+                          fontWeight: FontWeight.w800,
+                          color: isPremium ? const Color(0xFF7A5200) : const Color(0xFF1E293B),
                         ),
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _isVipActive
-                            ? const Color(0xFFFFF3C4)
-                            : Colors.white.withValues(alpha: 0.72),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: _isVipActive
-                              ? const Color(0xFFFFC107)
-                              : const Color(0xFFB0BEC5),
-                        ),
-                      ),
-                      child: Text(
-                        AppConfig.isPurchaseEnabled
-                            ? (_isVipActive ? context.tr('home_utin_52f79f') : 'BASIC')
-                            : context.tr('home_hs_aaa132'),
+                      const SizedBox(height: 4),
+                      Text(
+                        _accountTierSubtitle(),
                         style: SLTextStyles.quicksand(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          color: _isVipActive
-                              ? const Color(0xFF8D6E00)
-                              : const Color(0xFF455A64),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: isPremium ? const Color(0xFFF57F17) : const Color(0xFF64748B),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                SLSpacing.h8,
-                Text(
-                  _accountTierSubtitle(),
-                  style: SLTextStyles.quicksand(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: _isVipActive
-                        ? const Color(0xFF6D4C41)
-                        : const Color(0xFF455A64),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.7),
-                            width: 1.0,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.tr('home_thihn_2493a0'),
-                              style: SLTextStyles.quicksand(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                            SLSpacing.h4,
-                            Text(
-                              _accountTierTimeLabel(),
-                              style: SLTextStyles.quicksand(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900,
-                                color: _isVipActive
-                                    ? const Color(0xFF7A5200)
-                                    : const Color(0xFF424242),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SLSpacing.w8,
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.7),
-                            width: 1.0,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.tr('home_khoknim_c6067c'),
-                              style: SLTextStyles.quicksand(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                            SLSpacing.h4,
-                            Text(
-                              _accountMemoryLimitLabel(),
-                              style: SLTextStyles.quicksand(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900,
-                                color: _isVipActive
-                                    ? const Color(0xFF7A5200)
-                                    : const Color(0xFF424242),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                if (isPremium)
+                  const Icon(Icons.star_rounded, color: Color(0xFFFBC02D), size: 24),
               ],
             ),
-          ),
-          SLSpacing.h8,
-          if (AppConfig.isPurchaseEnabled)
-            Row(
-              children: [
-                Expanded(
-                  child: _buildGradientBtn(
-                    label: context.tr('home_xemquynli_aac3d9'),
-                    gradient: const [Color(0xFFffc107), Color(0xFFff9800)],
-                    textColor: Colors.black87,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PremiumStoreScreen(
-                              houseId: _houseId ?? '', myName: _nameU1),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.tr('home_thihn_2493a0'),
+                          style: SLTextStyles.quicksand(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF94A3B8),
+                          ),
                         ),
-                      );
-                    },
+                        const SizedBox(height: 4),
+                        Text(
+                          _accountTierTimeLabel(),
+                          style: SLTextStyles.quicksand(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF334155),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                SLSpacing.w8,
-                Expanded(
-                  child: _buildGradientBtn(
-                    label: _isRestoringVip ? context.tr('home_angkhiphc_944cf4') : context.tr('home_khiphc_efda66'),
-                    gradient: const [Color(0xFF424242), Color(0xFF212121)],
-                    onTap: _isRestoringVip ? () {} : _restoreVipPurchases,
+                  Container(width: 1, height: 30, color: const Color(0xFFCBD5E1)),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.tr('home_khoknim_c6067c'),
+                          style: SLTextStyles.quicksand(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF94A3B8),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _accountMemoryLimitLabel(),
+                          style: SLTextStyles.quicksand(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF334155),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          if (AppConfig.isPurchaseEnabled) SLSpacing.h8,
-          if (AppConfig.isPurchaseEnabled)
-            Text(
-              context.tr('restore_vip_desc'),
-              style: SLTextStyles.quicksand(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Colors.grey[700],
-                height: 1.4,
+                ],
               ),
             ),
-        ],
+            if (AppConfig.isPurchaseEnabled) ...[
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PremiumStoreScreen(
+                                houseId: _houseId ?? '', myName: _nameU1),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isPremium ? const Color(0xFFF57F17) : const Color(0xFF0F172A),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Text(
+                            isPremium ? context.tr('Xem quyền lợi') : context.tr('Nâng cấp VIP'),
+                            style: SLTextStyles.quicksand(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: GestureDetector(
+                      onTap: _isRestoringVip ? null : _restoreVipPurchases,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFCBD5E1)),
+                        ),
+                        child: Center(
+                          child: Text(
+                            _isRestoringVip ? context.tr('home_angkhiphc_944cf4') : context.tr('home_khiphc_efda66'),
+                            style: SLTextStyles.quicksand(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF334155),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: Text(
+                  context.tr('restore_vip_desc'),
+                  style: SLTextStyles.quicksand(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF94A3B8),
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
-
   Widget _buildIdentityPanel({bool hideBackButton = false}) {
     final panelState = _buildIdentityPanelState();
     final panelActions = _buildIdentityPanelActions();
@@ -793,8 +779,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSubCard(
-            borderColor: const Color(0xFFFBC8D4),
-            backgroundColor: const Color(0xFFFFF0F3),
+            
             children: [
               _buildLabel(isSingle
                   ? context.tr('birth_year_or_start')
@@ -955,8 +940,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
             ],
           ),
           _buildSubCard(
-            borderColor: const Color(0xFFC5DCF4),
-            backgroundColor: const Color(0xFFEBF3FC),
+            
             children: [
               _buildLabel(isSingle
                   ? context.tr('your_nickname')
@@ -1000,8 +984,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
           ),
           if (panelState.showPartnerFields) ...[
             _buildSubCard(
-              borderColor: const Color(0xFFFBC5D8),
-              backgroundColor: const Color(0xFFFFF0F5),
+              
               children: [
                 _buildLabel(context.tr('female_nickname')),
                 _buildInput(
@@ -1042,8 +1025,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               ],
             ),
             _buildSubCard(
-              borderColor: const Color(0xFFE2C9F3),
-              backgroundColor: const Color(0xFFF6EEFA),
+              
               children: [
                 _buildLabel(context.tr('greeting_quote')),
                 _buildInput(
@@ -1096,20 +1078,21 @@ extension _SettingsTabAccountSection on _SettingsTabState {
       id: 'language',
       title: '🌐 ${context.tr('language')}',
       borderColor: const Color(0xFF6a1b9a),
-      child: _buildSubCard(
-        borderColor: const Color(0xFFD9C4F2),
-        backgroundColor: const Color(0xFFF7F2FD),
-        children: [
-          Text(
-            hint,
-            style: SLTheme.quicksand(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              color: _settingsAccountPurpleTextColor,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              hint,
+              style: SLTheme.quicksand(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: _settingsAccountPurpleTextColor,
+              ),
             ),
-          ),
-          const SizedBox(height: 14),
-          Container(
+            const SizedBox(height: 14),
+            Container(
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
@@ -1194,7 +1177,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               ),
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -9,18 +10,53 @@ import '../../../core/sl_theme.dart';
 import 'package:soullocket_app/core/sl_route.dart';
 import '../../../utils/services/auth_service.dart';
 import '../../../utils/services/l10n_service.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:soullocket_app/utils/services/house_service.dart';
 import '../../utilities/user_support_chat_screen.dart';
 import '../screens/document_viewer_screen.dart';
 import 'settings_tab.dart';
 
-class UpdateTab extends StatelessWidget {
+class UpdateTab extends StatefulWidget {
   const UpdateTab({super.key});
 
+  @override
+  State<UpdateTab> createState() => _UpdateTabState();
+}
+
+class _UpdateTabState extends State<UpdateTab> {
   static const String _version = 'v2.0.0+53';
   static const String _supportEmail = 'hotroviethoangdev.lo.ve@gmail.com';
   static final Uri _webAppUri = Uri.parse(AppConfig.webBaseUrl);
   static String? _cachedAdminUid;
   static Future<bool>? _cachedAdminFuture;
+
+  final TextEditingController _feedbackCtrl = TextEditingController();
+  bool _isSendingFeedback = false;
+  DateTime? _lastFeedbackSentAt;
+  bool _isAdmin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAdminStatus();
+  }
+
+  Future<void> _loadAdminStatus() async {
+    try {
+      final isAdmin = await _adminFuture();
+      if (mounted) {
+        setState(() {
+          _isAdmin = isAdmin;
+        });
+      }
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _feedbackCtrl.dispose();
+    super.dispose();
+  }
 
   bool get _isEnglish => L10nService().locale.languageCode == 'en';
 
@@ -188,23 +224,54 @@ class UpdateTab extends StatelessWidget {
 
   void _showToast(BuildContext context, String message) {
     if (!context.mounted) return;
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            message,
-            style: _labelStyle(fontWeight: FontWeight.w800),
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger != null) {
+      try {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              message,
+              style:
+                  _labelStyle(fontWeight: FontWeight.w800, color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFFFF78A8),
+            behavior: SnackBarBehavior.floating,
           ),
-          behavior: SnackBarBehavior.floating,
+        );
+        return;
+      } catch (_) {}
+    }
+
+    // Fallback: Show Dialog when ScaffoldMessenger is not found in context tree
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Text(
+          message,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
         ),
-      );
-    } catch (_) {}
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'OK',
+              style: TextStyle(
+                color: Color(0xFFFF4B91),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showDeleteGuide(BuildContext context) {
     _openDoc(
       context,
-      title: _tr(L10nService().translate('home_hngdnxadli_a627ed'), 'Data deletion guide'),
+      title: _tr(L10nService().translate('home_hngdnxadli_a627ed'),
+          'Data deletion guide'),
       assetPath: 'assets/docs/delete_account.html',
     );
   }
@@ -246,7 +313,8 @@ class UpdateTab extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    _tr(L10nService().translate('home_nhtkcpnht_028a74'), 'Update log'),
+                    _tr(L10nService().translate('home_nhtkcpnht_028a74'),
+                        'Update log'),
                     style: _titleStyle(
                       color: const Color(0xFF1E293B),
                     ),
@@ -330,44 +398,40 @@ class UpdateTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     L10nScope.of(context); // Listen to locale changes
-    return FutureBuilder<bool>(
-      future: _adminFuture(),
-      builder: (context, snapshot) {
-        final isAdmin = snapshot.data ?? false;
-        return Scaffold(
-          backgroundColor: Colors.transparent,
-          body: SafeArea(
-            bottom: false,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSectionTitle(context),
-                Expanded(
-                  child: ListView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: SLSpacing.fromLTRB(6, 16, 6, 120),
-                    children: [
-                      _buildHeroBoard(context),
-                      SLSpacing.h16,
-                      _buildUpcomingEventsBoard(context),
-                      SLSpacing.h16,
-                      _buildQuickActions(context),
-                      SLSpacing.h16,
-                      _buildRoadmapBoard(context),
-                      SLSpacing.h16,
-                      _buildGuideBoard(context),
-                      SLSpacing.h16,
-                      _buildSupportBoard(context, isAdmin: isAdmin),
-                      SLSpacing.h24,
-                      _buildFooter(),
-                    ],
-                  ),
-                ),
-              ],
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle(context),
+            Expanded(
+              child: ListView(
+                physics: const BouncingScrollPhysics(),
+                padding: SLSpacing.fromLTRB(6, 16, 6, 120),
+                children: [
+                  _buildHeroBoard(context),
+                  SLSpacing.h16,
+                  _buildUpcomingEventsBoard(context),
+                  SLSpacing.h16,
+                  _buildQuickActions(context),
+                  SLSpacing.h16,
+                  _buildRoadmapBoard(context),
+                  SLSpacing.h16,
+                  _buildGuideBoard(context),
+                  SLSpacing.h16,
+                  _buildSupportBoard(context, isAdmin: _isAdmin),
+                  SLSpacing.h16,
+                  _buildFeedbackPanel(context),
+                  SLSpacing.h24,
+                  _buildFooter(),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 
@@ -392,7 +456,8 @@ class UpdateTab extends StatelessWidget {
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          _tr(L10nService().translate('home_updateiukh_a0963e'), 'UPDATE & TERMS'),
+                          _tr(L10nService().translate('home_updateiukh_a0963e'),
+                              'UPDATE & TERMS'),
                           maxLines: 1,
                           softWrap: false,
                           style: SLTheme.quicksand(
@@ -430,7 +495,8 @@ class UpdateTab extends StatelessWidget {
                       SLRoute(builder: (_) => const SettingsTab()),
                     );
                   },
-                  icon: const Icon(Icons.settings_rounded, color: Color(0xFFE91E63)),
+                  icon: const Icon(Icons.settings_rounded,
+                      color: Color(0xFFE91E63)),
                   tooltip: _tr('Cài đặt', 'Settings'),
                 ),
               ),
@@ -471,12 +537,14 @@ class UpdateTab extends StatelessWidget {
                   const Color(0xFFFFE4EE), const Color(0xFFD81B60)),
               _buildHeroBadge(
                   Icons.calendar_month_rounded,
-                  _tr(L10nService().translate('home_cpnht19042_20d59f'), 'Updated: 19/04/2026'),
+                  _tr(L10nService().translate('home_cpnht19042_20d59f'),
+                      'Updated: 19/04/2026'),
                   const Color(0xFFE3F2FD),
                   const Color(0xFF1976D2)),
               _buildHeroBadge(
                   Icons.verified_user_rounded,
-                  _tr(L10nService().translate('home_tiliuanghi_9c3983'), 'Documents in effect'),
+                  _tr(L10nService().translate('home_tiliuanghi_9c3983'),
+                      'Documents in effect'),
                   const Color(0xFFE8F5E9),
                   const Color(0xFF2E7D32)),
             ],
@@ -512,7 +580,8 @@ class UpdateTab extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: () => _openDoc(
                   context,
-                  title: _tr(L10nService().translate('home_hngdnsdnga_1d5442'), 'App usage guide'),
+                  title: _tr(L10nService().translate('home_hngdnsdnga_1d5442'),
+                      'App usage guide'),
                   assetPath: 'assets/docs/huong_dan.html',
                 ),
                 style: ElevatedButton.styleFrom(
@@ -528,7 +597,8 @@ class UpdateTab extends StatelessWidget {
                 ),
                 icon: const Icon(Icons.menu_book_rounded, size: 18),
                 label: Text(
-                  _tr(L10nService().translate('home_mcmnang_75f237'), 'Open handbook'),
+                  _tr(L10nService().translate('home_mcmnang_75f237'),
+                      'Open handbook'),
                   style: _labelStyle(color: Colors.white),
                 ),
               ),
@@ -547,7 +617,8 @@ class UpdateTab extends StatelessWidget {
                 ),
                 icon: const Icon(Icons.support_agent_rounded, size: 18),
                 label: Text(
-                  _tr(L10nService().translate('home_chathtr_789f29'), 'Support chat'),
+                  _tr(L10nService().translate('home_chathtr_789f29'),
+                      'Support chat'),
                   style: _labelStyle(color: const Color(0xFF334155)),
                 ),
               ),
@@ -558,7 +629,8 @@ class UpdateTab extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildMiniStatusCard(
-                  _tr(L10nService().translate('home_tiliursot_29e838'), 'Docs reviewed'),
+                  _tr(L10nService().translate('home_tiliursot_29e838'),
+                      'Docs reviewed'),
                   '19/04/2026',
                   _tr(
                     L10nService().translate('home_giithiuhng_541e3c'),
@@ -570,7 +642,8 @@ class UpdateTab extends StatelessWidget {
               SLSpacing.w12,
               Expanded(
                 child: _buildMiniStatusCard(
-                  _tr(L10nService().translate('home_trngthihtr_e796c9'), 'Support status'),
+                  _tr(L10nService().translate('home_trngthihtr_e796c9'),
+                      'Support status'),
                   'Online',
                   _tr(
                     L10nService().translate('home_emailhtrch_d34a60'),
@@ -589,7 +662,8 @@ class UpdateTab extends StatelessWidget {
 
   Widget _buildUpcomingEventsBoard(BuildContext context) {
     return _buildPanel(
-      title: _tr(L10nService().translate('home_nhmtnhnnga_bd84d9'), 'Current feature groups'),
+      title: _tr(L10nService().translate('home_nhmtnhnnga_bd84d9'),
+          'Current feature groups'),
       subtitle: _tr(
         L10nService().translate('home_tmttnhanhc_0268ff'),
         'A quick summary of the feature groups available in the current SoulLocket build.',
@@ -612,7 +686,8 @@ class UpdateTab extends StatelessWidget {
           _buildRoadmapItem(
             context,
             Icons.favorite_rounded,
-            _tr(L10nService().translate('home_ngchchocpi_dbb10a'), 'Important for couples'),
+            _tr(L10nService().translate('home_ngchchocpi_dbb10a'),
+                'Important for couples'),
             _tr(
               L10nService().translate('home_soullocket_ab23d4'),
               'SoulLocket is currently designed for two people to share one account. To use it together, both people simply sign in with the same email and password, or with the exact same login method originally used for that account. At this time, the app does not provide any pairing flow, pair code, QR join flow, or account-linking system between two separate accounts.',
@@ -633,7 +708,6 @@ class UpdateTab extends StatelessWidget {
             const Color(0xFFE8F5E9),
             const Color(0xFF388E3C),
           ),
-
         ],
       ),
     );
@@ -641,7 +715,8 @@ class UpdateTab extends StatelessWidget {
 
   Widget _buildQuickActions(BuildContext context) {
     return _buildPanel(
-      title: _tr(L10nService().translate('home_truycpnhan_7f5e55'), 'Quick access'),
+      title: _tr(
+          L10nService().translate('home_truycpnhan_7f5e55'), 'Quick access'),
       subtitle: _tr(
         L10nService().translate('home_ccmcquantr_9f1e17'),
         'The most important items are grouped here for quick access.',
@@ -655,19 +730,22 @@ class UpdateTab extends StatelessWidget {
         childAspectRatio: 1.65,
         children: [
           _buildQuickCard(
-            _tr(L10nService().translate('home_hngdnsdng_14c212'), 'Usage guide'),
+            _tr(L10nService().translate('home_hngdnsdng_14c212'),
+                'Usage guide'),
             Icons.book_rounded,
             const Color(0xFF3B82F6),
             const Color(0xFF2563EB),
             Colors.white,
             () => _openDoc(
               context,
-              title: _tr(L10nService().translate('home_hngdnsdnga_1d5442'), 'App usage guide'),
+              title: _tr(L10nService().translate('home_hngdnsdnga_1d5442'),
+                  'App usage guide'),
               assetPath: 'assets/docs/huong_dan.html',
             ),
           ),
           _buildQuickCard(
-            _tr(L10nService().translate('home_linhhthng_fc8a3f'), 'Contact support'),
+            _tr(L10nService().translate('home_linhhthng_fc8a3f'),
+                'Contact support'),
             Icons.headset_mic_rounded,
             const Color(0xFF64748B),
             const Color(0xFF475569),
@@ -683,7 +761,8 @@ class UpdateTab extends StatelessWidget {
             ),
           ),
           _buildQuickCard(
-            _tr(L10nService().translate('home_chatviadmi_6daadf'), 'Chat with admin'),
+            _tr(L10nService().translate('home_chatviadmi_6daadf'),
+                'Chat with admin'),
             Icons.smart_toy_rounded,
             const Color(0xFF10B981),
             const Color(0xFF059669),
@@ -705,7 +784,8 @@ class UpdateTab extends StatelessWidget {
 
   Widget _buildRoadmapBoard(BuildContext context) {
     return _buildPanel(
-      title: _tr(L10nService().translate('home_imcpnhtgny_2402af'), 'Recent updates'),
+      title: _tr(
+          L10nService().translate('home_imcpnhtgny_2402af'), 'Recent updates'),
       subtitle: _tr(
         L10nService().translate('home_ccthayilnb_86d55f'),
         'Changes that are already shipped and reflected in the current app.',
@@ -715,7 +795,8 @@ class UpdateTab extends StatelessWidget {
           _buildRoadmapItem(
             context,
             Icons.description_rounded,
-            _tr(L10nService().translate('home_rsotlibtil_c2bfa0'), 'Reviewed documentation set'),
+            _tr(L10nService().translate('home_rsotlibtil_c2bfa0'),
+                'Reviewed documentation set'),
             _tr(
               L10nService().translate('home_cpnhtlinid_80e47a'),
               'About, guide, privacy, cookie, terms, and deletion documents were revised to match the current feature scope.',
@@ -727,7 +808,8 @@ class UpdateTab extends StatelessWidget {
           _buildRoadmapItem(
             context,
             Icons.public_rounded,
-            _tr(L10nService().translate('home_qunlbnbmi_f15152'), 'New friends management'),
+            _tr(L10nService().translate('home_qunlbnbmi_f15152'),
+                'New friends management'),
             _tr(
               L10nService().translate('home_tabbnblimi_e6a654'),
               'Friends, Requests, and Search are now part of the friend management flow.',
@@ -739,7 +821,8 @@ class UpdateTab extends StatelessWidget {
           _buildRoadmapItem(
             context,
             Icons.bug_report_rounded,
-            _tr(L10nService().translate('home_tiuvsalinn_407716'), 'Optimization and core fixes'),
+            _tr(L10nService().translate('home_tiuvsalinn_407716'),
+                'Optimization and core fixes'),
             _tr(
               'Đã làm gọn một số lớp giao diện tiện ích và xử lý lỗi "ancestor path" khi người dùng tạo nhà mới.',
               'The utilities surface was simplified and the "ancestor path" error when creating a new house was fixed.',
@@ -766,7 +849,9 @@ class UpdateTab extends StatelessWidget {
                   ),
             const Color(0xFFFFF9F2),
             const Color(0xFFFB8C00),
-            linkText: Platform.isIOS ? null : _tr(L10nService().translate('home_nvoy_41b59d'), 'tap here'),
+            linkText: Platform.isIOS
+                ? null
+                : _tr(L10nService().translate('home_nvoy_41b59d'), 'tap here'),
             linkUri: Platform.isIOS ? null : _webAppUri,
           ),
         ],
@@ -776,7 +861,8 @@ class UpdateTab extends StatelessWidget {
 
   Widget _buildGuideBoard(BuildContext context) {
     return _buildPanel(
-      title: _tr(L10nService().translate('home_hngdnvchnh_546b71'), 'Guides and policies'),
+      title: _tr(L10nService().translate('home_hngdnvchnh_546b71'),
+          'Guides and policies'),
       subtitle: _tr(
         L10nService().translate('home_mnhanhbtil_b2996f'),
         'Open the reviewed document set aligned with the features currently available.',
@@ -784,80 +870,94 @@ class UpdateTab extends StatelessWidget {
       child: Column(
         children: [
           _buildGuideAction(
-            _tr(L10nService().translate('home_giithiuvso_07b6ae'), 'About SoulLocket'),
+            _tr(L10nService().translate('home_giithiuvso_07b6ae'),
+                'About SoulLocket'),
             Icons.info_rounded,
             const Color(0xFF00695C),
             () => _openDoc(
               context,
-              title: _tr(L10nService().translate('home_giithiuvso_07b6ae'), 'About SoulLocket'),
+              title: _tr(L10nService().translate('home_giithiuvso_07b6ae'),
+                  'About SoulLocket'),
               assetPath: 'assets/docs/about.html',
             ),
           ),
           SLSpacing.h8,
           _buildGuideAction(
-            _tr(L10nService().translate('home_mhngdnsdng_ccfed6'), 'Open the app guide'),
+            _tr(L10nService().translate('home_mhngdnsdng_ccfed6'),
+                'Open the app guide'),
             Icons.menu_book_rounded,
             const Color(0xFF2196F3),
             () => _openDoc(
               context,
-              title: _tr(L10nService().translate('home_hngdnsdnga_1d5442'), 'App usage guide'),
+              title: _tr(L10nService().translate('home_hngdnsdnga_1d5442'),
+                  'App usage guide'),
               assetPath: 'assets/docs/huong_dan.html',
             ),
           ),
           SLSpacing.h8,
           _buildGuideAction(
-            _tr(L10nService().translate('home_hngdncitln_85abba'), 'First setup guide'),
+            _tr(L10nService().translate('home_hngdncitln_85abba'),
+                'First setup guide'),
             Icons.rocket_launch_rounded,
             const Color(0xFF7B1FA2),
             () => _openDoc(
               context,
-              title: _tr(L10nService().translate('home_hngdncitln_85abba'), 'First setup guide'),
+              title: _tr(L10nService().translate('home_hngdncitln_85abba'),
+                  'First setup guide'),
               assetPath: 'assets/docs/huong_dan_cai_dat_lan_dau.html',
             ),
           ),
           SLSpacing.h8,
           _buildGuideAction(
-            _tr(L10nService().translate('home_chnhschbom_98b319'), 'Privacy Policy'),
+            _tr(L10nService().translate('home_chnhschbom_98b319'),
+                'Privacy Policy'),
             Icons.privacy_tip_rounded,
             const Color(0xFFD81B60),
             () => _openDoc(
               context,
-              title: _tr(L10nService().translate('home_chnhschbom_98b319'), 'Privacy Policy'),
+              title: _tr(L10nService().translate('home_chnhschbom_98b319'),
+                  'Privacy Policy'),
               assetPath: 'assets/docs/privacy.html',
             ),
           ),
           SLSpacing.h8,
           _buildGuideAction(
-            _tr(L10nService().translate('home_iukhonsdng_9a9c73'), 'Terms of Use'),
+            _tr(L10nService().translate('home_iukhonsdng_9a9c73'),
+                'Terms of Use'),
             Icons.gavel_rounded,
             const Color(0xFF6D4C41),
             () => _openDoc(
               context,
-              title: _tr(L10nService().translate('home_iukhonsdng_9a9c73'), 'Terms of Use'),
+              title: _tr(L10nService().translate('home_iukhonsdng_9a9c73'),
+                  'Terms of Use'),
               assetPath: 'assets/docs/terms.html',
             ),
           ),
           SLSpacing.h8,
           _buildGuideAction(
-            _tr(L10nService().translate('home_chnhschcoo_9209d0'), 'Cookie Policy'),
+            _tr(L10nService().translate('home_chnhschcoo_9209d0'),
+                'Cookie Policy'),
             Icons.cookie_rounded,
             const Color(0xFFF57C00),
             () => _openDoc(
               context,
-              title: _tr(L10nService().translate('home_chnhschcoo_9209d0'), 'Cookie Policy'),
+              title: _tr(L10nService().translate('home_chnhschcoo_9209d0'),
+                  'Cookie Policy'),
               assetPath: 'assets/docs/cookie-policy.html',
             ),
           ),
           SLSpacing.h8,
           _buildGuideAction(
-            _tr(L10nService().translate('home_hngdnxadli_a627ed'), 'Data deletion guide'),
+            _tr(L10nService().translate('home_hngdnxadli_a627ed'),
+                'Data deletion guide'),
             Icons.warning_amber_rounded,
             const Color(0xFFE53935),
             () => _showDeleteGuide(context),
           ),
           SLSpacing.h8,
           _buildGuideAction(
-            _tr(L10nService().translate('home_trangyucux_92da02'), 'Account deletion request page'),
+            _tr(L10nService().translate('home_trangyucux_92da02'),
+                'Account deletion request page'),
             Icons.open_in_new_rounded,
             const Color(0xFFAD1457),
             () => _openExternal(
@@ -896,7 +996,8 @@ class UpdateTab extends StatelessWidget {
 
   Widget _buildSupportBoard(BuildContext context, {required bool isAdmin}) {
     return _buildPanel(
-      title: _tr(L10nService().translate('home_knhhtr_c41104'), 'Support channels'),
+      title: _tr(
+          L10nService().translate('home_knhhtr_c41104'), 'Support channels'),
       subtitle: _tr(
         L10nService().translate('home_nubngplicn_c74a63'),
         'If you hit an issue, need account help, or want to suggest a feature, use one of the channels below.',
@@ -1271,7 +1372,8 @@ class UpdateTab extends StatelessWidget {
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.11),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: color.withValues(alpha: 0.32), width: 1.2),
+            border:
+                Border.all(color: color.withValues(alpha: 0.32), width: 1.2),
           ),
           child: Row(
             children: [
@@ -1341,5 +1443,236 @@ class UpdateTab extends StatelessWidget {
         style: _labelStyle(color: color, fontWeight: FontWeight.w800),
       ),
     );
+  }
+
+  Widget _buildFeedbackPanel(BuildContext context) {
+    return _buildPanel(
+      title: _tr('Đóng góp ý kiến', 'Suggest a feature / Feedback'),
+      subtitle: _tr(
+        'Chúng tôi luôn lắng nghe ý kiến đóng góp của bạn để hoàn thiện SoulLocket mỗi ngày.',
+        'We always listen to your suggestions to improve SoulLocket every day.',
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: _feedbackCtrl,
+            maxLines: 4,
+            maxLength: 500,
+            style: _bodyStyle(color: const Color(0xFF1E293B)),
+            decoration: InputDecoration(
+              hintText: _tr('Nhập ý kiến đóng góp của bạn ở đây...',
+                  'Enter your feedback here...'),
+              hintStyle: _bodyStyle(color: Colors.grey[400]),
+              filled: true,
+              fillColor: const Color(0xFFF8FAFC),
+              border: OutlineInputBorder(
+                borderRadius: SLRadius.lgAll,
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: SLRadius.lgAll,
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: SLRadius.lgAll,
+                borderSide: const BorderSide(color: Color(0xFFFF4B91)),
+              ),
+              counterStyle: _bodyStyle(color: Colors.grey[500], fontSize: 11),
+            ),
+          ),
+          SLSpacing.h12,
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed:
+                  _isSendingFeedback ? null : () => _sendFeedback(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF4B91),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: SLRadius.lgAll,
+                ),
+                elevation: 0,
+              ),
+              child: _isSendingFeedback
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Text(
+                      _tr('Gửi đóng góp', 'Submit Feedback'),
+                      style: _labelStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _sendFeedback(BuildContext context) async {
+    final content = _feedbackCtrl.text.trim();
+    if (content.length < 5) {
+      _showToast(
+          context,
+          _tr('Ý kiến đóng góp phải có ít nhất 5 ký tự!',
+              'Feedback must be at least 5 characters!'));
+      return;
+    }
+    if (content.length > 500) {
+      _showToast(
+          context,
+          _tr('Ý kiến đóng góp tối đa 500 ký tự!',
+              'Feedback must be at most 500 characters!'));
+      return;
+    }
+
+    final user = AuthService().currentUser;
+    if (user == null) {
+      _showToast(
+          context,
+          _tr('Vui lòng đăng nhập để gửi ý kiến!',
+              'Please log in to send feedback!'));
+      return;
+    }
+
+    setState(() => _isSendingFeedback = true);
+
+    try {
+      final houseId = await HouseService().getCurrentHouseId();
+      if (houseId == null || houseId.trim().isEmpty) {
+        _showToast(
+            context,
+            _tr('Không thể xác định thông tin nhà. Vui lòng thử lại sau!',
+                'Could not determine house information. Please try again later!'));
+        setState(() => _isSendingFeedback = false);
+        return;
+      }
+
+      // Kiểm tra chặn User UID hoặc House ID
+      final blockedUidSnap = await FirebaseDatabase.instance
+          .ref('sys_settings/blocked_feedbacks/uids/${user.uid}')
+          .get();
+      if (blockedUidSnap.exists && blockedUidSnap.value == true) {
+        _showToast(
+            context,
+            _tr('Tài khoản của bạn đã bị chặn gửi ý kiến đóng góp.',
+                'Your account has been blocked from sending feedback.'));
+        setState(() => _isSendingFeedback = false);
+        return;
+      }
+
+      final blockedHouseSnap = await FirebaseDatabase.instance
+          .ref('sys_settings/blocked_feedbacks/houses/$houseId')
+          .get();
+      if (blockedHouseSnap.exists && blockedHouseSnap.value == true) {
+        _showToast(
+            context,
+            _tr('Nhà của bạn đã bị chặn gửi ý kiến đóng góp.',
+                'Your house has been blocked from sending feedback.'));
+        setState(() => _isSendingFeedback = false);
+        return;
+      }
+
+      final dbRef = FirebaseDatabase.instance.ref('house_feedbacks/$houseId');
+      final snap = await dbRef.get();
+
+      Map<String, dynamic> slots = {};
+      if (snap.exists) {
+        final val = snap.value;
+        if (val is Map) {
+          slots = val.map((k, v) =>
+              MapEntry(k.toString(), Map<String, dynamic>.from(v as Map)));
+        } else if (val is List) {
+          for (int i = 0; i < val.length; i++) {
+            final item = val[i];
+            if (item is Map) {
+              slots['slot_$i'] = Map<String, dynamic>.from(item);
+            }
+          }
+        }
+      }
+
+      String? targetSlot;
+      for (final s in ['slot_1', 'slot_2', 'slot_3']) {
+        if (!slots.containsKey(s)) {
+          targetSlot = s;
+          break;
+        }
+      }
+
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+
+      if (targetSlot == null) {
+        // Cả 3 slot đều đã có dữ liệu, tìm slot cũ nhất
+        String oldestSlot = 'slot_1';
+        num oldestTime = slots['slot_1']?['createdAt'] ?? 0;
+
+        for (final s in ['slot_2', 'slot_3']) {
+          final time = slots[s]?['createdAt'] ?? 0;
+          if (time < oldestTime) {
+            oldestSlot = s;
+            oldestTime = time;
+          }
+        }
+
+        final diff = nowMs - oldestTime;
+        if (diff < 86400000) {
+          final remainingMs = 86400000 - diff;
+          final hours = remainingMs ~/ 3600000;
+          final mins = (remainingMs % 3600000) ~/ 60000;
+          _showToast(
+            context,
+            _tr(
+              'Nhà của bạn đã gửi tối đa 3 ý kiến trong 24 giờ. Vui lòng đợi $hours giờ $mins phút!',
+              'Your house has submitted max 3 feedbacks in 24 hours. Please wait $hours hours $mins minutes!',
+            ),
+          );
+          setState(() => _isSendingFeedback = false);
+          return;
+        }
+
+        targetSlot = oldestSlot;
+      }
+
+      // Ghi dữ liệu lên slot đã chọn
+      await dbRef.child(targetSlot).set({
+        'uid': user.uid,
+        'email': user.email ?? 'anonymous',
+        'content': content,
+        'createdAt': ServerValue.timestamp,
+      });
+
+      _feedbackCtrl.clear();
+      _lastFeedbackSentAt = DateTime.now();
+      if (mounted) {
+        _showToast(
+            context,
+            _tr('Cảm ơn bạn đã đóng góp ý kiến!',
+                'Thank you for your feedback!'));
+      }
+    } catch (e) {
+      debugPrint('[Feedback] Error sending feedback: $e');
+      if (mounted) {
+        _showToast(
+            context,
+            _tr('Không thể gửi ý kiến. Vui lòng thử lại sau!',
+                'Could not send feedback. Please try again later!'));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSendingFeedback = false);
+      }
+    }
   }
 }

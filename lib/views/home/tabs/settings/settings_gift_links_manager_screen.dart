@@ -60,8 +60,7 @@ class _SettingsGiftLinksManagerScreenState
       SLNotice.showInfo(context, context.tr('home_glinktthnh_b1d33a'));
     } catch (_) {
       if (!mounted) return;
-      SLNotice.showError(
-          context, context.tr('home_khngthglin_e7c9a0'));
+      SLNotice.showError(context, context.tr('home_khngthglin_e7c9a0'));
     }
   }
 
@@ -106,15 +105,13 @@ class _SettingsGiftLinksManagerScreenState
       SLNotice.showInfo(context, context.tr('home_thuhilinkt_39edd6'));
     } catch (_) {
       if (!mounted) return;
-      SLNotice.showError(
-          context, context.tr('home_khngththuh_abe293'));
+      SLNotice.showError(context, context.tr('home_khngththuh_abe293'));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4F8),
       appBar: AppBar(
         title: Text(
           context.tr('home_qunllinkt_df5d77'),
@@ -272,7 +269,9 @@ class _SettingsGiftLinksManagerScreenState
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  gift.isOpened ? context.tr('home_m_4a7e75') : context.tr('home_cham_e6d874'),
+                  gift.isOpened
+                      ? context.tr('home_m_4a7e75')
+                      : context.tr('home_cham_e6d874'),
                   style: SLTheme.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -314,7 +313,8 @@ class _SettingsGiftLinksManagerScreenState
                   onPressed: () {
                     final link = DeeplinkService().generateGiftLink(gift);
                     Clipboard.setData(ClipboardData(text: link));
-                    SLNotice.showInfo(context, context.tr('home_copylinkqu_4cdc9b'));
+                    SLNotice.showInfo(
+                        context, context.tr('home_copylinkqu_4cdc9b'));
                   },
                   icon: const Icon(Icons.copy_rounded,
                       size: 24, color: Color(0xFF1565C0)),
@@ -427,7 +427,9 @@ class _SettingsGiftLinksManagerScreenState
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  link.revoked ? context.tr('home_thuhi_4d3e97') : context.tr('home_angm_112640'),
+                  link.revoked
+                      ? context.tr('home_thuhi_4d3e97')
+                      : context.tr('home_angm_112640'),
                   style: SLTheme.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -468,7 +470,8 @@ class _SettingsGiftLinksManagerScreenState
                       ? null
                       : () {
                           Clipboard.setData(ClipboardData(text: url));
-                          SLNotice.showInfo(context, context.tr('home_copylinkme_7f75af'));
+                          SLNotice.showInfo(
+                              context, context.tr('home_copylinkme_7f75af'));
                         },
                   icon: const Icon(Icons.copy_rounded,
                       size: 24, color: Color(0xFF1565C0)),

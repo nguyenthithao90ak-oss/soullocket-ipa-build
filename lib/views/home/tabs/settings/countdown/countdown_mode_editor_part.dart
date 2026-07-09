@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../../settings_tab.dart';
 
 Future<XFile?> _cropCountdownModeAvatarFile(XFile file) async {
@@ -167,7 +168,8 @@ class _CountdownModeEditorScreenState
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now().millisecondsSinceEpoch;
     final loaded = <String>{};
-    for (final styleKey in _CountdownModeIndependentScreenState._premiumCountdownStyleKeys) {
+    for (final styleKey
+        in _CountdownModeIndependentScreenState._premiumCountdownStyleKeys) {
       final expiryKey = 'il_countdown_style_unlock_expiry_$styleKey';
       final expiry = prefs.getInt(expiryKey) ?? 0;
       if (expiry > now) {
@@ -175,15 +177,19 @@ class _CountdownModeEditorScreenState
       }
     }
     // Migration: legacy global unlocks
-    final legacyExpiry = prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
+    final legacyExpiry =
+        prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
     if (legacyExpiry > now) {
-      loaded.addAll(_CountdownModeIndependentScreenState._premiumCountdownStyleKeys);
+      loaded.addAll(
+          _CountdownModeIndependentScreenState._premiumCountdownStyleKeys);
     } else {
       final legacyTs = prefs.getInt('il_countdown_unlock_ad_ts') ?? 0;
       if (legacyTs > 0) {
-        final fallbackExpiry = legacyTs + const Duration(days: 7).inMilliseconds;
+        final fallbackExpiry =
+            legacyTs + const Duration(days: 7).inMilliseconds;
         if (fallbackExpiry > now) {
-          loaded.addAll(_CountdownModeIndependentScreenState._premiumCountdownStyleKeys);
+          loaded.addAll(
+              _CountdownModeIndependentScreenState._premiumCountdownStyleKeys);
         }
       }
     }
@@ -322,13 +328,17 @@ class _CountdownModeEditorScreenState
   String _previewTopLabel() {
     final value = _topCtrl.text.trim();
     if (value.isNotEmpty) return value;
-    return _singleMode ? context.tr('home_tuicati_5c654c') : context.tr('home_yunhau_501102');
+    return _singleMode
+        ? context.tr('home_tuicati_5c654c')
+        : context.tr('home_yunhau_501102');
   }
 
   String _previewBottomLabel() {
     final value = _bottomCtrl.text.trim();
     if (value.isNotEmpty) return value;
-    return _singleMode ? context.tr('home_ngytui_22bed4') : context.tr('home_ngy_41ec10');
+    return _singleMode
+        ? context.tr('home_ngytui_22bed4')
+        : context.tr('home_ngy_41ec10');
   }
 
   String? get _uploadHouseId {
@@ -375,8 +385,7 @@ class _CountdownModeEditorScreenState
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content:
-              Text(context.tr('home_lnuploadkh_b2b1ac')),
+          content: Text(context.tr('home_lnuploadkh_b2b1ac')),
           action: SnackBarAction(
             label: context.tr('home_thli_4dffdf'),
             onPressed: () {
@@ -455,7 +464,8 @@ class _CountdownModeEditorScreenState
 
   Future<void> _handleCountdownStyleSelection(String styleKey) async {
     final normalized = styleKey.trim().toLowerCase();
-    final exists = _countdownStyleOptions.any((item) => item.value == normalized);
+    final exists =
+        _countdownStyleOptions.any((item) => item.value == normalized);
     if (!exists) {
       _showMessage('Giao diện vòng đếm không hợp lệ: $styleKey');
       return;
@@ -500,7 +510,8 @@ class _CountdownModeEditorScreenState
         _unlockedStyles = {..._unlockedStyles, normalized};
         _styleKey = normalized;
       });
-      _showMessage('Đã mở khóa "${_countdownStyleOptions.firstWhere((e) => e.value == normalized).key}" trong 7 ngày!');
+      _showMessage(
+          'Đã mở khóa "${_countdownStyleOptions.firstWhere((e) => e.value == normalized).key}" trong 7 ngày!');
     } finally {
       if (mounted) {
         setState(() => _isUnlockingCountdownStyle = false);
@@ -512,27 +523,7 @@ class _CountdownModeEditorScreenState
     if (widget.isVipActive) {
       return true;
     }
-    final prefs = await SharedPreferences.getInstance();
-    final lastAdStr = prefs.getString('last_bg_ad_time');
-    var shouldShowAd = true;
-    if (lastAdStr != null) {
-      final lastAd = DateTime.tryParse(lastAdStr);
-      if (lastAd != null && DateTime.now().difference(lastAd).inMinutes < 20) {
-        shouldShowAd = false;
-      }
-    }
-    if (!shouldShowAd) {
-      return true;
-    }
-    final adSuccess = await AdMobService().showRewardedAd();
-    if (!mounted) {
-      return false;
-    }
-    if (!adSuccess) {
-      _showMessage(context.tr('home_cnxemqungc_370ee8'));
-      return false;
-    }
-    await prefs.setString('last_bg_ad_time', DateTime.now().toIso8601String());
+    await AdMobService().showInterstitialAd();
     return true;
   }
 
@@ -708,12 +699,14 @@ class _CountdownModeEditorScreenState
     required IconData icon,
     required String title,
     required String subtitle,
+    List<Color>? iconGradient,
     required Widget child,
   }) =>
       _sectionCardImpl(
         icon: icon,
         title: title,
         subtitle: subtitle,
+        iconGradient: iconGradient,
         child: child,
       );
 
@@ -791,13 +784,13 @@ class _CountdownModeEditorScreenState
                                     width: 48,
                                     height: 48,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 
-                                        themeData.isDark ? 0.14 : 0.82,
+                                      color: Colors.white.withValues(
+                                        alpha: themeData.isDark ? 0.14 : 0.82,
                                       ),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: Colors.white.withValues(alpha: 
-                                          themeData.isDark ? 0.22 : 0.94,
+                                        color: Colors.white.withValues(
+                                          alpha: themeData.isDark ? 0.22 : 0.94,
                                         ),
                                       ),
                                     ),
@@ -828,8 +821,8 @@ class _CountdownModeEditorScreenState
                                       style: SLTheme.quicksand(
                                         fontSize: 12.2,
                                         fontWeight: FontWeight.w700,
-                                        color: themeData.foreground.withValues(alpha: 
-                                          themeData.isDark ? 0.78 : 0.72,
+                                        color: themeData.foreground.withValues(
+                                          alpha: themeData.isDark ? 0.78 : 0.72,
                                         ),
                                         height: 1.42,
                                       ),
@@ -845,7 +838,8 @@ class _CountdownModeEditorScreenState
                             children: [
                               TextButton.icon(
                                 onPressed: _copyFromMainCountdown,
-                                icon: const Icon(Icons.copy_all_rounded, size: 18),
+                                icon: const Icon(Icons.copy_all_rounded,
+                                    size: 18),
                                 label: const Text('Sao chép từ Vòng Đếm chính'),
                                 style: TextButton.styleFrom(
                                   foregroundColor: themeData.isDark
@@ -875,13 +869,18 @@ class _CountdownModeEditorScreenState
                             icon: Icons.timelapse_rounded,
                             title: 'Xem nhanh không gian',
                             subtitle: 'Xem vòng đếm gọn trước khi lưu',
+                            iconGradient: const [
+                              Color(0xFF3B82F6),
+                              Color(0xFF60A5FA),
+                            ],
                             child: Container(
                               width: double.infinity,
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFFF6FA),
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFFF4D2E1)),
+                                border:
+                                    Border.all(color: const Color(0xFFF4D2E1)),
                               ),
                               child: Column(
                                 children: [
@@ -925,6 +924,10 @@ class _CountdownModeEditorScreenState
                             icon: Icons.edit_note_rounded,
                             title: 'Nội dung hiển thị',
                             subtitle: 'Tên, avatar và icon trung tâm',
+                            iconGradient: const [
+                              Color(0xFFF472B6),
+                              Color(0xFFEC4899),
+                            ],
                             child: Column(
                               children: [
                                 TextField(
@@ -983,9 +986,12 @@ class _CountdownModeEditorScreenState
                                                 Icons.upload_rounded,
                                                 size: 18,
                                               ),
-                                        label: Text(_uploadingAvatarRole == 'left' && _avatarUploadProgress != null
+                                        label: Text(_uploadingAvatarRole ==
+                                                    'left' &&
+                                                _avatarUploadProgress != null
                                             ? 'ĐANG TẢI... ${(_avatarUploadProgress! * 100).toInt()}%'
-                                            : context.tr('home_tinhtri_3bb821')),
+                                            : context
+                                                .tr('home_tinhtri_3bb821')),
                                       ),
                                     ),
                                   ],
@@ -1027,9 +1033,12 @@ class _CountdownModeEditorScreenState
                                                 Icons.upload_rounded,
                                                 size: 18,
                                               ),
-                                        label: Text(_uploadingAvatarRole == 'right' && _avatarUploadProgress != null
+                                        label: Text(_uploadingAvatarRole ==
+                                                    'right' &&
+                                                _avatarUploadProgress != null
                                             ? 'ĐANG TẢI... ${(_avatarUploadProgress! * 100).toInt()}%'
-                                            : context.tr('home_tinhphi_3b6cd5')),
+                                            : context
+                                                .tr('home_tinhphi_3b6cd5')),
                                       ),
                                     ),
                                   ],
@@ -1066,17 +1075,19 @@ class _CountdownModeEditorScreenState
                                         padding: const EdgeInsets.all(5),
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
-                                          color: Colors.white.withValues(alpha: 0.94),
+                                          color: Colors.white
+                                              .withValues(alpha: 0.94),
                                           border: Border.all(
                                             color: isSelected
                                                 ? preset.accent
-                                                : Colors.white.withValues(alpha: 0.78),
+                                                : Colors.white
+                                                    .withValues(alpha: 0.78),
                                             width: isSelected ? 2.2 : 1.2,
                                           ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: preset.accent.withValues(alpha: 
-                                                isSelected ? 0.22 : 0.10,
+                                              color: preset.accent.withValues(
+                                                alpha: isSelected ? 0.22 : 0.10,
                                               ),
                                               blurRadius: isSelected ? 18 : 11,
                                               offset: const Offset(0, 7),
@@ -1092,7 +1103,8 @@ class _CountdownModeEditorScreenState
                                               end: Alignment.bottomRight,
                                             ),
                                             border: Border.all(
-                                              color: Colors.white.withValues(alpha: 0.84),
+                                              color: Colors.white
+                                                  .withValues(alpha: 0.84),
                                               width: 2,
                                             ),
                                           ),
@@ -1117,6 +1129,10 @@ class _CountdownModeEditorScreenState
                             icon: Icons.event_available_rounded,
                             title: 'Mốc thời gian & kiểu hiển thị',
                             subtitle: 'Chọn ngày mốc, theme, vòng đếm, kính mờ',
+                            iconGradient: const [
+                              Color(0xFF14B8A6),
+                              Color(0xFF06B6D4),
+                            ],
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -1126,7 +1142,8 @@ class _CountdownModeEditorScreenState
                                   children: [
                                     ChoiceChip(
                                       selected: _singleMode,
-                                      label: Text(context.tr('home_cnhn_9d6cf4')),
+                                      label:
+                                          Text(context.tr('home_cnhn_9d6cf4')),
                                       labelStyle: SLTheme.quicksand(
                                         fontWeight: FontWeight.w800,
                                         color: _singleMode
@@ -1139,7 +1156,8 @@ class _CountdownModeEditorScreenState
                                     ),
                                     ChoiceChip(
                                       selected: !_singleMode,
-                                      label: Text(context.tr('home_cpi_d525b0')),
+                                      label:
+                                          Text(context.tr('home_cpi_d525b0')),
                                       labelStyle: SLTheme.quicksand(
                                         fontWeight: FontWeight.w800,
                                         color: !_singleMode
@@ -1158,7 +1176,8 @@ class _CountdownModeEditorScreenState
                                   runSpacing: 8,
                                   children: [
                                     ActionChip(
-                                      label: Text(context.tr('countdown_today')),
+                                      label:
+                                          Text(context.tr('countdown_today')),
                                       onPressed: () {
                                         final now = DateTime.now();
                                         setState(() {
@@ -1171,7 +1190,8 @@ class _CountdownModeEditorScreenState
                                       },
                                     ),
                                     ActionChip(
-                                      label: Text(context.tr('countdown_default_love_date')),
+                                      label: Text(context
+                                          .tr('countdown_default_love_date')),
                                       onPressed: () {
                                         final parsed = DateInputUtils.parse(
                                           widget.anchorDate == null
@@ -1211,7 +1231,8 @@ class _CountdownModeEditorScreenState
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              context.tr('home_ngymchinti_2f583e'),
+                                              context
+                                                  .tr('home_ngymchinti_2f583e'),
                                               style: SLTheme.quicksand(
                                                 fontSize: 11.5,
                                                 fontWeight: FontWeight.w800,
@@ -1221,7 +1242,8 @@ class _CountdownModeEditorScreenState
                                             const SizedBox(height: 6),
                                             Text(
                                               _anchorDate == null
-                                                  ? context.tr('home_chachn_cf29c8')
+                                                  ? context
+                                                      .tr('home_chachn_cf29c8')
                                                   : DateInputUtils
                                                       .formatDisplayDate(
                                                       _anchorDate!,
@@ -1238,8 +1260,6 @@ class _CountdownModeEditorScreenState
                                       ElevatedButton.icon(
                                         onPressed: _pickAnchorDate,
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              const Color(0xFFD81B60),
                                           foregroundColor: Colors.white,
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 14,
@@ -1254,7 +1274,8 @@ class _CountdownModeEditorScreenState
                                           Icons.event_rounded,
                                           size: 18,
                                         ),
-                                        label: Text(context.tr('home_chnngy_d2cce5')),
+                                        label: Text(
+                                            context.tr('home_chnngy_d2cce5')),
                                       ),
                                     ],
                                   ),
@@ -1265,20 +1286,27 @@ class _CountdownModeEditorScreenState
                           const SizedBox(height: 14),
                           _sectionCard(
                             icon: Icons.palette_rounded,
-                            title: L10nService().translate('home_giaodinvng_2311dc'),
-                            subtitle:
-                                context.tr('home_kiuhinthny_15f695'),
+                            title: L10nService()
+                                .translate('home_giaodinvng_2311dc'),
+                            subtitle: context.tr('home_kiuhinthny_15f695'),
+                            iconGradient: const [
+                              Color(0xFFFF9A9E),
+                              Color(0xFFFECF6A),
+                            ],
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _CountdownModeSheetDropdown(
-                                  label: context.tr('home_ch_f5d6a5'),
-                                  value: _themeKey,
-                                  options: _themeOptions,
-                                  onChanged: (value) =>
-                                      setState(() => _themeKey = value),
+                                Text(
+                                  context.tr('home_ch_f5d6a5'),
+                                  style: SLTheme.quicksand(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFF8A5B76),
+                                  ),
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 10),
+                                _buildCountdownThemeSwatchGrid(),
+                                const SizedBox(height: 16),
                                 _CountdownModeSheetDropdown(
                                   label: _isUnlockingCountdownStyle
                                       ? context.tr('home_angmkhakiu_38c380')
@@ -1374,7 +1402,8 @@ class _CountdownModeEditorScreenState
                                 StatefulBuilder(
                                   builder: (context, setStateSlider) {
                                     return Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'Kích thước vòng đếm: ${_sizePx.round()}px',
@@ -1388,7 +1417,8 @@ class _CountdownModeEditorScreenState
                                           min: 200,
                                           max: UiPrefs.maxCountdownSizePx,
                                           activeColor: const Color(0xFFD81B60),
-                                          inactiveColor: const Color(0xFFF2C3D7),
+                                          inactiveColor:
+                                              const Color(0xFFF2C3D7),
                                           value: _sizePx.clamp(
                                             200.0,
                                             UiPrefs.maxCountdownSizePx,
@@ -1402,12 +1432,17 @@ class _CountdownModeEditorScreenState
                                         Align(
                                           alignment: Alignment.centerRight,
                                           child: ElevatedButton.icon(
-                                            onPressed: () => Navigator.of(context).pop(
+                                            onPressed: () =>
+                                                Navigator.of(context).pop(
                                               _buildResult(
-                                                _CountdownModeSettingsAction.save,
+                                                _CountdownModeSettingsAction
+                                                    .save,
                                               ),
                                             ),
-                                            icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                                            icon: const Icon(
+                                                Icons
+                                                    .check_circle_outline_rounded,
+                                                size: 18),
                                             label: Text(
                                               'Lưu kích thước',
                                               style: SLTheme.quicksand(
@@ -1415,12 +1450,15 @@ class _CountdownModeEditorScreenState
                                               ),
                                             ),
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color(0xFFD81B60),
                                               foregroundColor: Colors.white,
-                                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 16,
+                                                      vertical: 8),
                                               elevation: 0,
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
                                             ),
                                           ),
@@ -1436,9 +1474,9 @@ class _CountdownModeEditorScreenState
                           if (widget.showDeleteSection) ...[
                             _sectionCard(
                               icon: Icons.delete_outline_rounded,
-                              title: L10nService().translate('home_xakhnggian_e79cf3'),
-                              subtitle:
-                                  context.tr('home_giyucuxayb_e0eb6b'),
+                              title: L10nService()
+                                  .translate('home_xakhnggian_e79cf3'),
+                              subtitle: context.tr('home_giyucuxayb_e0eb6b'),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -1506,8 +1544,6 @@ class _CountdownModeEditorScreenState
                                           ),
                                         ),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              const Color(0xFFD81B60),
                                           foregroundColor: Colors.white,
                                           padding: const EdgeInsets.symmetric(
                                             vertical: 14,
@@ -1539,8 +1575,6 @@ class _CountdownModeEditorScreenState
                                           ),
                                         ),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              const Color(0xFFC62828),
                                           foregroundColor: Colors.white,
                                           padding: const EdgeInsets.symmetric(
                                             vertical: 14,
@@ -1566,9 +1600,9 @@ class _CountdownModeEditorScreenState
                           ],
                           _sectionCard(
                             icon: Icons.check_circle_rounded,
-                            title: L10nService().translate('home_thaotcnhan_c45625'),
-                            subtitle:
-                                context.tr('home_lucuhnhcho_40e113'),
+                            title: L10nService()
+                                .translate('home_thaotcnhan_c45625'),
+                            subtitle: context.tr('home_lucuhnhcho_40e113'),
                             child: Column(
                               children: [
                                 SizedBox(
@@ -1580,7 +1614,6 @@ class _CountdownModeEditorScreenState
                                       ),
                                     ),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFFD81B60),
                                       foregroundColor: Colors.white,
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 14,
@@ -1591,7 +1624,8 @@ class _CountdownModeEditorScreenState
                                     ),
                                     icon:
                                         const Icon(Icons.check_circle_rounded),
-                                    label: Text(context.tr('home_luthayi_0dc3cc')),
+                                    label:
+                                        Text(context.tr('home_luthayi_0dc3cc')),
                                   ),
                                 ),
                                 const SizedBox(height: 10),
@@ -1617,8 +1651,8 @@ class _CountdownModeEditorScreenState
                                       ),
                                     ),
                                     icon: const Icon(Icons.grid_view_rounded),
-                                    label:
-                                        Text(context.tr('home_vdanhschkh_0a2542')),
+                                    label: Text(
+                                        context.tr('home_vdanhschkh_0a2542')),
                                   ),
                                 ),
                                 const SizedBox(height: 10),

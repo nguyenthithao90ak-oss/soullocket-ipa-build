@@ -51,6 +51,10 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
         if (savedRun != null) {
           _board = _cloneBoard(savedRun.board);
           _tray = List<_SoulPieceOption>.from(savedRun.tray);
+          _holdPiece = savedRun.holdPiece;
+          if (savedRun.boardSize != null) {
+            _boardSize = savedRun.boardSize!;
+          }
           _recommendedMove = savedRun.recommendedMove;
           _currentSessionId = savedRun.sessionId;
           _isGameOver = false;

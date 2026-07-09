@@ -176,7 +176,8 @@ class LegacyWebUi {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.92), width: 2.4),
+          border: Border.all(
+              color: Colors.white.withValues(alpha: 0.92), width: 2.4),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFF8DCDFD).withValues(alpha: 0.20),
@@ -275,15 +276,18 @@ class LegacyWebUi {
       ),
       border: OutlineInputBorder(
         borderRadius: SLRadius.xlAll,
-        borderSide: BorderSide(color: accent.withValues(alpha: 0.18), width: 1.2),
+        borderSide:
+            BorderSide(color: accent.withValues(alpha: 0.18), width: 1.2),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: SLRadius.xlAll,
-        borderSide: BorderSide(color: accent.withValues(alpha: 0.16), width: 1.2),
+        borderSide:
+            BorderSide(color: accent.withValues(alpha: 0.16), width: 1.2),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: SLRadius.xlAll,
-        borderSide: BorderSide(color: accent.withValues(alpha: 0.70), width: 1.8),
+        borderSide:
+            BorderSide(color: accent.withValues(alpha: 0.70), width: 1.8),
       ),
       filled: true,
       fillColor: SLColors.bgElevated.withValues(alpha: 0.96),
@@ -323,7 +327,8 @@ class LegacyWebUi {
               radius: 24,
               colors: notice.gradient,
             ).copyWith(
-              border: Border.all(color: notice.borderColor.withValues(alpha: 0.30)),
+              border:
+                  Border.all(color: notice.borderColor.withValues(alpha: 0.30)),
             ),
             child: Row(
               children: [
@@ -332,13 +337,16 @@ class LegacyWebUi {
                   height: 38,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [notice.iconTint.withValues(alpha: 0.16), Colors.white],
+                      colors: [
+                        notice.iconTint.withValues(alpha: 0.16),
+                        Colors.white
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: SLRadius.lgAll,
-                    border:
-                        Border.all(color: notice.iconTint.withValues(alpha: 0.14)),
+                    border: Border.all(
+                        color: notice.iconTint.withValues(alpha: 0.14)),
                   ),
                   child: Icon(notice.icon, color: notice.iconTint, size: 20),
                 ),
@@ -408,7 +416,8 @@ class LegacyWebUi {
               radius: 24,
               colors: notice.gradient,
             ).copyWith(
-              border: Border.all(color: notice.borderColor.withValues(alpha: 0.30)),
+              border:
+                  Border.all(color: notice.borderColor.withValues(alpha: 0.30)),
             ),
             child: Row(
               children: [
@@ -417,13 +426,16 @@ class LegacyWebUi {
                   height: 38,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [notice.iconTint.withValues(alpha: 0.16), Colors.white],
+                      colors: [
+                        notice.iconTint.withValues(alpha: 0.16),
+                        Colors.white
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: SLRadius.lgAll,
-                    border:
-                        Border.all(color: notice.iconTint.withValues(alpha: 0.14)),
+                    border: Border.all(
+                        color: notice.iconTint.withValues(alpha: 0.14)),
                   ),
                   child: Icon(notice.icon, color: notice.iconTint, size: 20),
                 ),
@@ -469,8 +481,8 @@ class LegacyWebUi {
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: SLRadius.pillAll,
-                      side:
-                          BorderSide(color: notice.iconTint.withValues(alpha: 0.28)),
+                      side: BorderSide(
+                          color: notice.iconTint.withValues(alpha: 0.28)),
                     ),
                   ),
                   child: Text(actionLabel),
@@ -504,7 +516,9 @@ class LegacyWebUi {
     if (isAccount) {
       return _LegacyNoticeStyle(
         title: title ??
-            (success ? L10nService().translate('legacy_account_status') : L10nService().translate('legacy_account_check_needed')),
+            (success
+                ? L10nService().translate('legacy_account_status')
+                : L10nService().translate('legacy_account_check_needed')),
         icon: icon ?? Icons.manage_accounts_rounded,
         iconTint: const Color(0xFF7C4DFF),
         borderColor: const Color(0xFFB39DDB),
@@ -520,7 +534,10 @@ class LegacyWebUi {
 
     if (isSecurity) {
       return _LegacyNoticeStyle(
-        title: title ?? (success ? L10nService().translate('legacy_security_updated') : L10nService().translate('legacy_security_warning')),
+        title: title ??
+            (success
+                ? L10nService().translate('legacy_security_updated')
+                : L10nService().translate('legacy_security_warning')),
         icon: icon ?? Icons.verified_user_rounded,
         iconTint: const Color(0xFFEF6C00),
         borderColor: const Color(0xFFFFCC80),
@@ -536,7 +553,10 @@ class LegacyWebUi {
 
     if (isSave) {
       return _LegacyNoticeStyle(
-        title: title ?? (success ? L10nService().translate('legacy_saved_success') : L10nService().translate('legacy_save_failed')),
+        title: title ??
+            (success
+                ? L10nService().translate('legacy_saved_success')
+                : L10nService().translate('legacy_save_failed')),
         icon: icon ??
             (success ? Icons.auto_awesome_rounded : Icons.warning_rounded),
         iconTint: success ? const Color(0xFFD81B60) : const Color(0xFFE53935),
@@ -551,7 +571,10 @@ class LegacyWebUi {
     }
 
     return _LegacyNoticeStyle(
-      title: title ?? (success ? L10nService().translate('legacy_action_done') : L10nService().translate('legacy_error_occurred')),
+      title: title ??
+          (success
+              ? L10nService().translate('legacy_action_done')
+              : L10nService().translate('legacy_error_occurred')),
       icon:
           icon ?? (success ? Icons.check_circle_rounded : Icons.error_rounded),
       iconTint: success ? const Color(0xFF2E7D32) : const Color(0xFFD32F2F),
@@ -587,7 +610,9 @@ _LegacyNoticeStyle _resolveNoticeStyleV2(
   if (isAccount) {
     return _LegacyNoticeStyle(
       title: title ??
-          (success ? L10nService().translate('legacy_account_status') : L10nService().translate('legacy_account_check_needed')),
+          (success
+              ? L10nService().translate('legacy_account_status')
+              : L10nService().translate('legacy_account_check_needed')),
       icon: icon ?? Icons.manage_accounts_rounded,
       iconTint: SLColors.accentPurpleDark,
       borderColor: SLColors.accentPurple,
@@ -603,7 +628,10 @@ _LegacyNoticeStyle _resolveNoticeStyleV2(
 
   if (isSecurity) {
     return _LegacyNoticeStyle(
-      title: title ?? (success ? L10nService().translate('legacy_security_updated') : L10nService().translate('legacy_security_warning')),
+      title: title ??
+          (success
+              ? L10nService().translate('legacy_security_updated')
+              : L10nService().translate('legacy_security_warning')),
       icon: icon ?? Icons.verified_user_rounded,
       iconTint: const Color(0xFFBF7A17),
       borderColor: const Color(0xFFE9C98C),
@@ -619,7 +647,10 @@ _LegacyNoticeStyle _resolveNoticeStyleV2(
 
   if (isSave) {
     return _LegacyNoticeStyle(
-      title: title ?? (success ? L10nService().translate('legacy_saved_success') : L10nService().translate('legacy_save_failed')),
+      title: title ??
+          (success
+              ? L10nService().translate('legacy_saved_success')
+              : L10nService().translate('legacy_save_failed')),
       icon: icon ??
           (success ? Icons.auto_awesome_rounded : Icons.warning_rounded),
       iconTint: success ? const Color(0xFF2E7D32) : SLColors.danger,
@@ -641,7 +672,10 @@ _LegacyNoticeStyle _resolveNoticeStyleV2(
   }
 
   return _LegacyNoticeStyle(
-    title: title ?? (success ? L10nService().translate('legacy_action_done') : L10nService().translate('legacy_error_occurred')),
+    title: title ??
+        (success
+            ? L10nService().translate('legacy_action_done')
+            : L10nService().translate('legacy_error_occurred')),
     icon: icon ?? (success ? Icons.check_circle_rounded : Icons.error_rounded),
     iconTint: success ? const Color(0xFF2E7D32) : const Color(0xFFD32F2F),
     borderColor: success ? const Color(0xFFA5D6A7) : const Color(0xFFEF9A9A),
@@ -879,7 +913,8 @@ class SlAvatarFrame extends StatelessWidget {
     final frameIsCircle = LegacyWebUi.avatarFrameIsCircle(frameKey);
 
     // Tính toán inner border radius để ôm concentric hoàn hảo
-    final double rawRadius = LegacyWebUi.avatarBorderRadiusForKey(frameKey, size).bottomRight.x;
+    final double rawRadius =
+        LegacyWebUi.avatarBorderRadiusForKey(frameKey, size).bottomRight.x;
     final double rawPadding = framePadding.top;
     final innerRadius = frameIsCircle
         ? null
@@ -951,7 +986,7 @@ class SlAvatarFrame extends StatelessWidget {
             top: -size * 0.08,
             left: -size * 0.08,
             child: Image.asset(
-              'assets/images/interaction_stickers/custom/numbered/sticker_012.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -961,7 +996,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             right: -size * 0.08,
             child: Image.asset(
-              'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -975,7 +1010,7 @@ class SlAvatarFrame extends StatelessWidget {
             top: -size * 0.08,
             right: -size * 0.08,
             child: Image.asset(
-              'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -1036,7 +1071,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             left: -size * 0.08,
             child: Image.asset(
-              'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
               width: size * 0.3,
               height: size * 0.3,
               fit: BoxFit.contain,
@@ -1046,7 +1081,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             right: -size * 0.08,
             child: Image.asset(
-              'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
               width: size * 0.3,
               height: size * 0.3,
               fit: BoxFit.contain,
@@ -1061,7 +1096,7 @@ class SlAvatarFrame extends StatelessWidget {
             top: -size * 0.08,
             left: -size * 0.08,
             child: Image.asset(
-              'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
               width: size * 0.32,
               height: size * 0.32,
               fit: BoxFit.contain,

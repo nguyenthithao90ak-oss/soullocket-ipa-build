@@ -130,11 +130,13 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
     );
     _jumpAnimation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 0.0, end: -25.0).chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween<double>(begin: 0.0, end: -25.0)
+            .chain(CurveTween(curve: Curves.easeOut)),
         weight: 50,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: -25.0, end: 0.0).chain(CurveTween(curve: Curves.easeIn)),
+        tween: Tween<double>(begin: -25.0, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeIn)),
         weight: 50,
       ),
     ]).animate(_jumpController);
@@ -144,8 +146,8 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_initialized) {
-      final screenWidth = MediaQuery.of(context).size.width;
-      final screenHeight = MediaQuery.of(context).size.height;
+      final screenWidth = MediaQuery.sizeOf(context).width;
+      final screenHeight = MediaQuery.sizeOf(context).height;
       // Start near the bottom-center, accounting for sticker width (150px widget wrapper)
       _posX = (screenWidth - 150) / 2;
       _posY = screenHeight - 220;
@@ -172,8 +174,8 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
   void _pickNextDestination() {
     if (!mounted) return;
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final screenHeight = MediaQuery.sizeOf(context).height;
 
     // Boundaries for the 150x120 sized overlay widget
     const minX = -30.0;
@@ -298,7 +300,8 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
         animation: Listenable.merge([_wobbleController, _jumpController]),
         builder: (context, child) {
           final rotation = _isWalking ? _wobbleAnimation.value : 0.0;
-          final verticalOffset = (_isWalking ? _hopAnimation.value : 0.0) + _jumpAnimation.value;
+          final verticalOffset =
+              (_isWalking ? _hopAnimation.value : 0.0) + _jumpAnimation.value;
 
           return Transform.translate(
             offset: Offset(0, verticalOffset),
@@ -320,7 +323,8 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.9),
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFFFB3CA), width: 2),
+                        border: Border.all(
+                            color: const Color(0xFFFFB3CA), width: 2),
                       ),
                       child: const Center(
                         child: Icon(

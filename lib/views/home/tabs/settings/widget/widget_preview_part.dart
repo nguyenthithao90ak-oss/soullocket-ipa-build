@@ -141,12 +141,6 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
           Color(0xFFFDE68A),
           Color(0xFFFFFBEB),
         ];
-      case 'none':
-        return const [
-          Color(0xFF888888),
-          Color(0xFFAAAAAA),
-          Color(0xFFDDDDDD),
-        ];
       case 'rose':
       default:
         return const [
@@ -453,31 +447,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
   }
 
   Widget _buildWidgetHeartPreview(Color textColor, {double size = 72}) {
-    // Trường hợp 'none': hiển thị emoji trái tim đơn giản, không màu, không glow
-    if (_widgetHeartColorKey == 'none') {
-      final styleKey = _normalizeWidgetHeartStyleKey(_widgetHeartStyleKey);
-      final emojiSize = size * 0.62;
-      return SizedBox(
-        width: size,
-        height: size,
-        child: Center(
-          child: Text(
-            styleKey,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: emojiSize,
-              height: 1,
-            ),
-          ),
-        ),
-      );
-    }
-
     final tick = _widgetPreviewTickNotifier.value;
-    final palette = _widgetHeartPalette(_widgetHeartColorKey);
-    final primary = palette[0];
-    final secondary = palette[1];
-    final glow = palette[2];
     final styleKey = _normalizeWidgetHeartStyleKey(_widgetHeartStyleKey);
 
     final styleSeed = styleKey.runes.fold<int>(0, (sum, rune) => sum + rune);
@@ -499,6 +469,34 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
         ? <double>[0.0, 2.2, -2.0, 1.2, -1.3, 0.8][phase]
         : 0.0;
     final emojiSize = size * 0.62;
+
+    if (_widgetHeartColorKey == 'none') {
+      return SizedBox(
+        width: size,
+        height: size,
+        child: Center(
+          child: Transform.translate(
+            offset: Offset(swayX * 0.42, floatY),
+            child: Transform.scale(
+              scale: pulse,
+              child: Text(
+                activeStyleKey,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: emojiSize,
+                  height: 1,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final palette = _widgetHeartPalette(_widgetHeartColorKey);
+    final primary = palette[0];
+    final secondary = palette[1];
+    final glow = palette[2];
 
     return SizedBox(
       width: size,
@@ -1357,18 +1355,11 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                                           ),
                                         if (showDiaryPreview) ...[
                                           SizedBox(height: diaryBlockGap),
-                                          // Tỉ lệ 3 tim : 1 ảnh nhật ký — tick % 4 == 3 mới hiện ảnh
-                                          if (_widgetPreviewTickNotifier.value % 4 == 3)
-                                            _buildWidgetDiaryPreview(
-                                              textColor,
-                                              width: diaryPreviewWidth,
-                                              height: diaryPreviewHeight,
-                                            )
-                                          else
-                                            _buildWidgetHeartPreview(
-                                              textColor,
-                                              size: heartSize,
-                                            ),
+                                          _buildWidgetDiaryPreview(
+                                            textColor,
+                                            width: diaryPreviewWidth,
+                                            height: diaryPreviewHeight,
+                                          ),
                                         ],
                                       ],
                                     ),
@@ -1402,8 +1393,18 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
       },
     );
   }
+  static Future<Map<String, String>>? _cachedSoulEventPreviewFuture;
 
   Future<Map<String, String>> _loadSoulEventPreviewData() async {
+    if (_cachedSoulEventPreviewFuture != null) {
+      return _cachedSoulEventPreviewFuture!;
+    }
+    
+    _cachedSoulEventPreviewFuture = _loadSoulEventPreviewDataInternal();
+    return _cachedSoulEventPreviewFuture!;
+  }
+
+  Future<Map<String, String>> _loadSoulEventPreviewDataInternal() async {
     final houseId = _houseId ?? '';
     if (houseId.isEmpty) {
       return {
@@ -1526,7 +1527,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
             style: SLTheme.quicksand(
               color: textColor,
               fontWeight: FontWeight.w900,
-              fontSize: fontSize,
+              fontSize: fontSize + 4.0,
               height: 1.15,
               letterSpacing: -0.1,
             ),
@@ -1562,12 +1563,16 @@ class _WidgetDiaryPreviewStream extends StatefulWidget {
 class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
   static const double _outerRadius = 18;
 
-  late Stream<DatabaseEvent> _memoriesStream;
+  late Future<List<String>> _imageUrlsFuture;
+  Timer? _rotationTimer;
 
   @override
   void initState() {
     super.initState();
     _updateStream();
+    _rotationTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -1578,11 +1583,14 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
     }
   }
 
+  @override
+  void dispose() {
+    _rotationTimer?.cancel();
+    super.dispose();
+  }
+
   void _updateStream() {
-    _memoriesStream = widget.state._dbRef
-        .child('houses/${widget.houseId}/memories')
-        .limitToLast(8)
-        .onValue;
+    _imageUrlsFuture = widget.state._loadWidgetDiaryUrls(limit: 24);
   }
 
   Widget _buildEmptyPreview() {
@@ -1649,34 +1657,27 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<DatabaseEvent>(
-      stream: _memoriesStream,
+    return FutureBuilder<List<String>>(
+      future: _imageUrlsFuture,
       builder: (context, snapshot) {
-        final imageLimit = switch (widget.layoutKey) {
-          'grid' => 4,
-          'duo' => 2,
-          _ => 1,
-        };
-        final imageUrls = widget.state._extractWidgetDiaryUrls(
-          snapshot.data?.snapshot.value,
-          limit: imageLimit,
-        );
+        final imageUrls = snapshot.data ?? const <String>[];
         if (imageUrls.isEmpty) {
           return _buildEmptyPreview();
         }
 
-        final previewKey = '${widget.layoutKey}_${imageUrls.join('|')}';
+        final timeOffset = (DateTime.now().millisecondsSinceEpoch ~/ 60000);
         final filledUrls = switch (widget.layoutKey) {
           'grid' => List<String?>.generate(
               4,
-              (index) => index < imageUrls.length ? imageUrls[index] : null,
+              (index) => imageUrls[(index + timeOffset) % imageUrls.length],
             ),
           'duo' => List<String?>.generate(
               2,
-              (index) => index < imageUrls.length ? imageUrls[index] : null,
+              (index) => imageUrls[(index + timeOffset) % imageUrls.length],
             ),
-          _ => <String?>[imageUrls.first],
+          _ => <String?>[imageUrls[timeOffset % imageUrls.length]],
         };
+        final previewKey = '${widget.layoutKey}_${filledUrls.join('|')}';
 
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 320),

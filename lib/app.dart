@@ -98,11 +98,16 @@ class MyApp extends StatelessWidget {
             scaffoldBackgroundColor: SLColors.bgMain,
             dividerColor: SLColors.border,
             shadowColor: Colors.black.withValues(alpha: 0.08),
-            splashFactory: InkRipple.splashFactory,
+            splashFactory: NoSplash.splashFactory,
             splashColor: SLColors.primary.withValues(alpha: 0.05),
             highlightColor: SLColors.primary.withValues(alpha: 0.02),
             hoverColor: SLColors.primary.withValues(alpha: 0.02),
             focusColor: SLColors.primary.withValues(alpha: 0.03),
+            pageTransitionsTheme: const PageTransitionsTheme(
+              builders: <TargetPlatform, PageTransitionsBuilder>{
+                TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+              },
+            ),
             textTheme: SLTypography.textTheme(baseTextTheme),
             appBarTheme: AppBarTheme(
               systemOverlayStyle: const SystemUiOverlayStyle(
@@ -406,7 +411,9 @@ class StartupErrorApp extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFF0F0),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE53935).withValues(alpha: 0.2)),
+                        border: Border.all(
+                            color:
+                                const Color(0xFFE53935).withValues(alpha: 0.2)),
                       ),
                       child: Text(
                         'SoulLocket © ${DateTime.now().year} — Tame Trương Việt Hoàng.\nMọi hành vi crack, mod, can thiệp trái phép đều vi phạm bản quyền.',
@@ -483,4 +490,3 @@ class SoulLocketScrollBehavior extends MaterialScrollBehavior {
     }
   }
 }
-

@@ -10,7 +10,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:soullocket_app/core/constants/app_firebase_paths.dart';
 import 'package:soullocket_app/utils/services/storage_picker_service.dart';
-import 'package:soullocket_app/utils\services\infrastructure\storage_service.dart';
+import 'package:soullocket_app/utils/services/infrastructure/storage_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 class PairingDashboardScreen extends StatefulWidget {

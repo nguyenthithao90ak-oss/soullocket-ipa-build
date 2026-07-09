@@ -97,19 +97,6 @@ class PermissionHelper {
     required String title,
     required String disclosure,
   }) async {
-    if (!kIsWeb &&
-        (defaultTargetPlatform == TargetPlatform.iOS ||
-            defaultTargetPlatform == TargetPlatform.macOS)) {
-      final status = await Permission.location.status;
-      if (status.isGranted || status.isLimited) {
-        return true;
-      }
-      final result = await _withLifecyclePresenceGuard(
-        Permission.location.request,
-      );
-      return result.isGranted || result.isLimited;
-    }
-
     final status = await Geolocator.checkPermission();
     if (status == LocationPermission.whileInUse ||
         status == LocationPermission.always) {
@@ -117,6 +104,12 @@ class PermissionHelper {
     }
 
     if (status == LocationPermission.deniedForever) {
+      return false;
+    }
+
+    if (!context.mounted) return false;
+    final shouldRequest = await _showDisclosureDialog(context, title, disclosure);
+    if (shouldRequest != true) {
       return false;
     }
 

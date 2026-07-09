@@ -940,13 +940,15 @@ extension _SoulBlockPanels on _SoulBlockGameState {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
-              child: BackdropFilter(
+              child: FastBackdropFilter(
                 filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                 child: Container(
                   decoration: BoxDecoration(
                     color: const Color(0xFF0D121D).withValues(alpha: 0.65),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: const Color(0xFF00C3FF).withValues(alpha: 0.2), width: 1.5),
+                    border: Border.all(
+                        color: const Color(0xFF00C3FF).withValues(alpha: 0.2),
+                        width: 1.5),
                     boxShadow: [
                       BoxShadow(
                         color: const Color(0xFF00C3FF).withValues(alpha: 0.1),
@@ -1326,7 +1328,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
     }
     final _SoulBlockPerformanceProfile profile = _performanceProfile;
     final double cardWidth =
-        min(MediaQuery.of(context).size.width * 0.72, 276.0);
+        min(MediaQuery.sizeOf(context).width * 0.72, 276.0);
 
     return Positioned.fill(
       child: IgnorePointer(

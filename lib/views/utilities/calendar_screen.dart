@@ -28,9 +28,6 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
-
-
-
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
 
   CalendarFormat _calendarFormat = CalendarFormat.month;
@@ -54,8 +51,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
         .onValue;
     _loadEvents();
   }
-
-
 
   void _loadEvents() {
     _calendarSubscription = _dbRef
@@ -222,21 +217,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
     if (_isToday(date)) {
       return eventCount == 0
           ? context.tr('util_hmnayangtr_1d1c51')
-          : L10nService().format('util_calendar_today_with_count', {'count': eventCount});
+          : L10nService()
+              .format('util_calendar_today_with_count', {'count': eventCount});
     }
     if (_isTomorrow(date)) {
       return eventCount == 0
           ? context.tr('util_ngymaichac_c9028e')
-          : L10nService().format('util_calendar_tomorrow_with_count', {'count': eventCount});
+          : L10nService().format(
+              'util_calendar_tomorrow_with_count', {'count': eventCount});
     }
     if (_isPastDate(date)) {
       return eventCount == 0
           ? context.tr('util_ngynyquavc_7fd2b2')
-          : L10nService().format('util_calendar_past_with_count', {'count': eventCount});
+          : L10nService()
+              .format('util_calendar_past_with_count', {'count': eventCount});
     }
     return eventCount == 0
         ? context.tr('util_ngynyangtr_12488d')
-        : L10nService().format('util_calendar_day_with_count', {'count': eventCount});
+        : L10nService()
+            .format('util_calendar_day_with_count', {'count': eventCount});
   }
 
   Future<bool> _saveEventForDay({
@@ -249,6 +248,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
 
     final dateKey = _getDateKey(day);
+    final daySnap =
+        await _dbRef.child('houses/${widget.houseId}/calendar/$dateKey').get();
+    if (daySnap.exists && daySnap.value is Map) {
+      final dayMap = daySnap.value as Map;
+      if (dayMap.length >= 5) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Một ngày chỉ có thể có tối đa 5 sự kiện. Vui lòng xoá bớt trước khi thêm mới.'),
+          backgroundColor: SLColors.danger,
+        ));
+        return false;
+      }
+    }
+
     await _dbRef
         .child('houses/${widget.houseId}/calendar/$dateKey')
         .push()
@@ -305,7 +318,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              L10nService().format('util_calendar_added_for_date', {'date': _formatShortDate(day)}),
+              L10nService().format('util_calendar_added_for_date',
+                  {'date': _formatShortDate(day)}),
             ),
           ),
         );
@@ -349,7 +363,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       NotificationService().scheduleLocalNotification(
         id: scheduleTime.millisecondsSinceEpoch ~/ 1000,
         title: context.tr('util_calendar_today_title'),
-        body: L10nService().format('util_calendar_reminder_body', {'title': eventTitle}),
+        body: L10nService()
+            .format('util_calendar_reminder_body', {'title': eventTitle}),
         scheduledDate: scheduleTime,
       );
     }
@@ -360,7 +375,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       NotificationService().scheduleLocalNotification(
         id: (dayBefore.millisecondsSinceEpoch ~/ 1000) + 1,
         title: context.tr('util_nhcnhngyma_b07d5b'),
-        body: L10nService().format('util_calendar_upcoming_body', {'title': eventTitle}),
+        body: L10nService()
+            .format('util_calendar_upcoming_body', {'title': eventTitle}),
         scheduledDate: dayBefore,
       );
     }
@@ -373,7 +389,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
         title: const Text('Xoá sự kiện'),
         content: const Text('Bạn có chắc chắn muốn xoá sự kiện này?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -393,7 +410,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
         .remove()
         .then((_) {
       if (mounted && Platform.isAndroid) {
-        unawaited(WidgetService.syncCalendarWidgetData(houseId: widget.houseId));
+        unawaited(
+            WidgetService.syncCalendarWidgetData(houseId: widget.houseId));
       }
     });
   }
@@ -406,27 +424,37 @@ class _CalendarScreenState extends State<CalendarScreen> {
         backgroundColor: const Color(0xFF1B2A36),
         title: Text(
           'Lịch & Sự kiện',
-          style: SLTheme.quicksand(fontWeight: FontWeight.w900, color: Colors.white),
+          style: SLTheme.quicksand(
+              fontWeight: FontWeight.w900, color: Colors.white),
         ),
         content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+              Text('Tính năng:',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.white)),
               SizedBox(height: 4),
-              Text('- Ghi nhớ ngày kỷ niệm, ngày sinh nhật, hoặc các lịch hẹn hò quan trọng.\n- Hệ thống sẽ tự động nhắc nhở trước sự kiện.', style: TextStyle(color: Colors.white70)),
+              Text(
+                  '- Ghi nhớ ngày kỷ niệm, ngày sinh nhật, hoặc các lịch hẹn hò quan trọng.\n- Hệ thống sẽ tự động nhắc nhở trước sự kiện.',
+                  style: TextStyle(color: Colors.white70)),
               SizedBox(height: 12),
-              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+              Text('Cách sử dụng:',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.white)),
               SizedBox(height: 4),
-              Text('- Bấm chọn ngày, nhập nội dung sự kiện và lưu lại.\n- Các sự kiện quan trọng có thể được xem lại và nhận thông báo nhắc nhở trước 1 ngày.', style: TextStyle(color: Colors.white70)),
+              Text(
+                  '- Bấm chọn ngày, nhập nội dung sự kiện và lưu lại.\n- Các sự kiện quan trọng có thể được xem lại và nhận thông báo nhắc nhở trước 1 ngày.',
+                  style: TextStyle(color: Colors.white70)),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu', style: TextStyle(color: Color(0xFF64B5F6))),
+            child: const Text('Đã hiểu',
+                style: TextStyle(color: Color(0xFF64B5F6))),
           ),
         ],
       ),
@@ -658,7 +686,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     if (Platform.isAndroid) ...[
                       SizedBox(height: compact ? 12 : 16),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: horizontalInset),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: horizontalInset),
                         child: _buildPinWidgetTile(compact),
                       ),
                     ],

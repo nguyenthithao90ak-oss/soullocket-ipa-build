@@ -48,7 +48,9 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
       MaterialPageRoute(
         builder: (_) => PremiumStoreScreen(
           houseId: houseId,
-          myName: _nameU1.trim().isEmpty ? context.tr('home_bn_1fd75b') : _nameU1.trim(),
+          myName: _nameU1.trim().isEmpty
+              ? context.tr('home_bn_1fd75b')
+              : _nameU1.trim(),
         ),
       ),
     );
@@ -96,18 +98,6 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
   Future<void> _handleWidgetDiaryVisibilityChanged(bool value) async {
     await _updateWidgetAppearanceDraft(() {
       _showDiaryOnWidget = value;
-      if (value) {
-        _widgetHeartAnimated = false;
-      }
-    });
-  }
-
-  Future<void> _handleWidgetHeartAnimatedChanged(bool value) async {
-    await _updateWidgetAppearanceDraft(() {
-      _widgetHeartAnimated = value;
-      if (value) {
-        _showDiaryOnWidget = false;
-      }
     });
   }
 

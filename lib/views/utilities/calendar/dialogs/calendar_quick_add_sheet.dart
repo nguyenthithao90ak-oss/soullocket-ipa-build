@@ -68,7 +68,8 @@ Future<bool> showCalendarQuickAddSheet({
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.42)),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.42)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.12),
@@ -156,8 +157,7 @@ Future<bool> showCalendarQuickAddSheet({
                           fontWeight: FontWeight.w700,
                         ),
                         decoration: InputDecoration(
-                          hintText:
-                              context.tr('util_vd1930inmu_d7456c'),
+                          hintText: context.tr('util_vd1930inmu_d7456c'),
                           hintStyle: SLTheme.quicksand(
                             color: SLTheme.textMuted,
                             fontWeight: FontWeight.w600,

@@ -22,9 +22,16 @@ class _DiaryTabShell extends StatelessWidget {
       );
     }
 
+    final header = DiaryHeaderSection(
+      currentTab: state._currentTab,
+      onTabChanged: state._setCurrentTab,
+      houseId: state._houseId,
+    );
+
     // Build memory section once and cache it
     final memorySection = DiaryMemorySection(
       key: const ValueKey('diary_memory_section'),
+      header: header,
       houseId: state._houseId,
       connectivityFuture: state._connectivityFuture,
       memoriesStream: state._getMemoriesStream(),
@@ -81,84 +88,73 @@ class _DiaryTabShell extends StatelessWidget {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          Column(
-            children: [
-              DiaryHeaderSection(
-                currentTab: state._currentTab,
-                onTabChanged: state._setCurrentTab,
-                houseId: state._houseId,
-              ),
-              Expanded(
-                child: RepaintBoundary(
-                  child: Stack(
-                    children: [
-                      // Memory tab - deferred load to avoid jank on tab switch
-                      Positioned.fill(
-                        child: AnimatedOpacity(
-                          key: const ValueKey('memory_tab_opacity'),
-                          opacity: state._currentTab == 'memory' ? 1.0 : 0.0,
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                          child: IgnorePointer(
-                            ignoring: state._currentTab != 'memory',
-                            child: state._deferMemoryLoad
-                                ? const _DiaryTabLoadingSection()
-                                : memorySection,
-                          ),
-                        ),
-                      ),
-                      // Post tab - rebuilds only when needed
-                      if (state._currentTab != 'memory')
-                        Positioned.fill(
-                          child: ValueListenableBuilder<List<DiaryPost>>(
-                            valueListenable: state._feedController.postsVN,
-                            builder: (context, posts, child) {
-                              return DiaryList(
-                                showDiaryPrivacyNotice:
-                                    state._showDiaryPrivacyNotice,
-                                buildDiaryPrivacyNotice: () =>
-                                    const SizedBox.shrink(),
-                                buildDiaryComposerCard: () =>
-                                    _DiaryComposerLauncherSection(
-                                  state: state,
-                                ),
-                                isLoading: state._isLoading &&
-                                    !state._isAnimatingTabSwitch,
-                                houseId: state._houseId,
-                                buildHouseSetupState: ({
-                                  required String title,
-                                  required String message,
-                                }) =>
-                                    DiaryHouseSetupCard(
-                                  title: title,
-                                  message: message,
-                                  onRetry: state._fetchDiaryPosts,
-                                ),
-                                posts: posts,
-                                buildDiaryEmptyState: () =>
-                                    const DiaryPostsEmptyStateCard(),
-                                buildPostCard: (post) => DiaryItem(
-                                  post: post,
-                                  activeRoleKey: state._activeRoleKey,
-                                  nameU1: state._nameU1,
-                                  nameU2: state._nameU2,
-                                  resolvedAuthorName:
-                                      state._resolvedPostAuthorName(post),
-                                  postImageCacheWidth:
-                                      state._postImageCacheWidth(context),
-                                  onConfirmDelete:
-                                      state._confirmDeleteDiaryPost,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                    ],
+          RepaintBoundary(
+            child: Stack(
+              children: [
+                // Memory tab - deferred load to avoid jank on tab switch
+                Positioned.fill(
+                  child: AnimatedOpacity(
+                    key: const ValueKey('memory_tab_opacity'),
+                    opacity: state._currentTab == 'memory' ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    child: IgnorePointer(
+                      ignoring: state._currentTab != 'memory',
+                      child: state._deferMemoryLoad
+                          ? const _DiaryTabLoadingSection()
+                          : memorySection,
+                    ),
                   ),
                 ),
-              ),
-
-            ],
+                // Post tab - rebuilds only when needed
+                if (state._currentTab != 'memory')
+                  Positioned.fill(
+                    child: ValueListenableBuilder<List<DiaryPost>>(
+                      valueListenable: state._feedController.postsVN,
+                      builder: (context, posts, child) {
+                        return DiaryList(
+                          header: header,
+                          showDiaryPrivacyNotice:
+                              state._showDiaryPrivacyNotice,
+                          buildDiaryPrivacyNotice: () =>
+                              const SizedBox.shrink(),
+                          buildDiaryComposerCard: () =>
+                              _DiaryComposerLauncherSection(
+                            state: state,
+                          ),
+                          isLoading: state._isLoading &&
+                              !state._isAnimatingTabSwitch,
+                          houseId: state._houseId,
+                          buildHouseSetupState: ({
+                            required String title,
+                            required String message,
+                          }) =>
+                              DiaryHouseSetupCard(
+                            title: title,
+                            message: message,
+                            onRetry: state._fetchDiaryPosts,
+                          ),
+                          posts: posts,
+                          buildDiaryEmptyState: () =>
+                              const DiaryPostsEmptyStateCard(),
+                          buildPostCard: (post) => DiaryItem(
+                            post: post,
+                            activeRoleKey: state._activeRoleKey,
+                            nameU1: state._nameU1,
+                            nameU2: state._nameU2,
+                            resolvedAuthorName:
+                                state._resolvedPostAuthorName(post),
+                            postImageCacheWidth:
+                                state._postImageCacheWidth(context),
+                            onConfirmDelete:
+                                state._confirmDeleteDiaryPost,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
           ),
           // Selection bar
           if (state._currentTab == 'memory')
@@ -169,8 +165,8 @@ class _DiaryTabShell extends StatelessWidget {
                   14,
                   0,
                   14,
-                  (MediaQuery.of(context).padding.bottom > 0
-                          ? MediaQuery.of(context).padding.bottom
+                  (MediaQuery.paddingOf(context).bottom > 0
+                          ? MediaQuery.paddingOf(context).bottom
                           : 0) +
                       10,
                 ),
@@ -220,16 +216,19 @@ class _DiaryTabLoadingSection extends StatelessWidget {
           const SizedBox(height: 20),
           // Skeleton cho Header
           SkeletonContainer.rounded(
-            width: 200, height: 28, 
-            baseColor: baseColor, highlightColor: highlightColor,
+            width: 200,
+            height: 28,
+            baseColor: baseColor,
+            highlightColor: highlightColor,
           ),
           const SizedBox(height: 24),
           // Skeleton cho Tab Switcher
           SkeletonContainer.rounded(
-              width: double.infinity,
-              height: 50,
-              borderRadius: const BorderRadius.all(Radius.circular(20)),
-              baseColor: baseColor, highlightColor: highlightColor,
+            width: double.infinity,
+            height: 50,
+            borderRadius: const BorderRadius.all(Radius.circular(20)),
+            baseColor: baseColor,
+            highlightColor: highlightColor,
           ),
           const SizedBox(height: 30),
           // Danh sách Skeleton Items
@@ -243,7 +242,8 @@ class _DiaryTabLoadingSection extends StatelessWidget {
                   children: [
                     SkeletonContainer.circle(
                       size: 48,
-                      baseColor: baseColor, highlightColor: highlightColor,
+                      baseColor: baseColor,
+                      highlightColor: highlightColor,
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -251,15 +251,17 @@ class _DiaryTabLoadingSection extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SkeletonContainer.rounded(
-                            width: MediaQuery.of(context).size.width * 0.45,
+                            width: MediaQuery.sizeOf(context).width * 0.45,
                             height: 18,
-                            baseColor: baseColor, highlightColor: highlightColor,
+                            baseColor: baseColor,
+                            highlightColor: highlightColor,
                           ),
                           const SizedBox(height: 10),
                           SkeletonContainer.rounded(
                             width: double.infinity,
                             height: 100,
-                            baseColor: baseColor, highlightColor: highlightColor,
+                            baseColor: baseColor,
+                            highlightColor: highlightColor,
                           ),
                         ],
                       ),

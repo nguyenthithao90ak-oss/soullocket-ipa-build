@@ -1,4 +1,4 @@
-﻿import 'dart:ui' as ui;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -26,11 +26,11 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
       tooltip: 'Hướng dẫn',
-      icon: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
+      icon:
+          const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -51,18 +51,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
             children: [
               Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text('- Ghi lại toàn bộ dấu chân tương tác của hai người: ngày bắt đầu yêu, lần đầu thêm ảnh, khi thay đổi hình nền, v.v.\n- Giúp dễ dàng theo dõi dòng thời gian phát triển tình cảm.'),
+              Text(
+                  '- Ghi lại toàn bộ dấu chân tương tác của hai người: ngày bắt đầu yêu, lần đầu thêm ảnh, khi thay đổi hình nền, v.v.\n- Giúp dễ dàng theo dõi dòng thời gian phát triển tình cảm.'),
               SizedBox(height: 12),
-              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Cách sử dụng:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text('- Hệ thống tự động lưu các sự kiện quan trọng vào lịch sử.\n- Bạn có thể xem lại để thấy nhà chung của mình đã thay đổi thế nào qua thời gian.'),
+              Text(
+                  '- Hệ thống tự động lưu các sự kiện quan trọng vào lịch sử.\n- Bạn có thể xem lại để thấy nhà chung của mình đã thay đổi thế nào qua thời gian.'),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+            child: const Text('Đã hiểu',
+                style: TextStyle(color: SLColors.primary)),
           ),
         ],
       ),
@@ -206,7 +210,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ),
         centerTitle: true,
-
         backgroundColor: Colors.transparent,
         elevation: 0,
         flexibleSpace: ClipRect(
@@ -306,7 +309,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     borderRadius: SLRadius.mdAll,
                   ),
                   child: Text(
-                    L10nService().format('util_history_limit', {'count': ActivityHistoryService.maxItems}),
+                    L10nService().format('util_history_limit',
+                        {'count': ActivityHistoryService.maxItems}),
                     style: SLTheme.quicksand(
                       color: Colors.white70,
                       fontWeight: FontWeight.w800,
@@ -481,8 +485,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     border: Border.all(color: const Color(0xFF334155)),
                   ),
                   child: IconButton(
-                    tooltip:
-                        isRestoring ? context.tr('util_angkhiphc_4d5bed') : context.tr('util_khiphc_682697'),
+                    tooltip: isRestoring
+                        ? context.tr('util_angkhiphc_4d5bed')
+                        : context.tr('util_khiphc_682697'),
                     constraints: const BoxConstraints.tightFor(
                       width: 36,
                       height: 36,

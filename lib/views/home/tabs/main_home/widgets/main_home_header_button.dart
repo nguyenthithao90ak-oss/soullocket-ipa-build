@@ -1,15 +1,23 @@
-part of '../../main_home_tab.dart';
+import 'package:flutter/material.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
 
-extension _MainHomeHeaderButtonExt on _MainHomeTabState {
-  Widget _buildHeaderButton({
-    Key? key,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-    VoidCallback? onLongPress,
-  }) {
+class MainHomeHeaderButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+
+  const MainHomeHeaderButton({
+    super.key,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+    this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      key: key,
       onTap: onTap,
       onLongPress: onLongPress,
       child: Container(
@@ -21,9 +29,10 @@ extension _MainHomeHeaderButtonExt on _MainHomeTabState {
           border: Border.all(color: const Color(0xCCE2E8F0), width: 1.5),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2))
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
         child: Icon(icon, color: color, size: 22),

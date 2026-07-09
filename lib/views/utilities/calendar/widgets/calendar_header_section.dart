@@ -78,8 +78,8 @@ class CalendarHeaderSection extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(compact ? 14 : 16),
-                        border:
-                            Border.all(color: Colors.white.withValues(alpha: 0.22)),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.22)),
                       ),
                       child: Icon(
                         Icons.calendar_month_rounded,
@@ -148,7 +148,8 @@ class CalendarHeaderSection extends StatelessWidget {
                     formatButtonDecoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.24)),
                     ),
                     leftChevronIcon:
                         const Icon(Icons.chevron_left, color: Colors.white),

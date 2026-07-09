@@ -34,7 +34,8 @@ class UpdateCheckerService {
         final data = Map<dynamic, dynamic>.from(rawData);
         final latestVersion = data['latest_version']?.toString() ?? '1.0.0';
         final forceUpdate = data['force_update'] == true;
-        final androidUrl = data['android_url']?.toString() ?? 'https://play.google.com/store/apps/details?id=com.soullocket.app';
+        final androidUrl = data['android_url']?.toString() ??
+            'https://play.google.com/store/apps/details?id=com.soullocket.app';
         final iosUrl = data['ios_url']?.toString() ?? '';
 
         if (_shouldUpdate(currentVersion, latestVersion)) {
@@ -57,8 +58,10 @@ class UpdateCheckerService {
 
   static bool _shouldUpdate(String current, String latest) {
     try {
-      final currentParts = current.split('.').map((e) => int.tryParse(e) ?? 0).toList();
-      final latestParts = latest.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+      final currentParts =
+          current.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+      final latestParts =
+          latest.split('.').map((e) => int.tryParse(e) ?? 0).toList();
       final length = math.max(currentParts.length, latestParts.length);
       for (int i = 0; i < length; i++) {
         final currentPart = i < currentParts.length ? currentParts[i] : 0;

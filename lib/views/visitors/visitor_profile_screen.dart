@@ -292,7 +292,6 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         maxWidth: 1080,
         maxHeight: 1080,
         uiSettings: [
-
           IOSUiSettings(
             title: 'Cắt avatar hồ sơ',
             aspectRatioLockEnabled: true,
@@ -454,10 +453,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       }
       await PendingUploadService.instance.clear(_pendingProfileHeaderUploadKey);
       final refreshedUrl = _withRefreshToken(url);
-      if (!mounted) return;
-      setState(() {
-        _applyProfilePresentationLocally(headerImageUrl: refreshedUrl);
-      });
+      await _saveProfilePresentation(headerImageUrl: refreshedUrl);
       _showSnack('Đã cập nhật ảnh nền hồ sơ.');
     } catch (e) {
       if (!mounted) return;
@@ -499,9 +495,23 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       await PendingUploadService.instance.clear(_pendingHouseAvatarUploadKey);
       final refreshedUrl = _withRefreshToken(url);
       if (!mounted) return;
-      setState(
-          () => _applyProfilePresentationLocally(houseAvatar: refreshedUrl));
-      _showSnack('Đã cập nhật avatar hồ sơ.');
+      
+      setState(() => _isUpdatingProfileAppearance = true);
+      try {
+        await _houseSettingsService.updateHouseAvatarOnly(
+          houseId: houseId,
+          avatarUrl: refreshedUrl,
+        );
+        if (!mounted) return;
+        setState(() {
+          _applyProfilePresentationLocally(houseAvatar: refreshedUrl);
+        });
+        _showSnack('Đã cập nhật avatar hồ sơ.');
+      } finally {
+        if (mounted) {
+          setState(() => _isUpdatingProfileAppearance = false);
+        }
+      }
     } catch (e) {
       if (!mounted) return;
       _showSnack('Chưa thể đổi ảnh đại diện lúc này. Vui lòng thử lại.');
@@ -569,17 +579,26 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
               : {};
         }
       } catch (e) {
-        debugPrint('Lỗi tải house_profiles: ${AppErrorMapper.resolve(e).message}');
+        debugPrint(
+            'Lỗi tải house_profiles: ${AppErrorMapper.resolve(e).message}');
       }
 
       if (_targetData.isEmpty) {
         try {
           // Chỉ fetch field cần, không load toàn bộ settings node (~10KB)
           const kSettingsFields = [
-            'bio', 'privacy', 'proUntil', 'relationshipMode',
-            'avtUser1', 'avtUser2', 'hideLikeCount',
-            'likedVisibility', 'locketVisibility',
-            'profileHeaderImageUrl', 'profileHeaderThemeKey', 'profileAvatarSizePx',
+            'bio',
+            'privacy',
+            'proUntil',
+            'relationshipMode',
+            'avtUser1',
+            'avtUser2',
+            'hideLikeCount',
+            'likedVisibility',
+            'locketVisibility',
+            'profileHeaderImageUrl',
+            'profileHeaderThemeKey',
+            'profileAvatarSizePx',
           ];
           final base = 'houses/${widget.targetHouseId}';
           final allSnaps = await Future.wait([
@@ -754,7 +773,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
           .where((p) => p.imageUrl.isNotEmpty || p.videoUrl.isNotEmpty)
           .toList();
     } catch (e) {
-      debugPrint('Error loading private posts: ${AppErrorMapper.resolve(e).message}');
+      debugPrint(
+          'Error loading private posts: ${AppErrorMapper.resolve(e).message}');
     } finally {
       if (mounted) setState(() => _isLoadingPrivate = false);
     }
@@ -780,7 +800,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         return true;
       }).toList();
     } catch (e) {
-      debugPrint('Error loading locket posts: ${AppErrorMapper.resolve(e).message}');
+      debugPrint(
+          'Error loading locket posts: ${AppErrorMapper.resolve(e).message}');
     } finally {
       if (mounted) setState(() => _isLoadingLocket = false);
     }
@@ -792,7 +813,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       _likedPosts =
           await _socialService.fetchLikedFeedPage(widget.targetHouseId);
     } catch (e) {
-      debugPrint('Error loading liked posts: ${AppErrorMapper.resolve(e).message}');
+      debugPrint(
+          'Error loading liked posts: ${AppErrorMapper.resolve(e).message}');
     } finally {
       if (mounted) setState(() => _isLoadingLiked = false);
     }
@@ -1312,10 +1334,11 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       child: Stack(fit: StackFit.expand, children: [
         if (img.isNotEmpty)
           CachedNetworkImage(
-              memCacheWidth: 720,
+              memCacheWidth: 300,
               imageUrl: img,
               fit: BoxFit.cover,
-              filterQuality: FilterQuality.high,
+              filterQuality: FilterQuality.low,
+              fadeInDuration: const Duration(milliseconds: 150),
               placeholder: (_, __) => Container(color: SLColors.borderLight),
               errorWidget: (_, __, ___) => Container(color: SLColors.border))
         else

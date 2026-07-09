@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../settings_tab.dart';
 
 extension _SettingsTabSecuritySection on _SettingsTabState {
@@ -32,35 +33,12 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
       hideBackButton: hideBackButton,
       id: 'security',
       title: context.tr('security_zone_title'),
-      borderColor: const Color(0xFFef9a9a),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isSingleMode) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFFFFD1E1).withValues(alpha: 0.3),
-                    const Color(0xFFFFF0F5).withValues(alpha: 0.5),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                    color: const Color(0xFFFFC1D1).withValues(alpha: 0.5),
-                    width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFF78A8).withValues(alpha: 0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
+            _buildSectionBlock(
+              colorTint: const Color(0xFFE57373),
               child: Column(
                 children: [
                   Row(
@@ -93,16 +71,15 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   ),
                   const SizedBox(height: 12),
                   GestureDetector(
-                    onTap: _houseIdChanged ? null : () => _showChangeHouseIdDialog(),
+                    onTap: _houseIdChanged
+                        ? null
+                        : () => _showChangeHouseIdDialog(),
                     child: Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: Colors.grey.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color:
-                                const Color(0xFFFFC1D1).withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -112,7 +89,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                                 ? context.tr('home_mnhchac_a0dca8')
                                 : 'ID: $_houseId',
                             style: SLTextStyles.quicksand(
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w800,
                               color: const Color(0xFFE8A0B6),
                             ),
@@ -129,6 +106,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                       ),
                     ),
                   ),
+
                 ],
               ),
             ),
@@ -138,20 +116,47 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             Center(
               child: Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFDEEF4),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Text(
-                  _houseId == null
-                      ? context.tr('home_mnhchac_a0dca8')
-                      : 'Mã nhà: $_houseId',
-                  style: SLTextStyles.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFFE8A0B6),
-                  ),
+                child: Column(
+                  children: [
+                    Text(
+                      _houseId == null
+                          ? context.tr('home_mnhchac_a0dca8')
+                          : 'Mã nhà: $_houseId',
+                      style: SLTextStyles.quicksand(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFFE8A0B6),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PairingDashboardScreen())),
+                      icon: const Icon(Icons.link_rounded, size: 18),
+                      label: Text(
+                        'Ghép nối ngay',
+                        style: SLTextStyles.quicksand(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFD81B60),
+                        side: const BorderSide(color: Color(0xFFD81B60)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -160,7 +165,6 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
           _buildSecurityCard(
             title: context.tr('home_thngtinngn_7bc2e7'),
             subtitle: context.tr('home_thngtintik_0a7339'),
-            borderColor: const Color(0xFFF0D6DF),
             backgroundColor: Colors.white,
             children: [
               // --- EMAIL CHÍNH ---
@@ -201,12 +205,13 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 accentColor: const Color(0xFF9C27B0),
               ),
               SLSpacing.h12,
-              // --- LIÊN KẾT GOOGLE ---
               _buildModernIdentityTile(
                 icon: Icons.account_circle_rounded,
                 label: context.tr('home_tikhongoog_fba9e3'),
                 value: _googleLinked
-                    ? context.tr('home_linkt_708640')
+                    ? (_googleLinkedEmail.isNotEmpty
+                        ? _authService.maskEmail(_googleLinkedEmail)
+                        : context.tr('home_linkt_708640'))
                     : context.tr('home_chalinkt_1f9e3b'),
                 isVerified: _googleLinked,
                 onAction: _googleLinked ? null : _linkGoogleAccount,
@@ -223,8 +228,6 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             subtitle: _passwordLinked
                 ? context.tr('home_ylmtkhungn_f5cdf1')
                 : context.tr('home_tikhonhint_e0973b'),
-            borderColor: const Color(0xFFFFCC80),
-            backgroundColor: const Color(0xFFFFFBF5),
             children: [
               _buildSecurityLine(
                 label: context.tr('home_trngthi_0fbc27'),
@@ -365,8 +368,6 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             subtitle: recoveryLocked
                 ? context.tr('security_q_locked')
                 : context.tr('home_chnntmtlnc_0791a2'),
-            borderColor: const Color(0xFFF48FB1),
-            backgroundColor: const Color(0xFFFFF7FB),
             children: [
               _buildSecurityLine(
                 label: context.tr('home_cuhi_c1a8b2'),
@@ -516,8 +517,6 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
           _buildSecurityCard(
             title: context.tr('home_thitbngnhp_d39323'),
             subtitle: context.tr('home_qunlthitbn_8d057f'),
-            borderColor: const Color(0xFF90CAF9),
-            backgroundColor: const Color(0xFFF3F9FF),
             children: [
               _buildGradientBtn(
                 label: context.tr('home_mqunlthitb_7882fa'),
@@ -530,8 +529,6 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
           _buildSecurityCard(
             title: context.tr('backup_pin'),
             subtitle: context.tr('backup_pin_desc'),
-            borderColor: const Color(0xFFFFB74D),
-            backgroundColor: const Color(0xFFFFF8EF),
             children: [
               _buildSecurityLine(
                 label: context.tr('home_pinph_af7cc5'),
@@ -574,160 +571,6 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             ],
           ),
           SLSpacing.h12,
-          if (showSecretVault)
-            _buildSecurityCard(
-              title: context.tr('home_khonhbmt_d6cf38'),
-              subtitle: context.tr('vault_timeout_desc'),
-              borderColor: const Color(0xFFCE93D8),
-              backgroundColor: const Color(0xFFF3E5F5),
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: SLRadius.mdAll,
-                    border: Border.all(color: const Color(0xFFCE93D8)),
-                  ),
-                  child: DropdownButtonFormField<int>(
-                    initialValue: UiPrefs.notifier.value.vaultTimeoutMins,
-                    isExpanded: true,
-                    style: SLTextStyles.quicksand(
-                      color: const Color(0xFF4A148C),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    decoration: const InputDecoration(
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      border: InputBorder.none,
-                    ),
-                    items: [
-                      DropdownMenuItem(
-                        value: 0,
-                        child: Text(context.tr('lock_immediately')),
-                      ),
-                      DropdownMenuItem(
-                        value: 5,
-                        child: Text(context.tr('lock_5m')),
-                      ),
-                      DropdownMenuItem(
-                        value: 15,
-                        child: Text(context.tr('lock_15m')),
-                      ),
-                      DropdownMenuItem(
-                        value: 60,
-                        child: Text(context.tr('lock_1h')),
-                      ),
-                      DropdownMenuItem(
-                        value: 1440,
-                        child: Text(context.tr('lock_24h')),
-                      ),
-                    ],
-                    onChanged: (val) {
-                      if (val != null) {
-                        UiPrefs.saveState(UiPrefs.notifier.value
-                            .copyWith(vaultTimeoutMins: val));
-                        _showToast(context.tr('saved_vault_timeout'));
-                      }
-                    },
-                  ),
-                ),
-                SLSpacing.h8,
-                Text(
-                  context.tr('home_monubnngho_5a6b7f'),
-                  style: SLTextStyles.quicksand(
-                    fontSize: 12,
-                    color: const Color(0xFF6A1B9A),
-                    fontWeight: FontWeight.w600,
-                    height: 1.4,
-                  ),
-                ),
-                SLSpacing.h16,
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    context.tr('vault_style_title'),
-                    style: SLTextStyles.quicksand(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF4A148C),
-                    ),
-                  ),
-                ),
-                SLSpacing.h8,
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: SLRadius.mdAll,
-                    border: Border.all(color: const Color(0xFFCE93D8)),
-                  ),
-                  child: ValueListenableBuilder<UiPrefsState>(
-                    valueListenable: UiPrefs.notifier,
-                    builder: (ctx, uiState, _) {
-                      return DropdownButtonFormField<String>(
-                        initialValue: uiState.vaultHomeStyle,
-                        isExpanded: true,
-                        style: SLTextStyles.quicksand(
-                          color: const Color(0xFF4A148C),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        decoration: const InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                          border: InputBorder.none,
-                        ),
-                        items: [
-                          DropdownMenuItem(
-                            value: 'soft',
-                            child: Text(ctx.tr('vault_style_soft')),
-                          ),
-                          DropdownMenuItem(
-                            value: 'secure',
-                            child: Text(ctx.tr('vault_style_secure')),
-                          ),
-                          DropdownMenuItem(
-                            value: 'cosmic',
-                            child: Text(ctx.tr('vault_style_cosmic')),
-                          ),
-                        ],
-                        onChanged: (val) async {
-                          if (val == null) return;
-                          if (val == 'cosmic') {
-                            await _loadVipStatus();
-                            if (!mounted) return;
-                            if (!_isVipActive) {
-                              _showToast(context.tr('vault_style_pro_required'), success: false);
-                              final houseId = _houseId?.trim();
-                              if (houseId == null || houseId.isEmpty) {
-                                _showToast(context.tr('home_hyvonhtrck_c33334'), success: false);
-                                return;
-                              }
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => PremiumStoreScreen(
-                                    houseId: houseId,
-                                    myName: _nameU1.trim().isEmpty 
-                                        ? context.tr('home_bn_1fd75b') 
-                                        : _nameU1.trim(),
-                                  ),
-                                ),
-                              );
-                              if (mounted) {
-                                await _loadVipStatus();
-                              }
-                              return;
-                            }
-                          }
-                          
-                          await UiPrefs.saveState(UiPrefs.notifier.value.copyWith(vaultHomeStyle: val));
-                          if (!mounted) return;
-                          _showToast(context.tr('saved_local_only'));
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
         ],
       ),
     );
@@ -740,7 +583,6 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
       hideBackButton: hideBackButton,
       id: 'lock',
       title: context.tr('home_trungtmkha_d42ff3'),
-      borderColor: const Color(0xFFD81B60),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -857,7 +699,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 value: _useBiometrics,
                 activeThumbColor: const Color(0xFFD81B60),
                 onChanged: (v) async {
-                  final msgBioNotSupported = context.tr('home_thitbkhngh_75b1e3');
+                  final msgBioNotSupported =
+                      context.tr('home_thitbkhngh_75b1e3');
                   final msgBioFailed = context.tr('home_xcthcsinht_2fd95b');
                   final requiresExistingLock =
                       _isAppLockEnabled && _storedLockSecret.trim().isNotEmpty;
@@ -871,15 +714,13 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     final canBio =
                         await _militaryLockService.canUseBiometrics();
                     if (!canBio) {
-                      _showToast(msgBioNotSupported,
-                          success: false);
+                      _showToast(msgBioNotSupported, success: false);
                       return;
                     }
                     final testAuth = await _militaryLockService
                         .authenticateWithDeviceForTest();
                     if (!testAuth) {
-                      _showToast(msgBioFailed,
-                          success: false);
+                      _showToast(msgBioFailed, success: false);
                       return;
                     }
                   }
@@ -940,55 +781,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 ),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Divider(color: Color(0xFFF3D9E6)),
-            ),
-            Text(
-              context.tr('auto_lock_after'),
-              style: SLTextStyles.quicksand(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF8A5B76)),
-            ),
-            SLSpacing.h8,
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [0, 1, 5, 15, 60].map((m) {
-                  final isSel = _lockTimeout == m;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(
-                          m == 0 ? context.tr('home_tcth_3c4371') : '$m phút'),
-                      selected: isSel,
-                      selectedColor: const Color(0xFFD81B60),
-                      labelStyle: SLTextStyles.quicksand(
-                        color: isSel ? Colors.white : const Color(0xFF8A5B76),
-                        fontWeight: FontWeight.w800,
-                        fontSize: 12,
-                      ),
-                      backgroundColor: const Color(0xFFF8F8F8),
-                      shape:
-                          RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
-                      onSelected: (s) async {
-                        if (!s) {
-                          return;
-                        }
-                        final authSuccess =
-                            await _authenticateLockSettingsChange();
-                        if (!authSuccess) {
-                          return;
-                        }
-                        setState(() => _lockTimeout = m);
-                        _saveAppLockSettings();
-                      },
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
+
             SLSpacing.h20,
             Text(
               context.tr('lock_scopes'),

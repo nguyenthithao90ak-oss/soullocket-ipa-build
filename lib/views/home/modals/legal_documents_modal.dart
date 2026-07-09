@@ -102,11 +102,14 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        _buildTabButton(
-                            'tos', context.tr('home_bomt_46487e'), Icons.gavel_rounded, _accentRose),
+                        _buildTabButton('tos', context.tr('home_bomt_46487e'),
+                            Icons.gavel_rounded, _accentRose),
                         SLSpacing.w8,
-                        _buildTabButton('privacy', context.tr('home_iukhon_bdeda1'),
-                            Icons.privacy_tip_rounded, _accentLavender),
+                        _buildTabButton(
+                            'privacy',
+                            context.tr('home_iukhon_bdeda1'),
+                            Icons.privacy_tip_rounded,
+                            _accentLavender),
                         SLSpacing.w8,
                         _buildTabButton('security', 'Cookie',
                             Icons.security_rounded, _accentGreen),
@@ -260,24 +263,21 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
               _buildDocItem(
                 icon: Icons.verified_user_rounded,
                 title: context.tr('home_quynvtrchn_bb2554'),
-                description:
-                    context.tr('home_lmrtrchnhi_ce82e7'),
+                description: context.tr('home_lmrtrchnhi_ce82e7'),
                 accent: _accentRose,
               ),
               SLSpacing.h10,
               _buildDocItem(
                 icon: Icons.groups_rounded,
                 title: context.tr('home_quytccngng_8862e1'),
-                description:
-                    context.tr('home_nuccnguynt_1015f9'),
+                description: context.tr('home_nuccnguynt_1015f9'),
                 accent: _accentRose,
               ),
               SLSpacing.h10,
               _buildDocItem(
                 icon: Icons.workspace_premium_rounded,
                 title: context.tr('home_provdchvs_00f86a'),
-                description:
-                    context.tr('home_giithchcch_1cbbe5'),
+                description: context.tr('home_giithchcch_1cbbe5'),
                 accent: _accentRose,
               ),
             ],
@@ -288,8 +288,8 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
           label: context.tr('home_xemchititi_eda09f'),
           icon: Icons.open_in_new_rounded,
           accent: _accentRose,
-          onTap: () =>
-              _openDoc(context.tr('home_iukhonsdng_b931f0'), 'assets/docs/terms.html'),
+          onTap: () => _openDoc(
+              context.tr('home_iukhonsdng_b931f0'), 'assets/docs/terms.html'),
         ),
       ],
     );
@@ -332,24 +332,21 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
               _buildDocItem(
                 icon: Icons.folder_shared_rounded,
                 title: context.tr('home_dliucxl_cbc4d9'),
-                description:
-                    context.tr('home_baogmnhvgp_7cae8c'),
+                description: context.tr('home_baogmnhvgp_7cae8c'),
                 accent: _accentLavender,
               ),
               SLSpacing.h10,
               _buildDocItem(
                 icon: Icons.lock_outline_rounded,
                 title: context.tr('home_mcchsdng_803f65'),
-                description:
-                    context.tr('home_dngktnicpi_abde74'),
+                description: context.tr('home_dngktnicpi_abde74'),
                 accent: _accentLavender,
               ),
               SLSpacing.h10,
               _buildDocItem(
                 icon: Icons.manage_accounts_rounded,
                 title: context.tr('home_quynkimsot_363315'),
-                description:
-                    context.tr('home_bncthttgps_338c10'),
+                description: context.tr('home_bncthttgps_338c10'),
                 accent: _accentLavender,
               ),
             ],
@@ -360,8 +357,8 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
           label: context.tr('home_xemchititb_d4c7c5'),
           icon: Icons.open_in_new_rounded,
           accent: _accentLavender,
-          onTap: () =>
-              _openDoc(context.tr('home_chnhschbom_98b319'), 'assets/docs/privacy.html'),
+          onTap: () => _openDoc(
+              context.tr('home_chnhschbom_98b319'), 'assets/docs/privacy.html'),
         ),
       ],
     );
@@ -404,24 +401,21 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
               _buildDocItem(
                 icon: Icons.phone_iphone_rounded,
                 title: context.tr('home_dliuclu_f572e2'),
-                description:
-                    context.tr('home_modelmyhiu_a0b2e6'),
+                description: context.tr('home_modelmyhiu_a0b2e6'),
                 accent: _accentGreen,
               ),
               SLSpacing.h10,
               _buildDocItem(
                 icon: Icons.public_rounded,
                 title: context.tr('home_vtrgnngtip_a84a67'),
-                description:
-                    context.tr('home_chsuyramct_3cfdc0'),
+                description: context.tr('home_chsuyramct_3cfdc0'),
                 accent: _accentGreen,
               ),
               SLSpacing.h10,
               _buildDocItem(
                 icon: Icons.security_rounded,
                 title: context.tr('home_mcchsdng_803f65'),
-                description:
-                    context.tr('home_cnhbongnhp_c8f63c'),
+                description: context.tr('home_cnhbongnhp_c8f63c'),
                 accent: _accentGreen,
               ),
             ],
@@ -487,24 +481,21 @@ class _LegalDocumentsModalState extends State<LegalDocumentsModal> {
               _buildDocItem(
                 icon: Icons.check_rounded,
                 title: context.tr('home_cookiescnt_91dc47'),
-                description:
-                    context.tr('home_cnthitsoul_2d6da0'),
+                description: context.tr('home_cnthitsoul_2d6da0'),
                 accent: _accentBlue,
               ),
               SLSpacing.h10,
               _buildDocItem(
                 icon: Icons.analytics_rounded,
                 title: context.tr('home_cookiesphn_3ea21d'),
-                description:
-                    context.tr('home_gipchngtih_99fd82'),
+                description: context.tr('home_gipchngtih_99fd82'),
                 accent: _accentBlue,
               ),
               SLSpacing.h10,
               _buildDocItem(
                 icon: Icons.campaign_rounded,
                 title: context.tr('home_cookiestip_7fd163'),
-                description:
-                    context.tr('home_csdnghinth_be761d'),
+                description: context.tr('home_csdnghinth_be761d'),
                 accent: _accentBlue,
               ),
             ],

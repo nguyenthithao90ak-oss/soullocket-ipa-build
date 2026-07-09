@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../app_error_mapper.dart';
+import '../../utils/app_error_mapper.dart';
 import 'cloudflare_r2_service.dart';
 import 'offline_cache_service.dart';
 
@@ -56,23 +56,6 @@ class GameDownloadService extends ChangeNotifier {
         'clear_burst.mp3',
         'drag_lift.mp3',
       ],
-    ),
-    'soul_rhythm': const GameAssetInfo(
-      gameId: 'soul_rhythm',
-      storagePath: 'game_assets/soul_rhythm',
-      downloadSizeLabel: 'khoảng 12 MB',
-      relativePaths: [
-        'AxelF_CrazyFrog_Tutorial.mp3',
-        '2PhutHon_Phao_tutorial.mp3',
-        'Believer_ImagineDragons_Tutorial.mp3',
-      ],
-    ),
-    // New entry for Caro Neon (no external assets needed)
-    'caro_neon': const GameAssetInfo(
-      gameId: 'caro_neon',
-      storagePath: '',
-      downloadSizeLabel: '0 MB',
-      relativePaths: [],
     ),
   };
 
@@ -174,7 +157,8 @@ class GameDownloadService extends ChangeNotifier {
           // Tải từ Cloudflare R2 (public domain)
           final fullStoragePath = '${config.storagePath}/$fileName';
           CloudflareR2Service.instance.init();
-          final remoteUrl = '${CloudflareR2Service.publicDomain}/$fullStoragePath';
+          final remoteUrl =
+              '${CloudflareR2Service.publicDomain}/$fullStoragePath';
 
           await _dio.download(
             remoteUrl,

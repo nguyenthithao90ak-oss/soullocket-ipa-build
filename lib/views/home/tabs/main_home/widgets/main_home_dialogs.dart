@@ -1,4 +1,4 @@
-
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../../main_home_tab.dart';
 
 extension _MainHomeTabDialogs on _MainHomeTabState {
@@ -11,26 +11,22 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
       (
         icon: Icons.favorite_rounded,
         title: context.tr('home_chomngbnnv_7ffc51'),
-        body:
-            context.tr('home_ylhngdnnha_b558ac'),
+        body: context.tr('home_ylhngdnnha_b558ac'),
       ),
       (
         icon: Icons.track_changes_rounded,
         title: context.tr('home_vngmngyyu_68e244'),
-        body:
-            context.tr('home_vngckhoanh_623126'),
+        body: context.tr('home_vngckhoanh_623126'),
       ),
       (
         icon: Icons.edit_calendar_rounded,
         title: context.tr('home_bmvochnhch_0d6ef0'),
-        body:
-            context.tr('home_bmsngychnh_cf2261'),
+        body: context.tr('home_bmsngychnh_cf2261'),
       ),
       (
         icon: Icons.apps_rounded,
         title: context.tr('home_cckhuvcchn_6df4cf'),
-        body:
-            context.tr('home_nhtkalbumk_6c939f'),
+        body: context.tr('home_nhtkalbumk_6c939f'),
       ),
     ];
     await showDialog<void>(
@@ -277,14 +273,33 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
 
   void _handleInteractionLongPressEnd(LongPressEndDetails details) {
     final selectedType = _interactionDragHoveredType;
+    _hideInteractionDragOverlay();
+    
+    if (selectedType == 'edit_stickers') {
+      _openStickerCustomization();
+      return;
+    }
+    
     final preset = selectedType == null
         ? null
         : _maybePresetForInteractionType(selectedType);
-    _hideInteractionDragOverlay();
     if (preset != null) {
       _setManualInteractionPreset(preset.type);
       _handleSendInteraction(preset.type, preset.emoji);
     }
+  }
+
+  void _openStickerCustomization() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const InteractionStickerEditorScreen(),
+      ),
+    ).then((updated) async {
+      if (updated == true && mounted) {
+        await _loadCustomStickers();
+        setState(() {});
+      }
+    });
   }
 
   void _handleInteractionLongPressCancel() {
@@ -310,6 +325,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           (preset) => MapEntry(preset.type, GlobalKey()),
         ),
       );
+    _interactionDragOptionKeys['edit_stickers'] = GlobalKey();
 
     _interactionDragOverlayEntry = OverlayEntry(
       builder: (context) {
@@ -342,8 +358,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                               maxWidth: 404,
                               minHeight: 224,
                             ),
-                            margin:
-                                const EdgeInsets.symmetric(horizontal: 16),
+                            margin: const EdgeInsets.symmetric(horizontal: 16),
                             padding: const EdgeInsets.fromLTRB(
                               20,
                               20,
@@ -372,38 +387,75 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                GridView.builder(
-                                  shrinkWrap: true,
-                                  physics:
-                                      const NeverScrollableScrollPhysics(),
-                                  itemCount:
-                                      _interactionDragMenuOptions.length,
-                                  gridDelegate:
-                                      const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 4,
-                                    crossAxisSpacing: 8,
-                                    mainAxisSpacing: 12,
-                                    childAspectRatio: 0.92,
-                                  ),
-                                  itemBuilder: (context, index) {
-                                    final preset =
-                                        _interactionDragMenuOptions[index];
-                                    final isHovered =
-                                        hoveredType == preset.type;
-                                    return _buildInteractionDragOption(
-                                      preset,
-                                      key: _interactionDragOptionKeys[
-                                          preset.type],
-                                      highlighted: isHovered,
-                                      onTap: () {
-                                        _setManualInteractionPreset(
-                                            preset.type);
-                                        _hideInteractionDragOverlay();
-                                        _handleSendInteraction(
-                                            preset.type, preset.emoji);
+                                Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    GridView.builder(
+                                      shrinkWrap: true,
+                                      physics: const NeverScrollableScrollPhysics(),
+                                      itemCount: _interactionDragMenuOptions.length,
+                                      gridDelegate:
+                                          const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 4,
+                                        crossAxisSpacing: 8,
+                                        mainAxisSpacing: 12,
+                                        childAspectRatio: 0.92,
+                                      ),
+                                      itemBuilder: (context, index) {
+                                        final preset =
+                                            _interactionDragMenuOptions[index];
+                                        final isHovered =
+                                            hoveredType == preset.type;
+                                        return _buildInteractionDragOption(
+                                          preset,
+                                          key: _interactionDragOptionKeys[
+                                              preset.type],
+                                          highlighted: isHovered,
+                                          onTap: () {
+                                            _setManualInteractionPreset(
+                                                preset.type);
+                                            _hideInteractionDragOverlay();
+                                            _handleSendInteraction(
+                                                preset.type, preset.emoji);
+                                          },
+                                        );
                                       },
-                                    );
-                                  },
+                                    ),
+                                    ValueListenableBuilder<String?>(
+                                      valueListenable: _interactionDragHoveredNotifier,
+                                      builder: (context, hoveredVal, _) {
+                                        final isHovered = hoveredVal == 'edit_stickers';
+                                        return GestureDetector(
+                                          onTap: () {
+                                            _hideInteractionDragOverlay();
+                                            _openStickerCustomization();
+                                          },
+                                          child: AnimatedScale(
+                                            scale: isHovered ? 1.2 : 1.0,
+                                            duration: const Duration(milliseconds: 200),
+                                            curve: Curves.easeOutBack,
+                                            child: Container(
+                                              key: _interactionDragOptionKeys['edit_stickers'],
+                                              padding: const EdgeInsets.all(6),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF4CAF50),
+                                                shape: BoxShape.circle,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: const Color(0xFF4CAF50).withValues(alpha: 0.4),
+                                                    blurRadius: 8,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                                border: Border.all(color: Colors.white, width: 1.5),
+                                              ),
+                                              child: const Icon(Icons.edit_rounded, color: Colors.white, size: 16),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -457,11 +509,16 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
     }
 
     String? hoveredType;
-    for (final preset in _interactionDragMenuOptions) {
-      final rect = _interactionDragOptionHitRects[preset.type];
-      if (rect != null && rect.contains(globalPosition)) {
-        hoveredType = preset.type;
-        break;
+    final editRect = _interactionDragOptionHitRects['edit_stickers'];
+    if (editRect != null && editRect.contains(globalPosition)) {
+      hoveredType = 'edit_stickers';
+    } else {
+      for (final preset in _interactionDragMenuOptions) {
+        final rect = _interactionDragOptionHitRects[preset.type];
+        if (rect != null && rect.contains(globalPosition)) {
+          hoveredType = preset.type;
+          break;
+        }
       }
     }
 
@@ -579,8 +636,8 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           margin: EdgeInsets.only(
             left: 16,
             right: 16,
-            bottom: MediaQuery.of(context).size.height -
-                (MediaQuery.of(context).padding.top + 168),
+            bottom: MediaQuery.sizeOf(context).height -
+                (MediaQuery.paddingOf(context).top + 168),
           ),
           content: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -662,7 +719,18 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
       );
   }
 
-  void _showMissYouScreen(_MissYouAlertPayload payload) {
+  void _showMissYouScreen(_MissYouAlertPayload payload) async {
+    final prefs = await OfflineCacheService.getPrefs();
+    final lastTimeMs = prefs.getInt('il_last_missyou_time_v2') ?? 0;
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    
+    if (nowMs - lastTimeMs < 3600000) {
+      return;
+    }
+    
+    await prefs.setInt('il_last_missyou_time_v2', nowMs);
+    if (!mounted) return;
+
     if (_incomingInteractionDialogVisible) {
       _incomingInteractionQueue.add(payload);
       return;
@@ -789,7 +857,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           startCooldown: startCooldown,
         );
         if (!mounted) return;
-        
+
         // Optimistic UI update
         _safeSetState(() {
           if (_houseSettings != null) {
@@ -818,9 +886,12 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
     if (_houseId == null) return;
 
     final controller = TextEditingController(text: currentLabel);
-    final dialogTitle =
-        editTopLabel ? context.tr('home_ichphatrn_2b9989') : context.tr('home_ichphadi_5a1c20');
-    final hintText = editTopLabel ? context.tr('home_vdbnnhau_998f24') : context.tr('home_vdngyyu_f3c8aa');
+    final dialogTitle = editTopLabel
+        ? context.tr('home_ichphatrn_2b9989')
+        : context.tr('home_ichphadi_5a1c20');
+    final hintText = editTopLabel
+        ? context.tr('home_vdbnnhau_998f24')
+        : context.tr('home_vdngyyu_f3c8aa');
 
     showDialog<String>(
       context: context,

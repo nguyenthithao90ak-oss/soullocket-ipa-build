@@ -29,7 +29,7 @@ class AntiSpamRateLimitService {
 
     try {
       final prefs = OfflineCacheService.getPrefsSync() ??
-        await SharedPreferences.getInstance();
+          await SharedPreferences.getInstance();
       _deviceId = prefs.getString('il_antispam_device_id');
 
       if (_deviceId == null) {

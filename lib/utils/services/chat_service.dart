@@ -653,7 +653,7 @@ class ChatService {
     Future<void> finalizeCall() async {
       if (sessionId.startsWith('R2_BYPASS|')) {
         final url = sessionId.split('|')[1];
-        
+
         await _runExternalChatAction(() async {
           final target = isInternal ? myHouseId : (targetHouseId ?? myHouseId);
           await _assertNotBlocked(myHouseId, target);
@@ -777,7 +777,7 @@ class ChatService {
 
       final welcomeText = _friendWelcomeTemplates[
           math.Random().nextInt(_friendWelcomeTemplates.length)];
-          
+
       final docRef = FirebaseFirestore.instance
           .collection('chats')
           .doc(roomId)
@@ -808,7 +808,7 @@ class ChatService {
         return Transaction.success(roomData);
       });
       if (!tx.committed) return;
-      
+
       final msgPayload = _buildMessageWriteMap(
         senderId: myHouseId,
         text: welcomeText,
@@ -937,13 +937,13 @@ class ChatService {
         await _assertNotBlocked(myHouseId, targetHouseId);
         await _assertChatRoomOpen(myHouseId, targetHouseId);
         final roomId = _getRoomId(myHouseId, targetHouseId);
-        
+
         final docRef = FirebaseFirestore.instance
             .collection('chats')
             .doc(roomId)
             .collection('messages')
             .doc(messageId);
-            
+
         await docRef.update({'reactions.$myHouseId': emoji});
       },
       permissionMessage:
@@ -980,13 +980,16 @@ class ChatService {
       final snap = await query.get().timeout(const Duration(seconds: 10));
       if (snap.docs.isEmpty) return [];
 
-      return snap.docs.map((doc) {
-        try {
-          return ChatMessage.fromMap(doc.id, doc.data());
-        } catch (_) {
-          return null;
-        }
-      }).whereType<ChatMessage>().toList();
+      return snap.docs
+          .map((doc) {
+            try {
+              return ChatMessage.fromMap(doc.id, doc.data());
+            } catch (_) {
+              return null;
+            }
+          })
+          .whereType<ChatMessage>()
+          .toList();
     } on TimeoutException {
       return [];
     }
@@ -1008,7 +1011,7 @@ class ChatService {
   }) {
     final roomId = _getRoomId(myHouseId, targetHouseId);
     final tsFilter = afterTs ?? 0;
-    
+
     return FirebaseFirestore.instance
         .collection('chats')
         .doc(roomId)
@@ -1017,26 +1020,25 @@ class ChatService {
         .orderBy('ts')
         .snapshots()
         .expand((snapshot) => snapshot.docChanges
-            .where((change) =>
-                change.type == DocumentChangeType.added ||
-                change.type == DocumentChangeType.modified)
-            .map((change) {
-          try {
-            return ChatMessage.fromMap(change.doc.id, change.doc.data()!);
-          } catch (_) {
-            return null;
-          }
-        })
-        .whereType<ChatMessage>());
+                .where((change) =>
+                    change.type == DocumentChangeType.added ||
+                    change.type == DocumentChangeType.modified)
+                .map((change) {
+              try {
+                return ChatMessage.fromMap(change.doc.id, change.doc.data()!);
+              } catch (_) {
+                return null;
+              }
+            }).whereType<ChatMessage>());
   }
 
   Stream<ChatMessage> streamNewInternalMessages(
     String houseId, {
     int? afterTs,
   }) {
-    return InternalChatService().streamNewMessages(houseId, afterTs: afterTs ?? 0);
+    return InternalChatService()
+        .streamNewMessages(houseId, afterTs: afterTs ?? 0);
   }
-
 
   String _readMetaString(Object? raw) => raw?.toString() ?? '';
 
@@ -1224,7 +1226,8 @@ class ChatService {
     return controller.stream;
   }
 
-  Stream<ChatRoomMeta> streamInternalRoomMeta(String houseId, {String? viewerRole}) {
+  Stream<ChatRoomMeta> streamInternalRoomMeta(String houseId,
+      {String? viewerRole}) {
     return _streamRoomMetaFields(
       _dbRef.child('houses/$houseId/chat_room'),
       includeStatus: false,
@@ -1289,7 +1292,8 @@ class ChatService {
     String senderRole,
     String emoji,
   ) async {
-    await InternalChatService().addReaction(houseId, messageId, senderRole, emoji);
+    await InternalChatService()
+        .addReaction(houseId, messageId, senderRole, emoji);
   }
 
   Future<void> clearConversation(

@@ -53,7 +53,10 @@ class ThemeSettingsService {
     if (normalizedHouseId.isEmpty) {
       return Stream<Map<dynamic, dynamic>?>.value(null);
     }
-    return _db.ref('houses/$normalizedHouseId/ui_settings').onValue.map((event) {
+    return _db
+        .ref('houses/$normalizedHouseId/ui_settings')
+        .onValue
+        .map((event) {
       if (!event.snapshot.exists || event.snapshot.value is! Map) return null;
       return Map<dynamic, dynamic>.from(event.snapshot.value as Map);
     });

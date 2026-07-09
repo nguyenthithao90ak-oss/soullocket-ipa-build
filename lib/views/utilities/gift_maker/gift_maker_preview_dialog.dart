@@ -1,4 +1,4 @@
-﻿part of '../gift_maker_screen.dart';
+part of '../gift_maker_screen.dart';
 
 enum _GiftStage { bubble, box, letterClosed, letterOpen, scratch, finalStage }
 
@@ -474,7 +474,9 @@ class _GiftPreviewDialogState extends State<GiftPreviewDialog> {
                 backgroundColor: const Color(0xFFD81B60),
               ),
               child: Text(
-                _scratchProgress >= 0.75 ? context.tr('util_cont_01a0f4') : context.tr('util_cothm_1e2656'),
+                _scratchProgress >= 0.75
+                    ? context.tr('util_cont_01a0f4')
+                    : context.tr('util_cothm_1e2656'),
                 style: SLTheme.quicksand(fontWeight: FontWeight.w900),
               ),
             ),

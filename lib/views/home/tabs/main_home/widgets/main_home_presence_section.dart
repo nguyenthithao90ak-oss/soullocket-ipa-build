@@ -1,4 +1,3 @@
-
 part of '../../main_home_tab.dart';
 
 extension _MainHomeTabPresenceSection on _MainHomeTabState {
@@ -9,154 +8,162 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
     required String avtUser1,
     required String avtUser2,
   }) {
-    final compactMetaLayout = !isSingle && !_showStatus && !_showWeather;
-    final dobU1 = _houseSettings?['dobU1']?.toString() ?? '';
-    final dobU2 = _houseSettings?['dobU2']?.toString() ?? '';
-    final z1 = ZodiacUtils.getZodiac(dobU1);
-    final z2 = ZodiacUtils.getZodiac(dobU2);
-    final ageDaysU1 = _extractAgeDays(dobU1);
-    final ageDaysU2 = _extractAgeDays(dobU2);
-    final effectProfile = UiPrefs.resolveEffectProfile(
-      state: UiPrefs.notifier.value,
-      isWeb: kIsWeb,
-    );
-    final showDecorGlow = !effectProfile.performanceMode;
-    final decorGlowEnabled = DateTime.now().millisecondsSinceEpoch < 0;
+    return ValueListenableBuilder<Map<String, dynamic>>(
+      valueListenable: _presenceDataNotifier,
+      builder: (context, _, __) {
+        final compactMetaLayout = !isSingle && !_showStatus && !_showWeather;
+        final dobU1 = _houseSettings?['dobU1']?.toString() ?? '';
+        final dobU2 = _houseSettings?['dobU2']?.toString() ?? '';
+        final z1 = ZodiacUtils.getZodiac(dobU1);
+        final z2 = ZodiacUtils.getZodiac(dobU2);
+        final ageDaysU1 = _extractAgeDays(dobU1);
+        final ageDaysU2 = _extractAgeDays(dobU2);
+        final effectProfile = UiPrefs.resolveEffectProfile(
+          state: UiPrefs.notifier.value,
+          isWeb: kIsWeb,
+        );
+        final showDecorGlow = !effectProfile.performanceMode;
+        final decorGlowEnabled = DateTime.now().millisecondsSinceEpoch < 0;
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        20,
-        compactMetaLayout ? 18 : 24,
-        20,
-        compactMetaLayout ? 14 : 20,
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
-        children: [
-          if (decorGlowEnabled && showDecorGlow) ...[
-            Positioned(
-              top: -8,
-              left: -4,
-              child: IgnorePointer(
-                child: Container(
-                  width: 78,
-                  height: 78,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        const Color(0xFFFFB7D1).withValues(alpha: 0.28),
-                        const Color(0xFFFFB7D1).withValues(alpha: 0.02),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              right: -10,
-              bottom: -10,
-              child: IgnorePointer(
-                child: Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        const Color(0xFF8FD8FF).withValues(alpha: 0.22),
-                        const Color(0xFF8FD8FF).withValues(alpha: 0.02),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-          Row(
-            mainAxisAlignment: compactMetaLayout
-                ? MainAxisAlignment.spaceEvenly
-                : MainAxisAlignment.spaceAround,
-            crossAxisAlignment: CrossAxisAlignment.start,
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            compactMetaLayout ? 18 : 24,
+            20,
+            compactMetaLayout ? 14 : 20,
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
             children: [
-              Flexible(
-                child: _buildModernUserColumn(
-                  name: nameU1,
-                  avatarUrl: avtUser1,
-                  zodiacEmoji: z1?['emoji'] ?? '✦',
-                  zodiacName: z1?['name'] ?? '',
-                  ageDays: ageDaysU1,
-                  role: 'user1',
-                  isUser1: true,
-                  hideMeta: isSingle,
-                  customOnTap: () => _changeAvatar(isUser1: true),
-                  customOnLongPress: () => _changeAvatar(isUser1: true),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: compactMetaLayout ? 8 : 10,
-                  vertical: compactMetaLayout ? 12 : 20,
-                ),
-                child: _buildModernRelationshipAction(isSingle: isSingle),
-              ),
-              Flexible(
-                child: isSingle
-                    ? _buildModernUserColumn(
-                        name: '',
-                        avatarUrl: '', // Will fall back to placeholder or empty
-                        zodiacEmoji: '',
-                        zodiacName: '',
-                        ageDays: '--',
-                        role: 'user2',
-                        isUser1: false,
-                        hideMeta: true,
-                        isGreyedOut: true,
-                        customOnTap: _openSingleMatchHub,
-                      )
-                    : _buildModernUserColumn(
-                        name: nameU2,
-                        avatarUrl: avtUser2,
-                        zodiacEmoji: z2?['emoji'] ?? '✦',
-                        zodiacName: z2?['name'] ?? '',
-                        ageDays: ageDaysU2,
-                        role: 'user2',
-                        isUser1: false,
-                        hideMeta: false,
-                        customOnTap: () => _changeAvatar(isUser1: false),
-                        customOnLongPress: () => _changeAvatar(isUser1: false),
+              if (decorGlowEnabled && showDecorGlow) ...[
+                Positioned(
+                  top: -8,
+                  left: -4,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: 78,
+                      height: 78,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            const Color(0xFFFFB7D1).withValues(alpha: 0.28),
+                            const Color(0xFFFFB7D1).withValues(alpha: 0.02),
+                          ],
+                        ),
                       ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: -10,
+                  bottom: -10,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            const Color(0xFF8FD8FF).withValues(alpha: 0.22),
+                            const Color(0xFF8FD8FF).withValues(alpha: 0.02),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              Row(
+                mainAxisAlignment: compactMetaLayout
+                    ? MainAxisAlignment.spaceEvenly
+                    : MainAxisAlignment.spaceAround,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Flexible(
+                    child: _buildModernUserColumn(
+                      name: nameU1,
+                      avatarUrl: avtUser1,
+                      zodiacEmoji: z1?['emoji'] ?? '',
+                      zodiacName: z1?['name'] ?? '',
+                      ageDays: ageDaysU1,
+                      role: 'user1',
+                      isUser1: true,
+                      hideMeta: isSingle,
+                      customOnTap: () => _changeAvatar(isUser1: true),
+                      customOnLongPress: () => _changeAvatar(isUser1: true),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: compactMetaLayout ? 8 : 10,
+                      vertical: compactMetaLayout ? 12 : 20,
+                    ),
+                    child: _buildModernRelationshipAction(isSingle: isSingle),
+                  ),
+                  Flexible(
+                    child: isSingle
+                        ? _buildModernUserColumn(
+                            name: '',
+                            avatarUrl:
+                                '', // Will fall back to placeholder or empty
+                            zodiacEmoji: '',
+                            zodiacName: '',
+                            ageDays: '--',
+                            role: 'user2',
+                            isUser1: false,
+                            hideMeta: true,
+                            isGreyedOut: true,
+                            customOnTap: _openSingleMatchHub,
+                          )
+                        : _buildModernUserColumn(
+                            name: nameU2,
+                            avatarUrl: avtUser2,
+                            zodiacEmoji: z2?['emoji'] ?? '',
+                            zodiacName: z2?['name'] ?? '',
+                            ageDays: ageDaysU2,
+                            role: 'user2',
+                            isUser1: false,
+                            hideMeta: false,
+                            customOnTap: () => _changeAvatar(isUser1: false),
+                            customOnLongPress: () =>
+                                _changeAvatar(isUser1: false),
+                          ),
+                  ),
+                ],
+              ),
+              Positioned.fill(
+                child: ValueListenableBuilder<List<_HomeReactionFlight>>(
+                  valueListenable: _reactionFlightsNotifier,
+                  builder: (context, flights, _) {
+                    return Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        for (final flight in flights)
+                          Positioned.fill(
+                            key: ValueKey('reaction-flight-${flight.id}'),
+                            child: IgnorePointer(
+                              child: ShootingHeartEffect(
+                                shootToRight: flight.shootToRight,
+                                emoji: flight.emoji,
+                                assetPath: flight.assetPath,
+                                imageUrl: flight.imageUrl,
+                                onComplete: () =>
+                                    _removeReactionFlight(flight.id),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
               ),
             ],
           ),
-          Positioned.fill(
-            child: ValueListenableBuilder<List<_HomeReactionFlight>>(
-              valueListenable: _reactionFlightsNotifier,
-              builder: (context, flights, _) {
-                return Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    for (final flight in flights)
-                      Positioned.fill(
-                        key: ValueKey('reaction-flight-${flight.id}'),
-                        child: IgnorePointer(
-                          child: ShootingHeartEffect(
-                            shootToRight: flight.shootToRight,
-                            emoji: flight.emoji,
-                            assetPath: flight.assetPath,
-                            imageUrl: flight.imageUrl,
-                            onComplete: () => _removeReactionFlight(flight.id),
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -188,29 +195,59 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
     }
     return Column(
       children: [
-        if (isGreyedOut)
-          _buildAvatar(
-            name,
-            avatarUrl,
-            isUser1: isUser1,
-            onTap: customOnTap,
-            onLongPress: customOnLongPress,
-            isUploading: _uploadingAvatarRole == role,
-            uploadProgress: _uploadingAvatarRole == role ? _avatarUploadProgress : null,
-            size: avatarSize,
-            isSinglePlaceholder: true,
-          )
-        else
-          _buildAvatar(
-            name,
-            avatarUrl,
-            isUser1: isUser1,
-            onTap: customOnTap,
-            onLongPress: customOnLongPress,
-            isUploading: _uploadingAvatarRole == role,
-            uploadProgress: _uploadingAvatarRole == role ? _avatarUploadProgress : null,
-            size: avatarSize,
-          ),
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            if (isGreyedOut)
+              _buildAvatar(
+                name,
+                avatarUrl,
+                isUser1: isUser1,
+                onTap: customOnTap,
+                onLongPress: customOnLongPress,
+                isUploading: _uploadingAvatarRole == role,
+                uploadProgress:
+                    _uploadingAvatarRole == role ? _avatarUploadProgress : null,
+                size: avatarSize,
+                isSinglePlaceholder: true,
+              )
+            else
+              _buildAvatar(
+                name,
+                avatarUrl,
+                isUser1: isUser1,
+                onTap: customOnTap,
+                onLongPress: customOnLongPress,
+                isUploading: _uploadingAvatarRole == role,
+                uploadProgress:
+                    _uploadingAvatarRole == role ? _avatarUploadProgress : null,
+                size: avatarSize,
+              ),
+            if (!hideMeta && _showWeather && weatherText.isNotEmpty)
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    weatherText,
+                    style: const TextStyle(fontSize: 14, height: 1),
+                  ),
+                ),
+              ),
+          ],
+        ),
         SizedBox(height: compactMeta ? 8 : 12),
         GestureDetector(
           onTap: () async {
@@ -252,7 +289,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if ((zodiacEmoji != '✦' && zodiacEmoji.isNotEmpty) ||
+              if ((zodiacEmoji.isNotEmpty) ||
                   (hasAge && displayAge.isNotEmpty))
                 _buildModernBirthZodiacPill(
                   zodiacEmoji: zodiacEmoji,
@@ -297,37 +334,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
               color: statusColor,
             ),
           ),
-        if (!hideMeta && (_showStatus || _showWeather)) SLSpacing.h8,
-        if (!hideMeta && _showWeather)
-          Wrap(
-            alignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              if (weatherText.isNotEmpty)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.72),
-                    borderRadius: BorderRadius.circular(999),
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.8)),
-                  ),
-                  child: Text(
-                    weatherText,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: SLTheme.quicksand(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: SLColors.textSecondary,
-                    ),
-                  ),
-                ),
-            ],
-          ),
+        if (!hideMeta && _showStatus) SLSpacing.h8,
       ],
     );
   }
@@ -340,7 +347,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
   }) {
     final detail = ZodiacUtils.zodiacDetails[zodiacName];
     final element = detail?['element']?.toString() ?? '';
-    final hasZodiac = zodiacEmoji != '✦' && zodiacEmoji.isNotEmpty;
+    final hasZodiac = zodiacEmoji.isNotEmpty;
     final hasAge = age.isNotEmpty;
 
     Color baseColor;
@@ -357,8 +364,8 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
     }
 
     return Container(
-      height: 24,
-      padding: const EdgeInsets.symmetric(horizontal: 7),
+      height: 28,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.86),
         borderRadius: BorderRadius.circular(999),
@@ -377,7 +384,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
           if (hasZodiac) ...[
             Text(
               zodiacEmoji,
-              style: const TextStyle(fontSize: 12, height: 1),
+              style: const TextStyle(fontSize: 16, height: 1),
             ),
             if (hasAge) const SizedBox(width: 4),
           ],

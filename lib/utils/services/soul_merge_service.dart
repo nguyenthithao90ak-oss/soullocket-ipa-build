@@ -25,7 +25,9 @@ class SoulMergeService {
       final prefs = await SharedPreferences.getInstance();
       final role = _normalizeRole(prefs.getString('il_role'));
 
-      await _db.ref('houses/$houseId/soul_merge/$role').set(ServerValue.timestamp);
+      await _db
+          .ref('houses/$houseId/soul_merge/$role')
+          .set(ServerValue.timestamp);
     } catch (e) {
       debugPrint('[SoulMergeService] reportBump error: $e');
     }
@@ -34,9 +36,14 @@ class SoulMergeService {
   /// Listen to the bump times of both partners (resolved by server time).
   /// Key trong map là role ('user1'/'user2').
   Stream<Map<String, int>> watchMergeTimes() {
-    return Stream.fromFuture(_houseService.getCurrentHouseId()).asyncExpand<Map<String, int>>((houseId) {
+    return Stream.fromFuture(_houseService.getCurrentHouseId())
+        .asyncExpand<Map<String, int>>((houseId) {
       if (houseId == null || houseId.isEmpty) return const Stream.empty();
-      return _db.ref('houses/$houseId/soul_merge').onValue.asBroadcastStream().map((event) {
+      return _db
+          .ref('houses/$houseId/soul_merge')
+          .onValue
+          .asBroadcastStream()
+          .map((event) {
         final data = event.snapshot.value as Map<dynamic, dynamic>?;
         if (data == null) return const <String, int>{};
 
@@ -115,7 +122,8 @@ class SoulMergeService {
 
   /// Watch real-time temporary messages in Soul Merge
   Stream<List<Map<String, dynamic>>> watchSoulMessages() {
-    return Stream.fromFuture(_houseService.getCurrentHouseId()).asyncExpand<List<Map<String, dynamic>>>((houseId) {
+    return Stream.fromFuture(_houseService.getCurrentHouseId())
+        .asyncExpand<List<Map<String, dynamic>>>((houseId) {
       if (houseId == null || houseId.isEmpty) return const Stream.empty();
       return _db
           .ref('houses/$houseId/soul_merge/chat')
@@ -168,7 +176,8 @@ class SoulMergeService {
       if (houseId == null || houseId.isEmpty) return 0;
       final prefs = await SharedPreferences.getInstance();
       final role = _normalizeRole(prefs.getString('il_role'));
-      final snap = await _db.ref('houses/$houseId/soul_merge/lastSeen/$role').get();
+      final snap =
+          await _db.ref('houses/$houseId/soul_merge/lastSeen/$role').get();
       return (snap.value as num?)?.toInt() ?? 0;
     } catch (e) {
       debugPrint('[SoulMergeService] getLastSeenTimestamp error: $e');
@@ -177,7 +186,8 @@ class SoulMergeService {
   }
 
   /// Send an interactive event (e.g. photo shot or heart tap) to the partner
-  Future<void> sendInteractiveEvent({required String type, String? url, double? x, double? y}) async {
+  Future<void> sendInteractiveEvent(
+      {required String type, String? url, double? x, double? y}) async {
     try {
       final user = _auth.currentUser;
       if (user == null) return;
@@ -222,11 +232,12 @@ class SoulMergeService {
 
   /// Watch real-time interactive events
   Stream<Map<String, dynamic>> watchInteractiveEvents() {
-    return Stream.fromFuture(_houseService.getCurrentHouseId()).asyncExpand<Map<String, dynamic>>((houseId) {
+    return Stream.fromFuture(_houseService.getCurrentHouseId())
+        .asyncExpand<Map<String, dynamic>>((houseId) {
       if (houseId == null || houseId.isEmpty) return const Stream.empty();
-      
+
       final now = DateTime.now().millisecondsSinceEpoch;
-      
+
       return _db
           .ref('houses/$houseId/soul_merge/interactive_events')
           .orderByChild('timestamp')

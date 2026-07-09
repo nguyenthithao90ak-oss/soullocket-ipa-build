@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -15,7 +16,9 @@ const List<Color> _registerButtonDisabledColors = <Color>[
 ];
 
 bool _isRegisterInputValid(String email, String password, bool acceptTerms) {
-  return _registerEmailRegex.hasMatch(email.trim()) && password.trim().length >= 6 && acceptTerms;
+  return _registerEmailRegex.hasMatch(email.trim()) &&
+      password.trim().length >= 6 &&
+      acceptTerms;
 }
 
 class RegisterForm extends StatelessWidget {
@@ -86,8 +89,6 @@ class RegisterForm extends StatelessWidget {
         children: [
           SLTheme.sectionHeader(
             title: l10n.translate('auth_login_email_label'),
-            trailing: l10n.translate('auth_required_badge').toUpperCase(),
-            trailingColor: accentRose,
           ),
           const SizedBox(height: 8),
           TextField(
@@ -142,152 +143,7 @@ class RegisterForm extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          GestureDetector(
-            onTap: onToggleSecurityQuestion,
-            child: SLTheme.authToggleCard(
-              selected: showSecurityQuestion,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        showSecurityQuestion
-                            ? securityQuestionLabel
-                            : securityQuestionTapLabel,
-                        style: SLTheme.quicksand(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: showSecurityQuestion
-                              ? SLColors.textSecond
-                              : SLTheme.authMutedTextColor,
-                          fontStyle: showSecurityQuestion
-                              ? FontStyle.normal
-                              : FontStyle.italic,
-                        ),
-                      ),
-                    ),
-                    AnimatedRotation(
-                      duration: const Duration(milliseconds: 240),
-                      turns: showSecurityQuestion ? 0.5 : 0,
-                      child: const Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: SLColors.primary,
-                        size: 20,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 300),
-            alignment: Alignment.topCenter,
-            curve: Curves.easeInOut,
-            child: !showSecurityQuestion
-                ? const SizedBox(height: 4, width: double.infinity)
-                : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: SLTheme.authHintCard(
-                    child: Text(
-                      securityNote,
-                      style: SLTheme.quicksand(
-                        fontSize: 11,
-                        color: SLColors.primary,
-                        fontWeight: FontWeight.w700,
-                        height: 1.35,
-                      ),
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: SLTheme.authFieldDecoration(
-                    fillColor: SLTheme.authFieldFill,
-                    borderColor: SLTheme.authFieldBorder,
-                    focusColor: accentRose,
-                    radius: 16,
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: selectedSecurityQuestion,
-                      isExpanded: true,
-                      icon: const Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: SLColors.primary,
-                      ),
-                      style: SLTheme.quicksand(
-                        color: SLColors.textSecond,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                      ),
-                      onChanged: onSecurityQuestionChanged,
-                      items: securityQuestions
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: securityAnswerController,
-                  keyboardType: isBirthQuestion
-                      ? TextInputType.datetime
-                      : TextInputType.text,
-                  inputFormatters: isBirthQuestion
-                      ? const [FlexibleDateInputFormatter()]
-                      : null,
-                  textInputAction: TextInputAction.done,
-                  onEditingComplete: isBirthQuestion
-                      ? () {
-                          final normalized = DateInputUtils.normalizeForDisplay(
-                            securityAnswerController.text,
-                            firstYear: 1900,
-                            lastYear: DateTime.now().year,
-                            allowMissingYear: true,
-                          );
-                          securityAnswerController.text = normalized;
-                          securityAnswerController.selection =
-                              TextSelection.collapsed(
-                            offset: normalized.length,
-                          );
-                        }
-                      : null,
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                  ),
-                  decoration: SLTheme.authInputDecoration(
-                    hintText: isBirthQuestion
-                        ? l10n.translate('auth_birthdate_hint')
-                        : securityAnswerHint,
-                    helperText: isBirthQuestion
-                        ? l10n.translate('auth_birthdate_helper')
-                        : null,
-                    focusColor: accentRose,
-                    prefixIcon: Icon(
-                      Icons.question_answer_outlined,
-                      color: accentRose.withValues(alpha: 0.65),
-                      size: 20,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           SLTheme.authToggleCard(
             selected: acceptTerms,
             child: Padding(

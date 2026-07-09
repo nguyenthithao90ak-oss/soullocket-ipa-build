@@ -3,7 +3,8 @@ part of '../../../tabs/main_home_tab.dart';
 class MainHomeHeroBadges extends StatelessWidget {
   final String houseName;
 
-  const MainHomeHeroBadges({super.key, 
+  const MainHomeHeroBadges({
+    super.key,
     required this.houseName,
   });
 

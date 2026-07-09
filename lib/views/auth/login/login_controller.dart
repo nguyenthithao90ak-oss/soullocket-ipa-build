@@ -181,8 +181,8 @@ class LoginController extends ChangeNotifier {
     }
 
     if (!email.contains('@')) {
-      SLNotice.showError(context,
-          L10nService().translate('auth_invalid_email_format'));
+      SLNotice.showError(
+          context, L10nService().translate('auth_invalid_email_format'));
       return;
     }
 
@@ -219,15 +219,13 @@ class LoginController extends ChangeNotifier {
     if (!_isLoginTab) {
       if (!_acceptTerms) {
         SLNotice.showError(
-            context,
-            L10nService().translate('auth_accept_terms_required'));
+            context, L10nService().translate('auth_accept_terms_required'));
         return;
       }
       final strongRegex = RegExp(r'^(?=.*[0-9])(?=.{6,})');
       if (!strongRegex.hasMatch(password)) {
         SLNotice.showError(
-            context,
-            L10nService().translate('auth_password_rule'));
+            context, L10nService().translate('auth_password_rule'));
         return;
       }
 
@@ -236,7 +234,7 @@ class LoginController extends ChangeNotifier {
     }
 
     final isProxy = await SecurityService().isProxyOrVpnActive();
-    
+
     if (_failedAuthAttempts >= 2) {
       final passed = await showMathCaptcha();
       if (!passed) return;
@@ -248,19 +246,19 @@ class LoginController extends ChangeNotifier {
 
     try {
       if (_isLoginTab) {
-        SLNotice.showInfo(context,
-            L10nService().translate('auth_logging_in'));
+        SLNotice.showInfo(context, L10nService().translate('auth_logging_in'));
         SecurityService().setProxyAtLogin(isProxy);
 
         await _authService.signInWithEmailPassword(email, password).timeout(
               _authActionTimeout,
-              onTimeout: () =>
-                  throw Exception(L10nService().translate('auth_login_timeout')),
+              onTimeout: () => throw Exception(
+                  L10nService().translate('auth_login_timeout')),
             );
 
         final prefs = await SharedPreferences.getInstance().timeout(
           _prefsTimeout,
-          onTimeout: () => throw Exception(L10nService().translate('auth_save_login_state_timeout')),
+          onTimeout: () => throw Exception(
+              L10nService().translate('auth_save_login_state_timeout')),
         );
         if (_rememberMe) {
           await prefs.setString('il_remembered_email', email);
@@ -276,15 +274,14 @@ class LoginController extends ChangeNotifier {
         );
       } else {
         SLNotice.showInfo(
-            context,
-            L10nService().translate('auth_creating_account'));
+            context, L10nService().translate('auth_creating_account'));
         SecurityService().setProxyAtLogin(isProxy);
 
         debugPrint('[Auth][Register] start createUserWithEmailAndPassword');
         await _authService.registerWithEmailPassword(email, password).timeout(
               _authActionTimeout,
-              onTimeout: () =>
-                  throw Exception(L10nService().translate('auth_register_timeout')),
+              onTimeout: () => throw Exception(
+                  L10nService().translate('auth_register_timeout')),
             );
         debugPrint('[Auth][Register] account created successfully');
 
@@ -305,7 +302,8 @@ class LoginController extends ChangeNotifier {
               debugPrint(
                 'savePendingRelationshipModeForCurrentUser failed: ${AppErrorMapper.resolve(
                   error,
-                  fallbackMessage: L10nService().translate('auth_save_pending_relationship_mode_failed'),
+                  fallbackMessage: L10nService()
+                      .translate('auth_save_pending_relationship_mode_failed'),
                 ).message}',
               );
             }),
@@ -361,7 +359,8 @@ class LoginController extends ChangeNotifier {
         _authActionTimeout,
         onTimeout: () => throw Exception(
           switch (provider) {
-            'Facebook' => L10nService().translate('auth_facebook_login_timeout'),
+            'Facebook' =>
+              L10nService().translate('auth_facebook_login_timeout'),
             'Apple' => L10nService().translate('auth_apple_login_timeout'),
             _ => L10nService().translate('auth_google_login_timeout'),
           },
@@ -421,8 +420,8 @@ class LoginController extends ChangeNotifier {
       try {
         final email = await _authService.findEmailByHouseId(houseId).timeout(
               _authActionTimeout,
-              onTimeout: () =>
-                  throw Exception(L10nService().translate('auth_qr_verify_timeout')),
+              onTimeout: () => throw Exception(
+                  L10nService().translate('auth_qr_verify_timeout')),
             );
         if (!context.mounted) return;
         if (email != null && email.isNotEmpty) {
@@ -430,13 +429,15 @@ class LoginController extends ChangeNotifier {
           if (context.mounted) {
             _showSuccessDialog(
                 context,
-                L10nService().translate('auth_qr_identity_confirmed_enter_password'));
+                L10nService()
+                    .translate('auth_qr_identity_confirmed_enter_password'));
           }
         } else {
           if (context.mounted) {
             _showSuccessDialog(
                 context,
-                L10nService().translate('auth_qr_identity_confirmed_enter_email_password'));
+                L10nService().translate(
+                    'auth_qr_identity_confirmed_enter_email_password'));
           }
         }
       } catch (e) {

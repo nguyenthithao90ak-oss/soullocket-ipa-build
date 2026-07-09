@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
-import 'package:soullocket_app/utils\app_error_mapper.dart';
+import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 
 class JoinHouseDialog extends StatefulWidget {

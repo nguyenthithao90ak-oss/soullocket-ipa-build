@@ -12,11 +12,11 @@ class CalculatorScreen extends StatefulWidget {
 }
 
 class _CalculatorScreenState extends State<CalculatorScreen> {
-
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
       tooltip: 'Hướng dẫn',
-      icon: const Icon(Icons.info_outline_rounded, color: SLColors.primary, size: 22),
+      icon: const Icon(Icons.info_outline_rounded,
+          color: SLColors.primary, size: 22),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -37,18 +37,22 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
             children: [
               Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text('- Công cụ tính toán nhanh dùng ngay trong ứng dụng mà không cần thoát ra ngoài.\n- Có thể dùng khi đang tính chi phí đi chơi chung hoặc chia tiền.'),
+              Text(
+                  '- Công cụ tính toán nhanh dùng ngay trong ứng dụng mà không cần thoát ra ngoài.\n- Có thể dùng khi đang tính chi phí đi chơi chung hoặc chia tiền.'),
               SizedBox(height: 12),
-              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Cách sử dụng:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text('- Nhập các phép tính như máy tính thông thường.\n- Lịch sử tính toán được lưu lại tạm thời để xem các kết quả trước đó.'),
+              Text(
+                  '- Nhập các phép tính như máy tính thông thường.\n- Lịch sử tính toán được lưu lại tạm thời để xem các kết quả trước đó.'),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+            child: const Text('Đã hiểu',
+                style: TextStyle(color: SLColors.primary)),
           ),
         ],
       ),
@@ -153,8 +157,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     } catch (error) {
       if (!commitHistory) return;
       setState(() {
-        _result =
-            error is FormatException ? error.message : L10nService().translate('util_biuthcchah_e4f8bc');
+        _result = error is FormatException
+            ? error.message
+            : L10nService().translate('util_biuthcchah_e4f8bc');
       });
     }
   }
@@ -185,7 +190,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, L10nService().translate('util_mytnh_fcce20'), actions: [_buildInfoIcon(context)]),
+      appBar: SLTheme.appBar(
+          context, L10nService().translate('util_mytnh_fcce20'),
+          actions: [_buildInfoIcon(context)]),
       body: SLTheme.background(
         child: SafeArea(
           child: Column(
@@ -329,7 +336,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               TextButton(
                 onPressed: () => setState(_history.clear),
                 child: Text(
-                  L10nService().translate(L10nService().translate('util_xa_4ed187')),
+                  L10nService()
+                      .translate(L10nService().translate('util_xa_4ed187')),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w800,
                     color: const Color(0xFF7A8AA0),
@@ -452,7 +460,8 @@ class _SafeExpressionParser {
       } else if (_match('/')) {
         final divisor = _parseFactor();
         if (divisor == 0) {
-          throw FormatException(L10nService().translate('util_khngthchia_9602c6'));
+          throw FormatException(
+              L10nService().translate('util_khngthchia_9602c6'));
         }
         value /= divisor;
       } else {
@@ -471,7 +480,8 @@ class _SafeExpressionParser {
       final value = _parseExpression();
       _skipSpaces();
       if (!_match(')')) {
-        throw FormatException(L10nService().translate('util_thiudungng_ff9ccf'));
+        throw FormatException(
+            L10nService().translate('util_thiudungng_ff9ccf'));
       }
       return _applyPercentIfNeeded(value);
     }

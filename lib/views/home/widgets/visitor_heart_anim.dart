@@ -191,7 +191,7 @@ class _AnimatedHeartState extends State<_AnimatedHeart>
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final size = MediaQuery.sizeOf(context);
 
     return AnimatedBuilder(
       animation: _ctrl,

@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../../main_home_tab.dart';
 
 extension _MainHomeInsightCardExt on _MainHomeTabState {
@@ -18,7 +19,9 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
                 phase: 0.4,
               ),
             _InsightBubbleSpec(
-              label: isSingle ? L10nService().translate('home_hotng_faccd7') : 'LOVE',
+              label: isSingle
+                  ? L10nService().translate('home_hotng_faccd7')
+                  : 'LOVE',
               value: insight.loveScore,
               color: const Color(0xFFD81B60),
               phase: 1.7,
@@ -53,7 +56,9 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
                 SLSpacing.w8,
                 Flexible(
                   child: Text(
-                    isSingle ? L10nService().translate('home_thngkcnhn_e82ba1') : L10nService().translate('home_chshnhphc_243d83'),
+                    isSingle
+                        ? L10nService().translate('home_thngkcnhn_e82ba1')
+                        : L10nService().translate('home_chshnhphc_243d83'),
                     maxLines: 1,
                     overflow: TextOverflow.visible,
                     style: SLTheme.quicksand(

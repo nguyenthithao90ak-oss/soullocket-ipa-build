@@ -132,7 +132,7 @@ extension _NotificationCenterScreenSections on _NotificationCenterScreenState {
   Widget _buildHeader(int unread) {
     return Container(
       padding: EdgeInsets.fromLTRB(
-          16, MediaQuery.of(context).padding.top + 12, 16, 14),
+          16, MediaQuery.paddingOf(context).top + 12, 16, 14),
       decoration: BoxDecoration(
         color: SLColors.bgCard,
         boxShadow: [

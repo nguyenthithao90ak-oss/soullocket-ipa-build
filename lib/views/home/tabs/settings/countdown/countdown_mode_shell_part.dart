@@ -1,7 +1,8 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../../settings_tab.dart';
 
 class _SettingsCountdownModeScreen extends StatelessWidget {
-  const _SettingsCountdownModeScreen({
+  _SettingsCountdownModeScreen({
     required this.currentHouseId,
     required this.loveDate,
     required this.birthDate,
@@ -15,6 +16,8 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
     required this.onOpenAppearanceSettings,
   });
 
+  final GlobalKey<TapHeartsOverlayState> _heartsOverlayKey =
+      GlobalKey<TapHeartsOverlayState>();
   final String? currentHouseId;
   final String loveDate;
   final String birthDate;
@@ -51,21 +54,25 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
 
   String _topLabel(UiPrefsState uiState) {
     if (_isSingleMode) {
-      return _limitLabel(uiState.countdownTopLabel, L10nService().translate('home_tuicati_5c654c'));
+      return _limitLabel(uiState.countdownTopLabel,
+          L10nService().translate('home_tuicati_5c654c'));
     }
     return _limitLabel(
       uiState.countdownTopLabel,
-      _limitLabel(fallbackTopLabel, L10nService().translate('home_bnnhau_d90054')),
+      _limitLabel(
+          fallbackTopLabel, L10nService().translate('home_bnnhau_d90054')),
     );
   }
 
   String _bottomLabel(UiPrefsState uiState) {
     if (_isSingleMode) {
-      return _limitLabel(uiState.countdownBottomLabel, L10nService().translate('home_ngytui_22bed4'));
+      return _limitLabel(uiState.countdownBottomLabel,
+          L10nService().translate('home_ngytui_22bed4'));
     }
     return _limitLabel(
       uiState.countdownBottomLabel,
-      _limitLabel(fallbackBottomLabel, L10nService().translate('home_ngy_48e4b0')),
+      _limitLabel(
+          fallbackBottomLabel, L10nService().translate('home_ngy_48e4b0')),
     );
   }
 
@@ -156,6 +163,14 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
           body: Stack(
             fit: StackFit.expand,
             children: [
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: TapHeartsOverlay(
+                    key: _heartsOverlayKey,
+                    style: uiState.countdownStyleKey,
+                  ),
+                ),
+              ),
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -230,15 +245,16 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                 value: _CountdownModeMenuAction.appearance,
                                 child: _CountdownModeMenuRow(
                                   icon: Icons.palette_outlined,
-                                  label:
-                                      L10nService().translate('countdown_mode_appearance'),
+                                  label: L10nService()
+                                      .translate('countdown_mode_appearance'),
                                 ),
                               ),
                               PopupMenuItem(
                                 value: _CountdownModeMenuAction.exit,
                                 child: _CountdownModeMenuRow(
                                   icon: Icons.close_rounded,
-                                  label: L10nService().translate('countdown_mode_exit'),
+                                  label: L10nService()
+                                      .translate('countdown_mode_exit'),
                                 ),
                               ),
                             ],
@@ -246,12 +262,12 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                               width: 52,
                               height: 52,
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 
-                                    themeData.isDark ? 0.14 : 0.80),
+                                color: Colors.white.withValues(
+                                    alpha: themeData.isDark ? 0.14 : 0.80),
                                 borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: 
-                                      themeData.isDark ? 0.24 : 0.92),
+                                  color: Colors.white.withValues(
+                                      alpha: themeData.isDark ? 0.24 : 0.92),
                                 ),
                                 boxShadow: [
                                   BoxShadow(
@@ -303,15 +319,20 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                               size: circleSize,
                                               value: value,
                                               topLabel: _topLabel(uiState),
-                                              bottomLabel: _bottomLabel(uiState),
+                                              bottomLabel:
+                                                  _bottomLabel(uiState),
                                               styleData: styleData,
                                               fontKey: uiState.fontKey,
-                                              styleKey: uiState.countdownStyleKey,
-                                              transparentMode: uiState.transparentMode,
+                                              styleKey:
+                                                  uiState.countdownStyleKey,
+                                              transparentMode:
+                                                  uiState.transparentMode,
                                               enableMotion: true,
                                             ),
-                                            if (uiState.countdownStyleKey == 'floating_hearts')
-                                              FloatingHeartsRingOverlay(size: circleSize),
+                                            if (uiState.countdownStyleKey ==
+                                                'floating_hearts')
+                                              FloatingHeartsRingOverlay(
+                                                  size: circleSize),
                                           ],
                                         ),
                                       ),
@@ -322,8 +343,9 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                         style: SLTheme.textStyleForKey(
                                           uiState.fontKey,
                                           color:
-                                              themeData.foreground.withValues(alpha: 
-                                            themeData.isDark ? 0.82 : 0.72,
+                                              themeData.foreground.withValues(
+                                            alpha:
+                                                themeData.isDark ? 0.82 : 0.72,
                                           ),
                                           fontSize: 13.5,
                                           fontWeight: FontWeight.w700,
@@ -335,12 +357,15 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                         _CountdownModeAvatarCard(
                                           isSingleMode: _isSingleMode,
                                           leftName: nameU1.trim().isEmpty
-                                              ? L10nService().translate('home_bn_1fd75b')
+                                              ? L10nService()
+                                                  .translate('home_bn_1fd75b')
                                               : nameU1.trim(),
                                           rightName: _isSingleMode
-                                              ? L10nService().translate('home_ngiy_5bab37')
+                                              ? L10nService()
+                                                  .translate('home_ngiy_5bab37')
                                               : (nameU2.trim().isEmpty
-                                                  ? L10nService().translate('home_ngiy_5bab37')
+                                                  ? L10nService().translate(
+                                                      'home_ngiy_5bab37')
                                                   : nameU2.trim()),
                                           leftAvatarUrl: avatarUrl1,
                                           rightAvatarUrl:
@@ -350,6 +375,23 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                           fontKey: uiState.fontKey,
                                           foreground: themeData.foreground,
                                           isDark: themeData.isDark,
+                                          currentHouseId: currentHouseId,
+                                          onCenterIconTap: () {
+                                            if (!_isSingleMode) {
+                                              unawaited(SoulMergeService()
+                                                  .sendInteractiveEvent(
+                                                      type: 'photo_shot'));
+                                            }
+                                            final size =
+                                                MediaQuery.sizeOf(context);
+                                            _heartsOverlayKey.currentState
+                                                ?.spawnLocalExplosion(
+                                              Offset(size.width / 2,
+                                                  size.height * 0.74),
+                                              count: 10,
+                                            );
+                                            HapticFeedback.mediumImpact();
+                                          },
                                         ),
                                       ],
                                     ],
@@ -383,6 +425,8 @@ class _CountdownModeAvatarCard extends StatefulWidget {
     required this.fontKey,
     required this.foreground,
     required this.isDark,
+    this.currentHouseId,
+    this.onCenterIconTap,
   });
 
   final bool isSingleMode;
@@ -394,6 +438,8 @@ class _CountdownModeAvatarCard extends StatefulWidget {
   final String fontKey;
   final Color foreground;
   final bool isDark;
+  final String? currentHouseId;
+  final VoidCallback? onCenterIconTap;
 
   @override
   State<_CountdownModeAvatarCard> createState() =>
@@ -407,13 +453,35 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
 
   _CountdownModeFriendTarget? _selectedFriend;
   bool _isSelectingFriend = false;
+  String _centerIconType = 'heart';
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadCenterIconType());
+  }
+
+  Future<void> _loadCenterIconType() async {
+    final houseId = widget.currentHouseId?.trim() ?? '';
+    if (houseId.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'il_countdown_mode_center_icon_type_$houseId';
+    final saved = prefs.getString(key) ?? 'heart';
+    if (mounted) {
+      setState(() {
+        _centerIconType = saved;
+      });
+    }
+  }
 
   String get _displayRightName {
     final selected = _selectedFriend;
     if (selected != null) {
       return selected.displayName;
     }
-    return widget.rightName.trim().isEmpty ? L10nService().translate('home_chnbn_ba8971') : widget.rightName;
+    return widget.rightName.trim().isEmpty
+        ? L10nService().translate('home_chnbn_ba8971')
+        : widget.rightName;
   }
 
   String get _displayRightAvatarUrl {
@@ -511,7 +579,8 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF101A2B),
                     borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.10)),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.28),
@@ -529,7 +598,8 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                           children: [
                             Expanded(
                               child: Text(
-                                L10nService().translate('home_chnkhnggia_68d5e3'),
+                                L10nService()
+                                    .translate('home_chnkhnggia_68d5e3'),
                                 style: SLTheme.quicksand(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
@@ -643,8 +713,9 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
       final avatarUrl = settings.houseAvatar.trim().isNotEmpty
           ? settings.houseAvatar.trim()
           : settings.avtUser1.trim();
-      final subtitle =
-          settings.isCouple ? L10nService().translate('home_khnggiani_534bb6') : L10nService().translate('home_khnggiancn_36c9f9');
+      final subtitle = settings.isCouple
+          ? L10nService().translate('home_khnggiani_534bb6')
+          : L10nService().translate('home_khnggiancn_36c9f9');
 
       targets.add(
         _CountdownModeFriendTarget(
@@ -682,7 +753,8 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
             Icon(
               Icons.hub_rounded,
               size: 18,
-              color: widget.foreground.withValues(alpha: widget.isDark ? 0.90 : 0.72),
+              color: widget.foreground
+                  .withValues(alpha: widget.isDark ? 0.90 : 0.72),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -730,6 +802,19 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
           fontKey: widget.fontKey,
           foreground: widget.foreground,
           isDark: widget.isDark,
+          centerIconType: _centerIconType,
+          onCenterIconChanged: (type) async {
+            setState(() {
+              _centerIconType = type;
+            });
+            final prefs = await SharedPreferences.getInstance();
+            final houseId = widget.currentHouseId?.trim() ?? '';
+            if (houseId.isNotEmpty) {
+              await prefs.setString(
+                  'il_countdown_mode_center_icon_type_$houseId', type);
+            }
+          },
+          onCenterIconTap: widget.onCenterIconTap,
         ),
         const SizedBox(height: 14),
         Row(
@@ -740,8 +825,8 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: widget.foreground,
                   side: BorderSide(
-                    color: Colors.white.withValues(alpha: 
-                      widget.isDark ? 0.16 : 0.86,
+                    color: Colors.white.withValues(
+                      alpha: widget.isDark ? 0.16 : 0.86,
                     ),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 13),
@@ -757,7 +842,9 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                       )
                     : const Icon(Icons.person_search_rounded, size: 18),
                 label: Text(
-                  _selectedFriend == null ? L10nService().translate('home_chnngi_34ef59') : L10nService().translate('home_ingi_3a22c1'),
+                  _selectedFriend == null
+                      ? L10nService().translate('home_chnngi_34ef59')
+                      : L10nService().translate('home_ingi_3a22c1'),
                   style: SLTheme.textStyleForKey(
                     widget.fontKey,
                     fontWeight: FontWeight.w900,
@@ -772,7 +859,6 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                 child: ElevatedButton.icon(
                   onPressed: _openSelectedSpace,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4BA7FF),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     shape: RoundedRectangleBorder(
@@ -803,8 +889,8 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
             widget.fontKey,
             fontSize: 11.5,
             fontWeight: FontWeight.w700,
-            color: widget.foreground.withValues(alpha: 
-              widget.isDark ? 0.72 : 0.62,
+            color: widget.foreground.withValues(
+              alpha: widget.isDark ? 0.72 : 0.62,
             ),
             height: 1.45,
           ),

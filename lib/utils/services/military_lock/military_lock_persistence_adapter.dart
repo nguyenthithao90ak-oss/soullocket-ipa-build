@@ -22,19 +22,29 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
 
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    await SecureStorageService.instance.migrateFromPrefs(SecureStorageService.keyHouseId, prefs.getString(MilitaryLockService._prefHouseId));
-    await SecureStorageService.instance.migrateFromPrefs(SecureStorageService.keyAuthUid, prefs.getString(MilitaryLockService._prefAuthUid));
-    final cachedHouseId =
-        (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
-    final cachedAuthUid =
-        (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? '';
+    await SecureStorageService.instance.migrateFromPrefs(
+        SecureStorageService.keyHouseId,
+        prefs.getString(MilitaryLockService._prefHouseId));
+    await SecureStorageService.instance.migrateFromPrefs(
+        SecureStorageService.keyAuthUid,
+        prefs.getString(MilitaryLockService._prefAuthUid));
+    final cachedHouseId = (await SecureStorageService.instance
+                .read(SecureStorageService.keyHouseId))
+            ?.trim() ??
+        '';
+    final cachedAuthUid = (await SecureStorageService.instance
+                .read(SecureStorageService.keyAuthUid))
+            ?.trim() ??
+        '';
     if (cachedHouseId.isNotEmpty) {
       if (currentUid.isNotEmpty && cachedAuthUid == currentUid) {
         _rememberResolvedHouseId(cachedHouseId, uid: currentUid);
         return cachedHouseId;
       }
-      await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
-      await SecureStorageService.instance.delete(SecureStorageService.keyAuthUid);
+      await SecureStorageService.instance
+          .delete(SecureStorageService.keyHouseId);
+      await SecureStorageService.instance
+          .delete(SecureStorageService.keyAuthUid);
       await SecureStorageService.instance.delete(SecureStorageService.keyRole);
       await prefs.remove(MilitaryLockService._prefHouseId);
       await prefs.remove(MilitaryLockService._prefAuthUid);
@@ -107,14 +117,16 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
     );
     final localSecret = _buildLockSecretRecord(
       secureLock ?? prefs.getString(MilitaryLockService._prefCustomLock),
-      rawSalt: secureSalt ?? prefs.getString(MilitaryLockService._prefCustomLockSalt),
+      rawSalt: secureSalt ??
+          prefs.getString(MilitaryLockService._prefCustomLockSalt),
       rawPinLength: prefs.getInt(MilitaryLockService._prefCustomLockLength),
       rawConfiguredAt: prefs.getInt(
         MilitaryLockService._prefCustomLockConfiguredAt,
       ),
     );
     // Migration: nếu còn dữ liệu cũ trong SharedPreferences, xóa đi sau khi đã đọc
-    if (secureLock == null && prefs.getString(MilitaryLockService._prefCustomLock) != null) {
+    if (secureLock == null &&
+        prefs.getString(MilitaryLockService._prefCustomLock) != null) {
       await prefs.remove(MilitaryLockService._prefCustomLock);
       await prefs.remove(MilitaryLockService._prefCustomLockSalt);
     }
@@ -160,10 +172,14 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
       return localSettings;
     }
 
-    final cachedHouseId =
-        (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
-    final cachedAuthUid =
-        (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? '';
+    final cachedHouseId = (await SecureStorageService.instance
+                .read(SecureStorageService.keyHouseId))
+            ?.trim() ??
+        '';
+    final cachedAuthUid = (await SecureStorageService.instance
+                .read(SecureStorageService.keyAuthUid))
+            ?.trim() ??
+        '';
     final currentUid = _auth.currentUser?.uid.trim() ?? '';
     if (cachedHouseId.isNotEmpty &&
         currentUid.isNotEmpty &&
@@ -327,10 +343,14 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
       _effectiveLockSettingsCacheKey(null),
       normalizedSettings,
     );
-    final cachedHouseId =
-        (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
-    final cachedAuthUid =
-        (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? '';
+    final cachedHouseId = (await SecureStorageService.instance
+                .read(SecureStorageService.keyHouseId))
+            ?.trim() ??
+        '';
+    final cachedAuthUid = (await SecureStorageService.instance
+                .read(SecureStorageService.keyAuthUid))
+            ?.trim() ??
+        '';
     final currentUid = _auth.currentUser?.uid.trim() ?? '';
     if (cachedHouseId.isNotEmpty &&
         currentUid.isNotEmpty &&
@@ -517,8 +537,10 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
       final primaryValue = primarySnap.value?.toString().trim() ?? '';
       if (primaryValue.isNotEmpty) {
         _rememberResolvedHouseId(primaryValue, uid: uid);
-        await SecureStorageService.instance.write(SecureStorageService.keyHouseId, primaryValue);
-        await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyHouseId, primaryValue);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyAuthUid, uid);
         await prefs.remove(MilitaryLockService._prefHouseId);
         await prefs.remove(MilitaryLockService._prefAuthUid);
         return primaryValue;
@@ -531,8 +553,10 @@ extension _MilitaryLockPersistenceAdapter on MilitaryLockService {
       final legacyValue = legacySnap.value?.toString().trim() ?? '';
       if (legacyValue.isNotEmpty) {
         _rememberResolvedHouseId(legacyValue, uid: uid);
-        await SecureStorageService.instance.write(SecureStorageService.keyHouseId, legacyValue);
-        await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyHouseId, legacyValue);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyAuthUid, uid);
         await prefs.remove(MilitaryLockService._prefHouseId);
         await prefs.remove(MilitaryLockService._prefAuthUid);
         try {

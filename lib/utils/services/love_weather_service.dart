@@ -25,7 +25,8 @@ class LoveWeatherService {
   Future<void> updateWeather(String houseId, String weatherType) async {
     final normalizedHouseId = houseId.trim();
     final normalizedWeatherType = weatherType.trim().toLowerCase();
-    if (normalizedHouseId.isEmpty || !_validWeatherTypes.contains(normalizedWeatherType)) {
+    if (normalizedHouseId.isEmpty ||
+        !_validWeatherTypes.contains(normalizedWeatherType)) {
       return;
     }
     await _db.ref('houses/$normalizedHouseId/weather').set({
@@ -38,7 +39,10 @@ class LoveWeatherService {
   Stream<String> listenToWeather(String houseId) {
     final normalizedHouseId = houseId.trim();
     if (normalizedHouseId.isEmpty) return Stream<String>.value('sunny');
-    return _db.ref('houses/$normalizedHouseId/weather/type').onValue.map((event) {
+    return _db
+        .ref('houses/$normalizedHouseId/weather/type')
+        .onValue
+        .map((event) {
       final value = event.snapshot.value?.toString().trim().toLowerCase() ?? '';
       return _validWeatherTypes.contains(value) ? value : 'sunny';
     });

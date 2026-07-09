@@ -9,7 +9,8 @@ class NoteService {
   Future<void> addNote(String houseId, SharedNote note) async {
     final normalizedHouseId = houseId.trim();
     if (normalizedHouseId.isEmpty) return;
-    final pushRef = _dbRef.child('houses/$normalizedHouseId/utilities/notes').push();
+    final pushRef =
+        _dbRef.child('houses/$normalizedHouseId/utilities/notes').push();
     await pushRef.set(note.toMap());
 
     // Record daily quest progress
@@ -38,7 +39,8 @@ class NoteService {
       return;
     }
     await _dbRef
-        .child('houses/$normalizedHouseId/utilities/notes/$normalizedNoteId/color')
+        .child(
+            'houses/$normalizedHouseId/utilities/notes/$normalizedNoteId/color')
         .set(normalizedColorHex);
   }
 
@@ -49,7 +51,8 @@ class NoteService {
     final normalizedNoteId = noteId.trim();
     if (normalizedHouseId.isEmpty || normalizedNoteId.isEmpty) return;
     await _dbRef
-        .child('houses/$normalizedHouseId/utilities/notes/$normalizedNoteId/isPinned')
+        .child(
+            'houses/$normalizedHouseId/utilities/notes/$normalizedNoteId/isPinned')
         .set(!currentStatus);
   }
 
@@ -66,8 +69,13 @@ class NoteService {
   // Lấy Stream danh sách Note theo thời gian thực (Realtime Board)
   Stream<List<SharedNote>> streamNotes(String houseId) {
     final normalizedHouseId = houseId.trim();
-    if (normalizedHouseId.isEmpty) return Stream<List<SharedNote>>.value(const []);
-    return _dbRef.child('houses/$normalizedHouseId/utilities/notes').onValue.map((event) {
+    if (normalizedHouseId.isEmpty) {
+      return Stream<List<SharedNote>>.value(const []);
+    }
+    return _dbRef
+        .child('houses/$normalizedHouseId/utilities/notes')
+        .onValue
+        .map((event) {
       if (!event.snapshot.exists) return [];
       final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
       final List<SharedNote> notes = [];

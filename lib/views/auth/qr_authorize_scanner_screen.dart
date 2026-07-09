@@ -573,7 +573,8 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
                             width: double.infinity,
                             padding: EdgeInsets.all(infoPadding),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF401722).withValues(alpha: 0.86),
+                              color: const Color(0xFF401722)
+                                  .withValues(alpha: 0.86),
                               borderRadius: SLRadius.xlAll,
                               border: Border.all(
                                 color: const Color(0x66FF8DB4),
@@ -604,8 +605,8 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color:
-                                      SLColors.primaryActive.withValues(alpha: 0.22),
+                                  color: SLColors.primaryActive
+                                      .withValues(alpha: 0.22),
                                   blurRadius: 28,
                                   spreadRadius: 4,
                                 ),
@@ -709,7 +710,8 @@ class _QRAuthorizeScannerScreenState extends State<QRAuthorizeScannerScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xFF1F1A1D),
                       borderRadius: SLRadius.xlAll,
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.08)),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,

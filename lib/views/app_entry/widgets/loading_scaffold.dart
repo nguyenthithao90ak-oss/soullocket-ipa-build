@@ -79,7 +79,8 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
                               borderRadius: BorderRadius.circular(28),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFD81B60).withValues(alpha: 0.22),
+                                  color: const Color(0xFFD81B60)
+                                      .withValues(alpha: 0.22),
                                   blurRadius: 28,
                                   spreadRadius: 2,
                                   offset: const Offset(0, 10),

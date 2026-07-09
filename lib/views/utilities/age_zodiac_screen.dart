@@ -13,11 +13,11 @@ class AgeZodiacScreen extends StatefulWidget {
 }
 
 class _AgeZodiacScreenState extends State<AgeZodiacScreen> {
-
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
       tooltip: 'Hướng dẫn',
-      icon: const Icon(Icons.info_outline_rounded, color: Color(0xFF3B2448), size: 22),
+      icon: const Icon(Icons.info_outline_rounded,
+          color: Color(0xFF3B2448), size: 22),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -38,18 +38,22 @@ class _AgeZodiacScreenState extends State<AgeZodiacScreen> {
             children: [
               Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text('- Tính toán số ngày tuổi và cung hoàng đạo của cả hai dựa trên ngày sinh đã khai báo.\n- Phân tích mức độ hợp nhau (chỉ số tương hợp) giữa hai cung hoàng đạo.'),
+              Text(
+                  '- Tính toán số ngày tuổi và cung hoàng đạo của cả hai dựa trên ngày sinh đã khai báo.\n- Phân tích mức độ hợp nhau (chỉ số tương hợp) giữa hai cung hoàng đạo.'),
               SizedBox(height: 12),
-              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Cách sử dụng:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text('- Mở tiện ích để xem các thông số tử vi vui nhộn.\n- Bạn có thể điều chỉnh lại ngày sinh trong phần cài đặt tài khoản nếu thông tin chưa chính xác.'),
+              Text(
+                  '- Mở tiện ích để xem các thông số tử vi vui nhộn.\n- Bạn có thể điều chỉnh lại ngày sinh trong phần cài đặt tài khoản nếu thông tin chưa chính xác.'),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+            child: const Text('Đã hiểu',
+                style: TextStyle(color: SLColors.primary)),
           ),
         ],
       ),
@@ -74,8 +78,12 @@ class _AgeZodiacScreenState extends State<AgeZodiacScreen> {
     if (cur != null) {
       if (!mounted) return;
       setState(() {
-        _nameU1 = cur.nameU1.isNotEmpty ? cur.nameU1 : L10nService().translate('util_bnnam_123ef2');
-        _nameU2 = cur.nameU2.isNotEmpty ? cur.nameU2 : L10nService().translate('util_bnn_babaec');
+        _nameU1 = cur.nameU1.isNotEmpty
+            ? cur.nameU1
+            : L10nService().translate('util_bnnam_123ef2');
+        _nameU2 = cur.nameU2.isNotEmpty
+            ? cur.nameU2
+            : L10nService().translate('util_bnn_babaec');
         // Parse dob
         try {
           if (cur.dobU1.isNotEmpty) {
@@ -113,8 +121,12 @@ class _AgeZodiacScreenState extends State<AgeZodiacScreen> {
       months += 12;
     }
     final sb = StringBuffer();
-    if (years > 0) sb.write(L10nService().format('util_age_years', {'count': years}));
-    if (months > 0) sb.write(L10nService().format('util_age_months', {'count': months}));
+    if (years > 0) {
+      sb.write(L10nService().format('util_age_years', {'count': years}));
+    }
+    if (months > 0) {
+      sb.write(L10nService().format('util_age_months', {'count': months}));
+    }
     sb.write(L10nService().format('util_age_days', {'count': days}));
     return sb.toString();
   }
@@ -331,8 +343,7 @@ class _AgeZodiacScreenState extends State<AgeZodiacScreen> {
                               fontSize: 18,
                               fontWeight: FontWeight.w900)),
                       SLSpacing.h6,
-                      Text(
-                          L10nService().translate('util_tuicunghon_57451d'),
+                      Text(L10nService().translate('util_tuicunghon_57451d'),
                           textAlign: TextAlign.center,
                           style: SLTheme.quicksand(
                               color: Colors.white.withValues(alpha: 0.86),
@@ -605,15 +616,23 @@ class _AgeZodiacScreenState extends State<AgeZodiacScreen> {
             ],
           ),
           SLSpacing.h20,
-          _buildInfoRow(Icons.cake, L10nService().translate('util_tuichitit_62f884'), _calculateAgeText(dob)),
+          _buildInfoRow(
+              Icons.cake,
+              L10nService().translate('util_tuichitit_62f884'),
+              _calculateAgeText(dob)),
           const Divider(height: 20),
-          _buildInfoRow(Icons.auto_awesome, L10nService().translate('util_cunghongo_8f59aa'), _getZodiac(dob)),
+          _buildInfoRow(
+              Icons.auto_awesome,
+              L10nService().translate('util_cunghongo_8f59aa'),
+              _getZodiac(dob)),
           if (zDetails != null) ...[
             SLSpacing.h12,
             _buildDetailBox(
               icon: Icons.psychology_alt_rounded,
-              title:
-                  L10nService().format('util_personality_title', {'element': zDetails['element'], 'planet': zDetails['planet']}),
+              title: L10nService().format('util_personality_title', {
+                'element': zDetails['element'],
+                'planet': zDetails['planet']
+              }),
               desc: zDetails['traits'] as String,
             ),
             SLSpacing.h12,
@@ -639,7 +658,10 @@ class _AgeZodiacScreenState extends State<AgeZodiacScreen> {
             ),
           ],
           const Divider(height: 20),
-          _buildInfoRow(Icons.pets, L10nService().translate('util_congip_796fd8'), _getChineseZodiac(dob)),
+          _buildInfoRow(
+              Icons.pets,
+              L10nService().translate('util_congip_796fd8'),
+              _getChineseZodiac(dob)),
           SLSpacing.h12,
           _softPanel(
             icon: Icons.event_available_rounded,

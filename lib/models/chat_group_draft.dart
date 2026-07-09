@@ -1,4 +1,5 @@
-import 'package:soullocket_app/views/chat/chat_message_preview.dart' show repairMojibakeText;
+import 'package:soullocket_app/views/chat/chat_message_preview.dart'
+    show repairMojibakeText;
 
 class ChatGroupDraft {
   final String id;

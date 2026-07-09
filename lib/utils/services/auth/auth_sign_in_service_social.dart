@@ -14,19 +14,31 @@ extension AuthSignInServiceSocial on AuthSignInService {
     return providerData.any((provider) => provider.providerId == providerId);
   }
 
-Future<bool> isGoogleLinkedCurrentUser() {
+  Future<bool> isGoogleLinkedCurrentUser() {
     return _isProviderLinkedCurrentUser('google.com');
   }
 
-Future<bool> isAppleLinkedCurrentUser() {
+  String? getGoogleLinkedEmail() {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+    final providerData = user.providerData;
+    for (final provider in providerData) {
+      if (provider.providerId == 'google.com') {
+        return provider.email;
+      }
+    }
+    return null;
+  }
+
+  Future<bool> isAppleLinkedCurrentUser() {
     return _isProviderLinkedCurrentUser('apple.com');
   }
 
-Future<bool> isPasswordLinkedCurrentUser() {
+  Future<bool> isPasswordLinkedCurrentUser() {
     return _isProviderLinkedCurrentUser('password');
   }
 
-Future<void> linkGoogleToCurrentUser() async {
+  Future<void> linkGoogleToCurrentUser() async {
     var user = _auth.currentUser;
     if (user == null) {
       throw 'Bạn cần đăng nhập trước khi liên kết Google.';
@@ -56,8 +68,9 @@ Future<void> linkGoogleToCurrentUser() async {
             }
           });
           await initCompleter.future.timeout(
-            const Duration(seconds: 5),
-            onTimeout: () => throw 'Không thể khởi động dịch vụ Google. Vui lòng kiểm tra Google Play Services.',
+            const Duration(seconds: 15),
+            onTimeout: () =>
+                throw 'Thời gian chờ Google quá lâu. Vui lòng thử lại.',
           );
           AuthSignInService._isGoogleSignInInitialized = true;
         }
@@ -81,13 +94,14 @@ Future<void> linkGoogleToCurrentUser() async {
         });
 
         final googleUser = await authCompleter.future.timeout(
-          const Duration(seconds: 10),
-          onTimeout: () => throw 'Đăng nhập Google phản hồi lâu. Vui lòng kiểm tra kết nối mạng và Google Play Services.',
+          const Duration(seconds: 20),
+          onTimeout: () =>
+              throw 'Bạn đã để màn hình đăng nhập Google quá lâu hoặc chưa hoàn tất thao tác. Vui lòng thử lại.',
         );
         if (googleUser == null) return;
         final googleAuth = await googleUser.authentication;
         if ((googleAuth.idToken ?? '').isEmpty) {
-          throw 'Google không trả về ID token hợp lệ. Hãy kiểm tra kết nối mạng và thử lại.';
+          throw 'Google không trả về ID token hợp lệ. Vui lòng thử lại.';
         }
 
         final credential = firebase_auth.GoogleAuthProvider.credential(
@@ -115,7 +129,7 @@ Future<void> linkGoogleToCurrentUser() async {
         case 'cancelled-popup-request':
           throw 'Popup Google đang bị chặn. Hãy cho phép popup rồi thử lại.';
         case 'network-request-failed':
-          throw 'Mạng đang lỗi hoặc bị chặn, chưa thể liên kết Google lúc này.';
+          throw 'Lỗi kết nối hoặc sự cố từ Google, chưa thể liên kết Google lúc này.';
         default:
           throw handleFirebaseAuthError(error);
       }
@@ -125,14 +139,17 @@ Future<void> linkGoogleToCurrentUser() async {
       if (error is PlatformException && error.code == 'sign_in_failed') {
         isRealCancel = false;
       }
-      if (isRealCancel && (errStr.contains('sign_in_canceled') || errStr.contains('canceled') || errStr.contains('cancelled'))) {
+      if (isRealCancel &&
+          (errStr.contains('sign_in_canceled') ||
+              errStr.contains('canceled') ||
+              errStr.contains('cancelled'))) {
         throw 'Bạn đã huỷ đăng nhập Google.';
       }
       final raw = error.toString();
       if (raw.contains('10') ||
           raw.contains('sign_in_failed') ||
           raw.contains('ApiException')) {
-        throw 'Đăng nhập Google gặp sự cố ở bước xác thực tài khoản. Hãy kiểm tra cấu hình chữ ký SHA-1 và kết nối mạng.';
+        throw 'Đăng nhập Google gặp sự cố ở bước xác thực tài khoản. Vui lòng thử lại sau.';
       }
       if (error is String) rethrow;
       throw AppErrorMapper.resolve(
@@ -143,7 +160,7 @@ Future<void> linkGoogleToCurrentUser() async {
     }
   }
 
-Future<void> linkAppleToCurrentUser() async {
+  Future<void> linkAppleToCurrentUser() async {
     var user = _auth.currentUser;
     if (user == null) {
       throw 'Bạn cần đăng nhập trước khi liên kết Apple.';
@@ -207,7 +224,7 @@ Future<void> linkAppleToCurrentUser() async {
               ? 'Firebase Authentication chưa bật nhà cung cấp Apple.'
               : 'Liên kết Apple chưa sẵn sàng trên bản app này.';
         case 'network-request-failed':
-          throw 'Mạng đang lỗi hoặc bị chặn, chưa thể liên kết Apple lúc này.';
+          throw 'Lỗi kết nối, chưa thể liên kết Apple lúc này.';
         default:
           throw handleFirebaseAuthError(error);
       }
@@ -228,7 +245,7 @@ Future<void> linkAppleToCurrentUser() async {
     }
   }
 
-Future<void> createPasswordForCurrentUser(String newPassword) async {
+  Future<void> createPasswordForCurrentUser(String newPassword) async {
     var user = _auth.currentUser;
     if (user == null) {
       throw 'Bạn cần đăng nhập trước khi tạo mật khẩu.';
@@ -286,7 +303,7 @@ Future<void> createPasswordForCurrentUser(String newPassword) async {
     } catch (_) {}
   }
 
-Future<void> _reauthenticateCurrentUserWithLinkedProvider(
+  Future<void> _reauthenticateCurrentUserWithLinkedProvider(
     firebase_auth.User user,
   ) async {
     final providerIds =
@@ -302,7 +319,7 @@ Future<void> _reauthenticateCurrentUserWithLinkedProvider(
     throw 'Phiên đăng nhập đã cũ. Hãy đăng xuất rồi đăng nhập lại bằng Google hoặc Facebook trước khi tạo mật khẩu.';
   }
 
-Future<void> _reauthenticateCurrentUserWithGoogle(
+  Future<void> _reauthenticateCurrentUserWithGoogle(
     firebase_auth.User user,
   ) async {
     try {
@@ -326,8 +343,9 @@ Future<void> _reauthenticateCurrentUserWithGoogle(
           }
         });
         await initCompleter.future.timeout(
-          const Duration(seconds: 5),
-          onTimeout: () => throw 'Không thể khởi động dịch vụ Google. Vui lòng kiểm tra Google Play Services.',
+          const Duration(seconds: 15),
+          onTimeout: () =>
+              throw 'Thời gian chờ Google quá lâu. Vui lòng thử lại.',
         );
         AuthSignInService._isGoogleSignInInitialized = true;
       }
@@ -351,8 +369,9 @@ Future<void> _reauthenticateCurrentUserWithGoogle(
       });
 
       final googleUser = await authCompleter.future.timeout(
-        const Duration(seconds: 10),
-        onTimeout: () => throw 'Đăng nhập Google phản hồi lâu. Vui lòng kiểm tra kết nối mạng và Google Play Services.',
+        const Duration(seconds: 20),
+        onTimeout: () =>
+            throw 'Bạn đã để màn hình đăng nhập Google quá lâu hoặc chưa hoàn tất thao tác. Vui lòng thử lại.',
       );
       if (googleUser == null) {
         throw 'Bạn đã huỷ đăng nhập Google.';
@@ -376,7 +395,7 @@ Future<void> _reauthenticateCurrentUserWithGoogle(
         case 'cancelled-popup-request':
           throw 'Popup Google đang bị chặn. Hãy cho phép popup rồi thử lại.';
         case 'network-request-failed':
-          throw 'Mạng đang lỗi hoặc bị chặn, chưa thể xác minh lại Google lúc này.';
+          throw 'Lỗi kết nối hoặc sự cố từ Google, chưa thể xác minh lại Google lúc này.';
         default:
           throw handleFirebaseAuthError(error);
       }
@@ -386,7 +405,10 @@ Future<void> _reauthenticateCurrentUserWithGoogle(
       if (error is PlatformException && error.code == 'sign_in_failed') {
         isRealCancel = false;
       }
-      if (isRealCancel && (errStr.contains('sign_in_canceled') || errStr.contains('canceled') || errStr.contains('cancelled'))) {
+      if (isRealCancel &&
+          (errStr.contains('sign_in_canceled') ||
+              errStr.contains('canceled') ||
+              errStr.contains('cancelled'))) {
         throw 'Bạn đã huỷ đăng nhập Google.';
       }
       if (error is String) rethrow;
@@ -398,7 +420,7 @@ Future<void> _reauthenticateCurrentUserWithGoogle(
     }
   }
 
-Future<void> _reauthenticateCurrentUserWithFacebook(
+  Future<void> _reauthenticateCurrentUserWithFacebook(
     firebase_auth.User user,
   ) async {
     try {
@@ -452,7 +474,7 @@ Future<void> _reauthenticateCurrentUserWithFacebook(
         throw 'Bạn cần chọn đúng tài khoản Facebook đã dùng để đăng nhập trước đó.';
       }
       if (error.code == 'network-request-failed') {
-        throw 'Mạng đang lỗi hoặc bị chặn, chưa thể xác minh lại Facebook lúc này.';
+        throw 'Lỗi kết nối, chưa thể xác minh lại Facebook lúc này.';
       }
       throw handleFirebaseAuthError(error);
     } catch (error) {

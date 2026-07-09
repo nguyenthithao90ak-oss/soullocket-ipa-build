@@ -27,8 +27,6 @@ class FriendlyChatScreen extends StatefulWidget {
 }
 
 class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
-
-
   static final List<String> _reportReasons = <String>[
     L10nService().translate('util_nidungkhng_493873'),
     L10nService().translate('util_trlisaihoc_6d9fe3'),
@@ -44,8 +42,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
   final Set<int> _reportingIndexes = <int>{};
   final List<_FriendlyChatMessage> _messages = <_FriendlyChatMessage>[
     _FriendlyChatMessage(
-      text:
-          L10nService().translate('util_chobnmnhlc_032510'),
+      text: L10nService().translate('util_chobnmnhlc_032510'),
       isUser: false,
     ),
   ];
@@ -322,7 +319,8 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
   Future<void> _copyAllMessages() async {
     final lines = _messages
         .where((message) => message.createdAt > 0)
-        .map((message) => '${message.isUser ? context.tr('util_bn_1fd75b') : 'SoulLocket AI'}: '
+        .map((message) =>
+            '${message.isUser ? context.tr('util_bn_1fd75b') : 'SoulLocket AI'}: '
             '${message.text.trim()}')
         .where((line) => line.trim().isNotEmpty)
         .join('\n\n');
@@ -479,7 +477,8 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
   String _buildPrompt(String text) {
     final name = widget.myName?.trim();
     return [
-      if (name != null && name.isNotEmpty) L10nService().format('util_chat_prompt_display_name', {'name': name}),
+      if (name != null && name.isNotEmpty)
+        L10nService().format('util_chat_prompt_display_name', {'name': name}),
       L10nService().format('util_chat_prompt_user_message', {'text': text}),
       context.tr('util_hytrlitnhi_5313dd'),
     ].join('\n');

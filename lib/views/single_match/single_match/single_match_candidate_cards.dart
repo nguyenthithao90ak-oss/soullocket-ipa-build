@@ -181,7 +181,8 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
                   onPressed: callingThisCard ? null : onSpin,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    side: BorderSide(color: Colors.white.withValues(alpha: 0.22)),
+                    side:
+                        BorderSide(color: Colors.white.withValues(alpha: 0.22)),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   icon: const Icon(Icons.shuffle_rounded),
@@ -209,7 +210,9 @@ class _SingleMatchFeaturedCard extends StatelessWidget {
                         )
                       : const Icon(Icons.call_rounded),
                   label: Text(
-                    callingThisCard ? context.tr('match_anggi_fc34f1') : context.tr('match_githoi_ad3e35'),
+                    callingThisCard
+                        ? context.tr('match_anggi_fc34f1')
+                        : context.tr('match_githoi_ad3e35'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

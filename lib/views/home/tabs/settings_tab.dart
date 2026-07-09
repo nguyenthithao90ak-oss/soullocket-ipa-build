@@ -17,11 +17,13 @@ import 'package:in_app_review/in_app_review.dart';
 import '../../login_screen.dart';
 import '../../app_entry.dart';
 import 'package:soullocket_app/views/chat/chat_detail_screen.dart';
+import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart'
+    show TapHeartsOverlay, TapHeartsOverlayState;
 import 'package:image_cropper/image_cropper.dart';
 
 import 'dart:io';
 import 'package:flutter/foundation.dart'
-    show kIsWeb, defaultTargetPlatform, TargetPlatform;
+    show kIsWeb, defaultTargetPlatform, TargetPlatform, kDebugMode;
 import '../../../utils/services/notification_service.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:permission_handler/permission_handler.dart' as app_permission;
@@ -36,6 +38,7 @@ import '../../../utils/services/schedule_notif_service.dart';
 import '../../../utils/services/settings_sync_service.dart';
 import '../../../utils/services/storage_service.dart';
 import '../../../utils/services/cloudflare_r2_service.dart';
+import '../../../utils/services/soul_merge_service.dart';
 import '../../../utils/services/countdown_space_service.dart';
 import '../../../models/data_export_result.dart';
 import '../../../utils/services/data_export_service.dart';
@@ -74,14 +77,12 @@ import 'settings/settings_gift_links_manager_screen.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../../utils/services/auth_service.dart';
 import '../../../utils/services/device_manager_service.dart';
-import '../../../utils/services/presence_service.dart';
 import '../../../utils/services/security_flow_guard.dart';
 import '../../../utils/services/admob_service.dart';
 import '../../../utils/services/breakup_service.dart';
 import '../../../utils/services/critical_data_sync_service.dart';
 import '../../../utils/services/house_service.dart';
 import '../../../utils/services/military_lock_service.dart';
-import '../../../utils/services/push_notification_helper.dart';
 import '../../../utils/services/role_utils.dart';
 import 'package:soullocket_app/models/soul_event.dart';
 import '../../../utils/services/soul_event_service.dart';
@@ -92,7 +93,6 @@ import 'settings/controllers/settings_security_controller.dart';
 import 'settings/security/security_otp_dialogs.dart';
 import '../../../widgets/first_setup_spotlight_guide.dart';
 import '../../../widgets/legacy_web_ui.dart';
-import '../../../widgets/legacy_falling_effect.dart';
 import '../../../widgets/pin_pad_setup_modal.dart';
 import '../../../utils/services/widget_service.dart';
 import '../../../models/house_settings.dart';
@@ -101,17 +101,18 @@ import '../../../core/constants/app_config.dart';
 import '../../../utils/flexible_date_input.dart';
 import '../../../utils/sl_notice.dart';
 import '../../../utils/app_error_mapper.dart';
+import '../../../utils/services/error_logger_service.dart';
 import '../../../utils/services/pending_upload_service.dart';
 import '../../../utils/services/app_lifecycle_presence_guard.dart';
 import '../../../widgets/soul_locket_brand_mark.dart';
 import '../../visitors/visitor_profile_screen.dart';
 import 'settings/account/identity_panel.dart';
-import 'main_home_tab.dart' show AnimatedWaveBackground;
+import 'main_home_tab.dart' show AnimatedWaveBackground, ShootingHeartEffect;
 import 'settings/controllers/settings_identity_controller.dart';
 import 'settings/controllers/settings_notifications_controller.dart';
 import 'settings/controllers/settings_widget_controller.dart';
 import 'settings/relationship/relationship_actions.dart';
-
+import 'settings/pairing/pairing_dashboard_screen.dart';
 part 'settings/settings_shared_widgets.dart';
 part 'settings/settings_state_helpers.dart';
 part 'settings/settings_persistence.dart';
@@ -407,13 +408,14 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   String _settingsBackupStatusError = '';
   bool _isSavingAdvanced = false;
   bool _isSecurityLocked = false;
-  bool _isCheckingSecurityLock = true;
+  bool _isCheckingSecurityLock = false;
   bool _isDevicePending = false;
   String _devicePendingMessage = '';
   int _devicePendingUnlockAtMs = 0;
   bool _isVipActive = false;
   bool _isRestoringVip = false;
   bool _googleLinked = false;
+  String _googleLinkedEmail = '';
   bool _passwordLinked = false;
   bool _isMainEmailVerified = false;
   bool _hasRecoveryAnswer = false;
@@ -460,7 +462,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   String _securityEmail = '';
   String _secondaryEmail = '';
   String _securityQuestion = '';
-  String _activeRoleKey = '';
+  String _activeRoleKey = RoleUtils.currentRoleSync();
   String _selectedSecurityQuestion =
       L10nService().translate('home_ngysinhcab_82062b');
   String _housePin = '';
@@ -469,7 +471,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   String _bgMusicType = 'audio';
   bool _isSavingTheme = false;
   String _vipPlanCode = '';
-  String? _openPanel;
+
   Set<String> _unlockedCountdownStyles = const <String>{};
   BreakupRequestData? _breakupRequest;
   int _pendingAccountDeletionAtMs = 0;
@@ -498,6 +500,12 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _draftLiteMode = false;
   Timer? _widgetDiaryPreviewTimer;
   final ValueNotifier<int> _widgetPreviewTickNotifier = ValueNotifier<int>(0);
+
+  // Custom Widget Event
+  bool _useCustomWidgetEvent = false;
+  final _customWidgetEventTitleCtrl = TextEditingController();
+  final _customWidgetEventDateCtrl = TextEditingController();
+  String _customWidgetEventColorHex = '#EC4899';
   double? _localCountdownSize;
   final List<String> _securityQuestions = [
     L10nService().translate('home_ngysinhcab_82062b'),
@@ -570,7 +578,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
 
   BannerAd? _bottomBannerAd;
 
-
   void _loadBottomBanner() async {
     if (kIsWeb) return;
     final adMob = AdMobService();
@@ -588,12 +595,17 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     _bottomBannerAd?.dispose();
     _bottomBannerAd = null;
     if (!mounted) return;
-    _bottomBannerAd = await adMob.createBannerAd(
+    final banner = await adMob.createBannerAd(
       onAdLoaded: (_) {
         if (!mounted) return;
         setState(() {});
       },
     );
+    if (!mounted) {
+      banner?.dispose();
+      return;
+    }
+    _bottomBannerAd = banner;
   }
 
   // ignore: unused_element
@@ -638,12 +650,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _startEmailVerifyTimer();
-    // ⚡ Khởi tạo activeRoleKey ngay từ local để tránh nhảy lộn khi fetch Firebase
-    SharedPreferences.getInstance().then((prefs) {
-      if (!mounted) return;
-      final localRole = prefs.getString('il_role') == 'user2' ? 'user2' : 'user1';
-      setState(() => _activeRoleKey = localRole);
-    });
+    // ⚡ _activeRoleKey has already been initialized synchronously
     _scheduleSettingsBootstrap();
   }
 
@@ -813,6 +820,8 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     _anniversaryNameCtrl.dispose();
     _anniversaryDateCtrl.dispose();
     _musicLinkCtrl.dispose();
+    _customWidgetEventTitleCtrl.dispose();
+    _customWidgetEventDateCtrl.dispose();
     SettingsSyncService().backupSettingsToCloud();
     super.dispose();
   }

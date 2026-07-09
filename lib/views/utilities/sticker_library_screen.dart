@@ -1,14 +1,12 @@
-import 'dart:convert';
-import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import '../../core/sl_theme.dart';
 
 class StickerLibraryScreen extends StatelessWidget {
-
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
       tooltip: 'Hướng dẫn',
-      icon: const Icon(Icons.info_outline_rounded, color: Color(0xFF24324A), size: 22),
+      icon: const Icon(Icons.info_outline_rounded,
+          color: Color(0xFF24324A), size: 22),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -29,18 +27,22 @@ class StickerLibraryScreen extends StatelessWidget {
             children: [
               Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text('- Nơi quản lý và thêm các bộ nhãn dán độc quyền dùng để ném vào người ấy trên màn hình chính.\n- Mở khóa nhãn dán hiếm thông qua vòng quay hoặc điểm tình yêu.'),
+              Text(
+                  '- Nơi quản lý và thêm các bộ nhãn dán độc quyền dùng để ném vào người ấy trên màn hình chính.\n- Mở khóa nhãn dán hiếm thông qua vòng quay hoặc điểm tình yêu.'),
               SizedBox(height: 12),
-              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Cách sử dụng:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text('- Duyệt qua các bộ nhãn dán, bấm Tải về để thêm vào bộ sưu tập.\n- Tại màn hình chính, mở ngăn kéo nhãn dán và ném chúng để tạo hiệu ứng tương tác.'),
+              Text(
+                  '- Duyệt qua các bộ nhãn dán, bấm Tải về để thêm vào bộ sưu tập.\n- Tại màn hình chính, mở ngăn kéo nhãn dán và ném chúng để tạo hiệu ứng tương tác.'),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
+            child: const Text('Đã hiểu',
+                style: TextStyle(color: SLColors.primary)),
           ),
         ],
       ),
@@ -58,42 +60,10 @@ class StickerLibraryScreen extends StatelessWidget {
     'assets/images/interaction_stickers/custom/numbered/sticker_006.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_007.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_009.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_010.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_011.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_012.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_013.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_014.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_015.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_016.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_017.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_018.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_019.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_020.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_021.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_022.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_023.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_024.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_025.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_026.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_027.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_028.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_029.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_030.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_031.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_032.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_033.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_034.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_035.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_036.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_037.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_038.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_039.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_040.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_041.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_042.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_043.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_044.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_045.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_046.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_047.png',
@@ -214,166 +184,283 @@ class StickerLibraryScreen extends StatelessWidget {
     'assets/images/interaction_stickers/custom/numbered/sticker_162.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_163.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_164.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_165.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_166.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_167.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_168.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_169.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_170.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_171.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_172.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_173.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_174.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_175.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_176.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_177.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_178.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_180.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_181.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_182.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_183.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_185.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_186.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_188.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_190.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_191.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_192.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_193.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_195.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_196.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_199.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_210.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_215.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_216.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_217.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_218.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_219.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_220.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_221.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_222.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_223.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_224.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_225.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_226.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_227.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_228.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_229.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_230.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_231.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_232.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_233.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_234.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_235.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_236.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_237.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_238.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_239.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_240.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_241.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_242.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_243.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_244.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_245.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_246.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_247.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_248.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_249.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_250.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_251.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_252.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_253.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_254.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_255.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_256.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_257.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_258.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_260.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_261.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_262.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_263.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_264.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_265.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_267.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_268.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_269.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_270.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_271.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_272.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_273.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_274.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_275.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_276.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_277.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_278.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_279.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_280.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_281.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_282.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_283.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_284.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_285.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_286.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_287.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_288.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_289.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_290.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_291.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_292.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_293.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_294.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_295.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_296.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_297.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_298.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_299.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_300.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_301.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_302.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_303.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_304.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_305.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_306.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_307.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_308.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_309.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_310.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_311.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_312.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_313.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_315.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_316.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_318.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_319.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_320.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_321.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_322.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_323.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_324.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_325.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_326.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_327.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_328.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_329.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_330.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_331.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_332.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_333.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_334.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_335.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_336.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_337.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_338.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_339.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_340.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_341.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_342.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_343.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_344.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_345.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_346.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_348.png',
+    'assets/images/sticker_import/cutout/sheet_01/_preview_check.png',
+    'assets/images/sticker_import/cutout/sheet_01/_preview_zoom_dark.png',
+    'assets/images/sticker_import/cutout/sheet_01/sticker_01.png',
     'assets/images/sticker_import/cutout/sheet_02/sticker_01.png',
-    'assets/images/sticker_import/cutout/sheet_02/sticker_02.png',
-    'assets/images/sticker_import/cutout/sheet_02/sticker_03.png',
-    'assets/images/sticker_import/cutout/sheet_02/sticker_04.png',
-    'assets/images/sticker_import/cutout/sheet_02/sticker_05.png',
-    'assets/images/sticker_import/cutout/sheet_02/sticker_06.png',
-    'assets/images/sticker_import/cutout/sheet_02/sticker_07.png',
-    'assets/images/sticker_import/cutout/sheet_02/sticker_08.png',
     'assets/images/sticker_import/cutout/sheet_03/sticker_01.png',
+    'assets/images/sticker_import/cutout/sheet_04/sticker_01.png',
+    'assets/images/sticker_import/cutout/sheet_04/sticker_02.png',
     'assets/images/sticker_import/cutout/sheet_03/sticker_02.png',
+    'assets/images/sticker_import/cutout/sheet_02/sticker_02.png',
+    'assets/images/sticker_import/cutout/sheet_01/sticker_02.png',
+    'assets/images/sticker_import/cutout/sheet_02/sticker_03.png',
+    'assets/images/sticker_import/cutout/sheet_01/sticker_03.png',
+    'assets/images/sticker_import/cutout/sheet_04/sticker_03.png',
     'assets/images/sticker_import/cutout/sheet_03/sticker_03.png',
+    'assets/images/sticker_import/cutout/sheet_01/sticker_04.png',
     'assets/images/sticker_import/cutout/sheet_03/sticker_04.png',
+    'assets/images/sticker_import/cutout/sheet_04/sticker_04.png',
+    'assets/images/sticker_import/cutout/sheet_02/sticker_04.png',
+    'assets/images/sticker_import/cutout/sheet_04/sticker_05.png',
     'assets/images/sticker_import/cutout/sheet_03/sticker_05.png',
+    'assets/images/sticker_import/cutout/sheet_02/sticker_05.png',
+    'assets/images/sticker_import/cutout/sheet_01/sticker_05.png',
+    'assets/images/sticker_import/cutout/sheet_04/sticker_06.png',
     'assets/images/sticker_import/cutout/sheet_03/sticker_06.png',
+    'assets/images/sticker_import/cutout/sheet_02/sticker_06.png',
+    'assets/images/sticker_import/cutout/sheet_01/sticker_06.png',
+    'assets/images/sticker_import/cutout/sheet_02/sticker_07.png',
+    'assets/images/sticker_import/cutout/sheet_04/sticker_07.png',
+    'assets/images/sticker_import/cutout/sheet_01/sticker_07.png',
     'assets/images/sticker_import/cutout/sheet_03/sticker_07.png',
+    'assets/images/sticker_import/cutout/sheet_01/sticker_08.png',
+    'assets/images/sticker_import/cutout/sheet_02/sticker_08.png',
     'assets/images/sticker_import/cutout/sheet_03/sticker_08.png',
+    'assets/images/sticker_import/cutout/sheet_04/sticker_08.png',
     'assets/images/sticker_import/cutout/sheet_03/sticker_09.png',
+    'assets/images/sticker_import/cutout/sheet_04/sticker_09.png',
+    'assets/images/sticker_import/cutout/sheet_04/sticker_10.png',
     'assets/images/sticker_import/cutout/sheet_03/sticker_10.png',
     'assets/images/sticker_import/cutout/sheet_03/sticker_11.png',
+    'assets/images/sticker_import/cutout/sheet_04/sticker_11.png',
+    'assets/images/sticker_import/cutout/sheet_04/sticker_12.png',
     'assets/images/sticker_import/cutout/sheet_03/sticker_12.png',
+    'assets/images/sticker_import/cutout/sheet_04/sticker_13.png',
     'assets/images/sticker_import/cutout/sheet_03/sticker_13.png',
+    'assets/images/sticker_import/cutout/sheet_04/sticker_14.png',
     'assets/images/sticker_import/cutout/sheet_03/sticker_14.png',
     'assets/images/sticker_import/cutout/sheet_03/sticker_15.png',
     'assets/images/sticker_import/cutout/sheet_03/sticker_16.png',
-    'assets/images/sticker_import/cutout/sheet_04/sticker_01.png',
-    'assets/images/sticker_import/cutout/sheet_04/sticker_02.png',
-    'assets/images/sticker_import/cutout/sheet_04/sticker_03.png',
-    'assets/images/sticker_import/cutout/sheet_04/sticker_04.png',
-    'assets/images/sticker_import/cutout/sheet_04/sticker_05.png',
-    'assets/images/sticker_import/cutout/sheet_04/sticker_06.png',
-    'assets/images/sticker_import/cutout/sheet_04/sticker_07.png',
-    'assets/images/sticker_import/cutout/sheet_04/sticker_08.png',
-    'assets/images/sticker_import/cutout/sheet_04/sticker_09.png',
-    'assets/images/sticker_import/cutout/sheet_04/sticker_10.png',
-    'assets/images/sticker_import/cutout/sheet_04/sticker_11.png',
-    'assets/images/sticker_import/cutout/sheet_04/sticker_12.png',
-    'assets/images/sticker_import/cutout/sheet_04/sticker_13.png',
-    'assets/images/sticker_import/cutout/sheet_04/sticker_14.png',
   ];
 
   static const int previewStickerLimit = 30;
 
   static List<String> get stickers => List<String>.unmodifiable(_stickers);
 
-  Future<List<String>> _loadStickerAssets() async {
-    try {
-      final manifestContent = await rootBundle.loadString('AssetManifest.json');
-      final Map<String, dynamic> manifestMap = json.decode(manifestContent);
-      
-      // Loc cac file png trong custom/numbered co thuc su ton tai
-      final List<String> numberedStickers = manifestMap.keys
-          .where((String key) => key.startsWith('assets/images/interaction_stickers/custom/numbered/sticker_') && key.endsWith('.png'))
-          .toList();
-      
-      // Sap xep tu nhien theo thu tu so
-      numberedStickers.sort((a, b) {
-        final regExp = RegExp(r'sticker_(\d+)\.png');
-        final matchA = regExp.firstMatch(a);
-        final matchB = regExp.firstMatch(b);
-        if (matchA != null && matchB != null) {
-          final numA = int.parse(matchA.group(1)!);
-          final numB = int.parse(matchB.group(1)!);
-          return numA.compareTo(numB);
-        }
-        return a.compareTo(b);
-      });
-
-      // Loc cac file tu cac sheet cutout khac co thuc su ton tai
-      final List<String> cutoutStickers = manifestMap.keys
-          .where((String key) => key.startsWith('assets/images/sticker_import/cutout/') && key.endsWith('.png'))
-          .toList();
-      
-      cutoutStickers.sort();
-
-      return [...numberedStickers, ...cutoutStickers];
-    } catch (e) {
-      // Fallback ve static list neu co loi
-      return _stickers;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<String>>(
-      future: _loadStickerAssets(),
-      builder: (context, snapshot) {
-        final list = snapshot.data ?? _stickers;
-        final isLoading = snapshot.connectionState == ConnectionState.waiting;
-
-        return Scaffold(
-          backgroundColor: const Color(0xFFF5F6F8),
-          appBar: AppBar(
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            foregroundColor: const Color(0xFF24324A),
-            title: Text(
-              'Kho sticker',
-              style: SLTheme.quicksand(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFF24324A),
-              ),
-            ),
-            actions: [_buildInfoIcon(context)],
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F6F8),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: const Color(0xFF24324A),
+        title: Text(
+          'Kho sticker',
+          style: SLTheme.quicksand(
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            color: const Color(0xFF24324A),
           ),
-          body: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: const Color(0xFFE3E5E8)),
-                    ),
-                    child: Text(
-                      isLoading
-                          ? 'Đang tải danh sách nhãn dán...'
-                          : 'Đã nạp ${list.length} sticker local từ bộ tương tác và các sheet cutout.',
-                      style: SLTheme.quicksand(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF5D6B82),
-                        height: 1.45,
-                      ),
-                    ),
+        ),
+        actions: [_buildInfoIcon(context)],
+      ),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFFE3E5E8)),
+                ),
+                child: Text(
+                  'Đã nạp ${_stickers.length} sticker local từ bộ tương tác và các sheet cutout. Không lấy ảnh preview.',
+                  style: SLTheme.quicksand(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF5D6B82),
+                    height: 1.45,
                   ),
                 ),
-                Expanded(
-                  child: isLoading
-                      ? const Center(
-                          child: CircularProgressIndicator(color: SLColors.primary),
-                        )
-                      : GridView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 14,
-                            childAspectRatio: 0.82,
-                          ),
-                          itemCount: list.length,
-                          itemBuilder: (context, index) {
-                            final assetPath = list[index];
-                            return _StickerLibraryTile(
-                              assetPath: assetPath,
-                              index: index,
-                            );
-                          },
-                        ),
-                ),
-              ],
+              ),
             ),
-          ),
-        );
-      },
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 14,
+                  childAspectRatio: 0.82,
+                ),
+                itemCount: _stickers.length,
+                itemBuilder: (context, index) {
+                  final assetPath = _stickers[index];
+                  return _StickerLibraryTile(
+                    assetPath: assetPath,
+                    index: index,
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -510,8 +597,8 @@ class _StickerPreviewScreen extends StatelessWidget {
                 ],
               ),
               child: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.78,
-                height: MediaQuery.of(context).size.width * 0.78,
+                width: MediaQuery.sizeOf(context).width * 0.78,
+                height: MediaQuery.sizeOf(context).width * 0.78,
                 child: _StickerArt(
                   assetPath: assetPath,
                   fit: BoxFit.contain,

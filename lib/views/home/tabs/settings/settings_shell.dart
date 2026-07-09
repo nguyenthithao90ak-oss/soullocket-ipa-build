@@ -265,153 +265,84 @@ extension _SettingsTabShell on _SettingsTabState {
   }
 
   Widget _buildResponsiveSettingsScaffold() {
-    final double headerHeight = MediaQuery.of(context).padding.top + 52;
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        const _SettingsBackgroundLayer(),
-        Scaffold(
-          backgroundColor: Colors.transparent,
-          body: SafeArea(
-            top: false,
-            bottom: false,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Material(
-                    color: Colors.transparent,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        return Align(
-                          alignment: Alignment.topCenter,
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxWidth: SLResponsive.maxContentWidthForWidth(
-                                constraints.maxWidth,
-                                handsetMax: 560,
-                                tabletMax: 980,
-                                desktopMax: 1080,
-                              ),
-                            ),
-                            child: ListView(
-                              physics: const ClampingScrollPhysics(),
-                              padding: EdgeInsets.only(
-                                top: headerHeight,
-                                bottom: 120,
-                              ),
-                              children: [
-                                _buildSettingsSyncBanner(),
-                                _buildSettingsCategoryGrid(),
-                                const SizedBox(height: 2),
-                                _buildSectionTitle(
-                                  context.tr('settings_other_features_title'),
-                                  topPadding: 6,
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 15),
-                                  child: Column(
-                                    children: [
-                                      if (_relationshipMode != 'single') ...[
-                                        _buildActionBtn(
-                                          icon: Icons.swap_horiz_rounded,
-                                          label: _activeRoleKey == 'user1'
-                                              ? context.tr('settings_swap_role_to_female')
-                                              : context.tr('settings_swap_role_to_male'),
-                                          gradient: const [
-                                            Color(0xFF42A5F5),
-                                            Color(0xFF1E88E5),
-                                          ],
-                                          textColor: const Color(0xFF1E88E5),
-                                          onTap: _swapUserRole,
-                                        ),
-                                        const SizedBox(height: 12),
-                                      ],
-                                      _buildActionBtn(
-                                        icon: Icons.support_agent_rounded,
-                                        label: context.tr('support_center'),
-                                        gradient: const [
-                                          Color(0xFF4FC3F7),
-                                          Color(0xFF0288D1),
-                                        ],
-                                        textColor: const Color(0xFF0288D1),
-                                        onTap: _openSupportContact,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      _buildActionBtn(
-                                        icon: Icons.star_rate_rounded,
-                                        label: context.tr('rate_app'),
-                                        gradient: const [
-                                          Color(0xFFFFD54F),
-                                          Color(0xFFFF8F00),
-                                        ],
-                                        textColor: const Color(0xFFFF8F00),
-                                        onTap: _rateApp,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      _buildActionBtn(
-                                        icon: Icons.logout_rounded,
-                                        label: context.tr('logout'),
-                                        gradient: const [
-                                          Color(0xFFFF8A65),
-                                          Color(0xFFE64A19),
-                                        ],
-                                        textColor: const Color(0xFFE64A19),
-                                        onTap: _logout,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      _buildActionBtn(
-                                        icon: Icons.delete_forever_rounded,
-                                        label: context.tr('settings_delete_account_data'),
-                                        gradient: const [
-                                          Color(0xFFB71C1C),
-                                          Color(0xFF7F0000),
-                                        ],
-                                        textColor: const Color(0xFFB71C1C),
-                                        onTap: _deleteAccount,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 18),
-                                _buildSettingsFooter(),
-                              ],
-                            ),
+    final uiState = UiPrefs.notifier.value;
+    final isDark = uiState.themeKey == 'theme-night' ||
+        uiState.themeKey == 'theme-dark' ||
+        uiState.themeKey == 'theme-true-black';
+
+    final double headerHeight = MediaQuery.paddingOf(context).top + 52;
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF000000) : const Color(0xFFF2F2F7),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Material(
+                color: Colors.transparent,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Align(
+                      alignment: Alignment.topCenter,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: SLResponsive.maxContentWidthForWidth(
+                            constraints.maxWidth,
+                            handsetMax: 560,
+                            tabletMax: 980,
+                            desktopMax: 1080,
                           ),
-                        );
-                      },
-                    ),
-                  ),
+                        ),
+                        child: ListView(
+                          physics: const ClampingScrollPhysics(),
+                          padding: EdgeInsets.only(
+                            top: headerHeight,
+                            bottom: 120,
+                          ),
+                          children: [
+                            _buildSettingsSyncBanner(),
+                            _buildNewSettingsList(isDark),
+                            const SizedBox(height: 18),
+                            _buildSettingsFooter(),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: _buildSettingsHeader(),
-                ),
-              ],
+              ),
             ),
-          ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: _buildSettingsHeader(),
+            ),
+          ],
         ),
-],
+      ),
     );
   }
 
   Widget _buildSettingsHeader() {
     final uiState = UiPrefs.notifier.value;
-    final isDark = uiState.themeKey == 'theme-night' || uiState.themeKey == 'theme-dark' || uiState.themeKey == 'theme-true-black';
-    final headerBgColor = (isDark ? Colors.black : _kSettingsHeaderBg).withValues(alpha: 0.65);
+    final isDark = uiState.themeKey == 'theme-night' ||
+        uiState.themeKey == 'theme-dark' ||
+        uiState.themeKey == 'theme-true-black';
+    final headerBgColor =
+        (isDark ? Colors.black : _kSettingsHeaderBg).withValues(alpha: 0.65);
 
     return RepaintBoundary(
       child: ClipRect(
         child: FastBackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           fallbackColor: isDark ? Colors.black87 : _kSettingsHeaderBg,
           child: Container(
             width: double.infinity,
             padding: EdgeInsets.fromLTRB(
               14,
-              MediaQuery.of(context).padding.top + 4,
+              MediaQuery.paddingOf(context).top + 4,
               14,
               8,
             ),
@@ -432,59 +363,60 @@ extension _SettingsTabShell on _SettingsTabState {
               ),
             ),
             child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: _kSettingsHeaderSurface,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: _kSettingsHeaderBorder,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: _kSettingsHeaderSurface,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: _kSettingsHeaderBorder,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new,
+                      color: SLColors.primaryActive,
+                      size: 15,
+                    ),
                   ),
-                ],
-              ),
-              child: const Icon(
-                Icons.arrow_back_ios_new,
-                color: SLColors.primaryActive,
-                size: 15,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: SLTheme.titleGradient(context.tr('settings'), fontSize: 18),
-          ),
-          _buildHeaderAction(
-            icon: Icons.search_rounded,
-            onTap: () {
-              final houseId = _houseId?.trim() ?? '';
-              if (houseId.isEmpty) {
-                return;
-              }
-              slPush(
-                context,
-                GlobalSearchScreen(
-                  houseId: houseId,
-                  relationshipMode: _relationshipMode,
-                  allowedUtilityIds: _settingsSearchableUtilityIds(),
-                  onResultSelected: (result) async {
-                    Navigator.of(context).pop();
-                    await _openSearchResultFromSettings(result);
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: SLTheme.titleGradient(context.tr('settings'),
+                      fontSize: 18),
+                ),
+                _buildHeaderAction(
+                  icon: Icons.search_rounded,
+                  onTap: () {
+                    final houseId = _houseId?.trim() ?? '';
+                    if (houseId.isEmpty) {
+                      return;
+                    }
+                    slPush(
+                      context,
+                      GlobalSearchScreen(
+                        houseId: houseId,
+                        relationshipMode: _relationshipMode,
+                        allowedUtilityIds: _settingsSearchableUtilityIds(),
+                        onResultSelected: (result) async {
+                          Navigator.of(context).pop();
+                          await _openSearchResultFromSettings(result);
+                        },
+                      ),
+                    );
                   },
                 ),
-              );
-            },
-          ),
-        ],
+              ],
             ),
           ),
         ),
@@ -496,99 +428,226 @@ extension _SettingsTabShell on _SettingsTabState {
     return const SizedBox(height: 8);
   }
 
-  Widget _buildSettingsCategoryGrid() {
-    final cards = <Widget>[
-      _buildControlCard(
-        icon: Icons.manage_accounts_rounded,
-        accentIcons: const [
-          Icons.workspace_premium_rounded,
-          Icons.translate_rounded,
-        ],
-        label: context.tr('settings_account_label'),
-        desc: context.tr('settings_account_desc'),
-        gradient: const [Color(0xFFFFEDB2), Color(0xFFF6CB63)],
-        border: const Color(0xFFF1C14E),
-        textColor: const Color(0xFF9C6A00),
-        onTap: () => _togglePanel('account'),
+  Widget _buildiOSSectionCard(List<Widget> children, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        borderRadius: BorderRadius.circular(10),
       ),
-      _buildControlCard(
-        icon: Icons.shield_rounded,
-        accentIcons: const [
-          Icons.lock_outline_rounded,
-          Icons.phonelink_lock_rounded,
-        ],
-        label: context.tr('settings_security_label'),
-        desc: context.tr('settings_security_desc'),
-        gradient: const [Color(0xFFFFD7E1), Color(0xFFF5A3B7)],
-        border: const Color(0xFFFFA8BF),
-        textColor: const Color(0xFFD63F67),
-        onTap: () => _togglePanel('security'),
-      ),
-      _buildControlCard(
-        icon: Icons.palette_rounded,
-        accentIcons: const [
-          Icons.auto_awesome_rounded,
-          Icons.smart_toy_rounded,
-        ],
-        label: context.tr('theme'),
-        desc: context.tr('settings_theme_desc'),
-        gradient: const [Color(0xFFD8E8FF), Color(0xFF97BEF5)],
-        border: const Color(0xFF8ABAF5),
-        textColor: const Color(0xFF2A73D9),
-        onTap: () => _togglePanel('theme'),
-      ),
-      _buildControlCard(
-        icon: Icons.widgets_rounded,
-        accentIcons: const [
-          Icons.favorite_rounded,
-          Icons.photo_library_outlined,
-        ],
-        label: context.tr('settings_widget_label'),
-        desc: kIsWeb
-            ? context.tr('settings_widget_desc_web')
-            : context.tr('settings_widget_desc_mobile'),
-        gradient: const [Color(0xFFCFF3EE), Color(0xFF88D9CE)],
-        border: const Color(0xFF73D5CC),
-        textColor: const Color(0xFF0D7D81),
-        onTap: () => _togglePanel('widget'),
-        badgeText: kIsWeb ? context.tr('settings_badge_mobile') : null,
-      ),
-      _buildControlCard(
-        icon: Icons.timelapse_rounded,
-        accentIcons: const [
-          Icons.hourglass_bottom_rounded,
-          Icons.calendar_month_rounded,
-        ],
-        label: context.tr('settings_countdown_space_label'),
-        desc: context.tr('settings_countdown_space_desc'),
-        gradient: const [Color(0xFFFFE4CC), Color(0xFFF4BC92)],
-        border: const Color(0xFFF1B58E),
-        textColor: const Color(0xFFB85A2B),
-        onTap: () => _togglePanel('countdownMode'),
-      ),
-      _buildControlCard(
-        icon: Icons.hub_rounded,
-        accentIcons: const [
-          Icons.notifications_active_rounded,
-          Icons.storage_rounded,
-        ],
-        label: context.tr('settings_data_system_label'),
-        desc: context.tr('settings_data_system_desc'),
-        gradient: const [Color(0xFFE3F2FD), Color(0xFF90CAF9)],
-        border: const Color(0xFF90CAF9),
-        textColor: const Color(0xFF1565C0),
-        onTap: () => _togglePanel('dataHealth'),
-      ),
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
-        children: cards.map((card) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: card,
-        )).toList(),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
       ),
+    );
+  }
+
+  Widget _buildiOSRow({
+    required IconData icon,
+    required Color iconBgColor,
+    required String title,
+    required VoidCallback onTap,
+    String? subtitle,
+    bool isDark = false,
+    bool isDestructive = false,
+  }) {
+    final textColor = isDestructive 
+        ? const Color(0xFFD32F2F) 
+        : (isDark ? Colors.white : const Color(0xFF243041));
+        
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: isDestructive ? const Color(0xFFFFEBEE) : iconBgColor,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  size: 18,
+                  color: isDestructive ? const Color(0xFFD32F2F) : Colors.white,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: SLTheme.quicksand(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: textColor,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: SLTheme.quicksand(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.grey[500] : const Color(0xFF7B8794),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (!isDestructive)
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: isDark ? Colors.grey[700] : const Color(0xFFCFD8DC),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider(bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 60),
+      child: Divider(
+        height: 0.5, 
+        thickness: 0.5, 
+        color: isDark ? Colors.grey[800] : Colors.grey.shade200,
+      ),
+    );
+  }
+
+  Widget _buildNewSettingsList(bool isDark) {
+    return Column(
+      children: [
+        _buildiOSSectionCard([
+          _buildiOSRow(
+            icon: Icons.manage_accounts_rounded,
+            iconBgColor: const Color(0xFFF6CB63),
+            title: context.tr('settings_account_label'),
+            subtitle: context.tr('settings_account_desc'),
+            isDark: isDark,
+            onTap: () => _togglePanel('account'),
+          ),
+          _buildDivider(isDark),
+          _buildiOSRow(
+            icon: Icons.link_rounded,
+            iconBgColor: const Color(0xFFD81B60),
+            title: context.tr('settings_partner_connect'),
+            subtitle: context.tr('settings_partner_connect_desc'),
+            isDark: isDark,
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PairingDashboardScreen())),
+          ),
+          _buildDivider(isDark),
+          _buildiOSRow(
+            icon: Icons.palette_rounded,
+            iconBgColor: const Color(0xFF8ABAF5),
+            title: context.tr('theme'),
+            subtitle: context.tr('settings_theme_desc'),
+            isDark: isDark,
+            onTap: () => _togglePanel('theme'),
+          ),
+          _buildDivider(isDark),
+          _buildiOSRow(
+            icon: Icons.widgets_rounded,
+            iconBgColor: const Color(0xFF73D5CC),
+            title: context.tr('settings_widget_label'),
+            subtitle: kIsWeb ? context.tr('settings_widget_desc_web') : context.tr('settings_widget_desc_mobile'),
+            isDark: isDark,
+            onTap: () => _togglePanel('widget'),
+          ),
+          _buildDivider(isDark),
+          _buildiOSRow(
+            icon: Icons.timelapse_rounded,
+            iconBgColor: const Color(0xFFF1B58E),
+            title: context.tr('settings_countdown_space_label'),
+            subtitle: context.tr('settings_countdown_space_desc'),
+            isDark: isDark,
+            onTap: () => _togglePanel('countdownMode'),
+          ),
+        ], isDark),
+
+        _buildSectionTitle(context.tr('settings_security_label'), topPadding: 16),
+        _buildiOSSectionCard([
+          _buildiOSRow(
+            icon: Icons.shield_rounded,
+            iconBgColor: const Color(0xFFFFA8BF),
+            title: context.tr('settings_security_label'),
+            subtitle: context.tr('settings_security_desc'),
+            isDark: isDark,
+            onTap: () => _togglePanel('security'),
+          ),
+          _buildDivider(isDark),
+          _buildiOSRow(
+            icon: Icons.notifications_active_rounded,
+            iconBgColor: const Color(0xFFA4D7A9),
+            title: context.tr('settings_notifications_interactions'),
+            subtitle: context.tr('settings_notifications_interactions_desc'),
+            isDark: isDark,
+            onTap: () => _togglePanel('notifications'),
+          ),
+          _buildDivider(isDark),
+          _buildiOSRow(
+            icon: Icons.hub_rounded,
+            iconBgColor: const Color(0xFF90CAF9),
+            title: context.tr('settings_data_system_label'),
+            subtitle: context.tr('settings_data_system_desc'),
+            isDark: isDark,
+            onTap: () => _togglePanel('dataHealth'),
+          ),
+        ], isDark),
+
+        _buildSectionTitle(context.tr('settings_other_features_title'), topPadding: 16),
+        _buildiOSSectionCard([
+
+          _buildiOSRow(
+            icon: Icons.support_agent_rounded,
+            iconBgColor: const Color(0xFF4FC3F7),
+            title: context.tr('support_center'),
+            isDark: isDark,
+            onTap: _openSupportContact,
+          ),
+          _buildDivider(isDark),
+          _buildiOSRow(
+            icon: Icons.star_rate_rounded,
+            iconBgColor: const Color(0xFFFFD54F),
+            title: context.tr('rate_app'),
+            isDark: isDark,
+            onTap: _rateApp,
+          ),
+        ], isDark),
+
+        _buildiOSSectionCard([
+          _buildiOSRow(
+            icon: Icons.logout_rounded,
+            iconBgColor: const Color(0xFFFF8A65),
+            title: context.tr('logout'),
+            isDark: isDark,
+            isDestructive: true,
+            onTap: _logout,
+          ),
+          _buildDivider(isDark),
+          _buildiOSRow(
+            icon: Icons.delete_forever_rounded,
+            iconBgColor: const Color(0xFFB71C1C),
+            title: context.tr('settings_delete_account_data'),
+            isDark: isDark,
+            isDestructive: true,
+            onTap: _deleteAccount,
+          ),
+        ], isDark),
+      ],
     );
   }
 
@@ -622,6 +681,16 @@ extension _SettingsTabShell on _SettingsTabState {
               fontSize: 10.5,
               fontWeight: FontWeight.w700,
               color: const Color(0xFF7B8794),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '© Bản quyền SoulLocket Hoàng & Tú',
+            textAlign: TextAlign.center,
+            style: SLTheme.quicksand(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF9AA5B1),
             ),
           ),
           const SizedBox(height: 8),
@@ -678,13 +747,10 @@ extension _SettingsTabShell on _SettingsTabState {
                             desktopMax: 1080,
                           ),
                         ),
-                        child: RepaintBoundary(
-                          child: SingleChildScrollView(
-                            physics: const ClampingScrollPhysics(),
-                            padding:
-                                const EdgeInsets.only(top: 0, bottom: 24),
-                            child: _buildStandalonePanelContent(sectionId),
-                          ),
+                        child: SingleChildScrollView(
+                          physics: const ClampingScrollPhysics(),
+                          padding: const EdgeInsets.only(top: 0, bottom: 24),
+                          child: _buildStandalonePanelContent(sectionId),
                         ),
                       ),
                     );

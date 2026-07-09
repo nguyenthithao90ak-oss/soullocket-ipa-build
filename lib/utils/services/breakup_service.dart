@@ -209,7 +209,8 @@ class BreakupService {
   }
 
   Future<BreakupRequestData?> getBreakupRequest(String houseId) async {
-    final snap = await _requestRef(houseId).get();
+    final snap =
+        await _requestRef(houseId).get().timeout(const Duration(seconds: 3));
     if (!snap.exists || snap.value == null) return null;
     final map = _toMap(snap.value);
     if (map.isEmpty) return null;
@@ -227,15 +228,19 @@ class BreakupService {
     final currentDeviceId = await getCurrentDeviceId();
     final trustedDeviceIds = <String>{};
 
-    final houseDevicesSnap =
-        await _db.ref('houses/$houseId/security/devices').get();
+    final houseDevicesSnap = await _db
+        .ref('houses/$houseId/security/devices')
+        .get()
+        .timeout(const Duration(seconds: 3));
     _collectTrustedDeviceIds(houseDevicesSnap.value, trustedDeviceIds);
 
     if (trustedDeviceIds.isEmpty &&
         currentUid != null &&
         currentUid.trim().isNotEmpty) {
-      final globalSnap =
-          await _db.ref('security/devices/${currentUid.trim()}').get();
+      final globalSnap = await _db
+          .ref('security/devices/${currentUid.trim()}')
+          .get()
+          .timeout(const Duration(seconds: 3));
       _collectTrustedDeviceIds(globalSnap.value, trustedDeviceIds);
     }
 

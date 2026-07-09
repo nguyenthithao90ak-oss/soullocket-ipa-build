@@ -87,7 +87,8 @@ class MusicService {
 
     _audioPlayer.setReleaseMode(ReleaseMode.loop);
 
-    _playerStateSub = _audioPlayer.onPlayerStateChanged.listen(_onPlayerStateChanged);
+    _playerStateSub =
+        _audioPlayer.onPlayerStateChanged.listen(_onPlayerStateChanged);
 
     UiPrefs.notifier.addListener(_handleUiPrefsChanged);
 

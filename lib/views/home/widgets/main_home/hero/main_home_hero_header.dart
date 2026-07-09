@@ -23,7 +23,7 @@ class _MainHomeHeroHeaderState extends State<_MainHomeHeroHeader> {
     return Stack(
       children: [
         Positioned(
-          top: MediaQuery.of(context).padding.top + 4,
+          top: MediaQuery.paddingOf(context).top + 4,
           right: 14,
           child: ValueListenableBuilder<bool>(
             valueListenable: UiPrefs.captureModeNotifier,
@@ -40,7 +40,7 @@ class _MainHomeHeroHeaderState extends State<_MainHomeHeroHeader> {
                     duration: const Duration(milliseconds: 180),
                     curve: Curves.easeOutCubic,
                     scale: hideButton ? 0.92 : 1.0,
-                    child: widget.state._buildHeaderButton(
+                    child: MainHomeHeaderButton(
                       key: widget.firstGuideSettingsKey,
                       icon: Icons.settings_rounded,
                       color: SLTheme.primary,
@@ -63,9 +63,9 @@ class _MainHomeHeroHeaderState extends State<_MainHomeHeroHeader> {
         ),
         if (widget.state._showLegacyMessengerButton && !widget.isSingle)
           Positioned(
-            top: MediaQuery.of(context).padding.top + 12,
+            top: MediaQuery.paddingOf(context).top + 12,
             left: 66,
-            child: widget.state._buildHeaderButton(
+            child: MainHomeHeaderButton(
               icon: Icons.messenger_outline,
               color: const Color(0xFFD81B60),
               onTap: () => Navigator.push(

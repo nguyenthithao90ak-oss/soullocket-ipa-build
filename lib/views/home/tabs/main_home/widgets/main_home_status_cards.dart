@@ -21,7 +21,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   decoration: BoxDecoration(
                     color: const Color(0xFF94A3B8).withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(radius),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.7)),
                   ),
                   child: Center(
                     child: Container(
@@ -34,7 +35,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                         borderRadius: BorderRadius.circular(999),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF94A3B8).withValues(alpha: 0.2),
+                            color:
+                                const Color(0xFF94A3B8).withValues(alpha: 0.2),
                             blurRadius: 16,
                             offset: const Offset(0, 8),
                           ),
@@ -93,19 +95,38 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     if (startDate != null && startDate.isNotEmpty) {
       try {
         final startDt = DateTime.parse(startDate);
-        final startDtMidnight = DateTime(startDt.year, startDt.month, startDt.day);
+        final startDtMidnight =
+            DateTime(startDt.year, startDt.month, startDt.day);
         final daysToday = todayMidnight.difference(startDtMidnight).inDays + 1;
         totalDays = daysToday;
 
         int? nextMilestone;
-        for (final m in [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2000, 2500, 3000, 4000, 5000]) {
+        for (final m in [
+          100,
+          200,
+          300,
+          400,
+          500,
+          600,
+          700,
+          800,
+          900,
+          1000,
+          1500,
+          2000,
+          2500,
+          3000,
+          4000,
+          5000
+        ]) {
           if (m >= daysToday) {
             nextMilestone = m;
             break;
           }
         }
         if (nextMilestone != null) {
-          final milestoneDate = startDtMidnight.add(Duration(days: nextMilestone - 1));
+          final milestoneDate =
+              startDtMidnight.add(Duration(days: nextMilestone - 1));
           upcomingEvents.add(HomeUpcomingEvent(
             title: 'Kỷ niệm $nextMilestone ngày yêu nhau 💖',
             date: milestoneDate,
@@ -113,9 +134,11 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
           ));
         }
 
-        DateTime nextAnniversary = DateTime(todayMidnight.year, startDtMidnight.month, startDtMidnight.day);
+        DateTime nextAnniversary = DateTime(
+            todayMidnight.year, startDtMidnight.month, startDtMidnight.day);
         if (nextAnniversary.isBefore(todayMidnight)) {
-          nextAnniversary = DateTime(todayMidnight.year + 1, startDtMidnight.month, startDtMidnight.day);
+          nextAnniversary = DateTime(todayMidnight.year + 1,
+              startDtMidnight.month, startDtMidnight.day);
         }
         final years = nextAnniversary.year - startDtMidnight.year;
         if (years > 0) {
@@ -133,10 +156,18 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     final dobU2 = _houseSettings?['dobU2']?.toString() ?? '';
     String nameU1 = _houseSettings?['nameU1']?.toString() ?? 'Bạn';
     String nameU2 = _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
-    if (nameU1.toLowerCase() == 'bạn nam') nameU1 = context.tr('male_role_default');
-    if (nameU1.toLowerCase() == 'bạn nữ') nameU1 = context.tr('female_role_default');
-    if (nameU2.toLowerCase() == 'bạn nam') nameU2 = context.tr('male_role_default');
-    if (nameU2.toLowerCase() == 'bạn nữ') nameU2 = context.tr('female_role_default');
+    if (nameU1.toLowerCase() == 'bạn nam') {
+      nameU1 = context.tr('male_role_default');
+    }
+    if (nameU1.toLowerCase() == 'bạn nữ') {
+      nameU1 = context.tr('female_role_default');
+    }
+    if (nameU2.toLowerCase() == 'bạn nam') {
+      nameU2 = context.tr('male_role_default');
+    }
+    if (nameU2.toLowerCase() == 'bạn nữ') {
+      nameU2 = context.tr('female_role_default');
+    }
 
     void addBirthday(String dob, String name) {
       if (dob.isEmpty) return;
@@ -148,7 +179,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
         }
         final daysUntil = nextBday.difference(todayMidnight).inDays;
         final giftHint = daysUntil <= 7 && daysUntil >= 0
-            ? _MainHomeTabState._giftSuggestionsForBirthday(bday.month, bday.day)
+            ? _MainHomeTabState._giftSuggestionsForBirthday(
+                bday.month, bday.day)
             : '';
         upcomingEvents.add(HomeUpcomingEvent(
           title: giftHint.isNotEmpty
@@ -159,6 +191,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
         ));
       } catch (_) {}
     }
+
     addBirthday(dobU1, nameU1);
     addBirthday(dobU2, nameU2);
 
@@ -179,9 +212,11 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       {'month': 12, 'day': 31, 'name': 'Đêm Giao thừa ✨'},
     ];
     for (final h in holidaysList) {
-      DateTime nextH = DateTime(todayMidnight.year, h['month'] as int, h['day'] as int);
+      DateTime nextH =
+          DateTime(todayMidnight.year, h['month'] as int, h['day'] as int);
       if (nextH.isBefore(todayMidnight)) {
-        nextH = DateTime(todayMidnight.year + 1, h['month'] as int, h['day'] as int);
+        nextH = DateTime(
+            todayMidnight.year + 1, h['month'] as int, h['day'] as int);
       }
       upcomingEvents.add(HomeUpcomingEvent(
         title: h['name'] as String,
@@ -224,11 +259,20 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     }
 
     String myNameSetting = _houseSettings?['nameU1']?.toString() ?? 'Bạn';
-    String partnerNameSetting = _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
-    if (myNameSetting.toLowerCase() == 'bạn nam') myNameSetting = context.tr('male_role_default');
-    if (myNameSetting.toLowerCase() == 'bạn nữ') myNameSetting = context.tr('female_role_default');
-    if (partnerNameSetting.toLowerCase() == 'bạn nam') partnerNameSetting = context.tr('male_role_default');
-    if (partnerNameSetting.toLowerCase() == 'bạn nữ') partnerNameSetting = context.tr('female_role_default');
+    String partnerNameSetting =
+        _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
+    if (myNameSetting.toLowerCase() == 'bạn nam') {
+      myNameSetting = context.tr('male_role_default');
+    }
+    if (myNameSetting.toLowerCase() == 'bạn nữ') {
+      myNameSetting = context.tr('female_role_default');
+    }
+    if (partnerNameSetting.toLowerCase() == 'bạn nam') {
+      partnerNameSetting = context.tr('male_role_default');
+    }
+    if (partnerNameSetting.toLowerCase() == 'bạn nữ') {
+      partnerNameSetting = context.tr('female_role_default');
+    }
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -243,20 +287,26 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             Row(
               children: [
                 Container(
-                  width: 42,
-                  height: 42,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [Color(0xFFFFD7E6), Color(0xFFFFEEF5)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(15),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFFD7E6).withValues(alpha: 0.5),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: const Icon(
-                    Icons.auto_awesome_rounded,
-                    color: SLColors.primary,
-                    size: 20,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: const AnimatedRabbitSticker('assets/images/interaction_stickers/custom/numbered/sticker_056.png'),
                   ),
                 ),
                 SLSpacing.w12,
@@ -298,8 +348,26 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF5F9),
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFFFFF5F9),
+                    Color(0xFFFFECF3),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFFFFCEE0),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF89B6).withValues(alpha: 0.12),
+                    blurRadius: 14,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
@@ -348,13 +416,34 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             ),
 
             const SizedBox(height: 14),
-            Text(
-              _buildCountdownText(isSingle: isSingle, startDate: startDate),
-              style: SLTheme.quicksand(
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-                color: SLColors.primary,
-                height: 1.4,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF6D97), Color(0xFFFF9EBA)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF6D97).withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  _buildCountdownText(isSingle: isSingle, startDate: startDate),
+                  style: SLTheme.quicksand(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
           ],
@@ -421,20 +510,26 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFFDDF5FF), Color(0xFFF0FAFF)],
+                      colors: [Color(0xFF80DEEA), Color(0xFF26C6DA)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(16),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF26C6DA).withValues(alpha: 0.35),
+                        blurRadius: 12,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
                   ),
-                  child: const Icon(
-                    Icons.map_rounded,
-                    color: SLColors.secondary,
-                    size: 22,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Image.asset('assets/images/interaction_stickers/custom/numbered/sticker_162.png'),
                   ),
                 ),
                 SLSpacing.w12,
@@ -443,7 +538,9 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isSingle ? context.tr('home_vtrhinti_f5956d') : context.tr('home_bncahaia_12dcb1'),
+                        isSingle
+                            ? context.tr('home_vtrhinti_f5956d')
+                            : context.tr('home_bncahaia_12dcb1'),
                         style: SLTheme.quicksand(
                           fontSize: 14,
                           fontWeight: FontWeight.w900,
@@ -476,46 +573,87 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
               builder: (context, distanceText, _) {
                 return ValueListenableBuilder<Map<String, dynamic>?>(
                   valueListenable: _homePartnerBatteryNotifier,
-                  builder: (context, batteryInfo, _) {
-                    String displayText = distanceText;
-                    if (batteryInfo != null && !isSingle) {
-                      final pct = batteryInfo['level'] as int;
-                      final isCharging = batteryInfo['isCharging'] == true;
-                      final emoji = isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
-                      displayText = '$distanceText • $emoji $pct%';
-                    }
-                    return Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.72),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.82)),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              displayText,
-                              style: SLTheme.quicksand(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF4B5B6E),
-                                height: 1.4,
+                  builder: (context, partnerBattery, _) {
+                    return ValueListenableBuilder<Map<String, dynamic>?>(
+                      valueListenable: _homeMyBatteryNotifier,
+                      builder: (context, myBattery, _) {
+                        String displayText = distanceText;
+                        if (!isSingle) {
+                          final List<String> batteryTexts = [];
+
+                          if (myBattery != null) {
+                            final pct = myBattery['level'] as int;
+                            final isCharging = myBattery['isCharging'] == true;
+                            final emoji =
+                                isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                            batteryTexts.add('Bạn $emoji $pct%');
+                          }
+
+                          if (partnerBattery != null) {
+                            final pct = partnerBattery['level'] as int;
+                            final isCharging =
+                                partnerBattery['isCharging'] == true;
+                            final emoji =
+                                isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                            batteryTexts.add('Người ấy $emoji $pct%');
+                          }
+
+                          if (batteryTexts.isNotEmpty) {
+                            displayText =
+                                '$distanceText • ${batteryTexts.join(' • ')}';
+                          }
+                        }
+                        return Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFFE0FAFA),
+                                Color(0xFFF0FEFF),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: const Color(0xFF80DEEA).withValues(alpha: 0.55),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF26C6DA).withValues(alpha: 0.08),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
-                            ),
+                            ],
                           ),
-                          SLSpacing.w12,
-                          Text(
-                            context.tr('home_mngay_02e4c1'),
-                            style: SLTheme.quicksand(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                              color: SLColors.secondary,
-                            ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  displayText,
+                                  style: SLTheme.quicksand(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: const Color(0xFF2A5F6E),
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                              SLSpacing.w12,
+                              Text(
+                                context.tr('home_mngay_02e4c1'),
+                                style: SLTheme.quicksand(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF00ACC1),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     );
                   },
                 );
@@ -572,15 +710,17 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
           children: [
             Row(
               children: [
-                const Icon(
-                  Icons.auto_awesome_rounded,
-                  color: SLColors.accent,
-                  size: 18,
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Image.asset('assets/images/interaction_stickers/custom/numbered/sticker_160.png'),
                 ),
                 SLSpacing.w8,
                 Flexible(
                   child: Text(
-                    isSingle ? context.tr('home_tngquanhmn_0e1b6b') : context.tr('home_hnhtrnhiqu_cbcf59'),
+                    isSingle
+                        ? context.tr('home_tngquanhmn_0e1b6b')
+                        : context.tr('home_hnhtrnhiqu_cbcf59'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
@@ -613,7 +753,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 ),
               )
             else ...[
-              _buildInsightBubbleWrap(metrics, compact: false, enableMotion: enableMotion),
+              _buildInsightBubbleWrap(metrics,
+                  compact: false, enableMotion: enableMotion),
               SLSpacing.h20,
               Container(
                 padding: const EdgeInsets.fromLTRB(14, 13, 14, 14),
@@ -627,7 +768,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: SLRadius.lgAll,
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.72)),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFFFF9BBC).withValues(alpha: 0.08),
@@ -689,25 +831,15 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
         for (var index = 0; index < metrics.length; index++) ...[
           Expanded(
             child: Center(
-              child: ValueListenableBuilder<bool>(
-                valueListenable: SLTheme.isTabSwiping,
-                builder: (context, isSwiping, _) {
-                  return ValueListenableBuilder<bool>(
-                    valueListenable: _isScrollingNotifier,
-                    builder: (context, isScrolling, _) {
-                      return _FloatingInsightBubble(
-                        label: metrics[index].label,
-                        value: metrics[index].value,
-                        color: metrics[index].color,
-                        phase: metrics[index].phase,
-                        size: bubbleSize,
-                        emphasize: metrics[index].emphasize,
-                        compact: compact,
-                        enableMotion: enableMotion && !isSwiping && !isScrolling,
-                      );
-                    },
-                  );
-                },
+              child: _FloatingInsightBubble(
+                label: metrics[index].label,
+                value: metrics[index].value,
+                color: metrics[index].color,
+                phase: metrics[index].phase,
+                size: bubbleSize,
+                emphasize: metrics[index].emphasize,
+                compact: compact,
+                enableMotion: enableMotion,
               ),
             ),
           ),
@@ -840,8 +972,8 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                             gradient: LinearGradient(
                               colors: [
                                 Colors.white.withValues(alpha: 0.98),
-                                widget.color.withValues(alpha: 
-                                  widget.emphasize ? 0.18 : 0.11,
+                                widget.color.withValues(
+                                  alpha: widget.emphasize ? 0.18 : 0.11,
                                 ),
                               ],
                               begin: Alignment.topLeft,
@@ -852,8 +984,8 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: widget.color.withValues(alpha: 
-                                  widget.emphasize ? 0.16 : 0.1,
+                                color: widget.color.withValues(
+                                  alpha: widget.emphasize ? 0.16 : 0.1,
                                 ),
                                 blurRadius: widget.emphasize ? 16 : 12,
                                 offset: const Offset(0, 7),

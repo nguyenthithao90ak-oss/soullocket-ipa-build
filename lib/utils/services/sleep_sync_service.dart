@@ -44,7 +44,9 @@ class SleepSyncService {
     final normalizedHouseId = houseId.trim();
     final normalizedPartnerUid = partnerUid.trim();
     if (normalizedHouseId.isEmpty || normalizedPartnerUid.isEmpty) return;
-    await _db.ref('houses/$normalizedHouseId/alarms/$normalizedPartnerUid').set({
+    await _db
+        .ref('houses/$normalizedHouseId/alarms/$normalizedPartnerUid')
+        .set({
       'alarmTimeMs': alarmTime.millisecondsSinceEpoch,
       'isActive': true,
       'message': 'Bé ơi dậy đi, tới giờ rồi nè! ☀️'

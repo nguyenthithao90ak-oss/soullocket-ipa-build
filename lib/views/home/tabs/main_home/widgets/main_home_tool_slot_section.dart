@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../../main_home_tab.dart';
 
 extension _MainHomeToolSlotSection on _MainHomeTabState {
@@ -618,10 +619,12 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
 
   bool _isRequestingUnlock = true;
   bool _isUnlocked = false;
+  late final Stream<bool> _vipStatusStream;
 
   @override
   void initState() {
     super.initState();
+    _vipStatusStream = PurchaseService().vipStatusStream();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
@@ -664,7 +667,7 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
     }
 
     return StreamBuilder<bool>(
-      stream: PurchaseService().vipStatusStream(),
+      stream: _vipStatusStream,
       initialData: false,
       builder: (context, snapshot) {
         final isVip = (snapshot.data ?? false);
@@ -724,7 +727,8 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: accent.withValues(alpha: cosmicStyle ? 0.35 : 0.18),
+                      color:
+                          accent.withValues(alpha: cosmicStyle ? 0.35 : 0.18),
                       blurRadius: cosmicStyle ? 36 : 28,
                       offset: const Offset(0, 16),
                     ),
@@ -744,10 +748,19 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: secureStyle
-                                      ? [const Color(0xFF4F46E5), const Color(0xFF111827)]
+                                      ? [
+                                          const Color(0xFF4F46E5),
+                                          const Color(0xFF111827)
+                                        ]
                                       : cosmicStyle
-                                          ? [const Color(0xFFD97706), const Color(0xFF7C2D12)]
-                                          : [const Color(0xFFFF7A86), const Color(0xFFF6A0C6)],
+                                          ? [
+                                              const Color(0xFFD97706),
+                                              const Color(0xFF7C2D12)
+                                            ]
+                                          : [
+                                              const Color(0xFFFF7A86),
+                                              const Color(0xFFF6A0C6)
+                                            ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
@@ -775,8 +788,8 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
                                         ? const Color(0xFFFFB74D)
                                         : const Color(0xFF43A047),
                                     shape: BoxShape.circle,
-                                    border:
-                                        Border.all(color: Colors.white, width: 3),
+                                    border: Border.all(
+                                        color: Colors.white, width: 3),
                                   ),
                                   child: Icon(
                                     _isRequestingUnlock
@@ -840,12 +853,16 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
                           _HomeVaultChip(
                             icon: Icons.fingerprint_rounded,
                             label: context.tr('home_mbngkha_d3e60a'),
-                            color: cosmicStyle ? const Color(0xFFFFD700) : const Color(0xFF7E57C2),
+                            color: cosmicStyle
+                                ? const Color(0xFFFFD700)
+                                : const Color(0xFF7E57C2),
                           ),
                           _HomeVaultChip(
                             icon: Icons.favorite_rounded,
                             label: context.tr('home_chhaibn_a913db'),
-                            color: cosmicStyle ? const Color(0xFFFFD700) : const Color(0xFFD81B60),
+                            color: cosmicStyle
+                                ? const Color(0xFFFFD700)
+                                : const Color(0xFFD81B60),
                           ),
                         ],
                       ),
@@ -867,7 +884,8 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
                         label: Text(context.tr('home_mkhnggianr_b53f72')),
                         style: FilledButton.styleFrom(
                           backgroundColor: accent,
-                          foregroundColor: cosmicStyle ? Colors.black87 : Colors.white,
+                          foregroundColor:
+                              cosmicStyle ? Colors.black87 : Colors.white,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 18,
                             vertical: 12,

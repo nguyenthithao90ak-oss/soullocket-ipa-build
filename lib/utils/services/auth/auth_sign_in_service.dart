@@ -28,6 +28,10 @@ import 'package:soullocket_app/utils/services/app_check_http_headers.dart';
 import 'package:soullocket_app/utils/services/revenue_security_telemetry_service.dart';
 import 'package:soullocket_app/utils/services/settings_sync_service.dart';
 import 'package:soullocket_app/utils/services/security_verdict_cache_service.dart';
+import 'package:soullocket_app/utils/services/notification_service.dart';
+import 'package:soullocket_app/utils/services/role_utils.dart';
+import 'package:soullocket_app/utils/services/core/presence_service.dart';
+import 'package:soullocket_app/utils/services/house_service.dart';
 import 'play_integrity_service.dart';
 import 'auth_admin_service.dart';
 import 'auth_house_context_service.dart';
@@ -178,7 +182,7 @@ class AuthSignInService {
     }
   }
 
-                Future<String> resolveLoginEmailAlias(
+  Future<String> resolveLoginEmailAlias(
     String email, {
     bool allowFallbackOnFailure = false,
   }) async {
@@ -297,7 +301,7 @@ class AuthSignInService {
     );
   }
 
-        Future<firebase_auth.UserCredential?> signInWithEmailPassword(
+  Future<firebase_auth.UserCredential?> signInWithEmailPassword(
     String email,
     String password,
   ) async {
@@ -560,11 +564,14 @@ class AuthSignInService {
       'action': action.trim().toLowerCase(),
       if (reason.trim().isNotEmpty) 'reason': reason.trim().toLowerCase(),
     };
-    return _playIntegrityService.buildIntegrityPayload(
-      flow: 'auth_login_guard_${action.trim().toLowerCase()}',
-      payload: payload,
-      autoWarmUp: true,
-    ).timeout(const Duration(seconds: 3), onTimeout: () => null).catchError((_) => null);
+    return _playIntegrityService
+        .buildIntegrityPayload(
+          flow: 'auth_login_guard_${action.trim().toLowerCase()}',
+          payload: payload,
+          autoWarmUp: true,
+        )
+        .timeout(const Duration(seconds: 3), onTimeout: () => null)
+        .catchError((_) => null);
   }
 
   Future<void> _cacheSecurityVerdictFromPayload(
@@ -766,14 +773,17 @@ class AuthSignInService {
             }
           });
           await initCompleter.future.timeout(
-            const Duration(seconds: 5),
-            onTimeout: () => throw 'Không thể khởi động dịch vụ Google. Vui lòng kiểm tra Google Play Services.',
+            const Duration(seconds: 15),
+            onTimeout: () =>
+                throw 'Thời gian chờ Google quá lâu. Vui lòng thử lại.',
           );
           _isGoogleSignInInitialized = true;
         }
 
         // Sign out trước để xoá cache phiên cũ, tránh lỗi treo và sign_in_failed
-        try { await googleSignIn.signOut(); } catch (_) {}
+        try {
+          await googleSignIn.signOut();
+        } catch (_) {}
 
         final authCompleter = Completer<dynamic>();
         googleSignIn.authenticate(
@@ -789,13 +799,14 @@ class AuthSignInService {
         });
 
         final googleUser = await authCompleter.future.timeout(
-          const Duration(seconds: 10),
-          onTimeout: () => throw 'Đăng nhập Google phản hồi lâu. Vui lòng kiểm tra kết nối mạng và Google Play Services.',
+          const Duration(seconds: 20),
+          onTimeout: () =>
+              throw 'Bạn đã để màn hình đăng nhập Google quá lâu hoặc chưa hoàn tất thao tác. Vui lòng thử lại.',
         );
         if (googleUser == null) return null;
         final googleAuth = await googleUser.authentication;
         if ((googleAuth.idToken ?? '').isEmpty) {
-          throw 'Google không trả về ID token hợp lệ. Hãy kiểm tra cấu hình Firebase Google Sign-In.';
+          throw 'Google không trả về ID token hợp lệ. Vui lòng thử lại.';
         }
 
         final credential = firebase_auth.GoogleAuthProvider.credential(
@@ -832,7 +843,10 @@ class AuthSignInService {
       if (error is PlatformException && error.code == 'sign_in_failed') {
         isRealCancel = false;
       }
-      if (isRealCancel && (errStr.contains('sign_in_canceled') || errStr.contains('canceled') || errStr.contains('cancelled'))) {
+      if (isRealCancel &&
+          (errStr.contains('sign_in_canceled') ||
+              errStr.contains('canceled') ||
+              errStr.contains('cancelled'))) {
         return null;
       }
       if (isGoogleSignInConfigMismatch(error)) {
@@ -841,13 +855,12 @@ class AuthSignInService {
             : 'Google chưa cho phép đăng nhập trên bản app này. Hãy cập nhật app hoặc thử lại sau.';
       }
       if (isGoogleSignInNetworkIssue(error)) {
-        throw 'Mạng đang lỗi hoặc bị chặn, chưa thể đăng nhập Google lúc này.';
+        throw 'Lỗi kết nối hoặc sự cố từ Google, chưa thể đăng nhập Google lúc này.';
       }
       if (error is String) rethrow;
       throw AppErrorMapper.resolve(
         error,
-        fallbackMessage:
-            'Không đăng nhập Google được: hãy kiểm tra tài khoản Google và kết nối mạng.',
+        fallbackMessage: 'Không đăng nhập Google được, vui lòng thử lại sau.',
       ).message;
     }
   }
@@ -1152,25 +1165,74 @@ class AuthSignInService {
 
   Future<void> signOut() async {
     final prefs = await _prefs;
+    
+    // 1. Thực hiện các tác vụ mạng/SDK song song để giảm tổng thời gian chờ xuống tối thiểu
+    final List<Future<void>> asyncCleanups = [];
+
     try {
-      if (!kIsWeb) {
-        await _googleSignIn?.signOut();
+      final houseId = await HouseService().getCurrentHouseId();
+      final role = RoleUtils.currentRoleSync();
+      if (houseId != null && houseId.isNotEmpty && role != null) {
+        asyncCleanups.add(
+          PresenceService().goOffline(
+            houseId: houseId,
+            role: role,
+          ).timeout(const Duration(seconds: 2)).catchError((_) {})
+        );
       }
     } catch (_) {}
+
+    asyncCleanups.add(
+      NotificationService().clearTokenOnSignOut()
+          .timeout(const Duration(seconds: 2))
+          .catchError((_) {})
+    );
+
     try {
-      await _facebookAuth.logOut();
+      if (!kIsWeb && _googleSignIn != null) {
+        asyncCleanups.add(
+          _googleSignIn!.signOut()
+              .timeout(const Duration(seconds: 2))
+              .catchError((_) {})
+        );
+      }
     } catch (_) {}
-    try {
-      await _auth.signOut();
-    } finally {
-      await SettingsSyncService().clearLocalSyncedSettings();
-      await _clearSensitiveLocalData(prefs);
-      // ⚡ Clear all offline cache to prevent data leakage to next user
-      await OfflineCacheService.clearAllCache();
-      EncryptionService().clearCache();
-      PaintingBinding.instance.imageCache.clear();
-      PaintingBinding.instance.imageCache.clearLiveImages();
+
+    asyncCleanups.add(
+      _facebookAuth.logOut()
+          .timeout(const Duration(seconds: 2))
+          .catchError((_) {})
+    );
+
+    // Chờ các dịch vụ mạng/SDK hoàn tất song song, tối đa 2.5 giây
+    if (asyncCleanups.isNotEmpty) {
+      await Future.wait(asyncCleanups).timeout(
+        const Duration(milliseconds: 2500),
+        onTimeout: () => [],
+      );
     }
+
+    // 2. Thực hiện đăng xuất FirebaseAuth
+    try {
+      await _auth.signOut().timeout(const Duration(seconds: 2));
+    } catch (_) {}
+
+    // 3. Thực hiện dọn dẹp dữ liệu cục bộ song song
+    try {
+      await Future.wait([
+        SettingsSyncService().clearLocalSyncedSettings().catchError((_) {}),
+        _clearSensitiveLocalData(prefs).catchError((_) {}),
+        SecureStorageService.instance.deleteAll().catchError((_) {}),
+        OfflineCacheService.clearAllCache().catchError((_) {}),
+      ]);
+    } catch (_) {}
+
+    // 4. Các tác vụ UI/Memory nhẹ chạy đồng bộ lập tức
+    try { EncryptionService().clearCache(); } catch (_) {}
+    try { RoleUtils.roleNotifier.value = null; } catch (_) {}
+    try { RoleUtils.duplicateRoleNotifier.value = false; } catch (_) {}
+    try { PaintingBinding.instance.imageCache.clear(); } catch (_) {}
+    try { PaintingBinding.instance.imageCache.clearLiveImages(); } catch (_) {}
   }
 
   Future<Map<String, dynamic>> deleteAccount() async {
@@ -1374,11 +1436,13 @@ class AuthSignInService {
     // Parallel Phase 1: Check block reason, ensure user profile exists, fetch house ID, read prefs, and restore settings from cloud
     final phase1Results = await Future.wait([
       if (resolvedEmail.isNotEmpty)
-        _adminService.getSystemBlockReason(
+        _adminService
+            .getSystemBlockReason(
           resolvedEmail,
           allowAdminBypass: true,
           forceRefreshAdmin: true,
-        ).catchError((error) {
+        )
+            .catchError((error) {
           debugPrint('Failed to check system block reason: $error');
           return null;
         })
@@ -1407,15 +1471,19 @@ class AuthSignInService {
     if (houseId != null && houseId.isNotEmpty) {
       await prefs.setString('il_house_id', houseId);
       await prefs.setString('il_auth_uid', user.uid);
-      await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
-      await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, user.uid);
+      await SecureStorageService.instance
+          .write(SecureStorageService.keyHouseId, houseId);
+      await SecureStorageService.instance
+          .write(SecureStorageService.keyAuthUid, user.uid);
       existingRole = prefs.getString('il_role');
     } else {
       await prefs.remove('il_house_id');
       await prefs.remove('il_auth_uid');
       await prefs.remove('il_role');
-      await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
-      await SecureStorageService.instance.delete(SecureStorageService.keyAuthUid);
+      await SecureStorageService.instance
+          .delete(SecureStorageService.keyHouseId);
+      await SecureStorageService.instance
+          .delete(SecureStorageService.keyAuthUid);
       await SecureStorageService.instance.delete(SecureStorageService.keyRole);
     }
 
@@ -1435,26 +1503,34 @@ class AuthSignInService {
         houseId,
         onForcedSignOut: signOut,
       ),
-      _houseContextService.syncRelationshipModeForCurrentUser(
+      _houseContextService
+          .syncRelationshipModeForCurrentUser(
         user: user,
         houseId: houseId,
-      ).catchError((error) {
+      )
+          .catchError((error) {
         debugPrint('Failed to sync relationship mode: $error');
         return null;
       }),
       if (houseId != null && houseId.isNotEmpty)
-        _db.child('houses/$houseId/settings').get().then<DataSnapshot?>((snap) => snap).catchError((error) {
+        _db
+            .child('houses/$houseId/settings')
+            .get()
+            .then<DataSnapshot?>((snap) => snap)
+            .catchError((error) {
           debugPrint('Failed to fetch house settings: $error');
           return null;
         })
       else
         Future<DataSnapshot?>.value(null),
       if (resolvedEmail.contains('@'))
-        _houseContextService.syncSecurityEmailForCurrentUser(
+        _houseContextService
+            .syncSecurityEmailForCurrentUser(
           user: user,
           email: resolvedEmail,
           houseId: houseId,
-        ).catchError((error) {
+        )
+            .catchError((error) {
           debugPrint('Failed to sync security email: $error');
         })
       else
@@ -1516,10 +1592,12 @@ class AuthSignInService {
     }
 
     unawaited(
-      CriticalDataSyncService().syncCurrentUserData(
+      CriticalDataSyncService()
+          .syncCurrentUserData(
         houseId: houseId,
         force: true,
-      ).catchError((error) {
+      )
+          .catchError((error) {
         debugPrint(
           'CriticalDataSync skipped during auth finalize: '
           '${AppErrorMapper.resolve(

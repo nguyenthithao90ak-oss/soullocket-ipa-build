@@ -1,6 +1,7 @@
 part of '../../consent_gate.dart';
 
-Widget _buildHighlightList(BuildContext context,
+Widget _buildHighlightList(
+  BuildContext context,
   List<_ConsentHighlight> items, {
   required Color accent,
 }) {

@@ -263,11 +263,15 @@ class _LeaderboardTile extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: badgeColor.withValues(alpha: 0.2),
-              border: isTop3Any ? Border.all(color: badgeColor.withValues(alpha: 0.5), width: 1.5) : null,
+              border: isTop3Any
+                  ? Border.all(
+                      color: badgeColor.withValues(alpha: 0.5), width: 1.5)
+                  : null,
             ),
             child: Center(
               child: isTop1
-                  ? const Icon(Icons.emoji_events_rounded, color: Color(0xFFFFD700), size: 22)
+                  ? const Icon(Icons.emoji_events_rounded,
+                      color: Color(0xFFFFD700), size: 22)
                   : Text(
                       '$rank',
                       style: SLTheme.quicksand(
@@ -333,46 +337,6 @@ class _SoulExplosionPainter extends CustomPainter {
   final bool drawRing;
   final List<_ExplosionParticle> _particles;
   final Paint _particlePaint = Paint()..style = PaintingStyle.fill;
-  final Paint _ringPaint = Paint()..style = PaintingStyle.stroke;
-  final Paint _streakPaint = Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeCap = StrokeCap.round;
-  final Paint _glowPaint = Paint()..style = PaintingStyle.stroke;
-  final List<double> _streakAngles = <double>[
-    -pi / 4,
-    -pi / 8,
-    0,
-    pi / 8,
-    pi / 4,
-  ];
-  final List<double> _streakOffsets = <double>[
-    -18,
-    -8,
-    6,
-    16,
-    28,
-  ];
-  final List<double> _streakLengths = <double>[
-    32,
-    44,
-    56,
-    42,
-    34,
-  ];
-  final List<double> _streakWidths = <double>[
-    1.2,
-    1.8,
-    2.6,
-    1.8,
-    1.2,
-  ];
-  final List<Color> _streakColors = <Color>[
-    const Color(0xFFFFF7D6),
-    const Color(0xFFFFD36F),
-    const Color(0xFFFF9F43),
-    const Color(0xFFFF6B4A),
-    const Color(0xFFFFE8A1),
-  ];
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -385,47 +349,7 @@ class _SoulExplosionPainter extends CustomPainter {
       return;
     }
 
-    final double easedProgress = Curves.easeOutQuart.transform(rawProgress);
-    final double ringRadius = 12 + (easedProgress * 40);
-    final double ringOpacity =
-        (1 - Curves.easeIn.transform(easedProgress)) * 0.24;
-
-    if (drawRing && ringOpacity > 0.01) {
-      final double strokeWidth = 2.6 - (easedProgress * 1.2);
-      _ringPaint
-        ..strokeWidth = strokeWidth
-        ..color = accent.withValues(alpha: ringOpacity);
-      canvas.drawCircle(center, ringRadius, _ringPaint);
-    }
-
-    final double streakOpacity =
-        (1 - Curves.easeIn.transform(easedProgress)) * 0.42;
-    if (streakOpacity > 0.01) {
-      for (int index = 0; index < _streakAngles.length; index++) {
-        final double angle = _streakAngles[index];
-        final double offsetX = _streakOffsets[index];
-        final double length =
-            _streakLengths[index] * (0.45 + (easedProgress * 0.9));
-        final double tailDrop = 16 + (easedProgress * 92);
-        final Offset start = Offset(
-          center.dx + offsetX,
-          center.dy + (easedProgress * 8),
-        );
-        final Offset end = Offset(
-          start.dx + (sin(angle) * length * 0.22),
-          start.dy + tailDrop + (cos(angle) * length),
-        );
-        _glowPaint
-          ..strokeWidth = _streakWidths[index] * 2.4
-          ..color =
-              _streakColors[index].withValues(alpha: streakOpacity * 0.24);
-        _streakPaint
-          ..strokeWidth = _streakWidths[index]
-          ..color = _streakColors[index].withValues(alpha: streakOpacity);
-        canvas.drawLine(start, end, _glowPaint);
-        canvas.drawLine(start, end, _streakPaint);
-      }
-    }
+    // Rings and streaks removed for a cleaner, gentler particle fallback effect.
 
     for (final _ExplosionParticle particle in _particles) {
       final double remainingFraction = 1.0 - particle.delayFraction;
@@ -450,6 +374,7 @@ class _SoulExplosionPainter extends CustomPainter {
 
       final double deltaX = particle.endOffset.dx - particle.startOffset.dx;
       final double deltaY = particle.endOffset.dy - particle.startOffset.dy;
+      final double gravity = travel * travel * 28.0; // Parabolic gravity drop
       final double rotation =
           particle.rotation + (travel * particle.twist * pi);
       final double width =
@@ -462,7 +387,7 @@ class _SoulExplosionPainter extends CustomPainter {
       canvas.save();
       canvas.translate(
         particle.startOffset.dx + (deltaX * travel),
-        particle.startOffset.dy + (deltaY * travel),
+        particle.startOffset.dy + (deltaY * travel) + gravity,
       );
       canvas.rotate(rotation);
 

@@ -3,6 +3,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+
 class StorageAppCheckHelper {
   const StorageAppCheckHelper();
 
@@ -94,7 +95,8 @@ class StorageAppCheckHelper {
       }
 
       if (kDebugMode) {
-        debugPrint('StorageService App Check warm-up failed: ${AppErrorMapper.resolve(
+        debugPrint(
+            'StorageService App Check warm-up failed: ${AppErrorMapper.resolve(
           error,
           fallbackMessage: 'Không thể khởi động App Check.',
         ).message}');

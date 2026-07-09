@@ -145,12 +145,6 @@ struct HeartPalette {
                 secondary: Color(hex: "FDE68A"),
                 glow: Color(hex: "FFFBEA")
             )
-        case "none":
-            return HeartPalette(
-                primary: Color.clear,
-                secondary: Color.clear,
-                glow: Color.clear
-            )
         case "rose":
             fallthrough
         default:
@@ -279,7 +273,6 @@ private func resolveHeartEmoji(_ styleKey: String) -> String {
 
 struct HeartClusterView: View {
     let styleKey: String
-    let colorKey: String
     let animated: Bool
     let palette: HeartPalette
     let size: CGFloat
@@ -331,14 +324,6 @@ struct HeartClusterView: View {
     }
 
     var body: some View {
-        // 'none': chỉ hiển thị emoji thuần túy, không màu, không glow
-        if colorKey == "none" {
-            Text(resolveHeartEmoji(styleKey))
-                .font(.system(size: scaled(42)))
-                .scaleEffect(pulse)
-                .offset(x: scaled(sway * 0.35), y: scaled(drift))
-                .frame(width: size, height: size)
-        } else {
         ZStack {
             Circle()
                 .fill(
@@ -385,7 +370,6 @@ struct HeartClusterView: View {
         }
         .frame(width: size, height: size)
         .shadow(color: palette.primary.opacity(animated ? 0.30 : 0.16), radius: size * 0.24, y: 3)
-        }
     }
 }
 
@@ -435,26 +419,33 @@ struct WidgetCenterVisualView: View {
     let diaryHeight: CGFloat
 
     var body: some View {
-        if data.heartAnimated {
-            TimelineView(.periodic(from: .now, by: 6)) { context in
+        if data.showDiaryOnWidget {
+            DiaryCenterPreview(
+                paths: data.diaryImagePaths,
+                theme: theme,
+                width: diaryWidth,
+                height: diaryHeight
+            )
+        } else {
+            if data.heartAnimated {
+                TimelineView(.periodic(from: .now, by: 6)) { context in
+                    HeartClusterView(
+                        styleKey: data.heartStyleKey,
+                        animated: true,
+                        palette: palette,
+                        size: heartSize,
+                        referenceDate: context.date
+                    )
+                }
+            } else {
                 HeartClusterView(
                     styleKey: data.heartStyleKey,
-                    colorKey: data.heartColorKey,
-                    animated: true,
+                    animated: false,
                     palette: palette,
                     size: heartSize,
-                    referenceDate: context.date
+                    referenceDate: Date()
                 )
             }
-        } else {
-            HeartClusterView(
-                styleKey: data.heartStyleKey,
-                colorKey: data.heartColorKey,
-                animated: false,
-                palette: palette,
-                size: heartSize,
-                referenceDate: Date()
-            )
         }
     }
 }
@@ -775,73 +766,37 @@ struct PersonCard: View {
         return "\(icon) \(battery)%"
     }
 
-    private var weatherIcon: String? {
-        guard !weather.isEmpty else { return nil }
-        let parts = weather.components(separatedBy: " ")
-        if let firstPart = parts.first, !firstPart.isEmpty {
-            if firstPart.contains("℃") || firstPart.contains("°C") || firstPart.contains("°") {
-                return nil
-            }
-            return firstPart
-        }
-        return nil
-    }
-
-    private var zodiacSymbol: String? {
-        guard stars != "--" && !stars.isEmpty else { return nil }
-        let parts = stars.components(separatedBy: " ")
-        if parts.count >= 1 {
-            return parts[0]
-        }
-        return nil
-    }
-
-    private var ageText: String? {
-        guard stars != "--" && !stars.isEmpty else { return nil }
-        let parts = stars.components(separatedBy: " ")
-        if parts.count >= 2 {
-            return parts[1]
-        }
-        return nil
-    }
-
     var body: some View {
         VStack(spacing: 5) {
-            ZStack(alignment: .bottomTrailing) {
-                AvatarView(path: avatarPath, name: name, size: avatarSize, accentColor: theme.accentColor)
-                
-                if let weatherIcon = weatherIcon {
-                    Text(weatherIcon)
-                        .font(.system(size: avatarSize * 0.25))
-                        .padding(3)
-                        .background(Color.white)
-                        .clipShape(Circle())
-                        .shadow(color: Color.black.opacity(0.15), radius: 2, y: 1)
-                        .offset(x: avatarSize * 0.04, y: avatarSize * 0.04)
-                }
-            }
+            AvatarView(path: avatarPath, name: name, size: avatarSize, accentColor: theme.accentColor)
+                .overlay(
+                    Group {
+                        if !weather.isEmpty {
+                            Text(weather)
+                                .font(.system(size: 14))
+                                .padding(3)
+                                .background(Color.white.opacity(0.85))
+                                .clipShape(Circle())
+                                .shadow(color: Color.black.opacity(0.1), radius: 2, y: 1)
+                                .offset(x: -4, y: 4)
+                        }
+                    },
+                    alignment: .bottomLeading
+                )
+                .overlay(
+                    OnlineDot(isOnline: isOnline)
+                        .offset(x: 2, y: 2),
+                    alignment: .bottomTrailing
+                )
 
             Text(name)
-                .font(.system(size: 19, weight: .heavy, design: .rounded))
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
                 .foregroundColor(theme.textColor)
                 .lineLimit(1)
-                .minimumScaleFactor(0.7)
+                .minimumScaleFactor(0.8)
 
-            if let zodiacSymbol = zodiacSymbol, let ageText = ageText {
-                HStack(spacing: 4) {
-                    Text(zodiacSymbol)
-                        .font(.system(size: 15))
-                    Text(ageText)
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .foregroundColor(theme.secondaryTextColor)
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(theme.chipBackground)
-                .overlay(
-                    Capsule().stroke(theme.chipBorder, lineWidth: 0.8)
-                )
-                .clipShape(Capsule())
+            if let label = batteryLabel {
+                InfoChip(label: label, theme: theme)
             } else if !status.isEmpty {
                 Text(status)
                     .font(.system(size: 9, weight: .medium, design: .rounded))
@@ -909,45 +864,34 @@ struct LockScreenWidgetView: View {
     var body: some View {
         switch family {
         case .accessoryRectangular:
-            HStack(alignment: .center, spacing: 8) {
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 2) {
-                        Text(data.name1)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                            .minimumScaleFactor(0.6)
-                        Text(data.heartStyleKey)
-                            .layoutPriority(1)
-                        Text(data.name2)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                            .minimumScaleFactor(0.6)
-                    }
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                    Text(data.resolvedDaysText())
-                        .font(.system(size: 18, weight: .heavy, design: .rounded))
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 4) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 14))
+                    Text("SoulLocket")
+                        .font(.system(size: 14, weight: .bold))
                 }
-                Spacer()
+                Text(data.resolvedDaysText())
+                    .font(.system(size: 18, weight: .bold))
+                if !data.status2.isEmpty {
+                    Text(data.status2)
+                        .font(.system(size: 10))
+                        .lineLimit(1)
+                }
             }
             .modifier(TransparentWidgetBackground())
         case .accessoryCircular:
-            let numberStr = String(data.resolvedDaysText().split(separator: " ").first ?? "0")
-            let days = Double(numberStr) ?? 0.0
-            let nextMilestone = days < 100 ? 100.0 : (days < 365 ? 365.0 : ceil(days / 365.0) * 365.0)
-            let progress = days > 0 ? (days / nextMilestone) : 0.0
-            
-            Gauge(value: progress) {
+            VStack(spacing: 2) {
                 Image(systemName: "heart.fill")
                     .font(.system(size: 14))
-            } currentValueLabel: {
+                let numberStr = String(data.resolvedDaysText().split(separator: " ").first ?? "0")
                 Text(numberStr)
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .font(.system(size: 16, weight: .bold))
                     .minimumScaleFactor(0.5)
             }
-            .gaugeStyle(.accessoryCircular)
             .modifier(TransparentWidgetBackground())
         case .accessoryInline:
-            Text("\(data.name1) \(data.heartStyleKey) \(data.name2) - \(data.resolvedDaysText())")
+            Text("💕 \(data.resolvedDaysText())")
         default:
             EmptyView()
         }
@@ -1024,13 +968,13 @@ struct SmallWidgetView: View {
 
             HStack(spacing: 5) {
                 ZStack(alignment: .bottomTrailing) {
-                    AvatarView(path: data.avatar1Path, name: data.name1, size: 42, accentColor: theme.accentColor)
+                    AvatarView(path: data.avatar1Path, name: data.name1, size: 36, accentColor: theme.accentColor)
                     OnlineDot(isOnline: data.isOnline1)
                         .offset(x: 2, y: 2)
                 }
 
                 ZStack(alignment: .bottomTrailing) {
-                    AvatarView(path: data.avatar2Path, name: data.name2, size: 42, accentColor: theme.accentColor)
+                    AvatarView(path: data.avatar2Path, name: data.name2, size: 36, accentColor: theme.accentColor)
                     OnlineDot(isOnline: data.isOnline2)
                         .offset(x: 2, y: 2)
                 }
@@ -1064,7 +1008,7 @@ struct MediumWidgetView: View {
                 stars: data.stars1,
                 avatarPath: data.avatar1Path,
                 theme: theme,
-                avatarSize: 76,
+                avatarSize: 60,
                 battery: data.battery1,
                 isCharging: data.isCharging1
             )
@@ -1096,7 +1040,7 @@ struct MediumWidgetView: View {
                 stars: data.stars2,
                 avatarPath: data.avatar2Path,
                 theme: theme,
-                avatarSize: 76,
+                avatarSize: 60,
                 battery: data.battery2,
                 isCharging: data.isCharging2
             )
@@ -1126,7 +1070,7 @@ struct LargeWidgetView: View {
                     stars: data.stars1,
                     avatarPath: data.avatar1Path,
                     theme: theme,
-                    avatarSize: 76,
+                    avatarSize: 60,
                     battery: data.battery1,
                     isCharging: data.isCharging1
                 )
@@ -1158,7 +1102,7 @@ struct LargeWidgetView: View {
                     stars: data.stars2,
                     avatarPath: data.avatar2Path,
                     theme: theme,
-                    avatarSize: 76,
+                    avatarSize: 60,
                     battery: data.battery2,
                     isCharging: data.isCharging2
                 )
@@ -1172,7 +1116,7 @@ struct LargeWidgetView: View {
                 .frame(height: 1)
                 .padding(.horizontal, 16)
 
-            if !data.diaryImagePaths.isEmpty {
+            if data.showDiaryOnWidget && !data.diaryImagePaths.isEmpty {
                 DiaryPhotosView(paths: data.diaryImagePaths, theme: theme)
             } else {
                 StatusSection(data: data, theme: theme)
@@ -1188,7 +1132,7 @@ struct DiaryPhotosView: View {
     let theme: WidgetTheme
 
     private var displayPaths: [String] {
-        Array(paths.prefix(12))
+        Array(paths.prefix(4))
     }
 
     var body: some View {
@@ -1260,9 +1204,12 @@ struct StatusSection: View {
         VStack(spacing: 8) {
             HStack(spacing: 8) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(data.name1)
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundColor(theme.textColor)
+                    HStack(spacing: 5) {
+                        OnlineDot(isOnline: data.isOnline1)
+                        Text(data.name1)
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    }
+                    .foregroundColor(theme.textColor)
 
                     Text(resolvedStatus(data.status1, isOnline: data.isOnline1))
                         .font(.system(size: 10, weight: .medium, design: .rounded))
@@ -1272,9 +1219,12 @@ struct StatusSection: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(data.name2)
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundColor(theme.textColor)
+                    HStack(spacing: 5) {
+                        OnlineDot(isOnline: data.isOnline2)
+                        Text(data.name2)
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    }
+                    .foregroundColor(theme.textColor)
 
                     Text(resolvedStatus(data.status2, isOnline: data.isOnline2))
                         .font(.system(size: 10, weight: .medium, design: .rounded))

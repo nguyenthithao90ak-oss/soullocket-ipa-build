@@ -19,11 +19,9 @@ extension _SoulBlockBoard on _SoulBlockGameState {
             devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
           );
           final double innerExtent =
-              boardExtent - (_SoulBlockGameState._boardPanelPadding * 2);
-          final double contentExtent =
-              (cellExtent * _SoulBlockGameState._boardSize) +
-                  (_SoulBlockGameState._boardGap *
-                      (_SoulBlockGameState._boardSize - 1));
+              boardExtent - (_SoulBlockGameState._boardPanelPadding * 2) - 6.0;
+          final double contentExtent = (cellExtent * _boardSize) +
+              (_SoulBlockGameState._boardGap * (_boardSize - 1));
           final double contentSlack = max(0, innerExtent - contentExtent);
 
           const double boardGap = _SoulBlockGameState._boardGap;
@@ -90,10 +88,10 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                               mainAxisAlignment: MainAxisAlignment.center,
                               mainAxisSize: MainAxisSize.min,
                               children: List<Widget>.generate(
-                                _SoulBlockGameState._boardSize,
+                                _boardSize,
                                 (int row) {
-                                  final bool isLastRow = row ==
-                                      (_SoulBlockGameState._boardSize - 1);
+                                  final bool isLastRow =
+                                      row == (_boardSize - 1);
                                   return Padding(
                                     padding: EdgeInsets.only(
                                       bottom: isLastRow ? 0 : boardGap,
@@ -103,11 +101,10 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                                           MainAxisAlignment.center,
                                       mainAxisSize: MainAxisSize.min,
                                       children: List<Widget>.generate(
-                                        _SoulBlockGameState._boardSize,
+                                        _boardSize,
                                         (int col) {
-                                          final bool isLastCol = col ==
-                                              (_SoulBlockGameState._boardSize -
-                                                  1);
+                                          final bool isLastCol =
+                                              col == (_boardSize - 1);
                                           return Padding(
                                             padding: EdgeInsets.only(
                                               right: isLastCol ? 0 : boardGap,
@@ -115,10 +112,12 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                                             child: SizedBox(
                                               width: cellExtent,
                                               height: cellExtent,
-                                              child: _buildBoardCell(
-                                                row: row,
-                                                col: col,
-                                                cellExtent: cellExtent,
+                                              child: RepaintBoundary(
+                                                child: _buildBoardCell(
+                                                  row: row,
+                                                  col: col,
+                                                  cellExtent: cellExtent,
+                                                ),
                                               ),
                                             ),
                                           );
@@ -325,8 +324,8 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     final int nextCol = col + colDelta;
     if (nextRow < 0 ||
         nextCol < 0 ||
-        nextRow >= _SoulBlockGameState._boardSize ||
-        nextCol >= _SoulBlockGameState._boardSize) {
+        nextRow >= _boardSize ||
+        nextCol >= _boardSize) {
       return false;
     }
 
@@ -343,8 +342,16 @@ extension _SoulBlockBoard on _SoulBlockGameState {
   ({Color tone, Set<int> templateCells}) _pieceRenderCache(
     _SoulPieceOption piece,
   ) {
+    final Color tone;
+    if (piece.isGold) {
+      tone = const Color(0xFFFFD700);
+    } else if (piece.isBomb) {
+      tone = const Color(0xFFFF4500);
+    } else {
+      tone = _kSoulTones[piece.toneIndex % _kSoulTones.length];
+    }
     return (
-      tone: _kSoulTones[piece.toneIndex % _kSoulTones.length],
+      tone: tone,
       templateCells: piece.template.cellKeySet,
     );
   }
@@ -360,11 +367,14 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     final bool isPreview = draggingPiece != null &&
         hasPreviewAnchor &&
         _isCellInPreviewFootprint(row, col);
-    final bool isClearing =
-        _clearingRows.contains(row) || _clearingCols.contains(col);
+    final bool isClearing = _clearingRows.contains(row) ||
+        _clearingCols.contains(col) ||
+        _clearingCells.contains(Point<int>(col, row));
 
     if (tile != null) {
-      final Color tone = _kSoulTones[tile.toneIndex % _kSoulTones.length];
+      final Color tone = tile.toneIndex == 999
+          ? const Color(0xFFFFD700)
+          : _kSoulTones[tile.toneIndex % _kSoulTones.length];
       final Widget block = _buildGlossyBlock(
         width: cellExtent,
         height: cellExtent,
@@ -405,12 +415,56 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     return _buildSocketCell(cellExtent, cellExtent);
   }
 
+  Widget _buildHoldEmptyCard({bool compact = false}) {
+    final double radius = compact ? 18 : 20;
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.02),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(
+          color: const Color(0xFF6366F1).withValues(alpha: 0.16),
+          width: 1.2,
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Icon(
+              Icons.archive_rounded,
+              color: const Color(0xFF6366F1).withValues(alpha: 0.46),
+              size: compact ? 16 : 20,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'HOLD',
+              style: SLTheme.quicksand(
+                fontSize: compact ? 8 : 10,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF6366F1).withValues(alpha: 0.46),
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildTrayPanel({bool compact = false}) {
-    final double pieceGap = compact ? 7 : 8;
+    final double pieceGap = compact ? 5 : 6;
     final List<_SoulPieceOption?> slots = List<_SoulPieceOption?>.generate(
       3,
       (int index) => index < _tray.length ? _tray[index] : null,
     );
+
+    final Widget holdWidget = SizedBox(
+      key: _holdAreaKey,
+      child: _holdPiece == null
+          ? _buildHoldEmptyCard(compact: compact)
+          : _buildPieceCard(_holdPiece!, compact: compact, isHold: true),
+    );
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(
@@ -512,20 +566,34 @@ extension _SoulBlockBoard on _SoulBlockGameState {
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: List<Widget>.generate(slots.length, (int index) {
-                final _SoulPieceOption? piece = slots[index];
-                final bool isLast = index == slots.length - 1;
-                return Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(right: isLast ? 0 : pieceGap),
-                    child: RepaintBoundary(
-                      child: piece == null
-                          ? _buildEmptyPieceCard(compact: compact)
-                          : _buildPieceCard(piece, compact: compact),
-                    ),
+              children: <Widget>[
+                Expanded(
+                  flex: 1,
+                  child: holdWidget,
+                ),
+                SizedBox(width: compact ? 8 : 12),
+                Expanded(
+                  flex: 3,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: List<Widget>.generate(slots.length, (int index) {
+                      final _SoulPieceOption? piece = slots[index];
+                      final bool isLast = index == slots.length - 1;
+                      return Expanded(
+                        child: Padding(
+                          padding:
+                              EdgeInsets.only(right: isLast ? 0 : pieceGap),
+                          child: RepaintBoundary(
+                            child: piece == null
+                                ? _buildEmptyPieceCard(compact: compact)
+                                : _buildPieceCard(piece, compact: compact),
+                          ),
+                        ),
+                      );
+                    }),
                   ),
-                );
-              }),
+                ),
+              ],
             ),
           ),
         ],
@@ -537,18 +605,11 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     final double radius = compact ? 18 : 20;
     return Container(
       decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(radius),
-        gradient: const LinearGradient(
-          colors: <Color>[
-            _kSoulBoardTop,
-            _kSoulBoardMid,
-            _kSoulBoardBottom,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: Colors.white.withValues(alpha: 0.04),
+          width: 1.0,
         ),
       ),
       child: Center(
@@ -561,7 +622,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
               height: compact ? 7 : 8,
               margin: EdgeInsets.symmetric(horizontal: compact ? 2 : 3),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
+                color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
@@ -574,91 +635,185 @@ extension _SoulBlockBoard on _SoulBlockGameState {
   Widget _buildPieceCard(
     _SoulPieceOption piece, {
     bool compact = false,
+    bool isHold = false,
   }) {
     final bool isDragging = _draggingPiece?.id == piece.id;
     final bool isSnapBack = _snapBackPieceId == piece.id;
     final bool isRecommended = _recommendedMove?.pieceId == piece.id;
     final Widget pieceCardChild = Transform.scale(
       scale: isDragging ? 0.96 : 1.0,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final double hitPaddingX = compact ? 8 : 10;
-          final double hitPaddingY = compact ? 6 : 8;
-          return SizedBox.expand(
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: <Widget>[
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: RadialGradient(
-                          colors: <Color>[
-                            Colors.white
-                                .withValues(alpha: isRecommended ? 0.10 : 0.05),
-                            Colors.transparent,
-                          ],
-                          radius: 0.88,
-                          center: const Alignment(0, -0.08),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Center(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      hitPaddingX,
-                      hitPaddingY,
-                      hitPaddingX,
-                      compact ? 4 : 5,
-                    ),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minWidth:
-                            max(0, constraints.maxWidth - (hitPaddingX * 2)),
-                        minHeight:
-                            max(0, constraints.maxHeight - hitPaddingY - 5),
-                      ),
-                      child: RepaintBoundary(
-                        child: _buildPieceGrid(piece, compact: compact),
-                      ),
-                    ),
-                  ),
-                ),
-                if (isRecommended)
-                  Positioned(
-                    top: compact ? -2 : -1,
-                    right: compact ? 2 : 4,
-                    child: Container(
-                      width: 18,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFD166).withValues(alpha: 0.18),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color:
-                              const Color(0xFFFFD166).withValues(alpha: 0.30),
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.auto_awesome_rounded,
-                        size: 11,
-                        color: Color(0xFFFFD166),
-                      ),
-                    ),
-                  ),
-              ],
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(compact ? 18 : 20),
+          border: Border.all(
+            color: isRecommended
+                ? const Color(0xFFFFD166).withValues(alpha: 0.32)
+                : Colors.white.withValues(alpha: 0.06),
+            width: isRecommended ? 1.4 : 1.0,
+          ),
+          boxShadow: <BoxShadow>[
+            if (isRecommended)
+              BoxShadow(
+                color: const Color(0xFFFFD166).withValues(alpha: 0.08),
+                blurRadius: 10,
+                spreadRadius: -4,
+              ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 6,
             ),
-          );
-        },
+          ],
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final double hitPaddingX = compact ? 8 : 10;
+            final double hitPaddingY = compact ? 6 : 8;
+            return SizedBox.expand(
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: <Widget>[
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: RadialGradient(
+                            colors: <Color>[
+                              Colors.white.withValues(
+                                  alpha: isRecommended ? 0.10 : 0.05),
+                              Colors.transparent,
+                            ],
+                            radius: 0.88,
+                            center: const Alignment(0, -0.08),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Center(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        hitPaddingX,
+                        hitPaddingY,
+                        hitPaddingX,
+                        compact ? 4 : 5,
+                      ),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minWidth:
+                              max(0, constraints.maxWidth - (hitPaddingX * 2)),
+                          minHeight:
+                              max(0, constraints.maxHeight - hitPaddingY - 5),
+                        ),
+                        child: RepaintBoundary(
+                          child: _buildPieceGrid(piece, compact: compact),
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (isRecommended)
+                    Positioned(
+                      top: compact ? -2 : -1,
+                      right: compact ? 2 : 4,
+                      child: Container(
+                        width: 18,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color:
+                              const Color(0xFFFFD166).withValues(alpha: 0.18),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color:
+                                const Color(0xFFFFD166).withValues(alpha: 0.30),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.auto_awesome_rounded,
+                          size: 11,
+                          color: Color(0xFFFFD166),
+                        ),
+                      ),
+                    ),
+                  Positioned(
+                    top: compact ? -4 : -3,
+                    left: compact ? 2 : 4,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => _rotatePiece(piece),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.rotate_right_rounded,
+                          size: 14,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (piece.isGold)
+                    Positioned(
+                      bottom: compact ? -4 : -2,
+                      right: compact ? 2 : 4,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color:
+                                const Color(0xFFFFD700).withValues(alpha: 0.4),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.star_rounded,
+                          size: 12,
+                          color: Color(0xFFFFD700),
+                        ),
+                      ),
+                    ),
+                  if (piece.isBomb)
+                    Positioned(
+                      bottom: compact ? -4 : -2,
+                      right: compact ? 2 : 4,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color:
+                                const Color(0xFFFF4500).withValues(alpha: 0.4),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.local_fire_department_rounded,
+                          size: 12,
+                          color: Color(0xFFFF4500),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onPanStart: (DragStartDetails details) {
-        _startDrag(piece, details.globalPosition);
+        _startDrag(piece, details.globalPosition, fromHold: isHold);
       },
       onPanUpdate: (DragUpdateDetails details) =>
           _updateDrag(details.globalPosition),
@@ -801,6 +956,9 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     bool connectBottom = false,
     bool connectLeft = false,
   }) {
+    final bool isGold = tone == const Color(0xFFFFD700);
+    final bool isBomb = tone == const Color(0xFFFF4500);
+
     final double shortSide = min(width, height);
     final double outerRadius = shortSide * 0.14;
     final double joinedRadius = max(1.6, shortSide * 0.045);
@@ -914,10 +1072,26 @@ extension _SoulBlockBoard on _SoulBlockGameState {
           end: Alignment.bottomCenter,
         ),
         border: Border.all(
-          color: Colors.black.withValues(alpha: isPreview ? 0.08 : 0.14),
-          width: 0.55,
+          color: isGold
+              ? const Color(0xFFFFE066).withValues(alpha: 0.6)
+              : (isBomb
+                  ? const Color(0xFFFF7B50).withValues(alpha: 0.6)
+                  : Colors.black.withValues(alpha: isPreview ? 0.08 : 0.14)),
+          width: (isGold || isBomb) ? 1.1 : 0.55,
         ),
         boxShadow: <BoxShadow>[
+          if (isGold)
+            BoxShadow(
+              color: const Color(0xFFFFD700).withValues(alpha: 0.28),
+              blurRadius: shortSide * 0.24,
+              spreadRadius: -shortSide * 0.02,
+            ),
+          if (isBomb)
+            BoxShadow(
+              color: const Color(0xFFFF4500).withValues(alpha: 0.28),
+              blurRadius: shortSide * 0.24,
+              spreadRadius: -shortSide * 0.02,
+            ),
           if (previewGlow > 0)
             BoxShadow(
               color: tone.withValues(alpha: previewGlow),
@@ -954,21 +1128,43 @@ extension _SoulBlockBoard on _SoulBlockGameState {
               width: isPreview ? 1.0 : 0.7,
             ),
           ),
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: Container(
-              margin: EdgeInsets.fromLTRB(
-                shortSide * 0.22,
-                max(0.8, shortSide * 0.08),
-                shortSide * 0.22,
-                0,
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              Align(
+                alignment: Alignment.topCenter,
+                child: Container(
+                  margin: EdgeInsets.fromLTRB(
+                    shortSide * 0.22,
+                    max(0.8, shortSide * 0.08),
+                    shortSide * 0.22,
+                    0,
+                  ),
+                  height: max(0.9, shortSide * 0.055),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(shortSide),
+                    color:
+                        Colors.white.withValues(alpha: isPreview ? 0.18 : 0.10),
+                  ),
+                ),
               ),
-              height: max(0.9, shortSide * 0.055),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(shortSide),
-                color: Colors.white.withValues(alpha: isPreview ? 0.18 : 0.10),
-              ),
-            ),
+              if (isGold)
+                Center(
+                  child: Icon(
+                    Icons.star_rounded,
+                    color: Colors.white.withValues(alpha: 0.78),
+                    size: shortSide * 0.52,
+                  ),
+                ),
+              if (isBomb)
+                Center(
+                  child: Icon(
+                    Icons.local_fire_department_rounded,
+                    color: Colors.white.withValues(alpha: 0.82),
+                    size: shortSide * 0.52,
+                  ),
+                ),
+            ],
           ),
         ),
       ),

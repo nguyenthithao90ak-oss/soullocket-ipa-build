@@ -29,7 +29,8 @@ class LoveTreeService {
     }
 
     // Tăng health
-    currentHealth += (waterAmount.clamp(0, 100) + fertilizerAmount.clamp(0, 100));
+    currentHealth +=
+        (waterAmount.clamp(0, 100) + fertilizerAmount.clamp(0, 100));
 
     // Tính toán Level (Cứ 100 health lên 1 level)
     if (currentHealth >= currentLevel * 100) {
@@ -72,7 +73,9 @@ class LoveTreeService {
 
   Stream<Map<dynamic, dynamic>> listenToTreeStatus(String houseId) {
     final normalizedHouseId = houseId.trim();
-    if (normalizedHouseId.isEmpty) return Stream<Map<dynamic, dynamic>>.value({});
+    if (normalizedHouseId.isEmpty) {
+      return Stream<Map<dynamic, dynamic>>.value({});
+    }
     return _db.ref('houses/$normalizedHouseId/love_tree').onValue.map((event) {
       if (event.snapshot.value is! Map) return {};
       return Map<dynamic, dynamic>.from(event.snapshot.value as Map);

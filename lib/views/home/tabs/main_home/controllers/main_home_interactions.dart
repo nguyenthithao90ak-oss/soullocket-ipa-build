@@ -14,10 +14,6 @@ extension _MainHomeInteractions on _MainHomeTabState {
     _smartInteractionPreset = preset;
   }
 
-
-
-
-
   Future<void> _rememberInteractionRotationType(String type) async {
     final normalized = type.trim();
     if (normalized.isEmpty) return;
@@ -56,7 +52,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
 
     if (_rotationQueue.isNotEmpty) {
       final nextType = _rotationQueue.removeAt(0);
-      final nextPreset = _maybePresetForInteractionType(nextType) ?? _defaultSmartInteractionPreset();
+      final nextPreset = _maybePresetForInteractionType(nextType) ??
+          _defaultSmartInteractionPreset();
       _smartInteractionPreset = nextPreset;
       unawaited(_rememberInteractionRotationType(nextPreset.type));
     }
@@ -76,7 +73,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
     }
     if (_rotationQueue.isNotEmpty) {
       final nextType = _rotationQueue.removeAt(0);
-      final nextPreset = _maybePresetForInteractionType(nextType) ?? _defaultSmartInteractionPreset();
+      final nextPreset = _maybePresetForInteractionType(nextType) ??
+          _defaultSmartInteractionPreset();
       _smartInteractionPreset = nextPreset;
       unawaited(_rememberInteractionRotationType(nextPreset.type));
     }
@@ -89,7 +87,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
     }
     if (!mounted) return;
 
-    final currentList = List<_HomeReactionFlight>.from(_reactionFlightsNotifier.value);
+    final currentList =
+        List<_HomeReactionFlight>.from(_reactionFlightsNotifier.value);
     currentList.removeWhere((item) => item.id == flight.id);
     currentList.add(flight);
     if (currentList.length > _kMaxVisibleReactionFlights) {
@@ -103,7 +102,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
 
   void _removeReactionFlight(String id) {
     if (!mounted) return;
-    final currentList = List<_HomeReactionFlight>.from(_reactionFlightsNotifier.value);
+    final currentList =
+        List<_HomeReactionFlight>.from(_reactionFlightsNotifier.value);
     final initialLength = currentList.length;
     currentList.removeWhere((item) => item.id == id);
     if (currentList.length != initialLength) {
@@ -201,7 +201,6 @@ extension _MainHomeInteractions on _MainHomeTabState {
     }
   }
 
-
   void _sendPartnerInteraction(
     String type, {
     bool showSentNotice = true,
@@ -254,7 +253,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
           body = partnerOnline
               ? '$partnerName đang online, nụ hôn này bay tới ngay luôn.'
               : '$partnerName chưa mở nhà, nụ hôn sẽ nằm chờ xinh xắn khi người ấy quay lại.';
-          message = customMessage ?? L10nService().translate('home_chtmtcitht_f7bbad');
+          message = customMessage ??
+              L10nService().translate('home_chtmtcitht_f7bbad');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
               : '$partnerName chưa mở app, nụ hôn sẽ chờ sẵn khi người ấy quay lại.';
@@ -264,8 +264,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
           body = partnerOnline
               ? '$partnerName đang online, cái ôm mềm này tới ngay rồi.'
               : '$partnerName chưa mở nhà, cái ôm sẽ đợi sẵn để người ấy mở ra là thấy.';
-          message =
-              customMessage ?? L10nService().translate('home_mbnmtcitht_a0ec5e');
+          message = customMessage ??
+              L10nService().translate('home_mbnmtcitht_a0ec5e');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
               : '$partnerName chưa mở app, cái ôm sẽ chờ sẵn khi người ấy quay lại.';
@@ -286,8 +286,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
           body = partnerOnline
               ? '$partnerName đang online, cơn tức đỏ rực này hiện lên ngay rồi.'
               : '$partnerName chưa mở nhà, cơn tức đỏ rực này sẽ chờ sẵn để người ấy dỗ bạn sau.';
-          message =
-              customMessage ?? L10nService().translate('home_mnhangtcth_dfdd25');
+          message = customMessage ??
+              L10nService().translate('home_mnhangtcth_dfdd25');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
               : '$partnerName chưa mở app, cơn tức này sẽ chờ sẵn khi người ấy quay lại.';
@@ -319,8 +319,8 @@ extension _MainHomeInteractions on _MainHomeTabState {
           body = partnerOnline
               ? '$partnerName đang online, cú trêu này bật ra ngay rồi.'
               : '$partnerName chưa mở nhà, cú trêu nghịch này sẽ chờ sẵn khi người ấy quay lại.';
-          message =
-              customMessage ?? L10nService().translate('home_nmnhmtcctr_3e8a1f');
+          message = customMessage ??
+              L10nService().translate('home_nmnhmtcctr_3e8a1f');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
               : '$partnerName chưa mở app, 💩 sẽ chờ sẵn khi người ấy quay lại.';
@@ -368,17 +368,24 @@ extension _MainHomeInteractions on _MainHomeTabState {
         'timestamp': ServerValue.timestamp,
       });
       try {
-        await _notificationService.sendPartnerNotification(
-          houseId: _houseId!,
-          title: title,
-          body: notificationBody,
-          data: {
-            'screen': 'home',
-            'type': 'partner_care',
-            'careType': type,
-            'houseId': _houseId!,
-          },
-        );
+        final prefs = await OfflineCacheService.getPrefs();
+        final lastFCM = prefs.getInt('il_last_sent_fcm_push_v2') ?? 0;
+        final nowMs = DateTime.now().millisecondsSinceEpoch;
+        
+        if (nowMs - lastFCM >= 3600000) {
+          await prefs.setInt('il_last_sent_fcm_push_v2', nowMs);
+          await _notificationService.sendPartnerNotification(
+            houseId: _houseId!,
+            title: title,
+            body: notificationBody,
+            data: {
+              'screen': 'home',
+              'type': 'partner_care',
+              'careType': type,
+              'houseId': _houseId!,
+            },
+          );
+        }
       } catch (_) {}
 
       // Record daily quest progress

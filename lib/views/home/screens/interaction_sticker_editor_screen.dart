@@ -162,7 +162,6 @@ class _InteractionStickerEditorScreenState
 
   Future<void> _loadSavedStickers() async {
     final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
     setState(() {
       for (var slot in _activeSlots) {
         final saved = prefs.getString('custom_sticker_${slot['type']}');
@@ -182,11 +181,9 @@ class _InteractionStickerEditorScreenState
         Navigator.pop(context, true);
       }
     } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Lưu thay đổi thất bại, vui lòng thử lại.')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lưu thay đổi thất bại, vui lòng thử lại.')),
+      );
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);

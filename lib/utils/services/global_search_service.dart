@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import 'utility_service.dart';
 
@@ -37,16 +38,16 @@ class GlobalSearchService {
     'calculator',
   ];
 
-  static const Map<String, String> _defaultUtilitySubtitles = <String, String>{
-    'note': 'Ghi nhanh điều cần nhớ trong nhà.',
-    'friendly_chat': 'Hỏi AI bằng giọng nhẹ nhàng, dễ hiểu.',
-    'history': 'Xem lại các hoạt động gần đây.',
-    'calendar': 'Theo dõi lịch chung và ngày quan trọng.',
-    'vault': 'Mở khu ảnh riêng tư.',
-    'bucket': 'Lưu những điều muốn làm cùng nhau.',
-    'habit': 'Theo dõi thói quen cần giữ.',
-    'voice': 'Gửi ghi âm nhanh.',
-    'calculator': 'Tính nhanh khi cần.',
+  static const Map<String, String> _defaultUtilitySubtitleKeys = <String, String>{
+    'note': 'search_utility_subtitle_note',
+    'friendly_chat': 'search_utility_subtitle_friendly_chat',
+    'history': 'search_utility_subtitle_history',
+    'calendar': 'search_utility_subtitle_calendar',
+    'vault': 'search_utility_subtitle_vault',
+    'bucket': 'search_utility_subtitle_bucket',
+    'habit': 'search_utility_subtitle_habit',
+    'voice': 'search_utility_subtitle_voice',
+    'calculator': 'search_utility_subtitle_calculator',
   };
 
   static const Map<String, List<String>> _utilityAliases = {
@@ -115,12 +116,18 @@ class GlobalSearchService {
           if (app == null) {
             return null;
           }
+          final subtitleKey = _defaultUtilitySubtitleKeys[app.id];
+          final localizedSubtitle = subtitleKey != null
+              ? L10nService().translate(subtitleKey)
+              : (app.isTool
+                  ? L10nService().translate('search_default_tool')
+                  : L10nService().translate('search_default_app'));
+
           return GlobalSearchResult(
             id: 'default_utility_${app.id}',
             title: app.localizedTitle,
-            subtitle: _defaultUtilitySubtitles[app.id] ??
-                (app.isTool ? 'Công cụ tiện ích' : 'Tiện ích SoulLocket'),
-            type: 'Cần thiết',
+            subtitle: localizedSubtitle,
+            type: L10nService().translate('search_badge_necessary'),
             actionId: 'utility:${app.id}',
             icon: app.icon,
             colors: app.colors,
@@ -150,8 +157,10 @@ class GlobalSearchService {
           return GlobalSearchResult(
             id: 'utility_${app.id}',
             title: app.localizedTitle,
-            subtitle: app.isTool ? 'Công cụ tiện ích' : 'Tiện ích SoulLocket',
-            type: 'Tiện ích',
+            subtitle: app.isTool
+                ? L10nService().translate('search_default_tool')
+                : L10nService().translate('search_default_app'),
+            type: L10nService().translate('search_badge_utility'),
             actionId: 'utility:${app.id}',
             icon: app.icon,
             colors: app.colors,
@@ -224,8 +233,10 @@ class GlobalSearchService {
   }
 
   String _stripVietnameseMarks(String value) {
-    const withMarks = 'đàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹ';
-    const withoutMarks = 'daaaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooooooooouuuuuuuuuuuyyyyy';
+    const withMarks =
+        'đàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹ';
+    const withoutMarks =
+        'daaaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiioooooooooooooooooouuuuuuuuuuuyyyyy';
     final buf = StringBuffer();
     for (var i = 0; i < value.length; i++) {
       final ch = value.toLowerCase()[i];

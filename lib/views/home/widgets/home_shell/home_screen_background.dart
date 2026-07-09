@@ -80,17 +80,23 @@ extension _HomeScreenShellBackground on _HomeScreenState {
     required bool isDark,
     required String backgroundUrl,
   }) {
-    final overlayColors = isDark
+    final overlayColors = themeKey == 'off'
         ? [
-            Colors.black.withValues(alpha: 0.30),
-            Colors.black.withValues(alpha: 0.18),
-            Colors.black.withValues(alpha: 0.40),
+            Colors.transparent,
+            Colors.transparent,
+            Colors.black.withValues(alpha: 0.12),
           ]
-        : [
-            Colors.white.withValues(alpha: 0.14),
-            Colors.white.withValues(alpha: 0.08),
-            Colors.black.withValues(alpha: 0.30),
-          ];
+        : (isDark
+            ? [
+                Colors.black.withValues(alpha: 0.30),
+                Colors.black.withValues(alpha: 0.18),
+                Colors.black.withValues(alpha: 0.40),
+              ]
+            : [
+                Colors.white.withValues(alpha: 0.14),
+                Colors.white.withValues(alpha: 0.08),
+                Colors.black.withValues(alpha: 0.30),
+              ]);
 
     return Stack(
       fit: StackFit.expand,
@@ -151,8 +157,6 @@ extension _HomeScreenShellBackground on _HomeScreenState {
   }) {
     return _resolveShellGradient(themeKey, isDark);
   }
-
-
 
   List<Color> _resolveShellGradient(String themeKey, bool isDark) {
     if (themeKey == 'off') {
@@ -252,7 +256,11 @@ class _StableShellBackgroundImageState
   @override
   void initState() {
     super.initState();
-    _syncProviders();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _syncProviders();
+      }
+    });
   }
 
   @override
@@ -288,8 +296,16 @@ class _StableShellBackgroundImageState
       return;
     }
 
+    precacheImage(provider, context).then((_) {
+      if (!mounted || _currentUrl != url) return;
+      setState(() {
+        _ready = true;
+        _retainedProvider = provider;
+      });
+    }).catchError((_) {});
+
     try {
-      final cachedFile = await DefaultCacheManager().getFileFromCache(url);
+      final cachedFile = await AppCacheManager.instance.getFileFromCache(url);
       if (!mounted || _currentUrl != url) return;
       final file = cachedFile?.file;
       if (file != null && await file.exists()) {
@@ -301,20 +317,24 @@ class _StableShellBackgroundImageState
   }
 
   ImageProvider<Object> _buildNetworkProvider(String url) {
+    final mediaQuery = MediaQuery.maybeOf(context);
     final view = WidgetsBinding.instance.platformDispatcher.views.isNotEmpty
         ? WidgetsBinding.instance.platformDispatcher.views.first
         : null;
-    final devicePixelRatio = view?.devicePixelRatio ?? 1.0;
-    final logicalSize = view?.physicalSize != null
-        ? Size(
-            view!.physicalSize.width / devicePixelRatio,
-            view.physicalSize.height / devicePixelRatio,
-          )
-        : const Size(430, 932);
-    final cacheWidth =
-        (logicalSize.width * devicePixelRatio).round().clamp(1080, 2160);
-    final cacheHeight =
-        (logicalSize.height * devicePixelRatio).round().clamp(1920, 3840);
+    final devicePixelRatio =
+        mediaQuery?.devicePixelRatio ?? view?.devicePixelRatio ?? 1.0;
+    final logicalWidth = mediaQuery?.size.width ??
+        ((view?.physicalSize.width ?? 0) / devicePixelRatio);
+    final logicalHeight = mediaQuery?.size.height ??
+        ((view?.physicalSize.height ?? 0) / devicePixelRatio);
+    final qualityScale = devicePixelRatio >= 2.5 ? 0.75 : 0.85;
+    final cacheWidth = (logicalWidth * devicePixelRatio * qualityScale)
+        .round()
+        .clamp(600, 1280);
+    final cacheHeight = (logicalHeight * devicePixelRatio * qualityScale)
+        .round()
+        .clamp(960, 1920);
+
     final provider = CachedNetworkImageProvider(
       url,
       maxWidth: cacheWidth,
@@ -363,7 +383,6 @@ class _StableShellBackgroundImageState
     );
   }
 
-  bool get _hasFallback => _diskCachedProvider != null || _retainedProvider != null;
+  bool get _hasFallback =>
+      _diskCachedProvider != null || _retainedProvider != null;
 }
-
-

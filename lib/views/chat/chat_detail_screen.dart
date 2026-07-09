@@ -278,7 +278,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               ),
               SLSpacing.h8,
               Text(
-                L10nService().format('chat_locked_desc', {'name': _nickname.trim().isEmpty ? widget.targetName : _nickname.trim()}),
+                L10nService().format('chat_locked_desc', {
+                  'name': _nickname.trim().isEmpty
+                      ? widget.targetName
+                      : _nickname.trim()
+                }),
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w700,
@@ -497,8 +501,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF1F4).withValues(alpha: 
-                          hasChatBackground ? 0.88 : 1,
+                        color: const Color(0xFFFFF1F4).withValues(
+                          alpha: hasChatBackground ? 0.88 : 1,
                         ),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: const Color(0xFFFFD5DE)),
@@ -513,7 +517,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           Expanded(
                             child: Text(
                               closedMessage.isEmpty
-                                  ? L10nService().translate('chat_closed_history_only')
+                                  ? L10nService()
+                                      .translate('chat_closed_history_only')
                                   : closedMessage,
                               style: SLTheme.quicksand(
                                 color: const Color(0xFFD81B60),

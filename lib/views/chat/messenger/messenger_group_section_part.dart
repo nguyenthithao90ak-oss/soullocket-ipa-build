@@ -1,8 +1,6 @@
-
 part of '../messenger_screen.dart';
 
 extension _MessengerGroupSectionPart on _MessengerScreenState {
-
   Widget _buildGroupTile(GroupChatRoom group) {
     final hasUnread = _groupHasUnread(group);
     final lastMessageTime = _formatLastMessageTime(group.lastMessage);
@@ -72,7 +70,8 @@ extension _MessengerGroupSectionPart on _MessengerScreenState {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: SLTheme.quicksand(
-                          fontWeight: hasUnread ? FontWeight.w900 : FontWeight.w700,
+                          fontWeight:
+                              hasUnread ? FontWeight.w900 : FontWeight.w700,
                           fontSize: 11.5,
                           color: hasUnread
                               ? const Color(0xFFD81B60)

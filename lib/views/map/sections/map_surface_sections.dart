@@ -66,10 +66,10 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              const Color(0xFF0F172A).withValues(alpha: 0.30),
+              const Color(0xFF0F172A).withValues(alpha: 0.20),
               Colors.transparent,
               Colors.transparent,
-              const Color(0xFF111827).withValues(alpha: 0.46),
+              const Color(0xFF0F172A).withValues(alpha: 0.50),
             ],
             stops: const [0, 0.22, 0.62, 1],
             begin: Alignment.topCenter,
@@ -252,7 +252,8 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
               decoration: BoxDecoration(
                 color: const Color(0xD918191A),
                 borderRadius: SLRadius.pillAll,
-                border: Border.all(color: _kMapPinkDeep.withValues(alpha: 0.20)),
+                border:
+                    Border.all(color: _kMapPinkDeep.withValues(alpha: 0.20)),
                 boxShadow: [
                   BoxShadow(
                     color: _kMapPinkDeep.withValues(alpha: 0.12),
@@ -316,11 +317,11 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
         return ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
           child: FastBackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
             child: Container(
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xF2242526), Color(0xFF171C25)],
+                  colors: [Color(0xA60F172A), Color(0x9909090B)],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
@@ -328,6 +329,18 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                   top: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
                 ),
                 boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x4D000000),
+                    blurRadius: 40,
+                    offset: Offset(0, -10),
+                  ),
+                  // old shadow replaced
+                  BoxShadow(
+                    color: Color(0x4D000000),
+                    blurRadius: 40,
+                    offset: Offset(0, -10),
+                  ),
+                  // old shadow replaced
                   BoxShadow(
                     color: Color(0x33000000),
                     blurRadius: 28,

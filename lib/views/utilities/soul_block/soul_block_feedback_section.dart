@@ -46,6 +46,17 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
             ],
             masterGain: 0.70,
           );
+      _bombSfxBytes = await _loadAudioAssetBytes(
+            'assets/audio/soul_block/bomb_explosion.mp3',
+          ) ??
+          _buildWaveBytes(
+            <_SoulSfxTone>[
+              _tone(36, 120, 1.0, noiseMix: 0.94),
+              _tone(43, 90, 0.88, noiseMix: 0.86),
+              _tone(48, 70, 0.64, noiseMix: 0.72),
+            ],
+            masterGain: 0.90,
+          );
       _comboSfxLevels = <Uint8List>[
         _buildWaveBytes(
           <_SoulSfxTone>[
@@ -298,7 +309,8 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       final ByteData data = await rootBundle.load(assetPath);
       return data.buffer.asUint8List();
     } catch (e) {
-      debugPrint('Soul Block: Error loading SFX ($assetPath): ${AppErrorMapper.resolve(
+      debugPrint(
+          'Soul Block: Error loading SFX ($assetPath): ${AppErrorMapper.resolve(
         e,
         fallbackMessage: loadSfxErrorFallback,
       ).message}');
@@ -356,6 +368,19 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     }
     if (_vibrationEnabled) {
       HapticFeedback.selectionClick();
+    }
+  }
+
+  void _emitBombFeedback() {
+    if (_soundEnabled) {
+      if (_audioReady && _bombSfxBytes != null) {
+        unawaited(_playSfx(_bombSfxBytes, volume: 0.90));
+      } else {
+        unawaited(SystemSound.play(SystemSoundType.alert));
+      }
+    }
+    if (_vibrationEnabled) {
+      HapticFeedback.vibrate();
     }
   }
 
@@ -515,11 +540,11 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
       for (final int row in clearedRows)
         _boardCellCenter(
           row.toDouble(),
-          (_SoulBlockGameState._boardSize - 1) / 2,
+          (_boardSize - 1) / 2,
         ),
       for (final int col in clearedCols)
         _boardCellCenter(
-          (_SoulBlockGameState._boardSize - 1) / 2,
+          (_boardSize - 1) / 2,
           col.toDouble(),
         ),
     ];
@@ -556,10 +581,12 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     final List<_ExplosionParticle> particles = <_ExplosionParticle>[];
 
     for (int index = 0; index < particleCount; index++) {
-      final double angle =
-          ((index / particleCount) * pi * 2) + (_random.nextDouble() * 0.35);
+      // Downward falling cone: pi/2 is straight down, +/- 0.8 radians (about 45 degrees)
+      final double angle = (pi / 2.0) + (_random.nextDouble() * 1.6 - 0.8);
+      // Shorter distance to keep particles centered near grid cells
       final double distance =
-          (18 + (_random.nextDouble() * maxDistance)).clamp(18, 112);
+          (10.0 + (_random.nextDouble() * maxDistance * 0.40))
+              .clamp(10.0, 64.0);
       final bool isShard = index.isEven;
       particles.add(
         _ExplosionParticle(
@@ -571,21 +598,21 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
           color: _kSoulBurstPalette[_random.nextInt(_kSoulBurstPalette.length)],
           size: subtle
               ? (isShard
-                  ? 7 + (_random.nextDouble() * 5)
-                  : 4 + (_random.nextDouble() * 3))
+                  ? 3.0 + (_random.nextDouble() * 2.0)
+                  : 1.5 + (_random.nextDouble() * 1.5))
               : isShard
-                  ? 10 + (_random.nextDouble() * 10)
-                  : 5 + (_random.nextDouble() * 7),
+                  ? 5.0 + (_random.nextDouble() * 3.0)
+                  : 2.5 + (_random.nextDouble() * 2.0),
           rotation: _random.nextDouble() * pi * 2,
-          twist: (subtle ? 1.8 : 3.6) *
+          twist: (subtle ? 0.6 : 1.2) *
               _random.nextDouble() *
               (_random.nextBool() ? 1 : -1),
           opacity: ((subtle
-                      ? 0.48 + (_random.nextDouble() * 0.18)
-                      : 0.64 + (_random.nextDouble() * 0.30)) *
+                      ? 0.35 + (_random.nextDouble() * 0.15)
+                      : 0.50 + (_random.nextDouble() * 0.20)) *
                   profile.opacityScale)
-              .clamp(0.24, 0.92),
-          delayFraction: (_random.nextDouble() * (subtle ? 0.14 : 0.22)) *
+              .clamp(0.18, 0.76),
+          delayFraction: (_random.nextDouble() * (subtle ? 0.10 : 0.16)) *
               profile.delayScale,
           isShard: isShard,
           simpleDraw: simpleParticles,

@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'single_match_service.dart';
 import 'activity_history_service.dart';
 import 'package:soullocket_app/models/house_settings.dart';
-import '../flexible_date_input.dart';
+import '../utils/flexible_date_input.dart';
 import 'offline_cache_service.dart';
 
 /// HouseSettingsService - realtime listener cho settings nhà
@@ -23,8 +23,6 @@ class HouseSettingsService {
   Future<Map<String, dynamic>> getStartDateChangePolicy(String houseId) async {
     const isLocked = false;
     const shouldWarn = false;
-
-
 
     return {
       'isLocked': isLocked,
@@ -73,7 +71,8 @@ class HouseSettingsService {
   }
 
   Stream<HouseSettings?> streamSettings(String houseId) {
-    return Stream.fromFuture(_dbRef.child('houses/$houseId/settings').get()).map((snapshot) {
+    return _dbRef.child('houses/$houseId/settings').onValue.map((event) {
+      final snapshot = event.snapshot;
       if (!snapshot.exists || snapshot.value == null) return null;
       final raw = snapshot.value;
       if (raw is! Map) return null;
@@ -97,7 +96,8 @@ class HouseSettingsService {
     final raw = snap.value;
     if (raw is! Map) return null;
     final settings = HouseSettings.fromMap(raw);
-    OfflineCacheService.setMemoryCache(cacheKey, settings, const Duration(minutes: 5));
+    OfflineCacheService.setMemoryCache(
+        cacheKey, settings, const Duration(minutes: 5));
     return settings;
   }
 
@@ -234,8 +234,6 @@ class HouseSettingsService {
       'đã làm mới thông tin không gian chung',
     );
   }
-
-
 
   Future<void> updateField(String houseId, String field, dynamic value) async {
     await _ensureCurrentDeviceCanModifySharedInfo(houseId);
@@ -403,9 +401,9 @@ class HouseSettingsService {
     final settingsSnap = await _dbRef.child('houses/$houseId/settings').get();
     final settings = _asStringDynamicMap(settingsSnap.value) ?? {};
     final nowMs = DateTime.now().millisecondsSinceEpoch;
-    final changeCount = (_readEpochMs(settings['startDateChangeCount']) ?? 0) + 1;
+    final changeCount =
+        (_readEpochMs(settings['startDateChangeCount']) ?? 0) + 1;
     const nextCooldownUntil = null;
-
 
     try {
       // Split into two updates to guarantee optimistic event propagation to deep listeners
@@ -419,7 +417,7 @@ class HouseSettingsService {
       await _dbRef.child('houses/$houseId').update({
         'updatedAt': ServerValue.timestamp,
       });
-      
+
       _invalidateCache(houseId);
     } on FirebaseException catch (fe) {
       if (fe.code == 'permission-denied') {
@@ -530,12 +528,11 @@ class HouseSettingsService {
     }
 
     try {
-      final snap = await _dbRef
-          .get()
-          .timeout(const Duration(seconds: 3));
+      final snap = await _dbRef.get().timeout(const Duration(seconds: 3));
       if (!snap.exists || snap.value == null) return null;
       final profile = _asStringDynamicMap(snap.value);
-      OfflineCacheService.setMemoryCache(cacheKey, profile, const Duration(minutes: 5));
+      OfflineCacheService.setMemoryCache(
+          cacheKey, profile, const Duration(minutes: 5));
       return profile;
     } catch (_) {
       return null;
@@ -568,9 +565,10 @@ class HouseSettingsService {
 
   Future<void> _checkAndUpdateUploadLimit(String houseId) async {
     final now = DateTime.now();
-    final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final todayStr =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     final ref = _dbRef.child('houses/$houseId/security/upload_limit');
-    
+
     final snapshot = await ref.get();
     if (snapshot.exists) {
       final value = snapshot.value;
@@ -588,7 +586,7 @@ class HouseSettingsService {
         }
       }
     }
-    
+
     await ref.set({
       'date': todayStr,
       'count': 1,
