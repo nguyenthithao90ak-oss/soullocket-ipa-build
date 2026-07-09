@@ -1053,7 +1053,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
             tag: 'memory_image_${photo['id']}',
             child: CachedNetworkImage(
               imageUrl: photoUrl,
-              memCacheWidth: widget.thumbnailCacheWidth,
+              maxWidthDiskCache: widget.thumbnailCacheWidth,
               cacheManager: AppCacheManager.instance,
               fit: BoxFit.contain,
               filterQuality: FilterQuality.low,

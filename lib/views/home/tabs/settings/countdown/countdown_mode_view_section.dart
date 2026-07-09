@@ -1510,7 +1510,7 @@ extension _CountdownModeIndependentScreenViewPart
                                 filterQuality: FilterQuality.medium,
                                 fadeInDuration:
                                     const Duration(milliseconds: 180),
-                                memCacheWidth: 720,
+                                maxWidthDiskCache: 720,
                                 placeholder: (_, __) => DecoratedBox(
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(

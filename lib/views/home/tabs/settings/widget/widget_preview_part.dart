@@ -1641,8 +1641,8 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
                 filterQuality: FilterQuality.medium,
-                memCacheWidth: tileWidth.ceil(),
-                memCacheHeight: tileHeight.ceil(),
+                maxWidthDiskCache: tileWidth.ceil(),
+                maxHeightDiskCache: tileHeight.ceil(),
                 errorWidget: (_, __, ___) {
                   return Icon(
                     Icons.broken_image_rounded,

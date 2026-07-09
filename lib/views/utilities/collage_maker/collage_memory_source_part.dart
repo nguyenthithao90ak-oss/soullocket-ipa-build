@@ -323,7 +323,7 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
                                       CachedNetworkImage(
                                         imageUrl: url,
                                         fit: BoxFit.cover,
-                                        memCacheWidth: 400,
+                                        maxWidthDiskCache: 400,
                                       ),
                                       if (isSelected)
                                         Positioned(

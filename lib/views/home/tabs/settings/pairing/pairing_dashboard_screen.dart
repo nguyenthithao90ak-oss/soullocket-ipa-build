@@ -24,7 +24,6 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   String? _myHouseId;
   bool _isPaired = false;
   bool _isLoading = true;
-  int _diaryCount = 0;
   String? _avatarU1;
   String? _avatarU2;
   String? _nameU1;
@@ -124,21 +123,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       }
     });
 
-    // Chỉ đếm số lượng nhật ký (Firestore) 1 lần khi tải trang, không bỏ vào listener RTDB
-    try {
-      final countQuery = await FirebaseFirestore.instance
-          .collection('houses')
-          .doc(houseId)
-          .collection('diaries')
-          .count()
-          .get();
-      if (mounted) {
-        setState(() {
-          final count = countQuery.count ?? 0;
-          _diaryCount = count >= 300 ? 300 : count;
-        });
-      }
-    } catch (_) {}
+    // Đã xoá logic đếm nhật ký ở đây
   }
 
   void _showCreateCodeSheet() {
@@ -234,9 +219,11 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           end: Alignment.bottomRight,
           colors: [
             const Color(0xFFFFF0F5),
-            const Color(0xFFFFE4E1).withValues(alpha: 0.5),
-            const Color(0xFFF0F8FF),
+            const Color(0xFFFFC0CB).withValues(alpha: 0.5),
+            const Color(0xFFE6E6FA).withValues(alpha: 0.8),
+            const Color(0xFFF0FFFF),
           ],
+          stops: const [0.0, 0.4, 0.7, 1.0],
         ),
       ),
       child: Column(
@@ -248,33 +235,32 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
               _buildAvatarWidget(_avatarU1, _nameU1 ?? L10nService().translate('role_male'), 'user1'),
               const SizedBox(width: 16),
               SizedBox(
-                width: 64,
-                height: 64,
+                width: 72,
+                height: 72,
                 child: Stack(
                   alignment: Alignment.center,
                   clipBehavior: Clip.none,
-                  children: const [
-                    Icon(Icons.favorite_rounded, color: Color(0xFFD81B60), size: 52),
-                    Positioned(
-                      top: -10,
-                      left: -10,
-                      child: Text('✨', style: TextStyle(fontSize: 22)),
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFD81B60).withValues(alpha: 0.2),
+                            blurRadius: 15,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.favorite_rounded, color: Color(0xFFD81B60), size: 36),
                     ),
-                    Positioned(
-                      bottom: -5,
-                      right: -10,
-                      child: Text('🎀', style: TextStyle(fontSize: 20)),
-                    ),
-                    Positioned(
-                      top: 5,
-                      right: -15,
-                      child: Text('💖', style: TextStyle(fontSize: 18)),
-                    ),
-                    Positioned(
-                      bottom: -10,
-                      left: 5,
-                      child: Text('🌸', style: TextStyle(fontSize: 20)),
-                    ),
+                    const Positioned(top: -5, left: -5, child: Text('✨', style: TextStyle(fontSize: 20))),
+                    const Positioned(bottom: 5, right: -10, child: Text('🎀', style: TextStyle(fontSize: 18))),
+                    const Positioned(top: 10, right: -15, child: Text('💖', style: TextStyle(fontSize: 16))),
+                    const Positioned(bottom: -5, left: 10, child: Text('🌸', style: TextStyle(fontSize: 18))),
                   ],
                 ),
               ),
@@ -282,46 +268,39 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
               _buildAvatarWidget(_avatarU2, _nameU2 ?? L10nService().translate('role_female'), 'user2'),
             ],
           ),
-          SLSpacing.h32,
-          Text(
-            L10nService().translate('pairing_start_date'),
-            style: SLTheme.quicksand(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: Colors.grey.shade600,
-            ),
-          ),
-          SLSpacing.h8,
-          Text(
-            _startDateStr ?? L10nService().translate('pairing_no_info'),
-            style: SLTheme.quicksand(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFFD81B60),
-            ),
-          ),
-          SLSpacing.h16,
+          const SizedBox(height: 40),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            margin: const EdgeInsets.symmetric(horizontal: 40),
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
             decoration: BoxDecoration(
-              color: const Color(0xFFD81B60).withValues(alpha: 0.08),
+              color: Colors.white.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFD81B60).withValues(alpha: 0.08),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+            child: Column(
               children: [
-                const Icon(Icons.photo_library_rounded, color: Color(0xFFD81B60), size: 20),
-                const SizedBox(width: 8),
                 Text(
-                  L10nService().format(
-                    _diaryCount >= 300 
-                        ? 'pairing_diary_count_more_than_300' 
-                        : 'pairing_diary_count',
-                    {'count': _diaryCount},
-                  ),
+                  L10nService().translate('pairing_start_date'),
                   style: SLTheme.quicksand(
                     fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.grey.shade600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                SLSpacing.h8,
+                Text(
+                  _startDateStr ?? L10nService().translate('pairing_no_info'),
+                  style: SLTheme.quicksand(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
                     color: const Color(0xFFD81B60),
                   ),
                 ),
@@ -369,17 +348,17 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
             alignment: Alignment.bottomRight,
             children: [
               Container(
-                width: 80,
-                height: 80,
+                width: 96,
+                height: 96,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 4),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      color: const Color(0xFFD81B60).withValues(alpha: 0.15),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
                     ),
                   ],
                   color: Colors.grey.shade100,
@@ -387,13 +366,11 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                 child: url != null && url.isNotEmpty
                     ? ClipOval(
                         child: SizedBox(
-                          width: 72,
-                          height: 72,
+                          width: 88,
+                          height: 88,
                           child: CachedNetworkImage(
                             imageUrl: url,
                             fit: BoxFit.cover,
-                            memCacheWidth: 200,
-                            memCacheHeight: 200,
                             placeholder: (context, url) => const Icon(Icons.person, color: Colors.grey, size: 40),
                             errorWidget: (context, url, error) => const Icon(Icons.person, color: Colors.grey, size: 40),
                           ),
@@ -401,13 +378,24 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                       )
                     : const Icon(Icons.person, color: Colors.grey, size: 40),
               ),
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
+              Positioned(
+                bottom: 2,
+                right: 2,
+                child: Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.camera_alt_rounded, color: Color(0xFFD81B60), size: 16),
                 ),
-                child: const Icon(Icons.camera_alt_rounded, color: Color(0xFFD81B60), size: 16),
               ),
             ],
           ),
@@ -601,8 +589,6 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                             width: 48,
                             height: 48,
                             fit: BoxFit.cover,
-                            memCacheWidth: 150,
-                            memCacheHeight: 150,
                           ),
                         )
                       : const Icon(Icons.person_rounded, color: Colors.grey),

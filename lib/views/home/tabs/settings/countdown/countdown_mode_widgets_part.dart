@@ -1121,8 +1121,9 @@ class _CountdownModeGlowOrb extends StatelessWidget {
 /// Overlay trái tim hồng bay bổng, xoay lật 3D đa chiều như giọt nước.
 /// Cảm biến trọng trường 360 độ cực nhạy và chân thực.
 class FloatingHeartsRingOverlay extends StatefulWidget {
-  const FloatingHeartsRingOverlay({super.key, required this.size});
+  const FloatingHeartsRingOverlay({super.key, required this.size, this.enableMotion = true});
   final double size;
+  final bool enableMotion;
 
   @override
   State<FloatingHeartsRingOverlay> createState() =>
@@ -1130,12 +1131,11 @@ class FloatingHeartsRingOverlay extends StatefulWidget {
 }
 
 class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
-    with WidgetsBindingObserver {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   static const int _kCount = 10;
 
   late final List<_HeartParticle> _particles;
-  final ValueNotifier<double> _progressNotifier = ValueNotifier<double>(0.0);
-  Timer? _timer;
+  late final AnimationController _animController;
   double _autoTiltX = 0.0;
   double _autoTiltY = 0.0;
 
@@ -1144,14 +1144,38 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initParticles();
-    _startAnimation();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6), // one full cycle
+    )..addListener(_onTick);
+    
+    _updateAnimationState();
+  }
+
+  @override
+  void didUpdateWidget(FloatingHeartsRingOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.enableMotion != widget.enableMotion) {
+      _updateAnimationState();
+    }
+  }
+
+  void _updateAnimationState() {
+    if (widget.enableMotion) {
+      if (!_animController.isAnimating) {
+        _animController.repeat();
+      }
+    } else {
+      if (_animController.isAnimating) {
+        _animController.stop();
+      }
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _timer?.cancel();
-    _progressNotifier.dispose();
+    _animController.dispose();
     super.dispose();
   }
 
@@ -1159,10 +1183,9 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
-      _timer?.cancel();
-      _timer = null;
-    } else if (state == AppLifecycleState.resumed && _timer == null) {
-      _startAnimation();
+      _animController.stop();
+    } else if (state == AppLifecycleState.resumed) {
+      _updateAnimationState();
     }
   }
 
@@ -1183,14 +1206,10 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
     });
   }
 
-  void _startAnimation() {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
-      if (!mounted) return;
-      _progressNotifier.value = (_progressNotifier.value + (16 / 6000)) % 1.0;
-      _autoTiltX = math.sin(_progressNotifier.value * math.pi * 2 * 0.3) * 4.0;
-      _autoTiltY = math.cos(_progressNotifier.value * math.pi * 2 * 0.2) * 3.0;
-    });
+  void _onTick() {
+    final progress = _animController.value;
+    _autoTiltX = math.sin(progress * math.pi * 2 * 0.3 * 6) * 4.0;
+    _autoTiltY = math.cos(progress * math.pi * 2 * 0.2 * 6) * 3.0;
   }
 
   @override
@@ -1204,9 +1223,9 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
         child: ClipRRect(
           borderRadius: BorderRadius.circular(widget.size / 2),
           child: AnimatedBuilder(
-            animation: _progressNotifier,
+            animation: _animController,
             builder: (context, _) {
-              final progress = _progressNotifier.value;
+              final progress = _animController.value;
               final tiltX = _autoTiltX;
               final tiltY = _autoTiltY;
 

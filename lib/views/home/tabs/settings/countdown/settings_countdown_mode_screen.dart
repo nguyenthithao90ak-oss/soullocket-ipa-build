@@ -358,7 +358,7 @@ class _CountdownModeIndependentScreenState
                       fit: BoxFit.cover,
                       filterQuality: FilterQuality.medium,
                       fadeInDuration: const Duration(milliseconds: 180),
-                      memCacheWidth: 1080,
+                      maxWidthDiskCache: 1080,
                       placeholder: (_, __) => DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(

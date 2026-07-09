@@ -869,8 +869,29 @@ struct LockScreenWidgetView: View {
     var body: some View {
         switch family {
         case .accessoryRectangular:
-            SmallWidgetView(data: data, theme: theme, date: date)
-                .modifier(TransparentWidgetBackground())
+            HStack(spacing: 4) {
+                Text(data.name1 ?? "")
+                    .font(.system(size: 14, weight: .bold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                
+                VStack(spacing: 2) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 12))
+                    let numberStr = String(data.resolvedDaysText().split(separator: " ").first ?? "0")
+                    Text(numberStr)
+                        .font(.system(size: 14, weight: .bold))
+                }
+                .padding(.horizontal, 4)
+                
+                Text(data.name2 ?? "")
+                    .font(.system(size: 14, weight: .bold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .modifier(TransparentWidgetBackground())
         case .accessoryCircular:
             VStack(spacing: 2) {
                 Image(systemName: "heart.fill")

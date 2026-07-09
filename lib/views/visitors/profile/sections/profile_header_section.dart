@@ -75,7 +75,7 @@ class VisitorProfileHeaderSection extends StatelessWidget {
         ),
         if (headerImageUrl.isNotEmpty)
           CachedNetworkImage(
-            memCacheWidth: 2160,
+            maxWidthDiskCache: 2160,
             imageUrl: headerImageUrl,
             fit: BoxFit.cover,
             filterQuality: FilterQuality.medium,
@@ -180,7 +180,7 @@ class VisitorProfileHeaderSection extends StatelessWidget {
                               height: avatarSize,
                               child: trimmedAvatar.isNotEmpty
                                   ? CachedNetworkImage(
-                                      memCacheWidth: 720,
+                                      maxWidthDiskCache: 720,
                                       imageUrl: trimmedAvatar,
                                       fit: BoxFit.cover,
                                       filterQuality: FilterQuality.medium,
@@ -332,7 +332,7 @@ class _VisitorProfileSmallHouseAvatarBadge extends StatelessWidget {
       child: ClipOval(
         child: avatarUrl.isNotEmpty
             ? CachedNetworkImage(
-                memCacheWidth: 720,
+                maxWidthDiskCache: 720,
                 imageUrl: avatarUrl,
                 fit: BoxFit.cover,
                 filterQuality: FilterQuality.medium,

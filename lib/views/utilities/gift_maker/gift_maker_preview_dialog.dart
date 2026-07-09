@@ -516,7 +516,7 @@ class _GiftPreviewDialogState extends State<GiftPreviewDialog> {
                   borderRadius: SLRadius.lgAll,
                   child: widget.gift.imageUrl.startsWith('http')
                       ? CachedNetworkImage(
-                          memCacheWidth: 900,
+                          maxWidthDiskCache: 900,
                           imageUrl: widget.gift.imageUrl,
                           fit: BoxFit.cover,
                           filterQuality: FilterQuality.medium,

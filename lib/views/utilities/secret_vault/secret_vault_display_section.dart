@@ -35,7 +35,7 @@ extension _SecretVaultDisplayPart on SecretVaultScreenState {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(20),
                               child: CachedNetworkImage(
-                                memCacheWidth: 900,
+                                maxWidthDiskCache: 900,
                                 imageUrl: url,
                                 fit: BoxFit.contain,
                                 filterQuality: FilterQuality.medium,

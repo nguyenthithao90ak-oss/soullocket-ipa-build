@@ -932,7 +932,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
 
     if (isNetwork) {
       return CachedNetworkImage(
-        memCacheWidth: 720,
+        maxWidthDiskCache: 720,
         imageUrl: url,
         fit: BoxFit.cover,
         filterQuality: FilterQuality.medium,
@@ -985,7 +985,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
       child: Center(
         child: isNetwork
             ? CachedNetworkImage(
-                memCacheWidth: memCacheWidth,
+                maxWidthDiskCache: memCacheWidth,
                 imageUrl: url,
                 fit: BoxFit.scaleDown,
                 filterQuality: FilterQuality.medium,

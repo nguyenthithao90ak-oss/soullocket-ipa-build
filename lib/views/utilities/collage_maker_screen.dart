@@ -1177,7 +1177,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     await _showZoomPreview(
       child: url.startsWith('http')
           ? CachedNetworkImage(
-              memCacheWidth: 720,
+              maxWidthDiskCache: 720,
               imageUrl: url,
               fit: BoxFit.contain,
               filterQuality: FilterQuality.medium,

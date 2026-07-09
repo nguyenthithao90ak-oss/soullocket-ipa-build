@@ -270,7 +270,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                               borderRadius: SLRadius.mdAll,
                               child: CachedNetworkImage(
                                 cacheManager: AppCacheManager.instance,
-                                memCacheWidth: imageCacheWidth,
+                                maxWidthDiskCache: imageCacheWidth,
                                 imageUrl: msg.text,
                                 width: effectiveImageSize,
                                 height: effectiveImageSize,

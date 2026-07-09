@@ -206,7 +206,7 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                   children: <Widget>[
                     _buildContainedImage(
                       frame.imageUrl,
-                      memCacheWidth: 1600,
+                      maxWidthDiskCache: 1600,
                       errorIconSize: 42,
                     ),
                     DecoratedBox(

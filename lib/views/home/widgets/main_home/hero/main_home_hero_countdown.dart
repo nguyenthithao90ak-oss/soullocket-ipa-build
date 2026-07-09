@@ -663,7 +663,10 @@ class _MainHomeHeroCountdownCircleState
                       ),
                     ),
                     if (widget.countdownStyleKey == 'floating_hearts')
-                      FloatingHeartsRingOverlay(size: widget.circleSize),
+                      FloatingHeartsRingOverlay(
+                        size: widget.circleSize,
+                        enableMotion: widget.enableMotion,
+                      ),
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,

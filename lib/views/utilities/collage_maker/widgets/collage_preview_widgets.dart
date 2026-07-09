@@ -298,7 +298,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
     final cacheWidth = (tileSize * 4).round().clamp(480, 720);
     final image = photo.source.startsWith('http')
         ? CachedNetworkImage(
-            memCacheWidth: cacheWidth,
+            maxWidthDiskCache: cacheWidth,
             imageUrl: photo.source,
             fit: BoxFit.cover,
             filterQuality: FilterQuality.medium,

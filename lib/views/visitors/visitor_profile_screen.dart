@@ -1334,7 +1334,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       child: Stack(fit: StackFit.expand, children: [
         if (img.isNotEmpty)
           CachedNetworkImage(
-              memCacheWidth: 300,
+              maxWidthDiskCache: 300,
               imageUrl: img,
               fit: BoxFit.cover,
               filterQuality: FilterQuality.low,

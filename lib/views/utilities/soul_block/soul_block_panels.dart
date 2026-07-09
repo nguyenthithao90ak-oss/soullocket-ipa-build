@@ -1525,8 +1525,8 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                     ),
                     CachedNetworkImage(
                       imageUrl: snapshot.imageUrl,
-                      memCacheWidth: cacheSize.width,
-                      memCacheHeight: cacheSize.height,
+                      maxWidthDiskCache: cacheSize.width,
+                      maxHeightDiskCache: cacheSize.height,
                       fadeInDuration: Duration.zero,
                       filterQuality: FilterQuality.medium,
                       imageBuilder: (context, imageProvider) {
