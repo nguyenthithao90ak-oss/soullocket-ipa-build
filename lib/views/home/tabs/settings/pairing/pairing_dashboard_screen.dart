@@ -11,6 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:soullocket_app/core/constants/app_firebase_paths.dart';
 import 'package:soullocket_app/utils/services/storage_picker_service.dart';
 import 'package:soullocket_app/utils/services/infrastructure/storage_service.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 class PairingDashboardScreen extends StatefulWidget {
   const PairingDashboardScreen({super.key});
@@ -61,12 +62,15 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
 
     _settingsSub?.cancel();
     _settingsSub = FirebaseDatabase.instance
-        .ref(AppFirebasePaths.houseSettings(houseId))
+        .ref('houses/$houseId')
         .onValue
         .listen((event) async {
       final snap = event.snapshot;
       if (!snap.exists) return;
-      final settings = Map<String, dynamic>.from(snap.value as Map);
+      final houseData = Map<String, dynamic>.from(snap.value as Map);
+      final settings = houseData['settings'] is Map
+          ? Map<String, dynamic>.from(houseData['settings'] as Map)
+          : {};
 
       bool isPaired = settings['isPaired'] == true;
 
@@ -74,9 +78,9 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       if (!isPaired && !_hasCheckedMembers) {
         _hasCheckedMembers = true;
         try {
-          final membersSnap = await FirebaseDatabase.instance.ref('houses/$houseId/members').get();
-          if (membersSnap.exists && membersSnap.value is Map) {
-            if ((membersSnap.value as Map).length >= 2) {
+          final membersSnap = houseData['members'];
+          if (membersSnap is Map) {
+            if (membersSnap.length >= 2) {
               isPaired = true;
               // Background update
               FirebaseDatabase.instance.ref('houses/$houseId/settings/isPaired').set(true);
@@ -94,16 +98,27 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
         setState(() {
           _isPaired = isPaired;
           _isLoading = false;
-          _nameU1 = settings['nameU1']?.toString() ?? 'Bạn Nam';
-          _nameU2 = settings['nameU2']?.toString() ?? 'Bạn Nữ';
+          _nameU1 = settings['nameU1']?.toString() ?? L10nService().translate('role_male');
+          _nameU2 = settings['nameU2']?.toString() ?? L10nService().translate('role_female');
           _avatarU1 = settings['avatarU1']?.toString();
           _avatarU2 = settings['avatarU2']?.toString();
-          final rawDate = settings['createdAt'];
+          
+          final rawDate = houseData['createdAt'] ?? settings['createdAt'];
           if (rawDate != null) {
             try {
               final startDate = DateTime.fromMillisecondsSinceEpoch(int.parse(rawDate.toString()));
               _startDateStr = '${startDate.day.toString().padLeft(2, '0')}/${startDate.month.toString().padLeft(2, '0')}/${startDate.year}';
             } catch (_) {}
+          }
+          
+          if (_startDateStr == null || _startDateStr!.isEmpty) {
+            final startDateVal = settings['startDate']?.toString();
+            if (startDateVal != null && startDateVal.isNotEmpty) {
+              try {
+                final parsed = DateTime.parse(startDateVal);
+                _startDateStr = '${parsed.day.toString().padLeft(2, '0')}/${parsed.month.toString().padLeft(2, '0')}/${parsed.year}';
+              } catch (_) {}
+            }
           }
         });
       }
@@ -159,7 +174,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          'Kết Nối Nửa Kia',
+          L10nService().translate('settings_partner_connect'),
           style: SLTheme.quicksand(
             fontSize: 18,
             fontWeight: FontWeight.w900,
@@ -219,7 +234,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           end: Alignment.bottomRight,
           colors: [
             const Color(0xFFFFF0F5),
-            const Color(0xFFFFE4E1).withOpacity(0.5),
+            const Color(0xFFFFE4E1).withValues(alpha: 0.5),
             const Color(0xFFF0F8FF),
           ],
         ),
@@ -230,7 +245,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildAvatarWidget(_avatarU1, _nameU1 ?? 'Bạn Nam', 'user1'),
+              _buildAvatarWidget(_avatarU1, _nameU1 ?? L10nService().translate('role_male'), 'user1'),
               const SizedBox(width: 16),
               SizedBox(
                 width: 64,
@@ -264,12 +279,12 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                 ),
               ),
               const SizedBox(width: 16),
-              _buildAvatarWidget(_avatarU2, _nameU2 ?? 'Bạn Nữ', 'user2'),
+              _buildAvatarWidget(_avatarU2, _nameU2 ?? L10nService().translate('role_female'), 'user2'),
             ],
           ),
           SLSpacing.h32,
           Text(
-            'Ngày bắt đầu ghép nối',
+            L10nService().translate('pairing_start_date'),
             style: SLTheme.quicksand(
               fontSize: 14,
               fontWeight: FontWeight.w800,
@@ -278,7 +293,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           ),
           SLSpacing.h8,
           Text(
-            _startDateStr ?? 'Chưa có thông tin',
+            _startDateStr ?? L10nService().translate('pairing_no_info'),
             style: SLTheme.quicksand(
               fontSize: 24,
               fontWeight: FontWeight.w900,
@@ -289,7 +304,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFD81B60).withOpacity(0.08),
+              color: const Color(0xFFD81B60).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(30),
             ),
             child: Row(
@@ -298,9 +313,12 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                 const Icon(Icons.photo_library_rounded, color: Color(0xFFD81B60), size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  _diaryCount >= 300 
-                      ? 'Cùng hơn 300 khoảnh khắc nhật ký' 
-                      : 'Cùng $_diaryCount khoảnh khắc nhật ký',
+                  L10nService().format(
+                    _diaryCount >= 300 
+                        ? 'pairing_diary_count_more_than_300' 
+                        : 'pairing_diary_count',
+                    {'count': _diaryCount},
+                  ),
                   style: SLTheme.quicksand(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -353,12 +371,13 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
               Container(
                 width: 80,
                 height: 80,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 4),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -367,13 +386,17 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                 ),
                 child: url != null && url.isNotEmpty
                     ? ClipOval(
-                        child: CachedNetworkImage(
-                          imageUrl: url,
-                          fit: BoxFit.cover,
-                          memCacheWidth: 200,
-                          memCacheHeight: 200,
-                          placeholder: (context, url) => const Icon(Icons.person, color: Colors.grey, size: 40),
-                          errorWidget: (context, url, error) => const Icon(Icons.person, color: Colors.grey, size: 40),
+                        child: SizedBox(
+                          width: 72,
+                          height: 72,
+                          child: CachedNetworkImage(
+                            imageUrl: url,
+                            fit: BoxFit.cover,
+                            memCacheWidth: 200,
+                            memCacheHeight: 200,
+                            placeholder: (context, url) => const Icon(Icons.person, color: Colors.grey, size: 40),
+                            errorWidget: (context, url, error) => const Icon(Icons.person, color: Colors.grey, size: 40),
+                          ),
                         ),
                       )
                     : const Icon(Icons.person, color: Colors.grey, size: 40),
@@ -420,7 +443,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -431,7 +454,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 28),
@@ -502,7 +525,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
         border: Border.all(color: const Color(0xFFF0F2F5), width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -552,7 +575,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFD81B60).withOpacity(0.06),
+            color: const Color(0xFFD81B60).withValues(alpha: 0.06),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -655,7 +678,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFD81B60).withOpacity(0.3),
+                          color: const Color(0xFFD81B60).withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),

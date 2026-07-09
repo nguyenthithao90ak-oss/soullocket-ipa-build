@@ -1503,7 +1503,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
             style: SLTheme.quicksand(
               color: textColor,
               fontWeight: FontWeight.w900,
-              fontSize: fontSize,
+              fontSize: fontSize + 4.0,
               height: 1.15,
               letterSpacing: -0.1,
             ),

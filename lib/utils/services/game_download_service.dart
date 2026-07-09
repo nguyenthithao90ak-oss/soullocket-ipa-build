@@ -57,23 +57,6 @@ class GameDownloadService extends ChangeNotifier {
         'drag_lift.mp3',
       ],
     ),
-    'soul_rhythm': const GameAssetInfo(
-      gameId: 'soul_rhythm',
-      storagePath: 'game_assets/soul_rhythm',
-      downloadSizeLabel: 'khoảng 12 MB',
-      relativePaths: [
-        'AxelF_CrazyFrog_Tutorial.mp3',
-        '2PhutHon_Phao_tutorial.mp3',
-        'Believer_ImagineDragons_Tutorial.mp3',
-      ],
-    ),
-    // New entry for Caro Neon (no external assets needed)
-    'caro_neon': const GameAssetInfo(
-      gameId: 'caro_neon',
-      storagePath: '',
-      downloadSizeLabel: '0 MB',
-      relativePaths: [],
-    ),
   };
 
   GameDownloadDisclosure disclosureFor(String gameId) {

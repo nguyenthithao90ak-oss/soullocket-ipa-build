@@ -637,24 +637,25 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           ),
           child: StatefulBuilder(
             builder: (ctx, setLocalState) => AlertDialog(
+              scrollable: true,
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
               title: Text(context.tr('util_thmghichty_5651be'),
                   style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w800, color: Colors.white)),
+                      fontWeight: FontWeight.w800, color: SLColors.textPrimary)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: captionCtrl,
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
                     maxLength: 1000,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Colors.white12,
+                      fillColor: const Color(0xFFF1F5F9),
                       hintText: context.tr('util_mtkhonhkhc_52663c'),
-                      hintStyle: const TextStyle(color: Colors.white38),
+                      hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
                       counterText: '',
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -887,7 +888,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   : context.tr('util_thitlpkhom_792656'),
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.w800,
-                color: Colors.white,
+                color: SLColors.textPrimary,
               ),
             ),
             content: ConstrainedBox(
@@ -906,13 +907,13 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   TextField(
                     controller: passphraseCtrl,
                     obscureText: obscurePass,
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
                     maxLength: 32,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Colors.white12,
+                      fillColor: const Color(0xFFF1F5F9),
                       hintText: context.tr('util_mtkhutithi_d4f304'),
-                      hintStyle: const TextStyle(color: Colors.white38),
+                      hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
                       counterText: '',
                       suffixIcon: IconButton(
                         onPressed: () =>
@@ -941,13 +942,13 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     TextField(
                       controller: confirmCtrl,
                       obscureText: obscureConfirm,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
                       maxLength: 32,
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: Colors.white12,
+                        fillColor: const Color(0xFFF1F5F9),
                         hintText: context.tr('util_nhplimtkhu_eee7a7'),
-                        hintStyle: const TextStyle(color: Colors.white38),
+                        hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
                         counterText: '',
                         suffixIcon: IconButton(
                           onPressed: () => setLocalState(
@@ -1064,19 +1065,19 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             context.tr('util_nhpmkhiphc_44a271'),
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w800,
-              color: Colors.white,
+              color: SLColors.textPrimary,
             ),
           ),
           content: TextField(
             controller: controller,
             textCapitalization: TextCapitalization.characters,
-            style: const TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
             maxLength: 30,
             decoration: InputDecoration(
               filled: true,
-              fillColor: Colors.white12,
+              fillColor: const Color(0xFFF1F5F9),
               hintText: 'VD: ABCD-EFGH-JKLM-NPQR',
-              hintStyle: const TextStyle(color: Colors.white38),
+              hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
               counterText: '',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -1437,7 +1438,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Text(context.tr('util_imtkhu_ff6fe7'),
                 style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w800, color: Colors.white)),
+                    fontWeight: FontWeight.w800, color: SLColors.textPrimary)),
             content: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
@@ -1447,11 +1448,11 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   TextField(
                     controller: oldPassCtrl,
                     obscureText: obscureOld,
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
                     maxLength: 32,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Colors.white12,
+                      fillColor: const Color(0xFFF1F5F9),
                       labelText: context.tr('util_mtkhuc_36b0a2'),
                       labelStyle: const TextStyle(color: Color(0xFF64748B)),
                       counterText: '',
@@ -1472,11 +1473,11 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   TextField(
                     controller: newPassCtrl,
                     obscureText: obscureNew,
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
                     maxLength: 32,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Colors.white12,
+                      fillColor: const Color(0xFFF1F5F9),
                       labelText: context.tr('util_mtkhumi_ccef95'),
                       labelStyle: const TextStyle(color: Color(0xFF64748B)),
                       counterText: '',
@@ -1497,11 +1498,11 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   TextField(
                     controller: confirmCtrl,
                     obscureText: obscureNew,
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
                     maxLength: 32,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Colors.white12,
+                      fillColor: const Color(0xFFF1F5F9),
                       labelText: context.tr('util_nhplimtkhu_82a9a4'),
                       labelStyle: const TextStyle(color: Color(0xFF64748B)),
                       counterText: '',

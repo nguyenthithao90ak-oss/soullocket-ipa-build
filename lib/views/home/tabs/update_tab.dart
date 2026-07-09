@@ -33,6 +33,24 @@ class _UpdateTabState extends State<UpdateTab> {
   final TextEditingController _feedbackCtrl = TextEditingController();
   bool _isSendingFeedback = false;
   DateTime? _lastFeedbackSentAt;
+  bool _isAdmin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAdminStatus();
+  }
+
+  Future<void> _loadAdminStatus() async {
+    try {
+      final isAdmin = await _adminFuture();
+      if (mounted) {
+        setState(() {
+          _isAdmin = isAdmin;
+        });
+      }
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -380,46 +398,40 @@ class _UpdateTabState extends State<UpdateTab> {
   @override
   Widget build(BuildContext context) {
     L10nScope.of(context); // Listen to locale changes
-    return FutureBuilder<bool>(
-      future: _adminFuture(),
-      builder: (context, snapshot) {
-        final isAdmin = snapshot.data ?? false;
-        return Scaffold(
-          backgroundColor: Colors.transparent,
-          body: SafeArea(
-            bottom: false,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSectionTitle(context),
-                Expanded(
-                  child: ListView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: SLSpacing.fromLTRB(6, 16, 6, 120),
-                    children: [
-                      _buildHeroBoard(context),
-                      SLSpacing.h16,
-                      _buildUpcomingEventsBoard(context),
-                      SLSpacing.h16,
-                      _buildQuickActions(context),
-                      SLSpacing.h16,
-                      _buildRoadmapBoard(context),
-                      SLSpacing.h16,
-                      _buildGuideBoard(context),
-                      SLSpacing.h16,
-                      _buildSupportBoard(context, isAdmin: isAdmin),
-                      SLSpacing.h16,
-                      _buildFeedbackPanel(context),
-                      SLSpacing.h24,
-                      _buildFooter(),
-                    ],
-                  ),
-                ),
-              ],
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle(context),
+            Expanded(
+              child: ListView(
+                physics: const BouncingScrollPhysics(),
+                padding: SLSpacing.fromLTRB(6, 16, 6, 120),
+                children: [
+                  _buildHeroBoard(context),
+                  SLSpacing.h16,
+                  _buildUpcomingEventsBoard(context),
+                  SLSpacing.h16,
+                  _buildQuickActions(context),
+                  SLSpacing.h16,
+                  _buildRoadmapBoard(context),
+                  SLSpacing.h16,
+                  _buildGuideBoard(context),
+                  SLSpacing.h16,
+                  _buildSupportBoard(context, isAdmin: _isAdmin),
+                  SLSpacing.h16,
+                  _buildFeedbackPanel(context),
+                  SLSpacing.h24,
+                  _buildFooter(),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 

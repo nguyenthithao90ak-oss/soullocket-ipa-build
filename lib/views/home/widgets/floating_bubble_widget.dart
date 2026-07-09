@@ -580,7 +580,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                             'Đang đồng bộ dữ liệu...\nVui lòng mở lại ứng dụng nếu chờ lâu 💕',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                color: Colors.white.withOpacity(0.6),
+                                color: Colors.white.withValues(alpha: 0.6),
                                 fontSize: 13,
                                 height: 1.5),
                           ),

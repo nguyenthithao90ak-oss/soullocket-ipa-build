@@ -1461,9 +1461,7 @@ class _HomeScreenState extends State<HomeScreen>
             dragStartBehavior: DragStartBehavior.start,
             // 🛑 TẮT VƯỢT: NeverScrollableScrollPhysics để chỉ chuyển tab bằng nút bottom nav.
             // ✅ BẬT LẠI: đổi thành `const SLPagePhysics(parent: ClampingScrollPhysics())`
-            physics: _isHouseUnpairedCache 
-                ? const NeverScrollableScrollPhysics() 
-                : const SLPagePhysics(parent: ClampingScrollPhysics()),
+            physics: const NeverScrollableScrollPhysics(),
             children: List<Widget>.generate(
               _navItems.length,
               _tabPageForIndex,

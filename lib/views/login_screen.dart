@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -1096,24 +1097,24 @@ class _LoginScreenState extends State<LoginScreen> {
       barrierDismissible:
           !enforceDelay, // Prevent dismissing by tapping outside if enforced
       builder: (context) {
-        int countdown = enforceDelay ? 1 : 0;
+        int countdownMs = enforceDelay ? (kDebugMode ? 500 : 5000) : 0;
         Timer? timer;
 
         return StatefulBuilder(
           builder: (context, setState) {
-            if (enforceDelay && timer == null && countdown > 0) {
-              timer = Timer.periodic(const Duration(seconds: 1), (t) {
-                if (countdown > 1) {
-                  setState(() => countdown--);
+            if (enforceDelay && timer == null && countdownMs > 0) {
+              timer = Timer.periodic(const Duration(milliseconds: 100), (t) {
+                if (countdownMs > 100) {
+                  setState(() => countdownMs -= 100);
                 } else {
                   t.cancel();
-                  setState(() => countdown = 0);
+                  setState(() => countdownMs = 0);
                 }
               });
             }
 
             return PopScope(
-              canPop: !enforceDelay || countdown == 0,
+              canPop: !enforceDelay || countdownMs == 0,
               child: Dialog(
                 backgroundColor: Colors.transparent,
                 insetPadding:
@@ -1199,10 +1200,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: SLTheme.authPrimaryButton(
-                          label: countdown > 0
-                              ? 'Đã hiểu ($countdown)'
+                          label: countdownMs > 0
+                              ? 'Đã hiểu (${(countdownMs / 1000).ceil()})'
                               : 'Đã hiểu',
-                          onPressed: countdown > 0
+                          onPressed: countdownMs > 0
                               ? null
                               : () {
                                   timer?.cancel();

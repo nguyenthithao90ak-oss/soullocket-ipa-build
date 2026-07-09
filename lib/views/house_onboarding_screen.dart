@@ -78,7 +78,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   bool _showScrollHint = false;
   bool _dismissedScrollHint = false;
   bool _isPromptingCreationSetup = false;
-  // ignore: unused_field
+
   final bool _showLegacyIntro = false;
   Timer? _scrollHintTimer;
   String? _autoCreateFailureMessage;
@@ -333,7 +333,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     return DateInputUtils.looksLikeBirthQuestion(question);
   }
 
-  // ignore: unused_element
+
   void _normalizeRecoveryBirthAnswer() {
     final normalized = DateInputUtils.normalizeForDisplay(
       _recoveryACtrl.text,
@@ -829,7 +829,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     });
   }
 
-  // ignore: unused_element
+
   Future<void> _signOutToLogin() async {
     if (_isLoading) return;
 
@@ -1552,7 +1552,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     return const LoadingScaffold();
   }
 
-  // ignore: unused_element
+
   Widget _buildScrollHint() {
     return Center(
       child: Container(
@@ -1592,7 +1592,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
-  // ignore: unused_element
+
   Widget _buildBackdropBubble({
     required double size,
     required Color color,
@@ -1607,7 +1607,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
-  // ignore: unused_element
+
   Widget _buildHeroChip(IconData icon, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
@@ -1634,7 +1634,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
-  // ignore: unused_element
+
   Widget _buildInfoCallout({
     required IconData icon,
     required String title,
@@ -1692,7 +1692,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
-  // ignore: unused_element
+
   Widget _buildSectionCard({
     required String title,
     required String subtitle,
@@ -1754,7 +1754,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
-  // ignore: unused_element
+
   Widget _buildModeCard({
     required IconData icon,
     required String title,
@@ -1830,7 +1830,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
-  // ignore: unused_element
+
   Widget _buildField({
     required String label,
     required TextEditingController controller,
@@ -1867,7 +1867,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
-  // ignore: unused_element
+
   Widget _buildQuestionAvatarPlaceholder() {
     return Container(
       color: const Color(0xFFD1D5DB),

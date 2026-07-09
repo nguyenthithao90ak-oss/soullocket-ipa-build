@@ -6,6 +6,7 @@ import '../../../models/diary_post.dart';
 import '../../../widgets/skeleton_container.dart';
 
 class DiaryList extends StatelessWidget {
+  final Widget? header;
   final bool showDiaryPrivacyNotice;
   final Widget Function() buildDiaryPrivacyNotice;
   final Widget Function() buildDiaryComposerCard;
@@ -22,6 +23,7 @@ class DiaryList extends StatelessWidget {
 
   const DiaryList({
     super.key,
+    this.header,
     required this.showDiaryPrivacyNotice,
     required this.buildDiaryPrivacyNotice,
     required this.buildDiaryComposerCard,
@@ -46,6 +48,7 @@ class DiaryList extends StatelessWidget {
       physics: const BouncingScrollPhysics(),
       controller: scrollController,
       slivers: [
+        if (header != null) SliverToBoxAdapter(child: header!),
         SliverToBoxAdapter(
           child: Column(
             children: [

@@ -1170,7 +1170,7 @@ class SLTheme {
     required Widget child,
     EdgeInsets? padding,
     EdgeInsets? margin,
-    double radius = 24,
+    double radius = 28,
     Color? color,
   }) {
     return glassCardWidget(
@@ -1186,7 +1186,7 @@ class SLTheme {
     required Widget child,
     EdgeInsets? padding,
     EdgeInsets? margin,
-    double radius = 24,
+    double radius = 28,
     Color? color,
   }) {
     return ValueListenableBuilder<bool>(

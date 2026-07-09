@@ -730,7 +730,6 @@ class _DiaryTabState extends State<DiaryTab>
   }
 
   BannerAd? _bottomBannerAd;
-  // ignore: unused_field
   bool _isBottomBannerReady = false;
 
   void _loadBottomBanner() async {
@@ -750,15 +749,19 @@ class _DiaryTabState extends State<DiaryTab>
     _bottomBannerAd?.dispose();
     _bottomBannerAd = null;
     if (!mounted) return;
-    _bottomBannerAd = await adMob.createBannerAd(
+    final banner = await adMob.createBannerAd(
       onAdLoaded: (_) {
         if (!mounted) return;
         setState(() => _isBottomBannerReady = true);
       },
     );
+    if (!mounted) {
+      banner?.dispose();
+      return;
+    }
+    _bottomBannerAd = banner;
   }
 
-  // ignore: unused_element
   Widget _buildBottomAdBanner(BannerAd bannerAd) {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
@@ -1419,28 +1422,17 @@ class _DiaryTabState extends State<DiaryTab>
                                             top: MediaQuery.of(context)
                                                     .padding
                                                     .top +
-                                                14,
-                                            left: 18,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: Colors.black
-                                                    .withValues(alpha: 0.42),
-                                                shape: BoxShape.circle,
-                                                border: Border.all(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.12),
-                                                ),
-                                              ),
-                                              child: IconButton(
-                                                tooltip: context
-                                                    .tr('home_ng_f63d1e'),
-                                                onPressed: () => Navigator.pop(
-                                                    dialogContext),
-                                                icon: const Icon(
-                                                  Icons.close_rounded,
-                                                  color: Colors.white,
-                                                  size: 22,
-                                                ),
+                                                16,
+                                            left: 12,
+                                            child: IconButton(
+                                              tooltip: context
+                                                  .tr('home_ng_f63d1e'),
+                                              onPressed: () => Navigator.pop(
+                                                  dialogContext),
+                                              icon: const Icon(
+                                                Icons.close_rounded,
+                                                color: Colors.white,
+                                                size: 26,
                                               ),
                                             ),
                                           ),
@@ -1448,28 +1440,9 @@ class _DiaryTabState extends State<DiaryTab>
                                             top: MediaQuery.of(context)
                                                     .padding
                                                     .top +
-                                                14,
-                                            right: 18,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: Colors.black
-                                                    .withValues(alpha: 0.42),
-                                                shape: BoxShape.circle,
-                                                border: Border.all(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.12),
-                                                ),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withValues(
-                                                            alpha: 0.22),
-                                                    blurRadius: 18,
-                                                    offset: const Offset(0, 8),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: PopupMenuButton<String>(
+                                                16,
+                                            right: 12,
+                                            child: PopupMenuButton<String>(
                                                 tooltip: context
                                                     .tr('home_tychnnh_5e18e0'),
                                                 padding:
@@ -1615,7 +1588,6 @@ class _DiaryTabState extends State<DiaryTab>
                                                   }
                                                 },
                                               ),
-                                            ),
                                           ),
                                         ],
                                       ),

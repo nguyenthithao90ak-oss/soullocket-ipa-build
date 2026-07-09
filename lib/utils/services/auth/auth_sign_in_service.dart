@@ -1165,41 +1165,74 @@ class AuthSignInService {
 
   Future<void> signOut() async {
     final prefs = await _prefs;
+    
+    // 1. Thực hiện các tác vụ mạng/SDK song song để giảm tổng thời gian chờ xuống tối thiểu
+    final List<Future<void>> asyncCleanups = [];
+
     try {
       final houseId = await HouseService().getCurrentHouseId();
       final role = RoleUtils.currentRoleSync();
       if (houseId != null && houseId.isNotEmpty && role != null) {
-        await PresenceService().goOffline(
-          houseId: houseId,
-          role: role,
-        ).timeout(const Duration(seconds: 3));
+        asyncCleanups.add(
+          PresenceService().goOffline(
+            houseId: houseId,
+            role: role,
+          ).timeout(const Duration(seconds: 2)).catchError((_) {})
+        );
       }
     } catch (_) {}
+
+    asyncCleanups.add(
+      NotificationService().clearTokenOnSignOut()
+          .timeout(const Duration(seconds: 2))
+          .catchError((_) {})
+    );
+
     try {
-      await NotificationService().clearTokenOnSignOut().timeout(const Duration(seconds: 3));
-    } catch (_) {}
-    try {
-      if (!kIsWeb) {
-        await _googleSignIn?.signOut().timeout(const Duration(seconds: 3));
+      if (!kIsWeb && _googleSignIn != null) {
+        asyncCleanups.add(
+          _googleSignIn!.signOut()
+              .timeout(const Duration(seconds: 2))
+              .catchError((_) {})
+        );
       }
     } catch (_) {}
-    try {
-      await _facebookAuth.logOut().timeout(const Duration(seconds: 3));
-    } catch (_) {}
-    try {
-      await _auth.signOut().timeout(const Duration(seconds: 5));
-    } finally {
-      try { await SettingsSyncService().clearLocalSyncedSettings(); } catch (_) {}
-      try { await _clearSensitiveLocalData(prefs); } catch (_) {}
-      try { await SecureStorageService.instance.deleteAll(); } catch (_) {}
-      try { RoleUtils.roleNotifier.value = null; } catch (_) {}
-      try { RoleUtils.duplicateRoleNotifier.value = false; } catch (_) {}
-      // ⚡ Clear all offline cache to prevent data leakage to next user
-      try { await OfflineCacheService.clearAllCache(); } catch (_) {}
-      try { EncryptionService().clearCache(); } catch (_) {}
-      try { PaintingBinding.instance.imageCache.clear(); } catch (_) {}
-      try { PaintingBinding.instance.imageCache.clearLiveImages(); } catch (_) {}
+
+    asyncCleanups.add(
+      _facebookAuth.logOut()
+          .timeout(const Duration(seconds: 2))
+          .catchError((_) {})
+    );
+
+    // Chờ các dịch vụ mạng/SDK hoàn tất song song, tối đa 2.5 giây
+    if (asyncCleanups.isNotEmpty) {
+      await Future.wait(asyncCleanups).timeout(
+        const Duration(milliseconds: 2500),
+        onTimeout: () => [],
+      );
     }
+
+    // 2. Thực hiện đăng xuất FirebaseAuth
+    try {
+      await _auth.signOut().timeout(const Duration(seconds: 2));
+    } catch (_) {}
+
+    // 3. Thực hiện dọn dẹp dữ liệu cục bộ song song
+    try {
+      await Future.wait([
+        SettingsSyncService().clearLocalSyncedSettings().catchError((_) {}),
+        _clearSensitiveLocalData(prefs).catchError((_) {}),
+        SecureStorageService.instance.deleteAll().catchError((_) {}),
+        OfflineCacheService.clearAllCache().catchError((_) {}),
+      ]);
+    } catch (_) {}
+
+    // 4. Các tác vụ UI/Memory nhẹ chạy đồng bộ lập tức
+    try { EncryptionService().clearCache(); } catch (_) {}
+    try { RoleUtils.roleNotifier.value = null; } catch (_) {}
+    try { RoleUtils.duplicateRoleNotifier.value = false; } catch (_) {}
+    try { PaintingBinding.instance.imageCache.clear(); } catch (_) {}
+    try { PaintingBinding.instance.imageCache.clearLiveImages(); } catch (_) {}
   }
 
   Future<Map<String, dynamic>> deleteAccount() async {

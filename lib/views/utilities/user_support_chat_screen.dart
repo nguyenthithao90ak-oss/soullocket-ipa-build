@@ -57,7 +57,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     final initialTopic = widget.initialTopic?.trim();
     if (initialTopic != null && initialTopic.isNotEmpty) {
       _entryBannerText =
-          'Bạn đang mở hỗ trợ từ luồng: $initialTopic. Hãy điền càng đủ mô tả, bước thao tác và lỗi hiển thị thì Admin sẽ xử lý nhanh hơn.';
+          '${L10nService().translate('support_banner_topic_prefix')}$initialTopic${L10nService().translate('support_banner_topic_suffix')}';
     }
     _init();
   }
@@ -92,7 +92,9 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         debugPrint('Error getting house ID in support chat init: $e');
       }
 
-      _ticketId = user.uid;
+      _ticketId = (_houseId != null && _houseId!.trim().isNotEmpty)
+          ? _houseId
+          : 'user_${user.uid}';
 
       _myName = (user.displayName?.trim().isNotEmpty ?? false)
           ? user.displayName!.trim()
@@ -107,10 +109,8 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         });
       } else {
         try {
-          final houseNameSnap = await _db
-              .ref('houses/$_houseId/settings/houseName')
-              .get()
-              .timeout(const Duration(seconds: 4));
+          final houseNameSnap =
+              await _db.ref('houses/$_houseId/settings/houseName').get().timeout(const Duration(seconds: 4));
           if (houseNameSnap.exists && mounted) {
             final houseName = houseNameSnap.value?.toString().trim() ?? '';
             if (houseName.isNotEmpty) {
@@ -393,24 +393,16 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       _selectedTopicId = commandId;
     }
 
-    Map<String, dynamic> ticketData = {};
-
     try {
-      try {
-        final ticketSnapshot = await _db
-            .ref('support_tickets/$_ticketId')
-            .get()
-            .timeout(const Duration(seconds: 4));
-        final rawTicketData = ticketSnapshot.value;
-        if (rawTicketData is Map) {
-          ticketData = Map<String, dynamic>.from(rawTicketData);
-        }
-      } catch (e) {
-        debugPrint('Warning: get ticketData timed out or failed: $e');
-      }
+      final ticketSnapshot = await _db.ref('support_tickets/$_ticketId').get();
+      final rawTicketData = ticketSnapshot.value;
+      final ticketData = rawTicketData is Map
+          ? Map<String, dynamic>.from(rawTicketData)
+          : <String, dynamic>{};
       if (wasAlreadyWaiting &&
           !isMenuCommand &&
-          _countWaitingAdminFollowUps(_messages) >= _maxWaitingAdminFollowUps) {
+          _countWaitingAdminFollowUps(_messages) >=
+              _maxWaitingAdminFollowUps) {
         if (mounted) {
           setState(() => _isSending = false);
         }
@@ -418,31 +410,26 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         return;
       }
 
-      try {
-        await FirebaseFirestore.instance
-            .collection('support_tickets')
-            .doc(_ticketId)
-            .collection('messages')
-            .add({
-          'text': text,
-          'is_bot': false,
-          'is_admin': false,
-          'is_menu_command': isMenuCommand,
-          'sender': _myName,
-          'house_id': _houseId,
-          'ticket_id': _ticketId,
-          'user_uid': currentUser?.uid,
-          'user_email': currentUser?.email?.trim(),
-          'topic_id': topic?.id,
-          'topic_label': topic?.title,
-          'summary': summary,
-          'context': _buildMessageContext(summary: summary, topic: topic),
-          'ts': DateTime.now().millisecondsSinceEpoch,
-        }).timeout(const Duration(seconds: 5));
-      } catch (e) {
-        debugPrint(
-            'Warning: Firestore add timed out, but message is in cache: $e');
-      }
+      await FirebaseFirestore.instance
+          .collection('support_tickets')
+          .doc(_ticketId)
+          .collection('messages')
+          .add({
+        'text': text,
+        'is_bot': false,
+        'is_admin': false,
+        'is_menu_command': isMenuCommand,
+        'sender': _myName,
+        'house_id': _houseId,
+        'ticket_id': _ticketId,
+        'user_uid': currentUser?.uid,
+        'user_email': currentUser?.email?.trim(),
+        'topic_id': topic?.id,
+        'topic_label': topic?.title,
+        'summary': summary,
+        'context': _buildMessageContext(summary: summary, topic: topic),
+        'ts': DateTime.now().millisecondsSinceEpoch,
+      });
 
       final updates = <String, dynamic>{
         'last_message': summary,
@@ -459,8 +446,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       final hasHouseId =
           (ticketData['house_id']?.toString().trim() ?? '').isNotEmpty;
       final hasName = (ticketData['name']?.toString().trim() ?? '').isNotEmpty;
-      final hasEmail =
-          (ticketData['email']?.toString().trim() ?? '').isNotEmpty;
+      final hasEmail = (ticketData['email']?.toString().trim() ?? '').isNotEmpty;
       final hasReason =
           (ticketData['reason']?.toString().trim() ?? '').isNotEmpty;
       final hasCategory =
@@ -540,10 +526,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       }
 
       try {
-        await _db
-            .ref('support_tickets/$_ticketId')
-            .update(updates)
-            .timeout(const Duration(seconds: 15));
+        await _db.ref('support_tickets/$_ticketId').update(updates);
       } catch (e) {
         debugPrint('Error updating ticket metadata: $e');
       }
@@ -590,7 +573,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
               'Người dùng vừa gửi tin nhắn hỗ trợ Admin: $userText\n${context.tr('util_hytrlinhtr_e42d19')}',
               context.tr('util_bnltrlailp_9d5e23'),
             )
-            .timeout(const Duration(seconds: 15));
+            .timeout(const Duration(seconds: 6));
       } catch (_) {}
 
       await _saveBotReply(
@@ -615,7 +598,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
             aiPrompt,
             context.tr('util_bnltrlailp_6890a8'),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 5));
 
       if (aiReply != null && aiReply.trim().isNotEmpty) {
         await _saveBotReply(
@@ -655,20 +638,16 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
 
   Future<void> _saveBotReply(String text) async {
     if (_ticketId == null) return;
-    try {
-      await FirebaseFirestore.instance
-          .collection('support_tickets')
-          .doc(_ticketId)
-          .collection('messages')
-          .add({
-        'text': text,
-        'is_bot': true,
-        'is_admin': false,
-        'ts': DateTime.now().millisecondsSinceEpoch,
-      }).timeout(const Duration(seconds: 8));
-    } catch (e) {
-      debugPrint('Error saving bot reply: $e');
-    }
+    await FirebaseFirestore.instance
+        .collection('support_tickets')
+        .doc(_ticketId)
+        .collection('messages')
+        .add({
+      'text': text,
+      'is_bot': true,
+      'is_admin': false,
+      'ts': DateTime.now().millisecondsSinceEpoch,
+    });
   }
 
   String _normalize(String input) {
@@ -680,72 +659,46 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   }
 
   String _buildGreetingReply() {
-    return 'Chào bạn, mình là trợ lý hỗ trợ của SoulLocket.\\n';
+    return context.tr('support_greeting_reply');
   }
 
   String _buildClarifyReply() {
-    return 'Mình chưa đủ dữ kiện để hướng dẫn chính xác. Bạn nhắn thêm theo mẫu này nhé:\n'
-        '• Màn hình/tính năng nào đang lỗi\n'
-        '• Bạn vừa bấm những bước gì trước khi lỗi xảy ra\n'
-        '• Ghi nguyên văn dòng thông báo lỗi đang hiển thị (nếu có)\\n';
+    return context.tr('support_clarify_reply');
   }
 
   String _buildLocalSupportReply(String userText) {
     final text = _normalize(userText);
 
     if (text == '1') {
-      return '🔑 HỖ TRỢ ĐĂNG NHẬP & QUÊN MẬT KHẨU\n\n'
-          '* Nếu quên mật khẩu:\n'
-          'Bước 1: Ra ngoài màn hình đăng nhập, bấm vào chữ .\\n'
-          'Bước 2: Gõ đúng Email bạn đã dùng đăng ký.\n'
-          'Bước 3: Mở ứng dụng Gmail (hoặc email của bạn), tìm thư của SoulLocket và bấm vào Link màu xanh để tạo lại mật khẩu mới.\n\n'
-          '* Nếu gặp lỗi sai mật khẩu liên tục:\n'
-          'Thường do bàn phím tự động ghi hoa chữ cái đầu. Bạn hãy gõ cẩn thận lại và thử gỡ ứng dụng ra cài lại nhé.\n\n${context.tr('util_nulmtrnccb_e760be')}';
+      return '${context.tr('support_reply_1_prefix')}${context.tr('util_nulmtrnccb_e760be')}';
     }
 
     if (text == '2') {
-      return '🔗 HỖ TRỢ GHÉP ĐÔI & LỖI MẤT KẾT NỐI\n\n* Cách ghép đôi dễ nhất:\nBước 1: Điện thoại của người kia vào mục Cài đặt -> Lấy Mã Nhà gồm 12 số.\nBước 2: Máy của bạn bấm nút Ghép Đôi và nhập 12 số đó vào.\\n\\n* Hiện lỗi ${context.tr('util_vamithotof_9440a3')} sai lệch:\\nĐây không phải lỗi mất kết nối nhà nha! Xảy ra do đường truyền mạng chậm đi vài giây. Bạn chỉ cần thử tắt 4G/Wifi rồi bật lại hoặc kệ nó 1 lúc là app sẽ tự cập nhật đồng bộ lại chữ "Online".\n\n${context.tr('util_nulmtheom2_b875c9')}';
+      return '${context.tr('support_reply_2_prefix_1')}${context.tr('util_vamithotof_9440a3')}${context.tr('support_reply_2_prefix_2')}${context.tr('util_nulmtheom2_b875c9')}';
     }
 
     if (text == '3') {
-      return '📸 HỖ TRỢ LỖI HÌNH ẢNH, VIDEO VÀ NHẬT KÝ\n\n'
-          '* Tải ảnh lên bị mờ, hình đen xì:\n'
-          'Khi bạn đang lưu ảnh hoặc video lên, máy cần mạng để đẩy lên hệ thống. Tuyệt đối KHÔNG LƯỚT QUA màn hình khác hay tắt app khi vòng quay 100% chưa tải xong nhé!\n\n'
-          '* Cập nhật nhật ký không thấy đâu:\n'
-          'Chỉ cần giữ ngón tay ở giữa màn hình rồi kéo vuốt mạnh từ trên xuống (Refresh) là dữ liệu mới nhất sẽ nhảy ra liền.\n\n${context.tr('util_vnblihynhn_7eff73')}';
+      return '${context.tr('support_reply_3_prefix')}${context.tr('util_vnblihynhn_7eff73')}';
     }
 
     if (text == '4') {
-      return '🧾 HỖ TRỢ TÀI KHOẢN VÀ QUYỀN LỢI\n\n'
-          '* Nếu bạn cần kiểm tra trạng thái hoặc quyền lợi trong ứng dụng:\n'
-          'Bước 1: Mở đúng màn hình đang gặp vấn đề.\n'
-          'Bước 2: Chụp lại thông báo hiển thị nếu có lỗi.\n'
-          'Bước 3: Gửi mô tả ngắn thao tác vừa làm để Admin kiểm tra.\n\n${context.tr('util_adminskimt_71493d')}';
+      return '${context.tr('support_reply_4_prefix')}${context.tr('util_adminskimt_71493d')}';
     }
 
     if (text == '5') {
-      return '📱 ĐỔI ĐIỆN THOẠI SAO CHO KHÔNG MẤT DỮ LIỆU\n\n'
-          '* Bạn không bao giờ mất dữ liệu:\n'
-          'Toàn bộ hình ảnh, nhật ký của nhà đôi luôn được tự gắn vô tài khoản và bảo lưu an toàn 100% trên mạng.\n\n'
-          '* Cách đổi máy chuẩn nhất:\n'
-          'Bước 1: Ở máy Cũ, bạn tuyệt đối phải để nguyên ứng dụng không được xoá House.\n'
-          'Bước 2: Cầm máy Mới, tải app về.\n'
-          'Bước 3: Nhớ lại thật kỹ bạn dùng Google hay Tên Đăng nhập gì lúc trước? Điền y xì đúc vậy ở máy mới là đống kỉ niệm ùa về luôn.\n\n${context.tr('util_lqunmttikh_e1d8ee')}';
+      return '${context.tr('support_reply_5_prefix')}${context.tr('util_lqunmttikh_e1d8ee')}';
     }
 
     if (text == '6') {
-      return '🛠 BÁO CÁO LỖI VĂNG ỨNG DỤNG - TRẮNG MÀN HÌNH\n\n* Văng ứng dụng (Vào app là bị đẩy thẳng ra ngoài):\nDo bộ nhớ đầy hoặc xung đột. Bạn hãy tắt đa nhiệm (vuốt sạch app ngầm) sau đó khởi động lại điện thoại. Nếu vẫn bị văng, xoá app tải lại nhé.\n\n* Trắng màn hình hoặc web đơ:\nViệc này thường do lỗi cache lưu đệm. Nếu xài Web thì làm ơn F5 giùm mình hoặc ấn xoá Cache duyệt web. Nếu xài điện thoại, đổi từ Wi-Fi qua 4G xem sao.\n\n👉 Nếu những lỗi này cản trở bạn xài, mong bạn hãy miêu tả cụ thể ở dưới: ${context.tr('util_dngmyglixy_658238')}. Admin sẽ bắt bệnh trong 1 nốt nhạc!';
+      return '${context.tr('support_reply_6_prefix_1')}${context.tr('util_dngmyglixy_658238')}${context.tr('support_reply_6_prefix_2')}';
     }
 
     if (text == '7') {
-      return '❤️ TRẠM LẮNG NGHE TÂM SỰ TÌNH YÊU\n\n'
-          'Ở đây hoàn toàn bí mật, không có bất kì sự phán xét nào!\n\n'
-          'Nếu hai bạn đang cãi nhau to, hay bản thân tự thấy cô đơn quá, hãy khoan đưa ra quyết định gì vội vàng nha.\n'
-          'Bấm vào Kỷ Niệm ngày đầu hoặc xem lại Cuốn Nhật Ký tháng 1, điều gì khiến hai người bắt đầu đến với nhau?\n\n${context.tr('util_nhnhtnibun_43c781')}';
+      return '${context.tr('support_reply_7_prefix')}${context.tr('util_nhnhtnibun_43c781')}';
     }
 
     if (text == '8') {
-      return '🗑 HƯỚNG DẪN RỜI NHÀ HOẶC XÓA TÀI KHOẢN VĨNH VIỄN\n\nCân nhắc kỹ trước khi làm, vì toàn bộ Ký ức, Ảnh và Nhật ký sẽ bị xóa vĩnh viễn, không thể khôi phục.\n\n* Muốn Rời Ghép Đôi (Ngưng yêu):\nBước 1: Ấn nút ${context.tr('util_cit_fa992a')} (Bánh răng trên cùng).\\nBước 2: Cuộn xuống gần cuối, bạn sẽ thấy mục ${context.tr('util_rinhi_202550')} màu đỏ.\\n\\n* Muốn Xóa Bóng Hoàn Toàn (Xóa App Xóa Acc):\nVào ${context.tr('util_cit_fa992a')} → Chọn mục ${context.tr('util_bomttikhon_80bc0d')} → Chọn ${context.tr('util_xatikhon_7d4ff0')}.\\n\\n${context.tr('util_nulthaotcn_7d2b85')}';
+      return '${context.tr('support_reply_8_prefix_1')}${context.tr('util_cit_fa992a')}${context.tr('support_reply_8_prefix_2')}${context.tr('util_rinhi_202550')}${context.tr('support_reply_8_prefix_3')}${context.tr('util_cit_fa992a')}${context.tr('support_reply_8_prefix_4')}${context.tr('util_bomttikhon_80bc0d')}${context.tr('support_reply_8_prefix_5')}${context.tr('util_xatikhon_7d4ff0')}${context.tr('support_reply_8_prefix_6')}${context.tr('util_nulthaotcn_7d2b85')}';
     }
 
     if (text == '9') {
@@ -757,18 +710,11 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           '• Gửi thẳng Hình Ảnh màn hình lúc vừa bị lỗi vô đây.\n\n${context.tr('util_hthngangkh_155fb0')}';
     }
 
-    if (_containsAny(text, [
-      context.tr('util_xincho_d79ae2'),
-      context.tr('util_cho_1b0c99'),
-      'hello',
-      'hi',
-      'alo'
-    ])) {
+    if (_containsAny(text, [context.tr('util_xincho_d79ae2'), context.tr('util_cho_1b0c99'), 'hello', 'hi', 'alo'])) {
       return _buildGreetingReply();
     }
 
-    if (_containsAny(text,
-        [context.tr('util_cmn_90b4d0'), 'thank', 'thanks', 'ok', 'oke'])) {
+    if (_containsAny(text, [context.tr('util_cmn_90b4d0'), 'thank', 'thanks', 'ok', 'oke'])) {
       return context.tr('util_khngcgunub_34bcf8');
     }
 
@@ -819,41 +765,23 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       return _buildVipReply(text);
     }
 
-    if (_containsAny(text, [
-      'qr',
-      context.tr('util_ghpi_f175c9'),
-      context.tr('util_ktni_36931a'),
-      context.tr('util_mnh_f293b9'),
-      context.tr('util_thamgianh_fb6185')
-    ])) {
+    if (_containsAny(
+        text, ['qr', context.tr('util_ghpi_f175c9'), context.tr('util_ktni_36931a'), context.tr('util_mnh_f293b9'), context.tr('util_thamgianh_fb6185')])) {
       return _buildConnectionReply();
     }
 
-    if (_containsAny(text, [
-      context.tr('util_bomt_eae571'),
-      context.tr('util_khaapp_9de691'),
-      context.tr('util_sinhtrc_7f36ab'),
-      context.tr('util_vntay_295887'),
-      'face id'
-    ])) {
+    if (_containsAny(
+        text, [context.tr('util_bomt_eae571'), context.tr('util_khaapp_9de691'), context.tr('util_sinhtrc_7f36ab'), context.tr('util_vntay_295887'), 'face id'])) {
       return _buildSecurityReply();
     }
 
-    if (_containsAny(text, [
-      context.tr('util_xatikhon_232744'),
-      context.tr('util_xadliu_d73744'),
-      'chia tay',
-      context.tr('util_ngtikhon_78f19f')
-    ])) {
+    if (_containsAny(
+        text, [context.tr('util_xatikhon_232744'), context.tr('util_xadliu_d73744'), 'chia tay', context.tr('util_ngtikhon_78f19f')])) {
       return _buildDeleteReply();
     }
 
-    if (_containsAny(text, [
-      context.tr('util_gp_a4c3bb'),
-      context.tr('util_xut_5c3170'),
-      context.tr('util_tnhnng_d3cb43'),
-      context.tr('util_thmchcnng_7fc17b')
-    ])) {
+    if (_containsAny(
+        text, [context.tr('util_gp_a4c3bb'), context.tr('util_xut_5c3170'), context.tr('util_tnhnng_d3cb43'), context.tr('util_thmchcnng_7fc17b')])) {
       return _buildFeedbackReply();
     }
 
@@ -918,6 +846,8 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     final count = substantiveMessages.length;
     return count > 0 ? count - 1 : 0;
   }
+
+
 
   int get _waitingAdminFollowUpCount => _countWaitingAdminFollowUps(_messages);
 
@@ -1074,8 +1004,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
             ),
           ),
           // Chỉ hiển thị typing indicator khi đang gửi VÀ chat chưa bị khóa
-          if (_isSending && !_isWaitingAdminInputLocked)
-            _buildTypingIndicator(),
+          if (_isSending && !_isWaitingAdminInputLocked) _buildTypingIndicator(),
           _buildInputBar(),
         ],
       ),
@@ -1097,8 +1026,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           return GestureDetector(
             onTap: () {
               if (_isSending) return;
-              unawaited(
-                  _send(menuId: topic.id, displayMessage: topic.chipLabel));
+              unawaited(_send(menuId: topic.id, displayMessage: topic.chipLabel));
             },
             child: Container(
               constraints: const BoxConstraints(minHeight: 36),
@@ -1361,9 +1289,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                   Padding(
                     padding: const EdgeInsets.only(left: 4, bottom: 3),
                     child: Text(
-                      message.isAdmin
-                          ? 'Admin SoulLocket'
-                          : context.tr('util_trlai_e23336'),
+                      message.isAdmin ? 'Admin SoulLocket' : context.tr('util_trlai_e23336'),
                       style: SLTheme.quicksand(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -1373,7 +1299,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                   ),
                 Container(
                   constraints: BoxConstraints(
-                    maxWidth: MediaQuery.sizeOf(context).width * 0.72,
+                    maxWidth: MediaQuery.of(context).size.width * 0.72,
                   ),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -1475,7 +1401,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           16,
           16,
           16,
-          MediaQuery.paddingOf(context).bottom + 16,
+          MediaQuery.of(context).padding.bottom + 16,
         ),
         color: Colors.white,
         child: ElevatedButton(
@@ -1508,7 +1434,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         12,
         8,
         12,
-        MediaQuery.paddingOf(context).bottom + 8,
+        MediaQuery.of(context).padding.bottom + 8,
       ),
       color: Colors.white,
       child: Column(
@@ -1589,11 +1515,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                     minLines: 1,
                     maxLines: 8,
                     maxLength: 1000,
-                    buildCounter: (context,
-                            {required currentLength,
-                            required isFocused,
-                            maxLength}) =>
-                        null,
+                    buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
                     textInputAction: TextInputAction.send,
                     onSubmitted: canSend ? (_) => _send() : null,
                     style: SLTheme.quicksand(
@@ -1692,18 +1614,12 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
             ),
             const SizedBox(height: 16),
             ...[
-              (
-                context.tr('util_qunmtkhu_a9a074'),
-                context.tr('util_citbomtimt_83d047')
-              ),
+              (context.tr('util_qunmtkhu_a9a074'), context.tr('util_citbomtimt_83d047')),
               (
                 context.tr('util_appbli_92e3fa'),
                 context.tr('util_thtthonton_f1e6df')
               ),
-              (
-                context.tr('util_kimtraquyn_4de2fd'),
-                context.tr('util_mcittikhon_4429d3')
-              ),
+              (context.tr('util_kimtraquyn_4de2fd'), context.tr('util_mcittikhon_4429d3')),
               (
                 context.tr('util_xatikhon_348215'),
                 context.tr('util_citxatikho_9cdf64')

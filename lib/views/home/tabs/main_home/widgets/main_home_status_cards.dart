@@ -356,7 +356,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: const Color(0xFFFFCEE0),
                   width: 1.2,
@@ -424,7 +424,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 ),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFFFF6D97).withValues(alpha: 0.3),
@@ -616,7 +616,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(14),
                             border: Border.all(
                               color: const Color(0xFF80DEEA).withValues(alpha: 0.55),
                             ),

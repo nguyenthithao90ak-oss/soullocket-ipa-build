@@ -874,7 +874,6 @@ extension _SettingsTabThemeSection on _SettingsTabState {
     );
   }
 
-  // ignore: unused_element
   Widget _buildAIPanel({bool hideBackButton = false}) {
     return const SizedBox.shrink();
   }
@@ -906,24 +905,24 @@ class _ThemeSectionCardState extends State<_ThemeSectionCard>
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withValues(alpha: 0.97),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: widget.themeColor.withValues(alpha: 0.35),
-          width: 1.8,
+          color: const Color(0xFFFFCEE0).withValues(alpha: 0.60),
+          width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: widget.themeColor.withValues(alpha: 0.10),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
+            color: const Color(0xFFFF89B6).withValues(alpha: 0.12),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         child: Material(
             type: MaterialType.transparency,
             child: Theme(
@@ -941,10 +940,10 @@ class _ThemeSectionCardState extends State<_ThemeSectionCard>
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       colors: [
-                        widget.themeColor,
-                        widget.themeColor.withValues(alpha: 0.8),
+                        Color(0xFFFF6E9F), // Rose pink
+                        Color(0xFFFF8EA8), // Coral pink
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -952,9 +951,9 @@ class _ThemeSectionCardState extends State<_ThemeSectionCard>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: widget.themeColor.withValues(alpha: 0.3),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
+                        color: const Color(0xFFFF8EA8).withValues(alpha: 0.35),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),

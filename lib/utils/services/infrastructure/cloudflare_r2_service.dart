@@ -1,81 +1,77 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:minio/minio.dart';
-import 'package:minio/io.dart';
 import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
+import 'package:cloud_functions/cloud_functions.dart';
 
 class CloudflareR2Service {
   static final CloudflareR2Service instance = CloudflareR2Service._internal();
   factory CloudflareR2Service() => instance;
   CloudflareR2Service._internal();
 
-  // Chỉ dùng --dart-define khi build. Không có defaultValue.
-  // Key được lưu trong file keys_r2.json (đã thêm .gitignore).
-  // Dùng build_aab.bat hoặc flutter_run.bat để build/chạy tự động.
-  static const String accessKey = String.fromEnvironment('R2_ACCESS_KEY_ID');
-  static const String secretKey =
-      String.fromEnvironment('R2_SECRET_ACCESS_KEY');
-  static const String endpoint = String.fromEnvironment('R2_ENDPOINT_URL');
-  static const String bucketName = String.fromEnvironment('R2_BUCKET_NAME',
-      defaultValue: 'soullocket-media');
   static const String publicDomain = String.fromEnvironment('R2_PUBLIC_DOMAIN');
 
-  Minio? _minio;
-
-  bool get isConfigured =>
-      accessKey.isNotEmpty && secretKey.isNotEmpty && endpoint.isNotEmpty;
+  // Luôn trả về true vì cấu hình khóa R2 hiện tại nằm ở Server (Cloud Functions)
+  bool get isConfigured => true;
 
   void init() {
-    if (!isConfigured) return;
+    // Không cần khởi tạo Minio client ở phía App
+  }
 
-    // Endpoint của Cloudflare R2 thường có dạng: https://<ACCOUNT_ID>.r2.cloudflarestorage.com
-    final uri = Uri.tryParse(endpoint);
-    if (uri == null) return;
-
-    _minio = Minio(
-      endPoint: uri.host,
-      accessKey: accessKey,
-      secretKey: secretKey,
-      region: 'auto', // R2 luôn dùng region 'auto'
-      useSSL: uri.scheme == 'https',
-    );
+  String _getMimeType(String filePath) {
+    final ext = path.extension(filePath).toLowerCase();
+    switch (ext) {
+      case '.png':
+        return 'image/png';
+      case '.webp':
+        return 'image/webp';
+      case '.gif':
+        return 'image/gif';
+      case '.jpg':
+      case '.jpeg':
+      default:
+        return 'image/jpeg';
+    }
   }
 
   /// Uploads base64 image data to Cloudflare R2
   Future<String?> uploadBase64(String base64Data,
       {required String folderPath, String extension = 'jpg'}) async {
-    if (!isConfigured || _minio == null) {
-      debugPrint('[CloudflareR2] R2 is not configured.');
-      return null;
-    }
-
     try {
-      // Bỏ phần header data:image/jpeg;base64, nếu có
       String cleanBase64 = base64Data;
       if (base64Data.contains(',')) {
         cleanBase64 = base64Data.split(',').last;
       }
 
-      // Decode base64 sang mảng byte
       final bytes = base64Decode(cleanBase64);
 
-      // Tạo một file tạm thời
-      final tempDir = await getTemporaryDirectory();
-      final tempFile = File(
-          '${tempDir.path}/temp_upload_${DateTime.now().millisecondsSinceEpoch}.$extension');
-      await tempFile.writeAsBytes(bytes);
+      // Yêu cầu sinh Presigned URL từ backend
+      final callable = FirebaseFunctions.instance.httpsCallable('getSignedUploadUrlSecure');
+      final result = await callable.call(<String, dynamic>{
+        'fileName': 'image_$extension',
+        'contentType': 'image/$extension',
+        'folderPath': folderPath,
+      });
 
-      // Dùng hàm uploadFile đã có để đẩy lên R2
-      final url = await uploadFile(tempFile, folderPath: folderPath);
+      final resData = result.data as Map;
+      final uploadUrl = resData['uploadUrl'] as String;
+      final publicUrl = resData['publicUrl'] as String;
+      final headers = Map<String, String>.from(resData['headers'] ?? {});
 
-      // Xóa file tạm để giải phóng bộ nhớ
-      if (await tempFile.exists()) {
-        await tempFile.delete();
+      // Tiến hành upload nhị phân trực tiếp bằng HTTP PUT
+      final putResponse = await http.put(
+        Uri.parse(uploadUrl),
+        headers: headers,
+        body: bytes,
+      );
+
+      if (putResponse.statusCode == 200 || putResponse.statusCode == 201) {
+        return publicUrl;
+      } else {
+        debugPrint('[CloudflareR2] PUT failed: ${putResponse.statusCode} - ${putResponse.body}');
+        return null;
       }
-
-      return url;
     } catch (e) {
       debugPrint('[CloudflareR2] Upload Base64 failed: $e');
       return null;
@@ -84,29 +80,36 @@ class CloudflareR2Service {
 
   /// Upload File lên R2 và trả về public link
   Future<String?> uploadFile(File file, {required String folderPath}) async {
-    if (!isConfigured || _minio == null) {
-      debugPrint('[CloudflareR2] R2 chưa được cấu hình. (Chưa có Key)');
-      return null;
-    }
-
     try {
       final fileName = path.basename(file.path);
-      final uniqueFileName =
-          '${DateTime.now().millisecondsSinceEpoch}_$fileName';
-      final objectName = '$folderPath/$uniqueFileName';
+      final contentType = _getMimeType(file.path);
+      final bytes = await file.readAsBytes();
 
-      // Upload file sử dụng Minio SDK
-      await _minio!.fPutObject(
-        bucketName,
-        objectName,
-        file.path,
+      // Yêu cầu sinh Presigned URL từ backend
+      final callable = FirebaseFunctions.instance.httpsCallable('getSignedUploadUrlSecure');
+      final result = await callable.call(<String, dynamic>{
+        'fileName': fileName,
+        'contentType': contentType,
+        'folderPath': folderPath,
+      });
+
+      final resData = result.data as Map;
+      final uploadUrl = resData['uploadUrl'] as String;
+      final publicUrl = resData['publicUrl'] as String;
+      final headers = Map<String, String>.from(resData['headers'] ?? {});
+
+      // Tiến hành upload nhị phân trực tiếp bằng HTTP PUT
+      final putResponse = await http.put(
+        Uri.parse(uploadUrl),
+        headers: headers,
+        body: bytes,
       );
 
-      // Trả về link ảnh công khai để lưu vào Firebase Realtime Database
-      if (publicDomain.isNotEmpty) {
-        return '$publicDomain/$objectName';
+      if (putResponse.statusCode == 200 || putResponse.statusCode == 201) {
+        return publicUrl;
       } else {
-        return objectName; // Fallback
+        debugPrint('[CloudflareR2] PUT failed: ${putResponse.statusCode} - ${putResponse.body}');
+        return null;
       }
     } catch (e) {
       debugPrint('[CloudflareR2] Lỗi khi upload: $e');
@@ -120,17 +123,14 @@ class CloudflareR2Service {
   }
 
   /// Xoá object trên R2 từ public URL
-  /// URL format: https://pub-xxx.r2.dev/media/1234567890_filename.jpg
   Future<bool> deleteFile(String url) async {
-    if (!isConfigured || _minio == null) return false;
-
     try {
-      final objectName = _extractObjectName(url);
-      if (objectName == null || objectName.isEmpty) return false;
-
-      await _minio!.removeObject(bucketName, objectName);
-      debugPrint('[CloudflareR2] Đã xoá: $objectName');
-      return true;
+      final callable = FirebaseFunctions.instance.httpsCallable('deleteR2ObjectSecure');
+      final result = await callable.call(<String, dynamic>{
+        'objectUrl': url,
+      });
+      final resData = result.data as Map;
+      return resData['success'] as bool? ?? false;
     } catch (e) {
       debugPrint('[CloudflareR2] Lỗi xoá file: $e');
       return false;
@@ -138,33 +138,18 @@ class CloudflareR2Service {
   }
 
   /// Xoá object trên R2 trực tiếp từ storage path
-  /// Không cần parse URL, dùng cho storage_path có sẵn
   Future<bool> deleteByPath(String objectName) async {
-    if (!isConfigured || _minio == null) return false;
-
     try {
-      final normalized = objectName.trim();
-      if (normalized.isEmpty) return false;
-
-      await _minio!.removeObject(bucketName, normalized);
-      debugPrint('[CloudflareR2] Đã xoá theo path: $normalized');
-      return true;
+      final callable = FirebaseFunctions.instance.httpsCallable('deleteR2ObjectSecure');
+      final result = await callable.call(<String, dynamic>{
+        'objectPath': objectName,
+      });
+      final resData = result.data as Map;
+      return resData['success'] as bool? ?? false;
     } catch (e) {
       debugPrint('[CloudflareR2] Lỗi xoá theo path: $e');
       return false;
     }
   }
-
-  /// Lấy object name từ public URL
-  String? _extractObjectName(String url) {
-    final normalized = url.trim();
-    if (publicDomain.isEmpty || !normalized.startsWith(publicDomain)) {
-      return null;
-    }
-
-    const prefix = '$publicDomain/';
-    if (!normalized.startsWith(prefix)) return null;
-
-    return normalized.substring(prefix.length);
-  }
 }
+

@@ -372,10 +372,15 @@ class AdMobService {
       // Áp dụng age gate từ Texas Age Signals API:
       // nếu user là minor, giới hạn quảng cáo child-directed + nội dung G
       unawaited(_applyAgeGateToAdSettings());
-      _loadRewardedAd();
-      _loadSoulGameRewardedAd();
-      unawaited(loadInterstitialAd());
-      unawaited(loadAppOpenAd());
+      // Trì hoãn tải quảng cáo nền 3s sau khi SDK ready
+      // để không tranh CPU với UI rendering khi app khởi động
+      Future<void>.delayed(const Duration(seconds: 3), () {
+        if (!_sdkInitialized) return;
+        _loadRewardedAd();
+        _loadSoulGameRewardedAd();
+        unawaited(loadInterstitialAd());
+        unawaited(loadAppOpenAd());
+      });
     } finally {
       if (!completer.isCompleted) {
         completer.complete();

@@ -86,7 +86,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
   String _activeStyle = 'basic';
   bool _showHeartNotif = false;
-  bool _showHeartGlobal = false;
   bool _isVip = false;
   StreamSubscription<bool>? _vipSub;
 
@@ -222,8 +221,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         // }
 
         final showNotif = prefs.getBool('soul_merge_show_heart_notif') ?? false;
-        final showGlobal =
-            prefs.getBool('soul_merge_show_heart_global') ?? false;
 
         setState(() {
           _myRole = myRole;
@@ -233,7 +230,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           _isVip = isUserVip;
           _activeStyle = savedStyle;
           _showHeartNotif = showNotif;
-          _showHeartGlobal = showGlobal;
         });
 
         final settings = await HouseService().getHouseSettings(_houseId!);
@@ -479,9 +475,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           (i % 2 == 0 ? (0.3 + 0.65 * pulseVal) : (0.95 - 0.65 * pulseVal))
               .clamp(0.0, 1.0);
       return Positioned(
-        // 50 = half of the 100px SizedBox — static center
-        left: 50 + dx - size / 2,
-        top: 50 + dy - size / 2,
+        // 80 = half of the 160px Container — static center
+        left: 80 + dx - size / 2,
+        top: 80 + dy - size / 2,
         child: IgnorePointer(
           child: Opacity(
             opacity: opacity,
@@ -739,20 +735,20 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background Gradient — cute pastel pink-purple
+          // Background Gradient — premium deep velvet night
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFF3D0F5E),
-                  Color(0xFF7B1C6A),
-                  Color(0xFFB33076),
-                  Color(0xFFE8517F),
-                  Color(0xFFF78DA7),
+                  Color(0xFF200F3A), // Deep dark violet
+                  Color(0xFF45133E), // Rich plum
+                  Color(0xFF6B184F), // Velvet magenta
+                  Color(0xFF91275E), // Warm rose magenta
+                  Color(0xFF380825), // Elegant dark bottom
                 ],
-                stops: [0.0, 0.25, 0.52, 0.78, 1.0],
+                stops: [0.0, 0.3, 0.55, 0.8, 1.0],
               ),
             ),
           ),
@@ -899,17 +895,63 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                             child: Stack(
                               alignment: Alignment.center,
                               children: [
-                                // Cute sticker heart
-                                Image.asset(
-                                  'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
-                                  width: 80,
-                                  height: 80,
-                                  fit: BoxFit.contain,
-                                  filterQuality: FilterQuality.medium,
-                                  errorBuilder: (_, __, ___) => const Icon(
-                                    Icons.favorite_rounded,
-                                    color: Color(0xFFFF80B3),
-                                    size: 70,
+                                // Vòng neon thở bên ngoài (Breathing neon ring)
+                                AnimatedBuilder(
+                                  animation: _pulseAnim,
+                                  builder: (context, _) {
+                                    final scale = _pulseAnim.value; // dao động từ 1.0 -> 1.15
+                                    // Chuyển đổi thành tỉ lệ từ 0.0 -> 1.0 để làm mờ dần khi mở rộng
+                                    final normalized = (scale - 1.0) / 0.15;
+                                    return Container(
+                                      width: 120 * scale,
+                                      height: 120 * scale,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: const Color(0xFFFF4F93).withValues(
+                                            alpha: (0.6 * (1.0 - normalized)).clamp(0.0, 1.0),
+                                          ),
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                // Đĩa kính mờ phát sáng trung tâm (Glowing glassmorphic core)
+                                Container(
+                                  width: 110,
+                                  height: 110,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white.withValues(alpha: 0.12),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.35),
+                                      width: 1.5,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFFFF4F93).withValues(alpha: 0.45),
+                                        blurRadius: 24,
+                                        spreadRadius: 2,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(55),
+                                      child: Image.asset(
+                                        'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+                                        width: 82,
+                                        height: 82,
+                                        fit: BoxFit.contain,
+                                        filterQuality: FilterQuality.medium,
+                                        errorBuilder: (_, __, ___) => const Icon(
+                                          Icons.favorite_rounded,
+                                          color: Color(0xFFFF80B3),
+                                          size: 60,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 // Sparkle dots
@@ -1425,17 +1467,34 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                 left: isSelf ? 48 : 0,
                                 right: isSelf ? 0 : 48,
                               ),
-                              padding: EdgeInsets.all(imageUrl.isNotEmpty ? 4 : 10),
+                              padding: imageUrl.isNotEmpty
+                                  ? const EdgeInsets.all(6)
+                                  : const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
                               decoration: BoxDecoration(
                                 color: isSelf 
                                   ? const Color(0xFFFF4F93) 
-                                  : Colors.white.withValues(alpha: 0.15),
+                                  : Colors.white.withValues(alpha: 0.22),
                                 borderRadius: BorderRadius.only(
-                                  topLeft: const Radius.circular(18),
-                                  topRight: const Radius.circular(18),
-                                  bottomLeft: Radius.circular(isSelf ? 18 : 4),
-                                  bottomRight: Radius.circular(isSelf ? 4 : 18),
+                                  topLeft: const Radius.circular(20),
+                                  topRight: const Radius.circular(20),
+                                  bottomLeft: Radius.circular(isSelf ? 20 : 4),
+                                  bottomRight: Radius.circular(isSelf ? 4 : 20),
                                 ),
+                                border: Border.all(
+                                  color: isSelf
+                                      ? Colors.white.withValues(alpha: 0.15)
+                                      : Colors.white.withValues(alpha: 0.25),
+                                  width: 1.0,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: isSelf
+                                        ? const Color(0xFFFF4F93).withValues(alpha: 0.25)
+                                        : Colors.black.withValues(alpha: 0.08),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
                               ),
                               child: Column(
                                 crossAxisAlignment: isSelf
@@ -1471,8 +1530,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                         text,
                                         style: SLTheme.quicksand(
                                           color: Colors.white,
-                                          fontSize: 14.5,
+                                          fontSize: 15,
                                           fontWeight: FontWeight.w600,
+                                          height: 1.3,
                                         ),
                                       ),
                                     ),
@@ -1523,11 +1583,26 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.12),
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFFFF758F).withValues(alpha: 0.25),
+                              const Color(0xFFFF4F93).withValues(alpha: 0.15),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.15),
+                            color: const Color(0xFFFF758F).withValues(alpha: 0.4),
+                            width: 1,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFF4F93).withValues(alpha: 0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Text(
                           text,
@@ -1547,19 +1622,31 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.35),
-              borderRadius: BorderRadius.circular(24),
+              color: Colors.white.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(28),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.15),
-                width: 1.0,
+                color: Colors.white.withValues(alpha: 0.25),
+                width: 1.2,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               children: [
                 GestureDetector(
                   onTap: _pickAndSendChatImage,
                   child: Container(
+                    margin: const EdgeInsets.only(left: 4),
                     padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                     child: _isUploadingPhoto
                         ? const SizedBox(
                             width: 20,
@@ -1567,7 +1654,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                             child: CircularProgressIndicator(
                                 strokeWidth: 2, color: Color(0xFFFF4F93)))
                         : const Icon(Icons.add_photo_alternate_rounded,
-                            color: Colors.white70, size: 24),
+                            color: Colors.white, size: 22),
                   ),
                 ),
                 Expanded(
@@ -1600,20 +1687,28 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                 GestureDetector(
                   onTap: _sendCustomMessage,
                   child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: const BoxDecoration(
+                    width: 38,
+                    height: 38,
+                    margin: const EdgeInsets.only(right: 2),
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFFF4F93), Color(0xFFE2528F)],
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF4F93), Color(0xFFFF758F)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF4F93).withValues(alpha: 0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: const Icon(
                       Icons.send_rounded,
                       color: Colors.white,
-                      size: 16,
+                      size: 18,
                     ),
                   ),
                 ),
@@ -1787,7 +1882,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Kiểu hiệu ứng thả tim',
+                      L10nService().translate('heart_style_title'),
                       textAlign: TextAlign.center,
                       style: SLTheme.quicksand(
                         color: Colors.white,
@@ -1797,7 +1892,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Chọn phong cách tim bay cao cấp dành riêng cho bạn',
+                      L10nService().translate('heart_style_desc'),
                       textAlign: TextAlign.center,
                       style: SLTheme.quicksand(
                         color: Colors.white60,
@@ -1833,7 +1928,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                   borderRadius: BorderRadius.circular(17),
                                 ),
                                 child: Text(
-                                  'Hiệu ứng',
+                                  L10nService().translate('heart_style_tab_effect'),
                                   style: SLTheme.quicksand(
                                     color: Colors.white,
                                     fontSize: 13.5,
@@ -1860,7 +1955,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                   borderRadius: BorderRadius.circular(17),
                                 ),
                                 child: Text(
-                                  'Cấu hình',
+                                  L10nService().translate('heart_style_tab_config'),
                                   style: SLTheme.quicksand(
                                     color: Colors.white,
                                     fontSize: 13.5,
@@ -1878,8 +1973,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                     // Nội dung từng Tab
                     if (activeTab == 0) ...[
                       _buildStyleItem(
-                        title: 'Basic Pink',
-                        desc: 'Hiệu ứng màu hồng pastel ngọt ngào cơ bản',
+                        title: L10nService().translate('heart_style_basic_title'),
+                        desc: L10nService().translate('heart_style_basic_desc'),
                         styleKey: 'basic',
                         isPremium: false,
                         color: const Color(0xFFFFB7D5),
@@ -1887,9 +1982,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       ),
                       const SizedBox(height: 12),
                       _buildStyleItem(
-                        title: 'Neon Aurora 🌟',
-                        desc:
-                            'Tim phát sáng đổi màu neon lung linh kèm vệt sao lấp lánh',
+                        title: L10nService().translate('heart_style_aurora_title'),
+                        desc: L10nService().translate('heart_style_aurora_desc'),
                         styleKey: 'aurora',
                         isPremium: false,
                         color: const Color(0xFF00FFCC),
@@ -1897,9 +1991,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       ),
                       const SizedBox(height: 12),
                       _buildStyleItem(
-                        title: 'Cosmic Sparkle ✨',
-                        desc:
-                            'Tim nhịp điệu vũ trụ bay lắc lư hình sin và vòng sáng tinh tú',
+                        title: L10nService().translate('heart_style_cosmic_title'),
+                        desc: L10nService().translate('heart_style_cosmic_desc'),
                         styleKey: 'cosmic',
                         isPremium: false,
                         color: const Color(0xFFFFD700),
@@ -1907,9 +2000,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       ),
                     ] else ...[
                       _buildToggleRow(
-                        title: 'Hiển thị câu thoại của mèo',
-                        subtitle:
-                            'Ẩn hoặc hiện bong bóng lời thoại, gợi ý của mèo',
+                        title: L10nService().translate('heart_style_show_cat_dialog'),
+                        subtitle: L10nService().translate('heart_style_show_cat_dialog_desc'),
                         value: _showHeartNotif,
                         onChanged: (val) async {
                           final prefs = await SharedPreferences.getInstance();
@@ -1920,24 +2012,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                           });
                           setState(() {
                             _showHeartNotif = val;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      _buildToggleRow(
-                        title: 'Xuất hiện ở toàn bộ màn hình',
-                        subtitle:
-                            'Hiển thị mèo cưng và hiệu ứng tim bay trên tất cả các màn hình',
-                        value: _showHeartGlobal,
-                        onChanged: (val) async {
-                          final prefs = await SharedPreferences.getInstance();
-                          await prefs.setBool(
-                              'soul_merge_show_heart_global', val);
-                          setSheetState(() {
-                            _showHeartGlobal = val;
-                          });
-                          setState(() {
-                            _showHeartGlobal = val;
                           });
                         },
                       ),

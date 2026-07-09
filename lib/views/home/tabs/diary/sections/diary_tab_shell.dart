@@ -22,9 +22,16 @@ class _DiaryTabShell extends StatelessWidget {
       );
     }
 
+    final header = DiaryHeaderSection(
+      currentTab: state._currentTab,
+      onTabChanged: state._setCurrentTab,
+      houseId: state._houseId,
+    );
+
     // Build memory section once and cache it
     final memorySection = DiaryMemorySection(
       key: const ValueKey('diary_memory_section'),
+      header: header,
       houseId: state._houseId,
       connectivityFuture: state._connectivityFuture,
       memoriesStream: state._getMemoriesStream(),
@@ -81,83 +88,73 @@ class _DiaryTabShell extends StatelessWidget {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          Column(
-            children: [
-              DiaryHeaderSection(
-                currentTab: state._currentTab,
-                onTabChanged: state._setCurrentTab,
-                houseId: state._houseId,
-              ),
-              Expanded(
-                child: RepaintBoundary(
-                  child: Stack(
-                    children: [
-                      // Memory tab - deferred load to avoid jank on tab switch
-                      Positioned.fill(
-                        child: AnimatedOpacity(
-                          key: const ValueKey('memory_tab_opacity'),
-                          opacity: state._currentTab == 'memory' ? 1.0 : 0.0,
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                          child: IgnorePointer(
-                            ignoring: state._currentTab != 'memory',
-                            child: state._deferMemoryLoad
-                                ? const _DiaryTabLoadingSection()
-                                : memorySection,
-                          ),
-                        ),
-                      ),
-                      // Post tab - rebuilds only when needed
-                      if (state._currentTab != 'memory')
-                        Positioned.fill(
-                          child: ValueListenableBuilder<List<DiaryPost>>(
-                            valueListenable: state._feedController.postsVN,
-                            builder: (context, posts, child) {
-                              return DiaryList(
-                                showDiaryPrivacyNotice:
-                                    state._showDiaryPrivacyNotice,
-                                buildDiaryPrivacyNotice: () =>
-                                    const SizedBox.shrink(),
-                                buildDiaryComposerCard: () =>
-                                    _DiaryComposerLauncherSection(
-                                  state: state,
-                                ),
-                                isLoading: state._isLoading &&
-                                    !state._isAnimatingTabSwitch,
-                                houseId: state._houseId,
-                                buildHouseSetupState: ({
-                                  required String title,
-                                  required String message,
-                                }) =>
-                                    DiaryHouseSetupCard(
-                                  title: title,
-                                  message: message,
-                                  onRetry: state._fetchDiaryPosts,
-                                ),
-                                posts: posts,
-                                buildDiaryEmptyState: () =>
-                                    const DiaryPostsEmptyStateCard(),
-                                buildPostCard: (post) => DiaryItem(
-                                  post: post,
-                                  activeRoleKey: state._activeRoleKey,
-                                  nameU1: state._nameU1,
-                                  nameU2: state._nameU2,
-                                  resolvedAuthorName:
-                                      state._resolvedPostAuthorName(post),
-                                  postImageCacheWidth:
-                                      state._postImageCacheWidth(context),
-                                  onConfirmDelete:
-                                      state._confirmDeleteDiaryPost,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                    ],
+          RepaintBoundary(
+            child: Stack(
+              children: [
+                // Memory tab - deferred load to avoid jank on tab switch
+                Positioned.fill(
+                  child: AnimatedOpacity(
+                    key: const ValueKey('memory_tab_opacity'),
+                    opacity: state._currentTab == 'memory' ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    child: IgnorePointer(
+                      ignoring: state._currentTab != 'memory',
+                      child: state._deferMemoryLoad
+                          ? const _DiaryTabLoadingSection()
+                          : memorySection,
+                    ),
                   ),
                 ),
-              ),
-            ],
+                // Post tab - rebuilds only when needed
+                if (state._currentTab != 'memory')
+                  Positioned.fill(
+                    child: ValueListenableBuilder<List<DiaryPost>>(
+                      valueListenable: state._feedController.postsVN,
+                      builder: (context, posts, child) {
+                        return DiaryList(
+                          header: header,
+                          showDiaryPrivacyNotice:
+                              state._showDiaryPrivacyNotice,
+                          buildDiaryPrivacyNotice: () =>
+                              const SizedBox.shrink(),
+                          buildDiaryComposerCard: () =>
+                              _DiaryComposerLauncherSection(
+                            state: state,
+                          ),
+                          isLoading: state._isLoading &&
+                              !state._isAnimatingTabSwitch,
+                          houseId: state._houseId,
+                          buildHouseSetupState: ({
+                            required String title,
+                            required String message,
+                          }) =>
+                              DiaryHouseSetupCard(
+                            title: title,
+                            message: message,
+                            onRetry: state._fetchDiaryPosts,
+                          ),
+                          posts: posts,
+                          buildDiaryEmptyState: () =>
+                              const DiaryPostsEmptyStateCard(),
+                          buildPostCard: (post) => DiaryItem(
+                            post: post,
+                            activeRoleKey: state._activeRoleKey,
+                            nameU1: state._nameU1,
+                            nameU2: state._nameU2,
+                            resolvedAuthorName:
+                                state._resolvedPostAuthorName(post),
+                            postImageCacheWidth:
+                                state._postImageCacheWidth(context),
+                            onConfirmDelete:
+                                state._confirmDeleteDiaryPost,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
           ),
           // Selection bar
           if (state._currentTab == 'memory')

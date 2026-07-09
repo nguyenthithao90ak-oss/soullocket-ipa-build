@@ -1234,7 +1234,9 @@ class LoveInsightService {
     required bool isSingle,
   }) {
     final anchor = _startOfDay(startDate);
-    final subtitle = isSingle ? 'Cột mốc hành trình' : 'Cột mốc quan trọng';
+    final subtitle = isSingle
+        ? L10nService().translate('milestone_journey_subtitle')
+        : L10nService().translate('milestone_important_subtitle');
     final entries = <LoveInsightTimelineEntry>[];
 
     final now = DateTime.now();
@@ -1465,27 +1467,23 @@ class LoveInsightService {
 
   String _monthMilestoneTitle(int months, {required bool isSingle}) {
     if (isSingle) {
-      if (months == 1) return 'Tròn 1 tháng đồng hành';
-      if (months == 6) return 'Tròn 6 tháng trưởng thành';
-      return 'Tròn $months tháng đồng hành';
+      return L10nService().format('milestone_months_single', {'months': months.toString()});
     }
-    if (months == 1) return 'Tròn 1 tháng bên nhau';
-    if (months == 6) return 'Tròn 6 tháng bên nhau';
-    return 'Tròn $months tháng bên nhau';
+    return L10nService().format('milestone_months_together', {'months': months.toString()});
   }
 
   String _dayMilestoneTitle(int days, {required bool isSingle}) {
     if (isSingle) {
-      return 'Cột mốc $days ngày trải nghiệm';
+      return L10nService().format('milestone_days_single', {'days': days.toString()});
     }
-    return 'Kỷ niệm $days ngày yêu';
+    return L10nService().format('milestone_anniversary_days', {'days': days.toString()});
   }
 
   String _yearMilestoneTitle(int years, {required bool isSingle}) {
     if (isSingle) {
-      return 'Cột mốc $years năm dùng app';
+      return L10nService().format('milestone_years_single', {'years': years.toString()});
     }
-    return 'Kỷ niệm $years năm';
+    return L10nService().format('milestone_anniversary_years', {'years': years.toString()});
   }
 
   DateTime? _parseFlexibleDate(String raw) {

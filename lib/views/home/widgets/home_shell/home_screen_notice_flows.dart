@@ -956,7 +956,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Nhắc nhở ghép nối',
+                context.tr('pairing_reminder_title'),
                 style: SLTheme.quicksand(
                   fontSize: 16,
                   fontWeight: FontWeight.w900,
@@ -967,7 +967,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           ],
         ),
         content: Text(
-          'Bạn chưa ghép nối! Hãy chia sẻ mã nhà cho người ấy ở Cài Đặt để cùng nhau xây dựng tổ ấm nhé.',
+          context.tr('pairing_reminder_body'),
           style: SLTheme.quicksand(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -979,7 +979,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Để sau',
+              context.tr('pairing_later'),
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.w700,
                 color: Colors.grey[600],
@@ -1001,7 +1001,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
               );
             },
             child: Text(
-              'Ghép nối ngay',
+              context.tr('pairing_connect_now'),
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.w800,
                 color: Colors.white,
@@ -1034,7 +1034,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Tính năng bị khóa',
+                context.tr('pairing_feature_locked_title'),
                 style: SLTheme.quicksand(
                   fontSize: 16,
                   fontWeight: FontWeight.w900,
@@ -1045,7 +1045,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           ],
         ),
         content: Text(
-          'Bạn cần ghép nối với người ấy để dùng tính năng này. Hãy vào mục Cài Đặt lấy mã để chia sẻ nhé!',
+          context.tr('pairing_feature_locked_body'),
           style: SLTheme.quicksand(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -1057,7 +1057,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Để sau',
+              context.tr('pairing_later'),
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.w700,
                 color: Colors.grey[600],
@@ -1079,7 +1079,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
               );
             },
             child: Text(
-              'Ghép nối ngay',
+              context.tr('pairing_connect_now'),
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.w800,
                 color: Colors.white,

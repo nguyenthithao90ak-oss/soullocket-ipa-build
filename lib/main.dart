@@ -364,10 +364,7 @@ void main() {
 
       await BuildSignatureService.verifyOfficialBuildSignature();
       await _initializeFirebaseBootstrap();
-      unawaited(_initializeGoogleMobileAds());
       await _clearStaleIosAuthAfterFreshInstall();
-      unawaited(_requestIosTrackingAuthorization());
-      unawaited(_initializeTikTokSdk());
 
       if (!kIsWeb) {
         FirebaseMessaging.onBackgroundMessage(
@@ -785,6 +782,9 @@ void _scheduleDeferredBootstrap() {
           _warmUpWidgetService(),
         ]);
         unawaited(_warmUpBackgroundServices());
+        unawaited(_initializeGoogleMobileAds());
+        unawaited(_requestIosTrackingAuthorization());
+        unawaited(_initializeTikTokSdk());
       } catch (error, stackTrace) {
         debugPrint('Deferred bootstrap error: ${AppErrorMapper.resolve(
           error,

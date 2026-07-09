@@ -77,14 +77,12 @@ import 'settings/settings_gift_links_manager_screen.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../../utils/services/auth_service.dart';
 import '../../../utils/services/device_manager_service.dart';
-import '../../../utils/services/presence_service.dart';
 import '../../../utils/services/security_flow_guard.dart';
 import '../../../utils/services/admob_service.dart';
 import '../../../utils/services/breakup_service.dart';
 import '../../../utils/services/critical_data_sync_service.dart';
 import '../../../utils/services/house_service.dart';
 import '../../../utils/services/military_lock_service.dart';
-import '../../../utils/services/push_notification_helper.dart';
 import '../../../utils/services/role_utils.dart';
 import 'package:soullocket_app/models/soul_event.dart';
 import '../../../utils/services/soul_event_service.dart';
@@ -597,12 +595,17 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     _bottomBannerAd?.dispose();
     _bottomBannerAd = null;
     if (!mounted) return;
-    _bottomBannerAd = await adMob.createBannerAd(
+    final banner = await adMob.createBannerAd(
       onAdLoaded: (_) {
         if (!mounted) return;
         setState(() {});
       },
     );
+    if (!mounted) {
+      banner?.dispose();
+      return;
+    }
+    _bottomBannerAd = banner;
   }
 
   // ignore: unused_element

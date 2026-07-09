@@ -1,10 +1,10 @@
-﻿part of '../../main_home_tab.dart';
+part of '../../main_home_tab.dart';
 
 class _PartnerInteractionPreset {
   final String type;
   final String label;
   final String emoji;
-  final String? assetPath;
+  String? assetPath;
   final int weight;
   final bool showInSmartSuggestion;
   final List<Color> gradient;
@@ -12,7 +12,7 @@ class _PartnerInteractionPreset {
   final List<String> titles;
   final List<String> messages;
 
-  const _PartnerInteractionPreset({
+  _PartnerInteractionPreset({
     required this.type,
     required this.label,
     required this.emoji,

@@ -59,15 +59,15 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         ? AppConfig.iOSStoreUrl
         : AppConfig.androidStoreUrl;
 
-    const subject = 'SoulLocket — Nhật ký tình yêu cho 2 người';
+    final subject = context.tr('settings_share_subject');
     final message = [
-      'SoulLocket — Ngôi nhà chung cho các cặp đôi 💖',
+      context.tr('settings_share_msg_1'),
       '',
-      '• Đếm ngày yêu (kính mời siêu xinh)',
-      '• Lưu kỷ niệm, ảnh, nhật ký',
-      '• Chat, widget màn hình chính, mini game',
+      context.tr('settings_share_msg_2'),
+      context.tr('settings_share_msg_3'),
+      context.tr('settings_share_msg_4'),
       '',
-      'Tải app tại đây 👇',
+      context.tr('settings_share_msg_5'),
       storeUrl,
     ].join('\n');
 
@@ -78,7 +78,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     try {
       await Clipboard.setData(ClipboardData(text: message));
       if (mounted) {
-        SLNotice.showInfo(context, 'Đã copy nội dung chia sẻ');
+        SLNotice.showInfo(context, context.tr('settings_copied_share'));
       }
     } catch (_) {}
 

@@ -272,7 +272,12 @@ class AppErrorMapper {
         normalized.contains('không chính xác') ||
         normalized.contains('không tồn tại') ||
         normalized.contains('đã được sử dụng') ||
+        normalized.contains('đã có tài khoản') ||
         normalized.contains('mật khẩu quá yếu') ||
+        normalized.contains('sai mật khẩu') ||
+        normalized.contains('thông tin đăng nhập') ||
+        normalized.contains('tài khoản không tồn tại') ||
+        normalized.contains('tối đa 3 tài khoản') ||
         normalized.contains('already in use') ||
         normalized.contains('already-in-use') ||
         normalized.contains('email-already-in-use') ||
@@ -333,30 +338,42 @@ class AppErrorMapper {
     }
     if (normalized.contains('already in use') ||
         normalized.contains('already-in-use') ||
-        normalized.contains('email-already-in-use')) {
+        normalized.contains('email-already-in-use') ||
+        normalized.contains('đã có tài khoản') ||
+        normalized.contains('đã được sử dụng')) {
       return L10nService().translate('err_auth_email_in_use');
     }
     if (normalized.contains('weak password') ||
+        normalized.contains('mật khẩu quá yếu') ||
         normalized.contains('weak-password')) {
       return L10nService().translate('err_auth_weak_password');
     }
     if (normalized.contains('invalid email') ||
-        normalized.contains('invalid-email')) {
+        normalized.contains('invalid-email') ||
+        normalized.contains('định dạng email') ||
+        normalized.contains('email không hợp lệ')) {
       return L10nService().translate('err_auth_invalid_email');
     }
     if (normalized.contains('wrong password') ||
         normalized.contains('wrong-password') ||
         normalized.contains('invalid-credential') ||
-        normalized.contains('invalid login credentials')) {
+        normalized.contains('invalid login credentials') ||
+        normalized.contains('sai mật khẩu') ||
+        normalized.contains('mật khẩu không chính xác') ||
+        normalized.contains('thông tin đăng nhập không đúng') ||
+        normalized.contains('thông tin đăng nhập')) {
       return L10nService().translate('err_auth_invalid_credential');
     }
     if (normalized.contains('too many requests') ||
         normalized.contains('too-many-requests') ||
-        normalized.contains('blocked all requests')) {
+        normalized.contains('blocked all requests') ||
+        normalized.contains('tối đa 3 tài khoản')) {
       return L10nService().translate('err_auth_too_many_requests');
     }
     if (normalized.contains('user not found') ||
-        normalized.contains('user-not-found')) {
+        normalized.contains('user-not-found') ||
+        normalized.contains('tài khoản không tồn tại') ||
+        normalized.contains('không tìm thấy tài khoản')) {
       return L10nService().translate('err_auth_user_not_found');
     }
     if (message.isEmpty) {

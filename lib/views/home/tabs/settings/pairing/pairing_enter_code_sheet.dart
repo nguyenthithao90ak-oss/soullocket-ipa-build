@@ -436,7 +436,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE91E63).withOpacity(0.1),
+                  color: const Color(0xFFE91E63).withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.favorite_rounded, size: 64, color: Color(0xFFE91E63)),

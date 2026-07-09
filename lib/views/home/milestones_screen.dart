@@ -595,58 +595,52 @@ class _MilestonesScreenState extends State<MilestonesScreen>
   }
 
   Widget _buildEventItemCard(MilestoneEvent event, {required bool isUpcoming}) {
-    String countdownText = '';
-    Color badgeBgColor;
-    Color badgeTextColor;
+    final (countdownText, badgeBgColor, badgeTextColor) = switch ((isUpcoming, event.diffDays)) {
+      (true, 0) => (
+          L10nService().translate('milestone_today'),
+          const Color(0xFFDCFCE7),
+          const Color(0xFF166534)
+        ),
+      (true, 1) => (
+          L10nService().translate('milestone_tomorrow'),
+          const Color(0xFFECFEFF),
+          const Color(0xFF155E75)
+        ),
+      (true, final d) => (
+          L10nService().format('milestone_days_left', {'days': d.toString()}),
+          const Color(0xFFFCE7F3),
+          const Color(0xFF9D174D)
+        ),
+      (false, -1) => (
+          L10nService().translate('milestone_yesterday'),
+          const Color(0xFFF1F5F9),
+          const Color(0xFF475569)
+        ),
+      (false, _) => (
+          L10nService().format('milestone_days_passed', {'days': event.diffDays.abs().toString()}),
+          const Color(0xFFF1F5F9),
+          const Color(0xFF475569)
+        ),
+    };
 
-    if (isUpcoming) {
-      if (event.diffDays == 0) {
-        countdownText = L10nService().translate('milestone_today');
-        badgeBgColor = const Color(0xFFDCFCE7);
-        badgeTextColor = const Color(0xFF166534);
-      } else if (event.diffDays == 1) {
-        countdownText = L10nService().translate('milestone_tomorrow');
-        badgeBgColor = const Color(0xFFECFEFF);
-        badgeTextColor = const Color(0xFF155E75);
-      } else {
-        countdownText = L10nService().format('milestone_days_left', {'days': event.diffDays.toString()});
-        badgeBgColor = const Color(0xFFFCE7F3);
-        badgeTextColor = const Color(0xFF9D174D);
-      }
-    } else {
-      final passedDays = event.diffDays.abs();
-      if (passedDays == 1) {
-        countdownText = L10nService().translate('milestone_yesterday');
-        badgeBgColor = const Color(0xFFF1F5F9);
-        badgeTextColor = const Color(0xFF475569);
-      } else {
-        countdownText = L10nService().format('milestone_days_passed', {'days': passedDays.toString()});
-        badgeBgColor = const Color(0xFFF1F5F9);
-        badgeTextColor = const Color(0xFF475569);
-      }
-    }
-
-    String stickerPath;
-    Color iconBgColor;
-    switch (event.type) {
-      case 'birthday':
-        stickerPath = 'assets/images/interaction_stickers/custom/numbered/sticker_108.png';
-        iconBgColor = const Color(0xFFFEF3C7);
-        break;
-      case 'anniversary':
-        stickerPath = 'assets/images/interaction_stickers/custom/numbered/sticker_005.png';
-        iconBgColor = const Color(0xFFFCE7F3);
-        break;
-      case 'holiday':
-        stickerPath = 'assets/images/interaction_stickers/custom/numbered/sticker_008.png';
-        iconBgColor = const Color(0xFFEDE9FE);
-        break;
-      case 'calendar':
-      default:
-        stickerPath = 'assets/images/interaction_stickers/custom/numbered/sticker_008.png';
-        iconBgColor = const Color(0xFFDBEAFE);
-        break;
-    }
+    final (stickerPath, iconBgColor) = switch (event.type) {
+      'birthday' => (
+          'assets/images/interaction_stickers/custom/numbered/sticker_108.png',
+          const Color(0xFFFEF3C7)
+        ),
+      'anniversary' => (
+          'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
+          const Color(0xFFFCE7F3)
+        ),
+      'holiday' => (
+          'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
+          const Color(0xFFEDE9FE)
+        ),
+      _ => (
+          'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
+          const Color(0xFFDBEAFE)
+        ),
+    };
 
     final weekdays = [
       L10nService().translate('milestone_weekday_1'),

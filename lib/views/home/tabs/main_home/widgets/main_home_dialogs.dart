@@ -273,14 +273,33 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
 
   void _handleInteractionLongPressEnd(LongPressEndDetails details) {
     final selectedType = _interactionDragHoveredType;
+    _hideInteractionDragOverlay();
+    
+    if (selectedType == 'edit_stickers') {
+      _openStickerCustomization();
+      return;
+    }
+    
     final preset = selectedType == null
         ? null
         : _maybePresetForInteractionType(selectedType);
-    _hideInteractionDragOverlay();
     if (preset != null) {
       _setManualInteractionPreset(preset.type);
       _handleSendInteraction(preset.type, preset.emoji);
     }
+  }
+
+  void _openStickerCustomization() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const InteractionStickerEditorScreen(),
+      ),
+    ).then((updated) async {
+      if (updated == true && mounted) {
+        await _loadCustomStickers();
+        setState(() {});
+      }
+    });
   }
 
   void _handleInteractionLongPressCancel() {
@@ -306,6 +325,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           (preset) => MapEntry(preset.type, GlobalKey()),
         ),
       );
+    _interactionDragOptionKeys['edit_stickers'] = GlobalKey();
 
     _interactionDragOverlayEntry = OverlayEntry(
       builder: (context) {
@@ -367,36 +387,75 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                GridView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: _interactionDragMenuOptions.length,
-                                  gridDelegate:
-                                      const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 4,
-                                    crossAxisSpacing: 8,
-                                    mainAxisSpacing: 12,
-                                    childAspectRatio: 0.92,
-                                  ),
-                                  itemBuilder: (context, index) {
-                                    final preset =
-                                        _interactionDragMenuOptions[index];
-                                    final isHovered =
-                                        hoveredType == preset.type;
-                                    return _buildInteractionDragOption(
-                                      preset,
-                                      key: _interactionDragOptionKeys[
-                                          preset.type],
-                                      highlighted: isHovered,
-                                      onTap: () {
-                                        _setManualInteractionPreset(
-                                            preset.type);
-                                        _hideInteractionDragOverlay();
-                                        _handleSendInteraction(
-                                            preset.type, preset.emoji);
+                                Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    GridView.builder(
+                                      shrinkWrap: true,
+                                      physics: const NeverScrollableScrollPhysics(),
+                                      itemCount: _interactionDragMenuOptions.length,
+                                      gridDelegate:
+                                          const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 4,
+                                        crossAxisSpacing: 8,
+                                        mainAxisSpacing: 12,
+                                        childAspectRatio: 0.92,
+                                      ),
+                                      itemBuilder: (context, index) {
+                                        final preset =
+                                            _interactionDragMenuOptions[index];
+                                        final isHovered =
+                                            hoveredType == preset.type;
+                                        return _buildInteractionDragOption(
+                                          preset,
+                                          key: _interactionDragOptionKeys[
+                                              preset.type],
+                                          highlighted: isHovered,
+                                          onTap: () {
+                                            _setManualInteractionPreset(
+                                                preset.type);
+                                            _hideInteractionDragOverlay();
+                                            _handleSendInteraction(
+                                                preset.type, preset.emoji);
+                                          },
+                                        );
                                       },
-                                    );
-                                  },
+                                    ),
+                                    ValueListenableBuilder<String?>(
+                                      valueListenable: _interactionDragHoveredNotifier,
+                                      builder: (context, hoveredVal, _) {
+                                        final isHovered = hoveredVal == 'edit_stickers';
+                                        return GestureDetector(
+                                          onTap: () {
+                                            _hideInteractionDragOverlay();
+                                            _openStickerCustomization();
+                                          },
+                                          child: AnimatedScale(
+                                            scale: isHovered ? 1.2 : 1.0,
+                                            duration: const Duration(milliseconds: 200),
+                                            curve: Curves.easeOutBack,
+                                            child: Container(
+                                              key: _interactionDragOptionKeys['edit_stickers'],
+                                              padding: const EdgeInsets.all(6),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF4CAF50),
+                                                shape: BoxShape.circle,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: const Color(0xFF4CAF50).withValues(alpha: 0.4),
+                                                    blurRadius: 8,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                                border: Border.all(color: Colors.white, width: 1.5),
+                                              ),
+                                              child: const Icon(Icons.edit_rounded, color: Colors.white, size: 16),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -450,11 +509,16 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
     }
 
     String? hoveredType;
-    for (final preset in _interactionDragMenuOptions) {
-      final rect = _interactionDragOptionHitRects[preset.type];
-      if (rect != null && rect.contains(globalPosition)) {
-        hoveredType = preset.type;
-        break;
+    final editRect = _interactionDragOptionHitRects['edit_stickers'];
+    if (editRect != null && editRect.contains(globalPosition)) {
+      hoveredType = 'edit_stickers';
+    } else {
+      for (final preset in _interactionDragMenuOptions) {
+        final rect = _interactionDragOptionHitRects[preset.type];
+        if (rect != null && rect.contains(globalPosition)) {
+          hoveredType = preset.type;
+          break;
+        }
       }
     }
 

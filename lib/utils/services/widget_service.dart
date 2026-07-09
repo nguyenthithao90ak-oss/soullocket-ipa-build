@@ -210,7 +210,7 @@ class WidgetService {
   }) {
     return (
       showDiaryOnWidget: showDiaryOnWidget,
-      heartAnimated: heartAnimated,
+      heartAnimated: true,
     );
   }
 

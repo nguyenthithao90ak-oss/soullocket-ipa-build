@@ -453,10 +453,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       }
       await PendingUploadService.instance.clear(_pendingProfileHeaderUploadKey);
       final refreshedUrl = _withRefreshToken(url);
-      if (!mounted) return;
-      setState(() {
-        _applyProfilePresentationLocally(headerImageUrl: refreshedUrl);
-      });
+      await _saveProfilePresentation(headerImageUrl: refreshedUrl);
       _showSnack('Đã cập nhật ảnh nền hồ sơ.');
     } catch (e) {
       if (!mounted) return;
@@ -498,9 +495,23 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       await PendingUploadService.instance.clear(_pendingHouseAvatarUploadKey);
       final refreshedUrl = _withRefreshToken(url);
       if (!mounted) return;
-      setState(
-          () => _applyProfilePresentationLocally(houseAvatar: refreshedUrl));
-      _showSnack('Đã cập nhật avatar hồ sơ.');
+      
+      setState(() => _isUpdatingProfileAppearance = true);
+      try {
+        await _houseSettingsService.updateHouseAvatarOnly(
+          houseId: houseId,
+          avatarUrl: refreshedUrl,
+        );
+        if (!mounted) return;
+        setState(() {
+          _applyProfilePresentationLocally(houseAvatar: refreshedUrl);
+        });
+        _showSnack('Đã cập nhật avatar hồ sơ.');
+      } finally {
+        if (mounted) {
+          setState(() => _isUpdatingProfileAppearance = false);
+        }
+      }
     } catch (e) {
       if (!mounted) return;
       _showSnack('Chưa thể đổi ảnh đại diện lúc này. Vui lòng thử lại.');

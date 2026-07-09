@@ -544,8 +544,8 @@ extension _SettingsTabShell on _SettingsTabState {
           _buildiOSRow(
             icon: Icons.link_rounded,
             iconBgColor: const Color(0xFFD81B60),
-            title: 'Kết nối nửa kia',
-            subtitle: 'Tham gia không gian chung với người ấy',
+            title: context.tr('settings_partner_connect'),
+            subtitle: context.tr('settings_partner_connect_desc'),
             isDark: isDark,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PairingDashboardScreen())),
           ),
@@ -592,8 +592,8 @@ extension _SettingsTabShell on _SettingsTabState {
           _buildiOSRow(
             icon: Icons.notifications_active_rounded,
             iconBgColor: const Color(0xFFA4D7A9),
-            title: '${context.tr('settings_notifications_label')} & Tương tác',
-            subtitle: 'Quản lý thông báo, lời nhắc kỷ niệm',
+            title: context.tr('settings_notifications_interactions'),
+            subtitle: context.tr('settings_notifications_interactions_desc'),
             isDark: isDark,
             onTap: () => _togglePanel('notifications'),
           ),

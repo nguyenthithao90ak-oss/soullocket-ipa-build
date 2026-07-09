@@ -761,12 +761,10 @@ struct PersonCard: View {
         VStack(spacing: 5) {
             ZStack(alignment: .bottomTrailing) {
                 AvatarView(path: avatarPath, name: name, size: avatarSize, accentColor: theme.accentColor)
-                OnlineDot(isOnline: isOnline)
-                    .offset(x: 2, y: 2)
             }
 
             Text(name)
-                .font(.system(size: 15, weight: .bold, design: .rounded))
+                .font(.system(size: 19, weight: .heavy, design: .rounded))
                 .foregroundColor(theme.textColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -1204,12 +1202,9 @@ struct StatusSection: View {
         VStack(spacing: 8) {
             HStack(spacing: 8) {
                 VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 5) {
-                        OnlineDot(isOnline: data.isOnline1)
-                        Text(data.name1)
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    }
-                    .foregroundColor(theme.textColor)
+                    Text(data.name1)
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundColor(theme.textColor)
 
                     Text(resolvedStatus(data.status1, isOnline: data.isOnline1))
                         .font(.system(size: 10, weight: .medium, design: .rounded))
@@ -1219,12 +1214,9 @@ struct StatusSection: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 5) {
-                        OnlineDot(isOnline: data.isOnline2)
-                        Text(data.name2)
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    }
-                    .foregroundColor(theme.textColor)
+                    Text(data.name2)
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundColor(theme.textColor)
 
                     Text(resolvedStatus(data.status2, isOnline: data.isOnline2))
                         .font(.system(size: 10, weight: .medium, design: .rounded))

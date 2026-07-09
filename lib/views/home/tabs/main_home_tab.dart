@@ -24,6 +24,7 @@ import 'package:soullocket_app/views/map/map_screen.dart';
 import 'package:soullocket_app/views/relationship/couple_connect_screen.dart';
 import 'package:soullocket_app/views/single_match/single_match_hub_screen.dart';
 import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart';
+import 'package:soullocket_app/views/home/screens/interaction_sticker_editor_screen.dart';
 import 'package:soullocket_app/widgets/animated_rabbit_sticker.dart';
 import 'package:soullocket_app/utils/services/soul_merge_service.dart';
 import 'dart:async';
@@ -431,6 +432,18 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   bool get _hasWarmHomeSnapshot =>
       (_houseId?.trim().isNotEmpty ?? false) && _houseSettings != null;
 
+  Future<void> _loadCustomStickers() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      for (final preset in _kPartnerInteractionPresets) {
+        final customPath = prefs.getString('custom_sticker_${preset.type}');
+        if (customPath != null && customPath.isNotEmpty) {
+          preset.assetPath = customPath;
+        }
+      }
+    } catch (_) {}
+  }
+
   _PartnerInteractionPreset get _displayInteractionPreset {
     final manualType = _manualInteractionPresetType;
     if (manualType != null) {
@@ -445,6 +458,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    unawaited(_loadCustomStickers());
     WidgetsBinding.instance.addObserver(this);
     _isTabActive = widget.isActiveListenable.value;
     widget.isActiveListenable.addListener(_onActiveChanged);
@@ -3672,7 +3686,6 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
   String _globalHeartStyle = 'basic';
   StreamSubscription<Map<String, dynamic>>? _interactiveEventsSub;
 
-  bool _showGlobal = false;
   bool _showHeartNotif = false;
 
   static const List<String> _appTips = [
@@ -3690,7 +3703,6 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
     '💡 Cùng lên danh sách To-do list hoặc ghi lại ghi chú ngọt ngào ở mục Ghi chú chung 📝',
     '💡 Thử vận may hoặc giải trí cùng người ấy với Vòng quay thử thách ở tab Giải Trí 🎡',
     '💡 Rút bài Tarot tình duyên mỗi ngày ở tab Giải Trí để xem mức độ đồng điệu hôm nay 🔮',
-    '💡 Sử dụng Nhịp điệu tâm hồn (Soul Rhythm) để cùng hít thở sâu, đồng điệu nhịp đập mỗi tối 🧘‍♀️',
     '💡 Đừng quên cho thú cưng ảo ăn và tương tác mỗi ngày trong ngôi nhà chung nhé 🐱',
     '💡 Vào Cài đặt ➔ Giao diện để đổi màu chủ đề cực xinh như "Hoàng hôn", "Đại dương" hay "Hồng ngọt ngào"! 🎨',
     '💡 Bạn có thể bật hiệu ứng tuyết rơi, trái tim bay hoặc lá rụng rất lãng mạn trong Cài đặt ➔ Giao diện! ❄️',
@@ -3731,7 +3743,6 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
-        _showGlobal = prefs.getBool('soul_merge_show_heart_global') ?? false;
         _showHeartNotif = prefs.getBool('soul_merge_show_heart_notif') ?? false;
         if (!_showHeartNotif) {
           _showBubble = false;
@@ -3779,9 +3790,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
         }
 
         // 2. Hiển thị hiệu ứng tim bay nếu:
-        // - Hoặc showGlobal được bật (bay trên mọi màn hình/tabs)
-        // - Hoặc chúng ta đang ở màn hình home (luôn bay ở home)
-        if (_showGlobal || widget.activeIndex == 0) {
+        // - Chúng ta đang ở màn hình home (luôn bay ở home)
+        if (widget.activeIndex == 0) {
           final prefs = await SharedPreferences.getInstance();
           final style = prefs.getString('soul_merge_heart_style') ?? 'basic';
           if (mounted) {
@@ -3805,7 +3815,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
 
     _messagesSub = SoulMergeService().watchSoulMessages().listen((messages) {
       if (messages.isEmpty || _isSingle) return;
-      final isVisible = _showGlobal || widget.activeIndex == 0;
+      final isVisible = widget.activeIndex == 0;
       if (!isVisible) return;
       final lastMsg = messages.last;
       final sender = lastMsg['sender']?.toString();
@@ -3835,7 +3845,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
   }
 
   void _showRandomTip() {
-    final isVisible = _showGlobal || widget.activeIndex == 0;
+    final isVisible = widget.activeIndex == 0;
     if (!isVisible) return;
     final tip = _appTips[_random.nextInt(_appTips.length)];
     _showFloatingMessage(tip);
@@ -3882,7 +3892,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
   Widget build(BuildContext context) {
     if (_isSingle) return const SizedBox.shrink();
 
-    final isVisible = _showGlobal || widget.activeIndex == 0;
+    final isVisible = widget.activeIndex == 0;
     if (!isVisible) return const SizedBox.shrink();
 
     return ValueListenableBuilder<bool>(

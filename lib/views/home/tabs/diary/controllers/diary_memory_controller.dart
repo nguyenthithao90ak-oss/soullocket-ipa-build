@@ -1559,7 +1559,7 @@ class DiaryMemoryController extends ChangeNotifier {
     final vipAccess = preCheckResults[0] as VipAccessInfo;
     final totalMemories = preCheckResults[1] as int;
 
-    final maxMemories = (vipAccess.memoryVaultLimit ?? 365).toDouble();
+    final maxMemories = 999999999.0;
 
     if (totalMemories >= maxMemories) {
       showSnackBar(
@@ -1572,7 +1572,7 @@ class DiaryMemoryController extends ChangeNotifier {
       return;
     }
 
-    final dailyLimit = vipAccess.dailyMemoryUploadLimit;
+    final dailyLimit = 999999999;
     final uid = FirebaseAuth.instance.currentUser?.uid ?? 'guest';
 
     final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());

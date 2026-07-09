@@ -364,19 +364,31 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
     }
 
     try {
-      // Yêu cầu xem quảng cáo tối đa 20p/lần
       final prefs = await SharedPreferences.getInstance();
       final lastAdStr = prefs.getString('last_bg_ad_time');
-      bool shouldShowAd = !_isVipActive;
-      if (shouldShowAd && lastAdStr != null) {
+      final bool requiresAd = !_isVipActive;
+
+      if (requiresAd && lastAdStr != null) {
         final lastAd = DateTime.tryParse(lastAdStr);
-        if (lastAd != null &&
-            DateTime.now().difference(lastAd).inMinutes < 20) {
-          shouldShowAd = false;
+        if (lastAd != null) {
+          final diff = DateTime.now().difference(lastAd);
+          if (diff.inMinutes < 60) {
+            final remaining = 60 - diff.inMinutes;
+            if (mounted) {
+              setState(() {
+                _isUploadingThemeBackground = false;
+              });
+            }
+            _showToast(
+              L10nService().format('theme_err_ad_cooldown', {'minutes': remaining.toString()}),
+              success: false,
+            );
+            return;
+          }
         }
       }
 
-      if (shouldShowAd) {
+      if (requiresAd) {
         final adMob = AdMobService();
         // ignoreCooldown=true: tránh bị block bởi cooldown 45s giữa các ad toàn màn hình
         // loadTimeout=12s: cho đủ thời gian load ad nếu chưa preload
@@ -386,6 +398,11 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
         );
         if (!mounted) return;
         if (!adSuccess) {
+          if (mounted) {
+            setState(() {
+              _isUploadingThemeBackground = false;
+            });
+          }
           _showToast(context.tr('theme_err_ad_for_bg'), success: false);
           return;
         }

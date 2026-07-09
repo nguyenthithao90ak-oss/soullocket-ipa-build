@@ -101,9 +101,4 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
     });
   }
 
-  Future<void> _handleWidgetHeartAnimatedChanged(bool value) async {
-    await _updateWidgetAppearanceDraft(() {
-      _widgetHeartAnimated = value;
-    });
-  }
 }

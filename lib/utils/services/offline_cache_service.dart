@@ -130,8 +130,8 @@ class OfflineCacheService {
     final prefs = await getPrefs();
     final keys =
         prefs.getKeys().where((k) => k.startsWith('offline_cache_')).toList();
-    for (final key in keys) {
-      await prefs.remove(key);
+    if (keys.isNotEmpty) {
+      await Future.wait(keys.map((key) => prefs.remove(key)));
     }
   }
 }
