@@ -995,7 +995,13 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
           } catch (_) {}
         });
       }
-      return Container(
+      final width = (photo['width'] as num?)?.toDouble() ?? 1.0;
+      final height = (photo['height'] as num?)?.toDouble() ?? 1.0;
+      final aspectRatio = (height > 0) ? (width / height) : 1.0;
+      
+      return AspectRatio(
+        aspectRatio: aspectRatio,
+        child: Container(
         decoration: BoxDecoration(
           color: const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(18),
@@ -1019,11 +1025,17 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
             ),
           ],
         ),
-      );
+      ));
     }
 
-    return ValueListenableBuilder<int>(
-      valueListenable: widget.selectionListenable,
+    final width = (photo['width'] as num?)?.toDouble() ?? 1.0;
+    final height = (photo['height'] as num?)?.toDouble() ?? 1.0;
+    final aspectRatio = (height > 0) ? (width / height) : 1.0;
+
+    return AspectRatio(
+      aspectRatio: aspectRatio,
+      child: ValueListenableBuilder<int>(
+        valueListenable: widget.selectionListenable,
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
@@ -1055,7 +1067,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
               imageUrl: photoUrl,
               maxWidthDiskCache: widget.thumbnailCacheWidth,
               cacheManager: AppCacheManager.instance,
-              fit: BoxFit.contain,
+              fit: isStickerOrPng ? BoxFit.contain : BoxFit.cover,
               filterQuality: FilterQuality.low,
               fadeInDuration: const Duration(milliseconds: 150),
               fadeOutDuration: Duration.zero,
@@ -1190,7 +1202,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
           ),
         );
       },
-    );
+    ));
   }
 }
 

@@ -201,10 +201,6 @@ flutter:
     - assets/splash_icon.png
     - assets/splash_icon_rounded.png
     - assets/splash_icon_android12.png
-    - assets/audio/soul_block/
-    - assets/audio/soul_rhythm_reference/
-    - assets/audio/soul_rhythm_reference/tutorial_songs/
-    - assets/audio/soul_rhythm_reference/sfx/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -395,5 +395,11 @@
 	<string>Dữ liệu của bạn được ẩn danh và dùng để cải thiện trải nghiệm ứng dụng, hiển thị quảng cáo phù hợp mà không bán cho bên thứ ba.</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+		<string>location</string>
+	</array>
 </dict>
 </plist>
