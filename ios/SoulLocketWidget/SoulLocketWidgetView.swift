@@ -818,7 +818,7 @@ struct SoulLocketWidgetView: View {
         let theme = WidgetTheme.from(entry.data.bgTheme)
 
         if #available(iOS 16.0, *), isLockScreen(family: family) {
-            LockScreenWidgetView(data: entry.data, family: family)
+            LockScreenWidgetView(data: entry.data, family: family, theme: theme, date: entry.date)
         } else {
             ZStack {
                 if #unavailable(iOSApplicationExtension 17.0) {
@@ -863,26 +863,14 @@ struct SoulLocketWidgetView: View {
 struct LockScreenWidgetView: View {
     let data: CoupleWidgetData
     let family: WidgetFamily
+    let theme: WidgetTheme
+    let date: Date
 
     var body: some View {
         switch family {
         case .accessoryRectangular:
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 4) {
-                    Image(systemName: "heart.fill")
-                        .font(.system(size: 14))
-                    Text("SoulLocket")
-                        .font(.system(size: 14, weight: .bold))
-                }
-                Text(data.resolvedDaysText())
-                    .font(.system(size: 18, weight: .bold))
-                if !data.status2.isEmpty {
-                    Text(data.status2)
-                        .font(.system(size: 10))
-                        .lineLimit(1)
-                }
-            }
-            .modifier(TransparentWidgetBackground())
+            SmallWidgetView(data: data, theme: theme, date: date)
+                .modifier(TransparentWidgetBackground())
         case .accessoryCircular:
             VStack(spacing: 2) {
                 Image(systemName: "heart.fill")
