@@ -378,9 +378,19 @@ struct DiaryCenterPreview: View {
     let theme: WidgetTheme
     let width: CGFloat
     let height: CGFloat
+    let date: Date
 
     private var cornerRadius: CGFloat {
         min(width, height) * 0.20
+    }
+
+    private var displayPath: String? {
+        guard !paths.isEmpty else { return nil }
+        let minute = Calendar.current.component(.minute, from: date)
+        let hour = Calendar.current.component(.hour, from: date)
+        let seed = minute / 2
+        let index = (hour + seed) % paths.count
+        return paths[index]
     }
 
     var body: some View {
@@ -388,7 +398,7 @@ struct DiaryCenterPreview: View {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .fill(theme.chipBackground)
 
-            if let firstPath = paths.first, let image = UIImage(contentsOfFile: firstPath) {
+            if let path = displayPath, let image = UIImage(contentsOfFile: path) {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
@@ -417,14 +427,19 @@ struct WidgetCenterVisualView: View {
     let heartSize: CGFloat
     let diaryWidth: CGFloat
     let diaryHeight: CGFloat
+    let date: Date
 
     var body: some View {
-        if data.showDiaryOnWidget {
+        let minute = Calendar.current.component(.minute, from: date)
+        let showPhotoNow = data.showDiaryOnWidget && (minute % 4 == 0)
+
+        if showPhotoNow && !data.diaryImagePaths.isEmpty {
             DiaryCenterPreview(
                 paths: data.diaryImagePaths,
                 theme: theme,
                 width: diaryWidth,
-                height: diaryHeight
+                height: diaryHeight,
+                date: date
             )
         } else {
             if data.heartAnimated {
@@ -457,6 +472,7 @@ struct InteractiveWidgetCenterVisualView: View {
     let heartSize: CGFloat
     let diaryWidth: CGFloat
     let diaryHeight: CGFloat
+    let date: Date
 
     var body: some View {
         if #available(iOS 17.0, *) {
@@ -467,7 +483,8 @@ struct InteractiveWidgetCenterVisualView: View {
                     palette: palette,
                     heartSize: heartSize,
                     diaryWidth: diaryWidth,
-                    diaryHeight: diaryHeight
+                    diaryHeight: diaryHeight,
+                    date: date
                 )
             }
             .buttonStyle(.plain)
@@ -478,7 +495,8 @@ struct InteractiveWidgetCenterVisualView: View {
                 palette: palette,
                 heartSize: heartSize,
                 diaryWidth: diaryWidth,
-                diaryHeight: diaryHeight
+                diaryHeight: diaryHeight,
+                date: date
             )
         }
     }
@@ -750,21 +768,13 @@ struct WidgetBackgroundDecorations: View {
 
 struct PersonCard: View {
     let name: String
-    let status: String
-    let isOnline: Bool
     let weather: String
     let stars: String
     let avatarPath: String?
     let theme: WidgetTheme
     let avatarSize: CGFloat
-    let battery: Int       // -1 = unknown
-    let isCharging: Bool
 
-    private var batteryLabel: String? {
-        guard battery >= 0 else { return nil }
-        let icon = isCharging ? "⚡" : (battery <= 20 ? "🔋" : "🔋")
-        return "\(icon) \(battery)%"
-    }
+
 
     var body: some View {
         VStack(spacing: 5) {
@@ -773,20 +783,15 @@ struct PersonCard: View {
                     Group {
                         if !weather.isEmpty {
                             Text(weather)
-                                .font(.system(size: 14))
-                                .padding(3)
+                                .font(.system(size: 11))
+                                .padding(2)
                                 .background(Color.white.opacity(0.85))
                                 .clipShape(Circle())
                                 .shadow(color: Color.black.opacity(0.1), radius: 2, y: 1)
-                                .offset(x: -4, y: 4)
+                                .offset(x: -4, y: 10)
                         }
                     },
                     alignment: .bottomLeading
-                )
-                .overlay(
-                    OnlineDot(isOnline: isOnline)
-                        .offset(x: 2, y: 2),
-                    alignment: .bottomTrailing
                 )
 
             Text(name)
@@ -795,10 +800,8 @@ struct PersonCard: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
 
-            if let label = batteryLabel {
-                InfoChip(label: label, theme: theme)
-            } else if !status.isEmpty {
-                Text(status)
+            if !stars.isEmpty {
+                Text(stars)
                     .font(.system(size: 9, weight: .medium, design: .rounded))
                     .foregroundColor(theme.secondaryTextColor)
                     .lineLimit(1)
@@ -837,13 +840,13 @@ struct SoulLocketWidgetView: View {
 
                 switch family {
                 case .systemSmall:
-                    SmallWidgetView(data: entry.data, theme: theme)
+                    SmallWidgetView(data: entry.data, theme: theme, date: entry.date)
                 case .systemMedium:
-                    MediumWidgetView(data: entry.data, theme: theme)
+                    MediumWidgetView(data: entry.data, theme: theme, date: entry.date)
                 case .systemLarge:
-                    LargeWidgetView(data: entry.data, theme: theme)
+                    LargeWidgetView(data: entry.data, theme: theme, date: entry.date)
                 default:
-                    SmallWidgetView(data: entry.data, theme: theme)
+                    SmallWidgetView(data: entry.data, theme: theme, date: entry.date)
                 }
             }
             .modifier(WidgetContainerBackground(theme: theme, data: entry.data))
@@ -944,6 +947,7 @@ struct WidgetContainerBackground: ViewModifier {
 struct SmallWidgetView: View {
     let data: CoupleWidgetData
     let theme: WidgetTheme
+    let date: Date
 
     private var palette: HeartPalette {
         HeartPalette.from(data.heartColorKey)
@@ -957,7 +961,8 @@ struct SmallWidgetView: View {
                 palette: palette,
                 heartSize: 44,
                 diaryWidth: 44,
-                diaryHeight: 54
+                diaryHeight: 54,
+                date: date
             )
 
             Text(data.resolvedDaysText(referenceDate: Date()))
@@ -967,17 +972,9 @@ struct SmallWidgetView: View {
                 .minimumScaleFactor(0.78)
 
             HStack(spacing: 5) {
-                ZStack(alignment: .bottomTrailing) {
-                    AvatarView(path: data.avatar1Path, name: data.name1, size: 36, accentColor: theme.accentColor)
-                    OnlineDot(isOnline: data.isOnline1)
-                        .offset(x: 2, y: 2)
-                }
+                AvatarView(path: data.avatar1Path, name: data.name1, size: 36, accentColor: theme.accentColor)
 
-                ZStack(alignment: .bottomTrailing) {
-                    AvatarView(path: data.avatar2Path, name: data.name2, size: 36, accentColor: theme.accentColor)
-                    OnlineDot(isOnline: data.isOnline2)
-                        .offset(x: 2, y: 2)
-                }
+                AvatarView(path: data.avatar2Path, name: data.name2, size: 36, accentColor: theme.accentColor)
             }
 
             Text("\(data.name1) & \(data.name2)")
@@ -993,6 +990,7 @@ struct SmallWidgetView: View {
 struct MediumWidgetView: View {
     let data: CoupleWidgetData
     let theme: WidgetTheme
+    let date: Date
 
     private var palette: HeartPalette {
         HeartPalette.from(data.heartColorKey)
@@ -1002,15 +1000,11 @@ struct MediumWidgetView: View {
         HStack(spacing: 0) {
             PersonCard(
                 name: data.name1,
-                status: data.status1,
-                isOnline: data.isOnline1,
                 weather: data.weather1,
                 stars: data.stars1,
                 avatarPath: data.avatar1Path,
                 theme: theme,
-                avatarSize: 60,
-                battery: data.battery1,
-                isCharging: data.isCharging1
+                avatarSize: 60
             )
             .frame(maxWidth: .infinity)
 
@@ -1021,7 +1015,8 @@ struct MediumWidgetView: View {
                     palette: palette,
                     heartSize: 64,
                     diaryWidth: 64,
-                    diaryHeight: 78
+                    diaryHeight: 78,
+                    date: date
                 )
 
                 Text(data.resolvedDaysText(referenceDate: Date()))
@@ -1034,15 +1029,11 @@ struct MediumWidgetView: View {
 
             PersonCard(
                 name: data.name2,
-                status: data.status2,
-                isOnline: data.isOnline2,
                 weather: data.weather2,
                 stars: data.stars2,
                 avatarPath: data.avatar2Path,
                 theme: theme,
-                avatarSize: 60,
-                battery: data.battery2,
-                isCharging: data.isCharging2
+                avatarSize: 60
             )
             .frame(maxWidth: .infinity)
         }
@@ -1054,6 +1045,7 @@ struct MediumWidgetView: View {
 struct LargeWidgetView: View {
     let data: CoupleWidgetData
     let theme: WidgetTheme
+    let date: Date
 
     private var palette: HeartPalette {
         HeartPalette.from(data.heartColorKey)
@@ -1064,15 +1056,11 @@ struct LargeWidgetView: View {
             HStack(spacing: 0) {
                 PersonCard(
                     name: data.name1,
-                    status: data.status1,
-                    isOnline: data.isOnline1,
                     weather: data.weather1,
                     stars: data.stars1,
                     avatarPath: data.avatar1Path,
                     theme: theme,
-                    avatarSize: 60,
-                    battery: data.battery1,
-                    isCharging: data.isCharging1
+                    avatarSize: 60
                 )
                 .frame(maxWidth: .infinity)
 
@@ -1083,7 +1071,8 @@ struct LargeWidgetView: View {
                         palette: palette,
                         heartSize: 68,
                         diaryWidth: 68,
-                        diaryHeight: 84
+                        diaryHeight: 84,
+                        date: date
                     )
 
                     Text(data.resolvedDaysText(referenceDate: Date()))
@@ -1096,15 +1085,11 @@ struct LargeWidgetView: View {
 
                 PersonCard(
                     name: data.name2,
-                    status: data.status2,
-                    isOnline: data.isOnline2,
                     weather: data.weather2,
                     stars: data.stars2,
                     avatarPath: data.avatar2Path,
                     theme: theme,
-                    avatarSize: 60,
-                    battery: data.battery2,
-                    isCharging: data.isCharging2
+                    avatarSize: 60
                 )
                 .frame(maxWidth: .infinity)
             }
