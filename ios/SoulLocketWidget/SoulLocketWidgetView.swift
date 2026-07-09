@@ -773,6 +773,7 @@ struct PersonCard: View {
     let avatarPath: String?
     let theme: WidgetTheme
     let avatarSize: CGFloat
+    let isLeft: Bool
 
 
 
@@ -788,10 +789,10 @@ struct PersonCard: View {
                                 .background(Color.white.opacity(0.85))
                                 .clipShape(Circle())
                                 .shadow(color: Color.black.opacity(0.1), radius: 2, y: 1)
-                                .offset(x: -4, y: 10)
+                                .offset(x: isLeft ? -4 : 4, y: 10)
                         }
                     },
-                    alignment: .bottomLeading
+                    alignment: isLeft ? .bottomLeading : .bottomTrailing
                 )
 
             Text(name)
@@ -1013,7 +1014,8 @@ struct MediumWidgetView: View {
                 stars: data.stars1,
                 avatarPath: data.avatar1Path,
                 theme: theme,
-                avatarSize: 75
+                avatarSize: 75,
+                isLeft: true
             )
             .frame(maxWidth: .infinity)
 
@@ -1042,7 +1044,8 @@ struct MediumWidgetView: View {
                 stars: data.stars2,
                 avatarPath: data.avatar2Path,
                 theme: theme,
-                avatarSize: 75
+                avatarSize: 75,
+                isLeft: false
             )
             .frame(maxWidth: .infinity)
         }
@@ -1069,7 +1072,8 @@ struct LargeWidgetView: View {
                     stars: data.stars1,
                     avatarPath: data.avatar1Path,
                     theme: theme,
-                    avatarSize: 75
+                    avatarSize: 75,
+                    isLeft: true
                 )
                 .frame(maxWidth: .infinity)
 
@@ -1098,7 +1102,8 @@ struct LargeWidgetView: View {
                     stars: data.stars2,
                     avatarPath: data.avatar2Path,
                     theme: theme,
-                    avatarSize: 75
+                    avatarSize: 75,
+                    isLeft: false
                 )
                 .frame(maxWidth: .infinity)
             }

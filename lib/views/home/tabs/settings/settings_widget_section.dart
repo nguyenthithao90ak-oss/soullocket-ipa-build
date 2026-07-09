@@ -43,8 +43,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       (context.tr('home_xanhngc_49b55b'), 'green'),
       (context.tr('home_m_720483'), 'red'),
       if (AppConfig.isPurchaseEnabled) ...[
-        (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
-        (_isVipActive ? 'Vũ trụ PRO' : 'Vũ trụ PRO 🔒', 'cosmic'),
+        ('Aurora', 'premium'),
+        ('Vũ trụ', 'cosmic'),
       ],
     ];
     final heartColorOptions = [
@@ -226,8 +226,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       (context.tr('home_xanhngc_49b55b'), 'green'),
       (context.tr('home_m_720483'), 'red'),
       if (AppConfig.isPurchaseEnabled) ...[
-        (_isVipActive ? 'Aurora PRO' : 'Aurora PRO 🔒', 'premium'),
-        (_isVipActive ? 'Vũ trụ PRO' : 'Vũ trụ PRO 🔒', 'cosmic'),
+        ('Aurora', 'premium'),
+        ('Vũ trụ', 'cosmic'),
       ],
     ];
     final heartColorOptions = [
@@ -657,8 +657,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       ('green',   [const Color(0xFFA5D6A7), const Color(0xFF2E7D32)], config.themeOptions.firstWhere((o) => o.$2 == 'green', orElse: () => ('Xanh lá', 'green')).$1),
       ('red',     [const Color(0xFFEF9A9A), const Color(0xFFB71C1C)], config.themeOptions.firstWhere((o) => o.$2 == 'red', orElse: () => ('Đỏ', 'red')).$1),
       if (AppConfig.isPurchaseEnabled) ...[
-        ('premium', [const Color(0xFFFBC2EB), const Color(0xFFA6C1EE)], config.themeOptions.firstWhere((o) => o.$2 == 'premium', orElse: () => ('Aurora PRO', 'premium')).$1),
-        ('cosmic',  [const Color(0xFF0F0C20), const Color(0xFFFFD700)], config.themeOptions.firstWhere((o) => o.$2 == 'cosmic', orElse: () => ('Vũ trụ PRO', 'cosmic')).$1),
+        ('premium', [const Color(0xFFFBC2EB), const Color(0xFFA6C1EE)], config.themeOptions.firstWhere((o) => o.$2 == 'premium', orElse: () => ('Aurora', 'premium')).$1),
+        ('cosmic',  [const Color(0xFF0F0C20), const Color(0xFFFFD700)], config.themeOptions.firstWhere((o) => o.$2 == 'cosmic', orElse: () => ('Vũ trụ', 'cosmic')).$1),
       ],
     ];
 

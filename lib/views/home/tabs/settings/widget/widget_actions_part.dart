@@ -58,21 +58,6 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
   }
 
   Future<void> _handleWidgetThemeChanged(String value) async {
-    if ((value == 'premium' || value == 'cosmic') && !_isVipActive) {
-      if (!AppConfig.isPurchaseEnabled) {
-        _showToast(
-          context.tr('home_lachnnyang_d9f089'),
-          success: false,
-        );
-        return;
-      }
-      _showToast(
-        context.tr('home_lachnnycha_2b9ddb'),
-        success: false,
-      );
-      await _openPremiumStoreFromWidgetPanel();
-      return;
-    }
     _updateThemeDraft(() => _draftWidgetThemeKey = value);
     await _persistAndSyncWidgetAppearance();
   }

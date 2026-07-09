@@ -205,7 +205,8 @@ class _InteractionStickerEditorScreenState
 
   @override
   Widget build(BuildContext context) {
-    return SLTheme.background(
+    return Container(
+      color: const Color(0xFFF0F8FF), // Xanh dương nhạt (Alice Blue)
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
