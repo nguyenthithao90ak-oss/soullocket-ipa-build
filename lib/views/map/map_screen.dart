@@ -1341,6 +1341,29 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       backgroundColor: const Color(0xFF0B1020),
       appBar: AppBar(
         automaticallyImplyLeading: false,
+        leadingWidth: 64,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Center(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: FastBackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xB3121A2B),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back_rounded, size: 22),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
         toolbarHeight: 62,
         elevation: 0,
         scrolledUnderElevation: 0,

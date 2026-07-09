@@ -121,7 +121,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
   Widget _buildMapStatusChips() {
     return Positioned(
       top: MediaQuery.paddingOf(context).top + 12,
-      left: 16,
+      left: 68,
       right: 72,
       child: ValueListenableBuilder<_LiveUiSnapshot>(
         valueListenable: _liveUiVN,

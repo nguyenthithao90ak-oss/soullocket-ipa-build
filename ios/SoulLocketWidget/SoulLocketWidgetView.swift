@@ -1105,7 +1105,7 @@ struct DiaryPhotosView: View {
     let theme: WidgetTheme
 
     private var displayPaths: [String] {
-        Array(paths.prefix(4))
+        Array(paths.prefix(12))
     }
 
     var body: some View {
