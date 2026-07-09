@@ -644,6 +644,7 @@ class AuthSignInService {
 
     return firebase_auth.OAuthProvider('apple.com').credential(
       idToken: identityToken,
+      accessToken: credential.authorizationCode,
       rawNonce: rawNonce,
     );
   }
