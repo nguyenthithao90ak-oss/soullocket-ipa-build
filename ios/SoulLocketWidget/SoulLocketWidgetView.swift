@@ -870,7 +870,7 @@ struct LockScreenWidgetView: View {
         switch family {
         case .accessoryRectangular:
             HStack(spacing: 4) {
-                Text(data.name1 ?? "")
+                Text(data.name1)
                     .font(.system(size: 14, weight: .bold))
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
@@ -885,7 +885,7 @@ struct LockScreenWidgetView: View {
                 }
                 .padding(.horizontal, 4)
                 
-                Text(data.name2 ?? "")
+                Text(data.name2)
                     .font(.system(size: 14, weight: .bold))
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)

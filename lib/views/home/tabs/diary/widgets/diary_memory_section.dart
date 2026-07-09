@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -8,9 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/material.dart';
 
-import '../../../../../utils/app_cache_manager.dart';
 import '../../../../../core/sl_theme.dart';
-import '../../../../../core/fast_backdrop_filter.dart';
 import '../../../../../utils/app_error_mapper.dart';
 import '../../../../../utils/services/l10n_service.dart';
 import '../../../../../widgets/skeleton_container.dart';
@@ -30,7 +27,6 @@ typedef DiaryPrepareMemoryFeedCallback = PreparedDiaryMemoryFeed Function({
 });
 
 class DiaryMemorySection extends StatefulWidget {
-  final Widget? header;
   final String? houseId;
   final Future<ConnectivityResult>? connectivityFuture;
   final Stream<DatabaseEvent>? memoriesStream;
@@ -62,7 +58,6 @@ class DiaryMemorySection extends StatefulWidget {
 
   const DiaryMemorySection({
     super.key,
-    this.header,
     required this.houseId,
     required this.connectivityFuture,
     required this.memoriesStream,
@@ -101,7 +96,6 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
   // Month filter state
   DateTime? _selectedMonth; // only year/month used, day = 1
   List<DateTime> _availableMonths = [];
-  bool _isMasonryLayout = true;
 
   @override
   void initState() {
@@ -405,37 +399,31 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                 ),
                               );
                             }
-                            for (var i = 0; i < filteredItems.length; i++) {
-                              final item = filteredItems[i];
+                            bodySlivers.add(
+                              SliverList(
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, index) {
+                                    final item = filteredItems[index];
 
-                              if (item.isHeader) {
-                                final highlights = item.highlights;
-                                if (highlights.isNotEmpty) {
-                                  bodySlivers.add(
-                                    SliverToBoxAdapter(
-                                      child: _DiaryMemorySpecialHeader(
-                                        icon:
-                                            highlights.first['icon'] ?? '💖',
-                                        title: highlights.first['text'] ?? '',
+                                    if (item.isHeader) {
+                                      final highlights = item.highlights;
+                                      if (highlights.isNotEmpty) {
+                                        return _DiaryMemorySpecialHeader(
+                                          icon:
+                                              highlights.first['icon'] ?? '💖',
+                                          title: highlights.first['text'] ?? '',
+                                          dateString: item.dateString ?? '',
+                                          totalPhotos: item.totalPhotos ?? 0,
+                                        );
+                                      }
+
+                                      return _DiaryMemoryDateHeader(
                                         dateString: item.dateString ?? '',
                                         totalPhotos: item.totalPhotos ?? 0,
-                                      ),
-                                    ),
-                                  );
-                                } else {
-                                  bodySlivers.add(
-                                    SliverToBoxAdapter(
-                                      child: _DiaryMemoryDateHeader(
-                                        dateString: item.dateString ?? '',
-                                        totalPhotos: item.totalPhotos ?? 0,
-                                      ),
-                                    ),
-                                  );
-                                }
-                              } else {
-                                bodySlivers.add(
-                                  SliverToBoxAdapter(
-                                    child: _DiaryMemoryPhotoRow(
+                                      );
+                                    }
+
+                                    return _DiaryMemoryPhotoRow(
                                       rowPhotos: item.photosRow ?? const [],
                                       thumbnailCacheWidth:
                                           widget.thumbnailCacheWidth,
@@ -448,12 +436,12 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                       onOpenMemory: widget.onOpenMemory,
                                       allPhotos: filteredPhotos,
                                       onEnsurePhotoUrl: widget.onEnsurePhotoUrl,
-                                      isMasonryLayout: _isMasonryLayout,
-                                    ),
-                                  ),
-                                );
-                              }
-                            }
+                                    );
+                                  },
+                                  childCount: filteredItems.length,
+                                ),
+                              ),
+                            );
 
                             bodySlivers.add(
                               SliverToBoxAdapter(
@@ -527,10 +515,6 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                           controller: _scrollController,
                           physics: const BouncingScrollPhysics(),
                           slivers: [
-                            if (widget.header != null)
-                              SliverToBoxAdapter(
-                                child: widget.header!,
-                              ),
                             SliverToBoxAdapter(
                               child: _DiaryMemoryHeroCard(
                                 totalPhotos: filteredCount,
@@ -543,14 +527,11 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                     widget.pendingUploadMessage,
                                 onRetryPendingUpload: _handleRetryPendingUpload,
                                 isUploading: _isUploadingMemory,
-                                isMasonry: _isMasonryLayout,
-                                onToggleGrid: () => setState(() => _isMasonryLayout = !_isMasonryLayout),
-                                onToggleSelection: () {},
                               ),
                             ),
                             ...bodySlivers,
                             const SliverPadding(
-                              padding: EdgeInsets.only(bottom: 240),
+                              padding: EdgeInsets.only(bottom: 128),
                             ),
                           ],
                         ),
@@ -608,8 +589,9 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 24, bottom: 12, left: 10, right: 10),
       child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.40),
+          color: Colors.white.withValues(alpha: 0.70),
           borderRadius: BorderRadius.circular(22),
           border: Border.all(color: Colors.white.withValues(alpha: 0.86)),
           boxShadow: [
@@ -620,13 +602,7 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
-          child: FastBackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: Row(
+        child: Row(
           children: [
             Container(
               width: 36,
@@ -692,9 +668,6 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
               ),
             ),
           ],
-        ),
-            ),
-          ),
         ),
       ),
     );
@@ -829,7 +802,6 @@ class _DiaryMemoryPhotoRow extends StatefulWidget {
   ) onOpenMemory;
   final List<Map<String, dynamic>> allPhotos;
   final Future<void> Function(Map<String, dynamic> photo) onEnsurePhotoUrl;
-  final bool isMasonryLayout;
 
   const _DiaryMemoryPhotoRow({
     required this.rowPhotos,
@@ -841,7 +813,6 @@ class _DiaryMemoryPhotoRow extends StatefulWidget {
     required this.onOpenMemory,
     required this.allPhotos,
     required this.onEnsurePhotoUrl,
-    this.isMasonryLayout = true,
   });
 
   @override
@@ -850,7 +821,6 @@ class _DiaryMemoryPhotoRow extends StatefulWidget {
 
 class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
   final Map<String, int> _retryCount = {};
-  final Map<String, bool> _showHeart = {};
 
   @override
   void initState() {
@@ -932,10 +902,8 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.rowPhotos.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
+    if (widget.rowPhotos.isEmpty) return const SizedBox.shrink();
+    
     // Compute optimal crossAxisCount based on number of items
     int crossAxisCount = 3;
     if (widget.rowPhotos.length == 1) {
@@ -946,34 +914,18 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12, left: 10, right: 10),
-      child: widget.isMasonryLayout
-          ? MasonryGridView.count(
-              crossAxisCount: crossAxisCount,
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
-              itemCount: widget.rowPhotos.length,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemBuilder: (context, index) {
-                final photo = widget.rowPhotos[index];
-                return _buildPhotoItem(context, photo, index);
-              },
-            )
-          : GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-                childAspectRatio: 1.0,
-              ),
-              itemCount: widget.rowPhotos.length,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemBuilder: (context, index) {
-                final photo = widget.rowPhotos[index];
-                return _buildPhotoItem(context, photo, index);
-              },
-            ),
+      child: MasonryGridView.count(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: crossAxisCount,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        itemCount: widget.rowPhotos.length,
+        itemBuilder: (context, index) {
+          final photo = widget.rowPhotos[index];
+          return _buildPhotoItem(context, photo, index);
+        },
+      ),
     );
   }
 
@@ -995,13 +947,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
           } catch (_) {}
         });
       }
-      final width = (photo['width'] as num?)?.toDouble() ?? 1.0;
-      final height = (photo['height'] as num?)?.toDouble() ?? 1.0;
-      final aspectRatio = (height > 0) ? (width / height) : 1.0;
-      
-      return AspectRatio(
-        aspectRatio: aspectRatio,
-        child: Container(
+      return Container(
         decoration: BoxDecoration(
           color: const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(18),
@@ -1025,17 +971,11 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
             ),
           ],
         ),
-      ));
+      );
     }
 
-    final width = (photo['width'] as num?)?.toDouble() ?? 1.0;
-    final height = (photo['height'] as num?)?.toDouble() ?? 1.0;
-    final aspectRatio = (height > 0) ? (width / height) : 1.0;
-
-    return AspectRatio(
-      aspectRatio: aspectRatio,
-      child: ValueListenableBuilder<int>(
-        valueListenable: widget.selectionListenable,
+    return ValueListenableBuilder<int>(
+      valueListenable: widget.selectionListenable,
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
@@ -1065,12 +1005,9 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
             tag: 'memory_image_${photo['id']}',
             child: CachedNetworkImage(
               imageUrl: photoUrl,
-              maxWidthDiskCache: widget.thumbnailCacheWidth,
-              cacheManager: AppCacheManager.instance,
+              memCacheWidth: widget.thumbnailCacheWidth,
               fit: isStickerOrPng ? BoxFit.contain : BoxFit.cover,
               filterQuality: FilterQuality.low,
-              fadeInDuration: const Duration(milliseconds: 150),
-              fadeOutDuration: Duration.zero,
               placeholder: (context, url) => Container(
                 color: isStickerOrPng ? Colors.transparent : const Color(0xFFF1F5F9),
               ),
@@ -1117,14 +1054,6 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
 
         return GestureDetector(
           onLongPress: () => widget.onToggleSelection(photo),
-          onDoubleTap: () {
-            setState(() { _showHeart[photoId] = true; });
-            Future.delayed(const Duration(milliseconds: 800), () {
-              if (mounted) {
-                setState(() { _showHeart[photoId] = false; });
-              }
-            });
-          },
           onTap: () async {
             if (widget.isSelectionMode) {
               widget.onToggleSelection(photo);
@@ -1171,38 +1100,11 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                         : null,
                   ),
                 ),
-              if (_showHeart[photoId] == true)
-                Positioned.fill(
-                  child: Center(
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.5, end: 1.2),
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.elasticOut,
-                      builder: (context, scale, child) {
-                        return Transform.scale(
-                          scale: scale,
-                          child: const Icon(
-                            Icons.favorite_rounded,
-                            color: Color(0xFFFF4F87),
-                            size: 80,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black26,
-                                blurRadius: 10,
-                                offset: Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
             ],
           ),
         );
       },
-    ));
+    );
   }
 }
 
@@ -1320,9 +1222,6 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
   final String pendingUploadMessage;
   final Future<void> Function() onRetryPendingUpload;
   final bool isUploading;
-  final bool isMasonry;
-  final VoidCallback onToggleGrid;
-  final VoidCallback onToggleSelection;
 
   const _DiaryMemoryHeroCard({
     required this.totalPhotos,
@@ -1333,9 +1232,6 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
     required this.pendingUploadMessage,
     required this.onRetryPendingUpload,
     required this.isUploading,
-    required this.isMasonry,
-    required this.onToggleGrid,
-    required this.onToggleSelection,
   });
 
   @override
@@ -1472,13 +1368,6 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                     onTap: onAdd,
                     isLoading: isUploading,
                   ),
-                  _DiaryMemoryHeroChip(
-                    icon: isMasonry ? Icons.grid_view_rounded : Icons.view_quilt_rounded,
-                    label: isMasonry ? 'Lưới vuông' : 'Lưới so le',
-                    color: const Color(0xFF7C5CE6),
-                    background: const Color(0xFFF4EEFF),
-                    onTap: onToggleGrid,
-                  ),
                 ],
               ),
               if (hasPendingUploadRetry) ...[
@@ -1613,7 +1502,6 @@ class _DiaryMemoryHeroChip extends StatelessWidget {
   final Color color;
   final Color background;
   final double? minWidth;
-  final VoidCallback? onTap;
 
   const _DiaryMemoryHeroChip({
     required this.icon,
@@ -1621,22 +1509,18 @@ class _DiaryMemoryHeroChip extends StatelessWidget {
     required this.color,
     required this.background,
     this.minWidth,
-    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
       constraints: BoxConstraints(minWidth: minWidth ?? 0),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-          decoration: BoxDecoration(
-            color: background,
-            borderRadius: BorderRadius.circular(16),
-          ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1656,7 +1540,6 @@ class _DiaryMemoryHeroChip extends StatelessWidget {
               ),
             ),
           ],
-        ),
         ),
       ),
     );
