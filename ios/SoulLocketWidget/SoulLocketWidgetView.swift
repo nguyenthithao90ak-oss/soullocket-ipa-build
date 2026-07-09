@@ -795,7 +795,7 @@ struct PersonCard: View {
                 )
 
             Text(name)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .font(.system(size: 14, weight: .bold, design: .rounded))
                 .foregroundColor(theme.textColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
@@ -1004,7 +1004,7 @@ struct MediumWidgetView: View {
                 stars: data.stars1,
                 avatarPath: data.avatar1Path,
                 theme: theme,
-                avatarSize: 60
+                avatarSize: 75
             )
             .frame(maxWidth: .infinity)
 
@@ -1033,7 +1033,7 @@ struct MediumWidgetView: View {
                 stars: data.stars2,
                 avatarPath: data.avatar2Path,
                 theme: theme,
-                avatarSize: 60
+                avatarSize: 75
             )
             .frame(maxWidth: .infinity)
         }
@@ -1060,7 +1060,7 @@ struct LargeWidgetView: View {
                     stars: data.stars1,
                     avatarPath: data.avatar1Path,
                     theme: theme,
-                    avatarSize: 60
+                    avatarSize: 75
                 )
                 .frame(maxWidth: .infinity)
 
@@ -1089,7 +1089,7 @@ struct LargeWidgetView: View {
                     stars: data.stars2,
                     avatarPath: data.avatar2Path,
                     theme: theme,
-                    avatarSize: 60
+                    avatarSize: 75
                 )
                 .frame(maxWidth: .infinity)
             }

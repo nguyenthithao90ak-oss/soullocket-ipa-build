@@ -31,12 +31,17 @@ struct CoupleWidgetData {
     var isCharging2: Bool
 
     func resolvedDaysText(referenceDate: Date = Date()) -> String {
-        let unit = dayUnitText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        var unit = dayUnitText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? "ngày"
             : dayUnitText.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        unit = unit.replacingOccurrences(of: " yêu", with: "")
+                   .replacingOccurrences(of: " of love", with: "")
+
         let raw = startDateRaw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !raw.isEmpty else {
-            return daysText
+            return daysText.replacingOccurrences(of: " yêu", with: "")
+                           .replacingOccurrences(of: " of love", with: "")
         }
 
         let formatter = ISO8601DateFormatter()
