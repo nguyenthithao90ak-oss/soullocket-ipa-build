@@ -120,8 +120,7 @@ class GiftMakerService {
           'giftId': giftId,
         });
       } catch (e) {
-        debugPrint(
-            'Warning: Could not save global gift link: ${AppErrorMapper.resolve(
+        debugPrint('Warning: Could not save global gift link: ${AppErrorMapper.resolve(
           e,
           fallbackMessage: 'Không thể lưu liên kết quà toàn cục.',
         ).message}');
@@ -130,16 +129,13 @@ class GiftMakerService {
       // Nếu gửi cho người khác, lưu thêm vào house người nhận
       if (normalizedToHouseId.isNotEmpty) {
         try {
-          await _db
-              .ref('houses/$normalizedToHouseId/received_gifts/$giftId')
-              .set({
+          await _db.ref('houses/$normalizedToHouseId/received_gifts/$giftId').set({
             ...giftData,
             'giftId': giftId,
             'status': 'pending',
           });
         } catch (e) {
-          debugPrint(
-              'Warning: Could not save to received_gifts: ${AppErrorMapper.resolve(
+          debugPrint('Warning: Could not save to received_gifts: ${AppErrorMapper.resolve(
             e,
             fallbackMessage: 'Không thể lưu quà vào nhà người nhận.',
           ).message}');
@@ -161,8 +157,7 @@ class GiftMakerService {
             'direction': 'sent',
           });
         } catch (e) {
-          debugPrint(
-              'Warning: Could not save to gift_feed_sender: ${AppErrorMapper.resolve(
+          debugPrint('Warning: Could not save to gift_feed_sender: ${AppErrorMapper.resolve(
             e,
             fallbackMessage: 'Không thể lưu lịch sử quà đã gửi.',
           ).message}');
@@ -195,9 +190,7 @@ class GiftMakerService {
       // Thử lấy từ house của người gửi
       var snap = normalizedHouseId.isEmpty
           ? await _db.ref('gift_links/$normalizedGiftId').get()
-          : await _db
-              .ref('houses/$normalizedHouseId/gift_links/$normalizedGiftId')
-              .get();
+          : await _db.ref('houses/$normalizedHouseId/gift_links/$normalizedGiftId').get();
       if (!snap.exists) {
         // Thử lấy từ gift_links global
         snap = await _db.ref('gift_links/$normalizedGiftId').get();
@@ -247,8 +240,7 @@ class GiftMakerService {
         data['status'] ??= 'new';
         return GiftData.fromMap(data);
       } catch (e) {
-        debugPrint(
-            'Could not resolve gift link from $path: ${AppErrorMapper.resolve(
+        debugPrint('Could not resolve gift link from $path: ${AppErrorMapper.resolve(
           e,
           fallbackMessage: 'Không thể đọc liên kết quà.',
         ).message}');
@@ -268,9 +260,7 @@ class GiftMakerService {
         .orderByChild('ts')
         .onValue
         .map((event) {
-      if (!event.snapshot.exists || event.snapshot.value is! Map) {
-        return <GiftData>[];
-      }
+      if (!event.snapshot.exists || event.snapshot.value is! Map) return <GiftData>[];
       final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
       return data.entries.where((e) => e.value is Map).map((e) {
         final map = Map<String, dynamic>.from(e.value as Map);
@@ -293,9 +283,7 @@ class GiftMakerService {
         .limitToLast(30)
         .onValue
         .map((event) {
-      if (!event.snapshot.exists || event.snapshot.value is! Map) {
-        return <GiftData>[];
-      }
+      if (!event.snapshot.exists || event.snapshot.value is! Map) return <GiftData>[];
       final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
       return data.entries.where((e) => e.value is Map).map((e) {
         final map = Map<String, dynamic>.from(e.value as Map);
@@ -321,8 +309,7 @@ class GiftMakerService {
     String openedGiftLabel = 'món quà bất ngờ';
     try {
       final existing = await _db
-          .ref(
-              'houses/$normalizedReceiverHouseId/received_gifts/$normalizedGiftId')
+          .ref('houses/$normalizedReceiverHouseId/received_gifts/$normalizedGiftId')
           .get();
       if (existing.exists && existing.value is Map) {
         final data = Map<dynamic, dynamic>.from(existing.value as Map);
@@ -339,20 +326,16 @@ class GiftMakerService {
 
     const openedAt = ServerValue.timestamp;
     final updates = <String, Object?>{
-      'houses/$normalizedReceiverHouseId/received_gifts/$normalizedGiftId/status':
-          'opened',
-      'houses/$normalizedReceiverHouseId/received_gifts/$normalizedGiftId/openedAt':
-          openedAt,
+      'houses/$normalizedReceiverHouseId/received_gifts/$normalizedGiftId/status': 'opened',
+      'houses/$normalizedReceiverHouseId/received_gifts/$normalizedGiftId/openedAt': openedAt,
       'gift_links/$normalizedGiftId/status': 'opened',
       'gift_links/$normalizedGiftId/openedAt': openedAt,
     };
 
     if (senderHouseId != null && senderHouseId.trim().isNotEmpty) {
       final senderId = senderHouseId.trim();
-      updates['houses/$senderId/gift_links/$normalizedGiftId/status'] =
-          'opened';
-      updates['houses/$senderId/gift_links/$normalizedGiftId/openedAt'] =
-          openedAt;
+      updates['houses/$senderId/gift_links/$normalizedGiftId/status'] = 'opened';
+      updates['houses/$senderId/gift_links/$normalizedGiftId/openedAt'] = openedAt;
     }
 
     await _db.ref().update(updates);
@@ -550,7 +533,6 @@ class GiftMakerService {
         ? 12
         : 0;
   }
-
   Future<void> deleteGiftLink({
     required String houseId,
     required String giftId,
@@ -559,9 +541,7 @@ class GiftMakerService {
       final normalizedHouseId = houseId.trim();
       final normalizedGiftId = giftId.trim();
       if (normalizedHouseId.isEmpty || normalizedGiftId.isEmpty) return;
-      await _db
-          .ref('houses/$normalizedHouseId/gift_links/$normalizedGiftId')
-          .remove();
+      await _db.ref('houses/$normalizedHouseId/gift_links/$normalizedGiftId').remove();
       await _db.ref('gift_links/$normalizedGiftId').remove();
 
       final uid = _auth.currentUser?.uid;
@@ -588,6 +568,7 @@ class GiftMakerService {
       rethrow;
     }
   }
+
 }
 
 // ─── MODEL ──────────────────────────────────────────────────────────────────

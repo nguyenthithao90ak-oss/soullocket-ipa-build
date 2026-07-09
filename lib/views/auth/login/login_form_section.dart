@@ -221,13 +221,13 @@ class LoginForm extends StatelessWidget {
             onProviderTap: onSocialLogin,
           ),
           const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
             child: Center(
               child: Text(
-                l10n.translate('auth_copyright'),
+                'SoulLocket © 2026 Tame Trương Việt Hoàng. Bản quyền được bảo hộ.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Color(0xFFBBBBBB),
                   fontSize: 9,
                   fontWeight: FontWeight.w500,

@@ -131,6 +131,8 @@ class SocialService {
     'boobs',
   ];
 
+
+
   /// Tải bài đăng từ Firestore trước, fallback sang RTDB nếu không có
   Future<Map<String, dynamic>?> _loadPostHybrid(String postId) async {
     try {
@@ -146,8 +148,7 @@ class SocialService {
     return null;
   }
 
-  Future<Map<String, dynamic>?> _loadCommentHybrid(
-      String postId, String commentId) async {
+  Future<Map<String, dynamic>?> _loadCommentHybrid(String postId, String commentId) async {
     try {
       final doc = await _getDocWithCacheFallback(
         _firestore
@@ -187,8 +188,7 @@ class SocialService {
     final blocked = results.any((snap) => snap.value == true);
 
     // Cache 5 phút — blocked status hiếm khi thay đổi
-    await LocalDatabaseService()
-        .setCacheEntry(cacheKey, blocked, ttl: const Duration(minutes: 5));
+    await LocalDatabaseService().setCacheEntry(cacheKey, blocked, ttl: const Duration(minutes: 5));
     return blocked;
   }
 
@@ -484,7 +484,8 @@ class SocialService {
     required String commentId,
     required String actorHouseId,
   }) async {
-    final commentData = await _loadCommentHybrid(postId, commentId);
+    final commentData =
+        await _loadCommentHybrid(postId, commentId);
     if (commentData == null || commentData['isHidden'] == true) {
       return;
     }
@@ -503,8 +504,9 @@ class SocialService {
 
   // ── STREAM feed global (mới nhất) bằng onChildAdded ──────────────────
   Stream<SocialPost> streamNewGlobalFeed({int? afterTs}) {
-    var query =
-        _firestore.collection('social_posts').orderBy('ts', descending: false);
+    var query = _firestore
+        .collection('social_posts')
+        .orderBy('ts', descending: false);
     if (afterTs != null) {
       query = query.startAfter([afterTs]);
     } else {
@@ -757,8 +759,7 @@ class SocialService {
         final snapshot = await transaction.get(docRef);
         if (snapshot.exists) {
           final data = snapshot.data() ?? <String, dynamic>{};
-          final currentLikesMap = Map<String, dynamic>.from(
-              data['likes_map'] ?? <String, dynamic>{});
+          final currentLikesMap = Map<String, dynamic>.from(data['likes_map'] ?? <String, dynamic>{});
           if (liked) {
             currentLikesMap.remove(myHouseId);
           } else {
@@ -803,6 +804,8 @@ class SocialService {
           (event) => event.snapshot.exists,
         );
   }
+
+
 
   // ── Unified Post Creation (Firebase only) ─────────────────────
   Future<String> createPostUnified({
@@ -919,15 +922,13 @@ class SocialService {
     if (docSnap.exists) {
       final commentData = docSnap.data()!;
       if (requester.isNotEmpty) {
-        final authorHouseId =
-            (commentData['houseId'] ?? commentData['uid'] ?? '')
-                .toString()
-                .trim();
+        final authorHouseId = (commentData['houseId'] ?? commentData['uid'] ?? '')
+            .toString()
+            .trim();
         final postDoc = await _getDocWithCacheFallback(
           _firestore.collection('social_posts').doc(postId),
         );
-        final postOwnerHouseId =
-            (postDoc.data()?['houseId'] ?? '').toString().trim();
+        final postOwnerHouseId = (postDoc.data()?['houseId'] ?? '').toString().trim();
         if (requester != authorHouseId && requester != postOwnerHouseId) {
           throw 'Bạn không có quyền xóa bình luận này.';
         }
@@ -967,8 +968,7 @@ class SocialService {
     }
     if (resolvedAvt.isEmpty) {
       try {
-        final avtSnap =
-            await _dbRef.child('houses/$houseId/settings/houseAvt').get();
+        final avtSnap = await _dbRef.child('houses/$houseId/settings/houseAvt').get();
         resolvedAvt = avtSnap.value?.toString() ?? '';
       } catch (_) {}
     }
@@ -1105,7 +1105,8 @@ class SocialService {
       throw 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại rồi thử tiếp.';
     }
 
-    final commentData = await _loadCommentHybrid(postId, commentId);
+    final commentData =
+        await _loadCommentHybrid(postId, commentId);
     if (commentData == null) {
       throw 'Bình luận không còn tồn tại.';
     }
@@ -1194,10 +1195,8 @@ class SocialService {
     if (pageItems.isEmpty) return [];
 
     final posts = <SocialPost>[];
-    final futures = pageItems.map((item) => _firestore
-        .collection('social_posts')
-        .doc(item['postId'] as String)
-        .get());
+    final futures = pageItems.map((item) =>
+        _firestore.collection('social_posts').doc(item['postId'] as String).get());
     final docSnaps = await Future.wait(futures);
 
     for (var doc in docSnaps) {
@@ -1293,4 +1292,5 @@ class SocialService {
   }
 
   // ── SCRIPT MIGRATION TỰ ĐỘNG CHO SOCIAL FEED ─────────────────────────
+
 }

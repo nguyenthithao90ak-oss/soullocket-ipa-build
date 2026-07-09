@@ -6,8 +6,8 @@ Widget _buildStartupAcknowledgement(BuildContext context) {
     decoration: BoxDecoration(
       color: _accentLavender.withValues(alpha: 0.08),
       borderRadius: BorderRadius.circular(18),
-      border: Border.all(
-          color: _accentLavender.withValues(alpha: 0.24), width: 1.3),
+      border:
+          Border.all(color: _accentLavender.withValues(alpha: 0.24), width: 1.3),
     ),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -31,16 +31,14 @@ Widget _buildStartupAcknowledgement(BuildContext context) {
   );
 }
 
-Widget _buildStartupAgreeBar(
-  BuildContext context, {
+Widget _buildStartupAgreeBar(BuildContext context, {
   required bool compact,
   required double bottomInset,
   required String cookieLevel,
   required VoidCallback onConfirm,
 }) {
-  final storageLabel = cookieLevel == 'essential'
-      ? context.tr('consent_lutrthityu_2d2969')
-      : context.tr('consent_lutry_ea3cfa');
+  final storageLabel =
+      cookieLevel == 'essential' ? context.tr('consent_lutrthityu_2d2969') : context.tr('consent_lutry_ea3cfa');
 
   return Container(
     padding: EdgeInsets.fromLTRB(
@@ -92,8 +90,7 @@ Widget _buildStartupAgreeBar(
           ],
         ),
         const SizedBox(height: 9),
-        _buildPrimaryButton(
-          context,
+        _buildPrimaryButton(context,
           accent: _accentBlue,
           label: context.tr('consent_ngvvoapp_93cd33'),
           scaleDownContent: true,
@@ -106,8 +103,7 @@ Widget _buildStartupAgreeBar(
   );
 }
 
-Widget _buildPrimaryButton(
-  BuildContext context, {
+Widget _buildPrimaryButton(BuildContext context, {
   required Color accent,
   required String label,
   required VoidCallback? onTap,
@@ -186,8 +182,7 @@ Widget _buildPrimaryButton(
   );
 }
 
-Widget _buildRequiredConsentHint(
-  BuildContext context, {
+Widget _buildRequiredConsentHint(BuildContext context, {
   required Color accent,
 }) {
   // Responsive scaling for hint icon

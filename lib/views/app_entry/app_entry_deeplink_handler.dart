@@ -109,8 +109,7 @@ class AppEntryDeeplinkHandler {
     try {
       currentHouseId = await _houseService.getCurrentHouseId();
     } catch (e) {
-      debugPrint(
-          'Could not resolve current house before opening gift: ${AppErrorMapper.resolve(
+      debugPrint('Could not resolve current house before opening gift: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: msgCannotResolveHouse,
       ).message}');
@@ -136,7 +135,9 @@ class AppEntryDeeplinkHandler {
       final resolvedGift = gift;
       if (resolvedGift == null) {
         showSnackBar(
-          hasCurrentHouse ? msgGiftNotFound : msgLinkMissingHouse,
+          hasCurrentHouse
+              ? msgGiftNotFound
+              : msgLinkMissingHouse,
         );
         return true;
       }

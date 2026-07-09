@@ -331,6 +331,8 @@ class _MessengerScreenState extends State<MessengerScreen>
     );
   }
 
+
+
   String _roomIdFor(String friendId) {
     final ids = [_myHouseId ?? '', friendId]..sort();
     return '${ids.first}_${ids.last}';
@@ -516,9 +518,7 @@ class _MessengerScreenState extends State<MessengerScreen>
       return repairMojibakeText(name);
     }
     return repairMojibakeText(
-      _partnerRole == 'user1'
-          ? L10nService().translate('male_role_default')
-          : L10nService().translate('female_role_default'),
+      _partnerRole == 'user1' ? L10nService().translate('male_role_default') : L10nService().translate('female_role_default'),
     );
   }
 
@@ -833,6 +833,7 @@ class _MessengerScreenState extends State<MessengerScreen>
     );
   }
 
+
   List<GroupChatRoom> get _sortedGroupRooms {
     final items = <GroupChatRoom>[..._groupRooms];
     items.sort((a, b) {
@@ -1118,3 +1119,5 @@ class _HouseMatePreview {
     required this.avatar,
   });
 }
+
+

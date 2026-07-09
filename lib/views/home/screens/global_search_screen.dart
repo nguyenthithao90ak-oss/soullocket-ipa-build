@@ -485,9 +485,8 @@ class _RecentSearchEntry {
       iconCodePoint: result.icon.codePoint,
       iconFontFamily: result.icon.fontFamily,
       iconFontPackage: result.icon.fontPackage,
-      colorValues: result.colors
-          .map((color) => color.toARGB32())
-          .toList(growable: false),
+      colorValues:
+          result.colors.map((color) => color.toARGB32()).toList(growable: false),
     );
   }
 

@@ -29,8 +29,7 @@ class LoveWheelService {
       'spinnedAt': ServerValue.timestamp,
     };
 
-    final historyRef =
-        _db.ref('houses/$normalizedHouseId/wheel_history').push();
+    final historyRef = _db.ref('houses/$normalizedHouseId/wheel_history').push();
     final historyKey = historyRef.key;
     if (historyKey == null || historyKey.isEmpty) {
       await _db.ref('houses/$normalizedHouseId/wheel_result').set(payload);
@@ -51,10 +50,7 @@ class LoveWheelService {
     if (normalizedHouseId.isEmpty) {
       return Stream<Map<dynamic, dynamic>?>.value(null);
     }
-    return _db
-        .ref('houses/$normalizedHouseId/wheel_result')
-        .onValue
-        .map((event) {
+    return _db.ref('houses/$normalizedHouseId/wheel_result').onValue.map((event) {
       if (!event.snapshot.exists || event.snapshot.value is! Map) {
         return null;
       }

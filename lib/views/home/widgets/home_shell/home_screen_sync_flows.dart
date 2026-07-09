@@ -1,3 +1,4 @@
+
 part of '../../home_screen.dart';
 
 extension _HomeScreenShellSyncFlows on _HomeScreenState {
@@ -57,27 +58,25 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child:
-                Text(context.tr('home_hiu_93c4c0'), style: SLTheme.quicksand()),
+            child: Text(context.tr('home_hiu_93c4c0'), style: SLTheme.quicksand()),
           ),
           if (isMe)
             ElevatedButton(
               onPressed: () async {
                 Navigator.of(ctx).pop();
                 try {
-                  SLNotice.showInfo(
-                      context, context.tr('home_anghontc_b7c262'));
+                  SLNotice.showInfo(context, context.tr('home_anghontc_b7c262'));
                   await AuthService().undoScheduledDeletion();
                   if (!mounted) return;
-                  SLNotice.showSuccess(
-                      context, context.tr('home_hontcxathn_58b732'));
+                  SLNotice.showSuccess(context, context.tr('home_hontcxathn_58b732'));
                 } catch (e) {
                   if (!mounted) return;
                   SLNotice.showError(
                     context,
                     AppErrorMapper.resolve(
                       e,
-                      fallbackMessage: context.tr('home_chathhontc_5110fb'),
+                      fallbackMessage:
+                          context.tr('home_chathhontc_5110fb'),
                     ).message,
                   );
                 }
@@ -98,30 +97,6 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
     if (houseId == null || houseId.isEmpty) return;
 
     FriendsService().initGlobalSync(houseId);
-
-    _pairingSub?.cancel();
-    _pairingSub = PairingService.instance.listenToIncomingRequests(houseId).listen((requests) {
-      if (!mounted) return;
-      final pendingRequests = requests.where((r) => r.status == 'pending').toList();
-      if (pendingRequests.isNotEmpty) {
-        // Show a dialog for the first pending request
-        final request = pendingRequests.first;
-        SLNotice.showConfirmDialog(
-          context,
-          title: 'Yêu cầu ghép nối',
-          message: 'Có yêu cầu ghép nối từ ${request.guestName}. Bạn có muốn xem không?',
-          confirmText: 'Xem',
-          cancelText: 'Đóng',
-        ).then((value) {
-          if (value == true && mounted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PairingDashboardScreen()),
-            );
-          }
-        });
-      }
-    });
 
     _settingsSub =
         _houseSettingsService.streamSettings(houseId).listen((settings) {

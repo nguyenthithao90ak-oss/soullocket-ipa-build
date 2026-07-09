@@ -152,7 +152,8 @@ class CalendarEventListSection extends StatelessWidget {
                       return CalendarEventStateCard(
                         icon: Icons.event_busy_rounded,
                         title: context.tr('util_ngynychack_2d6ef4'),
-                        description: context.tr('util_ththmmtlch_d99e48'),
+                        description:
+                            context.tr('util_ththmmtlch_d99e48'),
                         color: accent,
                       );
                     }

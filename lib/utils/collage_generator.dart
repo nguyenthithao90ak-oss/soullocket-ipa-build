@@ -1,4 +1,4 @@
-import 'dart:math';
+﻿import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -559,12 +559,10 @@ class CollageGenerator {
         height * (0.08 + random.nextDouble() * 0.84),
       );
       final fill = i / bubbleCount < bubbleBias
-          ? (bubbleTint ?? decor.secondary).withValues(
-              alpha: (bubbleTint == null ? 0.10 : 0.18) +
-                  random.nextDouble() * 0.10)
-          : (accentTint ?? decor.primary).withValues(
-              alpha: (accentTint == null ? 0.07 : 0.14) +
-                  random.nextDouble() * 0.08);
+          ? (bubbleTint ?? decor.secondary).withValues(alpha: 
+              (bubbleTint == null ? 0.10 : 0.18) + random.nextDouble() * 0.10)
+          : (accentTint ?? decor.primary).withValues(alpha: 
+              (accentTint == null ? 0.07 : 0.14) + random.nextDouble() * 0.08);
       canvas.drawCircle(center, radius, Paint()..color = fill);
       canvas.drawCircle(
         center,
@@ -1334,10 +1332,8 @@ class CollageGenerator {
 
       final double availableX = max(0.0, img.width - sourceWidth);
       final double availableY = max(0.0, img.height - sourceHeight);
-      final double normalizedX =
-          transform.offset.dx.clamp(-1.0, 1.0).toDouble();
-      final double normalizedY =
-          transform.offset.dy.clamp(-1.0, 1.0).toDouble();
+      final double normalizedX = transform.offset.dx.clamp(-1.0, 1.0).toDouble();
+      final double normalizedY = transform.offset.dy.clamp(-1.0, 1.0).toDouble();
       final double sx = availableX / 2 + normalizedX * availableX / 2;
       final double sy = availableY / 2 + normalizedY * availableY / 2;
       return Rect.fromLTWH(sx, sy, sourceWidth, sourceHeight);
@@ -1459,6 +1455,7 @@ class CollageGenerator {
       transform: transform,
     );
   }
+
 
   static Size _drawGridCollage(
     Canvas canvas,

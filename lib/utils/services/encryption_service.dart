@@ -280,8 +280,7 @@ class EncryptionService {
     }
     // Legacy App format 'ENC2:' (AES-CBC) — migrate to ENC3:
     if (ciphertext.startsWith(_legacyAppPrefix)) {
-      final plaintext =
-          _aesCbcDecrypt(key, ciphertext, prefix: _legacyAppPrefix);
+      final plaintext = _aesCbcDecrypt(key, ciphertext, prefix: _legacyAppPrefix);
       // Tự động migrate lên ENC3: khi decrypt
       return plaintext;
     }
@@ -616,8 +615,7 @@ class EncryptionService {
       final String plainText;
       if (caption.startsWith(_legacyAppPrefix)) {
         // ENC2: AES-CBC legacy → decrypt trước khi re-encrypt ENC3:
-        plainText =
-            _aesCbcDecrypt(legacyKey, caption, prefix: _legacyAppPrefix);
+        plainText = _aesCbcDecrypt(legacyKey, caption, prefix: _legacyAppPrefix);
       } else if (caption.startsWith(_legacyPrefix)) {
         // ENC: Web legacy GCM → decrypt trước khi re-encrypt ENC3:
         plainText = _aesDecrypt(legacyKey, caption, prefix: _legacyPrefix);

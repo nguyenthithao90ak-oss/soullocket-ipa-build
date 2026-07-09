@@ -39,11 +39,11 @@ class LocalActionThrottleService {
     Duration burstWindow = const Duration(seconds: 4),
   }) {
     final normalizedId = actionId.trim().toLowerCase();
-    final effectiveMinInterval =
-        minInterval.isNegative ? Duration.zero : minInterval;
+    final effectiveMinInterval = minInterval.isNegative ? Duration.zero : minInterval;
     final effectiveMaxAttempts = maxAttempts < 1 ? 1 : maxAttempts;
-    final effectiveBurstWindow =
-        burstWindow <= Duration.zero ? const Duration(seconds: 4) : burstWindow;
+    final effectiveBurstWindow = burstWindow <= Duration.zero
+        ? const Duration(seconds: 4)
+        : burstWindow;
     if (normalizedId.isEmpty) {
       return LocalActionThrottleResult(
         decision: LocalActionThrottleDecision.burstBlocked,

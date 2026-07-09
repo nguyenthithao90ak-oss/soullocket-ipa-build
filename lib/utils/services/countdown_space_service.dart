@@ -1,10 +1,8 @@
 import 'dart:async';
 
-import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
 
 import 'push_notification_helper.dart';
-import 'local_database_service.dart';
 
 class CountdownSpaceRequestResult {
   const CountdownSpaceRequestResult({
@@ -59,17 +57,6 @@ class CountdownSpaceRequest {
       snapshot: _toMap(map['snapshot']),
     );
   }
-
-  Map<String, dynamic> toJson() => {
-        'requestId': requestId,
-        'spaceId': spaceId,
-        'fromHouseId': fromHouseId,
-        'fromHouseName': fromHouseName,
-        'toHouseId': toHouseId,
-        'status': status,
-        'createdAt': createdAt,
-        'snapshot': snapshot,
-      };
 }
 
 class CountdownSpace {
@@ -99,13 +86,6 @@ class CountdownSpace {
       updatedAt: _toInt(map['updatedAt']),
     );
   }
-
-  Map<String, dynamic> toJson() => {
-        'spaceId': spaceId,
-        'status': status,
-        'snapshot': snapshot,
-        'updatedAt': updatedAt,
-      };
 }
 
 class CountdownSpaceDeleteRequestInfo {
@@ -142,14 +122,6 @@ class CountdownSpaceDeleteRequestInfo {
       status: map['status']?.toString() ?? 'pending',
     );
   }
-
-  Map<String, dynamic> toJson() => {
-        'spaceId': spaceId,
-        'requestedBy': requestedBy,
-        'requestedAt': requestedAt,
-        'deleteAt': deleteAt,
-        'status': status,
-      };
 }
 
 class CountdownSpaceService {
@@ -469,26 +441,9 @@ class CountdownSpaceService {
     });
   }
 
-  Stream<List<CountdownSpace>> streamActiveSpaces(String houseId) async* {
+  Stream<List<CountdownSpace>> streamActiveSpaces(String houseId) {
     final hId = houseId.trim();
-    final cacheKey = 'countdown_spaces_$hId';
-
-    final cacheData = await LocalDatabaseService().getCacheEntry(cacheKey);
-    if (cacheData != null) {
-      try {
-        final raw = jsonDecode(cacheData);
-        if (raw is List) {
-          final list = raw
-              .map((e) => CountdownSpace.fromMap(
-                  e['spaceId']?.toString() ?? '', e as Map<String, dynamic>))
-              .toList();
-          list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-          yield list;
-        }
-      } catch (_) {}
-    }
-
-    yield* _db.ref('countdown_spaces').onValue.asyncMap((event) async {
+    return _db.ref('countdown_spaces').onValue.asyncMap((event) async {
       if (event.snapshot.value == null) return [];
       final raw = _toMap(event.snapshot.value);
       final list = <CountdownSpace>[];
@@ -499,10 +454,6 @@ class CountdownSpaceService {
         }
       });
       list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-
-      final cacheJson = jsonEncode(list.map((e) => e.toJson()).toList());
-      LocalDatabaseService().setCacheEntry(cacheKey, cacheJson);
-
       return list;
     });
   }

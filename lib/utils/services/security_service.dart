@@ -35,8 +35,7 @@ class SecurityService {
   static final SecurityService _instance = SecurityService._internal();
   factory SecurityService() => _instance;
   SecurityService._internal() {
-    _lastSpamReason =
-        'Bạn đang thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.';
+    _lastSpamReason = 'Bạn đang thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.';
   }
 
   // Throttling / Spam detection
@@ -112,15 +111,15 @@ class SecurityService {
           includeLoopback: false, type: InternetAddressType.any);
       for (var interface in interfaces) {
         final name = interface.name.toLowerCase();
-
+        
         bool isVpn = false;
         if (Platform.isIOS) {
           // On iOS, utun, ipsec, ppp are often used for Cellular, Hotspot, Private Relay
-          isVpn = name.contains('tap') ||
-              (name.contains('tun') && !name.startsWith('utun')) ||
-              name.contains('wireguard') ||
-              name.contains('wg0') ||
-              name.contains('ovpn');
+          isVpn = name.contains('tap') || 
+                  (name.contains('tun') && !name.startsWith('utun')) || 
+                  name.contains('wireguard') || 
+                  name.contains('wg0') || 
+                  name.contains('ovpn');
         } else {
           isVpn = name.contains('tun') ||
               name.contains('tap') ||
@@ -210,8 +209,7 @@ class SecurityService {
 
     // Check if count exceeds max
     if (_actionHistory[actionType]!.length > _maxActionsPerMinute) {
-      _lastSpamReason =
-          'Bạn đang thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.';
+      _lastSpamReason = 'Bạn đang thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.';
       _logSecurityAlert(
           'spam_rate_limit',
           'Hành động: $actionType. Vượt quá $_maxActionsPerMinute lần/phút.',
@@ -266,18 +264,13 @@ class SecurityService {
         return _cachedDeviceId!;
       }
 
-      final storedId = (await _secureStorage
-                  .read(key: _deviceIdStorageKey)
-                  .timeout(const Duration(seconds: 3), onTimeout: () => null))
-              ?.trim() ??
-          '';
+      final storedId =
+          (await _secureStorage.read(key: _deviceIdStorageKey).timeout(const Duration(seconds: 3), onTimeout: () => null))?.trim() ?? '';
       if (storedId.isNotEmpty) {
         final sanitizedStoredId = _sanitizeDeviceId(storedId);
         if (await _shouldRotateStoredPlatformDeviceId(sanitizedStoredId)) {
           final deviceId = _sanitizeDeviceId(_generateFallbackDeviceId());
-          await _secureStorage
-              .write(key: _deviceIdStorageKey, value: deviceId)
-              .timeout(const Duration(seconds: 3), onTimeout: () => null);
+          await _secureStorage.write(key: _deviceIdStorageKey, value: deviceId).timeout(const Duration(seconds: 3), onTimeout: () => null);
           final prefs = OfflineCacheService.getPrefsSync() ??
               await SharedPreferences.getInstance();
           await prefs.remove(_deviceIdStorageKey);
@@ -285,12 +278,10 @@ class SecurityService {
           return deviceId;
         }
         if (sanitizedStoredId != storedId) {
-          await _secureStorage
-              .write(
-                key: _deviceIdStorageKey,
-                value: sanitizedStoredId,
-              )
-              .timeout(const Duration(seconds: 3), onTimeout: () => null);
+          await _secureStorage.write(
+            key: _deviceIdStorageKey,
+            value: sanitizedStoredId,
+          ).timeout(const Duration(seconds: 3), onTimeout: () => null);
         }
         _cachedDeviceId = sanitizedStoredId;
         return sanitizedStoredId;
@@ -300,9 +291,7 @@ class SecurityService {
       final deviceId = _sanitizeDeviceId(
         resolvedId.isNotEmpty ? resolvedId : _generateFallbackDeviceId(),
       );
-      await _secureStorage
-          .write(key: _deviceIdStorageKey, value: deviceId)
-          .timeout(const Duration(seconds: 3), onTimeout: () => null);
+      await _secureStorage.write(key: _deviceIdStorageKey, value: deviceId).timeout(const Duration(seconds: 3), onTimeout: () => null);
 
       final prefs = OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
@@ -388,8 +377,7 @@ class SecurityService {
     return _generateFallbackDeviceId();
   }
 
-  static const MethodChannel _securityChannel =
-      MethodChannel('soul_locket/security');
+  static const MethodChannel _securityChannel = MethodChannel('soul_locket/security');
 
   /// Advanced Root/Jailbreak detection using native Kotlin layer.
   /// Native check is harder to patch than pure Dart file.exists() checks.
@@ -544,8 +532,7 @@ class SecurityService {
       if (remainingMs >= 0 && context.mounted) {
         _showSpamWarningDialog(
           context,
-          message:
-              'Bạn đang thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.',
+          message: 'Bạn đang thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.',
         );
         return false;
       }

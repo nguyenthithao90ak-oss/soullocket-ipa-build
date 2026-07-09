@@ -69,8 +69,7 @@ class FinanceService {
         normalizedRequesterUid.isEmpty) {
       return false;
     }
-    final ref =
-        _db.ref('houses/$normalizedHouseId/finances/$normalizedTransactionId');
+    final ref = _db.ref('houses/$normalizedHouseId/finances/$normalizedTransactionId');
     final snap = await ref.get();
 
     if (!snap.exists || snap.value is! Map) return false;

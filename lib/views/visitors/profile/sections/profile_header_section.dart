@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/sl_theme.dart';
@@ -124,8 +124,7 @@ class VisitorProfileHeaderSection extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(SLRadius.pill),
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.16)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,

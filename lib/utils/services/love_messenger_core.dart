@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -200,41 +200,19 @@ class LoveMessengerCore {
   // 4. KIỂM SOÁT TRẠNG THÁI GÕ & BÀN PHÍM
   // ==========================================
   Timer? _typingThrottle;
-  Timer? _typingInactivityTimer;
   bool _lastTypingStatus = false;
 
   // [JS-03] Cập nhật logic Typing Indicator mượt mà hơn
   void updateTypingStatus(bool isTyping) {
-    if (isTyping) {
-      // Bắt đầu hoặc làm mới hẹn giờ ngắt gõ sau 4 giây bất động
-      _typingInactivityTimer?.cancel();
-      _typingInactivityTimer = Timer(const Duration(seconds: 4), () {
-        updateTypingStatus(false);
-      });
+    if (_lastTypingStatus == isTyping) return;
+    _lastTypingStatus = isTyping;
 
-      if (_lastTypingStatus) return; // đang gõ rồi thì không ghi đè DB
-      _lastTypingStatus = true;
-
-      _typingThrottle?.cancel();
-      _typingThrottle = Timer(const Duration(milliseconds: 300), () async {
-        await _db
-            .ref('houses/$_currentHouseId/typing/$_currentUserUid')
-            .set(true);
-      });
-    } else {
-      _typingInactivityTimer?.cancel();
-      _typingInactivityTimer = null;
-
-      if (!_lastTypingStatus) return;
-      _lastTypingStatus = false;
-
-      _typingThrottle?.cancel();
-      _typingThrottle = Timer(const Duration(milliseconds: 300), () async {
-        await _db
-            .ref('houses/$_currentHouseId/typing/$_currentUserUid')
-            .set(false);
-      });
-    }
+    _typingThrottle?.cancel();
+    _typingThrottle = Timer(const Duration(milliseconds: 300), () async {
+      await _db
+          .ref('houses/$_currentHouseId/typing/$_currentUserUid')
+          .set(isTyping);
+    });
   }
 
   // ==========================================
@@ -292,31 +270,14 @@ class LoveMessengerCore {
 
     if (snapshot.exists) {
       final data = Map<dynamic, dynamic>.from(snapshot.value as Map);
-      final updates = <String, dynamic>{};
-      final deleteIds = <String>[];
-
-      data.forEach((key, value) {
-        final keyStr = key.toString();
-        updates[keyStr] = null;
-        deleteIds.add(keyStr);
+      data.forEach((key, value) async {
+        await _db.ref('houses/$_currentHouseId/messages/$key').remove();
+        // Delete Offline
+        if (_localDb != null) {
+          await _localDb!
+              .delete('local_messages', where: 'id = ?', whereArgs: [key]);
+        }
       });
-
-      if (updates.isNotEmpty) {
-        await _db.ref('houses/$_currentHouseId/messages').update(updates);
-      }
-
-      // Delete Offline in transaction batch
-      if (!kIsWeb && _localDb != null && deleteIds.isNotEmpty) {
-        try {
-          await _localDb!.transaction((txn) async {
-            final batch = txn.batch();
-            for (final id in deleteIds) {
-              batch.delete('local_messages', where: 'id = ?', whereArgs: [id]);
-            }
-            await batch.commit(noResult: true);
-          });
-        } catch (_) {}
-      }
     }
   }
 
@@ -619,7 +580,7 @@ class SuperLoveMessengerViewState extends State<SuperLoveMessengerView>
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       constraints: BoxConstraints(
-                          maxWidth: MediaQuery.sizeOf(context).width * 0.75),
+                          maxWidth: MediaQuery.of(context).size.width * 0.75),
                       padding: SLSpacing.all12,
                       decoration: BoxDecoration(
                         gradient: isMe

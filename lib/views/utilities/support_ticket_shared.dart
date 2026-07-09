@@ -86,7 +86,8 @@ final List<SupportTopicDefinition> supportTopicCatalog = [
     id: '3',
     chipLabel: L10nService().translate('util_hnhnh_c868d5'),
     title: L10nService().translate('util_hnhnhvideo_0e879b'),
-    subtitle: L10nService().translate('util_khngticnhm_187885'),
+    subtitle:
+        L10nService().translate('util_khngticnhm_187885'),
     priority: 'high',
     requiredFields: [
       L10nService().translate('util_albumnhtkv_783431'),
@@ -150,7 +151,8 @@ final List<SupportTopicDefinition> supportTopicCatalog = [
     id: '6',
     chipLabel: L10nService().translate('util_boli_5df258'),
     title: L10nService().translate('util_bolikthutg_ee1692'),
-    subtitle: L10nService().translate('util_crashapptr_e06701'),
+    subtitle:
+        L10nService().translate('util_crashapptr_e06701'),
     priority: 'high',
     requiredFields: [
       L10nService().translate('util_vnkthuthoc_17b4ee'),
@@ -198,7 +200,8 @@ final List<SupportTopicDefinition> supportTopicCatalog = [
     id: '8',
     chipLabel: L10nService().translate('util_xanh_da3be7'),
     title: L10nService().translate('util_xatikhonxa_3f3624'),
-    subtitle: L10nService().translate('util_rinhixatik_d3f334'),
+    subtitle:
+        L10nService().translate('util_rinhixatik_d3f334'),
     priority: 'high',
     requiredFields: [
       L10nService().translate('util_bnmunrinhx_4458c5'),
@@ -219,7 +222,8 @@ final List<SupportTopicDefinition> supportTopicCatalog = [
     id: '9',
     chipLabel: '🧑‍💻 Admin',
     title: L10nService().translate('util_gpadminhtr_e7f15b'),
-    subtitle: L10nService().translate('util_cnadminkim_058bb2'),
+    subtitle:
+        L10nService().translate('util_cnadminkim_058bb2'),
     priority: 'high',
     requiredFields: [
       L10nService().translate('util_tmttngnvnc_b6c021'),
@@ -311,8 +315,7 @@ String buildSupportSummary(
       .map((line) => line.trim())
       .where((line) => line.isNotEmpty)
       .where((line) => !line.startsWith('['))
-      .where((line) =>
-          !line.startsWith(L10nService().translate('util_thngtinhth_71b4d7')))
+      .where((line) => !line.startsWith(L10nService().translate('util_thngtinhth_71b4d7')))
       .toList();
 
   var snippet = '';
@@ -336,8 +339,7 @@ String buildSupportSummary(
   }
 
   if (snippet.isEmpty) {
-    snippet =
-        topic?.subtitle ?? L10nService().translate('util_ngidngcnch_2580cd');
+    snippet = topic?.subtitle ?? L10nService().translate('util_ngidngcnch_2580cd');
   }
 
   if (snippet.length > 140) {

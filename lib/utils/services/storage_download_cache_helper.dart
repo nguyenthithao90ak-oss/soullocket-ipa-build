@@ -6,7 +6,6 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
-
 class StorageDownloadCacheHelper {
   const StorageDownloadCacheHelper();
 
@@ -128,9 +127,8 @@ class StorageDownloadCacheHelper {
     final normalizedUrl = url.trim();
     if (normalizedUrl.isEmpty) return null;
 
-    final keySource = (cacheKey ?? '').trim().isNotEmpty
-        ? '${cacheKey!.trim()}|$normalizedUrl'
-        : normalizedUrl;
+    final keySource =
+        (cacheKey ?? '').trim().isNotEmpty ? '${cacheKey!.trim()}|$normalizedUrl' : normalizedUrl;
     final memKey = stableCacheToken(keySource);
 
     if (!forceRefresh && _memoryCache.containsKey(memKey)) {
@@ -157,8 +155,7 @@ class StorageDownloadCacheHelper {
       }
       return bytes;
     } catch (e) {
-      debugPrint(
-          'Cached bytes read error ($namespace): ${AppErrorMapper.resolve(
+      debugPrint('Cached bytes read error ($namespace): ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Không thể đọc cache đã tải.',
       ).message}');

@@ -1,5 +1,4 @@
 import 'package:soullocket_app/utils/services/l10n_service.dart';
-
 // lib/models/chat_message.dart
 class ChatMessage {
   final String id;
@@ -118,9 +117,7 @@ class ChatMessage {
     }
     if (isImage && normalizedImageStatus != 'active') {
       final fallback = text.trim();
-      return fallback.isEmpty
-          ? L10nService().translate('chat_image_unavailable')
-          : fallback;
+      return fallback.isEmpty ? L10nService().translate('chat_image_unavailable') : fallback;
     }
     return text.trim();
   }

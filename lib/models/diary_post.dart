@@ -1,5 +1,4 @@
 import 'package:soullocket_app/utils/services/l10n_service.dart';
-
 class DiaryPost {
   final String id;
   final String content;
@@ -64,10 +63,7 @@ class DiaryPost {
       imageUrl: (json['imageUrl'] ?? '').toString(),
       authorId: normalizedAuthorId.isNotEmpty ? normalizedAuthorId : 'user1',
       authorRole: normalizedAuthorRole,
-      authorName: (json['authorName'] ??
-              json['a'] ??
-              L10nService().translate('core_partner'))
-          .toString(),
+      authorName: (json['authorName'] ?? json['a'] ?? L10nService().translate('core_partner')).toString(),
       mood: (json['mood'] ?? '😊').toString(),
       timestamp: ts,
       editedAt: json['editedAt'] is int

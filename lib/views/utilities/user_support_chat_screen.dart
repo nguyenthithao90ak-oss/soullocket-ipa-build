@@ -57,7 +57,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     final initialTopic = widget.initialTopic?.trim();
     if (initialTopic != null && initialTopic.isNotEmpty) {
       _entryBannerText =
-          '${L10nService().translate('support_banner_topic_prefix')}$initialTopic${L10nService().translate('support_banner_topic_suffix')}';
+          'Bạn đang mở hỗ trợ từ luồng: $initialTopic. Hãy điền càng đủ mô tả, bước thao tác và lỗi hiển thị thì Admin sẽ xử lý nhanh hơn.';
     }
     _init();
   }
@@ -659,46 +659,72 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   }
 
   String _buildGreetingReply() {
-    return context.tr('support_greeting_reply');
+    return 'Chào bạn, mình là trợ lý hỗ trợ của SoulLocket.\\n';
   }
 
   String _buildClarifyReply() {
-    return context.tr('support_clarify_reply');
+    return 'Mình chưa đủ dữ kiện để hướng dẫn chính xác. Bạn nhắn thêm theo mẫu này nhé:\n'
+        '• Màn hình/tính năng nào đang lỗi\n'
+        '• Bạn vừa bấm những bước gì trước khi lỗi xảy ra\n'
+        '• Ghi nguyên văn dòng thông báo lỗi đang hiển thị (nếu có)\\n';
   }
 
   String _buildLocalSupportReply(String userText) {
     final text = _normalize(userText);
 
     if (text == '1') {
-      return '${context.tr('support_reply_1_prefix')}${context.tr('util_nulmtrnccb_e760be')}';
+      return '🔑 HỖ TRỢ ĐĂNG NHẬP & QUÊN MẬT KHẨU\n\n'
+          '* Nếu quên mật khẩu:\n'
+          'Bước 1: Ra ngoài màn hình đăng nhập, bấm vào chữ .\\n'
+          'Bước 2: Gõ đúng Email bạn đã dùng đăng ký.\n'
+          'Bước 3: Mở ứng dụng Gmail (hoặc email của bạn), tìm thư của SoulLocket và bấm vào Link màu xanh để tạo lại mật khẩu mới.\n\n'
+          '* Nếu gặp lỗi sai mật khẩu liên tục:\n'
+          'Thường do bàn phím tự động ghi hoa chữ cái đầu. Bạn hãy gõ cẩn thận lại và thử gỡ ứng dụng ra cài lại nhé.\n\n${context.tr('util_nulmtrnccb_e760be')}';
     }
 
     if (text == '2') {
-      return '${context.tr('support_reply_2_prefix_1')}${context.tr('util_vamithotof_9440a3')}${context.tr('support_reply_2_prefix_2')}${context.tr('util_nulmtheom2_b875c9')}';
+      return '🔗 HỖ TRỢ GHÉP ĐÔI & LỖI MẤT KẾT NỐI\n\n* Cách ghép đôi QR dễ nhất:\nBước 1: Lấy điện thoại của người kia, mở màn hình có mã QR to đùng lên.\nBước 2: Lấy điện thoại của bạn, bấm nút ${context.tr('util_qutcamera_0e07a1')} và đưa camera soi vào khung QR của người kia.\\n\\n* Hiện lỗi ${context.tr('util_vamithotof_9440a3')} sai lệch:\\nĐây không phải lỗi mất kết nối nhà nha! Xảy ra do đường truyền mạng chậm đi vài giây. Bạn chỉ cần thử tắt 4G/Wifi rồi bật lại hoặc kệ nó 1 lúc là app sẽ tự cập nhật đồng bộ lại chữ "Online".\n\n${context.tr('util_nulmtheom2_b875c9')}';
     }
 
     if (text == '3') {
-      return '${context.tr('support_reply_3_prefix')}${context.tr('util_vnblihynhn_7eff73')}';
+      return '📸 HỖ TRỢ LỖI HÌNH ẢNH, VIDEO VÀ NHẬT KÝ\n\n'
+          '* Tải ảnh lên bị mờ, hình đen xì:\n'
+          'Khi bạn đang lưu ảnh hoặc video lên, máy cần mạng để đẩy lên hệ thống. Tuyệt đối KHÔNG LƯỚT QUA màn hình khác hay tắt app khi vòng quay 100% chưa tải xong nhé!\n\n'
+          '* Cập nhật nhật ký không thấy đâu:\n'
+          'Chỉ cần giữ ngón tay ở giữa màn hình rồi kéo vuốt mạnh từ trên xuống (Refresh) là dữ liệu mới nhất sẽ nhảy ra liền.\n\n${context.tr('util_vnblihynhn_7eff73')}';
     }
 
     if (text == '4') {
-      return '${context.tr('support_reply_4_prefix')}${context.tr('util_adminskimt_71493d')}';
+      return '🧾 HỖ TRỢ TÀI KHOẢN VÀ QUYỀN LỢI\n\n'
+          '* Nếu bạn cần kiểm tra trạng thái hoặc quyền lợi trong ứng dụng:\n'
+          'Bước 1: Mở đúng màn hình đang gặp vấn đề.\n'
+          'Bước 2: Chụp lại thông báo hiển thị nếu có lỗi.\n'
+          'Bước 3: Gửi mô tả ngắn thao tác vừa làm để Admin kiểm tra.\n\n${context.tr('util_adminskimt_71493d')}';
     }
 
     if (text == '5') {
-      return '${context.tr('support_reply_5_prefix')}${context.tr('util_lqunmttikh_e1d8ee')}';
+      return '📱 ĐỔI ĐIỆN THOẠI SAO CHO KHÔNG MẤT DỮ LIỆU\n\n'
+          '* Bạn không bao giờ mất dữ liệu:\n'
+          'Toàn bộ hình ảnh, nhật ký của nhà đôi luôn được tự gắn vô tài khoản và bảo lưu an toàn 100% trên mạng.\n\n'
+          '* Cách đổi máy chuẩn nhất:\n'
+          'Bước 1: Ở máy Cũ, bạn tuyệt đối phải để nguyên ứng dụng không được xoá House.\n'
+          'Bước 2: Cầm máy Mới, tải app về.\n'
+          'Bước 3: Nhớ lại thật kỹ bạn dùng Google hay Tên Đăng nhập gì lúc trước? Điền y xì đúc vậy ở máy mới là đống kỉ niệm ùa về luôn.\n\n${context.tr('util_lqunmttikh_e1d8ee')}';
     }
 
     if (text == '6') {
-      return '${context.tr('support_reply_6_prefix_1')}${context.tr('util_dngmyglixy_658238')}${context.tr('support_reply_6_prefix_2')}';
+      return '🛠 BÁO CÁO LỖI VĂNG ỨNG DỤNG - TRẮNG MÀN HÌNH\n\n* Văng ứng dụng (Vào app là bị đẩy thẳng ra ngoài):\nDo bộ nhớ đầy hoặc xung đột. Bạn hãy tắt đa nhiệm (vuốt sạch app ngầm) sau đó khởi động lại điện thoại. Nếu vẫn bị văng, xoá app tải lại nhé.\n\n* Trắng màn hình hoặc web đơ:\nViệc này thường do lỗi cache lưu đệm. Nếu xài Web thì làm ơn F5 giùm mình hoặc ấn xoá Cache duyệt web. Nếu xài điện thoại, đổi từ Wi-Fi qua 4G xem sao.\n\n👉 Nếu những lỗi này cản trở bạn xài, mong bạn hãy miêu tả cụ thể ở dưới: ${context.tr('util_dngmyglixy_658238')}. Admin sẽ bắt bệnh trong 1 nốt nhạc!';
     }
 
     if (text == '7') {
-      return '${context.tr('support_reply_7_prefix')}${context.tr('util_nhnhtnibun_43c781')}';
+      return '❤️ TRẠM LẮNG NGHE TÂM SỰ TÌNH YÊU\n\n'
+          'Ở đây hoàn toàn bí mật, không có bất kì sự phán xét nào!\n\n'
+          'Nếu hai bạn đang cãi nhau to, hay bản thân tự thấy cô đơn quá, hãy khoan đưa ra quyết định gì vội vàng nha.\n'
+          'Bấm vào Kỷ Niệm ngày đầu hoặc xem lại Cuốn Nhật Ký tháng 1, điều gì khiến hai người bắt đầu đến với nhau?\n\n${context.tr('util_nhnhtnibun_43c781')}';
     }
 
     if (text == '8') {
-      return '${context.tr('support_reply_8_prefix_1')}${context.tr('util_cit_fa992a')}${context.tr('support_reply_8_prefix_2')}${context.tr('util_rinhi_202550')}${context.tr('support_reply_8_prefix_3')}${context.tr('util_cit_fa992a')}${context.tr('support_reply_8_prefix_4')}${context.tr('util_bomttikhon_80bc0d')}${context.tr('support_reply_8_prefix_5')}${context.tr('util_xatikhon_7d4ff0')}${context.tr('support_reply_8_prefix_6')}${context.tr('util_nulthaotcn_7d2b85')}';
+      return '🗑 HƯỚNG DẪN RỜI NHÀ HOẶC XÓA TÀI KHOẢN VĨNH VIỄN\n\nCân nhắc kỹ trước khi làm, vì toàn bộ Ký ức, Ảnh và Nhật ký sẽ bị xóa vĩnh viễn, không thể khôi phục.\n\n* Muốn Rời Ghép Đôi (Ngưng yêu):\nBước 1: Ấn nút ${context.tr('util_cit_fa992a')} (Bánh răng trên cùng).\\nBước 2: Cuộn xuống gần cuối, bạn sẽ thấy mục ${context.tr('util_rinhi_202550')} màu đỏ.\\n\\n* Muốn Xóa Bóng Hoàn Toàn (Xóa App Xóa Acc):\nVào ${context.tr('util_cit_fa992a')} → Chọn mục ${context.tr('util_bomttikhon_80bc0d')} → Chọn ${context.tr('util_xatikhon_7d4ff0')}.\\n\\n${context.tr('util_nulthaotcn_7d2b85')}';
     }
 
     if (text == '9') {

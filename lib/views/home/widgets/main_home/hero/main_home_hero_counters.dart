@@ -44,16 +44,11 @@ class _CountersBody extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _TimeCell(
-                  value: timeDetail['h']!, label: context.tr('home_gi_770f40')),
+              _TimeCell(value: timeDetail['h']!, label: context.tr('home_gi_770f40')),
               const SizedBox(width: 8),
-              _TimeCell(
-                  value: timeDetail['m']!,
-                  label: context.tr('home_pht_06b001')),
+              _TimeCell(value: timeDetail['m']!, label: context.tr('home_pht_06b001')),
               const SizedBox(width: 8),
-              _TimeCell(
-                  value: timeDetail['s']!,
-                  label: context.tr('home_giy_392758')),
+              _TimeCell(value: timeDetail['s']!, label: context.tr('home_giy_392758')),
             ],
           ),
         ),
@@ -66,16 +61,11 @@ class _CountersBody extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _TimeCell(
-                  value: ymdDetail['y']!,
-                  label: context.tr('util_nm_923e10').toUpperCase()),
+              _TimeCell(value: ymdDetail['y']!, label: context.tr('util_nm_923e10').toUpperCase()),
               const SizedBox(width: 8),
-              _TimeCell(
-                  value: ymdDetail['M']!,
-                  label: context.tr('util_thng_59900e').toUpperCase()),
+              _TimeCell(value: ymdDetail['M']!, label: context.tr('util_thng_59900e').toUpperCase()),
               const SizedBox(width: 8),
-              _TimeCell(
-                  value: ymdDetail['d']!, label: context.tr('home_ngy_48e4b0')),
+              _TimeCell(value: ymdDetail['d']!, label: context.tr('home_ngy_48e4b0')),
             ],
           ),
         ),

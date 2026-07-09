@@ -16,8 +16,7 @@ class CollageLimitService {
 
   /// Kiểm tra có thể tạo không, nếu chưa thể thì hỏi xem quảng cáo.
   Future<bool> checkLimitAndAskAd({
-    required Future<bool> Function(int currentLimit, int dailyLimit)
-        onAskUserToWatchAd,
+    required Future<bool> Function(int currentLimit, int dailyLimit) onAskUserToWatchAd,
     required void Function(String message, {bool isError}) onShowMessage,
   }) async {
     final prefs = OfflineCacheService.getPrefsSync() ??
@@ -38,9 +37,7 @@ class CollageLimitService {
       // Nếu đã xem quảng cáo trong vòng 15 phút, tặng luôn lượt mà không cần xem lại
       if (nowMs - lastAdTime < cooldownMs) {
         await prefs.setInt(extraKey, extraLimit + dailyLimit);
-        onShowMessage(
-            'Vì bạn vừa xem quảng cáo gần đây, tặng bạn thêm $dailyLimit lượt miễn phí!',
-            isError: false);
+        onShowMessage('Vì bạn vừa xem quảng cáo gần đây, tặng bạn thêm $dailyLimit lượt miễn phí!', isError: false);
         return true;
       }
 
@@ -55,8 +52,7 @@ class CollageLimitService {
         await prefs.setInt(extraKey, extraLimit + dailyLimit);
         await prefs.setInt('collage_last_ad_time_$today',
             DateTime.now().millisecondsSinceEpoch);
-        onShowMessage('Bạn đã nhận thêm $dailyLimit lượt tạo ảnh!',
-            isError: false);
+        onShowMessage('Bạn đã nhận thêm $dailyLimit lượt tạo ảnh!', isError: false);
         return true;
       } else {
         onShowMessage('Chưa xem xong quảng cáo!', isError: true);

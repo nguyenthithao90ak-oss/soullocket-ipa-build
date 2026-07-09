@@ -156,8 +156,7 @@ Future<bool> showSettingsEmailOtpDialog({
                             if (ctx.mounted) {
                               setDialogState(() {
                                 isVerifying = false;
-                                verifyError =
-                                    AppErrorMapper.resolve(error).message;
+                                verifyError = AppErrorMapper.resolve(error).message;
                               });
                             }
                           }
@@ -335,8 +334,7 @@ Future<bool> showSettingsPasswordResetOtpDialog({
                             if (ctx.mounted) {
                               setDialogState(() {
                                 isVerifying = false;
-                                verifyError =
-                                    AppErrorMapper.resolve(error).message;
+                                verifyError = AppErrorMapper.resolve(error).message;
                               });
                             }
                           }

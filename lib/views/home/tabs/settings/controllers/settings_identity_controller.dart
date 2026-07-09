@@ -43,9 +43,8 @@ class SettingsIdentityDraft {
   String get normalizedNameU1 => nameU1.trim();
   String get normalizedNameU2 => nameU2.trim();
   String get normalizedGreetingQuote => greetingQuote.trim();
-  String get normalizedDayUnit => dayUnit.trim().isEmpty
-      ? L10nService().translate('home_ngyyu_722b21')
-      : dayUnit.trim();
+  String get normalizedDayUnit =>
+      dayUnit.trim().isEmpty ? L10nService().translate('home_ngyyu_722b21') : dayUnit.trim();
 }
 
 class SettingsIdentityController {

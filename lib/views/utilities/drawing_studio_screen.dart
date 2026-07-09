@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
@@ -35,11 +35,13 @@ class DrawingStudioScreen extends StatefulWidget {
 }
 
 class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
+
+
+
   static const int _maxGalleryItems = 20;
 
   final GlobalKey _canvasKey = GlobalKey();
-  final _CanvasRepaintNotifier _canvasRepaintNotifier =
-      _CanvasRepaintNotifier();
+  final _CanvasRepaintNotifier _canvasRepaintNotifier = _CanvasRepaintNotifier();
   final List<_DrawStroke> _strokes = [];
   final DrawingStudioService _drawingService = DrawingStudioService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -118,8 +120,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     _isSyncOnline = true;
     unawaited(_updatePresence(isDrawing: false));
 
-    _strokesSub =
-        _drawingService.streamStrokes(widget.houseId).listen((strokes) {
+    _strokesSub = _drawingService.streamStrokes(widget.houseId).listen((strokes) {
       if (!mounted) return;
       setState(() {
         _realtimeStrokes
@@ -140,8 +141,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     });
 
     final myRole = RoleUtils.currentRoleSync();
-    _presenceSub =
-        _drawingService.streamPresence(widget.houseId).listen((items) {
+    _presenceSub = _drawingService.streamPresence(widget.houseId).listen((items) {
       if (!mounted) return;
       setState(() {
         _presence = items.where((item) => item.uid != myRole).toList();
@@ -478,8 +478,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     canvas.translate(-crop.left, -crop.top);
     _StickerPainter(strokes: strokes).paint(canvas, canvasSize);
     final picture = recorder.endRecording();
-    final pixelRatio =
-        math.min(MediaQuery.devicePixelRatioOf(context) * 2, 4.0);
+    final pixelRatio = math.min(MediaQuery.devicePixelRatioOf(context) * 2, 4.0);
     final image = await picture.toImage(
       (outputSize.width * pixelRatio).ceil(),
       (outputSize.height * pixelRatio).ceil(),
@@ -569,29 +568,15 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                   shrinkWrap: true,
                   childAspectRatio: 1.55,
                   children: [
-                    _BackgroundChoice(
-                        id: 'paper_grid',
-                        label: context.tr('util_giycaro_021a05')),
-                    _BackgroundChoice(
-                        id: 'blank_paper',
-                        label: context.tr('util_giytrng_049d6d')),
-                    _BackgroundChoice(
-                        id: 'hearts', label: context.tr('util_timhng_60d58d')),
-                    _BackgroundChoice(
-                        id: 'night_stars',
-                        label: context.tr('util_msao_38b356')),
-                    _BackgroundChoice(
-                        id: 'blackboard',
-                        label: context.tr('util_bngphn_6961e0')),
-                    _BackgroundChoice(
-                        id: 'notebook', label: context.tr('util_vkdng_be72f0')),
-                    _BackgroundChoice(
-                        id: 'photo_frame',
-                        label: context.tr('util_khungnh_b0bdfe')),
-                    const _BackgroundChoice(
-                        id: 'pastel_dots', label: 'Pastel dots'),
-                    const _BackgroundChoice(
-                        id: 'sticker_sheet', label: 'Sticker'),
+                    _BackgroundChoice(id: 'paper_grid', label: context.tr('util_giycaro_021a05')),
+                    _BackgroundChoice(id: 'blank_paper', label: context.tr('util_giytrng_049d6d')),
+                    _BackgroundChoice(id: 'hearts', label: context.tr('util_timhng_60d58d')),
+                    _BackgroundChoice(id: 'night_stars', label: context.tr('util_msao_38b356')),
+                    _BackgroundChoice(id: 'blackboard', label: context.tr('util_bngphn_6961e0')),
+                    _BackgroundChoice(id: 'notebook', label: context.tr('util_vkdng_be72f0')),
+                    _BackgroundChoice(id: 'photo_frame', label: context.tr('util_khungnh_b0bdfe')),
+                    const _BackgroundChoice(id: 'pastel_dots', label: 'Pastel dots'),
+                    const _BackgroundChoice(id: 'sticker_sheet', label: 'Sticker'),
                   ],
                 ),
               ],
@@ -639,8 +624,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       _showSnack(successMsg);
     } catch (error) {
       _showSnack(
-        L10nService().format('util_drawing_save_gallery_failed',
-            {'error': _errorText(error, fallback: fallbackMsg)}),
+        L10nService().format('util_drawing_save_gallery_failed', {'error': _errorText(error, fallback: fallbackMsg)}),
       );
     } finally {
       if (mounted) {
@@ -669,8 +653,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       _showSnack(successMsg);
     } catch (error) {
       _showSnack(
-        L10nService().format('util_drawing_create_sticker_failed',
-            {'error': _errorText(error, fallback: fallbackMsg)}),
+        L10nService().format('util_drawing_create_sticker_failed', {'error': _errorText(error, fallback: fallbackMsg)}),
       );
     } finally {
       if (mounted) {
@@ -697,8 +680,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       _showSnack(successMsg);
     } catch (error) {
       _showSnack(
-        L10nService().format('util_drawing_save_sticker_failed',
-            {'error': _errorText(error, fallback: fallbackMsg)}),
+        L10nService().format('util_drawing_save_sticker_failed', {'error': _errorText(error, fallback: fallbackMsg)}),
       );
     } finally {
       if (mounted) {
@@ -722,8 +704,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       _showSnack(successMsg);
     } catch (error) {
       _showSnack(
-        L10nService().format('util_drawing_save_device_failed',
-            {'error': _errorText(error, fallback: fallbackMsg)}),
+        L10nService().format('util_drawing_save_device_failed', {'error': _errorText(error, fallback: fallbackMsg)}),
       );
     } finally {
       if (mounted) {
@@ -746,8 +727,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       _showSnack(successMsg);
     } catch (error) {
       _showSnack(
-        L10nService().format('util_drawing_save_image_failed',
-            {'error': _errorText(error, fallback: fallbackMsg)}),
+        L10nService().format('util_drawing_save_image_failed', {'error': _errorText(error, fallback: fallbackMsg)}),
       );
     } finally {
       if (mounted) {
@@ -777,8 +757,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return true;
     } catch (error) {
       _showSnack(
-        L10nService().format('util_drawing_delete_image_failed',
-            {'error': _errorText(error, fallback: fallbackMsg)}),
+        L10nService().format('util_drawing_delete_image_failed', {'error': _errorText(error, fallback: fallbackMsg)}),
       );
       return false;
     } finally {
@@ -880,37 +859,27 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
         backgroundColor: Colors.white,
         title: Text(
           'Xưởng vẽ',
-          style: SLTheme.quicksand(
-              fontWeight: FontWeight.w900, color: const Color(0xFFD81B60)),
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900, color: const Color(0xFFD81B60)),
         ),
         content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold, color: Color(0xFFD81B60))),
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFD81B60))),
               SizedBox(height: 4),
-              Text(
-                  '- Bảng vẽ đồng bộ trực tiếp: bạn vẽ một nét, máy người kia lập tức hiện lên.\n- Cùng nhau tạo ra các tác phẩm nghệ thuật hoặc chơi trò đoán hình.',
-                  style: TextStyle(color: Color(0xFF8A5B76))),
+              Text('- Bảng vẽ đồng bộ trực tiếp: bạn vẽ một nét, máy người kia lập tức hiện lên.\n- Cùng nhau tạo ra các tác phẩm nghệ thuật hoặc chơi trò đoán hình.', style: TextStyle(color: Color(0xFF8A5B76))),
               SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold, color: Color(0xFFD81B60))),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFD81B60))),
               SizedBox(height: 4),
-              Text(
-                  '- Chọn cọ vẽ, màu sắc và độ dày nét vẽ ở thanh công cụ.\n- Bắt đầu vẽ trên màn hình. Mọi thay đổi sẽ lập tức truyền đến máy người ấy.\n- Bấm nút Lưu để lưu tác phẩm vào thư viện máy hoặc cài làm nền.',
-                  style: TextStyle(color: Color(0xFF8A5B76))),
+              Text('- Chọn cọ vẽ, màu sắc và độ dày nét vẽ ở thanh công cụ.\n- Bắt đầu vẽ trên màn hình. Mọi thay đổi sẽ lập tức truyền đến máy người ấy.\n- Bấm nút Lưu để lưu tác phẩm vào thư viện máy hoặc cài làm nền.', style: TextStyle(color: Color(0xFF8A5B76))),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: Color(0xFFD81B60))),
+            child: const Text('Đã hiểu', style: TextStyle(color: Color(0xFFD81B60))),
           ),
         ],
       ),
@@ -934,8 +903,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.info_outline_rounded,
-                color: Color(0xFFD81B60), size: 22),
+            icon: const Icon(Icons.info_outline_rounded, color: Color(0xFFD81B60), size: 22),
             onPressed: () => _showInfoDialog(context),
           ),
         ],
@@ -1108,8 +1076,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
         final maxHeight = MediaQuery.sizeOf(context).height * 0.72;
         final minHeight = shortestSide < 380 ? 340.0 : 390.0;
         final desiredHeight = canvasWidth / ratio;
-        final canvasHeight =
-            desiredHeight.clamp(minHeight, maxHeight).toDouble();
+        final canvasHeight = desiredHeight.clamp(minHeight, maxHeight).toDouble();
 
         return Container(
           width: double.infinity,
@@ -1213,9 +1180,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                               ),
                             )
                           : const Icon(Icons.collections_bookmark_rounded),
-                      label: Text(_isSaving
-                          ? context.tr('util_anglu_4d30b6')
-                          : context.tr('util_luvokhov_68fefe')),
+                      label: Text(_isSaving ? context.tr('util_anglu_4d30b6') : context.tr('util_luvokhov_68fefe')),
                       style: _primaryButtonStyle(),
                     ),
                   ),
@@ -1266,9 +1231,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                             )
                           : const Icon(Icons.auto_awesome_rounded),
                       label: Text(
-                        _isSavingSticker
-                            ? context.tr('util_angct_b959fb')
-                            : context.tr('util_ctvinstick_30f8c2'),
+                        _isSavingSticker ? context.tr('util_angct_b959fb') : context.tr('util_ctvinstick_30f8c2'),
                       ),
                       style: _primaryButtonStyle(),
                     ),
@@ -1296,14 +1259,9 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   Widget _buildCanvasStatusBar() {
     final partnerDrawing = _presence.any((item) => item.isDrawing);
     final statusText = partnerDrawing
-        ? L10nService().format('util_drawing_partner_drawing', {
-            'name': _presence.firstWhere((item) => item.isDrawing).name.isEmpty
-                ? context.tr('util_ngikia_5cc882')
-                : _presence.firstWhere((item) => item.isDrawing).name
-          })
+        ? L10nService().format('util_drawing_partner_drawing', {'name': _presence.firstWhere((item) => item.isDrawing).name.isEmpty ? context.tr('util_ngikia_5cc882') : _presence.firstWhere((item) => item.isDrawing).name})
         : _isSyncOnline
-            ? L10nService().format(
-                'util_drawing_sync_online_count', {'count': _presence.length})
+            ? L10nService().format('util_drawing_sync_online_count', {'count': _presence.length})
             : context.tr('util_chm2lnvokh_5f9664');
 
     return Container(
@@ -1330,10 +1288,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
           SLSpacing.w8,
           Expanded(
             child: Text(
-              _isCanvasLocked
-                  ? L10nService().format('util_drawing_canvas_locked_status',
-                      {'status': statusText})
-                  : statusText,
+              _isCanvasLocked ? L10nService().format('util_drawing_canvas_locked_status', {'status': statusText}) : statusText,
               style: SLTheme.quicksand(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
@@ -1586,8 +1541,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
         ? Icons.history_toggle_off_rounded
         : Icons.phone_iphone_rounded;
     final bg = isLegacy ? const Color(0xFFB88725) : const Color(0xFF2E7D32);
-    final label =
-        isLegacy ? context.tr('util_nhc_3d3e02') : context.tr('util_my_211d16');
+    final label = isLegacy ? context.tr('util_nhc_3d3e02') : context.tr('util_my_211d16');
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
@@ -1750,10 +1704,8 @@ class _BackgroundChoice extends StatelessWidget {
                   borderRadius: SLRadius.lgAll,
                   gradient: LinearGradient(
                     colors: [
-                      Colors.black.withValues(
-                          alpha: id == 'night_stars' || id == 'blackboard'
-                              ? 0.22
-                              : 0.08),
+                      Colors.black.withValues(alpha:
+                          id == 'night_stars' || id == 'blackboard' ? 0.22 : 0.08),
                     ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
@@ -1785,27 +1737,20 @@ class _BackgroundChoice extends StatelessWidget {
   LinearGradient _gradientFor(String id) {
     switch (id) {
       case 'hearts':
-        return const LinearGradient(
-            colors: [Color(0xFFFFEEF6), Color(0xFFFFB4D0)]);
+        return const LinearGradient(colors: [Color(0xFFFFEEF6), Color(0xFFFFB4D0)]);
       case 'night_stars':
-        return const LinearGradient(
-            colors: [Color(0xFF24133F), Color(0xFF6A4BC2)]);
+        return const LinearGradient(colors: [Color(0xFF24133F), Color(0xFF6A4BC2)]);
       case 'blackboard':
-        return const LinearGradient(
-            colors: [Color(0xFF183D36), Color(0xFF2E6B5F)]);
+        return const LinearGradient(colors: [Color(0xFF183D36), Color(0xFF2E6B5F)]);
       case 'notebook':
-        return const LinearGradient(
-            colors: [Color(0xFFFFFFFF), Color(0xFFEAF3FF)]);
+        return const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFEAF3FF)]);
       case 'photo_frame':
-        return const LinearGradient(
-            colors: [Color(0xFFFFF7FB), Color(0xFFEDE7FF)]);
+        return const LinearGradient(colors: [Color(0xFFFFF7FB), Color(0xFFEDE7FF)]);
       case 'blank_paper':
-        return const LinearGradient(
-            colors: [Color(0xFFFFFCF8), Color(0xFFFFF2E8)]);
+        return const LinearGradient(colors: [Color(0xFFFFFCF8), Color(0xFFFFF2E8)]);
       case 'paper_grid':
       default:
-        return const LinearGradient(
-            colors: [Color(0xFFFFFFFF), Color(0xFFFFEAF2)]);
+        return const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFFFEAF2)]);
     }
   }
 }
@@ -1873,10 +1818,7 @@ class _DrawingStudioPreviewScreenState
         return;
       }
       _showSnack(
-        L10nService().format('util_drawing_save_device_failed', {
-          'error':
-              _errorText(error, fallback: context.tr('util_vuilngthli_abc123'))
-        }),
+        L10nService().format('util_drawing_save_device_failed', {'error': _errorText(error, fallback: context.tr('util_vuilngthli_abc123'))}),
       );
     } finally {
       if (mounted) {
@@ -1904,10 +1846,7 @@ class _DrawingStudioPreviewScreenState
         return;
       }
       _showSnack(
-        L10nService().format('util_drawing_delete_image_failed', {
-          'error':
-              _errorText(error, fallback: context.tr('util_vuilngthli_abc123'))
-        }),
+        L10nService().format('util_drawing_delete_image_failed', {'error': _errorText(error, fallback: context.tr('util_vuilngthli_abc123'))}),
       );
     } finally {
       if (mounted) {
@@ -2031,9 +1970,7 @@ class _DrawingStudioPreviewScreenState
                       : const Icon(Icons.download_rounded),
                   label: Text(
                     widget.canSaveToDevice
-                        ? (_isSaving
-                            ? context.tr('util_anglu_4d30b6')
-                            : context.tr('util_luvmy_4ac0a6'))
+                        ? (_isSaving ? context.tr('util_anglu_4d30b6') : context.tr('util_luvmy_4ac0a6'))
                         : context.tr('util_chhtrtrnmy_a20629'),
                   ),
                   style: OutlinedButton.styleFrom(
@@ -2060,9 +1997,7 @@ class _DrawingStudioPreviewScreenState
                           ),
                         )
                       : const Icon(Icons.delete_outline_rounded),
-                  label: Text(_isDeleting
-                      ? context.tr('util_angxa_c912a7')
-                      : context.tr('util_xakhikhov_b3e08d')),
+                  label: Text(_isDeleting ? context.tr('util_angxa_c912a7') : context.tr('util_xakhikhov_b3e08d')),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFD81B60),
                     disabledBackgroundColor: const Color(0xFFE9A6C0),

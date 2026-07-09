@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:js_interop';
-import 'dart:typed_data';
-import 'package:web/web.dart' as web;
+import 'dart:html' as html;
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:ui_web' as ui_web;
 
@@ -10,18 +8,17 @@ String _normalizeAssetUrl(String url) {
   return normalized.startsWith('assets/') ? normalized : 'assets/$normalized';
 }
 
-web.EventListener? _messageListener;
+html.EventListener? _messageListener;
 Completer<void>? _googleMapsScriptCompleter;
-final Map<String, web.HTMLIFrameElement> _iframeRegistry =
-    <String, web.HTMLIFrameElement>{};
+final Map<String, html.IFrameElement> _iframeRegistry =
+    <String, html.IFrameElement>{};
 final Set<String> _registeredIframeViews = <String>{};
 
-@JS('google.maps')
-external JSObject? get _googleMaps;
-
 bool _isGoogleMapsReady() {
+  final google = (html.window as dynamic).google;
+  if (google == null) return false;
   try {
-    return _googleMaps != null;
+    return google.maps != null;
   } catch (_) {
     return false;
   }
@@ -34,17 +31,16 @@ void registerWebViewImpl(
   String? allow,
 }) {
   final iframe = _iframeRegistry.putIfAbsent(viewId, () {
-    final elem = web.document.createElement('iframe') as web.HTMLIFrameElement;
-    elem.style.width = '100%';
-    elem.style.height = '100%';
-    elem.style.border = 'none';
-    elem.allowFullscreen = true;
-    return elem;
+    return html.IFrameElement()
+      ..style.width = '100%'
+      ..style.height = '100%'
+      ..style.border = 'none'
+      ..allowFullscreen = true;
   });
 
   iframe.allow = allow ??
       'camera *; microphone *; fullscreen *; display-capture *; autoplay *';
-  iframe.removeAttribute('sandbox');
+  iframe.attributes.remove('sandbox');
 
   if (isLocalAsset) {
     iframe.src = _normalizeAssetUrl(url);
@@ -65,43 +61,40 @@ void registerWebViewImpl(
 
 void registerWebMessageHandlerImpl(void Function(Object? data) handler) {
   clearWebMessageHandlerImpl();
-  _messageListener = (web.Event event) {
-    if (event.isA<web.MessageEvent>()) {
-      handler((event as web.MessageEvent).data);
+  _messageListener = (event) {
+    if (event is html.MessageEvent) {
+      handler(event.data);
     }
-  }.toJS;
-  web.window.addEventListener('message', _messageListener!);
+  };
+  html.window.addEventListener('message', _messageListener);
 }
 
 void clearWebMessageHandlerImpl() {
   if (_messageListener == null) return;
-  web.window.removeEventListener('message', _messageListener!);
+  html.window.removeEventListener('message', _messageListener);
   _messageListener = null;
 }
 
 void downloadFileImpl(String filename, List<int> bytes, String mimeType) {
-  final uint8List = Uint8List.fromList(bytes);
-  final jsArray = [uint8List.toJS].toJS;
-  final blob = web.Blob(jsArray, web.BlobPropertyBag(type: mimeType));
-  final url = web.URL.createObjectURL(blob);
-  
-  final anchor = web.document.createElement('a') as web.HTMLAnchorElement;
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  web.URL.revokeObjectURL(url);
+  final blob = html.Blob([bytes], mimeType);
+  final url = html.Url.createObjectUrlFromBlob(blob);
+  html.AnchorElement(href: url)
+    ..setAttribute('download', filename)
+    ..click();
+  html.Url.revokeObjectUrl(url);
 }
 
 void sendWebMessageToIframeImpl(String viewId, Object message) {
   final iframe = _iframeRegistry[viewId];
   if (iframe != null) {
-    iframe.contentWindow?.postMessage(message.jsify(), '*'.toJS);
+    iframe.contentWindow?.postMessage(message, '*');
     return;
   }
-  final iframes = web.document.getElementsByTagName('iframe');
-  for (var i = 0; i < iframes.length; i++) {
-    final frame = iframes.item(i) as web.HTMLIFrameElement;
-    frame.contentWindow?.postMessage(message.jsify(), '*'.toJS);
+  final iframes = html.document.getElementsByTagName('iframe');
+  for (var iframe in iframes) {
+    if (iframe is html.IFrameElement) {
+      iframe.contentWindow?.postMessage(message, '*');
+    }
   }
 }
 
@@ -121,26 +114,23 @@ Future<void> ensureGoogleMapsScriptReadyImpl(String apiKey) {
   _googleMapsScriptCompleter = completer;
 
   final existingScript =
-      web.document.querySelector('script[data-sl-google-maps="1"]');
-  final web.HTMLScriptElement script;
-  if (existingScript != null) {
-    script = existingScript as web.HTMLScriptElement;
-  } else {
-    script = web.document.createElement('script') as web.HTMLScriptElement;
-    script.src =
-        'https://maps.googleapis.com/maps/api/js?key=$apiKey&libraries=places';
-    script.defer = true;
-    script.async = true;
-    script.setAttribute('data-sl-google-maps', '1');
-  }
+      html.document.querySelector('script[data-sl-google-maps="1"]');
+  final script = existingScript is html.ScriptElement
+      ? existingScript
+      : (html.ScriptElement()
+        ..src =
+            'https://maps.googleapis.com/maps/api/js?key=$apiKey&libraries=places'
+        ..defer = true
+        ..async = true
+        ..dataset['slGoogleMaps'] = '1');
 
-  void completeLoaded([web.Event? _]) {
+  void completeLoaded([Object? _]) {
     if (!completer.isCompleted) {
       completer.complete();
     }
   }
 
-  void completeError([web.Event? _]) {
+  void completeError([Object? _]) {
     if (!completer.isCompleted) {
       completer.completeError(
         StateError('Không tải được Google Maps script trên web.'),
@@ -154,11 +144,11 @@ Future<void> ensureGoogleMapsScriptReadyImpl(String apiKey) {
     return completer.future;
   }
 
-  script.addEventListener('load', completeLoaded.toJS);
-  script.addEventListener('error', completeError.toJS);
+  script.onLoad.first.then(completeLoaded).catchError((_) {});
+  script.onError.first.then(completeError).catchError((_) {});
 
   if (existingScript == null) {
-    web.document.head?.appendChild(script);
+    html.document.head?.append(script);
   }
 
   Future<void>.microtask(() {

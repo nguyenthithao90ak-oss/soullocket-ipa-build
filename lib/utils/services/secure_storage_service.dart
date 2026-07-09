@@ -2,11 +2,10 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorageService {
   static final SecureStorageService instance = SecureStorageService._internal();
-
+  
   static const FlutterSecureStorage _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(),
-    iOptions: IOSOptions(
-        accessibility: KeychainAccessibility.first_unlock_this_device),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock_this_device),
   );
 
   SecureStorageService._internal();
@@ -20,29 +19,19 @@ class SecureStorageService {
   static const String keyRole = 'il_role';
   static const String keyRelMode = 'il_rel_mode';
   Future<void> write(String key, String value) async {
-    try {
-      await _storage.write(key: key, value: value).timeout(const Duration(seconds: 2));
-    } catch (_) {}
+    await _storage.write(key: key, value: value);
   }
 
   Future<String?> read(String key) async {
-    try {
-      return await _storage.read(key: key).timeout(const Duration(seconds: 2));
-    } catch (_) {
-      return null;
-    }
+    return await _storage.read(key: key);
   }
 
   Future<void> delete(String key) async {
-    try {
-      await _storage.delete(key: key).timeout(const Duration(seconds: 2));
-    } catch (_) {}
+    await _storage.delete(key: key);
   }
 
   Future<void> deleteAll() async {
-    try {
-      await _storage.deleteAll().timeout(const Duration(seconds: 2));
-    } catch (_) {}
+    await _storage.deleteAll();
   }
 
   /// Migrates a key from SharedPreferences to SecureStorage if it exists

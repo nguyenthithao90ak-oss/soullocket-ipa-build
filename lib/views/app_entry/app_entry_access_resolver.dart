@@ -35,8 +35,8 @@ class AppEntryAccessResolution {
 
 class AppEntryAccessResolver {
   static const Duration _prefsTimeout = Duration(seconds: 3);
-  static const Duration _adminTimeout = Duration(seconds: 3);
-  static const Duration _remoteTimeout = Duration(seconds: 4);
+  static const Duration _adminTimeout = Duration(seconds: 5);
+  static const Duration _remoteTimeout = Duration(seconds: 5);
 
   AppEntryAccessResolver({
     AuthService? authService,
@@ -110,28 +110,17 @@ class AppEntryAccessResolver {
     required String? userId,
     required void Function(AppEntryAccessState state) onBackgroundState,
   }) async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
-        await (() async {
-          try {
-            return await _getPrefs().timeout(_prefsTimeout);
-          } catch (e) {
-            debugPrint(
-                '[AppEntry] Prefs read timed out: ${AppErrorMapper.resolve(e).message}');
-            return null;
-          }
-        }());
+    final prefs = OfflineCacheService.getPrefsSync() ?? await (() async {
+      try {
+        return await _getPrefs().timeout(_prefsTimeout);
+      } catch (e) {
+        debugPrint('[AppEntry] Prefs read timed out: ${AppErrorMapper.resolve(e).message}');
+        return null;
+      }
+    }());
 
     final cachedHouseId = prefs?.getString('il_house_id');
-    var cachedAuthUid = prefs?.getString('il_auth_uid');
-
-    // Tự động gán lại il_auth_uid cho các máy cài phiên bản cũ bị thiếu
-    if (cachedHouseId != null &&
-        cachedHouseId.isNotEmpty &&
-        cachedAuthUid == null &&
-        userId != null) {
-      cachedAuthUid = userId;
-      unawaited(prefs?.setString('il_auth_uid', userId));
-    }
+    final cachedAuthUid = prefs?.getString('il_auth_uid');
 
     if (cachedHouseId != null &&
         cachedHouseId.isNotEmpty &&
@@ -197,8 +186,7 @@ class AppEntryAccessResolver {
         isMaintenance: remoteState.isMaintenance,
       );
     } catch (e) {
-      debugPrint(
-          '[AppEntry] Offline fallback triggered: ${AppErrorMapper.resolve(e).message}');
+      debugPrint('[AppEntry] Offline fallback triggered: ${AppErrorMapper.resolve(e).message}');
       final isAdmin = await isAdminFuture.catchError((_) => false);
       return AppEntryAccessState(
         houseId: null,
@@ -218,8 +206,7 @@ class AppEntryAccessResolver {
       required String? cachedHouseId,
     }) onResolved,
   }) {
-    return fetchRemoteAccessState(isAdmin).timeout(_remoteTimeout).then<void>(
-        (state) {
+    return fetchRemoteAccessState(isAdmin).timeout(_remoteTimeout).then<void>((state) {
       final sameHouseId = (state.houseId ?? '') == (cachedHouseId ?? '');
       if (sameHouseId && state.blockReason == null && !state.isMaintenance) {
         return;
@@ -230,8 +217,7 @@ class AppEntryAccessResolver {
         cachedHouseId: cachedHouseId,
       );
     }, onError: (Object e, StackTrace stackTrace) {
-      debugPrint(
-          '[AppEntry] Background fetch error: ${AppErrorMapper.resolve(e).message}');
+      debugPrint('[AppEntry] Background fetch error: ${AppErrorMapper.resolve(e).message}');
     });
   }
 

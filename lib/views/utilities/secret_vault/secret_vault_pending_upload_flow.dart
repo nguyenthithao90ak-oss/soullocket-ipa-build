@@ -99,3 +99,4 @@ Future<_PendingVaultUploadRetryPayload?> _loadPendingVaultUploadRetry(
 Future<void> _clearPendingVaultUploadRecord(String pendingKey) {
   return PendingUploadService.instance.clear(pendingKey);
 }
+

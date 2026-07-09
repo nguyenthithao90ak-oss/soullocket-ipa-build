@@ -164,15 +164,14 @@ class _WheelScreenState extends State<WheelScreen>
       }
 
       if (!mounted) return;
-      final hasPerm =
-          await LocationService().requestPermission(context: context);
+      final hasPerm = await LocationService()
+          .requestPermission(context: context);
       if (!hasPerm) {
         throw Exception(L10nService().translate('util_quyntruycp_d7e682'));
       }
 
       final position = await Geolocator.getCurrentPosition(
-        locationSettings:
-            const LocationSettings(accuracy: LocationAccuracy.high),
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
       );
 
       const apiKey =
@@ -368,8 +367,7 @@ class _WheelScreenState extends State<WheelScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(
-          context, L10nService().translate('util_vngquaynhm_856e66')),
+      appBar: SLTheme.appBar(context, L10nService().translate('util_vngquaynhm_856e66')),
       body: SLTheme.background(
         child: SafeArea(
           child: SingleChildScrollView(
@@ -605,8 +603,7 @@ class _WheelScreenState extends State<WheelScreen>
                   color: Colors.white.withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: SLTheme.primary.withValues(alpha: 0.3),
-                      width: 1.5),
+                      color: SLTheme.primary.withValues(alpha: 0.3), width: 1.5),
                   boxShadow: [
                     BoxShadow(
                       color: SLTheme.primary.withValues(alpha: 0.15),
@@ -616,9 +613,7 @@ class _WheelScreenState extends State<WheelScreen>
                   ],
                 ),
                 child: Text(
-                  currentItem.isEmpty
-                      ? L10nService().translate('util_chquay_eb9f26')
-                      : currentItem,
+                  currentItem.isEmpty ? L10nService().translate('util_chquay_eb9f26') : currentItem,
                   style: SLTheme.quicksand(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
@@ -693,9 +688,7 @@ class _WheelScreenState extends State<WheelScreen>
                 shadowColor: SLTheme.primary.withValues(alpha: 0.35),
               ),
               child: Text(
-                _isSpinning
-                    ? L10nService().translate('util_angquay_3580ce')
-                    : L10nService().translate('util_btuquay_5c5ee8'),
+                _isSpinning ? L10nService().translate('util_angquay_3580ce') : L10nService().translate('util_btuquay_5c5ee8'),
                 style: SLTheme.quicksand(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
@@ -796,8 +789,7 @@ class _WheelScreenState extends State<WheelScreen>
               decoration: BoxDecoration(
                 color: SLTheme.primary.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(18),
-                border:
-                    Border.all(color: SLTheme.primary.withValues(alpha: 0.12)),
+                border: Border.all(color: SLTheme.primary.withValues(alpha: 0.12)),
               ),
               child: Text(
                 L10nService().translate('util_chaclchsqu_9e0f48'),
@@ -860,8 +852,7 @@ class _WheelScreenState extends State<WheelScreen>
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: SLTheme.primary
-                      .withValues(alpha: index == 0 ? 0.18 : 0.1),
+                  color: SLTheme.primary.withValues(alpha: index == 0 ? 0.18 : 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -918,8 +909,7 @@ class _WheelScreenState extends State<WheelScreen>
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFF0F6),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                      color: SLTheme.primary.withValues(alpha: 0.18)),
+                  border: Border.all(color: SLTheme.primary.withValues(alpha: 0.18)),
                 ),
                 child: Text(
                   '${entry.options.length} mục',
@@ -1135,8 +1125,7 @@ class _WheelPainter extends CustomPainter {
             fontWeight: FontWeight.w900,
             color: Colors.white,
             shadows: [
-              Shadow(
-                  color: Colors.black.withValues(alpha: 0.35), blurRadius: 10),
+              Shadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 10),
             ],
           ),
         ),

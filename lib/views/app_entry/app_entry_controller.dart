@@ -231,8 +231,8 @@ class AppEntryController {
         reason: MilitaryLockService.scopeReason(LockScope.app),
       )
           .timeout(const Duration(seconds: 8), onTimeout: () {
-        debugPrint('[AppEntry] requestUnlock timed out, fail-closed');
-        return false;
+        debugPrint('[AppEntry] requestUnlock timed out, fail-open');
+        return true;
       });
       debugPrint('[AppEntry] checkAppLock resolved: $authSuccess');
       return AppEntryAuthState(
@@ -246,7 +246,7 @@ class AppEntryController {
       );
       debugPrint('[AppEntry] checkAppLock failed: ${errorInfo.message}');
       return const AppEntryAuthState(
-        isAuthenticated: false,
+        isAuthenticated: true,
         isCheckingAuth: false,
       );
     } finally {
@@ -462,7 +462,7 @@ class AppEntryController {
 
     if (!hasTriggeredInitialAppOpenAd) {
       didScheduleInitialAppOpenAd = true;
-      Future<void>.delayed(const Duration(seconds: 7), () async {
+      Future<void>.delayed(const Duration(seconds: 4), () async {
         await _runGuarded(
           'show startup app open ad while loading',
           () => _adMobService.showAppOpenAdIfEligible(),

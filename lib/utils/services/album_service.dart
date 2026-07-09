@@ -1,5 +1,4 @@
-import 'package:firebase_database/firebase_database.dart'
-    hide Query, Transaction;
+import 'package:firebase_database/firebase_database.dart' hide Query, Transaction;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -39,6 +38,8 @@ class AlbumService {
     '12-31': {'icon': '✨', 'text': 'Cuoi nam'},
   };
 
+
+
   Future<int> _getAlbumCount(String houseId) async {
     try {
       final aggregateQuery = await FirebaseFirestore.instance
@@ -51,6 +52,10 @@ class AlbumService {
     } catch (e) {
       return 0;
     }
+  }
+
+  Future<void> _changeAlbumCount(String houseId, int delta) async {
+    // Bỏ qua. Bộ đếm giờ đọc chuẩn xác từ Firestore aggregate count().
   }
 
   List<Map<String, String>> getDateHighlights(
@@ -199,6 +204,8 @@ class AlbumService {
         .collection('album')
         .add(data);
 
+    await _changeAlbumCount(houseId, 1);
+
     // Record daily quest progress
     DailyQuestService().recordProgress('diary_entry');
 
@@ -208,8 +215,7 @@ class AlbumService {
   static const StorageDeleteHelper _deleteHelper = StorageDeleteHelper();
 
   /// Lấy URL ảnh từ Firestore doc và xoá file trên R2.
-  Future<void> _deleteR2Item(String houseId, String itemId,
-      {String source = 'album'}) async {
+  Future<void> _deleteR2Item(String houseId, String itemId, {String source = 'album'}) async {
     try {
       final docRef = FirebaseFirestore.instance
           .collection('houses')
@@ -256,6 +262,8 @@ class AlbumService {
     );
     batch.delete(docRef);
     await batch.commit();
+
+    await _changeAlbumCount(houseId, -1);
   }
 
   Future<void> deleteForever({
@@ -271,49 +279,55 @@ class AlbumService {
         .collection('album')
         .doc(itemId)
         .delete();
+    await _changeAlbumCount(houseId, -1);
   }
 
   Stream<List<Map<String, dynamic>>> streamTrash(String houseId) {
-    final now = DateTime.now().millisecondsSinceEpoch;
     return FirebaseFirestore.instance
         .collection('houses')
         .doc(houseId)
         .collection('album_trash')
-        .where('purgeAt', isGreaterThan: now)
-        .orderBy('deletedAt', descending: true)
         .snapshots()
         .map((event) {
+      final now = DateTime.now().millisecondsSinceEpoch;
       final items = <Map<String, dynamic>>[];
       for (var doc in event.docs) {
         final item = Map<String, dynamic>.from(doc.data());
         item['id'] = doc.id;
-        items.add(item);
+        final purgeAt = item['purgeAt'] as int? ?? 0;
+        if (purgeAt > now) {
+          items.add(item);
+        }
       }
+      items.sort((a, b) =>
+          (b['deletedAt'] as int? ?? 0).compareTo(a['deletedAt'] as int? ?? 0));
       return items;
     });
   }
 
   Future<void> cleanupExpiredTrash(String houseId) async {
     try {
-      final now = DateTime.now().millisecondsSinceEpoch;
       final snap = await FirebaseFirestore.instance
           .collection('houses')
           .doc(houseId)
           .collection('album_trash')
-          .where('purgeAt', isLessThanOrEqualTo: now)
           .get();
 
+      final now = DateTime.now().millisecondsSinceEpoch;
       final batch = FirebaseFirestore.instance.batch();
       int count = 0;
 
       for (var doc in snap.docs) {
-        // Xoá file trên R2 trước
-        final url = (doc.data()['url'] ?? '').toString().trim();
-        if (url.isNotEmpty) {
-          await _deleteHelper.deleteImageByUrl(url: url);
+        final purgeAt = doc.data()['purgeAt'] as int? ?? 0;
+        if (purgeAt <= now) {
+          // Xoá file trên R2 trước
+          final url = (doc.data()['url'] ?? '').toString().trim();
+          if (url.isNotEmpty) {
+            await _deleteHelper.deleteImageByUrl(url: url);
+          }
+          batch.delete(doc.reference);
+          count++;
         }
-        batch.delete(doc.reference);
-        count++;
       }
 
       if (count > 0) {
@@ -352,6 +366,8 @@ class AlbumService {
     );
     batch.delete(trashRef);
     await batch.commit();
+
+    await _changeAlbumCount(houseId, 1);
   }
 
   Future<void> deleteTrashForever({
@@ -420,15 +436,6 @@ class AlbumService {
 
   // ── SCRIPT MIGRATION TỰ ĐỘNG ──────────────────────────────────────────
   Future<void> migrateAlbumFromRTDB(String houseId) async {
-    // Kiểm tra xem đã migrate chưa để tránh tốn tiền Firestore Writes
-    final existingCount = await FirebaseFirestore.instance
-        .collection('houses')
-        .doc(houseId)
-        .collection('album')
-        .limit(1)
-        .get();
-    if (existingCount.docs.isNotEmpty) return;
-
     final snap = await _dbRef.child('houses/$houseId/album').get();
     if (!snap.exists || snap.value == null) return;
 
@@ -445,8 +452,7 @@ class AlbumService {
             .doc(houseId)
             .collection('album')
             .doc(key.toString());
-        batch.set(
-            docRef, Map<String, dynamic>.from(value), SetOptions(merge: true));
+        batch.set(docRef, Map<String, dynamic>.from(value), SetOptions(merge: true));
         count++;
       }
     });

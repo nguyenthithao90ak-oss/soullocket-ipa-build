@@ -239,7 +239,8 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
       _setError(
         AppErrorMapper.resolve(
           error,
-          fallbackMessage: context.tr('relationship_khngghpich_72dc50'),
+          fallbackMessage:
+              context.tr('relationship_khngghpich_72dc50'),
         ).message,
         scannedValue: targetHouseId,
       );
@@ -457,8 +458,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                   children: [
                     IconButton(
                       onPressed: () async {
-                        final msgSwitchFail =
-                            context.tr('relationship_khngthicam_8bf16f');
+                        final msgSwitchFail = context.tr('relationship_khngthicam_8bf16f');
                         try {
                           await _scannerCtrl.switchCamera();
                         } catch (_) {
@@ -469,8 +469,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                     ),
                     IconButton(
                       onPressed: () async {
-                        final msgTorchFail =
-                            context.tr('relationship_thitbnykhn_df24cd');
+                        final msgTorchFail = context.tr('relationship_thitbnykhn_df24cd');
                         try {
                           await _scannerCtrl.toggleTorch();
                           if (mounted) {
@@ -526,8 +525,8 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                 controller: _manualCtrl,
                 textInputAction: TextInputAction.done,
                 onChanged: (_) => setState(() {}),
-                onSubmitted: (_) => unawaited(_handleValue(_manualCtrl.text,
-                    source: context.tr('relationship_nhptay_d6a84b'))),
+                onSubmitted: (_) => unawaited(
+                    _handleValue(_manualCtrl.text, source: context.tr('relationship_nhptay_d6a84b'))),
                 decoration: InputDecoration(
                   hintText: context.tr('relationship_vdabc123xy_28686a'),
                   filled: true,
@@ -553,8 +552,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                 onPressed: _isJoining
                     ? null
                     : () => unawaited(
-                          _handleValue(_manualCtrl.text,
-                              source: context.tr('relationship_nhptay_d6a84b')),
+                          _handleValue(_manualCtrl.text, source: context.tr('relationship_nhptay_d6a84b')),
                         ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFD81B60),
@@ -562,9 +560,7 @@ class _CoupleConnectScreenState extends State<CoupleConnectScreen>
                   shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
                 ),
                 child: Text(
-                  _isJoining
-                      ? context.tr('relationship_angghpi_3711a2')
-                      : context.tr('relationship_xcnhnghpi_e13bce'),
+                  _isJoining ? context.tr('relationship_angghpi_3711a2') : context.tr('relationship_xcnhnghpi_e13bce'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                 ),
               ),

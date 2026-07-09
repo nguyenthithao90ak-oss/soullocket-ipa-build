@@ -132,7 +132,7 @@ class ReactionPicker extends StatelessWidget {
                 style: const TextStyle(color: Colors.redAccent, fontSize: 13),
               ),
             ),
-          SizedBox(height: MediaQuery.paddingOf(context).bottom),
+          SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
       ),
     );
@@ -243,7 +243,7 @@ class _ReactionPopup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
+    final size = MediaQuery.of(context).size;
     double left = position.dx - 180;
     if (left < 8) left = 8;
     if (left + 360 > size.width) left = size.width - 368;

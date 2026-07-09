@@ -159,7 +159,7 @@ class _LocketCameraScreenState extends State<LocketCameraScreen> {
     }
 
     // Calculate scaling to fill screen like Locket
-    final size = MediaQuery.sizeOf(context);
+    final size = MediaQuery.of(context).size;
     var scale = size.aspectRatio * _controller!.value.aspectRatio;
     if (scale < 1) scale = 1 / scale;
 

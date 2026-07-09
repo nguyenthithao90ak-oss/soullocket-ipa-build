@@ -159,8 +159,8 @@ mixin _SoulBlockStrategyLogic {
     double progress,
   ) {
     final stress = _boardStressLevel(boardMask);
-    final avgTier = combo.fold<double>(0, (total, item) => total + item.tier) /
-        combo.length;
+    final avgTier =
+        combo.fold<double>(0, (total, item) => total + item.tier) / combo.length;
     final avgCells =
         combo.fold<double>(0, (total, item) => total + item.cellCount) /
             combo.length;
@@ -251,13 +251,6 @@ mixin _SoulBlockStrategyLogic {
     final boardMask = _boardMask(boardTiles);
     final fittingCandidates = <_TemplateScore>[];
     for (final template in _kSoulBlockTemplates) {
-      if (template.id == 'single') {
-        final double stress = _boardStressLevel(boardMask);
-        final bool allowSingle = stress >= 0.82 || _random.nextDouble() < 0.02;
-        if (!allowSingle) {
-          continue;
-        }
-      }
       final placements = _findPlacements(boardMask, template);
       if (placements.isEmpty) {
         continue;
@@ -412,17 +405,59 @@ mixin _SoulBlockStrategyLogic {
     return chosenTemplates.map(_spawnPieceFromTemplate).toList(growable: false);
   }
 
+  List<_SoulPieceOption> _buildFastTray(List<List<_SoulTile?>> boardTiles) {
+    final boardMask = _boardMask(boardTiles);
+    final fittingTemplates = <_SoulPieceTemplate>[];
+    for (final template in _kSoulBlockTemplates) {
+      var canFit = false;
+      for (var row = 0; row <= _strategyBoardSize - template.height; row++) {
+        for (var col = 0; col <= _strategyBoardSize - template.width; col++) {
+          if (_canPlace(boardMask, template, row, col)) {
+            canFit = true;
+            break;
+          }
+        }
+        if (canFit) {
+          break;
+        }
+      }
+      if (canFit) {
+        fittingTemplates.add(template);
+      }
+    }
+    if (fittingTemplates.isEmpty) {
+      return const <_SoulPieceOption>[];
+    }
+
+    fittingTemplates.shuffle(_random);
+    final selected = <_SoulPieceTemplate>[];
+    for (final tier in <int>[0, 1, 2]) {
+      for (final template in fittingTemplates) {
+        if (selected.length >= 3) {
+          break;
+        }
+        if (template.tier == tier && !selected.contains(template)) {
+          selected.add(template);
+        }
+      }
+    }
+    for (final template in fittingTemplates) {
+      if (selected.length >= 3) {
+        break;
+      }
+      if (!selected.contains(template)) {
+        selected.add(template);
+      }
+    }
+    return selected.map(_spawnPieceFromTemplate).toList(growable: false);
+  }
+
   _SoulPieceOption _spawnPieceFromTemplate(_SoulPieceTemplate template) {
     _pieceSequence += 1;
-    final int roll = _random.nextInt(100);
-    final bool isGold = roll < 10; // 10%
-    final bool isBomb = !isGold && (roll >= 10 && roll < 15); // 5%
     return _SoulPieceOption(
       id: _pieceSequence,
       template: template,
       toneIndex: _random.nextInt(_kSoulTones.length),
-      isGold: isGold,
-      isBomb: isBomb,
     );
   }
 

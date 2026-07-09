@@ -1,4 +1,4 @@
-part of '../secret_vault_screen.dart';
+﻿part of '../secret_vault_screen.dart';
 
 extension _SecretVaultDisplayPart on SecretVaultScreenState {
   void _showFullImage(String url, String? caption) {

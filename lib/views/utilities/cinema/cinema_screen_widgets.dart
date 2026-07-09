@@ -1,6 +1,7 @@
-part of '../cinema_screen.dart';
+﻿part of '../cinema_screen.dart';
 
 extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
+
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
       context: context,
@@ -17,22 +18,18 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
             children: [
               Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text(
-                  '- Cùng nhau xem YouTube đồng bộ từ xa (vừa xem vừa chat/call).\n- Bạn tua video hoặc tạm dừng, máy người ấy cũng đồng bộ theo lập tức.'),
+              Text('- Cùng nhau xem YouTube đồng bộ từ xa (vừa xem vừa chat/call).\n- Bạn tua video hoặc tạm dừng, máy người ấy cũng đồng bộ theo lập tức.'),
               SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text(
-                  '- Dán link video YouTube vào ô tìm kiếm hoặc chọn từ lịch sử.\n- Khi video phát, cả hai sẽ xem cùng một khoảnh khắc. Bất kỳ ai bấm Pause hoặc tua đi, hệ thống sẽ đồng bộ cho người còn lại.'),
+              Text('- Dán link video YouTube vào ô tìm kiếm hoặc chọn từ lịch sử.\n- Khi video phát, cả hai sẽ xem cùng một khoảnh khắc. Bất kỳ ai bấm Pause hoặc tua đi, hệ thống sẽ đồng bộ cho người còn lại.'),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: SLColors.primary)),
+            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
           ),
         ],
       ),
@@ -51,11 +48,11 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
               icon: Icons.arrow_back_ios_new_rounded,
               onTap: () => Navigator.of(context).maybePop(),
             ),
-            const SizedBox(width: 8),
-            _circleButton(
-              icon: Icons.info_outline_rounded,
-              onTap: () => _showInfoDialog(context),
-            ),
+              const SizedBox(width: 8),
+              _circleButton(
+                icon: Icons.info_outline_rounded,
+                onTap: () => _showInfoDialog(context),
+              ),
             SizedBox(width: compact ? 8 : 12),
             Expanded(
               child: Align(
@@ -117,8 +114,9 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 380;
-        final accent =
-            reel == null ? const Color(0xFF8AD8FF) : Color(reel.accentValue);
+        final accent = reel == null
+            ? const Color(0xFF8AD8FF)
+            : Color(reel.accentValue);
         return Container(
           padding: EdgeInsets.all(compact ? 16 : 18),
           decoration: BoxDecoration(
@@ -160,8 +158,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                         ],
                       ),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.10)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
                     ),
                     child: Icon(
                       reel == null
@@ -426,8 +423,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                                 const SizedBox(width: 10),
                                 _pill(
                                   icon: Icons.auto_awesome_motion_rounded,
-                                  label:
-                                      '${_previewIndex + 1}/${reel.items.length}',
+                                  label: '${_previewIndex + 1}/${reel.items.length}',
                                   color: Colors.white,
                                 ),
                               ],
@@ -450,8 +446,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                                     ),
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.30),
+                                      color: Colors.white.withValues(alpha: 0.30),
                                     ),
                                   ),
                                   child: const Icon(
@@ -585,8 +580,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                   boxShadow: isActive
                       ? <BoxShadow>[
                           BoxShadow(
-                            color:
-                                Color(reel.accentValue).withValues(alpha: 0.26),
+                            color: Color(reel.accentValue).withValues(alpha: 0.26),
                             blurRadius: 16,
                             offset: const Offset(0, 8),
                           ),
@@ -621,8 +615,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Color(reel.accentValue)
-                                  .withValues(alpha: 0.92),
+                              color: Color(reel.accentValue).withValues(alpha: 0.92),
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
@@ -752,8 +745,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
             width: double.infinity,
             child: FilledButton.icon(
               style: FilledButton.styleFrom(
-                backgroundColor:
-                    Color(reel.accentValue).withValues(alpha: 0.26),
+                backgroundColor: Color(reel.accentValue).withValues(alpha: 0.26),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -779,8 +771,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.only(top: 1),
-          child:
-              Icon(icon, size: 16, color: Colors.white.withValues(alpha: 0.78)),
+          child: Icon(icon, size: 16, color: Colors.white.withValues(alpha: 0.78)),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -932,7 +923,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
 
     if (isNetwork) {
       return CachedNetworkImage(
-        memCacheWidth: 720,
+        memCacheWidth: 1440,
         imageUrl: url,
         fit: BoxFit.cover,
         filterQuality: FilterQuality.medium,
@@ -975,7 +966,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
 
   Widget _buildContainedImage(
     String url, {
-    int memCacheWidth = 720,
+    int memCacheWidth = 1440,
     double errorIconSize = 30,
   }) {
     final isNetwork = url.startsWith('http://') || url.startsWith('https://');

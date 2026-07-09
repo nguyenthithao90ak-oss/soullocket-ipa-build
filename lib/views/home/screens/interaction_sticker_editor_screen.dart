@@ -182,9 +182,11 @@ class _InteractionStickerEditorScreenState
         Navigator.pop(context, true);
       }
     } catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lưu thay đổi thất bại, vui lòng thử lại.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Lưu thay đổi thất bại, vui lòng thử lại.')),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);

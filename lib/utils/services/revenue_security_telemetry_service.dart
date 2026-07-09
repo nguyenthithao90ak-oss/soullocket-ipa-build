@@ -9,7 +9,7 @@ class RevenueSecurityTelemetryService {
 
   static final RevenueSecurityTelemetryService instance =
       RevenueSecurityTelemetryService._();
-  static bool _disabledForSession = true;
+  static bool _disabledForSession = false;
   static bool _permissionDeniedLogged = false;
 
   // Cooldown: không ghi cùng type quá 1 lần / 30 giây
@@ -81,8 +81,7 @@ class RevenueSecurityTelemetryService {
 
     final normalizedType = type.trim();
     final normalizedReason = reason.trim();
-    final normalizedSeverity =
-        severity.trim().isEmpty ? 'medium' : severity.trim();
+    final normalizedSeverity = severity.trim().isEmpty ? 'medium' : severity.trim();
     final normalizedUid = uid?.trim();
     if (normalizedType.isEmpty || normalizedReason.isEmpty) return;
 
@@ -99,8 +98,7 @@ class RevenueSecurityTelemetryService {
         .push()
         .set({
       'ts': ServerValue.timestamp,
-      if (normalizedUid != null && normalizedUid.isNotEmpty)
-        'uid': normalizedUid,
+      if (normalizedUid != null && normalizedUid.isNotEmpty) 'uid': normalizedUid,
       'type': normalizedType,
       'reason': normalizedReason,
       'severity': normalizedSeverity,

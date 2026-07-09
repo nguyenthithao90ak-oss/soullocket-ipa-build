@@ -23,11 +23,11 @@ class SharedNotesScreen extends StatefulWidget {
 }
 
 class _SharedNotesScreenState extends State<SharedNotesScreen> {
+
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
       tooltip: 'Hướng dẫn',
-      icon:
-          const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
+      icon: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -48,22 +48,18 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
             children: [
               Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text(
-                  '- Đồng bộ hóa ghi chú theo thời gian thực giữa hai người.\n- Phân loại ghi chú bằng màu sắc và ghim lên màn hình chính (Widget).\n- Cùng nhau chỉnh sửa một danh sách chung.'),
+              Text('- Đồng bộ hóa ghi chú theo thời gian thực giữa hai người.\n- Phân loại ghi chú bằng màu sắc và ghim lên màn hình chính (Widget).\n- Cùng nhau chỉnh sửa một danh sách chung.'),
               SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text(
-                  '- Bấm nút Tạo ghi chú để bắt đầu.\n- Gõ nội dung, chọn màu sắc để dễ phân biệt.\n- Vuốt một ghi chú để xóa hoặc bấm vào biểu tượng ghim để đưa lên Widget ngoài màn hình chính.'),
+              Text('- Bấm nút Tạo ghi chú để bắt đầu.\n- Gõ nội dung, chọn màu sắc để dễ phân biệt.\n- Vuốt một ghi chú để xóa hoặc bấm vào biểu tượng ghim để đưa lên Widget ngoài màn hình chính.'),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: SLColors.primary)),
+            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
           ),
         ],
       ),
@@ -72,7 +68,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
 
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final TextEditingController _noteController = TextEditingController();
-
+  
   Map<String, Map<String, dynamic>> _cachedNotes = {};
   int _cachedNotesVersion = 0;
   bool _isLoadingNotes = true;
@@ -147,12 +143,10 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     }
   }
 
-  Future<void> _saveNotesToCache(
-      Map<String, Map<String, dynamic>> notes, int version) async {
+  Future<void> _saveNotesToCache(Map<String, Map<String, dynamic>> notes, int version) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-          'il_cached_notes_data_${widget.houseId}', jsonEncode(notes));
+      await prefs.setString('il_cached_notes_data_${widget.houseId}', jsonEncode(notes));
       await prefs.setInt('il_cached_notes_ver_${widget.houseId}', version);
     } catch (_) {}
   }
@@ -164,9 +158,8 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
         .onValue
         .listen((event) async {
       final val = event.snapshot.value;
-      final serverVersion =
-          val is int ? val : (int.tryParse(val?.toString() ?? '') ?? 0);
-
+      final serverVersion = val is int ? val : (int.tryParse(val?.toString() ?? '') ?? 0);
+      
       if (serverVersion != _cachedNotesVersion || _cachedNotes.isEmpty) {
         await _fetchNotesFromServer(serverVersion);
       } else {
@@ -181,8 +174,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
 
   Future<void> _fetchNotesFromServer(int serverVersion) async {
     try {
-      final snapshot =
-          await _dbRef.child('houses/${widget.houseId}/note').get();
+      final snapshot = await _dbRef.child('houses/${widget.houseId}/note').get();
       final raw = snapshot.value;
       final nextNotes = <String, Map<String, dynamic>>{};
       if (raw is Map) {
@@ -192,12 +184,12 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
           }
         });
       }
-
+      
       _cachedNotes = nextNotes;
       _cachedNotesVersion = serverVersion;
-
+      
       await _saveNotesToCache(nextNotes, serverVersion);
-
+      
       if (mounted) {
         setState(() {
           _isLoadingNotes = false;
@@ -222,15 +214,6 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   Future<void> _addNote() async {
     final text = _noteController.text.trim();
     if (text.isEmpty) return;
-
-    if (_cachedNotes.length >= 50) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text(
-            'Danh sách ghi chú đã đạt giới hạn (tối đa 50 ghi chú). Vui lòng xoá bớt trước khi thêm mới.'),
-        backgroundColor: SLColors.danger,
-      ));
-      return;
-    }
 
     final now = DateTime.now();
     await _dbRef.child('houses/${widget.houseId}/note').push().set({
@@ -262,13 +245,15 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   void _togglePinned(String key, bool currentPinned) {
     _dbRef
         .child('houses/${widget.houseId}/note/$key')
-        .update({'pinned': !currentPinned}).then((_) => _touchMetadata());
+        .update({'pinned': !currentPinned})
+        .then((_) => _touchMetadata());
   }
 
   void _toggleDone(String key, bool currentDone) {
     _dbRef
         .child('houses/${widget.houseId}/note/$key')
-        .update({'done': !currentDone}).then((_) => _touchMetadata());
+        .update({'done': !currentDone})
+        .then((_) => _touchMetadata());
   }
 
   void _deleteNote(String key) {
@@ -278,8 +263,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
         title: const Text('Xoá ghi chú'),
         content: const Text('Bạn có chắc chắn muốn xoá ghi chú này?'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -332,8 +316,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, context.tr('util_ghichchung_7f58a6'),
-          actions: [_buildInfoIcon(context)]),
+      appBar: SLTheme.appBar(context, context.tr('util_ghichchung_7f58a6'), actions: [_buildInfoIcon(context)]),
       body: SLTheme.softCanvasBackdrop(
         baseColor: const Color(0xFFFFFBF8),
         accentColor: const Color(0xFFF59EBA),
@@ -421,7 +404,6 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                     controller: _noteController,
                     maxLines: 3,
                     minLines: 1,
-                    maxLength: 200,
                     style: SLTheme.quicksand(
                       color: SLColors.textPrimary,
                       fontWeight: FontWeight.w800,
@@ -433,7 +415,6 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                         fontWeight: FontWeight.w700,
                       ),
                       border: InputBorder.none,
-                      counterText: '',
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 15,
                         vertical: 12,
@@ -542,16 +523,10 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   Widget _buildNotesList() {
     if (_isLoadingNotes && _cachedNotes.isEmpty) {
       final uiState = UiPrefs.notifier.value;
-      final isDark = uiState.themeKey == 'theme-night' ||
-          uiState.themeKey == 'theme-dark' ||
-          uiState.themeKey == 'theme-true-black';
-      final cardColor = isDark
-          ? Colors.white.withValues(alpha: 0.06)
-          : Colors.black.withValues(alpha: 0.03);
-      final baseColor =
-          isDark ? const Color(0xFF262626) : const Color(0xFFF2F3F5);
-      final highlightColor =
-          isDark ? const Color(0xFF333333) : const Color(0xFFE2E4E8);
+      final isDark = uiState.themeKey == 'theme-night' || uiState.themeKey == 'theme-dark' || uiState.themeKey == 'theme-true-black';
+      final cardColor = isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.03);
+      final baseColor = isDark ? const Color(0xFF262626) : const Color(0xFFF2F3F5);
+      final highlightColor = isDark ? const Color(0xFF333333) : const Color(0xFFE2E4E8);
 
       return ListView.builder(
         shrinkWrap: true,
@@ -566,46 +541,24 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
               decoration: BoxDecoration(
                 color: cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.04)
-                        : Colors.black.withValues(alpha: 0.02)),
+                border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.02)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      SkeletonContainer.circle(
-                          size: 24,
-                          baseColor: baseColor,
-                          highlightColor: highlightColor),
+                      SkeletonContainer.circle(size: 24, baseColor: baseColor, highlightColor: highlightColor),
                       const SizedBox(width: 8),
-                      SkeletonContainer.rounded(
-                          width: 80,
-                          height: 14,
-                          baseColor: baseColor,
-                          highlightColor: highlightColor),
+                      SkeletonContainer.rounded(width: 80, height: 14, baseColor: baseColor, highlightColor: highlightColor),
                       const Spacer(),
-                      SkeletonContainer.rounded(
-                          width: 50,
-                          height: 12,
-                          baseColor: baseColor,
-                          highlightColor: highlightColor),
+                      SkeletonContainer.rounded(width: 50, height: 12, baseColor: baseColor, highlightColor: highlightColor),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  SkeletonContainer.rounded(
-                      width: double.infinity,
-                      height: 16,
-                      baseColor: baseColor,
-                      highlightColor: highlightColor),
+                  SkeletonContainer.rounded(width: double.infinity, height: 16, baseColor: baseColor, highlightColor: highlightColor),
                   const SizedBox(height: 6),
-                  SkeletonContainer.rounded(
-                      width: 150,
-                      height: 14,
-                      baseColor: baseColor,
-                      highlightColor: highlightColor),
+                  SkeletonContainer.rounded(width: 150, height: 14, baseColor: baseColor, highlightColor: highlightColor),
                 ],
               ),
             ),
@@ -641,7 +594,8 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
       return (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0);
     });
 
-    final int doneCount = items.where((item) => item['done'] == true).length;
+    final int doneCount =
+        items.where((item) => item['done'] == true).length;
     final int pinnedCount =
         items.where((item) => item['pinned'] == true).length;
     final int pendingCount = items.length - doneCount;
@@ -816,7 +770,9 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
           color: selected ? const Color(0xFFFFEDF4) : Colors.white,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: selected ? const Color(0xFFD95C8A) : const Color(0xFFF2CDD7),
+            color: selected
+                ? const Color(0xFFD95C8A)
+                : const Color(0xFFF2CDD7),
           ),
         ),
         child: Row(
@@ -841,7 +797,6 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
       ),
     );
   }
-
   Widget _buildNoteCard({
     required Map<String, dynamic> item,
     required Color bgColor,
@@ -889,8 +844,8 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.64),
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.75)),
+                        border:
+                            Border.all(color: Colors.white.withValues(alpha: 0.75)),
                       ),
                       child: Text(
                         item['tag'] ?? 'Chung',
@@ -909,8 +864,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                           color: const Color(0xFFFFEDF4),
                           borderRadius: BorderRadius.circular(999),
                           border: Border.all(
-                              color: const Color(0xFFF2B9CC)
-                                  .withValues(alpha: 0.75)),
+                              color: const Color(0xFFF2B9CC).withValues(alpha: 0.75)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,

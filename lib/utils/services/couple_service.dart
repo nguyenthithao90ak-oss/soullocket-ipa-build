@@ -76,14 +76,10 @@ class CoupleService {
 
       final prefs = OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
-      await SecureStorageService.instance
-          .write(SecureStorageService.keyHouseId, resolvedHouseId);
-      await SecureStorageService.instance
-          .write(SecureStorageService.keyAuthUid, user.uid);
-      await SecureStorageService.instance
-          .write(SecureStorageService.keyRole, assignedRole);
-      await SecureStorageService.instance
-          .write(SecureStorageService.keyRelMode, 'couple');
+      await SecureStorageService.instance.write(SecureStorageService.keyHouseId, resolvedHouseId);
+      await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, user.uid);
+      await SecureStorageService.instance.write(SecureStorageService.keyRole, assignedRole);
+      await SecureStorageService.instance.write(SecureStorageService.keyRelMode, 'couple');
       await prefs.remove('il_house_id');
       await prefs.remove('il_auth_uid');
       await prefs.remove('il_role');

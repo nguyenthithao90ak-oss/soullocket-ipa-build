@@ -26,8 +26,7 @@ class StorageDeleteHelper {
       await file.delete();
       return true;
     } catch (e) {
-      debugPrint(
-          'Failed to delete local file $normalizedPath: ${AppErrorMapper.resolve(
+      debugPrint('Failed to delete local file $normalizedPath: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Không thể xóa tệp cục bộ.',
       ).message}');
@@ -49,12 +48,10 @@ class StorageDeleteHelper {
       if (CloudflareR2Service.instance.isR2Url(normalizedUrl)) {
         return await CloudflareR2Service.instance.deleteFile(normalizedUrl);
       }
-      debugPrint(
-          'deleteImageByUrl: URL không thuộc R2, bỏ qua: $normalizedUrl');
+      debugPrint('deleteImageByUrl: URL không thuộc R2, bỏ qua: $normalizedUrl');
       return true;
     } catch (e) {
-      debugPrint(
-          'Failed to delete R2 file $normalizedUrl: ${AppErrorMapper.resolve(
+      debugPrint('Failed to delete R2 file $normalizedUrl: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Không thể xóa tệp trên R2.',
       ).message}');

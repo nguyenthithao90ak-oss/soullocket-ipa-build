@@ -4,23 +4,8 @@ class _L10nAssetLoader {
   const _L10nAssetLoader();
 
   static const List<String> supportedLocales = [
-    'vi',
-    'en',
-    'zh',
-    'zh-TW',
-    'ja',
-    'ko',
-    'th',
-    'id',
-    'es',
-    'pt',
-    'fr',
-    'de',
-    'it',
-    'ru',
-    'hi',
-    'tr',
-    'ar'
+    'vi', 'en', 'zh', 'zh-TW', 'ja', 'ko', 'th', 'id',
+    'es', 'pt', 'fr', 'de', 'it', 'ru', 'hi', 'tr', 'ar'
   ];
 
   static const Map<String, Locale> supportedLocaleMap = {

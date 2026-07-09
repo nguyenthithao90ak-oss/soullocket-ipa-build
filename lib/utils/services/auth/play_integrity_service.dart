@@ -284,8 +284,7 @@ class PlayIntegrityService {
         return null;
       }
     }
-    final integrityToken =
-        await _requestIntegrityToken(requestHash: requestHash);
+    final integrityToken = await _requestIntegrityToken(requestHash: requestHash);
     if (integrityToken == null || integrityToken.isEmpty) {
       return null;
     }
@@ -337,8 +336,7 @@ class PlayIntegrityService {
         flow: normalizedFlow,
         requestHash: requestHash,
         requestId: requestId,
-        reason:
-            _markedUnsupported ? 'marked_unsupported' : 'unsupported_platform',
+        reason: _markedUnsupported ? 'marked_unsupported' : 'unsupported_platform',
         message: kDebugMode
             ? 'Play Integrity hiện không khả dụng.'
             : 'Tính năng kiểm tra an toàn hiện chưa áp dụng trên thiết bị này.',
@@ -476,9 +474,7 @@ class PlayIntegrityService {
       unawaited(
         RevenueSecurityTelemetryService.instance.logEvent(
           type: 'play_integrity_failed',
-          reason: error is StateError
-              ? 'missing_app_check'
-              : 'verify_request_failed',
+          reason: error is StateError ? 'missing_app_check' : 'verify_request_failed',
           severity: 'high',
           extra: <String, Object?>{
             'flow': normalizedFlow,

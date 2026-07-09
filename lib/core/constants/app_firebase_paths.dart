@@ -40,7 +40,7 @@ class AppFirebasePaths {
   static String houseBlockedUsers(String houseId) =>
       '${houseDoc(houseId)}/blocked_users';
   static String houseLoginHistory(String houseId) =>
-      'house_login_history/$houseId';
+      '${houseDoc(houseId)}/loginHistory';
   static String houseChatRooms(String houseId) =>
       '${houseDoc(houseId)}/chat_rooms';
 

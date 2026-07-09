@@ -264,8 +264,7 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
               ),
               _buildInfoChip(
                 icon: Icons.event_note_rounded,
-                text: L10nService()
-                    .translateMemoriesPerMonth(insight.memoryThisMonth),
+                text: L10nService().translateMemoriesPerMonth(insight.memoryThisMonth),
                 color: const Color(0xFF0F4C81),
                 background: const Color(0xFFEAF4FF),
               ),

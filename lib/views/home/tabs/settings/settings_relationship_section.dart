@@ -1,3 +1,4 @@
+
 part of '../settings_tab.dart';
 
 extension _SettingsTabRelationshipSection on _SettingsTabState {
@@ -110,6 +111,7 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
           ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD81B60),
               foregroundColor: Colors.white,
             ),
             child: Text(confirmLabel),
@@ -139,10 +141,12 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
     if (!await _ensureCanModifySharedInfo()) return;
 
     final confirmed = await _confirmRelationshipAction(
-      title: _isSingleRelationship ? confirmSingleTitle : confirmCoupleTitle,
-      message: _isSingleRelationship ? confirmSingleMsg : confirmCoupleMsg,
-      confirmLabel:
-          _isSingleRelationship ? confirmSingleLabel : confirmCoupleLabel,
+      title:
+          _isSingleRelationship ? confirmSingleTitle : confirmCoupleTitle,
+      message: _isSingleRelationship
+          ? confirmSingleMsg
+          : confirmCoupleMsg,
+      confirmLabel: _isSingleRelationship ? confirmSingleLabel : confirmCoupleLabel,
     );
     if (!confirmed || !mounted) return;
 
@@ -187,7 +191,8 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
 
     final confirmed = await _confirmRelationshipAction(
       title: confirmTitle,
-      message: confirmMsg,
+      message:
+          confirmMsg,
       confirmLabel: confirmLabel,
     );
     if (!confirmed || !mounted) return;
@@ -297,6 +302,7 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
       hideBackButton: hideBackButton,
       id: 'relationship',
       title: context.tr('relationship_status'),
+      borderColor: const Color(0xFFf48fb1),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -67,8 +67,7 @@ ScheduleEventPresentation describeScheduleNotification({
   final birthdayPerson = _detectBirthdayPerson(
       resolvedTitle, fallbackTitle, fallbackMessage, eventDate, identity);
   final milestoneDays = _detectLoveDayMilestone(resolvedTitle, notificationId);
-  final isAnniversary = birthdayPerson == null &&
-      milestoneDays == null &&
+  final isAnniversary = birthdayPerson == null && milestoneDays == null &&
       _isAnniversaryEvent(
           resolvedTitle, fallbackTitle, fallbackMessage, eventDate, identity);
 

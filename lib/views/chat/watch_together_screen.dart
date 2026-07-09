@@ -221,8 +221,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
     // Detect manual seek:
     // We only consider it a seek if the position actually changed (posDiffMs > 100)
     // and the change is significantly different from the elapsed real time.
-    final posDiffMs =
-        (position.inMilliseconds - _lastKnownPosition.inMilliseconds).abs();
+    final posDiffMs = (position.inMilliseconds - _lastKnownPosition.inMilliseconds).abs();
     final timeDiffMs = now.difference(_lastTickTime).inMilliseconds;
     bool seeked = posDiffMs > 100 && (posDiffMs - timeDiffMs).abs() > 1500;
 
@@ -250,7 +249,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
           decoded.map((key, value) => MapEntry(key.toString(), value));
       if (data.isEmpty) return;
       final eventName = data['event']?.toString() ?? '';
-
+      
       // Skip 'timeupdate' events to avoid continuous sync
       if (eventName == 'timeupdate') return;
 

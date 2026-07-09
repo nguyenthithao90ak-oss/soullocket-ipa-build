@@ -22,74 +22,53 @@ class _CountdownModeCenterIconPreset {
 
 final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
   _CountdownModeCenterIconPreset(
-    type: 'miss',
-    label: L10nService().translate('home_nh_dbe2a3'),
+    type: 'heart',
+    label: L10nService().translate('home_tritim_94c542'),
     emoji: '\u{1F496}',
     icon: Icons.favorite_rounded,
-    assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
-    gradient: [const Color(0xFFFFD8E6), const Color(0xFFFFF3F7)],
+    assetPath: null,
+    gradient: [const Color(0xFFFFFFFF), const Color(0xFFFFF2F8)],
     accent: const Color(0xFFD94C86),
-  ),
-  _CountdownModeCenterIconPreset(
-    type: 'angry',
-    label: L10nService().translate('home_gin_6a4c8c'),
-    emoji: '\u{1F63E}',
-    icon: Icons.sentiment_very_dissatisfied_rounded,
-    assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_154.png',
-    gradient: [const Color(0xFFFFE6DC), const Color(0xFFFFF6F2)],
-    accent: const Color(0xFFE26A3A),
   ),
   _CountdownModeCenterIconPreset(
     type: 'kiss',
     label: L10nService().translate('home_hn_fac010'),
     emoji: '\u{1F48B}',
     icon: Icons.favorite_border_rounded,
-    assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_047.png',
-    gradient: [const Color(0xFFFFE1EC), const Color(0xFFFFF7FA)],
+    gradient: [const Color(0xFFFFF7FA), const Color(0xFFFFD9E8)],
     accent: const Color(0xFFE14A8B),
   ),
   _CountdownModeCenterIconPreset(
     type: 'hug',
     label: L10nService().translate('home_m_07a3b7'),
-    emoji: '\u{1F428}',
+    emoji: '\u{1F917}',
     icon: Icons.diversity_1_rounded,
-    assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_082.png',
-    gradient: [const Color(0xFFDDF3FF), const Color(0xFFF5FBFF)],
+    gradient: [const Color(0xFFFFFFFF), const Color(0xFFDDF3FF)],
     accent: const Color(0xFF2D8FE3),
+  ),
+  _CountdownModeCenterIconPreset(
+    type: 'angry',
+    label: L10nService().translate('home_gin_6a4c8c'),
+    emoji: '\u{1F620}',
+    icon: Icons.sentiment_very_dissatisfied_rounded,
+    gradient: [const Color(0xFFFFFFFF), const Color(0xFFFFE6DC)],
+    accent: const Color(0xFFE26A3A),
   ),
   _CountdownModeCenterIconPreset(
     type: 'tease',
     label: L10nService().translate('home_tru_d66cdf'),
-    emoji: '\u{1F921}',
+    emoji: '\u{2728}',
     icon: Icons.auto_awesome_rounded,
-    assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_070.png',
-    gradient: [const Color(0xFFE8E1FF), const Color(0xFFF8F5FF)],
+    gradient: [const Color(0xFFFFFFFF), const Color(0xFFE8E1FF)],
     accent: const Color(0xFF7B61D9),
   ),
-  _CountdownModeCenterIconPreset(
-    type: 'cry',
-    label: L10nService().translate('home_khc_92394f'),
-    emoji: '\u{1F62D}',
-    icon: Icons.face_retouching_natural_rounded,
-    assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_089.png',
-    gradient: [const Color(0xFFDDEBFF), const Color(0xFFF4F8FF)],
-    accent: const Color(0xFF5B8DEF),
-  ),
-  _CountdownModeCenterIconPreset(
+  const _CountdownModeCenterIconPreset(
     type: 'poop',
     label: 'Troll',
-    emoji: '\u{1F4A9}',
+    emoji: '\u{26A1}',
     icon: Icons.bolt_rounded,
-    assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_071.png',
-    gradient: [const Color(0xFFFFE1B9), const Color(0xFFFFF4E6)],
-    accent: const Color(0xFFB96B2C),
+    gradient: [Color(0xFFFFFFFF), Color(0xFFFFE1B9)],
+    accent: Color(0xFFB96B2C),
   ),
 ];
 
@@ -98,7 +77,8 @@ _CountdownModeCenterIconPreset _countdownModeCenterIconPresetFor(
 ) {
   final normalized = rawType.trim().toLowerCase();
   final legacyNormalized = switch (normalized) {
-    'heart' => 'miss',
+    'miss' => 'heart',
+    'cry' => 'heart',
     'furious' => 'angry',
     _ => normalized,
   };
@@ -134,7 +114,7 @@ Widget _buildCountdownModeCenterIconVisual({
   required _CountdownModeCenterIconPreset preset,
   required double size,
   double? emojiSize,
-  bool preferAsset = true,
+  bool preferAsset = false,
 }) {
   final resolvedAssetPath =
       preset.assetPath != null && preset.assetPath!.trim().isNotEmpty
@@ -258,8 +238,8 @@ Future<String?> _showCountdownModeCenterIconPicker(
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: preset.accent.withValues(
-                                alpha: isSelected ? 0.22 : 0.10,
+                              color: preset.accent.withValues(alpha: 
+                                isSelected ? 0.22 : 0.10,
                               ),
                               blurRadius: isSelected ? 20 : 12,
                               offset: const Offset(0, 8),
@@ -494,7 +474,6 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
     required this.isDark,
     this.centerIconType = 'heart',
     this.onCenterIconChanged,
-    this.onCenterIconTap,
     this.onLeftAvatarTap,
     this.onRightAvatarTap,
     this.onRightAvatarChatTap,
@@ -511,7 +490,6 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
   final bool isDark;
   final String centerIconType;
   final ValueChanged<String>? onCenterIconChanged;
-  final VoidCallback? onCenterIconTap;
   final VoidCallback? onLeftAvatarTap;
   final VoidCallback? onRightAvatarTap;
   final VoidCallback? onRightAvatarChatTap;
@@ -565,7 +543,17 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: onCenterIconTap,
+              onTap: onCenterIconChanged == null
+                  ? null
+                  : () async {
+                      final selected = await _showCountdownModeCenterIconPicker(
+                        context,
+                        selectedType: centerIconType,
+                      );
+                      if (selected != null) {
+                        onCenterIconChanged!(selected);
+                      }
+                    },
               onLongPress: onCenterIconChanged == null
                   ? null
                   : () async {
@@ -620,8 +608,7 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
                         end: Alignment.bottomRight,
                       ),
                       border: Border.all(
-                        color: Colors.white
-                            .withValues(alpha: isDark ? 0.22 : 0.88),
+                        color: Colors.white.withValues(alpha: isDark ? 0.22 : 0.88),
                         width: 2,
                       ),
                     ),
@@ -643,9 +630,7 @@ class _CountdownModeAvatarCardStatic extends StatelessWidget {
               avatarUrl: rightAvatarUrl,
               avatarFrameKey: avatarFrameKey,
               fontKey: fontKey,
-              roleLabel: isSingleMode
-                  ? L10nService().translate('home_angch_7a6550')
-                  : L10nService().translate('home_ngiy_e21b71'),
+              roleLabel: isSingleMode ? L10nService().translate('home_angch_7a6550') : L10nService().translate('home_ngiy_e21b71'),
               accent: const Color(0xFFFF6FA3),
               foreground: foreground,
               isDark: isDark,
@@ -751,8 +736,7 @@ class _CountdownModeAvatarIdentity extends StatelessWidget {
           decoration: BoxDecoration(
             color: accent.withValues(alpha: isDark ? 0.18 : 0.12),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-                color: accent.withValues(alpha: isDark ? 0.30 : 0.18)),
+            border: Border.all(color: accent.withValues(alpha: isDark ? 0.30 : 0.18)),
           ),
           child: Text(
             roleLabel,
@@ -932,100 +916,97 @@ class _CountdownModeCircle extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: resolvedSize * 0.12),
+                  padding: EdgeInsets.symmetric(horizontal: resolvedSize * 0.12),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: resolvedSize * 0.04),
-                        child: _CountdownModeCircleTapTarget(
-                          circleSize: resolvedSize,
-                          onTap: onTopTap,
-                          constraints: BoxConstraints(
-                            minWidth: (resolvedSize * 0.52).clamp(150.0, 260.0),
-                            minHeight: (resolvedSize * 0.11).clamp(28.0, 54.0),
-                          ),
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              topLabel,
-                              maxLines: 1,
-                              textAlign: TextAlign.center,
-                              style: SLTheme.textStyleForKey(
-                                fontKey,
-                                fontSize:
-                                    (resolvedSize * 0.075).clamp(16.0, 22.0),
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.2,
-                                color: styleData.topColor,
-                                shadows: styleData.labelShadows,
-                              ),
-                            ),
-                          ),
-                        ),
+                  Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: resolvedSize * 0.04),
+                    child: _CountdownModeCircleTapTarget(
+                      circleSize: resolvedSize,
+                      onTap: onTopTap,
+                      constraints: BoxConstraints(
+                        minWidth: (resolvedSize * 0.52).clamp(150.0, 260.0),
+                        minHeight: (resolvedSize * 0.11).clamp(28.0, 54.0),
                       ),
-                      SizedBox(height: resolvedSize * 0.05),
-                      _CountdownModeCircleTapTarget(
-                        circleSize: resolvedSize,
-                        onTap: onValueTap,
-                        constraints: BoxConstraints(
-                          minWidth: (resolvedSize * 0.26).clamp(82.0, 148.0),
-                          minHeight: (resolvedSize * 0.14).clamp(42.0, 76.0),
-                        ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
                         child: Text(
-                          value,
+                          topLabel,
+                          maxLines: 1,
                           textAlign: TextAlign.center,
                           style: SLTheme.textStyleForKey(
                             fontKey,
-                            fontSize: (resolvedSize * 0.36).clamp(54.0, 142.0),
+                            fontSize: (resolvedSize * 0.075).clamp(16.0, 22.0),
                             fontWeight: FontWeight.w900,
-                            height: 1.0,
-                            foreground: valuePaint,
-                            shadows: styleData.numberShadows,
+                            letterSpacing: 1.2,
+                            color: styleData.topColor,
+                            shadows: styleData.labelShadows,
                           ),
                         ),
                       ),
-                      SizedBox(height: resolvedSize * 0.02),
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: resolvedSize * 0.06),
-                        child: _CountdownModeCircleTapTarget(
-                          circleSize: resolvedSize,
-                          onTap: onBottomTap,
-                          constraints: BoxConstraints(
-                            minWidth: (resolvedSize * 0.56).clamp(156.0, 276.0),
-                            minHeight: (resolvedSize * 0.11).clamp(28.0, 54.0),
-                          ),
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              bottomLabel,
-                              maxLines: 1,
-                              textAlign: TextAlign.center,
-                              style: SLTheme.textStyleForKey(
-                                fontKey,
-                                fontSize:
-                                    (resolvedSize * 0.082).clamp(17.0, 24.0),
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.1,
-                                color: styleData.bottomColor,
-                                shadows: styleData.labelShadows,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                  SizedBox(height: resolvedSize * 0.05),
+                  _CountdownModeCircleTapTarget(
+                    circleSize: resolvedSize,
+                    onTap: onValueTap,
+                    constraints: BoxConstraints(
+                      minWidth: (resolvedSize * 0.26).clamp(82.0, 148.0),
+                      minHeight: (resolvedSize * 0.14).clamp(42.0, 76.0),
+                    ),
+                    child: Text(
+                      value,
+                      textAlign: TextAlign.center,
+                      style: SLTheme.textStyleForKey(
+                        fontKey,
+                        fontSize: (resolvedSize * 0.36).clamp(54.0, 142.0),
+                        fontWeight: FontWeight.w900,
+                        height: 1.0,
+                        foreground: valuePaint,
+                        shadows: styleData.numberShadows,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: resolvedSize * 0.02),
+                  Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: resolvedSize * 0.06),
+                    child: _CountdownModeCircleTapTarget(
+                      circleSize: resolvedSize,
+                      onTap: onBottomTap,
+                      constraints: BoxConstraints(
+                        minWidth: (resolvedSize * 0.56).clamp(156.0, 276.0),
+                        minHeight: (resolvedSize * 0.11).clamp(28.0, 54.0),
+                      ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          bottomLabel,
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
+                          style: SLTheme.textStyleForKey(
+                            fontKey,
+                            fontSize: (resolvedSize * 0.082).clamp(17.0, 24.0),
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.1,
+                            color: styleData.bottomColor,
+                            shadows: styleData.labelShadows,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }
 
@@ -1129,8 +1110,8 @@ class FloatingHeartsRingOverlay extends StatefulWidget {
       _FloatingHeartsRingOverlayState();
 }
 
-class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
-    with WidgetsBindingObserver {
+class _FloatingHeartsRingOverlayState
+    extends State<FloatingHeartsRingOverlay> with WidgetsBindingObserver {
   static const int _kCount = 10;
 
   late final List<_HeartParticle> _particles;
@@ -1157,8 +1138,7 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
       _timer?.cancel();
       _timer = null;
     } else if (state == AppLifecycleState.resumed && _timer == null) {
@@ -1215,17 +1195,15 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
                   clipBehavior: Clip.none,
                   children: List.generate(_kCount, (i) {
                     final p = _particles[i];
-                    final double localProgress =
-                        (progress * p.speedMultiplier + p.phaseOffset) % 1.0;
+                    final double localProgress = (progress * p.speedMultiplier + p.phaseOffset) % 1.0;
                     final double t = math.sin(localProgress * 2 * math.pi);
-                    final double currentR =
-                        radius * p.rFrac + (t * p.floatAmplitude);
+                    final double currentR = radius * p.rFrac + (t * p.floatAmplitude);
                     final double angle = p.angle + (t * 0.6);
 
-                    final double cx =
-                        radius + currentR * math.cos(angle) + tiltX;
-                    final double cy =
-                        radius + currentR * math.sin(angle) + tiltY;
+                    final double cx = radius +
+                        currentR * math.cos(angle) + tiltX;
+                    final double cy = radius +
+                        currentR * math.sin(angle) + tiltY;
 
                     return Positioned(
                       left: cx - p.size / 2,
@@ -1233,8 +1211,7 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
                       child: Icon(
                         Icons.favorite_rounded,
                         size: p.size,
-                        color: _kHeartColors[i % _kHeartColors.length]
-                            .withValues(alpha: p.opacity),
+                        color: _kHeartColors[i % _kHeartColors.length].withValues(alpha: p.opacity),
                       ),
                     );
                   }),
@@ -1277,3 +1254,5 @@ class _HeartParticle {
   final double floatAmplitude;
   final double opacity;
 }
+
+

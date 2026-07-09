@@ -28,6 +28,7 @@ class PinPadSetupModal extends StatefulWidget {
   final VoidCallback? onBiometricPressed;
   final Function(String pin) onCompleted;
 
+
   const PinPadSetupModal({
     super.key,
     this.title = 'Thiết lập mã PIN',
@@ -47,6 +48,7 @@ class PinPadSetupModal extends StatefulWidget {
     required this.onCompleted,
   });
 
+
   static Future<String?> show(
     BuildContext context, {
     String title = 'Thiết lập mã PIN',
@@ -64,6 +66,7 @@ class PinPadSetupModal extends StatefulWidget {
     bool enableBiometrics = false,
     VoidCallback? onBiometricPressed,
   }) async {
+
     return Navigator.of(context, rootNavigator: true).push<String>(
       PageRouteBuilder<String>(
         opaque: true,
@@ -87,6 +90,7 @@ class PinPadSetupModal extends StatefulWidget {
             enableBiometrics: enableBiometrics,
             onBiometricPressed: onBiometricPressed,
             onCompleted: (pin) => Navigator.of(context).pop(pin),
+
           );
         },
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -389,9 +393,8 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
       _remainingLockSeconds = seconds;
       _currentPin = '';
       _hasError = true;
-      _errorMessage = L10nService().format(
-          'pin_too_many_attempts_retry_seconds',
-          {'seconds': _remainingLockSeconds});
+      _errorMessage =
+          L10nService().format('pin_too_many_attempts_retry_seconds', {'seconds': _remainingLockSeconds});
     });
 
     _lockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -412,9 +415,8 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
 
       setState(() {
         _remainingLockSeconds -= 1;
-        _errorMessage = L10nService().format(
-            'pin_too_many_attempts_retry_seconds',
-            {'seconds': _remainingLockSeconds});
+        _errorMessage =
+            L10nService().format('pin_too_many_attempts_retry_seconds', {'seconds': _remainingLockSeconds});
       });
     });
   }
@@ -424,9 +426,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
       return fallback;
     }
 
-    final value = raw
-        .replaceAll('Quên mã pin?', L10nService().translate('pin_forgot'))
-        .replaceAll(
+    final value = raw.replaceAll('Quên mã pin?', L10nService().translate('pin_forgot')).replaceAll(
           'Quên mã pin sau khi nhập sai 5 lần',
           L10nService().translate('pin_forgot_after_5'),
         );
@@ -444,8 +444,8 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
     return value;
   }
 
-  String get _resolvedTitle => _cleanUiText(widget.title,
-      fallback: L10nService().translate('pin_setup_title'));
+  String get _resolvedTitle =>
+      _cleanUiText(widget.title, fallback: L10nService().translate('pin_setup_title'));
 
   String get _resolvedSubtitle {
     final fallback = widget.isUnlock
@@ -469,17 +469,14 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
   String get _resolvedHintText {
     final fallback = _pinSlotCount == _maxPinLength
         ? L10nService().translate('pin_hint_4_8')
-        : L10nService()
-            .format('pin_hint_exact_count', {'count': _pinSlotCount});
+        : L10nService().format('pin_hint_exact_count', {'count': _pinSlotCount});
     return _cleanUiText(_defaultHintText, fallback: fallback);
   }
 
   String get _resolvedProgressText {
     final fallback = _pinSlotCount == _maxPinLength
-        ? L10nService()
-            .format('pin_progress_min', {'current': _currentPin.length})
-        : L10nService().format('pin_progress_exact',
-            {'current': _currentPin.length, 'count': _pinSlotCount});
+        ? L10nService().format('pin_progress_min', {'current': _currentPin.length})
+        : L10nService().format('pin_progress_exact', {'current': _currentPin.length, 'count': _pinSlotCount});
     return _cleanUiText(_pinProgressText, fallback: fallback);
   }
 
@@ -490,15 +487,13 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
     return L10nService().translate('pin_forgot');
   }
 
-  String get _forgotPinDisabledLabel =>
-      L10nService().translate('pin_forgot_after_5');
+  String get _forgotPinDisabledLabel => L10nService().translate('pin_forgot_after_5');
 
-  String get _confirmDeliveryHint => L10nService().format(
-      'pin_confirm_delivery_hint', {'target': widget.forgotPinHint ?? ''});
+  String get _confirmDeliveryHint =>
+      L10nService().format('pin_confirm_delivery_hint', {'target': widget.forgotPinHint ?? ''});
 
-  String get _primaryActionLabel => widget.isConfirming
-      ? L10nService().translate('core_confirm_upper')
-      : L10nService().translate('core_continue_upper');
+  String get _primaryActionLabel =>
+      widget.isConfirming ? L10nService().translate('core_confirm_upper') : L10nService().translate('core_continue_upper');
 
   double _keypadButtonSize(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
@@ -639,8 +634,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                                       vertical: 16,
                                     ),
                                     side: BorderSide(
-                                      color: SLColors.primary
-                                          .withValues(alpha: 0.18),
+                                      color: SLColors.primary.withValues(alpha: 0.18),
                                     ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(18),
@@ -1067,8 +1061,8 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                                     borderRadius: BorderRadius.circular(8),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: SLColors.primary
-                                            .withValues(alpha: 0.24),
+                                        color:
+                                            SLColors.primary.withValues(alpha: 0.24),
                                         blurRadius: 15,
                                         offset: const Offset(0, 6),
                                       ),
@@ -1443,8 +1437,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                               color: Colors.white,
                               boxShadow: [
                                 BoxShadow(
-                                  color:
-                                      SLColors.primary.withValues(alpha: 0.14),
+                                  color: SLColors.primary.withValues(alpha: 0.14),
                                   blurRadius: 20,
                                   spreadRadius: 2,
                                 ),
@@ -1511,8 +1504,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                                 color: SLColors.danger.withValues(alpha: 0.1),
                                 borderRadius: SLRadius.mdAll,
                                 border: Border.all(
-                                    color:
-                                        SLColors.danger.withValues(alpha: 0.2)),
+                                    color: SLColors.danger.withValues(alpha: 0.2)),
                               ),
                               child: Text(
                                 displayedError,
@@ -1554,9 +1546,7 @@ class _PinPadSetupModalState extends State<PinPadSetupModal> {
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 16),
                                 child: Text(
-                                  L10nService().format(
-                                      'pin_confirm_delivery_hint',
-                                      {'target': widget.forgotPinHint ?? ''}),
+                                  L10nService().format('pin_confirm_delivery_hint', {'target': widget.forgotPinHint ?? ''}),
                                   textAlign: TextAlign.center,
                                   style: SLTheme.quicksand(
                                     fontSize: 12,

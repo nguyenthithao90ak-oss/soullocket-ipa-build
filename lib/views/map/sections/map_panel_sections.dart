@@ -144,7 +144,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
-        color: const Color(0x4D1E293B),
+        color: _kMapTileSurface,
         borderRadius: SLRadius.lgAll,
         border: Border.all(color: accent.withValues(alpha: 0.18)),
       ),
@@ -1133,7 +1133,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
-        color: const Color(0x4D1E293B),
+        color: _kMapTileSurface,
         borderRadius: SLRadius.lgAll,
         border: Border.all(color: _kMapPanelBorder.withValues(alpha: 0.72)),
       ),

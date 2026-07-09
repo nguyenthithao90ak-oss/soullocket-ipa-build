@@ -308,9 +308,10 @@ extension _SettingsDataHealthSection on _SettingsTabState {
         : _hasSettingsCloudBackup
             ? context.tr('settings_data_status_cloud_found')
             : context.tr('settings_data_status_cloud_not_found');
-    final houseStatus = (_houseId ?? '').trim().isNotEmpty
-        ? context.tr('settings_data_status_linked')
-        : context.tr('settings_data_status_no_house');
+    final houseStatus =
+        (_houseId ?? '').trim().isNotEmpty
+            ? context.tr('settings_data_status_linked')
+            : context.tr('settings_data_status_no_house');
 
     return _buildSectionBlock(
       colorTint: const Color(0xFFFF9800),
@@ -533,9 +534,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
 
   Widget _buildPrivacyCenterCard() {
     final hasAppLock = (_lockConfiguredAtMs ?? 0) > 0;
-    final deviceStatus = _isDevicePending
-        ? context.tr('settings_device_pending')
-        : context.tr('settings_device_trusted');
+    final deviceStatus = _isDevicePending ? context.tr('settings_device_pending') : context.tr('settings_device_trusted');
     final backupStatus = _isCheckingBackupStatus
         ? context.tr('settings_data_status_checking')
         : _hasSettingsCloudBackup
@@ -826,10 +825,8 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                         const SizedBox(height: 4),
                         Text(
                           isPerformanceMode
-                              ? context
-                                  .tr('settings_performance_mode_desc_smooth')
-                              : context.tr(
-                                  'settings_performance_mode_desc_balanced'),
+                              ? context.tr('settings_performance_mode_desc_smooth')
+                              : context.tr('settings_performance_mode_desc_balanced'),
                           style: SLTheme.quicksand(
                             fontSize: 11.8,
                             fontWeight: FontWeight.w700,
@@ -1119,6 +1116,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, passwordCtrl.text.trim()),
               style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1565C0),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -1219,6 +1217,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1565C0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -1312,6 +1311,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
               );
             },
             style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1565C0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -1528,6 +1528,11 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                 ),
               );
             },
+          ),
+          _buildAdvancedPanel(
+            hideBackButton: true,
+            showSaveButton: false,
+            showHeaderCard: false,
           ),
         ],
       ),

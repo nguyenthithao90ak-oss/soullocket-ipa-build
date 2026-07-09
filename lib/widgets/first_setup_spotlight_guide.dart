@@ -54,8 +54,7 @@ class FirstSetupSpotlightGuide extends StatefulWidget {
   }
 
   @override
-  State<FirstSetupSpotlightGuide> createState() =>
-      _FirstSetupSpotlightGuideState();
+  State<FirstSetupSpotlightGuide> createState() => _FirstSetupSpotlightGuideState();
 }
 
 class _FirstSetupSpotlightGuideState extends State<FirstSetupSpotlightGuide> {
@@ -133,8 +132,7 @@ class _FirstSetupSpotlightGuideState extends State<FirstSetupSpotlightGuide> {
     final cardTop = showCardAbove
         ? math.max(safeTop, targetRect.top - 210)
         : math.min(size.height - safeBottom - 190, targetRect.bottom + 18);
-    final cardLeft = (targetCenter.dx - cardWidth / 2)
-        .clamp(16.0, size.width - cardWidth - 16);
+    final cardLeft = (targetCenter.dx - cardWidth / 2).clamp(16.0, size.width - cardWidth - 16);
 
     final targetHighlightRect = targetRect.inflate(8);
     final targetRadius = _spotlightRadiusFor(targetHighlightRect);
@@ -159,8 +157,7 @@ class _FirstSetupSpotlightGuideState extends State<FirstSetupSpotlightGuide> {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(targetRadius),
-                    border: Border.all(
-                        color: step.color.withValues(alpha: 0.92), width: 2.4),
+                    border: Border.all(color: step.color.withValues(alpha: 0.92), width: 2.4),
                     boxShadow: [
                       BoxShadow(
                         color: step.color.withValues(alpha: 0.36),
@@ -220,8 +217,7 @@ class _SpotlightPainter extends CustomPainter {
         RRect.fromRectAndRadius(target, Radius.circular(radius)),
       );
     final path = Path.combine(PathOperation.difference, overlay, cutout);
-    canvas.drawPath(
-        path, Paint()..color = Colors.black.withValues(alpha: 0.66));
+    canvas.drawPath(path, Paint()..color = Colors.black.withValues(alpha: 0.66));
 
     canvas.drawRRect(
       RRect.fromRectAndRadius(target, Radius.circular(radius)),
@@ -348,9 +344,7 @@ class _SpotlightCard extends StatelessWidget {
                 ),
                 onPressed: onNext,
                 child: Text(
-                  isLast
-                      ? L10nService().translate('core_done')
-                      : L10nService().translate('core_next'),
+                  isLast ? L10nService().translate('core_done') : L10nService().translate('core_next'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                 ),
               ),

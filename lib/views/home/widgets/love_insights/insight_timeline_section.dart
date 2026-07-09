@@ -189,8 +189,7 @@ extension _InsightTimelineSectionExt on _LoveInsightsScreenState {
                 boxShadow: isCurrent
                     ? [
                         BoxShadow(
-                          color:
-                              const Color(0xFFF26A3D).withValues(alpha: 0.10),
+                          color: const Color(0xFFF26A3D).withValues(alpha: 0.10),
                           blurRadius: 14,
                           offset: const Offset(0, 6),
                         ),

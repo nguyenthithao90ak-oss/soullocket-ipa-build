@@ -15,19 +15,18 @@ class BumpDetector {
 
   BumpDetector({
     this.threshold = 4.0, // Gia tốc tuyến tính > 4.0 m/s^2 được tính là bump
-    this.cooldown = const Duration(
-        milliseconds: 1000), // Thời gian chờ giữa 2 lần bump liên tiếp
+    this.cooldown = const Duration(milliseconds: 1000), // Thời gian chờ giữa 2 lần bump liên tiếp
     required this.onBump,
   });
 
   void start() {
     if (kIsWeb) return; // Không hỗ trợ web
-
+    
     _subscription?.cancel();
     _subscription = SensorHelper.userAccelerometerEvents.listen(
       (UserAccelerometerEvent event) {
         // userAccelerometer loại bỏ trọng lực, chỉ còn gia tốc do chuyển động tay.
-        // Tính độ lớn vector gia tốc tuyến tính (bo qua Z nếu chi quan tam mặt phẳng màn hình,
+        // Tính độ lớn vector gia tốc tuyến tính (bo qua Z nếu chi quan tam mặt phẳng màn hình, 
         // nhung thuc te bump co the dien ra doc theo X hoac Y)
         final acceleration = math.sqrt(
           event.x * event.x + event.y * event.y + event.z * event.z,
@@ -35,11 +34,9 @@ class BumpDetector {
 
         if (acceleration > threshold) {
           final now = DateTime.now();
-          if (_lastBumpTime == null ||
-              now.difference(_lastBumpTime!) > cooldown) {
+          if (_lastBumpTime == null || now.difference(_lastBumpTime!) > cooldown) {
             _lastBumpTime = now;
-            debugPrint(
-                '[BumpDetector] Bump detected! Acceleration: $acceleration');
+            debugPrint('[BumpDetector] Bump detected! Acceleration: $acceleration');
             onBump();
           }
         }

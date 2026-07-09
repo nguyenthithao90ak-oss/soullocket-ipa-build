@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../settings_tab.dart';
 
 // Shell-ready extraction target for shared draft state:
@@ -54,6 +53,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       ('Xanh ocean', 'ocean'),
       (context.tr('home_honghn_ab7dad'), 'sunset'),
       ('Gold', 'gold'),
+      ('Tắt (không màu)', 'none'),
     ];
     final previewSizeOptions = _widgetPreviewSizeKeys
         .map((key) => (_widgetPreviewSizeLabel(key), key))
@@ -236,6 +236,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
       ('Xanh ocean', 'ocean'),
       (context.tr('home_honghn_ab7dad'), 'sunset'),
       ('Gold', 'gold'),
+      ('Tắt (không màu)', 'none'),
     ];
     final previewSizeOptions = _widgetPreviewSizeKeys
         .map((key) => (_widgetPreviewSizeLabel(key), key))
@@ -439,6 +440,15 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                     value: _showDiaryOnWidget,
                     accentColor: const Color(0xFF0EA5C6),
                     onChanged: _handleWidgetDiaryVisibilityChanged,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildWidgetToggleTile(
+                    icon: Icons.favorite_outline_rounded,
+                    title: context.tr('widget_animated_heart'),
+                    subtitle: null,
+                    value: _widgetHeartAnimated,
+                    accentColor: const Color(0xFFFF5B8A),
+                    onChanged: _handleWidgetHeartAnimatedChanged,
                   ),
                 ],
               ),

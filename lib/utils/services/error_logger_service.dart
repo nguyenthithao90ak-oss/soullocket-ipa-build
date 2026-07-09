@@ -29,11 +29,9 @@ class ErrorLoggerService {
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
   }
 
-  Future<void> logError(dynamic error, StackTrace? stack,
-      {String? reason, bool fatal = false}) async {
+  Future<void> logError(dynamic error, StackTrace? stack, {String? reason, bool fatal = false}) async {
     final errStr = error.toString().toLowerCase();
-    if (errStr.contains('unable to load asset') ||
-        errStr.contains('không thể tải')) {
+    if (errStr.contains('unable to load asset') || errStr.contains('không thể tải')) {
       debugPrint('Ignored asset loading error from logger: $errStr');
       return;
     }

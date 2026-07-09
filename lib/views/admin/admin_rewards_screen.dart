@@ -40,12 +40,7 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
     }
 
     try {
-      final snapshot = await _db
-          .child('users')
-          .orderByChild('points')
-          .startAt(1)
-          .limitToLast(100)
-          .get();
+      final snapshot = await _db.child('users').orderByChild('points').startAt(1).limitToLast(100).get();
       final List<Map<String, dynamic>> loaded = [];
 
       if (snapshot.exists) {
@@ -75,7 +70,8 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
       setState(() {
         _errorText = AppErrorMapper.resolve(
           error,
-          fallbackMessage: context.tr('admin_chathtidli_561cb4'),
+          fallbackMessage:
+              context.tr('admin_chathtidli_561cb4'),
         ).message;
       });
     } finally {
@@ -126,8 +122,7 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(context.tr('admin_hy_1e4050'),
-                style: const TextStyle(color: Colors.grey)),
+            child: Text(context.tr('admin_hy_1e4050'), style: const TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -150,26 +145,25 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
                   if (!ctx.mounted) return;
                   Navigator.pop(ctx);
                   if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(context.tr('admin_cpnhtim_2675a2'))));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(context.tr('admin_cpnhtim_2675a2'))));
                   _loadData(refresh: true);
                 } catch (e) {
-                  debugPrint(
-                      'Update reward points failed: ${AppErrorMapper.resolve(
+                  debugPrint('Update reward points failed: ${AppErrorMapper.resolve(
                     e,
                     fallbackMessage: context.tr('admin_chathcpnht_98d3f7'),
                   ).message}');
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(context.tr('admin_chathcpnht_cc7c27')),
+                      content: Text(
+                          context.tr('admin_chathcpnht_cc7c27')),
                     ),
                   );
                 }
               }
             },
-            child: Text(context.tr('admin_lu_49fac1'),
-                style: const TextStyle(color: Colors.white)),
+            child: Text(context.tr('admin_lu_49fac1'), style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -204,10 +198,8 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
                         ? const Center(child: CircularProgressIndicator())
                         : _usersPoints.isEmpty
                             ? Center(
-                                child: Text(
-                                    context.tr('admin_khngcdliui_f38d82'),
-                                    style:
-                                        const TextStyle(color: Colors.white)))
+                                child: Text(context.tr('admin_khngcdliui_f38d82'),
+                                    style: const TextStyle(color: Colors.white)))
                             : AdminGlassCard(
                                 padding: const EdgeInsets.all(0),
                                 child: ListView.separated(
@@ -237,8 +229,7 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
                                             color: Color(0xFFFF4B91)),
                                         onPressed: () =>
                                             _showAdjustPointsDialog(u),
-                                        tooltip:
-                                            context.tr('admin_chnhsaim_4b9910'),
+                                        tooltip: context.tr('admin_chnhsaim_4b9910'),
                                       ),
                                     );
                                   },

@@ -87,7 +87,7 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
       padding: EdgeInsets.only(
         left: 14,
         right: 14,
-        bottom: MediaQuery.viewInsetsOf(context).bottom + 14,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 14,
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -250,8 +250,7 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: accent,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          side:
-                              BorderSide(color: accent.withValues(alpha: 0.28)),
+                          side: BorderSide(color: accent.withValues(alpha: 0.28)),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),

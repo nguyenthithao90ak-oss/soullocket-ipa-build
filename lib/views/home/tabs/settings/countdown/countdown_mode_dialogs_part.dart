@@ -46,6 +46,7 @@ class _CountdownSpaceRenameDialogState
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      backgroundColor: const Color(0xFF101A2B),
       title: Text(
         context.tr('home_ttnkhnggia_9d2bdf'),
         style: SLTheme.quicksand(
@@ -162,6 +163,7 @@ class _CountdownSpaceAddDialogState extends State<_CountdownSpaceAddDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      backgroundColor: const Color(0xFF101A2B),
       title: Text(
         context.tr('home_ghpnikhngg_860e28'),
         style: SLTheme.quicksand(

@@ -25,12 +25,7 @@ class _AdminSupportChatScreenState extends State<AdminSupportChatScreen> {
   @override
   void initState() {
     super.initState();
-    _ticketsSub = _db
-        .child('support_tickets')
-        .orderByChild('last_ts')
-        .limitToLast(100)
-        .onValue
-        .listen(
+    _ticketsSub = _db.child('support_tickets').orderByChild('last_ts').limitToLast(100).onValue.listen(
       (event) {
         final raw = event.snapshot.value;
         if (raw is! Map) {
@@ -185,8 +180,7 @@ class _AdminSupportChatScreenState extends State<AdminSupportChatScreen> {
                         Icon(Icons.support_agent_rounded, color: Colors.white),
                   ),
                   title: Text(
-                    ticket['name']?.toString() ??
-                        context.tr('util_vdanh_f4df97'),
+                    ticket['name']?.toString() ?? context.tr('util_vdanh_f4df97'),
                     style: SLTheme.quicksand(
                       fontWeight: unread ? FontWeight.bold : FontWeight.w700,
                     ),
@@ -657,8 +651,7 @@ class _AdminSupportChatDetailScreenState
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  L10nService()
-                      .format('util_priority_label', {'priority': priority}),
+                  L10nService().format('util_priority_label', {'priority': priority}),
                   style: SLTheme.quicksand(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w900,
@@ -713,8 +706,7 @@ class _AdminSupportChatDetailScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          L10nService()
-              .format('util_chat_with_ticket', {'ticketId': widget.ticketId}),
+          L10nService().format('util_chat_with_ticket', {'ticketId': widget.ticketId}),
           style: SLTheme.quicksand(
             fontSize: 14,
             fontWeight: FontWeight.w800,
@@ -766,7 +758,7 @@ class _AdminSupportChatDetailScreenState
                         Container(
                           padding: const EdgeInsets.all(12),
                           constraints: BoxConstraints(
-                            maxWidth: MediaQuery.sizeOf(context).width * 0.75,
+                            maxWidth: MediaQuery.of(context).size.width * 0.75,
                           ),
                           decoration: BoxDecoration(
                             color: isAdmin

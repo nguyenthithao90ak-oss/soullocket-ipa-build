@@ -7,8 +7,7 @@ class SoulEventEditorSheet extends StatefulWidget {
   final String houseId;
   final SoulEvent? initialEvent;
 
-  const SoulEventEditorSheet(
-      {super.key, required this.houseId, this.initialEvent});
+  const SoulEventEditorSheet({super.key, required this.houseId, this.initialEvent});
 
   @override
   State<SoulEventEditorSheet> createState() => _SoulEventEditorSheetState();
@@ -21,14 +20,8 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
   bool _isLunar = false;
 
   final List<String> _colors = [
-    '#FF4D94',
-    '#FF8C42',
-    '#FF3C38',
-    '#A23E48',
-    '#6A4C93',
-    '#1982C4',
-    '#8AC926',
-    '#FFCA3A'
+    '#FF4D94', '#FF8C42', '#FF3C38', '#A23E48', 
+    '#6A4C93', '#1982C4', '#8AC926', '#FFCA3A'
   ];
 
   @override
@@ -36,8 +29,7 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
     super.initState();
     _titleCtrl = TextEditingController(text: widget.initialEvent?.title ?? '');
     if (widget.initialEvent != null) {
-      _selectedDate =
-          DateTime.fromMillisecondsSinceEpoch(widget.initialEvent!.dateMs);
+      _selectedDate = DateTime.fromMillisecondsSinceEpoch(widget.initialEvent!.dateMs);
       _selectedColor = widget.initialEvent!.colorHex;
       _isLunar = widget.initialEvent!.isLunar;
     }
@@ -71,7 +63,7 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
 
   Future<void> _save() async {
     if (_titleCtrl.text.trim().isEmpty) return;
-
+    
     final newEvent = SoulEvent(
       id: widget.initialEvent?.id ?? '',
       title: _titleCtrl.text.trim(),
@@ -79,8 +71,7 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
       isLunar: _isLunar,
       category: 'all',
       colorHex: _selectedColor,
-      createdAt: widget.initialEvent?.createdAt ??
-          DateTime.now().millisecondsSinceEpoch,
+      createdAt: widget.initialEvent?.createdAt ?? DateTime.now().millisecondsSinceEpoch,
     );
 
     await SoulEventService().saveEvent(widget.houseId, newEvent);
@@ -98,7 +89,7 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
         left: 24,
         right: 24,
         top: 24,
-        bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -107,11 +98,8 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(widget.initialEvent == null ? 'Sự kiện mới' : 'Sửa sự kiện',
-                  style: SLTypography.titleLarge),
-              IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context)),
+              Text(widget.initialEvent == null ? 'Sự kiện mới' : 'Sửa sự kiện', style: SLTypography.titleLarge),
+              IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
             ],
           ),
           const SizedBox(height: 16),
@@ -121,15 +109,11 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
               hintText: 'VD: Sinh nhật mẹ',
               filled: true,
               fillColor: SLColors.bgMain,
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
             ),
           ),
           const SizedBox(height: 24),
-          Text('MÀU SẮC',
-              style: SLTypography.bodySmall
-                  .copyWith(color: SLColors.textSecondary)),
+          Text('MÀU SẮC', style: SLTypography.bodySmall.copyWith(color: SLColors.textSecondary)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 12,
@@ -144,21 +128,15 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
                   decoration: BoxDecoration(
                     color: Color(int.parse(hex.replaceFirst('#', '0xFF'))),
                     shape: BoxShape.circle,
-                    border: isSelected
-                        ? Border.all(color: Colors.black, width: 2)
-                        : null,
+                    border: isSelected ? Border.all(color: Colors.black, width: 2) : null,
                   ),
-                  child: isSelected
-                      ? const Icon(Icons.check, color: Colors.white, size: 20)
-                      : null,
+                  child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 20) : null,
                 ),
               );
             }).toList(),
           ),
           const SizedBox(height: 24),
-          Text('NGÀY',
-              style: SLTypography.bodySmall
-                  .copyWith(color: SLColors.textSecondary)),
+          Text('NGÀY', style: SLTypography.bodySmall.copyWith(color: SLColors.textSecondary)),
           const SizedBox(height: 8),
           GestureDetector(
             onTap: _pickDate,
@@ -173,8 +151,7 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
                   const Icon(Icons.calendar_month, color: SLColors.primary),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(_selectedDate.toString().split(' ')[0],
-                        style: SLTypography.bodyMedium),
+                    child: Text(_selectedDate.toString().split(' ')[0], style: SLTypography.bodyMedium),
                   ),
                 ],
               ),
@@ -195,15 +172,10 @@ class _SoulEventEditorSheetState extends State<SoulEventEditorSheet> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: SLColors.primary,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
               onPressed: _save,
-              child: const Text('Lưu sự kiện',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold)),
+              child: const Text('Lưu sự kiện', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
         ],

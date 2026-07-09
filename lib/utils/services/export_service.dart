@@ -369,8 +369,7 @@ class ExportService {
       final memFile = io.File('${memoriesDir.path}/$memFileName.jpg');
 
       try {
-        final response = await http
-            .get(Uri.parse(memUrl))
+        final response = await http.get(Uri.parse(memUrl))
             .timeout(const Duration(seconds: 15));
         if (response.statusCode == 200) {
           await memFile.writeAsBytes(response.bodyBytes);
@@ -395,8 +394,8 @@ class ExportService {
         'author': m['author'] ?? '',
         'ts': ts,
         'date': ts != null
-            ? DateFormat('dd/MM/yyyy HH:mm')
-                .format(DateTime.fromMillisecondsSinceEpoch(ts))
+            ? DateFormat('dd/MM/yyyy HH:mm').format(
+                DateTime.fromMillisecondsSinceEpoch(ts))
             : '',
       };
     }).toList();

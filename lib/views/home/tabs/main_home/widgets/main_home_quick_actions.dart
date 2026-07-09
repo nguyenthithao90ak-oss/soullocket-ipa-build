@@ -45,8 +45,8 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
                         ),
                         borderRadius: SLRadius.lgAll,
                         boxShadow: SLShadow.subtle,
-                        border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.5)),
+                        border:
+                            Border.all(color: Colors.white.withValues(alpha: 0.5)),
                       ),
                       child: Center(
                         child: Icon(
@@ -100,8 +100,7 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
               canSendMissYou ? _handleInteractionLongPressStart : null,
           onLongPressMoveUpdate:
               canSendMissYou ? _handleInteractionLongPressMoveUpdate : null,
-          onLongPressEnd:
-              canSendMissYou ? _handleInteractionLongPressEnd : null,
+          onLongPressEnd: canSendMissYou ? _handleInteractionLongPressEnd : null,
           onLongPressCancel:
               canSendMissYou ? _handleInteractionLongPressCancel : null,
           child: _HeartbeatWidget(
@@ -127,22 +126,22 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
                                 assetPath: displayPreset.assetPath,
                                 size: 52,
                                 emojiSize: 44,
-                                preferAsset: true,
-                              ))
-                        : const Icon(
-                            Icons.favorite_rounded,
-                            color: Color(0xFFFF4D79),
-                            size: 54,
-                          ),
-                  ),
-                ),
-                if (canSendMissYou) ...const [
-                  // Keep icon-only presentation here.
-                ],
-              ],
-            ), // close Column
-          ), // close _HeartbeatWidget
-        ); // close GestureDetector + return
+                            preferAsset: true,
+                          ))
+                    : const Icon(
+                        Icons.favorite_rounded,
+                        color: Color(0xFFFF4D79),
+                        size: 54,
+                      ),
+              ),
+            ),
+            if (canSendMissYou) ...const [
+              // Keep icon-only presentation here.
+            ],
+          ],
+        ),  // close Column
+      ),  // close _HeartbeatWidget
+      );  // close GestureDetector + return
       },
     );
   }

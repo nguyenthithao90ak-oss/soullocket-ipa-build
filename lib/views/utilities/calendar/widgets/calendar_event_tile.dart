@@ -72,9 +72,7 @@ class CalendarEventTile extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        title.isEmpty
-                            ? context.tr('util_chactiu_3f4360')
-                            : title,
+                        title.isEmpty ? context.tr('util_chactiu_3f4360') : title,
                         style: SLTheme.quicksand(
                           fontSize: 15,
                           fontWeight: FontWeight.w900,

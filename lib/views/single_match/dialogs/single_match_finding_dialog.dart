@@ -18,12 +18,10 @@ class SingleMatchFindingDialog extends StatefulWidget {
   });
 
   @override
-  State<SingleMatchFindingDialog> createState() =>
-      _SingleMatchFindingDialogState();
+  State<SingleMatchFindingDialog> createState() => _SingleMatchFindingDialogState();
 }
 
-class _SingleMatchFindingDialogState extends State<SingleMatchFindingDialog>
-    with SingleTickerProviderStateMixin {
+class _SingleMatchFindingDialogState extends State<SingleMatchFindingDialog> with SingleTickerProviderStateMixin {
   int _seconds = 0;
   Timer? _timer;
   late AnimationController _animCtrl;
@@ -31,9 +29,7 @@ class _SingleMatchFindingDialogState extends State<SingleMatchFindingDialog>
   @override
   void initState() {
     super.initState();
-    _animCtrl =
-        AnimationController(vsync: this, duration: const Duration(seconds: 2))
-          ..repeat();
+    _animCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) setState(() => _seconds++);
     });
@@ -71,8 +67,8 @@ class _SingleMatchFindingDialogState extends State<SingleMatchFindingDialog>
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = widget.isChat
-        ? const Color(0xFFFF4F87)
+    final accentColor = widget.isChat 
+        ? const Color(0xFFFF4F87) 
         : (widget.isVideo ? const Color(0xFF7C61FF) : const Color(0xFFFF4F87));
 
     return PopScope(
@@ -102,8 +98,7 @@ class _SingleMatchFindingDialogState extends State<SingleMatchFindingDialog>
                           height: 100 + (_animCtrl.value * 60),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: accentColor.withValues(
-                                alpha: 0.15 - (_animCtrl.value * 0.15)),
+                            color: accentColor.withValues(alpha: 0.15 - (_animCtrl.value * 0.15)),
                           ),
                         );
                       },
@@ -123,11 +118,9 @@ class _SingleMatchFindingDialogState extends State<SingleMatchFindingDialog>
                         ],
                       ),
                       child: Icon(
-                        widget.isChat
-                            ? Icons.chat_rounded
-                            : (widget.isVideo
-                                ? Icons.videocam_rounded
-                                : Icons.call_rounded),
+                        widget.isChat 
+                            ? Icons.chat_rounded 
+                            : (widget.isVideo ? Icons.videocam_rounded : Icons.call_rounded),
                         color: Colors.white,
                         size: 48,
                       ),
@@ -156,8 +149,7 @@ class _SingleMatchFindingDialogState extends State<SingleMatchFindingDialog>
               ),
               const SizedBox(height: 24),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8F9FA),
                   borderRadius: BorderRadius.circular(16),

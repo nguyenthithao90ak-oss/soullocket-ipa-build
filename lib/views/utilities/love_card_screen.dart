@@ -20,7 +20,6 @@ import '../../utils/app_error_mapper.dart';
 import '../../utils/services/pending_upload_service.dart';
 import '../../utils/services/storage_service.dart';
 import 'love_card_public_viewer_screen.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 
 part 'love_card/dialogs/love_card_overlay_dialog.dart';
 part 'love_card/widgets/love_card_editor_sections.dart';
@@ -50,14 +49,6 @@ class LoveCardService {
   }) async {
     try {
       final expiresAt = _expiresAtForMonths(expiryMonths);
-      final cardsSnap = await _db.ref('houses/$houseId/love_cards').get();
-      if (cardsSnap.exists && cardsSnap.value is Map) {
-        final cardsMap = cardsSnap.value as Map;
-        if (cardsMap.length >= 100) {
-          throw Exception(
-              'Hộp thư tình yêu đã đạt giới hạn (tối đa 100 thiệp). Vui lòng xoá bớt trước khi gửi thêm.');
-        }
-      }
       final ref = _db.ref('houses/$houseId/love_cards').push();
       await ref.set({
         'fromUid': fromUid,
@@ -138,8 +129,7 @@ class LoveCardService {
 
     final updates = <String, Object?>{
       '${LoveCardLinkService.publicShareCollectionPath}/$shareId': payloadMap,
-      'houses/${houseId.trim()}/love_cards/$normalizedCardId/publicShareId':
-          shareId,
+      'houses/${houseId.trim()}/love_cards/$normalizedCardId/publicShareId': shareId,
     };
 
     Object? lastError;
@@ -181,8 +171,7 @@ class LoveCardService {
       _db.ref('houses/$houseId/love_cards/$normalizedCardId').remove(),
       if (normalizedShareId.isNotEmpty)
         _db
-            .ref(
-                '${LoveCardLinkService.publicShareCollectionPath}/$normalizedShareId')
+            .ref('${LoveCardLinkService.publicShareCollectionPath}/$normalizedShareId')
             .remove(),
     ]);
   }
@@ -252,8 +241,7 @@ class LoveCardService {
       final data = Map<dynamic, dynamic>.from(rawValue);
       final expiredShareIds = <String>[];
       final expiredCardIds = <String>[];
-      final list =
-          data.entries.where((entry) => entry.value is Map).map((entry) {
+      final list = data.entries.where((entry) => entry.value is Map).map((entry) {
         final card = Map<dynamic, dynamic>.from(entry.value as Map);
         card['id'] = entry.key;
         return card;
@@ -474,8 +462,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
     }
   }
 
-  void _showFullScreenPreview(
-      BuildContext context, _LoveThemeData theme, List<Color> colors) {
+  void _showFullScreenPreview(BuildContext context, _LoveThemeData theme, List<Color> colors) {
     Navigator.of(context).push(
       PageRouteBuilder(
         barrierDismissible: true,
@@ -512,8 +499,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
                         color: Colors.white.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.close_rounded,
-                          color: Colors.white, size: 22),
+                      child: const Icon(Icons.close_rounded, color: Colors.white, size: 22),
                     ),
                   ),
                 ),
@@ -521,8 +507,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
             ],
           ),
         ),
-        transitionsBuilder: (context, a, _, child) => FadeTransition(
-            opacity: a, child: ScaleTransition(scale: a, child: child)),
+        transitionsBuilder: (context, a, _, child) => FadeTransition(opacity: a, child: ScaleTransition(scale: a, child: child)),
         transitionDuration: const Duration(milliseconds: 280),
       ),
     );
@@ -590,7 +575,8 @@ class _LoveCardScreenState extends State<LoveCardScreen>
           content: Text(
             AppErrorMapper.resolve(
               e,
-              fallbackMessage: context.tr('util_chathchnnh_d25503'),
+              fallbackMessage:
+                  context.tr('util_chathchnnh_d25503'),
             ).message,
           ),
         ),
@@ -733,8 +719,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
         e,
         fallbackMessage: fallbackMsg,
       );
-      debugPrint(L10nService().format(
-          'util_love_card_send_debug_error', {'error': errorInfo.message}));
+      debugPrint(L10nService().format('util_love_card_send_debug_error', {'error': errorInfo.message}));
       if (!mounted) {
         return;
       }
@@ -749,8 +734,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
           ),
           backgroundColor: Colors.red.shade800,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
       );
     } finally {
@@ -891,9 +875,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
         content.length > 100 ? '${content.substring(0, 100)}…' : content;
     final shareText = [
       titleText,
-      if (preview.isNotEmpty)
-        L10nService()
-            .format('util_love_card_message_preview', {'message': preview}),
+      if (preview.isNotEmpty) L10nService().format('util_love_card_message_preview', {'message': preview}),
       suffixText,
       link,
     ].join('\n\n');
@@ -956,8 +938,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
   List<Color> _themeColors(String key) {
     if (!_themeColorsCache.containsKey(key)) {
       final theme = _themeOf(key);
-      _themeColorsCache[key] =
-          theme.colors.map(Color.new).toList(growable: false);
+      _themeColorsCache[key] = theme.colors.map(Color.new).toList(growable: false);
     }
     return _themeColorsCache[key]!;
   }

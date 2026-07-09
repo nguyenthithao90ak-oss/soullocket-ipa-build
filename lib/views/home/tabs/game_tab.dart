@@ -1,18 +1,25 @@
 import 'dart:async' show unawaited;
 import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../utilities/block_blast_game.dart';
+import '../../utilities/soul_rhythm_game.dart';
+import '../../utilities/caro_neon_screen.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../utils/services/game_download_service.dart';
 import '../../../utils/services/admob_service.dart';
 
 class GameTab extends StatefulWidget {
   const GameTab({super.key});
+
+  static const String soulRhythmIconPath = 'assets/games/rhythm-tiles/icon.png';
+
   @override
   State<GameTab> createState() => _GameTabState();
 }
@@ -21,8 +28,14 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
+  static const AssetImage _soulRhythmIcon =
+      AssetImage(GameTab.soulRhythmIconPath);
+  bool _didPrecacheSoulRhythmIcon = false;
+
   final Map<String, bool> _downloadedGames = {
     'soul_block': false,
+    'soul_rhythm': false,
+    'caro_neon': false,
   };
 
   BannerAd? _bannerAd;
@@ -61,7 +74,7 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
         return;
       }
 
-      final banner = await adMob.createBannerAd(
+      _bannerAd = await adMob.createBannerAd(
         onAdLoaded: (ad) {
           if (mounted) {
             setState(() {
@@ -70,11 +83,6 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
           }
         },
       );
-      if (!mounted) {
-        banner?.dispose();
-        return;
-      }
-      _bannerAd = banner;
     } catch (e) {
       debugPrint(
         'GameTab banner load failed: ${AppErrorMapper.resolve(
@@ -229,6 +237,29 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
     }
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didPrecacheSoulRhythmIcon) return;
+    _didPrecacheSoulRhythmIcon = true;
+    precacheImage(
+      _soulRhythmIcon,
+      context,
+      onError: (exception, stackTrace) {
+        debugPrint('Failed to precache soul rhythm icon: $exception');
+      },
+    );
+  }
+
+  void _openSoulGame(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SoulRhythmGame(),
+      ),
+    );
+  }
+
   Future<void> _openSoulBlockGame(BuildContext context) async {
     final openGameErrorMsg = context.tr('home_khngmcsoul_009d9e');
     final navigator = Navigator.of(context, rootNavigator: true);
@@ -281,6 +312,10 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
                     // Để tránh tạo Future mới mỗi lần rebuild (gây flash loading)
                     final soulBlockDownloaded =
                         _downloadedGames['soul_block'] ?? false;
+                    final soulRhythmDownloaded =
+                        _downloadedGames['soul_rhythm'] ?? false;
+                    final caroNeonDownloaded =
+                        _downloadedGames['caro_neon'] ?? false;
 
                     return GridView.count(
                       crossAxisCount: crossAxisCount,
@@ -305,6 +340,49 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
                                   context, 'soul_block', 'Soul Block')
                               : null,
                         ),
+                        if (kDebugMode)
+                          _SoulRhythmCard(
+                            imagePath: GameTab.soulRhythmIconPath,
+                            isDownloaded: soulRhythmDownloaded,
+                            downloadProgress:
+                                downloadService.getProgress('soul_rhythm'),
+                            onTap: () => _onGameTap('soul_rhythm',
+                                'Soul Rhythm', () => _openSoulGame(context)),
+                            onLongPress: soulRhythmDownloaded
+                                ? () => _confirmDeleteGame(
+                                    context, 'soul_rhythm', 'Soul Rhythm')
+                                : null,
+                            onDelete: soulRhythmDownloaded
+                                ? () => _confirmDeleteGame(
+                                    context, 'soul_rhythm', 'Soul Rhythm')
+                                : null,
+                          ),
+                        if (kDebugMode)
+                          _GenericGameCard(
+                            label: 'Caro Neon',
+                            icon: Icons.grid_4x4_rounded,
+                            color: const Color(0xFF00E5FF),
+                            isDownloaded: caroNeonDownloaded,
+                            downloadProgress:
+                                downloadService.getProgress('caro_neon'),
+                            onLongPress: caroNeonDownloaded
+                                ? () => _confirmDeleteGame(
+                                    context, 'caro_neon', 'Caro Neon')
+                                : null,
+                            onDelete: caroNeonDownloaded
+                                ? () => _confirmDeleteGame(
+                                    context, 'caro_neon', 'Caro Neon')
+                                : null,
+                            onTap: () => _onGameTap(
+                                'caro_neon',
+                                'Caro Neon',
+                                () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const CaroNeonScreen()),
+                                    )),
+                          ),
                       ],
                     );
                   },
@@ -595,6 +673,87 @@ class _GameLauncherTile extends StatelessWidget {
   }
 }
 
+class _SoulRhythmCard extends StatelessWidget {
+  const _SoulRhythmCard({
+    required this.imagePath,
+    required this.onTap,
+    this.isDownloaded = false,
+    this.downloadProgress,
+    this.onLongPress,
+    this.onDelete,
+  });
+
+  final String imagePath;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final VoidCallback? onDelete;
+  final bool isDownloaded;
+  final double? downloadProgress;
+
+  Widget _buildInstantPlaceholder() {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF3B1453), Color(0xFF160821)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.music_note_rounded,
+          color: Color(0xFFFF77B7),
+          size: 36,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _GameLauncherTile(
+      label: 'Soul Rhythm',
+      semanticsLabel: 'Soul Rhythm',
+      onTap: onTap,
+      onLongPress: onLongPress,
+      onDelete: onDelete,
+      isDownloaded: isDownloaded,
+      downloadProgress: downloadProgress,
+      borderColor: const Color(0xFFFF77B7),
+      shadowColor: const Color(0xFFFF77B7),
+      preview: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            imagePath,
+            fit: BoxFit.cover,
+            gaplessPlayback: true,
+            frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+              if (wasSynchronouslyLoaded || frame != null) return child;
+              return _buildInstantPlaceholder();
+            },
+            errorBuilder: (context, error, stackTrace) =>
+                _buildInstantPlaceholder(),
+          ),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color.fromRGBO(49, 16, 69, 0.1),
+                  Color.fromRGBO(24, 8, 36, 0.42),
+                  Color.fromRGBO(255, 119, 183, 0.24),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SoulBlockCard extends StatelessWidget {
   const _SoulBlockCard({
     required this.onTap,
@@ -784,4 +943,60 @@ class _SoulBlockCardPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _GenericGameCard extends StatelessWidget {
+  const _GenericGameCard({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+    this.isDownloaded = false,
+    this.downloadProgress,
+    this.onLongPress,
+    this.onDelete,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+  final bool isDownloaded;
+  final double? downloadProgress;
+  final VoidCallback? onLongPress;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return _GameLauncherTile(
+      label: label,
+      semanticsLabel: label,
+      onTap: onTap,
+      isDownloaded: isDownloaded,
+      downloadProgress: downloadProgress,
+      onLongPress: onLongPress,
+      onDelete: onDelete,
+      borderColor: color,
+      shadowColor: color,
+      preview: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              color.withValues(alpha: 0.3),
+              color.withValues(alpha: 0.1)
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: Icon(
+            icon,
+            color: color,
+            size: 32,
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -70,32 +70,32 @@ Widget _buildStartupLegalSection({
         ),
         const SizedBox(height: 10),
         ...bullets.take(2).map(
-              (bullet) => Padding(
-                padding: const EdgeInsets.only(bottom: 5),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.check_circle_rounded,
-                      color: accent.withValues(alpha: 0.85),
-                      size: 12,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        bullet,
-                        style: SLTheme.quicksand(
-                          fontSize: 12.55,
-                          fontWeight: FontWeight.w700,
-                          color: _ink.withValues(alpha: 0.86),
-                          height: 1.26,
-                        ),
-                      ),
-                    ),
-                  ],
+          (bullet) => Padding(
+            padding: const EdgeInsets.only(bottom: 5),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.check_circle_rounded,
+                  color: accent.withValues(alpha: 0.85),
+                  size: 12,
                 ),
-              ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    bullet,
+                    style: SLTheme.quicksand(
+                      fontSize: 12.55,
+                      fontWeight: FontWeight.w700,
+                      color: _ink.withValues(alpha: 0.86),
+                      height: 1.26,
+                    ),
+                  ),
+                ),
+              ],
             ),
+          ),
+        ),
         const SizedBox(height: 4),
         _buildInlineDocLink(accent: accent, label: actionLabel, onTap: onTap),
       ],

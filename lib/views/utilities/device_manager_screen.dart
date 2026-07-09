@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/sl_theme.dart';
 import '../../utils/services/device_manager_service.dart';
@@ -87,8 +88,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
     });
     final msgRegisterFail = L10nService().translate('util_chathngbth_d39079');
     final msgLoadFail = L10nService().translate('util_chathtidan_e58038');
-    final msgOnlyCurrentDevice =
-        L10nService().translate('util_nubntngngn_2e56cd');
+    final msgOnlyCurrentDevice = L10nService().translate('util_nubntngngn_2e56cd');
     final msgNoDevices = L10nService().translate('util_chacdliumy_af1225');
 
     try {
@@ -145,21 +145,6 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
           }
         ];
         _loadMessage = _loadMessage.isNotEmpty ? _loadMessage : msgNoDevices;
-      }
-
-      devices.sort((a, b) {
-        final aIsCurrent = a['deviceId'] == _currentDeviceId;
-        final bIsCurrent = b['deviceId'] == _currentDeviceId;
-        if (aIsCurrent && !bIsCurrent) return -1;
-        if (!aIsCurrent && bIsCurrent) return 1;
-
-        final aTs = (a['last_seen'] as num?)?.toInt() ?? 0;
-        final bTs = (b['last_seen'] as num?)?.toInt() ?? 0;
-        return bTs.compareTo(aTs);
-      });
-
-      if (devices.length > 10) {
-        devices = devices.take(10).toList();
       }
 
       final currentDevice = devices.cast<Map<String, dynamic>?>().firstWhere(
@@ -283,30 +268,17 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
     SLNotice.showInfo(context, msg);
   }
 
-  String _formatRelativeTime(dynamic ts, bool isMe) {
+  String _formatTs(dynamic ts) {
     if (ts == null) return context.tr('util_khngr_b18ff7');
     try {
       final dt = DateTime.fromMillisecondsSinceEpoch((ts as num).toInt());
-      final now = DateTime.now();
-      final diff = now.difference(dt);
-
-      if (isMe || diff.inMinutes < 5) {
-        return 'Vẫn đang hoạt động';
-      }
-
-      if (diff.inDays > 0) {
-        return 'Off ${diff.inDays} ngày trước';
-      } else if (diff.inHours > 0) {
-        return 'Off ${diff.inHours} giờ trước';
-      } else if (diff.inMinutes > 0) {
-        return 'Off ${diff.inMinutes} phút trước';
-      } else {
-        return 'Vừa xong';
-      }
+      return DateFormat('dd/MM/yyyy HH:mm').format(dt);
     } catch (_) {
       return context.tr('util_khngr_b18ff7');
     }
   }
+
+
 
   Color _statusTextColor(String? status) {
     switch (status) {
@@ -533,14 +505,14 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: isMe
-                  ? const Color(0xFF007AFF).withValues(alpha: 0.24)
+              color: isMe 
+                  ? const Color(0xFF007AFF).withValues(alpha: 0.24) 
                   : Colors.black.withValues(alpha: 0.04),
               width: isMe ? 1.5 : 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: isMe
+                color: isMe 
                     ? const Color(0xFF007AFF).withValues(alpha: 0.05)
                     : Colors.black.withValues(alpha: 0.03),
                 blurRadius: 20,
@@ -549,247 +521,222 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
             ],
           ),
           child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: Material(
-                  type: MaterialType.transparency,
-                  child: Theme(
-                    data: Theme.of(context).copyWith(
-                      dividerColor: Colors.transparent,
+            borderRadius: BorderRadius.circular(24),
+            child: Material(
+              type: MaterialType.transparency,
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  dividerColor: Colors.transparent,
+                ),
+                child: ExpansionTile(
+              tilePadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              leading: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: isMe 
+                      ? const Color(0xFF007AFF).withValues(alpha: 0.08)
+                      : statusBg,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  _platformIcon(device['platform']),
+                  color: isMe ? const Color(0xFF007AFF) : statusText,
+                  size: 24,
+                ),
+              ),
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      device['model'] ?? context.tr('util_thitbkhngr_671ddb'),
+                      style: SLTheme.quicksand(
+                          fontWeight: FontWeight.w900, fontSize: 15),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    child: ExpansionTile(
-                      tilePadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      leading: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: isMe
-                              ? const Color(0xFF007AFF).withValues(alpha: 0.08)
-                              : statusBg,
-                          shape: BoxShape.circle,
+                  ),
+                  if (isMe)
+                    Container(
+                      margin: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF007AFF).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'Thiết bị này',
+                        style: SLTheme.quicksand(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF007AFF),
                         ),
-                        child: Icon(
-                          _platformIcon(device['platform']),
-                          color: isMe ? const Color(0xFF007AFF) : statusText,
-                          size: 24,
+                      ),
+                    ),
+                  if (isAdmin && !isMe)
+                    Container(
+                      margin: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF9800).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'Quản trị viên',
+                        style: SLTheme.quicksand(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFFE65100),
                         ),
                       ),
-                      title: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              device['model'] ??
-                                  context.tr('util_thitbkhngr_671ddb'),
-                              style: SLTheme.quicksand(
-                                  fontWeight: FontWeight.w900, fontSize: 15),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (isMe)
-                            Container(
-                              margin: const EdgeInsets.only(left: 8),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF007AFF)
-                                    .withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                'Thiết bị này',
-                                style: SLTheme.quicksand(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF007AFF),
-                                ),
-                              ),
-                            ),
-                          if (isAdmin && !isMe)
-                            Container(
-                              margin: const EdgeInsets.only(left: 8),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFF9800)
-                                    .withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                'Quản trị viên',
-                                style: SLTheme.quicksand(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFFE65100),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SLSpacing.h4,
-                          Text(device['os'] ?? '',
-                              style: SLTheme.quicksand(
-                                  fontSize: 12, color: Colors.black54)),
-                          SLSpacing.gapH(2),
-                          Text(_formatRelativeTime(device['last_seen'], isMe),
-                              style: SLTheme.quicksand(
-                                  fontSize: 11, color: Colors.black45)),
-                          if (device['ip'] != null &&
-                              device['ip'] != 'unknown') ...[
-                            SLSpacing.gapH(2),
-                            Text('IP: ${device['ip']}',
-                                style: SLTheme.quicksand(
-                                    fontSize: 11, color: Colors.black45)),
-                          ],
-                          if (device['location'] != null &&
-                              device['location'] != 'unknown') ...[
-                            SLSpacing.gapH(2),
-                            Text(
-                                L10nService().format('util_device_location',
-                                    {'location': device['location']}),
-                                style: SLTheme.quicksand(
-                                    fontSize: 11, color: Colors.black45)),
-                          ],
-                          SLSpacing.h8,
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: statusBg,
-                              borderRadius: SLRadius.mdAll,
-                            ),
-                            child: Text(
-                              _statusLabelForTile(status, device, isMe),
-                              style: SLTheme.quicksand(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w900,
-                                  color: statusText),
-                            ),
-                          ),
-                        ],
-                      ),
+                    ),
+                ],
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SLSpacing.h4,
+                  Text(device['os'] ?? '',
+                      style:
+                          SLTheme.quicksand(fontSize: 12, color: Colors.black54)),
+                  SLSpacing.gapH(2),
+                  Text(
+                      L10nService().format('util_device_last_seen',
+                          {'time': _formatTs(device['last_seen'])}),
+                      style:
+                          SLTheme.quicksand(fontSize: 11, color: Colors.black45)),
+                  if (device['ip'] != null && device['ip'] != 'unknown') ...[
+                    SLSpacing.gapH(2),
+                    Text('IP: ${device['ip']}',
+                        style: SLTheme.quicksand(
+                            fontSize: 11, color: Colors.black45)),
+                  ],
+                  if (device['location'] != null &&
+                      device['location'] != 'unknown') ...[
+                    SLSpacing.gapH(2),
+                    Text(
+                        L10nService().format('util_device_location',
+                            {'location': device['location']}),
+                        style: SLTheme.quicksand(
+                            fontSize: 11, color: Colors.black45)),
+                  ],
+                  SLSpacing.h8,
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: statusBg,
+                      borderRadius: SLRadius.mdAll,
+                    ),
+                    child: Text(
+                      _statusLabelForTile(status, device, isMe),
+                      style: SLTheme.quicksand(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          color: statusText),
+                    ),
+                  ),
+                ],
+              ),
+              children: [
+                if (canTakeAction)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.02),
+                      borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(24),
+                          bottomRight: Radius.circular(24)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        if (canTakeAction)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.02),
-                              borderRadius: const BorderRadius.only(
-                                  bottomLeft: Radius.circular(24),
-                                  bottomRight: Radius.circular(24)),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                if (status != 'approved')
-                                  Expanded(
-                                    child: ElevatedButton.icon(
-                                      onPressed: () => _approve(id),
-                                      icon: const Icon(
-                                          Icons.check_circle_outline,
-                                          size: 16),
-                                      label: Text(
-                                        context.tr('util_duyt_a4db4d'),
-                                        style: SLTheme.quicksand(
-                                            fontWeight: FontWeight.w900,
-                                            fontSize: 13),
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor:
-                                            const Color(0xFF2E7D32),
-                                        foregroundColor: Colors.white,
-                                        elevation: 0,
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 10),
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12)),
-                                      ),
-                                    ),
-                                  ),
-                                if (status != 'approved') SLSpacing.w8,
-                                if (status != 'blocked')
-                                  Expanded(
-                                    child: ElevatedButton.icon(
-                                      onPressed: () => _block(id),
-                                      icon: const Icon(Icons.block_outlined,
-                                          size: 16),
-                                      label: Text(
-                                        context.tr('util_chn_483b6f'),
-                                        style: SLTheme.quicksand(
-                                            fontWeight: FontWeight.w900,
-                                            fontSize: 13),
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor:
-                                            const Color(0xFFEF6C00),
-                                        foregroundColor: Colors.white,
-                                        elevation: 0,
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 10),
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12)),
-                                      ),
-                                    ),
-                                  ),
-                                if (status != 'blocked') SLSpacing.w8,
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed: () => _delete(id),
-                                    icon: const Icon(
-                                        Icons.delete_outline_rounded,
-                                        size: 16),
-                                    label: Text(
-                                      context.tr('util_xa_4ed187'),
-                                      style: SLTheme.quicksand(
-                                          fontWeight: FontWeight.w900,
-                                          fontSize: 13),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFFC62828),
-                                      foregroundColor: Colors.white,
-                                      elevation: 0,
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 10),
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12)),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        if (!canTakeAction)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.015),
-                              borderRadius: const BorderRadius.only(
-                                bottomLeft: Radius.circular(24),
-                                bottomRight: Radius.circular(24),
+                        if (status != 'approved')
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => _approve(id),
+                              icon: const Icon(Icons.check_circle_outline,
+                                  size: 16),
+                              label: Text(
+                                context.tr('util_duyt_a4db4d'),
+                                style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 13),
                               ),
-                            ),
-                            child: Text(
-                              isMe
-                                  ? context.tr('util_ylthitbbna_af3295')
-                                  : context.tr('util_thitbhinti_7d3436'),
-                              style: SLTheme.quicksand(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.black45,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2E7D32),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                             ),
                           ),
+                        if (status != 'approved') SLSpacing.w8,
+                        if (status != 'blocked')
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => _block(id),
+                              icon: const Icon(Icons.block_outlined, size: 16),
+                              label: Text(
+                                context.tr('util_chn_483b6f'),
+                                style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 13),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFEF6C00),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                          ),
+                        if (status != 'blocked') SLSpacing.w8,
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _delete(id),
+                            icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                            label: Text(
+                              context.tr('util_xa_4ed187'),
+                              style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 13),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFC62828),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                  ))),
+                  ),
+                if (!canTakeAction)
+                  Container(
+                    width: double.infinity,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.015),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(24),
+                        bottomRight: Radius.circular(24),
+                      ),
+                    ),
+                    child: Text(
+                      isMe
+                          ? context.tr('util_ylthitbbna_af3295')
+                          : context.tr('util_thitbhinti_7d3436'),
+                      style: SLTheme.quicksand(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black45,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ))),
         );
       },
     );

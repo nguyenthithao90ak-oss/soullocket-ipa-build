@@ -32,8 +32,7 @@ class SensorHelper {
   }
 
   static Stream<UserAccelerometerEvent> get userAccelerometerEvents {
-    _userAccelerometerController ??=
-        StreamController<UserAccelerometerEvent>.broadcast(
+    _userAccelerometerController ??= StreamController<UserAccelerometerEvent>.broadcast(
       onListen: () {
         _userAccelerometerSub ??= userAccelerometerEventStream().listen(
           (event) {

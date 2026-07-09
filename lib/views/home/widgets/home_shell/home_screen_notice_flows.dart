@@ -251,7 +251,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Cảm ơn bạn đã tạo tài khoản và trở thành một trong những người dùng đầu tiên của ứng dụng.\n\nĐây vẫn là phiên bản đầu tiên nên có thể còn xuất hiện lỗi nhỏ, tính năng chưa hoàn thiện hoặc đôi lúc hoạt động chưa thật sự ổn định. Mong bạn thông cảm và tiếp tục đồng hành cùng tụi mình trong giai đoạn đầu này.\n\nTài khoản mới cũng đang được tặng Pro dùng thử 1 ngày để bạn khám phá thêm nhiều tính năng. Chúc bạn có thật nhiều trải nghiệm dễ thương với SoulLocket 💖',
+                  'Cảm ơn bạn đã tạo tài khoản và trở thành một trong những người dùng đầu tiên của ứng dụng.\n\nĐây vẫn là phiên bản đầu tiên nên có thể còn xuất hiện lỗi nhỏ, tính năng chưa hoàn thiện hoặc đôi lúc hoạt động chưa thật sự ổn định. Mong bạn thông cảm và tiếp tục đồng hành cùng tụi mình trong giai đoạn đầu này.\n\nTài khoản mới cũng đang được tặng Pro dùng thử 3 ngày để bạn khám phá thêm nhiều tính năng. Chúc bạn có thật nhiều trải nghiệm dễ thương với SoulLocket 💖',
                   style: SLTheme.quicksand(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w600,
@@ -514,8 +514,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
   void _resetInactivityTimer() {
     if (!mounted) return;
     _inactivityTimer?.cancel();
-    _inactivityTimer =
-        Timer(_HomeScreenState._inactivityTimeout, _onInactivityTimeout);
+    _inactivityTimer = Timer(_HomeScreenState._inactivityTimeout, _onInactivityTimeout);
   }
 
   void _onInactivityTimeout() {
@@ -712,14 +711,13 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
       } else {
         final graceData = Map<String, dynamic>.from(graceSnap.value as Map);
         final startedAt = (graceData['startedAt'] as num?)?.toInt() ?? now;
-        final lastNotifiedAt =
-            (graceData['lastNotifiedAt'] as num?)?.toInt() ?? 0;
+        final lastNotifiedAt = (graceData['lastNotifiedAt'] as num?)?.toInt() ?? 0;
 
         final diffMs = now - startedAt;
         final daysElapsed = diffMs / (24 * 60 * 60 * 1000);
 
-        if (daysElapsed >= 1.0) {
-          // --- QUÁ 1 NGÀY: TỰ ĐỘNG KHÓA CÁC LINK CŨ, GIỮ LẠI 5 MỚI NHẤT ---
+        if (daysElapsed >= 3.0) {
+          // --- QUÁ 3 NGÀY: TỰ ĐỘNG KHÓA CÁC LINK CŨ, GIỮ LẠI 5 MỚI NHẤT ---
           activeLinks.sort((a, b) {
             final tsA = (a.value['createdAt'] as num?)?.toInt() ?? 0;
             final tsB = (b.value['createdAt'] as num?)?.toInt() ?? 0;
@@ -750,8 +748,8 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           if (!mounted) return;
           _showExpiredProAutoCleanedDialog();
         } else {
-          // --- CHƯA QUÁ 1 NGÀY: NHẮC NHỞ HẰNG NGÀY ---
-          const daysRemaining = 1;
+          // --- CHƯA QUÁ 3 NGÀY: NHẮC NHỞ HẰNG NGÀY ---
+          final daysRemaining = (3.0 - daysElapsed).ceil().clamp(1, 3);
           if (now - lastNotifiedAt >= 24 * 60 * 60 * 1000) {
             if (!mounted) return;
             _showExpiredProGraceDialog(
@@ -789,8 +787,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
                 color: const Color(0xFFFF4B91).withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.warning_amber_rounded,
-                  color: Color(0xFFFF4B91), size: 24),
+              child: const Icon(Icons.warning_amber_rounded, color: Color(0xFFFF4B91), size: 24),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -828,16 +825,14 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFFF4B91),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () {
               Navigator.pop(ctx);
               Navigator.push(
                 context,
                 SLRoute<void>(
-                  builder: (_) =>
-                      SettingsGiftLinksManagerScreen(houseId: houseId),
+                  builder: (_) => SettingsGiftLinksManagerScreen(houseId: houseId),
                 ),
               );
             },
@@ -870,8 +865,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
                 color: const Color(0xFF00C853).withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.info_outline_rounded,
-                  color: Color(0xFF00C853), size: 24),
+              child: const Icon(Icons.info_outline_rounded, color: Color(0xFF00C853), size: 24),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -887,7 +881,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           ],
         ),
         content: Text(
-          'Đã quá 1 ngày kể từ khi hết hạn PRO, hệ thống đã tự động khóa các liên kết cũ và giữ lại 5 liên kết Memory Share mới nhất của bạn để đảm bảo giới hạn tài khoản thường.',
+          'Đã quá 3 ngày kể từ khi hết hạn PRO, hệ thống đã tự động khóa các liên kết cũ và giữ lại 5 liên kết Memory Share mới nhất của bạn để đảm bảo giới hạn tài khoản thường.',
           style: SLTheme.quicksand(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -899,187 +893,11 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF00C853),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () => Navigator.pop(ctx),
             child: Text(
               'Đồng ý',
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _maybeShowDailyPairingNotice() async {
-    if (!mounted) return;
-    final prefs = await OfflineCacheService.getPrefs();
-    final lastShownKey = 'il_last_pairing_notice_date';
-    final now = DateTime.now();
-    final lastDateStr = prefs.getString(lastShownKey);
-
-    if (lastDateStr != null) {
-      final lastDate = DateTime.tryParse(lastDateStr);
-      if (lastDate != null &&
-          lastDate.year == now.year &&
-          lastDate.month == now.month &&
-          lastDate.day == now.day) {
-        // Đã hiển thị hôm nay
-        return;
-      }
-    }
-
-    await prefs.setString(lastShownKey, now.toIso8601String());
-
-    if (!mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFD81B60).withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.favorite_border_rounded,
-                  color: Color(0xFFD81B60), size: 24),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                context.tr('pairing_reminder_title'),
-                style: SLTheme.quicksand(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: SLColors.textPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          context.tr('pairing_reminder_body'),
-          style: SLTheme.quicksand(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: SLColors.textSecondary,
-            height: 1.5,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              context.tr('pairing_later'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w700,
-                color: Colors.grey[600],
-              ),
-            ),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFD81B60),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const PairingDashboardScreen()),
-              );
-            },
-            child: Text(
-              context.tr('pairing_connect_now'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showPairingRequiredDialog() {
-    if (!mounted) return;
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFF9800).withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.lock_person_rounded,
-                  color: Color(0xFFFF9800), size: 24),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                context.tr('pairing_feature_locked_title'),
-                style: SLTheme.quicksand(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: SLColors.textPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          context.tr('pairing_feature_locked_body'),
-          style: SLTheme.quicksand(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: SLColors.textSecondary,
-            height: 1.5,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              context.tr('pairing_later'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w700,
-                color: Colors.grey[600],
-              ),
-            ),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFFF9800),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const PairingDashboardScreen()),
-              );
-            },
-            child: Text(
-              context.tr('pairing_connect_now'),
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.w800,
                 color: Colors.white,

@@ -282,9 +282,7 @@ class _LoveCardHistoryItem extends StatelessWidget {
     final timeStr = _formatTime(_timestampOf(card));
     final hasImage = (card['imageUrl'] ?? '').toString().trim().isNotEmpty;
     final expiresAt = _timestampFromValue(card['expiresAt']);
-    final expiryText = expiresAt > 0
-        ? _formatTime(expiresAt)
-        : context.tr('util_khngchn_a4f770');
+    final expiryText = expiresAt > 0 ? _formatTime(expiresAt) : context.tr('util_khngchn_a4f770');
     final previewText = context.tr('util_linktthipt_730c23');
 
     return Material(

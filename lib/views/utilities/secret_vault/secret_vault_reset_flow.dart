@@ -132,7 +132,8 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
       _showVaultSnack(
         AppErrorMapper.resolve(
           error,
-          fallbackMessage: context.tr('util_chathtoyuc_9b47fd'),
+          fallbackMessage:
+              context.tr('util_chathtoyuc_9b47fd'),
         ).message,
         backgroundColor: Colors.redAccent,
       );
@@ -205,7 +206,8 @@ extension _SecretVaultResetFlow on SecretVaultScreenState {
       _showVaultSnack(
         AppErrorMapper.resolve(
           error,
-          fallbackMessage: context.tr('util_chaththuhi_bab788'),
+          fallbackMessage:
+              context.tr('util_chaththuhi_bab788'),
         ).message,
         backgroundColor: Colors.redAccent,
       );

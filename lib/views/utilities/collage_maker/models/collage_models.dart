@@ -7,8 +7,7 @@ class _EditableCollagePhoto {
 
   _EditableCollagePhoto({
     required this.source,
-  })  : scale = 1,
-        offset = Offset.zero;
+  }) : scale = 1, offset = Offset.zero;
 
   CollagePhotoTransform get transform => CollagePhotoTransform(
         scale: scale,

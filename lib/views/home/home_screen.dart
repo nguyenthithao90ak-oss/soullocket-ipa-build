@@ -1,10 +1,5 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
 import 'dart:ui' as ui;
-import 'dart:io';
-import 'dart:convert';
-import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -60,13 +55,10 @@ import 'tabs/utilities_tab.dart';
 import '../utilities/utility_sticker_icon.dart';
 import '../../utils/services/widget_service.dart';
 import '../../utils/sl_notice.dart';
-import '../../utils/services/pairing_service.dart';
-import '../../views/home/tabs/settings/pairing/pairing_dashboard_screen.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../widgets/first_setup_spotlight_guide.dart';
 import '../../core/fast_backdrop_filter.dart';
 import '../../core/sl_page_physics.dart';
-import '../../utils/app_cache_manager.dart';
 
 part 'widgets/home_shell/home_screen_sync_flows.dart';
 part 'widgets/home_shell/home_screen_notice_flows.dart';
@@ -339,8 +331,7 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
         dragStartBehavior: widget.dragStartBehavior,
         viewportBuilder: (context, position) {
           return Viewport(
-            scrollCacheExtent: const ScrollCacheExtent.viewport(cacheExtent),
-            axisDirection: axisDirection,
+            scrollCacheExtent: const ScrollCacheExtent.viewport(cacheExtent), axisDirection: axisDirection,
             offset: position,
             clipBehavior: Clip.hardEdge,
             slivers: [
@@ -378,12 +369,12 @@ class _HomeScreenState extends State<HomeScreen>
   bool _didCheckFirstSetupGuide = false;
   bool _didCheckPendingDeviceNotice = false;
   bool _isShowingBreakupEntryNotice = false;
-  bool _isHouseUnpairedCache = false;
   final _houseService = HouseService();
   final _houseSettingsService = HouseSettingsService();
   final _breakupService = BreakupService();
   late final List<_HomeTabBuilder> _tabBuilders;
   final Map<int, Widget> _tabPageCache = <int, Widget>{};
+  Widget? _cachedForegroundContent;
   int _homeReloadCounter = 0;
   late final ValueNotifier<int> _activeTabIndexNotifier;
   late final ValueNotifier<int>
@@ -403,7 +394,6 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _musicController;
 
   StreamSubscription? _callSub;
-  StreamSubscription? _pairingSub;
   StreamSubscription? _settingsSub;
   StreamSubscription<WidgetLaunchAction>? _widgetActionSub;
   StreamSubscription<DatabaseEvent>? _notificationBadgeSub;
@@ -426,7 +416,7 @@ class _HomeScreenState extends State<HomeScreen>
   static const String _lastTabPrefsKey = 'il_home_last_tab_v1';
   static const String _countdownPinnedLaunchPrefsKey =
       'il_countdown_mode_pinned_launch_v1';
-  static const int _notificationBadgeLimit = 30;
+  static const int _notificationBadgeLimit = 75;
   static const Duration _homeStartupTaskDelay = Duration(milliseconds: 700);
   static const Duration _homeStartupAnimationDelay =
       Duration(milliseconds: 900);
@@ -451,7 +441,6 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-    _autoSyncOverlayData();
     RoleUtils.roleNotifier.addListener(_handleGlobalRoleChanged);
     RoleUtils.duplicateRoleNotifier.addListener(_handleDuplicateRoleWarning);
     _currentIndex = widget.initialTab.clamp(0, _navItems.length - 1);
@@ -528,28 +517,6 @@ class _HomeScreenState extends State<HomeScreen>
     _resetInactivityTimer();
   }
 
-  void _autoSyncOverlayData() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final houseId = prefs.getString('il_house_id');
-      final role = prefs.getString('il_role') ?? 'user1';
-      final partnerName = prefs.getString('overlay_partner_name') ?? 'Người ấy';
-
-      if (houseId != null && houseId.isNotEmpty) {
-        final payloadText = jsonEncode({
-          'houseId': houseId,
-          'role': role,
-          'partnerName': partnerName,
-        });
-        final dir = await getApplicationDocumentsDirectory();
-        final file = File('${dir.path}/overlay_sync.json');
-        await file.writeAsString(payloadText);
-      }
-    } catch (e) {
-      debugPrint('[HomeScreen] auto sync overlay error: $e');
-    }
-  }
-
   Future<void> _checkAndUpdateApp() async {
     final updateInfo = await UpdateCheckerService.checkUpdate();
     if (updateInfo != null && updateInfo.needsUpdate && mounted) {
@@ -586,9 +553,9 @@ class _HomeScreenState extends State<HomeScreen>
             )
           : const Size(430, 932);
       final cacheWidth =
-          (logicalSize.width * devicePixelRatio).round().clamp(480, 1080);
+          (logicalSize.width * devicePixelRatio).round().clamp(720, 1440);
       final cacheHeight =
-          (logicalSize.height * devicePixelRatio).round().clamp(853, 1920);
+          (logicalSize.height * devicePixelRatio).round().clamp(1280, 2560);
 
       final provider = CachedNetworkImageProvider(
         backgroundUrl,
@@ -615,23 +582,11 @@ class _HomeScreenState extends State<HomeScreen>
 
     final houseId = await HouseService().getCurrentHouseId();
     if (!mounted || houseId == null) return;
-    final isUnpaired = await HouseService().isHouseUnpaired(houseId);
-    if (mounted) {
-      setState(() {
-        _isHouseUnpairedCache = isUnpaired;
-      });
-      if (isUnpaired) {
-        _maybeShowDailyPairingNotice();
-      }
-    }
     unawaited(_syncIncomingCallListener(houseId));
     unawaited(_checkExpiredProGracePeriod(houseId));
-    final startDateSnap = await FirebaseDatabase.instance
-        .ref('houses/$houseId/settings/startDate')
-        .get();
-    if (!mounted || !startDateSnap.exists || startDateSnap.value == null) {
-      return;
-    }
+    final startDateSnap =
+        await FirebaseDatabase.instance.ref('houses/$houseId/settings/startDate').get();
+    if (!mounted || !startDateSnap.exists || startDateSnap.value == null) return;
     final startDate = DateTime.tryParse(startDateSnap.value.toString());
     if (startDate != null) {
       NotificationService().checkAnniversaryReminder(houseId, startDate);
@@ -661,6 +616,7 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() {
       _homeReloadCounter++;
       _tabPageCache.clear();
+      _cachedForegroundContent = null;
     });
   }
 
@@ -951,7 +907,6 @@ class _HomeScreenState extends State<HomeScreen>
     RoleUtils.roleNotifier.removeListener(_handleGlobalRoleChanged);
     RoleUtils.duplicateRoleNotifier.removeListener(_handleDuplicateRoleWarning);
     _callSub?.cancel();
-    _pairingSub?.cancel();
     _settingsSub?.cancel();
     _widgetActionSub?.cancel();
     _detachNotificationBadgeListener(resetCounter: true);
@@ -1152,12 +1107,6 @@ class _HomeScreenState extends State<HomeScreen>
     if (!throttle.isAllowed && throttle.isSuspiciousBurst) return;
     final nextIndex = index.clamp(0, _navItems.length - 1);
     if (!mounted) return;
-    
-    if (_isHouseUnpairedCache && nextIndex != 0) {
-      _showPairingRequiredDialog();
-      return;
-    }
-
     final oldIndex = _currentIndex;
     if (_currentIndex != nextIndex) {
       _currentIndex = nextIndex;
@@ -1330,14 +1279,11 @@ class _HomeScreenState extends State<HomeScreen>
 
     final currentRole = await RoleUtils.currentRole();
     final targetRole = currentRole == 'user1' ? 'user2' : 'user1';
-    var targetName = targetRole == 'user1'
-        ? L10nService().translate('male_role_default')
-        : L10nService().translate('female_role_default');
+    var targetName = targetRole == 'user1' ? L10nService().translate('male_role_default') : L10nService().translate('female_role_default');
     var targetAvatar = '';
 
     try {
-      final snap =
-          await FirebaseDatabase.instance.ref('houses/$houseId/settings').get();
+      final snap = await FirebaseDatabase.instance.ref('houses/$houseId/settings').get();
       final raw = snap.value;
       if (raw is Map) {
         final data = Map<dynamic, dynamic>.from(raw);
@@ -1365,6 +1311,79 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
+  Widget _buildHomeMessengerBubble() {
+    return Positioned(
+      right: 16,
+      bottom: 110 + MediaQuery.of(context).padding.bottom,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _openHomeMessenger,
+          borderRadius: BorderRadius.circular(22),
+          child: Ink(
+            width: 64,
+            height: 74,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFFFF6EAD),
+                  Color(0xFFFF4D97),
+                  Color(0xFFE23C83),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.26),
+                width: 1.1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFD81B60).withValues(alpha: 0.22),
+                  blurRadius: 18,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(13),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.20),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.forum_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Iu ơi',
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: SLTheme.quicksand(
+                    color: Colors.white,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildShellBody({
     required Widget foregroundChild,
@@ -1450,43 +1469,47 @@ class _HomeScreenState extends State<HomeScreen>
     return bodyContent;
   }
 
+  /// ⚡ Cache foreground content để tránh rebuild PageView khi UiPrefs thay đổi
   Widget _getOrBuildForegroundContent() {
-    return Stack(
-      children: [
-        NotificationListener<ScrollNotification>(
-          onNotification: _handlePageScrollNotification,
-          child: _HomePreloadPageView(
-            controller: _pageController,
-            onPageChanged: _handlePageChanged,
-            dragStartBehavior: DragStartBehavior.start,
-            // 🛑 TẮT VƯỢT: NeverScrollableScrollPhysics để chỉ chuyển tab bằng nút bottom nav.
-            // ✅ BẬT LẠI: đổi thành `const SLPagePhysics(parent: ClampingScrollPhysics())`
-            physics: const NeverScrollableScrollPhysics(),
-            children: List<Widget>.generate(
-              _navItems.length,
-              _tabPageForIndex,
-              growable: false,
+    if (_cachedForegroundContent == null || _homeReloadCounter > 0) {
+      _cachedForegroundContent = Stack(
+        children: [
+          NotificationListener<ScrollNotification>(
+            onNotification: _handlePageScrollNotification,
+            child: _HomePreloadPageView(
+              controller: _pageController,
+              onPageChanged: _handlePageChanged,
+              dragStartBehavior: DragStartBehavior.start,
+              // 🛑 TẮT VƯỢT: NeverScrollableScrollPhysics để chỉ chuyển tab bằng nút bottom nav.
+              // ✅ BẬT LẠI: đổi thành `const SLPagePhysics(parent: ClampingScrollPhysics())`
+              physics: const SLPagePhysics(parent: ClampingScrollPhysics()),
+              children: List<Widget>.generate(
+                _navItems.length,
+                _tabPageForIndex,
+                growable: false,
+              ),
             ),
           ),
-        ),
-        ValueListenableBuilder<bool>(
-          valueListenable: _isUserTabSwipingNotifier,
-          builder: (context, isSwiping, child) {
-            return TickerMode(
-              enabled: !isSwiping,
-              child: child ?? const SizedBox.shrink(),
-            );
-          },
-          child: _buildMusicButton(),
-        ),
-        ValueListenableBuilder<int>(
-          valueListenable: _activeTabIndexNotifier,
-          builder: (context, activeIndex, _) {
-            return SoulMergeSticker(activeIndex: activeIndex);
-          },
-        ),
-      ],
-    );
+          ValueListenableBuilder<bool>(
+            valueListenable: _isUserTabSwipingNotifier,
+            builder: (context, isSwiping, child) {
+              return TickerMode(
+                enabled: !isSwiping,
+                child: child ?? const SizedBox.shrink(),
+              );
+            },
+            child: _buildMusicButton(),
+          ),
+          ValueListenableBuilder<int>(
+            valueListenable: _activeTabIndexNotifier,
+            builder: (context, activeIndex, _) {
+              return SoulMergeSticker(activeIndex: activeIndex);
+            },
+          ),
+        ],
+      );
+    }
+    return _cachedForegroundContent!;
   }
 
   @override
@@ -1505,80 +1528,78 @@ class _HomeScreenState extends State<HomeScreen>
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
           child: Scaffold(
-            extendBody: true,
-            // ⚡ Dùng child param để foregroundContent không bị rebuild khi UiPrefs thay đổi
-            body: ValueListenableBuilder<UiPrefsState>(
-              valueListenable: UiPrefs.notifier,
-              builder: (context, uiState, child) {
-                final effectProfile = _resolveHomeEffectProfile(
-                  uiState,
-                  pauseAnimations: _isUserTabSwiping,
+          extendBody: true,
+          // ⚡ Dùng child param để foregroundContent không bị rebuild khi UiPrefs thay đổi
+          body: ValueListenableBuilder<UiPrefsState>(
+            valueListenable: UiPrefs.notifier,
+            builder: (context, uiState, child) {
+              final effectProfile = _resolveHomeEffectProfile(
+                uiState,
+                pauseAnimations: _isUserTabSwiping,
+              );
+              final graphicsQualityKey = effectProfile.graphicsQualityKey;
+              final resolvedThemeKey = _resolveThemeKey(uiState.themeKey);
+              final resolvedEffectKey = uiState.liteMode
+                  ? 'off'
+                  : _resolveEffectKey(
+                      uiState.fallingEffectKey, resolvedThemeKey);
+              final isDark = _isDarkTheme(resolvedThemeKey);
+              final shouldAnimateEffects =
+                  effectProfile.premiumEffects && resolvedEffectKey == 'off';
+              final shouldAnimateFallingEffect =
+                  effectProfile.animationEnabled && resolvedEffectKey != 'off';
+
+              final shellChild = child ?? const SizedBox.shrink();
+
+              if (uiState.themeKey.trim() != 'theme-vip-rotate') {
+                return _buildShellBody(
+                  foregroundChild: shellChild,
+                  isDark: isDark,
+                  resolvedThemeKey: resolvedThemeKey,
+                  resolvedEffectKey: resolvedEffectKey,
+                  graphicsQualityKey: graphicsQualityKey,
+                  shouldAnimateEffects: shouldAnimateEffects,
+                  shouldAnimateFallingEffect: shouldAnimateFallingEffect,
                 );
-                final graphicsQualityKey = effectProfile.graphicsQualityKey;
-                final resolvedThemeKey = _resolveThemeKey(uiState.themeKey);
-                final resolvedEffectKey = uiState.liteMode
-                    ? 'off'
-                    : _resolveEffectKey(
-                        uiState.fallingEffectKey, resolvedThemeKey);
-                final isDark = _isDarkTheme(resolvedThemeKey);
-                final shouldAnimateEffects =
-                    effectProfile.premiumEffects && resolvedEffectKey == 'off';
-                final shouldAnimateFallingEffect =
-                    effectProfile.animationEnabled &&
-                        resolvedEffectKey != 'off';
+              }
 
-                final shellChild = child ?? const SizedBox.shrink();
-
-                if (uiState.themeKey.trim() != 'theme-vip-rotate') {
+              return ValueListenableBuilder<int>(
+                valueListenable: _vipThemeRotationTickNotifier,
+                builder: (context, _, __) {
+                  final rotatedThemeKey = _resolveThemeKey(uiState.themeKey);
+                  final rotatedEffectKey = uiState.liteMode
+                      ? 'off'
+                      : _resolveEffectKey(
+                          uiState.fallingEffectKey, rotatedThemeKey);
+                  final rotatedIsDark = _isDarkTheme(rotatedThemeKey);
+                  final rotatedShouldAnimateEffects =
+                      effectProfile.premiumEffects && rotatedEffectKey == 'off';
+                  final rotatedShouldAnimateFallingEffect =
+                      effectProfile.animationEnabled &&
+                          rotatedEffectKey != 'off';
                   return _buildShellBody(
                     foregroundChild: shellChild,
-                    isDark: isDark,
-                    resolvedThemeKey: resolvedThemeKey,
-                    resolvedEffectKey: resolvedEffectKey,
+                    isDark: rotatedIsDark,
+                    resolvedThemeKey: rotatedThemeKey,
+                    resolvedEffectKey: rotatedEffectKey,
                     graphicsQualityKey: graphicsQualityKey,
-                    shouldAnimateEffects: shouldAnimateEffects,
-                    shouldAnimateFallingEffect: shouldAnimateFallingEffect,
+                    shouldAnimateEffects: rotatedShouldAnimateEffects,
+                    shouldAnimateFallingEffect:
+                        rotatedShouldAnimateFallingEffect,
                   );
-                }
-
-                return ValueListenableBuilder<int>(
-                  valueListenable: _vipThemeRotationTickNotifier,
-                  builder: (context, _, __) {
-                    final rotatedThemeKey = _resolveThemeKey(uiState.themeKey);
-                    final rotatedEffectKey = uiState.liteMode
-                        ? 'off'
-                        : _resolveEffectKey(
-                            uiState.fallingEffectKey, rotatedThemeKey);
-                    final rotatedIsDark = _isDarkTheme(rotatedThemeKey);
-                    final rotatedShouldAnimateEffects =
-                        effectProfile.premiumEffects &&
-                            rotatedEffectKey == 'off';
-                    final rotatedShouldAnimateFallingEffect =
-                        effectProfile.animationEnabled &&
-                            rotatedEffectKey != 'off';
-                    return _buildShellBody(
-                      foregroundChild: shellChild,
-                      isDark: rotatedIsDark,
-                      resolvedThemeKey: rotatedThemeKey,
-                      resolvedEffectKey: rotatedEffectKey,
-                      graphicsQualityKey: graphicsQualityKey,
-                      shouldAnimateEffects: rotatedShouldAnimateEffects,
-                      shouldAnimateFallingEffect:
-                          rotatedShouldAnimateFallingEffect,
-                    );
-                  },
-                );
-              },
-              child: foregroundContent,
-            ),
-            bottomNavigationBar: ValueListenableBuilder<UiPrefsState>(
-              valueListenable: UiPrefs.notifier,
-              builder: (context, uiState, _) {
-                final resolvedThemeKey = _resolveThemeKey(uiState.themeKey);
-                return _buildBottomNav(isDark: _isDarkTheme(resolvedThemeKey));
-              },
-            ),
+                },
+              );
+            },
+            child: foregroundContent,
           ),
+          bottomNavigationBar: ValueListenableBuilder<UiPrefsState>(
+            valueListenable: UiPrefs.notifier,
+            builder: (context, uiState, _) {
+              final resolvedThemeKey = _resolveThemeKey(uiState.themeKey);
+              return _buildBottomNav(isDark: _isDarkTheme(resolvedThemeKey));
+            },
+          ),
+        ),
         ),
       ),
     );
@@ -1639,11 +1660,6 @@ class _HomeScreenState extends State<HomeScreen>
     final raw = effectKey.trim();
     final key = raw.isEmpty ? 'auto' : raw;
     if (key != 'auto') return key;
-
-    if (resolvedThemeKey == 'off' ||
-        UiPrefs.notifier.value.customBackgroundUrl.isNotEmpty) {
-      return 'off';
-    }
 
     final now = DateTime.now();
     if (_isDarkTheme(resolvedThemeKey)) {

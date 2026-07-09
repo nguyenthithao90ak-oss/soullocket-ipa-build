@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
@@ -26,8 +25,7 @@ class TravelCountdownCard extends StatelessWidget {
     final daysRemaining = difference.inDays;
     final displayDays = daysRemaining > 0 ? daysRemaining : 0;
 
-    final String formattedDate =
-        '${startDate.day}/${startDate.month}/${startDate.year}';
+    final String formattedDate = '${startDate.day}/${startDate.month}/${startDate.year}';
 
     return GestureDetector(
       onTap: onTap,
@@ -76,7 +74,7 @@ class TravelCountdownCard extends StatelessWidget {
               ),
 
               // ─── Glassmorphism Frosted Cover ──────────────────────────────
-              FastBackdropFilter(
+              BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
                 child: Container(
                   padding: const EdgeInsets.all(20),
@@ -100,9 +98,8 @@ class TravelCountdownCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: RepaintBoundary(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // ─── Left Section: Big Glowing Countdown ──────────────
                       Column(
@@ -113,24 +110,20 @@ class TravelCountdownCard extends StatelessWidget {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  const Color(0xFFFF4B91)
-                                      .withValues(alpha: 0.25),
-                                  const Color(0xFF7A63C7)
-                                      .withValues(alpha: 0.1),
+                                  const Color(0xFFFF4B91).withValues(alpha: 0.25),
+                                  const Color(0xFF7A63C7).withValues(alpha: 0.1),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: const Color(0xFFFF4B91)
-                                    .withValues(alpha: 0.3),
+                                color: const Color(0xFFFF4B91).withValues(alpha: 0.3),
                                 width: 1.2,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFFF4B91)
-                                      .withValues(alpha: 0.2),
+                                  color: const Color(0xFFFF4B91).withValues(alpha: 0.2),
                                   blurRadius: 12,
                                   spreadRadius: -2,
                                 ),
@@ -158,8 +151,7 @@ class TravelCountdownCard extends StatelessWidget {
                                     height: 1,
                                     shadows: [
                                       Shadow(
-                                        color: const Color(0xFFFF4B91)
-                                            .withValues(alpha: 0.8),
+                                        color: const Color(0xFFFF4B91).withValues(alpha: 0.8),
                                         blurRadius: 15,
                                       ),
                                     ],
@@ -177,13 +169,10 @@ class TravelCountdownCard extends StatelessWidget {
                               ],
                             ),
                           )
-                              .animate(
-                                  onPlay: (controller) =>
-                                      controller.repeat(reverse: true))
+                              .animate(onPlay: (controller) => controller.repeat(reverse: true))
                               .shimmer(
                                 duration: const Duration(seconds: 3),
-                                color: const Color(0xFFFF4B91)
-                                    .withValues(alpha: 0.3),
+                                color: const Color(0xFFFF4B91).withValues(alpha: 0.3),
                               )
                               .scale(
                                 duration: const Duration(seconds: 2),
@@ -195,12 +184,9 @@ class TravelCountdownCard extends StatelessWidget {
                           Icon(
                             Icons.local_airport_rounded,
                             size: 20,
-                            color:
-                                const Color(0xFFFF4B91).withValues(alpha: 0.8),
+                            color: const Color(0xFFFF4B91).withValues(alpha: 0.8),
                           )
-                              .animate(
-                                  onPlay: (controller) =>
-                                      controller.repeat(reverse: true))
+                              .animate(onPlay: (controller) => controller.repeat(reverse: true))
                               .slideY(
                                 begin: 0,
                                 end: -0.25,
@@ -259,8 +245,7 @@ class TravelCountdownCard extends StatelessWidget {
                                 final isLast = index == destinations.length - 1;
                                 return IntrinsicHeight(
                                   child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
                                     children: [
                                       // Timeline Line and Nodes
                                       Column(
@@ -282,10 +267,8 @@ class TravelCountdownCard extends StatelessWidget {
                                               boxShadow: [
                                                 BoxShadow(
                                                   color: (index == 0
-                                                          ? const Color(
-                                                              0xFFFF4B91)
-                                                          : const Color(
-                                                              0xFF7A63C7))
+                                                          ? const Color(0xFFFF4B91)
+                                                          : const Color(0xFF7A63C7))
                                                       .withValues(alpha: 0.6),
                                                   blurRadius: 6,
                                                 ),
@@ -296,8 +279,7 @@ class TravelCountdownCard extends StatelessWidget {
                                             Expanded(
                                               child: Container(
                                                 width: 2,
-                                                color: const Color(0xFF7A63C7)
-                                                    .withValues(alpha: 0.4),
+                                                color: const Color(0xFF7A63C7).withValues(alpha: 0.4),
                                               ),
                                             ),
                                         ],
@@ -306,8 +288,7 @@ class TravelCountdownCard extends StatelessWidget {
                                       // Destination label
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               destinations[index],
@@ -321,9 +302,7 @@ class TravelCountdownCard extends StatelessWidget {
                                                     : const Color(0xFFB0B0C0),
                                               ),
                                             ),
-                                            const SizedBox(
-                                                height:
-                                                    8), // Gap to the next node
+                                            const SizedBox(height: 8), // Gap to the next node
                                           ],
                                         ),
                                       ),
@@ -339,12 +318,13 @@ class TravelCountdownCard extends StatelessWidget {
                   ),
                 ),
               ),
-              ),
             ],
           ),
         ),
-      ).animate().fadeIn(duration: 800.ms, curve: Curves.easeOutQuad).slideY(
-          begin: 0.15, end: 0, duration: 800.ms, curve: Curves.easeOutQuad),
+      )
+          .animate()
+          .fadeIn(duration: 800.ms, curve: Curves.easeOutQuad)
+          .slideY(begin: 0.15, end: 0, duration: 800.ms, curve: Curves.easeOutQuad),
     );
   }
 }

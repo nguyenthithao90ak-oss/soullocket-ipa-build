@@ -18,7 +18,6 @@ import '../utils/services/texas_age_gate_service.dart';
 import '../utils/services/widget_action_service.dart';
 import '../utils/services/app_lifecycle_presence_guard.dart';
 import '../utils/services/settings_sync_service.dart';
-import 'auth/house_choice_screen.dart';
 import '../utils/services/role_utils.dart';
 import '../utils/app_error_mapper.dart';
 import 'app_entry/app_entry_access_resolver.dart';
@@ -32,7 +31,7 @@ import 'auth/auth_action_screen.dart';
 import 'auth/lock_appeal_screen.dart';
 import 'consent/consent_gate.dart';
 import 'home/home_screen.dart';
-
+import 'house_onboarding_screen.dart';
 import 'login_screen.dart';
 import 'home/tabs/diary/controllers/diary_memory_controller.dart';
 
@@ -673,7 +672,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
                     context,
                   );
                 },
-                child: HouseChoiceScreen(
+                child: HouseOnboardingScreen(
+                  autoCreateOnly: true,
+                  initialHouseName: 'Chúng mình',
                   onHouseCreated: _refreshCurrentUserAccess,
                   onSignedOut: _refreshCurrentUserAccess,
                 ),

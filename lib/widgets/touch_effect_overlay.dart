@@ -212,7 +212,7 @@ class _TouchEffectPainter extends CustomPainter {
     final path = Path();
     const double width = 1.0;
     const double height = 0.9;
-
+    
     path.moveTo(0, height * 0.3);
     path.cubicTo(-width * 0.5, -height * 0.2, -width, height * 0.4, 0, height);
     path.moveTo(0, height * 0.3);

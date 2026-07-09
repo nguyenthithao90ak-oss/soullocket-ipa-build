@@ -47,9 +47,7 @@ class WatchTogetherService {
     final uid = _auth.currentUser?.uid;
     final normalizedHouseId = houseId.trim();
     final normalizedVideoUrl = videoUrl.trim();
-    if (uid == null ||
-        normalizedHouseId.isEmpty ||
-        normalizedVideoUrl.isEmpty) {
+    if (uid == null || normalizedHouseId.isEmpty || normalizedVideoUrl.isEmpty) {
       return;
     }
 
@@ -100,8 +98,7 @@ class WatchTogetherService {
     final updates = <String, dynamic>{
       'isPlaying': isPlaying,
       'positionSec': positionSec.isNegative ? 0.0 : positionSec,
-      if (durationSec != null)
-        'durationSec': durationSec.isNegative ? 0.0 : durationSec,
+      if (durationSec != null) 'durationSec': durationSec.isNegative ? 0.0 : durationSec,
       if (uid != null) 'updatedBy': uid,
       if (updatedByName != null && updatedByName.trim().isNotEmpty)
         'updatedByName': updatedByName.trim(),
@@ -167,14 +164,11 @@ class WatchTogetherService {
     final uid = _auth.currentUser?.uid;
     final normalizedHouseId = houseId.trim();
     final normalizedVideoUrl = videoUrl.trim();
-    if (uid == null ||
-        normalizedHouseId.isEmpty ||
-        normalizedVideoUrl.isEmpty) {
+    if (uid == null || normalizedHouseId.isEmpty || normalizedVideoUrl.isEmpty) {
       return null;
     }
 
-    final inviteRef =
-        _db.ref('houses/$normalizedHouseId/cinema_invites').push();
+    final inviteRef = _db.ref('houses/$normalizedHouseId/cinema_invites').push();
     final inviteId = inviteRef.key;
     if (inviteId == null) return null;
 
@@ -210,8 +204,7 @@ class WatchTogetherService {
         'status': 'pending',
       });
     } catch (e) {
-      debugPrint(
-          'Failed to queue cinema invite notification: ${AppErrorMapper.resolve(
+      debugPrint('Failed to queue cinema invite notification: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Không thể xếp hàng thông báo mời xem phim.',
       ).message}');
@@ -228,15 +221,11 @@ class WatchTogetherService {
     final uid = _auth.currentUser?.uid;
     final normalizedHouseId = houseId.trim();
     final normalizedInviteId = inviteId.trim();
-    if (uid == null ||
-        normalizedHouseId.isEmpty ||
-        normalizedInviteId.isEmpty) {
+    if (uid == null || normalizedHouseId.isEmpty || normalizedInviteId.isEmpty) {
       return;
     }
 
-    await _db
-        .ref('houses/$normalizedHouseId/cinema_invites/$normalizedInviteId')
-        .update({
+    await _db.ref('houses/$normalizedHouseId/cinema_invites/$normalizedInviteId').update({
       'status': 'accepted',
       'acceptedByUid': uid,
       'acceptedByName': accepterName.trim(),
@@ -356,10 +345,8 @@ class MovieSyncState {
       videoTitle: map['videoTitle']?.toString() ?? '',
       videoType: map['videoType']?.toString() ?? 'youtube',
       isPlaying: map['isPlaying'] == true,
-      positionSec: ((map['positionSec'] as num?)?.toDouble() ?? 0.0)
-          .clamp(0.0, double.infinity),
-      durationSec: ((map['durationSec'] as num?)?.toDouble() ?? 0.0)
-          .clamp(0.0, double.infinity),
+      positionSec: ((map['positionSec'] as num?)?.toDouble() ?? 0.0).clamp(0.0, double.infinity),
+      durationSec: ((map['durationSec'] as num?)?.toDouble() ?? 0.0).clamp(0.0, double.infinity),
       sessionActive: map['sessionActive'] == true,
       lastUpdatedAt: (map['lastUpdatedAt'] as num?)?.toInt() ?? 0,
       originClientId: map['originClientId']?.toString() ?? '',

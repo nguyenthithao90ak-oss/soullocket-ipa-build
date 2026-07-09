@@ -60,13 +60,13 @@ extension _CinemaReelPlayerDialogsPart on _CinemaReelPlayerScreenState {
                     fillColor: Colors.white.withValues(alpha: 0.06),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.12)),
+                      borderSide:
+                          BorderSide(color: Colors.white.withValues(alpha: 0.12)),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.12)),
+                      borderSide:
+                          BorderSide(color: Colors.white.withValues(alpha: 0.12)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),

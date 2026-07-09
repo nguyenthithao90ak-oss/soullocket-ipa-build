@@ -30,16 +30,12 @@ class QRPayloadCodec {
 
   static String encodeLoginToken(String token) {
     final normalizedToken = _sanitizeToken(token);
-    return normalizedToken.isEmpty
-        ? loginPrefix
-        : '$loginPrefix$normalizedToken';
+    return normalizedToken.isEmpty ? loginPrefix : '$loginPrefix$normalizedToken';
   }
 
   static String encodeHouseId(String houseId) {
     final normalizedHouseId = _sanitize(houseId);
-    return normalizedHouseId.isEmpty
-        ? housePrefix
-        : '$housePrefix$normalizedHouseId';
+    return normalizedHouseId.isEmpty ? housePrefix : '$housePrefix$normalizedHouseId';
   }
 
   static QRPayloadKind detectKind(String raw) {
@@ -173,10 +169,6 @@ class QRPayloadCodec {
 
   static String _sanitizeToken(String? value) {
     if (value == null) return '';
-    return value
-        .trim()
-        .replaceAll('"', '')
-        .replaceAll("'", '')
-        .replaceAll('/', '');
+    return value.trim().replaceAll('"', '').replaceAll("'", '').replaceAll('/', '');
   }
 }

@@ -199,9 +199,7 @@ extension _SettingsTabThemeEventPreviewPart on _SettingsTabState {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        context
-                            .tr('theme_event_date_label')
-                            .replaceAll('{date}', dateLabel),
+                        context.tr('theme_event_date_label').replaceAll('{date}', dateLabel),
                         style: SLTheme.quicksand(
                           fontSize: 11.4,
                           fontWeight: FontWeight.w700,
@@ -360,18 +358,15 @@ class _ThemeEventPreviewSectionState extends State<_ThemeEventPreviewSection> {
             ),
             if (anniversaryEvents.isNotEmpty)
               widget.eventSectionBuilder(
-                title:
-                    widget.context.tr('theme_event_anniversary_section_title'),
-                subtitle:
-                    widget.context.tr('theme_event_anniversary_section_desc'),
+                title: widget.context.tr('theme_event_anniversary_section_title'),
+                subtitle: widget.context.tr('theme_event_anniversary_section_desc'),
                 accent: const Color(0xFFD81B60),
                 events: anniversaryEvents,
               ),
             if (calendarEvents.isNotEmpty)
               widget.eventSectionBuilder(
                 title: widget.context.tr('theme_event_calendar_section_title'),
-                subtitle:
-                    widget.context.tr('theme_event_calendar_section_desc'),
+                subtitle: widget.context.tr('theme_event_calendar_section_desc'),
                 accent: const Color(0xFF3366D6),
                 events: calendarEvents,
               ),

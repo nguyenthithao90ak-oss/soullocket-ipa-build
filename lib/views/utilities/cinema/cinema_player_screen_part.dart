@@ -174,7 +174,8 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
       _exportedVideoPath = null;
       _exportedVideoSignature = null;
       _videoProgress = null;
-      _videoStatus = context.tr('util_vtrtiuthay_12e0a5');
+      _videoStatus =
+          context.tr('util_vtrtiuthay_12e0a5');
     });
   }
 
@@ -255,8 +256,7 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                                     child: SizedBox(
                                       height: 4,
                                       child: ColoredBox(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.16),
+                                        color: Colors.white.withValues(alpha: 0.16),
                                         child: Align(
                                           alignment: Alignment.centerLeft,
                                           child: isActive
@@ -286,8 +286,7 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                                                   widthFactor: isDone ? 1 : 0,
                                                   child: ColoredBox(
                                                     color: Colors.white
-                                                        .withValues(
-                                                            alpha: 0.88),
+                                                        .withValues(alpha: 0.88),
                                                   ),
                                                 ),
                                         ),

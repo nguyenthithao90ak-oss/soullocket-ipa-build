@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../../home_screen.dart';
 
 extension _HomeScreenShellControls on _HomeScreenState {
@@ -114,10 +113,9 @@ extension _HomeScreenShellControls on _HomeScreenState {
                       UiPrefs.notifier.value,
                       pauseAnimations: isSwiping,
                     );
-                    final bottomInset = MediaQuery.paddingOf(context).bottom;
+                    final bottomInset = MediaQuery.of(context).padding.bottom;
                     return Padding(
-                      padding: EdgeInsets.only(
-                          bottom: bottomInset > 0 ? bottomInset : 0),
+                      padding: EdgeInsets.only(bottom: bottomInset > 0 ? bottomInset : 0),
                       child: AnimatedSize(
                         duration: effectProfile.performanceMode || isSwiping
                             ? Duration.zero
@@ -151,7 +149,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
     required int currentIndex,
     required bool isSwiping,
   }) {
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     final accent = _HomeScreenState._navItems[currentIndex].activeColor;
     final uiState = UiPrefs.notifier.value;
     final effectProfile = _resolveHomeEffectProfile(
@@ -210,7 +208,8 @@ extension _HomeScreenShellControls on _HomeScreenState {
       },
       child: Padding(
         key: const ValueKey('expanded-nav'),
-        padding: EdgeInsets.fromLTRB(24, 0, 24, bottomInset > 0 ? 4 : 12),
+        padding: EdgeInsets.fromLTRB(
+            24, 0, 24, bottomInset > 0 ? 4 : 12),
         child: Stack(
           alignment: Alignment.topCenter,
           clipBehavior: Clip.none,
@@ -292,7 +291,8 @@ extension _HomeScreenShellControls on _HomeScreenState {
       },
       child: Padding(
         key: const ValueKey('collapsed-nav'),
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+        padding:
+            const EdgeInsets.fromLTRB(12, 0, 12, 0),
         child: Align(
           alignment: Alignment.bottomCenter,
           child: Material(

@@ -24,11 +24,11 @@ class GiftcodeScreen extends StatefulWidget {
 }
 
 class _GiftcodeScreenState extends State<GiftcodeScreen> {
+
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
       tooltip: 'Hướng dẫn',
-      icon:
-          const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
+      icon: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -117,7 +117,7 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
           ),
         ),
         centerTitle: true,
-        actions: [_buildInfoIcon(context)],
+          actions: [_buildInfoIcon(context)],
         backgroundColor: Colors.transparent,
         elevation: 0,
         flexibleSpace: ClipRect(

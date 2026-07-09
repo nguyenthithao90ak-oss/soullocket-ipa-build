@@ -110,16 +110,10 @@ class _BlockListScreenState extends State<BlockListScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Bỏ chặn người dùng'),
-        content: const Text(
-            'Bạn có chắc chắn muốn bỏ chặn người dùng này? Họ sẽ có thể xem và tương tác lại với bạn.'),
+        content: const Text('Bạn có chắc chắn muốn bỏ chặn người dùng này? Họ sẽ có thể xem và tương tác lại với bạn.'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Huỷ')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Bỏ chặn')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Huỷ')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), style: TextButton.styleFrom(foregroundColor: Colors.red), child: const Text('Bỏ chặn')),
         ],
       ),
     );
@@ -138,7 +132,8 @@ class _BlockListScreenState extends State<BlockListScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.tr('util_chathbchnn_060c07')),
+            content:
+                Text(context.tr('util_chathbchnn_060c07')),
           ),
         );
       }
@@ -156,8 +151,7 @@ class _BlockListScreenState extends State<BlockListScreen> {
             style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
         content: TextField(
           controller: ctrl,
-          decoration:
-              InputDecoration(hintText: context.tr('util_nhpmnhcnch_30480e')),
+          decoration: InputDecoration(hintText: context.tr('util_nhpmnhcnch_30480e')),
         ),
         actions: [
           TextButton(
@@ -180,8 +174,8 @@ class _BlockListScreenState extends State<BlockListScreen> {
     await _db.ref('houses/$_myHouseId/blocked_users/$hid').set(true);
     await _load();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('util_chnngidng_fa6f1b'))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.tr('util_chnngidng_fa6f1b'))));
     }
   }
 
@@ -216,7 +210,8 @@ class _BlockListScreenState extends State<BlockListScreen> {
                         ? SLTheme.emptyStatePanel(
                             icon: Icons.shield_rounded,
                             title: context.tr('util_khnggianan_a63f27'),
-                            subtitle: context.tr('util_hinchacnhn_165e73'),
+                            subtitle:
+                                context.tr('util_hinchacnhn_165e73'),
                             accentColor: SLColors.danger,
                           )
                         : _buildBlockedList(),
@@ -269,8 +264,7 @@ class _BlockListScreenState extends State<BlockListScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              border:
-                  Border.all(color: SLColors.danger.withValues(alpha: 0.22)),
+              border: Border.all(color: SLColors.danger.withValues(alpha: 0.22)),
             ),
             child: const Icon(Icons.verified_user_rounded,
                 color: SLColors.danger, size: 28),
@@ -302,10 +296,7 @@ class _BlockListScreenState extends State<BlockListScreen> {
             ),
           ),
           SLSpacing.w12,
-          SLTheme.chip(
-              L10nService().format(
-                  'util_blocked_count', {'count': _blockedHouses.length}),
-              SLColors.danger),
+          SLTheme.chip(L10nService().format('util_blocked_count', {'count': _blockedHouses.length}), SLColors.danger),
         ],
       ),
     );
@@ -383,8 +374,8 @@ class _BlockListScreenState extends State<BlockListScreen> {
                   decoration: BoxDecoration(
                     color: SLColors.dangerLight.withValues(alpha: 0.82),
                     borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                        color: SLColors.danger.withValues(alpha: 0.12)),
+                    border:
+                        Border.all(color: SLColors.danger.withValues(alpha: 0.12)),
                   ),
                   child: Text(
                     'ID $shortId',

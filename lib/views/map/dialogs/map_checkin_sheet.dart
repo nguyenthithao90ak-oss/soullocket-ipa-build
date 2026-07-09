@@ -6,7 +6,8 @@ extension _MapCheckinSheetExt on _MapScreenState {
     if (activePoint == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.tr('map_chacvtrhin_ccf9e7')),
+          content:
+              Text(context.tr('map_chacvtrhin_ccf9e7')),
           behavior: SnackBarBehavior.floating,
         ),
       );

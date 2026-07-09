@@ -27,7 +27,8 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
 
   void _showVipAccountDetail() {
     // Mở panel VIP trong settings
-    _togglePanel('account');
+    _openPanel = 'account';
+    setState(() {});
   }
 
   /// Xoá file nhạc cũ trên R2 (dựa vào URL đã lưu trong Firebase)
@@ -157,10 +158,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
       updates['musicSyncMode'] = 'local';
     }
 
-    await _dbRef
-        .child('houses/$houseId/settings')
-        .update(updates)
-        .catchError((_) {});
+    await _dbRef.child('houses/$houseId/settings').update(updates).catchError((_) {});
   }
 
   Widget _buildMusicPanel({bool hideBackButton = false}) {
@@ -264,8 +262,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                         GestureDetector(
                           onTap: () => _showVipAccountDetail(),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
                                 colors: [Color(0xFFFFD54F), Color(0xFFFF8F00)],
@@ -275,8 +272,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.star_rounded,
-                                    size: 12, color: Color(0xFF3E2723)),
+                                const Icon(Icons.star_rounded, size: 12, color: Color(0xFF3E2723)),
                                 const SizedBox(width: 3),
                                 Text(
                                   'PRO',
@@ -317,9 +313,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
               textColor: Colors.black87,
               onTap: () async {
                 final previousLocalPath =
-                    MusicService.isLocalAudioPath(_bgMusicUrl)
-                        ? _bgMusicUrl
-                        : '';
+                    MusicService.isLocalAudioPath(_bgMusicUrl) ? _bgMusicUrl : '';
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.remove('il_local_music_url');
                 await prefs.remove('il_local_music_link');

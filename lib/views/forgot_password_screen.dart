@@ -27,11 +27,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     Icons.password_rounded,
   ];
   static List<String> recoveryStepLabels(BuildContext context) => [
-        context.tr('forgot_pwd_step_home_email'),
-        context.tr('forgot_pwd_step_security'),
-        context.tr('forgot_pwd_step_send_code'),
-        context.tr('forgot_pwd_step_change_password'),
-      ];
+    context.tr('forgot_pwd_step_home_email'),
+    context.tr('forgot_pwd_step_security'),
+    context.tr('forgot_pwd_step_send_code'),
+    context.tr('forgot_pwd_step_change_password'),
+  ];
 
   final _authService = AuthService();
   final SecurityFlowGuard _securityFlowGuard = SecurityFlowGuard.instance;
@@ -78,8 +78,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(context.tr('forgot_pwd_dialog_close'),
-                style: SLTheme.quicksand()),
+            child: Text(context.tr('forgot_pwd_dialog_close'), style: SLTheme.quicksand()),
           )
         ],
       ),
@@ -155,10 +154,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           .trim();
       if (mounted) {
         setState(() {
-          houseUser1Name =
-              n1.isNotEmpty ? n1 : context.tr('forgot_pwd_member_default_1');
-          houseUser2Name =
-              n2.isNotEmpty ? n2 : context.tr('forgot_pwd_member_default_2');
+          houseUser1Name = n1.isNotEmpty ? n1 : context.tr('forgot_pwd_member_default_1');
+          houseUser2Name = n2.isNotEmpty ? n2 : context.tr('forgot_pwd_member_default_2');
         });
       }
     } catch (_) {
@@ -496,10 +493,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             height: 42,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  accent.withValues(alpha: 0.15),
-                  accent.withValues(alpha: 0.05)
-                ],
+                colors: [accent.withValues(alpha: 0.15), accent.withValues(alpha: 0.05)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -630,67 +624,66 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final isEnabled = onTap != null;
     final colors = isEnabled
         ? const [Color(0xFFD81B60), Color(0xFFFF5293), Color(0xFFFF8FB8)]
-        : [
-            const Color(0xFFE8AFC4).withValues(alpha: 0.62),
-            const Color(0xFFF1C3D3).withValues(alpha: 0.62)
-          ];
+        : const [Color(0xFFE8AFC4), Color(0xFFF1C3D3)];
 
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: colors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: isEnabled ? 0.3 : 0.15),
-          width: 1.4,
-        ),
-        boxShadow: isEnabled
-            ? [
-                BoxShadow(
-                  color: colors.last.withValues(alpha: 0.20),
-                  blurRadius: 24,
-                  offset: const Offset(0, 12),
-                ),
-              ]
-            : [],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
+    return Opacity(
+      opacity: isEnabled ? 1 : 0.62,
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: colors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(22),
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            alignment: Alignment.center,
-            child: busy
-                ? const SizedBox(
-                    height: 22,
-                    width: 22,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2.2,
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        label,
-                        style: SLTheme.quicksand(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16.5,
-                          letterSpacing: 0.9,
-                        ),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.38),
+            width: 1.4,
+          ),
+          boxShadow: [
+            if (isEnabled)
+              BoxShadow(
+                color: colors.last.withValues(alpha: 0.20),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(22),
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              alignment: Alignment.center,
+              child: busy
+                  ? const SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.2,
                       ),
-                      const SizedBox(width: 8),
-                      Icon(icon, color: Colors.white, size: 20),
-                    ],
-                  ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          label,
+                          style: SLTheme.quicksand(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 16.5,
+                            letterSpacing: 0.9,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(icon, color: Colors.white, size: 20),
+                      ],
+                    ),
+            ),
           ),
         ),
       ),
@@ -909,8 +902,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           decoration: BoxDecoration(
             color: _recoveryAccentSoft,
             borderRadius: SLRadius.lgAll,
-            border:
-                Border.all(color: _recoveryButtonColor.withValues(alpha: 0.24)),
+            border: Border.all(color: _recoveryButtonColor.withValues(alpha: 0.24)),
           ),
           child: Row(
             children: [
@@ -943,8 +935,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           decoration: BoxDecoration(
             color: _recoveryAccentSoft,
             borderRadius: SLRadius.lgAll,
-            border:
-                Border.all(color: _recoveryButtonColor.withValues(alpha: 0.24)),
+            border: Border.all(color: _recoveryButtonColor.withValues(alpha: 0.24)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -991,8 +982,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     }
                   } catch (e) {
                     if (mounted) {
-                      _showErrorDialog(
-                          context.tr('forgot_pwd_err_resend_failed'));
+                      _showErrorDialog(context.tr('forgot_pwd_err_resend_failed'));
                     }
                   } finally {
                     if (mounted) setState(() => isBusy = false);
@@ -1072,10 +1062,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ? context.tr('forgot_pwd_step4_title_sending')
               : context.tr('forgot_pwd_step4_title_enter'),
           description: isSendingRecoveryCode
-              ? L10nService()
-                  .format('forgot_pwd_step4_desc_sending', {'email': sentTo})
-              : L10nService()
-                  .format('forgot_pwd_step4_desc_sent', {'email': sentTo}),
+              ? L10nService().format('forgot_pwd_step4_desc_sending', {'email': sentTo})
+              : L10nService().format('forgot_pwd_step4_desc_sent', {'email': sentTo}),
           icon: Icons.mark_email_unread_rounded,
           accent: const Color(0xFFD81B60),
         ),
@@ -1149,8 +1137,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(
-                                context.tr('forgot_pwd_snack_otp_resent'),
+                            content: Text(context.tr('forgot_pwd_snack_otp_resent'),
                                 style: SLTheme.quicksand()),
                             backgroundColor: Colors.green,
                           ),
@@ -1158,8 +1145,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       }
                     } catch (e) {
                       if (mounted) {
-                        _showErrorDialog(
-                            context.tr('forgot_pwd_err_resend_otp_failed'));
+                        _showErrorDialog(context.tr('forgot_pwd_err_resend_otp_failed'));
                       }
                     } finally {
                       if (mounted) {
@@ -1226,9 +1212,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
             SLSpacing.h24,
             _buildRecoveryActionButton(
-              label: isBusy
-                  ? context.tr('forgot_pwd_btn_checking')
-                  : context.tr('forgot_pwd_btn_check_answer'),
+              label: isBusy ? context.tr('forgot_pwd_btn_checking') : context.tr('forgot_pwd_btn_check_answer'),
               onTap: isBusy ? null : handleAnswerVerify,
               busy: isBusy,
               icon: Icons.verified_user_rounded,
@@ -1237,8 +1221,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         );
       case 3:
         final description = maskedEmail.isNotEmpty
-            ? L10nService().format(
-                'forgot_pwd_step3_desc_with_hint', {'masked': maskedEmail})
+            ? L10nService().format('forgot_pwd_step3_desc_with_hint', {'masked': maskedEmail})
             : context.tr('forgot_pwd_step3_desc_no_hint');
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1273,9 +1256,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
             SLSpacing.h24,
             _buildRecoveryActionButton(
-              label: isBusy
-                  ? context.tr('forgot_pwd_btn_send_code_busy')
-                  : context.tr('forgot_pwd_btn_send_code'),
+              label: isBusy ? context.tr('forgot_pwd_btn_send_code_busy') : context.tr('forgot_pwd_btn_send_code'),
               onTap: isBusy ? null : handleResetLinkSend,
               busy: isBusy,
               icon: Icons.send_rounded,
@@ -1316,9 +1297,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
             SLSpacing.h24,
             _buildRecoveryActionButton(
-              label: isBusy
-                  ? context.tr('forgot_pwd_btn_processing')
-                  : context.tr('forgot_pwd_btn_continue'),
+              label: isBusy ? context.tr('forgot_pwd_btn_processing') : context.tr('forgot_pwd_btn_continue'),
               onTap: isBusy ? null : handleHouseLookup,
               busy: isBusy,
               icon: Icons.arrow_forward_rounded,
@@ -1420,8 +1399,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   leading: IconButton(
                     icon: const Icon(Icons.arrow_back_ios_new_rounded,
                         color: SLColors.primary),
-                    onPressed:
-                        isBusy ? null : () => Navigator.of(context).pop(),
+                    onPressed: isBusy ? null : () => Navigator.of(context).pop(),
                   ),
                   title: Text(
                     context.tr('forgot_pwd_appbar_title').toUpperCase(),
@@ -1450,23 +1428,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             vertical: 12,
                           ),
                           child: ConstrainedBox(
-                            constraints:
-                                BoxConstraints(maxWidth: maxContentWidth),
+                            constraints: BoxConstraints(maxWidth: maxContentWidth),
                             child: Container(
                               padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFFBFD)
-                                    .withValues(alpha: 0.9),
+                                color: const Color(0xFFFFFBFD).withValues(alpha: 0.9),
                                 borderRadius: BorderRadius.circular(36),
                                 border: Border.all(
-                                  color: const Color(0xFFFFB6D3)
-                                      .withValues(alpha: 0.55),
+                                  color: const Color(0xFFFFB6D3).withValues(alpha: 0.55),
                                   width: 1.5,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFFFF85B3)
-                                        .withValues(alpha: 0.16),
+                                    color: const Color(0xFFFF85B3).withValues(alpha: 0.16),
                                     blurRadius: 40,
                                     spreadRadius: -4,
                                     offset: const Offset(0, 20),
@@ -1486,16 +1460,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   Padding(
                                     padding: const EdgeInsets.only(bottom: 14),
                                     child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                      mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         ShaderMask(
-                                          shaderCallback: (bounds) =>
-                                              const LinearGradient(
-                                            colors: [
-                                              SLColors.primary,
-                                              Color(0xFFE060B0)
-                                            ],
+                                          shaderCallback: (bounds) => const LinearGradient(
+                                            colors: [SLColors.primary, Color(0xFFE060B0)],
                                           ).createShader(bounds),
                                           child: const Icon(
                                             Icons.favorite_rounded,
@@ -1505,12 +1474,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                         ),
                                         const SizedBox(width: 5),
                                         ShaderMask(
-                                          shaderCallback: (bounds) =>
-                                              const LinearGradient(
-                                            colors: [
-                                              Color(0xFFE0609A),
-                                              Color(0xFFA044C0)
-                                            ],
+                                          shaderCallback: (bounds) => const LinearGradient(
+                                            colors: [Color(0xFFE0609A), Color(0xFFA044C0)],
                                           ).createShader(bounds),
                                           child: Text(
                                             'soullocket',
@@ -1524,12 +1489,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                         ),
                                         const SizedBox(width: 5),
                                         ShaderMask(
-                                          shaderCallback: (bounds) =>
-                                              const LinearGradient(
-                                            colors: [
-                                              Color(0xFFE060B0),
-                                              SLColors.primary
-                                            ],
+                                          shaderCallback: (bounds) => const LinearGradient(
+                                            colors: [Color(0xFFE060B0), SLColors.primary],
                                           ).createShader(bounds),
                                           child: const Icon(
                                             Icons.favorite_rounded,
@@ -1568,23 +1529,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                                   }
                                                 });
                                               },
-                                        icon: const Icon(
-                                            Icons.arrow_back_rounded,
-                                            size: 16),
+                                        icon: const Icon(Icons.arrow_back_rounded, size: 16),
                                         label: Text(
                                           step == 4
-                                              ? context
-                                                  .tr('forgot_pwd_btn_restart')
-                                              : context.tr(
-                                                  'forgot_pwd_btn_back_step'),
+                                              ? context.tr('forgot_pwd_btn_restart')
+                                              : context.tr('forgot_pwd_btn_back_step'),
                                           style: SLTheme.quicksand(
                                             fontWeight: FontWeight.w800,
                                             fontSize: 13,
                                           ),
                                         ),
                                         style: TextButton.styleFrom(
-                                          foregroundColor:
-                                              const Color(0xFFD81B60),
+                                          foregroundColor: const Color(0xFFD81B60),
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 16,
                                             vertical: 10,

@@ -7,7 +7,8 @@ extension _CinemaReelPlayerExportPart on _CinemaReelPlayerScreenState {
     }
     if (!_videoExportService.isSupported) {
       _commitState(() {
-        _videoStatus = L10nService().translate('util_tnhnngxutv_f2e071');
+        _videoStatus =
+            L10nService().translate('util_tnhnngxutv_f2e071');
         _videoProgress = null;
         _isExportingVideo = false;
       });
@@ -67,7 +68,8 @@ extension _CinemaReelPlayerExportPart on _CinemaReelPlayerScreenState {
       _commitState(() {
         _isExportingVideo = false;
         _videoProgress = 1;
-        _videoStatus = L10nService().translate('util_videomp4sn_1777d9');
+        _videoStatus =
+            L10nService().translate('util_videomp4sn_1777d9');
         _exportedVideoPath = result.outputPath;
         _exportedVideoSignature = _currentExportSignature;
       });

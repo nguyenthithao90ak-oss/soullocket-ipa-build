@@ -119,8 +119,7 @@ class SingleMatchService {
           debugPrint(
               '[SingleMatch] profile index fetch failed: ${AppErrorMapper.resolve(
             error,
-            fallbackMessage: L10nService()
-                .translate('err_single_match_profile_index_stream_failed'),
+            fallbackMessage: L10nService().translate('err_single_match_profile_index_stream_failed'),
           ).message}');
           emitMergedCandidates();
         }));
@@ -227,12 +226,8 @@ class SingleMatchService {
     controller = StreamController<List<SingleMatchHistoryEntry>>(
       onListen: () {
         controller.add(const <SingleMatchHistoryEntry>[]);
-        historySub = _db
-            .child('houses/$houseId/singleMatch/history')
-            .orderByKey()
-            .limitToLast(50)
-            .onValue
-            .listen(
+        historySub =
+            _db.child('houses/$houseId/singleMatch/history').orderByKey().limitToLast(50).onValue.listen(
           (event) {
             if (!event.snapshot.exists || event.snapshot.value is! Map) {
               controller.add(const <SingleMatchHistoryEntry>[]);
@@ -260,8 +255,7 @@ class SingleMatchService {
             debugPrint(
                 '[SingleMatch] history stream failed: ${AppErrorMapper.resolve(
               error,
-              fallbackMessage: L10nService()
-                  .translate('err_single_match_history_stream_failed'),
+              fallbackMessage: L10nService().translate('err_single_match_history_stream_failed'),
             ).message}');
             if (!controller.isClosed) {
               controller.add(const <SingleMatchHistoryEntry>[]);
@@ -395,8 +389,7 @@ class SingleMatchService {
 
   // ===== Profile Index (legacy) =====
 
-  Future<Map<String, Map<dynamic, dynamic>>>
-      _fetchProfileIndexWithCache() async {
+  Future<Map<String, Map<dynamic, dynamic>>> _fetchProfileIndexWithCache() async {
     final now = DateTime.now();
     if (_profileIndexCache != null &&
         _profileIndexCachedAt != null &&
@@ -580,12 +573,12 @@ class SingleMatchService {
     final chatRoomId = data['chatRoomId']?.toString();
 
     if (creatorHouseId == myHouseId) {
-      return null;
+       return null;
     }
 
     if (chatRoomId != null && chatRoomId.isNotEmpty) {
-      if (data['joinedHouseId'] == myHouseId) return chatRoomId;
-      throw Exception(L10nService().translate('core_err_general'));
+       if (data['joinedHouseId'] == myHouseId) return chatRoomId;
+       throw Exception(L10nService().translate('core_err_general'));
     }
 
     final newRoomId = _db.child('chat_rooms').push().key!;
@@ -610,10 +603,7 @@ class SingleMatchService {
   }
 
   Stream<String?> watchSecretCodeMatch(String secretCode) {
-    return _db
-        .child('single_match_secret_codes/$secretCode/chatRoomId')
-        .onValue
-        .map((event) {
+    return _db.child('single_match_secret_codes/$secretCode/chatRoomId').onValue.map((event) {
       if (event.snapshot.exists && event.snapshot.value != null) {
         return event.snapshot.value.toString();
       }
@@ -737,8 +727,7 @@ class SingleMatchService {
             intro: (match['intro'] ?? '').toString().trim(),
             goal: (match['goal'] ?? '').toString().trim(),
             voiceStyle: (match['voiceStyle'] ?? '').toString().trim(),
-            tags: (match['tags'] as List?)?.map((e) => e.toString()).toList() ??
-                const [],
+            tags: (match['tags'] as List?)?.map((e) => e.toString()).toList() ?? const [],
             allowAudioCalls: match['allowAudioCalls'] == true,
             allowVideoCalls: match['allowVideoCalls'] == true,
             enabled: true,

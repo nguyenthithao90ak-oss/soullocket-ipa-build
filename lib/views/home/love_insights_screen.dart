@@ -106,9 +106,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
         foregroundColor: const Color(0xFF23192C),
         titleSpacing: 0,
         title: Text(
-          _isSingle
-              ? L10nService().translate('insight_title_single')
-              : L10nService().translate('insight_title_couple'),
+          _isSingle ? L10nService().translate('insight_title_single') : L10nService().translate('insight_title_couple'),
           style: SLTheme.quicksand(
             fontSize: 20,
             fontWeight: FontWeight.w900,
@@ -274,12 +272,12 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
     );
   }
 
+
   BoxDecoration _softCardDecoration() {
     return BoxDecoration(
       color: Colors.white.withValues(alpha: 0.75),
       borderRadius: BorderRadius.circular(28),
-      border:
-          Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.2),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.2),
       boxShadow: [
         BoxShadow(
           color: const Color(0xFFCEBCD0).withValues(alpha: 0.15),
@@ -335,12 +333,8 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
   }
 
   String _favoriteActivityLabel(LoveInsightData insight) {
-    if (insight.diaryTotal > insight.albumTotal) {
-      return L10nService().translate('insight_habit_diary');
-    }
-    if (insight.diaryTotal < insight.albumTotal) {
-      return L10nService().translate('insight_habit_album');
-    }
+    if (insight.diaryTotal > insight.albumTotal) return L10nService().translate('insight_habit_diary');
+    if (insight.diaryTotal < insight.albumTotal) return L10nService().translate('insight_habit_album');
     return L10nService().translate('insight_habit_balance');
   }
 

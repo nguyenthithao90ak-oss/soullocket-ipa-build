@@ -10,9 +10,8 @@ extension _InsightOfflineContributionCardsExt on _LoveInsightsScreenState {
         children: [
           _buildCardTitle(
             icon: Icons.wifi_off_rounded,
-            title: _isSingle
-                ? L10nService().translate('home_nhponlineg_42a0ba')
-                : L10nService().translate('home_trngthionl_e20b34'),
+            title:
+                _isSingle ? L10nService().translate('home_nhponlineg_42a0ba') : L10nService().translate('home_trngthionl_e20b34'),
             subtitle: _isSingle
                 ? L10nService().translate('home_osngybnria_cb6f93')
                 : L10nService().translate('home_numtngivng_9f01d2'),
@@ -114,7 +113,8 @@ extension _InsightOfflineContributionCardsExt on _LoveInsightsScreenState {
           _buildCardTitle(
             icon: Icons.balance_rounded,
             title: L10nService().translate('home_nggpchotnh_b78922'),
-            subtitle: L10nService().translate('home_tnhtheonht_08e94d'),
+            subtitle:
+                L10nService().translate('home_tnhtheonht_08e94d'),
           ),
           SLSpacing.h16,
           Row(

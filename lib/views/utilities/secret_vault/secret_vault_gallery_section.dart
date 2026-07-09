@@ -20,8 +20,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(18),
-        border:
-            Border.all(color: const Color(0xFFFF5252).withValues(alpha: 0.4)),
+        border: Border.all(color: const Color(0xFFFF5252).withValues(alpha: 0.4)),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFFF1744).withValues(alpha: 0.15),
@@ -150,8 +149,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                const Color(0xFFE91E63).withValues(alpha: 0.3),
+                            color: const Color(0xFFE91E63).withValues(alpha: 0.3),
                             blurRadius: 10,
                           ),
                         ],
@@ -271,8 +269,8 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                 if (_hasPendingReset) ...[
                   const SizedBox(height: 12),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFF6D00).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
@@ -381,7 +379,8 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                   color: const Color(0xFF9C27B0).withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: const Color(0xFFCE93D8).withValues(alpha: 0.3)),
+                      color:
+                          const Color(0xFFCE93D8).withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   _hasMorePhotos
@@ -400,8 +399,8 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                   onTap: _isLoadingMorePhotos ? null : _loadMorePhotos,
                   borderRadius: 20,
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
@@ -422,7 +421,8 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                                 width: 12,
                                 height: 12,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Color(0xFFCE93D8)))
+                                    strokeWidth: 2,
+                                    color: Color(0xFFCE93D8)))
                             : const Icon(Icons.history_rounded,
                                 size: 14, color: Color(0xFFCE93D8)),
                         const SizedBox(width: 5),

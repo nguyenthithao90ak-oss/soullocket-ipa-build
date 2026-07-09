@@ -17,7 +17,7 @@ class StoragePickerService {
   static const int pickerImageQuality = AppConfig.imageCompressQuality;
   static const double pickerMaxWidth = 1080;
   static const double pickerMaxHeight = 1080;
-  static const int maxGallerySelectionPerBatch = 999;
+  static const int maxGallerySelectionPerBatch = 30;
 
   static int clampImagePickLimit(
     int? requested, {
@@ -52,6 +52,7 @@ class StoragePickerService {
         final file = await FilePicker.pickFile(
           type: FileType.custom,
           allowedExtensions: storageMusicPickerExtensions,
+          compressionQuality: 0,
         );
         if (file != null) {
           return platformFileToXFile(file);
@@ -66,6 +67,7 @@ class StoragePickerService {
       final file = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: storageMusicPickerExtensions,
+        compressionQuality: 0,
       );
       if (file == null) {
         return null;
@@ -80,6 +82,7 @@ class StoragePickerService {
       try {
         final file = await FilePicker.pickFile(
           type: FileType.image,
+          compressionQuality: 0,
         );
         if (file != null) {
           return platformFileToXFile(file);
@@ -111,6 +114,7 @@ class StoragePickerService {
       try {
         final result = await FilePicker.pickFiles(
           type: FileType.image,
+          compressionQuality: 0,
         );
         final files = (result?.files ?? const <PlatformFile>[])
             .map(platformFileToXFile)

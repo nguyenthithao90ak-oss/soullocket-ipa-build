@@ -219,9 +219,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       final preferences = results[1] as SingleMatchPreferences;
       final blocked = Set<String>.from(results[2] as Set);
 
-      final displayName = (settings['nameU1'] ??
-              settings['houseName'] ??
-              L10nService().translate('match_bn_1fd75b'))
+      final displayName = (settings['nameU1'] ?? settings['houseName'] ?? L10nService().translate('match_bn_1fd75b'))
           .toString()
           .trim();
       final houseName =
@@ -243,9 +241,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         _savedPreferences = preferences;
         _draftPreferences = preferences;
         _blockedHouseIds = blocked;
-        _displayName = displayName.isEmpty
-            ? L10nService().translate('match_bn_1fd75b')
-            : displayName;
+        _displayName = displayName.isEmpty ? L10nService().translate('match_bn_1fd75b') : displayName;
         _houseName = houseName.isEmpty ? widget.houseId : houseName;
         _avatarUrl = avatarUrl;
         _myDob = dob;
@@ -696,8 +692,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
     final candidate = scored.candidate;
     if ((isVideo && !scored.canVideoCall) ||
         (!isVideo && !scored.canAudioCall)) {
-      _showSnack(L10nService().translate('match_hsnychammo_561339'),
-          isError: true);
+      _showSnack(L10nService().translate('match_hsnychammo_561339'), isError: true);
       return;
     }
     if (_callingHouseId != null) {
@@ -882,9 +877,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                             fontSize: compactWidth ? 12 : 13,
                           ),
                           tabs: <Tab>[
-                            Tab(
-                                text: L10nService()
-                                    .translate('match_ghpni_91676a')),
+                            Tab(text: L10nService().translate('match_ghpni_91676a')),
                             const Tab(text: 'Trò chuyện'),
                             const Tab(text: 'Cuộc gọi'),
                           ],
@@ -929,9 +922,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
   }
 
   Widget _buildHeaderCard() {
-    final ageText = _myAge == null
-        ? L10nService().translate('match_chactui_a686b2')
-        : '$_myAge tuổi';
+    final ageText = _myAge == null ? L10nService().translate('match_chactui_a686b2') : '$_myAge tuổi';
     final goalText = _choiceLabel(_goalOptions, _currentPreferences.goal);
     return _SingleMatchHeaderCard(
       avatarUrl: _avatarUrl,
@@ -1174,7 +1165,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       children: <Widget>[
         _buildSettingsSection(
           title: L10nService().translate('match_hshinthkhi_3fa84b'),
-          subtitle: L10nService().translate('match_avatarbiov_6b5c42'),
+          subtitle:
+              L10nService().translate('match_avatarbiov_6b5c42'),
           child: Column(
             children: <Widget>[
               Row(
@@ -1200,8 +1192,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                         const SizedBox(height: 4),
                         Text(
                           (_mySettings['bio'] ?? '').toString().trim().isEmpty
-                              ? L10nService()
-                                  .translate('match_chacbiocng_f4c0b3')
+                              ? L10nService().translate('match_chacbiocng_f4c0b3')
                               : (_mySettings['bio'] ?? '').toString().trim(),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -1252,8 +1243,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                     ),
                     TextButton(
                       onPressed: _pickDob,
-                      child:
-                          Text(L10nService().translate('match_cpnht_3b7db4')),
+                      child: Text(L10nService().translate('match_cpnht_3b7db4')),
                     ),
                   ],
                 ),
@@ -1264,7 +1254,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         const SizedBox(height: 14),
         _buildSettingsSection(
           title: L10nService().translate('match_poolvmodeg_7fc33d'),
-          subtitle: L10nService().translate('match_btxuthintr_279295'),
+          subtitle:
+              L10nService().translate('match_btxuthintr_279295'),
           child: Column(
             children: <Widget>[
               SwitchListTile.adaptive(
@@ -1335,7 +1326,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         const SizedBox(height: 14),
         _buildSettingsSection(
           title: L10nService().translate('match_tuibnmungp_0fc277'),
-          subtitle: L10nService().translate('match_thuttonuti_fa0b79'),
+          subtitle:
+              L10nService().translate('match_thuttonuti_fa0b79'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -1375,7 +1367,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         const SizedBox(height: 14),
         _buildSettingsSection(
           title: L10nService().translate('match_bnmungpngi_d21532'),
-          subtitle: L10nService().translate('match_mctiunystn_614ab0'),
+          subtitle:
+              L10nService().translate('match_mctiunystn_614ab0'),
           child: Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -1412,7 +1405,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         const SizedBox(height: 14),
         _buildSettingsSection(
           title: L10nService().translate('match_vibegingni_e6402c'),
-          subtitle: L10nService().translate('match_dngutinnhn_c21718'),
+          subtitle:
+              L10nService().translate('match_dngutinnhn_c21718'),
           child: Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -1449,7 +1443,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         const SizedBox(height: 14),
         _buildSettingsSection(
           title: L10nService().translate('match_sthchnibt_32a2e6'),
-          subtitle: L10nService().translate('match_nhpbngduph_108600'),
+          subtitle:
+              L10nService().translate('match_nhpbngduph_108600'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -1495,14 +1490,16 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
         const SizedBox(height: 14),
         _buildSettingsSection(
           title: L10nService().translate('match_limukhimat_05cb9f'),
-          subtitle: L10nService().translate('match_mtintrongn_109f85'),
+          subtitle:
+              L10nService().translate('match_mtintrongn_109f85'),
           child: TextField(
             controller: _introController,
             minLines: 3,
             maxLines: 5,
             maxLength: 180,
             decoration: InputDecoration(
-              hintText: L10nService().translate('match_vdmnhthchn_afb6c9'),
+              hintText:
+                  L10nService().translate('match_vdmnhthchn_afb6c9'),
               filled: true,
               fillColor: const Color(0xFFF9F4FF),
               border: OutlineInputBorder(
@@ -1529,9 +1526,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                   )
                 : const Icon(Icons.save_rounded),
             label: Text(
-              _isSaving
-                  ? L10nService().translate('match_anglu_4d30b6')
-                  : L10nService().translate('match_lucitghpni_394565'),
+              _isSaving ? L10nService().translate('match_anglu_4d30b6') : L10nService().translate('match_lucitghpni_394565'),
               style: SLTheme.quicksand(fontWeight: FontWeight.w900),
             ),
           ),
@@ -1588,8 +1583,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
               onPressed: () async {
                 final roomId = await showDialog<String>(
                   context: context,
-                  builder: (_) =>
-                      SingleMatchSecretCodeDialog(houseId: widget.houseId),
+                  builder: (_) => SingleMatchSecretCodeDialog(houseId: widget.houseId),
                 );
                 if (roomId != null && mounted) {
                   Navigator.push(
@@ -1605,8 +1599,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                 }
               },
               icon: const Icon(Icons.vpn_key_rounded, size: 18),
-              label: Text('Nhập mã',
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
+              label: Text('Nhập mã', style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF7C61FF),
               ),

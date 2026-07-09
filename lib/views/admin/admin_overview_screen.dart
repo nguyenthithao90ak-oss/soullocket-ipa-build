@@ -51,25 +51,11 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
 
     try {
       final results = await Future.wait([
-        FirebaseFirestore.instance
-            .collection('reports')
-            .count()
-            .get()
-            .timeout(const Duration(seconds: 8)),
-        FirebaseFirestore.instance
-            .collection('social_posts')
-            .count()
-            .get()
-            .timeout(const Duration(seconds: 8)),
+        FirebaseFirestore.instance.collection('reports').count().get().timeout(const Duration(seconds: 8)),
+        FirebaseFirestore.instance.collection('social_posts').count().get().timeout(const Duration(seconds: 8)),
         _db.child('support_tickets').get().timeout(const Duration(seconds: 8)),
-        _db
-            .child(AppConfig.maintenanceModePath)
-            .get()
-            .timeout(const Duration(seconds: 5)),
-        _db
-            .child(AppConfig.communityMaintenanceModePath)
-            .get()
-            .timeout(const Duration(seconds: 5)),
+        _db.child(AppConfig.maintenanceModePath).get().timeout(const Duration(seconds: 5)),
+        _db.child(AppConfig.communityMaintenanceModePath).get().timeout(const Duration(seconds: 5)),
       ]);
 
       final snap0 = results[0] as AggregateQuerySnapshot;
@@ -102,8 +88,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
         _totalSupportTickets = totalTickets;
         _unreadSupportTickets = unreadTickets;
         _isMaintenanceMode = (results[3] as DataSnapshot).value == true;
-        _isCommunityMaintenanceMode =
-            (results[4] as DataSnapshot).value == true;
+        _isCommunityMaintenanceMode = (results[4] as DataSnapshot).value == true;
         _lastUpdatedAt = DateTime.now();
         _errorText = null;
       });
@@ -165,9 +150,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            value
-                ? context.tr('admin_btbotrcngn_270bad')
-                : context.tr('admin_ttbotrcngn_9c7665'),
+            value ? context.tr('admin_btbotrcngn_270bad') : context.tr('admin_ttbotrcngn_9c7665'),
           ),
         ),
       );
@@ -248,12 +231,11 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                sectionTag(context.tr(
-                                                    'admin_dashboardt_954f1f')),
+                                                sectionTag(
+                                                    context.tr('admin_dashboardt_954f1f')),
                                                 SLSpacing.h12,
                                                 Text(
-                                                  context.tr(
-                                                      'admin_theodinhan_44dfc9'),
+                                                  context.tr('admin_theodinhan_44dfc9'),
                                                   style: SLTheme.quicksand(
                                                     color: Colors.white,
                                                     fontSize: 30,
@@ -262,8 +244,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                 ),
                                                 SLSpacing.h12,
                                                 Text(
-                                                  context.tr(
-                                                      'admin_hinthdliuc_0d6528'),
+                                                  context.tr('admin_hinthdliuc_0d6528'),
                                                   style: SLTheme.quicksand(
                                                     color:
                                                         const Color(0xFFB7C1D6),
@@ -325,8 +306,8 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                                           _vipHouses -
                                                                           _bannedHouses)
                                                                       .toDouble(),
-                                                                  title: context
-                                                                      .tr('admin_thng_c10b85'),
+                                                                  title:
+                                                                      context.tr('admin_thng_c10b85'),
                                                                   radius: 30,
                                                                   titleStyle: const TextStyle(
                                                                       fontSize:
@@ -383,8 +364,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  context.tr(
-                                                      'admin_trngthihth_caf17e'),
+                                                  context.tr('admin_trngthihth_caf17e'),
                                                   style: SLTheme.quicksand(
                                                     color: Colors.white,
                                                     fontSize: 18,
@@ -417,10 +397,8 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                               children: [
                                                                 Text(
                                                                   _isMaintenanceMode
-                                                                      ? context.tr(
-                                                                          'admin_botrtonban_65c143')
-                                                                      : context.tr(
-                                                                          'admin_botrtonban_b4ed8c'),
+                                                                      ? context.tr('admin_botrtonban_65c143')
+                                                                      : context.tr('admin_botrtonban_b4ed8c'),
                                                                   style: SLTheme
                                                                       .quicksand(
                                                                     color: Colors
@@ -435,10 +413,8 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                                 SLSpacing.h8,
                                                                 Text(
                                                                   _isMaintenanceMode
-                                                                      ? context.tr(
-                                                                          'admin_ngidngthng_2c78b3')
-                                                                      : context.tr(
-                                                                          'admin_hthnghotng_006fd9'),
+                                                                      ? context.tr('admin_ngidngthng_2c78b3')
+                                                                      : context.tr('admin_hthnghotng_006fd9'),
                                                                   style: SLTheme
                                                                       .quicksand(
                                                                     color: const Color(
@@ -479,10 +455,8 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                               children: [
                                                                 Text(
                                                                   _isCommunityMaintenanceMode
-                                                                      ? context.tr(
-                                                                          'admin_botrcngnga_b6fd85')
-                                                                      : context.tr(
-                                                                          'admin_botrcngnga_5e948f'),
+                                                                      ? context.tr('admin_botrcngnga_b6fd85')
+                                                                      : context.tr('admin_botrcngnga_5e948f'),
                                                                   style: SLTheme
                                                                       .quicksand(
                                                                     color: Colors
@@ -497,10 +471,8 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                                 SLSpacing.h8,
                                                                 Text(
                                                                   _isCommunityMaintenanceMode
-                                                                      ? context.tr(
-                                                                          'admin_tnhnngcngn_3e9b83')
-                                                                      : context.tr(
-                                                                          'admin_tnhnngcngn_f6dcf7'),
+                                                                      ? context.tr('admin_tnhnngcngn_3e9b83')
+                                                                      : context.tr('admin_tnhnngcngn_f6dcf7'),
                                                                   style: SLTheme
                                                                       .quicksand(
                                                                     color: const Color(
@@ -564,31 +536,25 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                       children: [
                                         AdminStatCard(
                                           width: cardWidth,
-                                          title:
-                                              context.tr('admin_tngnh_c8a1f6'),
+                                          title: context.tr('admin_tngnh_c8a1f6'),
                                           value: '$_totalHouses',
-                                          subtitle: context
-                                              .tr('admin_bnghihouse_ec7358'),
+                                          subtitle: context.tr('admin_bnghihouse_ec7358'),
                                           color: const Color(0xFF4F8CFF),
                                           icon: Icons.home_work_rounded,
                                         ),
                                         AdminStatCard(
                                           width: cardWidth,
-                                          title:
-                                              context.tr('admin_boco_2e9037'),
+                                          title: context.tr('admin_boco_2e9037'),
                                           value: '$_totalReports',
-                                          subtitle: context
-                                              .tr('admin_bnghirepor_e7df60'),
+                                          subtitle: context.tr('admin_bnghirepor_e7df60'),
                                           color: const Color(0xFFFF6B81),
                                           icon: Icons.report_problem_rounded,
                                         ),
                                         AdminStatCard(
                                           width: cardWidth,
-                                          title:
-                                              context.tr('admin_bivit_998bbe'),
+                                          title: context.tr('admin_bivit_998bbe'),
                                           value: '$_totalFeeds',
-                                          subtitle: context
-                                              .tr('admin_bnghisocia_bab4d4'),
+                                          subtitle: context.tr('admin_bnghisocia_bab4d4'),
                                           color: const Color(0xFF00C896),
                                           icon: Icons.dynamic_feed_rounded,
                                         ),
@@ -625,8 +591,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  context.tr(
-                                                      'admin_nhanhgncho_02d993'),
+                                                  context.tr('admin_nhanhgncho_02d993'),
                                                   style: SLTheme.quicksand(
                                                     color: Colors.white,
                                                     fontSize: 18,
@@ -637,26 +602,24 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                 OverviewListTile(
                                                   icon: Icons
                                                       .verified_user_rounded,
-                                                  title: context.tr(
-                                                      'admin_ngnhpadmin_eb6486'),
-                                                  subtitle: context.tr(
-                                                      'admin_xcthcbngfi_f16353'),
+                                                  title: context.tr('admin_ngnhpadmin_eb6486'),
+                                                  subtitle:
+                                                      context.tr('admin_xcthcbngfi_f16353'),
                                                 ),
                                                 SLSpacing.h12,
                                                 OverviewListTile(
                                                   icon: Icons.insights_rounded,
-                                                  title: context.tr(
-                                                      'admin_dashboardt_954f1f'),
-                                                  subtitle: context.tr(
-                                                      'admin_hinthhouse_105d2e'),
+                                                  title: context.tr('admin_dashboardt_954f1f'),
+                                                  subtitle:
+                                                      context.tr('admin_hinthhouse_105d2e'),
                                                 ),
                                                 SLSpacing.h12,
                                                 OverviewListTile(
                                                   icon: Icons.toggle_on_rounded,
-                                                  title: context.tr(
-                                                      'admin_maintenanc_96cb53'),
-                                                  subtitle: context.tr(
-                                                      'admin_btttnhanht_822a70'),
+                                                  title:
+                                                      context.tr('admin_maintenanc_96cb53'),
+                                                  subtitle:
+                                                      context.tr('admin_btttnhanht_822a70'),
                                                 ),
                                               ],
                                             ),
@@ -674,8 +637,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  context.tr(
-                                                      'admin_phinngnhp_d906a2'),
+                                                  context.tr('admin_phinngnhp_d906a2'),
                                                   style: SLTheme.quicksand(
                                                     color: Colors.white,
                                                     fontSize: 18,
@@ -691,8 +653,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                 MetaRow(
                                                   label: 'Email',
                                                   value: widget.user.email ??
-                                                      context.tr(
-                                                          'admin_chacemail_4d9065'),
+                                                      context.tr('admin_chacemail_4d9065'),
                                                 ),
                                                 SLSpacing.h12,
                                                 const MetaRow(
@@ -701,11 +662,9 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                                                 ),
                                                 SLSpacing.h12,
                                                 MetaRow(
-                                                  label: context
-                                                      .tr('admin_cpnht_3b7db4'),
+                                                  label: context.tr('admin_cpnht_3b7db4'),
                                                   value: _lastUpdatedAt == null
-                                                      ? context.tr(
-                                                          'admin_chatidliu_16f82f')
+                                                      ? context.tr('admin_chatidliu_16f82f')
                                                       : formatDateTime(
                                                           _lastUpdatedAt!),
                                                 ),

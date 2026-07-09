@@ -112,7 +112,7 @@ class StorageManagedUploadHelper {
       final path =
           'uploads/$currentUid/houses/${request.houseId}/${request.folderName}/$nowMs$fileExtension';
       final normalizedStoragePath = normalizeStorageWritePath(path);
-
+      
       if (onProgress != null) onProgress(0.4); // Start network upload
 
       try {
@@ -122,7 +122,7 @@ class StorageManagedUploadHelper {
                     path,
                     XFile(tempCompressedPath),
                     contentType: finalContentType,
-                    onProgress: onProgress != null
+                    onProgress: onProgress != null 
                         ? (p) => onProgress(0.4 + (p * 0.6))
                         : null,
                   )
@@ -130,7 +130,7 @@ class StorageManagedUploadHelper {
                     path,
                     uploadFile,
                     contentType: finalContentType,
-                    onProgress: onProgress != null
+                    onProgress: onProgress != null 
                         ? (p) => onProgress(0.4 + (p * 0.6))
                         : null,
                   );

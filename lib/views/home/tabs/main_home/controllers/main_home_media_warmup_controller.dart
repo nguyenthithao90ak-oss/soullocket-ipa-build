@@ -1,3 +1,4 @@
+
 part of '../../main_home_tab.dart';
 
 extension _MainHomeMediaWarmupController on _MainHomeTabState {
@@ -48,9 +49,8 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
     final logicalHeight = mediaQuery?.size.height ??
         ((view?.physicalSize.height ?? 0) / devicePixelRatio);
     final qualityScale = devicePixelRatio >= 2.5 ? 0.75 : 0.85;
-    final cacheWidth = (logicalWidth * devicePixelRatio * qualityScale)
-        .round()
-        .clamp(600, 1280);
+    final cacheWidth =
+        (logicalWidth * devicePixelRatio * qualityScale).round().clamp(600, 1280);
     final cacheHeight = (logicalHeight * devicePixelRatio * qualityScale)
         .round()
         .clamp(960, 1920);

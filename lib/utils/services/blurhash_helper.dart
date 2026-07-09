@@ -11,8 +11,7 @@ class BlurHashHelper {
   static Future<String?> generateBlurHash(String filePath) async {
     try {
       // 1. Compress image to a very small version (e.g. 32x32) for BlurHash
-      final Uint8List? smallImageBytes =
-          await FlutterImageCompress.compressWithFile(
+      final Uint8List? smallImageBytes = await FlutterImageCompress.compressWithFile(
         filePath,
         minWidth: 32,
         minHeight: 32,
@@ -37,8 +36,7 @@ class BlurHashHelper {
     try {
       return await compute(_processBlurHashBytes, bytes);
     } catch (e) {
-      debugPrint(
-          'Error generating BlurHash from bytes: ${AppErrorMapper.resolve(
+      debugPrint('Error generating BlurHash from bytes: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Không thể tạo BlurHash từ dữ liệu ảnh.',
       ).message}');
@@ -56,7 +54,7 @@ class BlurHashHelper {
       final img.Image smallImage = (image.width > 32 || image.height > 32)
           ? img.copyResize(image, width: 32, height: 32)
           : image;
-
+      
       return await BlurHash.encode(smallImage.getBytes(), 4, 3);
     } catch (e) {
       return null;

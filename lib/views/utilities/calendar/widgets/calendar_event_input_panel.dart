@@ -98,28 +98,26 @@ class CalendarEventInputPanel extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.72),
                     borderRadius: BorderRadius.circular(18),
-                    border:
-                        Border.all(color: Colors.black.withValues(alpha: 0.05)),
+                    border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
                   ),
                   padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 16),
                   child: TextField(
                     controller: controller,
                     minLines: 1,
                     maxLines: 3,
-                    maxLength: 100,
                     textInputAction: TextInputAction.done,
                     style: SLTheme.quicksand(
                       color: SLTheme.textMain,
                       fontWeight: FontWeight.w700,
                     ),
                     decoration: InputDecoration(
-                      hintText: context.tr('util_vd1930givi_57624e'),
+                      hintText:
+                          context.tr('util_vd1930givi_57624e'),
                       hintStyle: SLTheme.quicksand(
                         color: SLTheme.textMuted,
                         fontWeight: FontWeight.w600,
                       ),
                       border: InputBorder.none,
-                      counterText: '',
                     ),
                     onSubmitted: (_) => onAdd(),
                   ),

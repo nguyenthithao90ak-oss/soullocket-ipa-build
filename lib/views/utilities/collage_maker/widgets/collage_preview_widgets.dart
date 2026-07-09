@@ -1,4 +1,4 @@
-part of '../../collage_maker_screen.dart';
+﻿part of '../../collage_maker_screen.dart';
 
 extension _CollagePreviewWidgets on _CollageMakerScreenState {
   Widget _buildSelectedImagesPreview() {
@@ -44,8 +44,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                   SizedBox(width: compact ? 6 : 8),
                   Container(
                     height: 34,
-                    padding:
-                        EdgeInsets.symmetric(horizontal: compact ? 10 : 12),
+                    padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 12),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: const Color(0xFFF7EADF),
@@ -53,9 +52,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                       border: Border.all(color: _paperLine),
                     ),
                     child: Text(
-                      hasPhotos
-                          ? '${photos.length} ảnh'
-                          : context.tr('util_0nh_e58f05'),
+                      hasPhotos ? '${photos.length} ảnh' : context.tr('util_0nh_e58f05'),
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w800,
                         color: _paperRoseDeep,
@@ -103,8 +100,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                     scrollDirection: Axis.horizontal,
                     itemCount: photos.length,
                     padding: EdgeInsets.zero,
-                    separatorBuilder: (_, __) =>
-                        SizedBox(width: compact ? 8 : 10),
+                    separatorBuilder: (_, __) => SizedBox(width: compact ? 8 : 10),
                     itemBuilder: (context, index) {
                       final photo = photos[index];
                       final memoryItem = _isFromMemory && memoryItems != null
@@ -139,14 +135,12 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                                       width: 26,
                                       height: 26,
                                       decoration: BoxDecoration(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.96),
+                                        color: Colors.white.withValues(alpha: 0.96),
                                         shape: BoxShape.circle,
                                         border: Border.all(color: _paperLine),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: _paperCocoa.withValues(
-                                                alpha: 0.10),
+                                            color: _paperCocoa.withValues(alpha: 0.10),
                                             blurRadius: 8,
                                             offset: const Offset(0, 3),
                                           ),
@@ -194,8 +188,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
         return canAccept;
       },
       onLeave: (_) => _clearHoveredSwapTarget(),
-      onAcceptWithDetails: (details) =>
-          _swapEditablePhotos(details.data, index),
+      onAcceptWithDetails: (details) => _swapEditablePhotos(details.data, index),
       builder: (context, _, __) {
         return GestureDetector(
           onTap: () => _selectEditablePhoto(index),
@@ -233,8 +226,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                   left: 6,
                   bottom: 6,
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                     decoration: BoxDecoration(
                       color: _paperCocoa.withValues(alpha: 0.42),
                       borderRadius: BorderRadius.circular(999),

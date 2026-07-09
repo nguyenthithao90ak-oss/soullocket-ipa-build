@@ -49,8 +49,7 @@ class AiCounselorService {
           .whereType<AiChatHistoryMessage>()
           .toList(growable: false);
     } catch (error) {
-      debugPrint(
-          '[AiCounselor] getAiChatHistory failed: ${AppErrorMapper.resolve(error).message}');
+      debugPrint('[AiCounselor] getAiChatHistory failed: ${AppErrorMapper.resolve(error).message}');
       return const <AiChatHistoryMessage>[];
     }
   }
@@ -92,8 +91,7 @@ class AiCounselorService {
       });
       return true;
     } catch (error) {
-      debugPrint(
-          '[AiCounselor] reportAiReply failed: ${AppErrorMapper.resolve(error).message}');
+      debugPrint('[AiCounselor] reportAiReply failed: ${AppErrorMapper.resolve(error).message}');
       return false;
     }
   }

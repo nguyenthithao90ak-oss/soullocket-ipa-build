@@ -24,8 +24,7 @@ class DeviceTrustGuardState {
   })  : isTrusted = false,
         isPendingDevice = false,
         isTrustUnavailable = true,
-        pendingMessage =
-            message ?? L10nService().translate('home_khngthxcmi_2b9511'),
+        pendingMessage = message ?? L10nService().translate('home_khngthxcmi_2b9511'),
         autoApproveAtMs = 0;
 
   final bool isTrusted;
@@ -116,7 +115,8 @@ class DeviceTrustGuard {
 
       if (trustState.isBlocked) {
         return DeviceTrustGuardState.unavailable(
-          message: L10nService().translate('home_thitbnyang_23704c'),
+          message:
+              L10nService().translate('home_thitbnyang_23704c'),
         );
       }
 

@@ -39,13 +39,12 @@ class VoiceScreen extends StatefulWidget {
   State<VoiceScreen> createState() => _VoiceScreenState();
 }
 
-class _VoiceScreenState extends State<VoiceScreen>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+class _VoiceScreenState extends State<VoiceScreen> with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
       tooltip: 'Hướng dẫn',
-      icon:
-          const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
+      icon: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -66,14 +65,11 @@ class _VoiceScreenState extends State<VoiceScreen>
             children: [
               Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text(
-                  '- Ghi lại các lời chúc, giọng hát, hoặc tiếng ngáy của người ấy để lưu giữ.\n- Lưu trữ trên mây, không lo mất file khi đổi điện thoại.'),
+              Text('- Ghi lại các lời chúc, giọng hát, hoặc tiếng ngáy của người ấy để lưu giữ.\n- Lưu trữ trên mây, không lo mất file khi đổi điện thoại.'),
               SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text(
-                  '- Bấm và giữ biểu tượng Micro để bắt đầu ghi âm.\n- Đặt tên cho bản ghi và lưu lại.\n- Bấm nút Phát để nghe lại bất cứ lúc nào, âm thanh sẽ đồng bộ sang máy người kia.'),
+              Text('- Bấm và giữ biểu tượng Micro để bắt đầu ghi âm.\n- Đặt tên cho bản ghi và lưu lại.\n- Bấm nút Phát để nghe lại bất cứ lúc nào, âm thanh sẽ đồng bộ sang máy người kia.'),
             ],
           ),
         ),
@@ -170,6 +166,7 @@ class _VoiceScreenState extends State<VoiceScreen>
         () => FilePicker.pickFile(
           type: FileType.custom,
           allowedExtensions: const ['mp3', 'm4a', 'aac', 'ogg'],
+          compressionQuality: 0,
         ),
       );
 
@@ -216,29 +213,28 @@ class _VoiceScreenState extends State<VoiceScreen>
       );
 
       // Bỏ block UI: chạy ngầm
-      unawaited(_queueAndUploadVoiceFile(
-        localPath: persistedPath,
-        extension: safeExtension,
-        fileName: file.name,
-        mimeType: mimeType,
-        durationMs: durationMs,
-      ).then((_) {
-        _showMessage(successMsg);
-      }).catchError((e, stackTrace) {
-        debugPrint('[VoiceScreen] _pickAndUploadVoice async catchError: $e');
-        unawaited(ErrorLoggerService.instance.logError(
-            e, stackTrace as StackTrace?,
-            reason: 'pickAndUploadVoice_async_error'));
-        final errorInfo = AppErrorMapper.resolve(
-          e,
-          fallbackMessage: fallbackErrMsg,
-        );
-        _showMessage(errorInfo.message);
-      }));
+      unawaited(
+        _queueAndUploadVoiceFile(
+          localPath: persistedPath,
+          extension: safeExtension,
+          fileName: file.name,
+          mimeType: mimeType,
+          durationMs: durationMs,
+        ).then((_) {
+          _showMessage(successMsg);
+        }).catchError((e, stackTrace) {
+          debugPrint('[VoiceScreen] _pickAndUploadVoice async catchError: $e');
+          unawaited(ErrorLoggerService.instance.logError(e, stackTrace as StackTrace?, reason: 'pickAndUploadVoice_async_error'));
+          final errorInfo = AppErrorMapper.resolve(
+            e,
+            fallbackMessage: fallbackErrMsg,
+          );
+          _showMessage(errorInfo.message);
+        })
+      );
     } catch (e, stackTrace) {
       debugPrint('[VoiceScreen] _pickAndUploadVoice catch: $e');
-      unawaited(ErrorLoggerService.instance
-          .logError(e, stackTrace, reason: 'pickAndUploadVoice_sync_error'));
+      unawaited(ErrorLoggerService.instance.logError(e, stackTrace, reason: 'pickAndUploadVoice_sync_error'));
       final errorInfo = AppErrorMapper.resolve(
         e,
         fallbackMessage: fallbackErrMsg,
@@ -328,8 +324,7 @@ class _VoiceScreenState extends State<VoiceScreen>
       });
     } catch (e, stackTrace) {
       debugPrint('[VoiceScreen] _toggleRecordAndUpload catch: $e');
-      unawaited(ErrorLoggerService.instance
-          .logError(e, stackTrace, reason: 'toggleRecordAndUpload_error'));
+      unawaited(ErrorLoggerService.instance.logError(e, stackTrace, reason: 'toggleRecordAndUpload_error'));
       final errorInfo = AppErrorMapper.resolve(
         e,
         fallbackMessage: fallbackErrMsg,
@@ -396,32 +391,30 @@ class _VoiceScreenState extends State<VoiceScreen>
         bytes: await recordFile.readAsBytes(),
         extension: 'm4a',
       );
-      unawaited(_queueAndUploadVoiceFile(
-        localPath: persistedPath,
-        extension: 'm4a',
-        fileName: p.basename(recordPath),
-        mimeType: _detectMimeType('m4a'),
-        durationMs: durationMs,
-      ).then((_) {
-        _showMessage(
-          reachedLimit ? limitReachedMsg : successMsg,
-        );
-      }).catchError((e, stackTrace) {
-        debugPrint(
-            '[VoiceScreen] _stopRecordingAndUpload async catchError: $e');
-        unawaited(ErrorLoggerService.instance.logError(
-            e, stackTrace as StackTrace?,
-            reason: 'stopRecordingAndUpload_async_error'));
-        final errorInfo = AppErrorMapper.resolve(
-          e,
-          fallbackMessage: fallbackErrMsg,
-        );
-        _showMessage(errorInfo.message);
-      }));
+      unawaited(
+        _queueAndUploadVoiceFile(
+          localPath: persistedPath,
+          extension: 'm4a',
+          fileName: p.basename(recordPath),
+          mimeType: _detectMimeType('m4a'),
+          durationMs: durationMs,
+        ).then((_) {
+          _showMessage(
+            reachedLimit ? limitReachedMsg : successMsg,
+          );
+        }).catchError((e, stackTrace) {
+          debugPrint('[VoiceScreen] _stopRecordingAndUpload async catchError: $e');
+          unawaited(ErrorLoggerService.instance.logError(e, stackTrace as StackTrace?, reason: 'stopRecordingAndUpload_async_error'));
+          final errorInfo = AppErrorMapper.resolve(
+            e,
+            fallbackMessage: fallbackErrMsg,
+          );
+          _showMessage(errorInfo.message);
+        })
+      );
     } catch (e, stackTrace) {
       debugPrint('[VoiceScreen] _stopRecordingAndUpload catch: $e');
-      unawaited(ErrorLoggerService.instance.logError(e, stackTrace,
-          reason: 'stopRecordingAndUpload_sync_error'));
+      unawaited(ErrorLoggerService.instance.logError(e, stackTrace, reason: 'stopRecordingAndUpload_sync_error'));
       final errorInfo = AppErrorMapper.resolve(
         e,
         fallbackMessage: fallbackErrMsg,
@@ -465,8 +458,7 @@ class _VoiceScreenState extends State<VoiceScreen>
     }
     headers.putIfAbsent('Content-Type', () => mimeType);
 
-    debugPrint(
-        '[VoiceScreen] Uploading voice bytes to R2 signed URL: $uploadUrl');
+    debugPrint('[VoiceScreen] Uploading voice bytes to R2 signed URL: $uploadUrl');
 
     try {
       final uploadResponse = await http
@@ -476,16 +468,14 @@ class _VoiceScreenState extends State<VoiceScreen>
             body: bytes,
           )
           .timeout(const Duration(seconds: 20));
-      debugPrint(
-          '[VoiceScreen] R2 response status: ${uploadResponse.statusCode}');
+      debugPrint('[VoiceScreen] R2 response status: ${uploadResponse.statusCode}');
       if (uploadResponse.statusCode < 200 || uploadResponse.statusCode >= 300) {
         throw Exception(
             'Tải audio lên máy chủ thất bại (${uploadResponse.statusCode}). Response: ${uploadResponse.body}');
       }
     } catch (e, stackTrace) {
       debugPrint('[VoiceScreen] HTTP put to R2 error: $e');
-      unawaited(ErrorLoggerService.instance
-          .logError(e, stackTrace, reason: 'r2_upload_put_error'));
+      unawaited(ErrorLoggerService.instance.logError(e, stackTrace, reason: 'r2_upload_put_error'));
       rethrow;
     }
 
@@ -508,28 +498,27 @@ class _VoiceScreenState extends State<VoiceScreen>
     final errCreateSession = context.tr('util_khngthtoph_d7489b');
     try {
       final callable = _functions.httpsCallable('createVoiceUploadSession');
-      final response = await callable.call(<String, dynamic>{
+      final response = await callable
+          .call(<String, dynamic>{
         'houseId': widget.houseId.trim(),
         'fileName': fileName.trim(),
         'contentType': contentType.trim(),
-      }).timeout(const Duration(seconds: 15));
+      })
+          .timeout(const Duration(seconds: 15));
       final data = response.data;
       if (data is! Map) {
         throw Exception('Voice upload session is invalid.');
       }
       return Map<String, dynamic>.from(data);
     } on FirebaseFunctionsException catch (error, stackTrace) {
-      debugPrint(
-          '[VoiceScreen] createVoiceUploadSession FirebaseFunctionsException: ${error.code} - ${error.message}');
-      unawaited(ErrorLoggerService.instance.logError(error, stackTrace,
-          reason: 'createVoiceUploadSession_firebase_error'));
+      debugPrint('[VoiceScreen] createVoiceUploadSession FirebaseFunctionsException: ${error.code} - ${error.message}');
+      unawaited(ErrorLoggerService.instance.logError(error, stackTrace, reason: 'createVoiceUploadSession_firebase_error'));
       throw Exception(error.message?.trim().isNotEmpty == true
           ? error.message!.trim()
           : errCreateSession);
     } catch (error, stackTrace) {
       debugPrint('[VoiceScreen] createVoiceUploadSession error: $error');
-      unawaited(ErrorLoggerService.instance.logError(error, stackTrace,
-          reason: 'createVoiceUploadSession_unknown_error'));
+      unawaited(ErrorLoggerService.instance.logError(error, stackTrace, reason: 'createVoiceUploadSession_unknown_error'));
       rethrow;
     }
   }
@@ -544,7 +533,8 @@ class _VoiceScreenState extends State<VoiceScreen>
     final errFinalize = context.tr('util_khngthhont_91a9c4');
     try {
       final callable = _functions.httpsCallable('finalizeVoiceUpload');
-      await callable.call(<String, dynamic>{
+      await callable
+          .call(<String, dynamic>{
         'houseId': widget.houseId.trim(),
         'sessionId': sessionId.trim(),
         'authorName': widget.myName.trim(),
@@ -552,19 +542,17 @@ class _VoiceScreenState extends State<VoiceScreen>
         'mimeType': mimeType.trim(),
         'durationMs': durationMs,
         'size': size,
-      }).timeout(const Duration(seconds: 15));
+      })
+          .timeout(const Duration(seconds: 15));
     } on FirebaseFunctionsException catch (error, stackTrace) {
-      debugPrint(
-          '[VoiceScreen] finalizeVoiceUpload FirebaseFunctionsException: ${error.code} - ${error.message}');
-      unawaited(ErrorLoggerService.instance.logError(error, stackTrace,
-          reason: 'finalizeVoiceUpload_firebase_error'));
+      debugPrint('[VoiceScreen] finalizeVoiceUpload FirebaseFunctionsException: ${error.code} - ${error.message}');
+      unawaited(ErrorLoggerService.instance.logError(error, stackTrace, reason: 'finalizeVoiceUpload_firebase_error'));
       throw Exception(error.message?.trim().isNotEmpty == true
           ? error.message!.trim()
           : errFinalize);
     } catch (error, stackTrace) {
       debugPrint('[VoiceScreen] finalizeVoiceUpload error: $error');
-      unawaited(ErrorLoggerService.instance.logError(error, stackTrace,
-          reason: 'finalizeVoiceUpload_unknown_error'));
+      unawaited(ErrorLoggerService.instance.logError(error, stackTrace, reason: 'finalizeVoiceUpload_unknown_error'));
       rethrow;
     }
   }
@@ -927,8 +915,7 @@ class _VoiceScreenState extends State<VoiceScreen>
       _pendingRetryUpload = null;
     } catch (e, stackTrace) {
       debugPrint('[VoiceScreen] _queueAndUploadVoiceFile error: $e');
-      unawaited(ErrorLoggerService.instance
-          .logError(e, stackTrace, reason: 'queueAndUploadVoiceFile_failed'));
+      unawaited(ErrorLoggerService.instance.logError(e, stackTrace, reason: 'queueAndUploadVoiceFile_failed'));
       rethrow;
     } finally {
       if (mounted) {
@@ -1009,17 +996,12 @@ class _VoiceScreenState extends State<VoiceScreen>
                 // Retro Screen
                 Container(
                   width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                   decoration: BoxDecoration(
-                    color: _isRecording
-                        ? const Color(0xFFFFEBEE)
-                        : const Color(0xFFE0F2F1),
+                    color: _isRecording ? const Color(0xFFFFEBEE) : const Color(0xFFE0F2F1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: _isRecording
-                          ? Colors.red.shade200
-                          : Colors.teal.shade200,
+                      color: _isRecording ? Colors.red.shade200 : Colors.teal.shade200,
                       width: 2,
                     ),
                   ),
@@ -1030,9 +1012,7 @@ class _VoiceScreenState extends State<VoiceScreen>
                         style: SLTheme.quicksand(
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
-                          color: _isRecording
-                              ? Colors.red.shade900
-                              : Colors.teal.shade900,
+                          color: _isRecording ? Colors.red.shade900 : Colors.teal.shade900,
                           letterSpacing: 1.1,
                         ),
                       ),
@@ -1067,9 +1047,7 @@ class _VoiceScreenState extends State<VoiceScreen>
                   child: ScaleTransition(
                     scale: _isRecording
                         ? Tween<double>(begin: 0.94, end: 1.06).animate(
-                            CurvedAnimation(
-                                parent: _bounceController,
-                                curve: Curves.easeInOut),
+                            CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut),
                           )
                         : const AlwaysStoppedAnimation(1.0),
                     child: AnimatedContainer(
@@ -1087,10 +1065,7 @@ class _VoiceScreenState extends State<VoiceScreen>
                               ),
                         boxShadow: [
                           BoxShadow(
-                            color: (_isRecording
-                                    ? Colors.red
-                                    : const Color(0xFF00B4DB))
-                                .withValues(alpha: 0.3),
+                            color: (_isRecording ? Colors.red : const Color(0xFF00B4DB)).withValues(alpha: 0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -1098,9 +1073,7 @@ class _VoiceScreenState extends State<VoiceScreen>
                         border: Border.all(color: Colors.white, width: 3),
                       ),
                       child: Icon(
-                        _isRecording
-                            ? Icons.mic_rounded
-                            : Icons.mic_none_rounded,
+                        _isRecording ? Icons.mic_rounded : Icons.mic_none_rounded,
                         color: Colors.white,
                         size: 32,
                       ),
@@ -1133,8 +1106,7 @@ class _VoiceScreenState extends State<VoiceScreen>
                     boxShadow: SLShadow.subtle,
                   ),
                   child: TextButton.icon(
-                    icon: const Icon(Icons.upload_file_rounded,
-                        color: SLColors.primary, size: 18),
+                    icon: const Icon(Icons.upload_file_rounded, color: SLColors.primary, size: 18),
                     label: Text(
                       'Tải lên file audio',
                       style: SLTheme.quicksand(
@@ -1143,9 +1115,7 @@ class _VoiceScreenState extends State<VoiceScreen>
                         fontSize: 13,
                       ),
                     ),
-                    onPressed: (_isUploading || _isRecording)
-                        ? null
-                        : _pickAndUploadVoice,
+                    onPressed: (_isUploading || _isRecording) ? null : _pickAndUploadVoice,
                   ),
                 ),
               ),
@@ -1186,8 +1156,7 @@ class _VoiceScreenState extends State<VoiceScreen>
               decoration: BoxDecoration(
                 color: SLColors.dangerLight,
                 borderRadius: BorderRadius.circular(16),
-                border:
-                    Border.all(color: SLColors.danger.withValues(alpha: 0.3)),
+                border: Border.all(color: SLColors.danger.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -1302,12 +1271,10 @@ class _VoiceScreenState extends State<VoiceScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color:
-                              const Color(0xFF00B4DB).withValues(alpha: 0.15),
+                          color: const Color(0xFF00B4DB).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                              color: const Color(0xFF00B4DB)
-                                  .withValues(alpha: 0.3)),
+                              color: const Color(0xFF00B4DB).withValues(alpha: 0.3)),
                         ),
                         child: Text(
                           L10nService().translateRecordsCount(items.length),
@@ -1340,8 +1307,7 @@ class _VoiceScreenState extends State<VoiceScreen>
                 ),
                 Expanded(
                   child: ListView.builder(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                     itemCount: items.length,
                     itemBuilder: (context, index) {
                       final item = items[index];
@@ -1358,8 +1324,7 @@ class _VoiceScreenState extends State<VoiceScreen>
                       final isLoading = _loadingKey == key;
 
                       return _AnimatedPressButton(
-                        onTap:
-                            hasPlayableSource ? () => _togglePlay(item) : null,
+                        onTap: hasPlayableSource ? () => _togglePlay(item) : null,
                         borderRadius: 18,
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 12),
@@ -1369,10 +1334,8 @@ class _VoiceScreenState extends State<VoiceScreen>
                             gradient: isPlaying
                                 ? LinearGradient(
                                     colors: [
-                                      const Color(0xFF00B4DB)
-                                          .withValues(alpha: 0.12),
-                                      const Color(0xFF0083B0)
-                                          .withValues(alpha: 0.06),
+                                      const Color(0xFF00B4DB).withValues(alpha: 0.12),
+                                      const Color(0xFF0083B0).withValues(alpha: 0.06),
                                     ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
@@ -1388,8 +1351,7 @@ class _VoiceScreenState extends State<VoiceScreen>
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: isPlaying
-                                  ? const Color(0xFF00B4DB)
-                                      .withValues(alpha: 0.5)
+                                  ? const Color(0xFF00B4DB).withValues(alpha: 0.5)
                                   : SLColors.borderLight,
                               width: isPlaying ? 1.5 : 1.0,
                             ),
@@ -1403,16 +1365,12 @@ class _VoiceScreenState extends State<VoiceScreen>
                                 decoration: BoxDecoration(
                                   gradient: isPlaying
                                       ? const LinearGradient(
-                                          colors: [
-                                            Color(0xFF00B4DB),
-                                            Color(0xFF0083B0)
-                                          ],
+                                          colors: [Color(0xFF00B4DB), Color(0xFF0083B0)],
                                         )
                                       : LinearGradient(
                                           colors: [
                                             SLColors.primaryLight,
-                                            SLColors.primaryLight
-                                                .withValues(alpha: 0.5),
+                                            SLColors.primaryLight.withValues(alpha: 0.5),
                                           ],
                                         ),
                                   shape: BoxShape.circle,
@@ -1432,9 +1390,7 @@ class _VoiceScreenState extends State<VoiceScreen>
                                           isPlaying
                                               ? Icons.pause_rounded
                                               : Icons.play_arrow_rounded,
-                                          color: isPlaying
-                                              ? Colors.white
-                                              : SLColors.primary,
+                                          color: isPlaying ? Colors.white : SLColors.primary,
                                           size: 26,
                                         ),
                                 ),
@@ -1442,11 +1398,11 @@ class _VoiceScreenState extends State<VoiceScreen>
                               const SizedBox(width: 14),
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      L10nService().translatePartnerMessage(
-                                          item['a']?.toString() ?? ''),
+                                      L10nService().translatePartnerMessage(item['a']?.toString() ?? ''),
                                       style: SLTheme.quicksand(
                                           color: SLColors.textPrimary,
                                           fontWeight: FontWeight.w800,
@@ -1478,8 +1434,7 @@ class _VoiceScreenState extends State<VoiceScreen>
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: SLTheme.quicksand(
-                                            color: SLColors.textSecond
-                                                .withValues(alpha: 0.6),
+                                            color: SLColors.textSecond.withValues(alpha: 0.6),
                                             fontWeight: FontWeight.w600,
                                             fontSize: 10.5),
                                       ),
@@ -1495,8 +1450,8 @@ class _VoiceScreenState extends State<VoiceScreen>
                               IconButton(
                                 icon: const Icon(Icons.delete_outline_rounded,
                                     color: SLColors.textSecond, size: 20),
-                                onPressed: () =>
-                                    _deleteVoice(key, item['aud']?.toString()),
+                                onPressed: () => _deleteVoice(
+                                    key, item['aud']?.toString()),
                               )
                             ],
                           ),
@@ -1629,10 +1584,7 @@ class _VoiceVisualizerState extends State<_VoiceVisualizer>
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: List.generate(4, (index) {
-            final double value =
-                math.sin((_controller.value * 2 * math.pi) + (index * 1.5)) *
-                        0.5 +
-                    0.5;
+            final double value = math.sin((_controller.value * 2 * math.pi) + (index * 1.5)) * 0.5 + 0.5;
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 1.5),
               width: 3,

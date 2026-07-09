@@ -1,8 +1,7 @@
+
 import 'dart:async';
 import 'dart:math';
-import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -95,9 +94,9 @@ class _LoginScreenState extends State<LoginScreen> {
     await Future<void>.delayed(const Duration(milliseconds: 1200));
     if (!mounted || _isLoading) return;
     final prefs = await SharedPreferences.getInstance();
-    final hasSeen = prefs.getBool('il_has_seen_sync_guide_v2') ?? false;
+    final hasSeen = prefs.getBool('il_has_seen_sync_guide') ?? false;
     if (!hasSeen) {
-      await prefs.setBool('il_has_seen_sync_guide_v2', true);
+      await prefs.setBool('il_has_seen_sync_guide', true);
       if (!mounted) return;
       _showSyncGuideDialog(context, enforceDelay: true);
     }
@@ -202,9 +201,19 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<String?> _readSavedGender([String? accountKey]) async {
-    // LUÔN LUÔN BẮT CHỌN GIỚI TÍNH KHI ĐĂNG NHẬP MỚI.
-    // Tránh lỗi iCloud / Google Backup đồng bộ SharedPreferences giữa 2 máy cùng tài khoản
-    // dẫn đến máy B (Nữ) tự động bị ép lấy vai của máy A (Nam) mà không được phép chọn.
+    final prefs = await SharedPreferences.getInstance();
+
+    String? savedGender;
+    if (accountKey != null && accountKey.isNotEmpty) {
+      final normalizedAccountKey = accountKey.trim().toLowerCase();
+      savedGender = prefs.getString('il_saved_gender_$normalizedAccountKey');
+    } else {
+      savedGender = prefs.getString('il_saved_gender');
+    }
+
+    if (savedGender == 'user1' || savedGender == 'user2') {
+      return savedGender;
+    }
     return null;
   }
 
@@ -280,7 +289,47 @@ class _LoginScreenState extends State<LoginScreen> {
     await prefs.remove(_pendingSignupAutoCreateHousePrefsKey);
   }
 
+  Future<bool> _prepareFirstHouseSetupForSocialAuth(
+    String accountKey, {
+    String? preferredRelationshipMode,
+  }) async {
+    final relationshipMode =
+        _authService.normalizeRelationshipMode(preferredRelationshipMode) ??
+            await _ensureRelationshipModeSelected(accountKey);
+    if (relationshipMode == null) {
+      await _authService.signOut();
+      if (mounted) {
+        _showErrorDialog(
+          'Bạn cần chọn Độc thân hoặc Có người yêu trước khi tiếp tục.',
+        );
+      }
+      return false;
+    }
 
+    await _authService.cacheRelationshipModeForEmail(
+      accountKey,
+      relationshipMode,
+    );
+
+    final role = await _askGender(accountKey);
+    if (role == null) {
+      await _authService.signOut();
+      if (mounted) {
+        _showErrorDialog(
+          'Bạn cần chọn vai trò tài khoản trước khi tiếp tục.',
+        );
+      }
+      return false;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('il_role', role);
+    await SecureStorageService.instance.write(SecureStorageService.keyRole, role);
+    await _authService.savePendingRelationshipModeForCurrentUser(
+      relationshipMode,
+    );
+    return true;
+  }
 
   void _setAuthTab(bool isLoginTab) {
     if (_isLoginTab == isLoginTab) return;
@@ -591,7 +640,20 @@ class _LoginScreenState extends State<LoginScreen> {
     AuthFeedbackDialogs.showError(context, message);
   }
 
-
+  void _showSuccessDialog(
+    String message, {
+    Widget? next,
+    bool autoContinue = false,
+  }) {
+    unawaited(
+      AuthFeedbackDialogs.showSuccessDialog(
+        context,
+        message: message,
+        next: next,
+        autoContinue: autoContinue,
+      ),
+    );
+  }
 
   void _handleForgotPasswordAction() {
     unawaited(ForgotPasswordLauncher.launch(context));
@@ -790,66 +852,39 @@ class _LoginScreenState extends State<LoginScreen> {
       listenable: L10nService(),
       builder: (context, _) {
         final l10n = L10nService();
-        final baseBg = _isLoginTab ? const Color(0xFFFDF7FA) : const Color(0xFFFDF8FC);
+        final backgroundColors = _isLoginTab
+            ? const [
+                Color(0xFFFDF7FA), // Very light soft pink-white
+                Color(0xFFFCF3F8), // Soft pink-white
+                Color(0xFFFFF0F7),
+                Color(0xFFFCECF6),
+              ]
+            : const [
+                Color(0xFFFDF8FC),
+                Color(0xFFFCF4FA),
+                Color(0xFFFBF0F8),
+                Color(0xFFF9EBF6),
+              ];
 
         return SensitiveContentGuard(
           child: Scaffold(
-            backgroundColor: baseBg,
+            backgroundColor: Colors.transparent,
             body: GestureDetector(
               behavior: HitTestBehavior.translucent,
               onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-              child: Stack(
-                children: [
-                  // --- Ambient Blobs ---
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 600),
-                    curve: Curves.easeOutCubic,
-                    top: _isLoginTab ? -100 : -50,
-                    left: _isLoginTab ? -50 : -100,
-                    child: Container(
-                      width: 350,
-                      height: 350,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFFFFD1E3).withValues(alpha: 0.5),
-                      ),
-                    ),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 360),
+                curve: Curves.easeOutCubic,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: backgroundColors,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 600),
-                    curve: Curves.easeOutCubic,
-                    bottom: _isLoginTab ? -150 : -100,
-                    right: _isLoginTab ? -100 : -150,
-                    child: Container(
-                      width: 450,
-                      height: 450,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFFE5CCFF).withValues(alpha: 0.45),
-                      ),
-                    ),
-                  ),
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 600),
-                    curve: Curves.easeOutCubic,
-                    top: _isLoginTab ? 200 : 100,
-                    right: _isLoginTab ? -50 : -80,
-                    child: Container(
-                      width: 250,
-                      height: 250,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFFFFDFD1).withValues(alpha: 0.35),
-                      ),
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
-                      child: Container(color: Colors.transparent),
-                    ),
-                  ),
-                  LayoutBuilder(
+                ),
+                child: Stack(
+                  children: [
+                    LayoutBuilder(
                       builder: (context, constraints) {
                         final isDesktop = constraints.maxWidth >= 920;
                         final isTablet = constraints.maxWidth >= 680 &&
@@ -933,7 +968,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 ),
                                                 const SizedBox(width: 6),
                                                 Text(
-                                                  'Cách đồng bộ',
+                                                  l10n.translate(
+                                                      'auth_sync_guide_button'),
                                                   style: SLTheme.quicksand(
                                                     fontSize: 12,
                                                     fontWeight: FontWeight.w900,
@@ -1086,35 +1122,37 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+          ),
         );
       },
     );
   }
 
   void _showSyncGuideDialog(BuildContext context, {bool enforceDelay = false}) {
+    final l10n = L10nService();
     showDialog(
       context: context,
       barrierDismissible:
           !enforceDelay, // Prevent dismissing by tapping outside if enforced
       builder: (context) {
-        int countdownMs = enforceDelay ? (kDebugMode ? 500 : 5000) : 0;
+        int countdown = enforceDelay ? 1 : 0;
         Timer? timer;
 
         return StatefulBuilder(
           builder: (context, setState) {
-            if (enforceDelay && timer == null && countdownMs > 0) {
-              timer = Timer.periodic(const Duration(milliseconds: 100), (t) {
-                if (countdownMs > 100) {
-                  setState(() => countdownMs -= 100);
+            if (enforceDelay && timer == null && countdown > 0) {
+              timer = Timer.periodic(const Duration(seconds: 1), (t) {
+                if (countdown > 1) {
+                  setState(() => countdown--);
                 } else {
                   t.cancel();
-                  setState(() => countdownMs = 0);
+                  setState(() => countdown = 0);
                 }
               });
             }
 
             return PopScope(
-              canPop: !enforceDelay || countdownMs == 0,
+              canPop: !enforceDelay || countdown == 0,
               child: Dialog(
                 backgroundColor: Colors.transparent,
                 insetPadding:
@@ -1166,7 +1204,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'Cách đồng bộ dữ liệu',
+                              l10n.translate('auth_sync_guide_title'),
                               style: SLTheme.quicksand(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w900,
@@ -1178,7 +1216,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 18),
                       Text(
-                        'SoulLocket đã nâng cấp tính năng đồng bộ. Mỗi người cần dùng tài khoản riêng biệt để ghép đôi với nhau!',
+                        l10n.translate('auth_sync_guide_intro'),
                         style: SLTheme.quicksand(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -1189,21 +1227,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 14),
                       _buildSyncStep(
                         number: '1',
-                        text: 'Tạo tài khoản: Cả hai tự tạo tài khoản riêng biệt của mình và đăng nhập vào ứng dụng.',
+                        text: l10n.translate('auth_sync_guide_step1'),
                       ),
                       const SizedBox(height: 12),
                       _buildSyncStep(
                         number: '2',
-                        text: 'Ghép đôi: Vào phần Cài đặt -> Ghép nối dữ liệu. Một người Tạo mã, người kia Nhập mã để tiến hành đồng bộ và liên kết dữ liệu với nhau.',
+                        text: l10n.translate('auth_sync_guide_step2'),
                       ),
                       const SizedBox(height: 22),
                       SizedBox(
                         width: double.infinity,
                         child: SLTheme.authPrimaryButton(
-                          label: countdownMs > 0
-                              ? 'Đã hiểu (${(countdownMs / 1000).ceil()})'
-                              : 'Đã hiểu',
-                          onPressed: countdownMs > 0
+                          label: countdown > 0
+                              ? '${l10n.translate('auth_sync_guide_gotit')} ($countdown)'
+                              : l10n.translate('auth_sync_guide_gotit'),
+                          onPressed: countdown > 0
                               ? null
                               : () {
                                   timer?.cancel();
@@ -1266,3 +1304,32 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
+class _AuthGlowOrb extends StatelessWidget {
+  final double size;
+  final List<Color> colors;
+  final double opacity;
+
+  const _AuthGlowOrb({
+    required this.size,
+    required this.colors,
+    required this.opacity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            colors.first.withValues(alpha: opacity),
+            colors.last.withValues(alpha: opacity * 0.58),
+            colors.last.withValues(alpha: 0),
+          ],
+        ),
+      ),
+    );
+  }
+}

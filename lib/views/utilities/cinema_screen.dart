@@ -375,7 +375,8 @@ class _CinemaScreenState extends State<CinemaScreen> {
                       _buildStateCard(
                         icon: Icons.hourglass_top_rounded,
                         title: context.tr('util_angdngsutc_7c751f'),
-                        message: context.tr('util_soullocket_a4255f'),
+                        message:
+                            context.tr('util_soullocket_a4255f'),
                         child: const Padding(
                           padding: EdgeInsets.only(top: 18),
                           child: LinearProgressIndicator(
@@ -389,13 +390,15 @@ class _CinemaScreenState extends State<CinemaScreen> {
                       _buildStateCard(
                         icon: Icons.event_busy_rounded,
                         title: context.tr('util_chacngybtu_0f2f9a'),
-                        message: context.tr('util_rpchmckhin_716a2e'),
+                        message:
+                            context.tr('util_rpchmckhin_716a2e'),
                       )
                     else if (!_isAnniversaryToday)
                       _buildStateCard(
                         icon: Icons.lock_clock_rounded,
                         title: context.tr('util_rpchamhmna_2cca0a'),
-                        message: context.tr('util_rpchmkhich_85285a'),
+                        message:
+                            context.tr('util_rpchmkhich_85285a'),
                         child: Padding(
                           padding: const EdgeInsets.only(top: 16),
                           child: _buildLockedShowtimeCard(),
@@ -405,17 +408,15 @@ class _CinemaScreenState extends State<CinemaScreen> {
                       _buildStateCard(
                         icon: Icons.photo_library_outlined,
                         title: context.tr('util_chacnhdngv_7555bb'),
-                        message: L10nService().format(
-                            'util_cinema_today_milestone', {
-                          'title': todayMilestone?.title.toLowerCase() ??
-                              context.tr('util_knim_1a2b3c')
-                        }),
+                        message:
+                            L10nService().format('util_cinema_today_milestone', {'title': todayMilestone?.title.toLowerCase() ?? context.tr('util_knim_1a2b3c')}),
                       )
                     else if (reel == null || selectedItem == null)
                       _buildStateCard(
                         icon: Icons.movie_creation_outlined,
                         title: context.tr('util_angchtreel_6b815f'),
-                        message: context.tr('util_videoknima_b36e6c'),
+                        message:
+                            context.tr('util_videoknima_b36e6c'),
                         child: const Padding(
                           padding: EdgeInsets.only(top: 18),
                           child: LinearProgressIndicator(

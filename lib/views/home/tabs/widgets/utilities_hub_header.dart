@@ -21,7 +21,7 @@ class UtilitiesHubHeader extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(
         20,
-        MediaQuery.paddingOf(context).top + 8,
+        MediaQuery.of(context).padding.top + 8,
         20,
         12,
       ),

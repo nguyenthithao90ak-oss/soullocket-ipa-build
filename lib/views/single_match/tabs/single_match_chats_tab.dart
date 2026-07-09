@@ -35,12 +35,11 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
       onError: (err) {
         if (mounted) {
           setState(() {
-            _error = AppErrorMapper.resolve(
-              err,
-              fallbackMessage:
-                  L10nService().translate('match_khngthtidl_11f27c'),
-            ).message;
-          });
+          _error = AppErrorMapper.resolve(
+            err,
+            fallbackMessage: L10nService().translate('match_khngthtidl_11f27c'),
+          ).message;
+        });
         }
       },
     );
@@ -56,8 +55,9 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
     if (_isCreating) return;
 
     try {
-      final alreadyChatted =
-          _mappings.map((m) => m['peerHouseId'].toString()).toSet();
+      final alreadyChatted = _mappings
+          .map((m) => m['peerHouseId'].toString())
+          .toSet();
 
       final result = await Navigator.push<dynamic>(
         context,
@@ -74,8 +74,7 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
 
       if (result == null || result is! SingleMatchCandidate) {
         if (!mounted) return;
-        _showSnack(
-            'Hiện không có ai để trò chuyện lúc này. Hãy ghép đôi thêm.');
+        _showSnack('Hiện không có ai để trò chuyện lúc này. Hãy ghép đôi thêm.');
         return;
       }
 
@@ -132,11 +131,10 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.cloud_off_rounded,
-                  size: 48, color: SLColors.textTertiary),
+              const Icon(Icons.cloud_off_rounded, size: 48,
+                  color: SLColors.textTertiary),
               const SizedBox(height: 12),
-              Text(_error!,
-                  textAlign: TextAlign.center,
+              Text(_error!, textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w700,
                     color: SLColors.textSecondary,
@@ -160,14 +158,13 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
           ),
           child: Column(
             children: [
-              const Icon(Icons.casino_rounded,
-                  size: 40, color: Color(0xFFFF4F87)),
+              const Icon(Icons.casino_rounded, size: 40,
+                  color: Color(0xFFFF4F87)),
               const SizedBox(height: 8),
               Text(
                 'Trò chuyện ngẫu nhiên',
                 style: SLTheme.quicksand(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w900,
+                  fontSize: 17, fontWeight: FontWeight.w900,
                   color: const Color(0xFF32203B),
                 ),
               ),
@@ -176,8 +173,7 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
                 'Hệ thống chọn người phù hợp nhất với bạn',
                 textAlign: TextAlign.center,
                 style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 12, fontWeight: FontWeight.w700,
                   color: const Color(0xFF8A798E),
                 ),
               ),
@@ -185,7 +181,9 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: _isCreating ? null : _startRandomChat,
+                  onPressed: _isCreating
+                      ? null
+                      : _startRandomChat,
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFFFF4F87),
                     shape: RoundedRectangleBorder(
@@ -193,8 +191,7 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
                   ),
                   icon: _isCreating
                       ? const SizedBox(
-                          width: 18,
-                          height: 18,
+                          width: 18, height: 18,
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white))
                       : const Icon(Icons.chat_rounded),
@@ -214,16 +211,14 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
               Text(
                 'Lịch sử trò chuyện',
                 style: SLTheme.quicksand(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
+                  fontSize: 16, fontWeight: FontWeight.w900,
                   color: const Color(0xFF32203B),
                 ),
               ),
               const Spacer(),
               Text('${_mappings.length} người',
                   style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 12, fontWeight: FontWeight.w700,
                     color: SLColors.textTertiary,
                   )),
             ],
@@ -247,8 +242,7 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
                 Text(
                   'Chưa có phòng trò chuyện nào',
                   style: SLTheme.quicksand(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
+                    fontSize: 16, fontWeight: FontWeight.w900,
                     color: SLColors.textSecondary,
                   ),
                 ),
@@ -257,8 +251,7 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
                   'Nhấn "Trò chuyện ngay" để kết nối hoặc quay lại tab Ghép đôi để gọi.',
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 12, fontWeight: FontWeight.w700,
                     color: SLColors.textTertiary,
                   ),
                 ),
@@ -293,10 +286,13 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
             CircleAvatar(
               radius: 24,
               backgroundColor: const Color(0xFFFFDCE7),
-              backgroundImage:
-                  peerAvatar.isNotEmpty ? NetworkImage(peerAvatar) : null,
+              backgroundImage: peerAvatar.isNotEmpty
+                  ? NetworkImage(peerAvatar)
+                  : null,
               child: peerAvatar.isEmpty
-                  ? Text(peerName.isNotEmpty ? peerName[0].toUpperCase() : '?')
+                  ? Text(peerName.isNotEmpty
+                      ? peerName[0].toUpperCase()
+                      : '?')
                   : null,
             ),
             const SizedBox(width: 12),
@@ -305,18 +301,15 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(peerName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
                       style: SLTheme.quicksand(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
+                        fontSize: 15, fontWeight: FontWeight.w900,
                         color: const Color(0xFF32203B),
                       )),
                   if (createdAt.isNotEmpty)
                     Text(createdAt,
                         style: SLTheme.quicksand(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 11, fontWeight: FontWeight.w700,
                           color: SLColors.textTertiary,
                         )),
                 ],
@@ -339,8 +332,8 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
                 backgroundColor: const Color(0xFF7C61FF),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 10),
               ),
               icon: const Icon(Icons.chat_rounded, size: 16),
               label: Text('Nhắn tin',

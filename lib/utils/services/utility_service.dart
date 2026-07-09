@@ -64,7 +64,7 @@ class UtilityService {
 
   static bool isUtilityVisibleInCurrentBuild(String id) {
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
-      if (id == 'giftcode' || id == 'soul_events') return false;
+      if (id == 'giftcode') return false;
     }
     return kDebugMode || !_debugOnlyIds.contains(id);
   }

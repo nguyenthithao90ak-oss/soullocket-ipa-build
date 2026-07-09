@@ -19,8 +19,7 @@ extension _SettingsTabWidgetPanelHelpersPart on _SettingsTabState {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
-        border:
-            Border.all(color: accentColor.withValues(alpha: 0.15), width: 1.4),
+        border: Border.all(color: accentColor.withValues(alpha: 0.15), width: 1.4),
         boxShadow: [
           BoxShadow(
             color: accentColor.withValues(alpha: 0.08),
@@ -119,8 +118,7 @@ extension _SettingsTabWidgetPanelHelpersPart on _SettingsTabState {
                             ? Center(
                                 child: ValueListenableBuilder<UiPrefsState>(
                                   valueListenable: UiPrefs.notifier,
-                                  builder: (context, ui, _) =>
-                                      SoulLocketBrandMark(
+                                  builder: (context, ui, _) => SoulLocketBrandMark(
                                     styleKey: ui.brandMarkKey,
                                     size: 22,
                                   ),
@@ -141,8 +139,7 @@ extension _SettingsTabWidgetPanelHelpersPart on _SettingsTabState {
                                 color: const Color(0xFF1A2332),
                               ),
                             ),
-                            if (subtitle != null &&
-                                subtitle.trim().isNotEmpty) ...[
+                            if (subtitle != null && subtitle.trim().isNotEmpty) ...[
                               const SizedBox(height: 2),
                               Text(
                                 subtitle,

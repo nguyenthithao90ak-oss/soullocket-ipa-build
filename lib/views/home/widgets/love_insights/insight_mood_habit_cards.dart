@@ -69,9 +69,7 @@ extension _InsightMoodHabitCardsExt on _LoveInsightsScreenState {
         children: [
           _buildCardTitle(
             icon: Icons.auto_awesome_rounded,
-            title: _isSingle
-                ? L10nService().translate('home_gcnhhng_699bdb')
-                : L10nService().translate('home_gctvnyuthn_897317'),
+            title: _isSingle ? L10nService().translate('home_gcnhhng_699bdb') : L10nService().translate('home_gctvnyuthn_897317'),
             subtitle: _isSingle
                 ? L10nService().translate('home_ctnhpsinhh_fdf44b')
                 : L10nService().translate('home_datrnnhpyu_d7b4a7'),

@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:soullocket_app/utils/helpers/sensor_helper.dart';
@@ -24,8 +23,6 @@ import 'package:soullocket_app/views/map/map_screen.dart';
 import 'package:soullocket_app/views/relationship/couple_connect_screen.dart';
 import 'package:soullocket_app/views/single_match/single_match_hub_screen.dart';
 import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart';
-import 'package:soullocket_app/views/home/screens/interaction_sticker_editor_screen.dart';
-import 'package:soullocket_app/widgets/animated_rabbit_sticker.dart';
 import 'package:soullocket_app/utils/services/soul_merge_service.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -49,8 +46,7 @@ import 'package:soullocket_app/utils/sl_notice.dart';
 import 'package:soullocket_app/models/album_item.dart';
 import 'package:soullocket_app/models/house_settings.dart';
 import 'package:soullocket_app/models/utilities/shared_note.dart';
-import 'package:soullocket_app/views/home/tabs/settings_tab.dart'
-    show SettingsTab, FloatingHeartsRingOverlay;
+import 'package:soullocket_app/views/home/tabs/settings_tab.dart' show SettingsTab, FloatingHeartsRingOverlay;
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/views/utilities/age_zodiac_screen.dart';
 import 'package:soullocket_app/views/utilities/bucket_list_screen.dart';
@@ -86,7 +82,6 @@ import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/widgets/legacy_web_ui.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
 import 'package:soullocket_app/utils/services/admob_service.dart';
-import 'package:soullocket_app/utils/app_cache_manager.dart';
 
 import 'package:soullocket_app/views/home/love_insights_screen.dart';
 import 'package:soullocket_app/views/home/milestones_screen.dart';
@@ -95,7 +90,6 @@ import 'dart:ui' as ui;
 import '../../../widgets/lottie_async_loader.dart';
 import '../../../core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/core/sl_route.dart';
-import 'package:soullocket_app/views/home/tabs/main_home/widgets/main_home_header_button.dart';
 
 part 'main_home/widgets/main_home_dialogs.dart';
 part '../widgets/main_home/main_home_hero_section.dart';
@@ -104,9 +98,11 @@ part 'main_home/widgets/main_home_presence_section.dart';
 part 'main_home/widgets/main_home_status_cards.dart';
 part 'main_home/widgets/main_home_tool_slot_section.dart';
 part 'main_home/widgets/main_home_support.dart';
+part 'main_home/widgets/main_home_admin_badge.dart';
 part 'main_home/widgets/main_home_relationship_action.dart';
 part 'main_home/widgets/main_home_map_card.dart';
 part 'main_home/widgets/main_home_insight_card.dart';
+part 'main_home/widgets/main_home_header_button.dart';
 part 'main_home/widgets/main_home_avatar_section.dart';
 part 'main_home/widgets/main_home_quote_activity_card.dart';
 part 'main_home/widgets/main_home_shortcut_dock.dart';
@@ -128,6 +124,7 @@ part '../widgets/main_home/hero/main_home_hero_countdown.dart';
 part '../widgets/main_home/hero/main_home_hero_counters.dart';
 part '../widgets/main_home/hero/main_home_hero_header.dart';
 part 'main_home/models/main_home_models.dart';
+
 
 class MainHomeTab extends StatefulWidget {
   final ValueNotifier<bool> isActiveListenable;
@@ -156,73 +153,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   static const String _insightCardFirstTapSeenPrefsKey =
       'il_home_insight_card_first_tap_seen_v1';
 
-  TextStyle _uiTextStyle({
-    required double fontSize,
-    required FontWeight fontWeight,
-    required Color color,
-    double? height,
-    double? letterSpacing,
-  }) {
-    return SLTheme.textStyleForKey(
-      UiPrefs.notifier.value.fontKey,
-      fontSize: fontSize,
-      fontWeight: fontWeight,
-      color: color,
-      height: height,
-      letterSpacing: letterSpacing,
-    );
-  }
-
-  List<Color> _profileAccentGradient(bool isUser1) {
-    if (isUser1) {
-      return const [Color(0xFF60A5FA), Color(0xFF2563EB)];
-    }
-    return const [Color(0xFFFF8FB1), Color(0xFFFF4D79)];
-  }
-
-  BoxDecoration _homeCardDecoration({double radius = 24}) {
-    final tone = UiPrefs.notifier.value.homeBlockToneKey;
-    final color = switch (tone) {
-      'mist' => const Color(0xFFEEF4FF).withValues(alpha: 0.72),
-      'rose' => const Color(0xFFFFE1EC).withValues(alpha: 0.68),
-      'glass' => Colors.white.withValues(alpha: 0.14),
-      _ => Colors.white.withValues(alpha: 0.82),
-    };
-    final borderColor = switch (tone) {
-      'mist' => const Color(0xFFB8D4FF).withValues(alpha: 0.70),
-      'rose' => const Color(0xFFFFA8C8).withValues(alpha: 0.65),
-      'glass' => Colors.white.withValues(alpha: 0.28),
-      _ => const Color(0xFFFFCEE0).withValues(alpha: 0.80),
-    };
-    final shadowColor = switch (tone) {
-      'mist' => const Color(0xFF64B5F6).withValues(alpha: 0.12),
-      'rose' => SLColors.primary.withValues(alpha: 0.14),
-      'glass' => Colors.black.withValues(alpha: 0.18),
-      _ => const Color(0xFFFF6DA0).withValues(alpha: 0.10),
-    };
-
-    return BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(radius),
-      boxShadow: [
-        BoxShadow(
-          color: shadowColor,
-          blurRadius: 24,
-          offset: const Offset(0, 8),
-        ),
-        BoxShadow(
-          color: Colors.white.withValues(alpha: 0.60),
-          blurRadius: 0,
-          offset: const Offset(0, 0),
-          spreadRadius: 0,
-        ),
-      ],
-      border: Border.all(color: borderColor, width: 1.0),
-    );
-  }
-
-  static final List<String> _kHomeStickerAssets =
-      List<String>.generate(99, (i) {
+  static final List<String> _kHomeStickerAssets = List<String>.generate(99, (i) {
     final num = (i + 1).toString().padLeft(3, '0');
     return 'assets/images/interaction_stickers/custom/numbered/sticker_$num.png';
   });
@@ -275,11 +206,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   static const Duration _fetchCacheDuration = Duration(seconds: 30);
 
   Map<String, dynamic>? _houseSettings;
-  Map<String, dynamic> _presenceDataMap = {};
   final ValueNotifier<Map<String, dynamic>> _presenceDataNotifier =
       ValueNotifier<Map<String, dynamic>>({});
-  Map<String, dynamic> get _presenceData => _presenceDataMap;
-  set _presenceData(Map<String, dynamic> v) => _presenceDataMap = v;
+  Map<String, dynamic> get _presenceData => _presenceDataNotifier.value;
+  set _presenceData(Map<String, dynamic> v) => _presenceDataNotifier.value = v;
   bool _hasLoadedPresenceSnapshot = false;
   bool _isLoading = true;
   bool _showStatus = true;
@@ -300,9 +230,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       ValueNotifier<String?>(null);
   final ValueNotifier<Map<String, dynamic>?> _homePartnerBatteryNotifier =
       ValueNotifier<Map<String, dynamic>?>(null);
-  final ValueNotifier<Map<String, dynamic>?> _homeMyBatteryNotifier =
-      ValueNotifier<Map<String, dynamic>?>(null);
-  final ValueNotifier<bool> _isScrollingNotifier = ValueNotifier<bool>(false);
   int _wishIndex = -1;
   int _tipIndex = -1;
   bool _hideSettingsButtonUntilRestart = false;
@@ -316,11 +243,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   Timer? _presenceSnapshotFallbackTimer;
   Timer? _calendarWidgetSyncDebounce;
   Timer? _healthCycleWidgetSyncDebounce;
-  Timer? _fetchHouseDataDebounceTimer;
-  Future<void>? _activeFetchFuture;
   StreamSubscription? _settingsSubscription;
   StreamSubscription? _presenceSubscription;
-  final List<StreamSubscription> _presenceSubList = [];
   StreamSubscription? _missInteractionSubscription;
   StreamSubscription<DatabaseEvent>? _alertSubscription;
   StreamSubscription<DatabaseEvent>? _newDeviceNotificationSubscription;
@@ -367,8 +291,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   List<String> _cachedWidgetDiaryImageUrls = const <String>[];
   List<String> _recentChatSignals = [];
   int _lastChatMessageTs = 0; // timestamp ms của tin nhắn chat cuối cùng
-  late final ValueNotifier<_PartnerInteractionPreset>
-      _smartInteractionPresetNotifier;
+  late final ValueNotifier<_PartnerInteractionPreset> _smartInteractionPresetNotifier;
   _PartnerInteractionPreset get _smartInteractionPreset =>
       _smartInteractionPresetNotifier.value;
   set _smartInteractionPreset(_PartnerInteractionPreset v) =>
@@ -404,6 +327,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   int _homeMediaWarmupToken = 0;
   final Set<String> _seenNewDeviceNotificationIds = <String>{};
   String _lastHomeMediaWarmupSignature = '';
+  final ValueNotifier<bool> _isScrollingNotifier = ValueNotifier<bool>(false);
 
   StreamSubscription? _membersSubscription;
 
@@ -432,18 +356,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   bool get _hasWarmHomeSnapshot =>
       (_houseId?.trim().isNotEmpty ?? false) && _houseSettings != null;
 
-  Future<void> _loadCustomStickers() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      for (final preset in _kPartnerInteractionPresets) {
-        final customPath = prefs.getString('custom_sticker_${preset.type}');
-        if (customPath != null && customPath.isNotEmpty) {
-          preset.assetPath = customPath;
-        }
-      }
-    } catch (_) {}
-  }
-
   _PartnerInteractionPreset get _displayInteractionPreset {
     final manualType = _manualInteractionPresetType;
     if (manualType != null) {
@@ -455,16 +367,77 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     return _smartInteractionPreset;
   }
 
+  List<Color> _profileAccentGradient(bool isUser1) {
+    if (isUser1) {
+      return const [Color(0xFF60A5FA), Color(0xFF2563EB)];
+    }
+    return const [Color(0xFFFF8FB1), Color(0xFFFF4D79)];
+  }
+
+
+
+  TextStyle _uiTextStyle({
+    required double fontSize,
+    required FontWeight fontWeight,
+    required Color color,
+    double? height,
+    double? letterSpacing,
+  }) {
+    return SLTheme.textStyleForKey(
+      UiPrefs.notifier.value.fontKey,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      height: height,
+      letterSpacing: letterSpacing,
+    );
+  }
+
+  BoxDecoration _homeCardDecoration({double radius = 24}) {
+    final tone = UiPrefs.notifier.value.homeBlockToneKey;
+    final color = switch (tone) {
+      'mist' => const Color(0xFFEEF4FF).withValues(alpha: 0.42),
+      'rose' => const Color(0xFFFFE1EC).withValues(alpha: 0.38),
+      'glass' => const Color(0xFF3A2434).withValues(alpha: 0.22),
+      _ => const Color(0xFF43293A).withValues(alpha: 0.20),
+    };
+    final borderColor = switch (tone) {
+      'mist' => const Color(0xFFDAE8FF).withValues(alpha: 0.62),
+      'rose' => const Color(0xFFFFC7DA).withValues(alpha: 0.60),
+      'glass' => Colors.white.withValues(alpha: 0.22),
+      _ => const Color(0xFFFFD6E4).withValues(alpha: 0.26),
+    };
+    final shadowColor = switch (tone) {
+      'mist' => const Color(0xFF64B5F6).withValues(alpha: 0.10),
+      'rose' => SLColors.primary.withValues(alpha: 0.12),
+      'glass' => Colors.black.withValues(alpha: 0.14),
+      _ => const Color(0xFF2C1623).withValues(alpha: 0.16),
+    };
+
+    return BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(radius),
+      boxShadow: [
+        BoxShadow(
+          color: shadowColor,
+          blurRadius: 28,
+          offset: const Offset(0, 10),
+        ),
+      ],
+      border: Border.all(color: borderColor, width: 1.2),
+    );
+  }
+
+
   @override
   void initState() {
     super.initState();
-    unawaited(_loadCustomStickers());
     WidgetsBinding.instance.addObserver(this);
     _isTabActive = widget.isActiveListenable.value;
     widget.isActiveListenable.addListener(_onActiveChanged);
     _reactionFlightsNotifier = ValueNotifier<List<_HomeReactionFlight>>([]);
-    _smartInteractionPresetNotifier = ValueNotifier<_PartnerInteractionPreset>(
-        _defaultSmartInteractionPreset());
+    _smartInteractionPresetNotifier =
+        ValueNotifier<_PartnerInteractionPreset>(_defaultSmartInteractionPreset());
     unawaited(() async {
       try {
         final selectedUiFont = SLTheme.textStyleForKey(
@@ -476,16 +449,11 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         ]);
       } catch (_) {}
     }());
-    // Pre-cache sticker assets deferred and chunked to avoid startup stutter
-    Timer(const Duration(seconds: 4), () async {
+    // Pre-cache sticker assets để tránh white flash
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      for (var i = 0; i < _kHomeStickerAssets.length; i++) {
-        if (!mounted) break;
-        precacheImage(AssetImage(_kHomeStickerAssets[i]), context);
-        // Chia nhỏ mỗi đợt 10 ảnh, nghỉ 50ms để không block UI thread
-        if (i % 10 == 9) {
-          await Future.delayed(const Duration(milliseconds: 50));
-        }
+      for (final path in _kHomeStickerAssets) {
+        precacheImage(AssetImage(path), context);
       }
     });
     unawaited(_syncHomeCardFirstTapHintState());
@@ -502,8 +470,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       ),
     );
     unawaited(_promptPendingAvatarRetryIfNeeded());
-    unawaited(PurchaseService().getVipAccessInfo().catchError((_) =>
-        const VipAccessInfo(isVip: false, planId: '', expiresAtMs: null)));
+    unawaited(PurchaseService()
+        .getVipAccessInfo()
+        .catchError((_) => const VipAccessInfo(isVip: false, planId: '', expiresAtMs: null)));
   }
 
   void _onActiveChanged() {
@@ -533,13 +502,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     widget.isActiveListenable.removeListener(_onActiveChanged);
     _invalidateLiveWorkSession();
     _cancelLiveWorkBindings();
-    _fetchHouseDataDebounceTimer?.cancel();
 
     // Explicitly cancel subscriptions in dispose to satisfy linter rule 'cancel_subscriptions'
-    for (final sub in _presenceSubList) {
-      sub.cancel();
-    }
-    _presenceSubList.clear();
     _settingsSubscription?.cancel();
     _presenceSubscription?.cancel();
     _missInteractionSubscription?.cancel();
@@ -564,16 +528,14 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _homeDistanceTextNotifier.dispose();
     _homeMapAlertNotifier.dispose();
     _homePartnerBatteryNotifier.dispose();
-    _fallingEffectTypeNotifier.dispose();
     _isScrollingNotifier.dispose();
+    _fallingEffectTypeNotifier.dispose();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed &&
-        _isTabActive &&
-        _houseId != null) {
+    if (state == AppLifecycleState.resumed && _isTabActive && _houseId != null) {
       unawaited(_ensureAppWideLocationTracking(_houseId!));
       unawaited(_refreshCurrentRoleWeather());
     }
@@ -588,11 +550,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       final dataIsFresh = _lastFetchTime != null &&
           DateTime.now().difference(_lastFetchTime!) <= _fetchCacheDuration;
       if (dataIsFresh) return;
-      // ⚡ Debounce fetch until after swipe animation (~300ms) + warmup settle (650ms).
+      // ⚡ Delay fetch until after swipe animation (~300ms) + warmup settle (650ms).
       //    700ms gives enough breathing room so the UI thread is free during animation.
-      _fetchHouseDataDebounceTimer?.cancel();
-      _fetchHouseDataDebounceTimer =
-          Timer(const Duration(milliseconds: 700), () {
+      Future.delayed(const Duration(milliseconds: 700), () {
         if (!mounted || !_isTabActive) return;
         unawaited(
           _fetchHouseData(
@@ -605,7 +565,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     // Do not cancel Firebase RTDB bindings here (keep them connected to avoid tearing down and re-fetching on tab switch).
     // Instead, we only pause non-critical active loops if any, but weather loop and presence check and update will
     // automatically adapt based on _isTabActive inside their respective timers/listeners.
-    _fetchHouseDataDebounceTimer?.cancel();
     _invalidateLiveWorkSession();
   }
 
@@ -710,11 +669,17 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     }
   }
 
+
+
   int _invalidateLiveWorkSession() => _invalidateLiveWorkSessionImpl();
+
+
 
   void _cancelLiveWorkBindings() {
     _cancelLiveWorkBindingsImpl();
   }
+
+
 
   void _showLatestSnackBar(
     String message, {
@@ -832,19 +797,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     bool preserveVisibleState = false,
     bool preloadOnly = false,
   }) {
-    if (_activeFetchFuture != null) {
-      return _activeFetchFuture!;
-    }
-    final future = _fetchHouseDataImpl(
+    return _fetchHouseDataImpl(
       preserveVisibleState: preserveVisibleState,
       preloadOnly: preloadOnly,
     );
-    _activeFetchFuture = future;
-    return future.then((_) {
-      _activeFetchFuture = null;
-    }, onError: (_) {
-      _activeFetchFuture = null;
-    });
   }
 
   String _zodiacAndAgeForRole(String role) {
@@ -1169,13 +1125,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         maxWidth: 1080,
         maxHeight: 1080,
         uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
-            toolbarColor: const Color(0xFFD81B60),
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: true,
-          ),
           IOSUiSettings(
             title: isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
             aspectRatioLockEnabled: true,
@@ -1641,15 +1590,13 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       }
     }
     // Migration: nếu đã có unlock hàng loạt cũ còn hiệu lực thì cộng vào
-    final legacyExpiry =
-        prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
+    final legacyExpiry = prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
     if (legacyExpiry > now) {
       result.addAll(_kCountdownQuickPremiumStyleKeys);
     } else {
       final legacyTs = prefs.getInt('il_countdown_unlock_ad_ts') ?? 0;
       if (legacyTs > 0) {
-        final fallbackExpiry =
-            legacyTs + _kCountdownQuickUnlockWindow.inMilliseconds;
+        final fallbackExpiry = legacyTs + _kCountdownQuickUnlockWindow.inMilliseconds;
         if (fallbackExpiry > now) {
           result.addAll(_kCountdownQuickPremiumStyleKeys);
         }
@@ -1727,8 +1674,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     if (countdownStyleKey != null &&
         _kCountdownQuickPremiumStyleKeys.contains(resolvedCountdownStyleKey) &&
         !resolvedIsVip) {
-      final resolvedUnlockedStyles =
-          prevalidatedUnlockedStyles ?? await _getUnlockedCountdownStyles();
+      final resolvedUnlockedStyles = prevalidatedUnlockedStyles ?? await _getUnlockedCountdownStyles();
       if (!resolvedUnlockedStyles.contains(resolvedCountdownStyleKey)) {
         if (mounted) {
           _showLatestSnackBar(
@@ -1745,18 +1691,14 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     final normalizedFallingEffectKey = fallingEffectKey == null
         ? current.fallingEffectKey
         : resolvedFallingEffectKey;
-    final normalizedCountdownSizePx =
-        countdownSizePx ?? current.countdownSizePx;
+    final normalizedCountdownSizePx = countdownSizePx ?? current.countdownSizePx;
     final normalizedAvatarSizePx = avatarSizePx ?? current.avatarSizePx;
     final normalizedAvatarFrameKey = avatarFrameKey ?? current.avatarFrameKey;
-    final normalizedCustomBackgroundUrl =
-        customBackgroundUrl ?? current.customBackgroundUrl;
-    final normalizedCountdownTextColor =
-        countdownTextColor ?? current.countdownTextColor;
-
+    final normalizedCustomBackgroundUrl = customBackgroundUrl ?? current.customBackgroundUrl;
+    final normalizedCountdownTextColor = countdownTextColor ?? current.countdownTextColor;
+    
     // Auto turn off transparentMode if user explicitly changes countdown style
-    final newTransparentMode =
-        (countdownStyleKey != null) ? false : current.transparentMode;
+    final newTransparentMode = (countdownStyleKey != null) ? false : current.transparentMode;
 
     if (normalizedCountdownStyleKey == current.countdownStyleKey &&
         normalizedFallingEffectKey == current.fallingEffectKey &&
@@ -1813,10 +1755,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         updates['transparentMode'] = newTransparentMode;
       }
 
-      unawaited(_dbRef
-          .child('houses/$houseId/settings')
-          .update(updates)
-          .catchError((e) {
+      unawaited(_dbRef.child('houses/$houseId/settings').update(updates).catchError((e) {
         if (mounted) {
           _showLatestSnackBar(
             'Đã lưu trên máy. Chưa thể đồng bộ lúc này, vui lòng thử lại sau.',
@@ -1825,6 +1764,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       }));
     }
   }
+
 
   Future<void> _showCountdownQuickCustomizeSheet() async {
     final isVip = await PurchaseService().isVip();
@@ -1901,6 +1841,63 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         isPremium: true,
       ),
     ];
+    final effectOptions = <_CountdownQuickOption>[
+      _CountdownQuickOption(
+        label: context.tr('effect_auto_season'),
+        value: 'auto',
+        icon: Icons.auto_awesome_motion_rounded,
+        accent: const Color(0xFFB56BE8),
+      ),
+      _CountdownQuickOption(
+        label: context.tr('effect_sparkles'),
+        value: 'sparkles',
+        icon: Icons.auto_awesome_rounded,
+        accent: const Color(0xFFFFB300),
+      ),
+      _CountdownQuickOption(
+        label: context.tr('effect_stars'),
+        value: 'stars',
+        icon: Icons.star_rounded,
+        accent: const Color(0xFF5C6BC0),
+      ),
+      _CountdownQuickOption(
+        label: context.tr('effect_hearts'),
+        value: 'hearts',
+        icon: Icons.favorite_rounded,
+        accent: const Color(0xFFE91E63),
+      ),
+      _CountdownQuickOption(
+        label: context.tr('effect_meteors'),
+        value: 'meteors',
+        icon: Icons.rocket_launch_rounded,
+        accent: const Color(0xFFFF7043),
+      ),
+      _CountdownQuickOption(
+        label: context.tr('effect_bubbles'),
+        value: 'bubbles',
+        icon: Icons.bubble_chart_rounded,
+        accent: const Color(0xFF29B6F6),
+      ),
+      _CountdownQuickOption(
+        label: context.tr('effect_snow'),
+        value: 'snow',
+        icon: Icons.ac_unit_rounded,
+        accent: const Color(0xFF4FC3F7),
+      ),
+      _CountdownQuickOption(
+        label: context.tr('effect_leaves'),
+        value: 'leaves',
+        icon: Icons.spa_rounded,
+        accent: const Color(0xFF66BB6A),
+      ),
+      _CountdownQuickOption(
+        label: context.tr('effect_off'),
+        value: 'off',
+        icon: Icons.do_not_disturb_on_rounded,
+        accent: const Color(0xFF9E9E9E),
+      ),
+    ];
+
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -1911,6 +1908,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       builder: (sheetContext) {
         return _CountdownQuickCustomizeSheetContent(
           styleOptions: styleOptions,
+          effectOptions: effectOptions,
           unlockedStyles: unlockedStyles,
           isVip: isVip,
           homeState: this,
@@ -1919,12 +1917,11 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       },
     );
   }
-
   void _hideSettingsButtonForSession() {
     if (!mounted) return;
     final isCurrentlyHidden = _hideSettingsButtonUntilRestart;
     setState(() => _hideSettingsButtonUntilRestart = !isCurrentlyHidden);
-
+    
     if (!isCurrentlyHidden) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
@@ -1945,6 +1942,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   bool _shouldShowAdminBadge(String role) {
     return false;
   }
+
 
   void triggerShootingHeartState({String? emoji, String? fromRole}) {
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -2032,25 +2030,18 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _MissYouAlertPayload payload, {
     String? removalPath,
   }) async {
-    final prefs = await OfflineCacheService.getPrefs();
-    final lastLocalMs = prefs.getInt('il_last_local_push_time_v2') ?? 0;
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-    
-    if (nowMs - lastLocalMs >= 3600000) {
-      await prefs.setInt('il_last_local_push_time_v2', nowMs);
-      await _notificationService.showLocalNotification(
-        title: payload.title,
-        body: payload.body.isNotEmpty ? payload.body : payload.message,
-        data: {
-          'screen': 'home',
-          'type': 'partner_care',
-          'careType': payload.type,
-          if (_houseId != null) 'houseId': _houseId!,
-        },
-        dedupeKey:
-            '${payload.fromUid}|${payload.fromRole}|${payload.sentAtMs}|${payload.type}|${payload.title}',
-      );
-    }
+    await _notificationService.showLocalNotification(
+      title: payload.title,
+      body: payload.body.isNotEmpty ? payload.body : payload.message,
+      data: {
+        'screen': 'home',
+        'type': 'partner_care',
+        'careType': payload.type,
+        if (_houseId != null) 'houseId': _houseId!,
+      },
+      dedupeKey:
+          '${payload.fromUid}|${payload.fromRole}|${payload.sentAtMs}|${payload.type}|${payload.title}',
+    );
     if (!mounted) return;
     _showMissYouScreen(payload);
     if (removalPath != null) {
@@ -2112,7 +2103,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   Future<void> _handleSendInteraction(String type, String emoji) async {
     final cleanEmoji =
         emoji.trim().isEmpty ? _emojiForInteractionType(type) : emoji;
-
+    
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     final localWait = _consumeLocalReactionThrowWaitSeconds(nowMs);
     if (localWait > 0) {
@@ -2160,18 +2151,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   }
 }
 
-class _ThemeBackgroundAspectRatioPreset implements CropAspectRatioPresetData {
-  const _ThemeBackgroundAspectRatioPreset();
-
-  @override
-  String get name => 'house_background_9x16';
-
-  @override
-  (int ratioX, int ratioY)? get data => (9, 16);
-}
-
 class _CountdownQuickCustomizeSheetContent extends StatefulWidget {
   final List<_CountdownQuickOption> styleOptions;
+  final List<_CountdownQuickOption> effectOptions;
   final Set<String> unlockedStyles;
   final bool isVip;
   final _MainHomeTabState homeState;
@@ -2179,6 +2161,7 @@ class _CountdownQuickCustomizeSheetContent extends StatefulWidget {
 
   const _CountdownQuickCustomizeSheetContent({
     required this.styleOptions,
+    required this.effectOptions,
     required this.unlockedStyles,
     required this.isVip,
     required this.homeState,
@@ -2211,8 +2194,7 @@ class _CountdownQuickCustomizeSheetContentState
   }) {
     final accent = option.accent;
     final borderColor = selected ? accent : accent.withValues(alpha: 0.28);
-    final backgroundColor =
-        selected ? accent.withValues(alpha: 0.14) : Colors.white;
+    final backgroundColor = selected ? accent.withValues(alpha: 0.14) : Colors.white;
     final textColor = selected ? accent : const Color(0xFF584450);
 
     return Material(
@@ -2283,25 +2265,19 @@ class _CountdownQuickCustomizeSheetContentState
                     final prefs = await SharedPreferences.getInstance();
                     final now = DateTime.now().millisecondsSinceEpoch;
                     await prefs.setInt('il_last_any_rewarded_ad_ts', now);
-                    final expiry = now +
-                        _MainHomeTabState
-                            ._kCountdownQuickUnlockWindow.inMilliseconds;
-                    final expiryKey =
-                        'il_countdown_style_unlock_expiry_${option.value}';
+                    final expiry = now + _MainHomeTabState._kCountdownQuickUnlockWindow.inMilliseconds;
+                    final expiryKey = 'il_countdown_style_unlock_expiry_${option.value}';
                     await prefs.setInt(expiryKey, expiry);
                     setState(() {
                       _unlockedStyles = {..._unlockedStyles, option.value};
                     });
                     await onUnlocked(option);
-                    widget.homeState._showLatestSnackBar(
-                        'Đã mở khóa "${option.label}" trong 7 ngày!');
+                    widget.homeState._showLatestSnackBar('Đã mở khóa "${option.label}" trong 7 ngày!');
                   } else {
-                    widget.homeState._showLatestSnackBar(
-                        'Chưa mở khóa. Vui lòng xem hết quảng cáo.');
+                    widget.homeState._showLatestSnackBar('Chưa mở khóa. Vui lòng xem hết quảng cáo.');
                   }
                 } catch (_) {
-                  widget.homeState
-                      ._showLatestSnackBar('Đã xảy ra lỗi khi tải quảng cáo.');
+                  widget.homeState._showLatestSnackBar('Đã xảy ra lỗi khi tải quảng cáo.');
                 } finally {
                   if (mounted) {
                     setState(() {
@@ -2316,8 +2292,7 @@ class _CountdownQuickCustomizeSheetContentState
           decoration: BoxDecoration(
             color: accent.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(18),
-            border:
-                Border.all(color: accent.withValues(alpha: 0.45), width: 1.5),
+            border: Border.all(color: accent.withValues(alpha: 0.45), width: 1.5),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -2437,8 +2412,7 @@ class _CountdownQuickCustomizeSheetContentState
             spacing: 10,
             runSpacing: 10,
             children: options.map((option) {
-              final isLocked =
-                  option.isPremium && !_unlockedStyles.contains(option.value);
+              final isLocked = option.isPremium && !_unlockedStyles.contains(option.value);
               if (isLocked) {
                 return buildLockedAdButton(
                   option: option,
@@ -2555,10 +2529,8 @@ class _CountdownQuickCustomizeSheetContentState
               children: colors.map((hex) {
                 final isSelected = selectedColorHex == hex;
                 final isDefault = hex.isEmpty;
-                final color = isDefault
-                    ? Colors.transparent
-                    : Color(int.parse(hex.replaceFirst('#', '0xFF')));
-
+                final color = isDefault ? Colors.transparent : Color(int.parse(hex.replaceFirst('#', '0xFF')));
+                
                 return GestureDetector(
                   onTap: () async {
                     HapticFeedback.selectionClick();
@@ -2572,24 +2544,14 @@ class _CountdownQuickCustomizeSheetContentState
                       color: color,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFFD81B60)
-                            : const Color(0xFFF0DDE4),
+                        color: isSelected ? const Color(0xFFD81B60) : const Color(0xFFF0DDE4),
                         width: isSelected ? 3.0 : 1.5,
                       ),
                     ),
                     child: isDefault
-                        ? Icon(Icons.format_color_reset_rounded,
-                            size: 20,
-                            color: isSelected
-                                ? const Color(0xFFD81B60)
-                                : const Color(0xFF8E6F7E))
+                        ? Icon(Icons.format_color_reset_rounded, size: 20, color: isSelected ? const Color(0xFFD81B60) : const Color(0xFF8E6F7E))
                         : (isSelected
-                            ? Icon(Icons.check_rounded,
-                                size: 20,
-                                color: color.computeLuminance() > 0.5
-                                    ? Colors.black
-                                    : Colors.white)
+                            ? Icon(Icons.check_rounded, size: 20, color: color.computeLuminance() > 0.5 ? Colors.black : Colors.white)
                             : null),
                   ),
                 );
@@ -2610,12 +2572,9 @@ class _CountdownQuickCustomizeSheetContentState
     required ValueChanged<double> onChanged,
     required ValueChanged<double> onChangedEnd,
     required VoidCallback onSave,
-    required String? customBgUrl,
   }) {
     final displayValue = tempValue ?? currentValue;
-    final hasChanges =
-        tempValue != null && (tempValue - currentValue).abs() > 0.01;
-    final hasBg = customBgUrl != null && customBgUrl.trim().isNotEmpty;
+    final hasChanges = tempValue != null && (tempValue - currentValue).abs() > 0.01;
 
     return Container(
       width: double.infinity,
@@ -2696,19 +2655,15 @@ class _CountdownQuickCustomizeSheetContentState
                     activeTrackColor: const Color(0xFFD81B60),
                     inactiveTrackColor: const Color(0xFFFDE8F0),
                     thumbColor: const Color(0xFFD81B60),
-                    overlayColor:
-                        const Color(0xFFD81B60).withValues(alpha: 0.12),
+                    overlayColor: const Color(0xFFD81B60).withValues(alpha: 0.12),
                     trackHeight: 4.0,
-                    thumbShape:
-                        const RoundSliderThumbShape(enabledThumbRadius: 8.0),
-                    overlayShape:
-                        const RoundSliderOverlayShape(overlayRadius: 16.0),
+                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8.0),
+                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 16.0),
                   ),
                   child: Slider(
                     min: 200.0,
                     max: UiPrefs.maxCountdownSizePx,
-                    value:
-                        displayValue.clamp(200.0, UiPrefs.maxCountdownSizePx),
+                    value: displayValue.clamp(200.0, UiPrefs.maxCountdownSizePx),
                     onChanged: onChanged,
                     onChangeEnd: onChangedEnd,
                   ),
@@ -2730,9 +2685,7 @@ class _CountdownQuickCustomizeSheetContentState
                 style: SLTheme.quicksand(
                   fontSize: 12.6,
                   fontWeight: FontWeight.w800,
-                  color: hasChanges
-                      ? const Color(0xFFD81B60)
-                      : const Color(0xFF8E6F7E),
+                  color: hasChanges ? const Color(0xFFD81B60) : const Color(0xFF8E6F7E),
                 ),
               ),
               if (hasChanges)
@@ -2742,16 +2695,14 @@ class _CountdownQuickCustomizeSheetContentState
                     borderRadius: BorderRadius.circular(12),
                     onTap: onSave,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFF2F7),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: const Color(0xFFF4D7E2)),
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                const Color(0xFFD81B60).withValues(alpha: 0.08),
+                            color: const Color(0xFFD81B60).withValues(alpha: 0.08),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -2770,193 +2721,6 @@ class _CountdownQuickCustomizeSheetContentState
                 ),
             ],
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 10),
-            child: Divider(color: Color(0xFFF0DDE4), height: 1),
-          ),
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF9733EE).withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.image_outlined,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Ảnh nền trang chủ',
-                      style: SLTheme.quicksand(
-                        fontSize: 14.8,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF4A3640),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Tải lên hoặc xóa ảnh nền trang chủ.',
-                      style: SLTheme.quicksand(
-                        fontSize: 12.1,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF8E6F7E),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (_isUploadingBg) ...[
-            Row(
-              children: [
-                const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    _bgUploadProgress != null
-                        ? 'Đang tải lên: ${(_bgUploadProgress! * 100).toInt()}%'
-                        : 'Đang chuẩn bị tải lên...',
-                    style: SLTheme.quicksand(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF8E6F7E),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ] else ...[
-            Row(
-              children: [
-                if (hasBg) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: CachedNetworkImage(
-                      imageUrl: customBgUrl.trim(),
-                      width: 44,
-                      height: 44,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        color: const Color(0xFFFDE8F0),
-                        child: const Icon(Icons.image_outlined,
-                            size: 16, color: Color(0xFFD81B60)),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        color: const Color(0xFFFDE8F0),
-                        child: const Icon(Icons.broken_image_outlined,
-                            size: 16, color: Color(0xFFD81B60)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                ],
-                Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFF0DDE4)),
-                      foregroundColor: const Color(0xFF4A3640),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    onPressed: _pickBgImage,
-                    icon: const Icon(Icons.upload_rounded,
-                        size: 16, color: Color(0xFFD81B60)),
-                    label: Text(
-                      hasBg ? 'Thay đổi ảnh' : 'Tải ảnh lên',
-                      style: SLTheme.quicksand(
-                          fontSize: 13, fontWeight: FontWeight.w800),
-                    ),
-                  ),
-                ),
-                if (hasBg) ...[
-                  const SizedBox(width: 10),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF2F7),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFF4D7E2)),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded,
-                          color: Color(0xFFD81B60), size: 20),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: Text(
-                              'Xóa ảnh nền?',
-                              style: SLTheme.quicksand(
-                                  fontWeight: FontWeight.w900),
-                            ),
-                            content: Text(
-                              'Bạn có chắc chắn muốn xóa ảnh nền trang chủ không?',
-                              style: SLTheme.quicksand(
-                                  fontWeight: FontWeight.w700),
-                            ),
-                            actions: [
-                              TextButton(
-                                child: Text(
-                                  'Hủy',
-                                  style: SLTheme.quicksand(
-                                      fontWeight: FontWeight.w800,
-                                      color: const Color(0xFF8E6F7E)),
-                                ),
-                                onPressed: () => Navigator.pop(ctx),
-                              ),
-                              TextButton(
-                                child: Text(
-                                  'Xóa',
-                                  style: SLTheme.quicksand(
-                                      fontWeight: FontWeight.w900,
-                                      color: const Color(0xFFD81B60)),
-                                ),
-                                onPressed: () {
-                                  Navigator.pop(ctx);
-                                  _clearBgImage();
-                                },
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ],
         ],
       ),
     );
@@ -2966,35 +2730,8 @@ class _CountdownQuickCustomizeSheetContentState
     final homeState = widget.homeState;
     final houseId = (homeState._houseId ?? '').trim();
     if (houseId.isEmpty) {
-      homeState._showLatestSnackBar(
-          'Vui lòng đăng nhập hoặc tham gia nhà để đổi ảnh nền.');
+      homeState._showLatestSnackBar('Vui lòng đăng nhập hoặc tham gia nhà để đổi ảnh nền.');
       return;
-    }
-
-    if (!widget.isVip && !kIsWeb) {
-      final prefs = await SharedPreferences.getInstance();
-      final lastAdTimeStr = prefs.getString('last_bg_ad_time');
-      bool shouldShowAd = true;
-      if (lastAdTimeStr != null) {
-        final lastAdTime = DateTime.parse(lastAdTimeStr);
-        if (DateTime.now().difference(lastAdTime).inMinutes < 15) {
-          shouldShowAd = false;
-        }
-      }
-
-      if (shouldShowAd) {
-        final adMob = AdMobService();
-        final adSuccess = await adMob.showRewardedAd(
-          ignoreCooldown: true,
-          loadTimeout: const Duration(seconds: 12),
-        );
-        if (!mounted) return;
-        if (!adSuccess) {
-          homeState._showLatestSnackBar('Cần xem hết quảng cáo để thay đổi ảnh nền.');
-          return;
-        }
-        await prefs.setString('last_bg_ad_time', DateTime.now().toIso8601String());
-      }
     }
 
     try {
@@ -3011,13 +2748,6 @@ class _CountdownQuickCustomizeSheetContentState
           maxWidth: 1440,
           maxHeight: 3200,
           uiSettings: [
-            AndroidUiSettings(
-              toolbarTitle: 'Chỉnh sửa ảnh nền',
-              toolbarColor: const Color(0xFFD81B60),
-              toolbarWidgetColor: Colors.white,
-              initAspectRatio: CropAspectRatioPreset.ratio16x9,
-              lockAspectRatio: true,
-            ),
             IOSUiSettings(
               title: 'Chỉnh sửa ảnh nền',
               // Using ratio16x9 since ratio9x16 was removed in image_cropper v7
@@ -3261,8 +2991,7 @@ class _CountdownQuickCustomizeSheetContentState
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -3293,13 +3022,11 @@ class _CountdownQuickCustomizeSheetContentState
                       fit: BoxFit.cover,
                       placeholder: (context, url) => Container(
                         color: const Color(0xFFFDE8F0),
-                        child: const Icon(Icons.image_outlined,
-                            size: 16, color: Color(0xFFD81B60)),
+                        child: const Icon(Icons.image_outlined, size: 16, color: Color(0xFFD81B60)),
                       ),
                       errorWidget: (context, url, error) => Container(
                         color: const Color(0xFFFDE8F0),
-                        child: const Icon(Icons.broken_image_outlined,
-                            size: 16, color: Color(0xFFD81B60)),
+                        child: const Icon(Icons.broken_image_outlined, size: 16, color: Color(0xFFD81B60)),
                       ),
                     ),
                   ),
@@ -3316,12 +3043,10 @@ class _CountdownQuickCustomizeSheetContentState
                       ),
                     ),
                     onPressed: _pickBgImage,
-                    icon: const Icon(Icons.upload_rounded,
-                        size: 16, color: Color(0xFFD81B60)),
+                    icon: const Icon(Icons.upload_rounded, size: 16, color: Color(0xFFD81B60)),
                     label: Text(
                       hasBg ? 'Thay đổi ảnh' : 'Tải ảnh lên',
-                      style: SLTheme.quicksand(
-                          fontSize: 13, fontWeight: FontWeight.w800),
+                      style: SLTheme.quicksand(fontSize: 13, fontWeight: FontWeight.w800),
                     ),
                   ),
                 ),
@@ -3334,38 +3059,31 @@ class _CountdownQuickCustomizeSheetContentState
                       border: Border.all(color: const Color(0xFFF4D7E2)),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded,
-                          color: Color(0xFFD81B60), size: 20),
+                      icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFD81B60), size: 20),
                       onPressed: () {
                         showDialog(
                           context: context,
                           builder: (ctx) => AlertDialog(
                             title: Text(
                               'Xóa ảnh nền?',
-                              style: SLTheme.quicksand(
-                                  fontWeight: FontWeight.w900),
+                              style: SLTheme.quicksand(fontWeight: FontWeight.w900),
                             ),
                             content: Text(
                               'Bạn có chắc chắn muốn xóa ảnh nền trang chủ không?',
-                              style: SLTheme.quicksand(
-                                  fontWeight: FontWeight.w700),
+                              style: SLTheme.quicksand(fontWeight: FontWeight.w700),
                             ),
                             actions: [
                               TextButton(
                                 child: Text(
                                   'Hủy',
-                                  style: SLTheme.quicksand(
-                                      fontWeight: FontWeight.w800,
-                                      color: const Color(0xFF8E6F7E)),
+                                  style: SLTheme.quicksand(fontWeight: FontWeight.w800, color: const Color(0xFF8E6F7E)),
                                 ),
                                 onPressed: () => Navigator.pop(ctx),
                               ),
                               TextButton(
                                 child: Text(
                                   'Xóa',
-                                  style: SLTheme.quicksand(
-                                      fontWeight: FontWeight.w900,
-                                      color: const Color(0xFFD81B60)),
+                                  style: SLTheme.quicksand(fontWeight: FontWeight.w900, color: const Color(0xFFD81B60)),
                                 ),
                                 onPressed: () {
                                   Navigator.pop(ctx);
@@ -3540,8 +3258,7 @@ class _CountdownQuickCustomizeSheetContentState
                             buildLockedAdButton(
                               option: selectedStyle,
                               onUnlocked: (opt) async {
-                                await widget.homeState
-                                    ._saveCountdownQuickUiPrefs(
+                                await widget.homeState._saveCountdownQuickUiPrefs(
                                   countdownStyleKey: opt.value,
                                   prevalidatedUnlockedStyles: _unlockedStyles,
                                   isVip: widget.isVip,
@@ -3552,8 +3269,7 @@ class _CountdownQuickCustomizeSheetContentState
                             buildOptionChip(
                               option: selectedStyle,
                               selected: true,
-                              onTap: () =>
-                                  widget.homeState._saveCountdownQuickUiPrefs(
+                              onTap: () => widget.homeState._saveCountdownQuickUiPrefs(
                                 countdownStyleKey: selectedStyle.value,
                                 prevalidatedUnlockedStyles: _unlockedStyles,
                                 isVip: widget.isVip,
@@ -3572,8 +3288,7 @@ class _CountdownQuickCustomizeSheetContentState
                   icon: Icons.change_circle_rounded,
                   options: widget.styleOptions,
                   selectedValue: uiState.countdownStyleKey,
-                  onSelect: (option) =>
-                      widget.homeState._saveCountdownQuickUiPrefs(
+                  onSelect: (option) => widget.homeState._saveCountdownQuickUiPrefs(
                     countdownStyleKey: option.value,
                     prevalidatedUnlockedStyles: _unlockedStyles,
                     isVip: widget.isVip,
@@ -3582,8 +3297,7 @@ class _CountdownQuickCustomizeSheetContentState
                 const SizedBox(height: 12),
                 buildTextColorSection(
                   selectedColorHex: uiState.countdownTextColor,
-                  onSelect: (hex) =>
-                      widget.homeState._saveCountdownQuickUiPrefs(
+                  onSelect: (hex) => widget.homeState._saveCountdownQuickUiPrefs(
                     countdownTextColor: hex,
                     prevalidatedUnlockedStyles: _unlockedStyles,
                     isVip: widget.isVip,
@@ -3596,7 +3310,6 @@ class _CountdownQuickCustomizeSheetContentState
                   icon: Icons.photo_size_select_large_rounded,
                   currentValue: uiState.countdownSizePx,
                   tempValue: _tempCountdownSize,
-                  customBgUrl: uiState.customBackgroundUrl,
                   onChanged: (value) {
                     setState(() {
                       _tempCountdownSize = value;
@@ -3628,6 +3341,11 @@ class _CountdownQuickCustomizeSheetContentState
                     await UiPrefs.setHomeShowTimer(val);
                   },
                 ),
+                const SizedBox(height: 12),
+                buildBackgroundSection(
+                  customBgUrl: uiState.customBackgroundUrl,
+                ),
+                // Tạm ngắt phần cài đặt Hiệu ứng nền
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
@@ -3681,11 +3399,11 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
   String _myRole = 'user1';
   final _random = Random();
 
-  final GlobalKey<TapHeartsOverlayState> _globalHeartsKey =
-      GlobalKey<TapHeartsOverlayState>();
+  final GlobalKey<TapHeartsOverlayState> _globalHeartsKey = GlobalKey<TapHeartsOverlayState>();
   String _globalHeartStyle = 'basic';
   StreamSubscription<Map<String, dynamic>>? _interactiveEventsSub;
 
+  bool _showGlobal = false;
   bool _showHeartNotif = false;
 
   static const List<String> _appTips = [
@@ -3703,6 +3421,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
     '💡 Cùng lên danh sách To-do list hoặc ghi lại ghi chú ngọt ngào ở mục Ghi chú chung 📝',
     '💡 Thử vận may hoặc giải trí cùng người ấy với Vòng quay thử thách ở tab Giải Trí 🎡',
     '💡 Rút bài Tarot tình duyên mỗi ngày ở tab Giải Trí để xem mức độ đồng điệu hôm nay 🔮',
+    '💡 Sử dụng Nhịp điệu tâm hồn (Soul Rhythm) để cùng hít thở sâu, đồng điệu nhịp đập mỗi tối 🧘‍♀️',
     '💡 Đừng quên cho thú cưng ảo ăn và tương tác mỗi ngày trong ngôi nhà chung nhé 🐱',
     '💡 Vào Cài đặt ➔ Giao diện để đổi màu chủ đề cực xinh như "Hoàng hôn", "Đại dương" hay "Hồng ngọt ngào"! 🎨',
     '💡 Bạn có thể bật hiệu ứng tuyết rơi, trái tim bay hoặc lá rụng rất lãng mạn trong Cài đặt ➔ Giao diện! ❄️',
@@ -3743,6 +3462,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
+        _showGlobal = prefs.getBool('soul_merge_show_heart_global') ?? false;
         _showHeartNotif = prefs.getBool('soul_merge_show_heart_notif') ?? false;
         if (!_showHeartNotif) {
           _showBubble = false;
@@ -3776,12 +3496,11 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
 
   void _initInteractiveEventsListening() {
     _interactiveEventsSub?.cancel();
-    _interactiveEventsSub =
-        SoulMergeService().watchInteractiveEvents().listen((event) async {
+    _interactiveEventsSub = SoulMergeService().watchInteractiveEvents().listen((event) async {
       if (event.isEmpty || _isSingle || !mounted) return;
       final sender = event['sender']?.toString();
       if (sender == _myRole) return; // ignore my own
-
+      
       final type = event['type']?.toString();
       if (type == 'photo_shot') {
         // 1. Hiển thị thông báo bằng chữ nếu được bật
@@ -3790,8 +3509,9 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
         }
 
         // 2. Hiển thị hiệu ứng tim bay nếu:
-        // - Chúng ta đang ở màn hình home (luôn bay ở home)
-        if (widget.activeIndex == 0) {
+        // - Hoặc showGlobal được bật (bay trên mọi màn hình/tabs)
+        // - Hoặc chúng ta đang ở màn hình home (luôn bay ở home)
+        if (_showGlobal || widget.activeIndex == 0) {
           final prefs = await SharedPreferences.getInstance();
           final style = prefs.getString('soul_merge_heart_style') ?? 'basic';
           if (mounted) {
@@ -3800,8 +3520,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
             });
             // Trì hoãn nhẹ 50ms để widget cập nhật style mới rồi bắn tim
             Future.delayed(const Duration(milliseconds: 50), () {
-              _globalHeartsKey.currentState
-                  ?.spawnLocalExplosion(const Offset(26, 26), count: 6);
+              _globalHeartsKey.currentState?.spawnLocalExplosion(const Offset(26, 26), count: 6);
             });
           }
         }
@@ -3815,16 +3534,14 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
 
     _messagesSub = SoulMergeService().watchSoulMessages().listen((messages) {
       if (messages.isEmpty || _isSingle) return;
-      final isVisible = widget.activeIndex == 0;
+      final isVisible = _showGlobal || widget.activeIndex == 0;
       if (!isVisible) return;
       final lastMsg = messages.last;
       final sender = lastMsg['sender']?.toString();
       if (sender != _myRole) {
         final text = lastMsg['text']?.toString() ?? '';
         final imgUrl = lastMsg['imageUrl']?.toString() ?? '';
-        final displayTxt = text.isNotEmpty
-            ? text
-            : (imgUrl.isNotEmpty ? 'Đã gửi một ảnh 📸' : '');
+        final displayTxt = text.isNotEmpty ? text : (imgUrl.isNotEmpty ? 'Đã gửi một ảnh 📸' : '');
         if (displayTxt.isEmpty) return;
 
         final msgTime = lastMsg['timestamp'] as int? ?? 0;
@@ -3845,7 +3562,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
   }
 
   void _showRandomTip() {
-    final isVisible = widget.activeIndex == 0;
+    final isVisible = _showGlobal || widget.activeIndex == 0;
     if (!isVisible) return;
     final tip = _appTips[_random.nextInt(_appTips.length)];
     _showFloatingMessage(tip);
@@ -3854,11 +3571,6 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
   void _showFloatingMessage(String text) {
     if (!mounted) return;
     if (!_showHeartNotif) return;
-    
-    // [Fix] Chỉ hiển thị thông báo bong bóng khi ở màn hình chính (tab 0) 
-    // theo yêu cầu của người dùng, tránh đè lên các tính năng ở tab khác.
-    if (widget.activeIndex != 0) return;
-
     setState(() {
       _bubbleText = text;
       _showBubble = true;
@@ -3892,7 +3604,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
   Widget build(BuildContext context) {
     if (_isSingle) return const SizedBox.shrink();
 
-    final isVisible = widget.activeIndex == 0;
+    final isVisible = _showGlobal || widget.activeIndex == 0;
     if (!isVisible) return const SizedBox.shrink();
 
     return ValueListenableBuilder<bool>(
@@ -3900,9 +3612,9 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
       builder: (context, captureMode, _) {
         if (captureMode) return const SizedBox.shrink();
 
-        final defaultPos = Offset(14, MediaQuery.paddingOf(context).top + 4);
+        final defaultPos = Offset(14, MediaQuery.of(context).padding.top + 4);
         final pos = _position ?? defaultPos;
-        final screenWidth = MediaQuery.sizeOf(context).width;
+        final screenWidth = MediaQuery.of(context).size.width;
 
         // Căn giữa sticker mặc định (52 - 212) / 2 = -80
         double tooltipLeft = -80;
@@ -3934,10 +3646,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                         decoration: const BoxDecoration(
                           color: Colors.white,
                           border: Border(
-                            bottom: BorderSide(
-                                color: Color(0xFFFFB3CA), width: 1.5),
-                            right: BorderSide(
-                                color: Color(0xFFFFB3CA), width: 1.5),
+                            bottom: BorderSide(color: Color(0xFFFFB3CA), width: 1.5),
+                            right: BorderSide(color: Color(0xFFFFB3CA), width: 1.5),
                           ),
                         ),
                       ),
@@ -3954,8 +3664,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                   child: _showBubble && _bubbleText != null
                       ? Container(
                           width: 212,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
@@ -3965,8 +3674,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFCEBCD0)
-                                    .withValues(alpha: 0.3),
+                                color: const Color(0xFFCEBCD0).withValues(alpha: 0.3),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -4005,10 +3713,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                   setState(() {
                     final targetPos = details.globalPosition - _dragOffset;
                     _position = Offset(
-                      targetPos.dx
-                          .clamp(0.0, MediaQuery.sizeOf(context).width - 52),
-                      targetPos.dy
-                          .clamp(0.0, MediaQuery.sizeOf(context).height - 150),
+                      targetPos.dx.clamp(0.0, MediaQuery.of(context).size.width - 52),
+                      targetPos.dy.clamp(0.0, MediaQuery.of(context).size.height - 150),
                     );
                   });
                 },
@@ -4061,3 +3767,4 @@ class HomeUpcomingEvent {
     required this.type,
   });
 }
+

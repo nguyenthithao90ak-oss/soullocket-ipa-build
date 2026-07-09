@@ -339,7 +339,8 @@ class SecurityProtectionRolloutService {
   SharedPreferences? _prefs;
 
   Future<SharedPreferences> _getPrefs() async {
-    return _prefs ??= OfflineCacheService.getPrefsSync() ??
+    return _prefs ??=
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
   }
 
@@ -370,8 +371,7 @@ class SecurityProtectionRolloutService {
             return config;
           }
         } catch (e) {
-          debugPrint(
-              'Security rollout cache decode failed: ${AppErrorMapper.resolve(
+          debugPrint('Security rollout cache decode failed: ${AppErrorMapper.resolve(
             e,
             fallbackMessage: 'Không thể đọc cache bảo vệ bảo mật.',
           ).message}');
@@ -389,8 +389,7 @@ class SecurityProtectionRolloutService {
       _rememberConfig(config);
       return config;
     } catch (e) {
-      debugPrint(
-          'Security rollout fetch failed, fallback cache: ${AppErrorMapper.resolve(
+      debugPrint('Security rollout fetch failed, fallback cache: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Không thể tải cấu hình bảo vệ bảo mật.',
       ).message}');

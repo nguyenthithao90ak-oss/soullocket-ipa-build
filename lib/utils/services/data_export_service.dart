@@ -26,8 +26,7 @@ class DataExportService {
     'il_security_device_signals_consent',
   ];
 
-  Future<DataExportResult> requestUserDataExport(
-      {required int rangeDays}) async {
+  Future<DataExportResult> requestUserDataExport({required int rangeDays}) async {
     try {
       final callable = _functions.httpsCallable('requestUserDataExport');
       final normalizedRangeDays = _normalizeRangeDays(rangeDays);

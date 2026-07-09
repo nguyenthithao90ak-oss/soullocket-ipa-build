@@ -74,9 +74,8 @@ class StorageSignedUploadHelper {
     bool isDone = false;
     const tick = Duration(milliseconds: 50);
     double current = start;
-    final step =
-        (end - start) / (expectedDuration.inMilliseconds / tick.inMilliseconds);
-
+    final step = (end - start) / (expectedDuration.inMilliseconds / tick.inMilliseconds);
+    
     final timer = Timer.periodic(tick, (t) {
       if (isDone) {
         t.cancel();
@@ -185,15 +184,14 @@ class StorageSignedUploadHelper {
           uploadUrl: session['uploadUrl'].toString(),
           bytes: uploadBytes,
           headers: headers,
-          onProgress: request.onProgress != null
+          onProgress: request.onProgress != null 
               ? (p) => request.onProgress!(0.35 + (p * 0.40))
               : null,
         );
 
         if (request.onProgress != null) request.onProgress!(0.75);
 
-        final blurHash =
-            await BlurHashHelper.generateBlurHashFromBytes(uploadBytes);
+        final blurHash = await BlurHashHelper.generateBlurHashFromBytes(uploadBytes);
         final sessionWithBlur = Map<String, dynamic>.from(session);
         if (blurHash != null) {
           sessionWithBlur['blurHash'] = blurHash;

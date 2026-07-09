@@ -1,4 +1,4 @@
-part of '../single_match_hub_screen.dart';
+﻿part of '../single_match_hub_screen.dart';
 
 class _SingleMatchWarningCard extends StatelessWidget {
   const _SingleMatchWarningCard({
@@ -198,7 +198,7 @@ class _SingleMatchFilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
+    final screenWidth = MediaQuery.of(context).size.width;
     final maxChipWidth = (screenWidth - 84).clamp(140.0, 320.0).toDouble();
 
     return ConstrainedBox(
@@ -248,7 +248,7 @@ class _SingleMatchAdaptiveTagPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
+    final screenWidth = MediaQuery.of(context).size.width;
     final maxChipWidth = (screenWidth - 84).clamp(140.0, 320.0).toDouble();
 
     return ConstrainedBox(

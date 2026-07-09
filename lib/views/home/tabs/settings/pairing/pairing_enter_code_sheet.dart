@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/pairing_service.dart';
-import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils\app_error_mapper.dart';
 
 class PairingEnterCodeSheet extends StatefulWidget {
   const PairingEnterCodeSheet({super.key});

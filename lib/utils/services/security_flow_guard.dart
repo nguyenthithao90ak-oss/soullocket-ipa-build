@@ -395,8 +395,8 @@ class SecurityFlowGuard {
   }
 
   Future<DeviceTrustState> _loadTrustStateWithRetry() async {
-    final first = await _deviceManagerService.getCurrentDeviceTrustState(
-        autoApprove: true);
+    final first =
+        await _deviceManagerService.getCurrentDeviceTrustState(autoApprove: true);
     if (first.isTrusted || first.isPendingApproval || first.isBlocked) {
       return first;
     }

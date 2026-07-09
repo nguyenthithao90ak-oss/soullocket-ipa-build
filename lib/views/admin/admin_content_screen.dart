@@ -42,66 +42,55 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
     }
 
     try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection('reports')
-          .get()
-          .timeout(const Duration(seconds: 8));
+      final snapshot = await FirebaseFirestore.instance.collection('reports').get().timeout(const Duration(seconds: 8));
       final List<Map<String, dynamic>> loaded = [];
 
       if (snapshot.docs.isNotEmpty) {
-        final entries =
-            snapshot.docs.map((d) => MapEntry(d.id, d.data())).toList();
+          final entries = snapshot.docs.map((d) => MapEntry(d.id, d.data())).toList();
 
-        // Fetch post data for each report concurrently
-        await Future.wait(entries.map((entry) async {
-          final key = entry.key;
-          final value = entry.value;
+          // Fetch post data for each report concurrently
+          await Future.wait(entries.map((entry) async {
+            final key = entry.key;
+            final value = entry.value;
 
-          final reportData = Map<String, dynamic>.from(value);
-          reportData['id'] = key.toString();
+            final reportData = Map<String, dynamic>.from(value);
+            reportData['id'] = key.toString();
 
-          final postId = reportData['postId']?.toString() ??
-              reportData['post']?.toString() ??
-              '';
-          final commentId = reportData['commentId']?.toString() ?? '';
-          final isCommentReport = reportData['type'] == 'comment_report' ||
-              reportData['type'] == 'comment';
+            final postId = reportData['postId']?.toString() ??
+                reportData['post']?.toString() ??
+                '';
+            final commentId = reportData['commentId']?.toString() ?? '';
+            final isCommentReport = reportData['type'] == 'comment_report' ||
+                reportData['type'] == 'comment';
 
-          if (postId.isNotEmpty) {
-            try {
-              var postSnap = await FirebaseFirestore.instance
-                  .collection('social_posts')
-                  .doc(postId)
-                  .get();
-              if (!postSnap.exists || postSnap.data() == null) {
-                postSnap = await FirebaseFirestore.instance
-                    .collection('social_feed')
-                    .doc(postId)
-                    .get();
-              }
-              if (postSnap.exists && postSnap.data() != null) {
-                final postData =
-                    Map<String, dynamic>.from(postSnap.data() as Map);
-                reportData['postData'] = postData;
+            if (postId.isNotEmpty) {
+              try {
+                var postSnap = await FirebaseFirestore.instance.collection('social_posts').doc(postId).get();
+                if (!postSnap.exists || postSnap.data() == null) {
+                  postSnap = await FirebaseFirestore.instance.collection('social_feed').doc(postId).get();
+                }
+                if (postSnap.exists && postSnap.data() != null) {
+                  final postData =
+                      Map<String, dynamic>.from(postSnap.data() as Map);
+                  reportData['postData'] = postData;
 
-                if (isCommentReport && commentId.isNotEmpty) {
-                  final commentSnap = await FirebaseFirestore.instance
-                      .collection('social_posts')
-                      .doc(postId)
-                      .collection('comments')
-                      .doc(commentId)
-                      .get();
-                  if (commentSnap.exists && commentSnap.data() != null) {
-                    reportData['commentData'] =
-                        Map<String, dynamic>.from(commentSnap.data()!);
+                  if (isCommentReport && commentId.isNotEmpty) {
+                    final commentSnap = await FirebaseFirestore.instance
+                        .collection('social_posts')
+                        .doc(postId)
+                        .collection('comments')
+                        .doc(commentId)
+                        .get();
+                    if (commentSnap.exists && commentSnap.data() != null) {
+                      reportData['commentData'] = Map<String, dynamic>.from(commentSnap.data()!);
+                    }
                   }
                 }
-              }
-            } catch (_) {}
-          }
+              } catch (_) {}
+            }
 
-          loaded.add(reportData);
-        }));
+            loaded.add(reportData);
+          }));
       }
 
       for (var r in loaded) {
@@ -127,7 +116,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
       setState(() {
         _errorText = AppErrorMapper.resolve(
           error,
-          fallbackMessage: context.tr('admin_chathtiboc_54579d'),
+          fallbackMessage:
+              context.tr('admin_chathtiboc_54579d'),
         ).message;
       });
     } finally {
@@ -146,18 +136,9 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
   Future<void> _deletePost(String postId, String reportId) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('social_posts')
-          .doc(postId)
-          .delete();
-      await FirebaseFirestore.instance
-          .collection('social_feed')
-          .doc(postId)
-          .delete();
-      await FirebaseFirestore.instance
-          .collection('reports')
-          .doc(reportId)
-          .delete();
+      await FirebaseFirestore.instance.collection('social_posts').doc(postId).delete();
+      await FirebaseFirestore.instance.collection('social_feed').doc(postId).delete();
+      await FirebaseFirestore.instance.collection('reports').doc(reportId).delete();
 
       await FirebaseFirestore.instance.collection('admin_audit_logs').add({
         'ts': FieldValue.serverTimestamp(),
@@ -167,8 +148,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
       });
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('admin_xabivit_92d4ec'))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.tr('admin_xabivit_92d4ec'))));
       _loadData(refresh: true);
     } catch (e) {
       debugPrint('Delete post failed: ${AppErrorMapper.resolve(
@@ -198,10 +179,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
           .doc(postId)
           .update({'commentCount': FieldValue.increment(-1)});
 
-      await FirebaseFirestore.instance
-          .collection('reports')
-          .doc(reportId)
-          .delete();
+      await FirebaseFirestore.instance.collection('reports').doc(reportId).delete();
 
       await FirebaseFirestore.instance.collection('admin_audit_logs').add({
         'ts': FieldValue.serverTimestamp(),
@@ -211,8 +189,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
       });
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('admin_xabnhlun_f398ed'))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.tr('admin_xabnhlun_f398ed'))));
       _loadData(refresh: true);
     } catch (e) {
       debugPrint('Delete comment failed: ${AppErrorMapper.resolve(
@@ -230,13 +208,10 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
   Future<void> _dismissReport(String reportId) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('reports')
-          .doc(reportId)
-          .delete();
+      await FirebaseFirestore.instance.collection('reports').doc(reportId).delete();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('admin_bquaboco_cc6fa6'))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.tr('admin_bquaboco_cc6fa6'))));
       _loadData(refresh: true);
     } catch (e) {
       debugPrint('Dismiss report failed: ${AppErrorMapper.resolve(
@@ -302,9 +277,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildInfoRow(
-                          context.tr('admin_ldoreport_25f7cf'),
-                          r['reason'] ?? context.tr('admin_khngr_b18ff7'),
+                      _buildInfoRow(context.tr('admin_ldoreport_25f7cf'), r['reason'] ?? context.tr('admin_khngr_b18ff7'),
                           Colors.redAccent),
                       _buildInfoRow(context.tr('admin_ngireport_0d8b07'),
                           r['by'] ?? r['reporterId'] ?? 'Unknown', Colors.grey),
@@ -341,8 +314,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                             border: Border.all(color: const Color(0xFF2A364E)),
                           ),
                           child: Text(
-                            r['assistantText']?.toString() ??
-                                context.tr('admin_khngc_6c5fcb'),
+                            r['assistantText']?.toString() ?? context.tr('admin_khngc_6c5fcb'),
                             style: const TextStyle(
                                 color: Colors.white, fontSize: 15),
                           ),
@@ -384,7 +356,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                           ),
                         ),
                       ] else ...[
-                        Text(context.tr('admin_khngtmthyd_865265'),
+                        Text(
+                            context.tr('admin_khngtmthyd_865265'),
                             style: const TextStyle(color: Colors.grey)),
                       ],
                       if (isCommentReport) ...[
@@ -404,8 +377,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                               color: const Color(0xFF10182A),
                               borderRadius: SLRadius.mdAll,
                               border: Border.all(
-                                  color:
-                                      Colors.redAccent.withValues(alpha: 0.5)),
+                                  color: Colors.redAccent.withValues(alpha: 0.5)),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -426,7 +398,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                             ),
                           ),
                         ] else ...[
-                          Text(context.tr('admin_khngtmthyd_1f0f9f'),
+                          Text(
+                              context.tr('admin_khngtmthyd_1f0f9f'),
                               style: const TextStyle(color: Colors.grey)),
                         ]
                       ]
@@ -465,9 +438,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                         icon: const Icon(Icons.delete_forever,
                             color: Colors.white, size: 18),
                         label: Text(
-                            isCommentReport
-                                ? context.tr('admin_xabnhlun_479f8e')
-                                : context.tr('admin_xabivit_29f643'),
+                            isCommentReport ? context.tr('admin_xabnhlun_479f8e') : context.tr('admin_xabivit_29f643'),
                             style: const TextStyle(color: Colors.white)),
                       ),
                     ],
@@ -569,10 +540,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                         ? const Center(child: CircularProgressIndicator())
                         : _reports.isEmpty
                             ? Center(
-                                child: Text(
-                                    context.tr('admin_khngcbocon_b28c2e'),
-                                    style:
-                                        const TextStyle(color: Colors.white)))
+                                child: Text(context.tr('admin_khngcbocon_b28c2e'),
+                                    style: const TextStyle(color: Colors.white)))
                             : AdminGlassCard(
                                 padding: const EdgeInsets.all(0),
                                 child: ListView.separated(
@@ -601,8 +570,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
 
                                     String targetIdStr = '';
                                     if (isAiReport) {
-                                      targetIdStr =
-                                          context.tr('admin_chatthnthi_6c9f71');
+                                      targetIdStr = context.tr('admin_chatthnthi_6c9f71');
                                     } else if (isUserReport) {
                                       targetIdStr = 'User: $targetHouseId';
                                     } else if (isCommentReport) {
@@ -666,8 +634,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                                                 color: Colors.blue),
                                             onPressed: () =>
                                                 _showPostDetails(r),
-                                            tooltip: context
-                                                .tr('admin_xemchititn_abe496'),
+                                            tooltip: context.tr('admin_xemchititn_abe496'),
                                           ),
                                           IconButton(
                                             icon: const Icon(
@@ -685,10 +652,8 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                                                     }
                                                   },
                                             tooltip: isCommentReport
-                                                ? context
-                                                    .tr('admin_xabnhlun_0e12a1')
-                                                : context
-                                                    .tr('admin_xabivit_2c7199'),
+                                                ? context.tr('admin_xabnhlun_0e12a1')
+                                                : context.tr('admin_xabivit_2c7199'),
                                           ),
                                           IconButton(
                                             icon: const Icon(
@@ -697,8 +662,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                                                 color: Colors.green),
                                             onPressed: () =>
                                                 _dismissReport(r['id']),
-                                            tooltip: context
-                                                .tr('admin_bquaboco_1f67bf'),
+                                            tooltip: context.tr('admin_bquaboco_1f67bf'),
                                           ),
                                         ],
                                       ),

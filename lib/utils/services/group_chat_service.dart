@@ -44,6 +44,8 @@ class GroupChatService {
   String _sanitize(String input) =>
       input.replaceAll('<', '&lt;').replaceAll('>', '&gt;').trim();
 
+
+
   bool isHouseMemberOfGroup(GroupChatRoom room, String houseId) {
     final normalizedHouseId = houseId.trim();
     return normalizedHouseId.isNotEmpty &&
@@ -321,16 +323,13 @@ class GroupChatService {
       final snap = await query.get().timeout(const Duration(seconds: 10));
       if (snap.docs.isEmpty) return const <ChatMessage>[];
 
-      return snap.docs
-          .map((doc) {
-            try {
-              return ChatMessage.fromMap(doc.id, doc.data());
-            } catch (_) {
-              return null;
-            }
-          })
-          .whereType<ChatMessage>()
-          .toList();
+      return snap.docs.map((doc) {
+        try {
+          return ChatMessage.fromMap(doc.id, doc.data());
+        } catch (_) {
+          return null;
+        }
+      }).whereType<ChatMessage>().toList();
     } on TimeoutException {
       return const <ChatMessage>[];
     }

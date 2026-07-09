@@ -1,9 +1,7 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'widgets/utilities_tab_body.dart';
 import 'dart:async';
-import 'dart:math';
-import 'package:intl/intl.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, listEquals;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, listEquals;
 
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -51,7 +49,7 @@ import '../../utilities/local_album_screen.dart';
 import '../../utilities/soul_events/soul_events_screen.dart';
 import 'package:soullocket_app/core/sl_route.dart';
 
-// import '../../utils/sl_notice.dart';
+// import '../../../utils/sl_notice.dart';
 
 // ─── Web-parity: Map ID -> Icon & Colors ───
 
@@ -81,7 +79,7 @@ class _UtilitiesTabState extends State<UtilitiesTab>
   bool _isEditMode = false;
   int _currentSegment = 0;
   BannerAd? _bottomBannerAd;
-  final bool _isBottomBannerReady = false;
+  bool _isBottomBannerReady = false;
   List<UtilityApp> _pinnedApps = const <UtilityApp>[];
   List<UtilityApp> _recentApps = const <UtilityApp>[];
 
@@ -313,8 +311,30 @@ class _UtilitiesTabState extends State<UtilitiesTab>
     super.dispose();
   }
 
-  void _loadBottomBanner() {
-    // Disabled to prevent white screen crashes on emulator / unverified environments.
+  void _loadBottomBanner() async {
+    if (kIsWeb || ModalRoute.of(context)?.isCurrent != true) return;
+
+    await _adMob.initialize();
+    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+
+    // Nếu là tk Pro thì không hiển thị banner
+    if (await _adMob.isProUser()) {
+      _bottomBannerAd?.dispose();
+      _bottomBannerAd = null;
+      if (!mounted) return;
+      setState(() => _isBottomBannerReady = false);
+      return;
+    }
+
+    _bottomBannerAd?.dispose();
+    _bottomBannerAd = null;
+    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+    _bottomBannerAd = await _adMob.createBannerAd(
+      onAdLoaded: (_) {
+        if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+        setState(() => _isBottomBannerReady = true);
+      },
+    );
   }
 
   @override
@@ -443,74 +463,12 @@ class _UtilitiesTabState extends State<UtilitiesTab>
     final isPro = await _adMob.isProUser();
     if (!isPro && id != 'store') {
       final now = DateTime.now();
-      final prefs = await SharedPreferences.getInstance();
-
-      // 1. Tăng bộ đếm click
-      int tapCount = (prefs.getInt('utility_click_tap_count') ?? 0) + 1;
-      await prefs.setInt('utility_click_tap_count', tapCount);
-
-      // 2. Lấy mục tiêu ngẫu nhiên (nếu chưa có thì sinh mới 7-12)
-      int target = prefs.getInt('utility_click_tap_target') ?? 0;
-      if (target < 7 || target > 12) {
-        target = 7 + Random().nextInt(6); // 7 đến 12
-        await prefs.setInt('utility_click_tap_target', target);
-      }
-
-      debugPrint('UtilityClickAd: Tap count = $tapCount, Target = $target');
-
-      // 3. Nếu đạt mục tiêu
-      if (tapCount >= target) {
-        // Reset bộ đếm và sinh mục tiêu mới
-        final nextTarget = 7 + Random().nextInt(6);
-        await prefs.setInt('utility_click_tap_count', 0);
-        await prefs.setInt('utility_click_tap_target', nextTarget);
-
-        // Kiểm tra giới hạn 2 tiếng
-        final lastShownMs =
-            prefs.getInt('utility_click_ad_last_shown_time') ?? 0;
-        final timeDiff = now.millisecondsSinceEpoch - lastShownMs;
-        final has2HourCooldownPassed =
-            lastShownMs == 0 || timeDiff >= 2 * 60 * 60 * 1000;
-
-        // Kiểm tra giới hạn tối đa 3 cái một ngày
-        final todayStr = DateFormat('yyyy-MM-dd').format(now);
-        final savedDate = prefs.getString('utility_click_ad_shown_date') ?? '';
-        int shownToday =
-            prefs.getInt('utility_click_ad_shown_today_count') ?? 0;
-
-        if (savedDate != todayStr) {
-          shownToday = 0;
-          await prefs.setString('utility_click_ad_shown_date', todayStr);
-          await prefs.setInt('utility_click_ad_shown_today_count', 0);
-        }
-
-        final isUnderDailyLimit = shownToday < 3;
-
-        debugPrint(
-            'UtilityClickAd: Cooldown passed = $has2HourCooldownPassed, Shown today = $shownToday, Under limit = $isUnderDailyLimit');
-
-        if (has2HourCooldownPassed && isUnderDailyLimit) {
-          debugPrint('UtilityClickAd: Target reached! Showing click-count ad.');
-          final shown = await _adMob.showInterstitialAd();
-          if (shown) {
-            await prefs.setInt(
-                'utility_click_ad_last_shown_time', now.millisecondsSinceEpoch);
-            await prefs.setInt(
-                'utility_click_ad_shown_today_count', shownToday + 1);
-            _lastUtilityAdTime = now;
-          }
-        }
-      } else {
-        // Nếu chưa đạt mục tiêu click ngẫu nhiên, vẫn kiểm tra hiển thị ad thường 5 phút như cũ
-        if ((_lastUtilityAdTime == null ||
-                now.difference(_lastUtilityAdTime!) >
-                    const Duration(minutes: 5)) &&
-            !_adMob.hasRecentFullscreenAd()) {
-          final shown = await _adMob.showInterstitialAd();
-          if (shown) {
-            _lastUtilityAdTime = now;
-          }
-        }
+      if ((_lastUtilityAdTime == null ||
+              now.difference(_lastUtilityAdTime!) >
+                  const Duration(minutes: 5)) &&
+          !_adMob.hasRecentFullscreenAd()) {
+        await _adMob.showInterstitialAd();
+        _lastUtilityAdTime = DateTime.now();
       }
     }
 

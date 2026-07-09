@@ -20,11 +20,11 @@ class WishlistScreen extends StatefulWidget {
 }
 
 class _WishlistScreenState extends State<WishlistScreen> {
+
   Widget _buildInfoIcon(BuildContext context) {
     return IconButton(
       tooltip: 'Hướng dẫn',
-      icon: const Icon(Icons.info_outline_rounded,
-          color: SLColors.primary, size: 22),
+      icon: const Icon(Icons.info_outline_rounded, color: SLColors.primary, size: 22),
       onPressed: () => _showInfoDialog(context),
     );
   }
@@ -45,22 +45,18 @@ class _WishlistScreenState extends State<WishlistScreen> {
             children: [
               Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text(
-                  '- Lưu lại những món quà hoặc những nơi bạn muốn đi để người ấy biết.\n- Tạo bất ngờ bằng cách âm thầm đánh dấu "Đã mua tặng".'),
+              Text('- Lưu lại những món quà hoặc những nơi bạn muốn đi để người ấy biết.\n- Tạo bất ngờ bằng cách âm thầm đánh dấu "Đã mua tặng".'),
               SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Cách sử dụng:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text(
-                  '- Bấm Thêm điều ước, nhập tên món quà, đính kèm hình ảnh và link mua hàng.\n- Nửa kia có thể vào xem và bấm nút Thực hiện điều ước để tặng bạn một sự bất ngờ.'),
+              Text('- Bấm Thêm điều ước, nhập tên món quà, đính kèm hình ảnh và link mua hàng.\n- Nửa kia có thể vào xem và bấm nút Thực hiện điều ước để tặng bạn một sự bất ngờ.'),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: SLColors.primary)),
+            child: const Text('Đã hiểu', style: TextStyle(color: SLColors.primary)),
           ),
         ],
       ),
@@ -106,8 +102,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     }
 
     _sub?.cancel();
-    _sub = _dbRef.child('houses/${widget.houseId}/wishlist').onValue.listen(
-        (event) {
+    _sub = _dbRef.child('houses/${widget.houseId}/wishlist').onValue.listen((event) {
       if (!mounted) return;
       final val = event.snapshot.value;
       if (val is Map) {
@@ -140,15 +135,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
   Future<void> _addWish() async {
     final text = _itemController.text.trim();
     if (text.isEmpty) return;
-
-    if (_data != null && _data!.length >= 50) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text(
-            'Danh sách điều ước đã đạt giới hạn (tối đa 50 mục). Vui lòng xoá bớt trước khi thêm mới.'),
-        backgroundColor: SLColors.danger,
-      ));
-      return;
-    }
 
     final priceText = _priceController.text.replaceAll(RegExp(r'[^0-9]'), '');
     final price = int.tryParse(priceText) ?? 0;
@@ -189,8 +175,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
         title: const Text('Xoá điều ước'),
         content: const Text('Bạn có chắc chắn muốn xoá điều ước này?'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -204,8 +189,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     );
   }
 
-  final _currencyFormat = NumberFormat.currency(
-      locale: 'vi_VN', symbol: L10nService().translate('util_txt_b5407d'));
+  final _currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: L10nService().translate('util_txt_b5407d'));
 
   int _priorityRank(String? value) {
     switch (value) {
@@ -251,8 +235,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, context.tr('util_wishlisti_b2581f'),
-          actions: [_buildInfoIcon(context)]),
+      appBar: SLTheme.appBar(context, context.tr('util_wishlisti_b2581f'), actions: [_buildInfoIcon(context)]),
       body: SLTheme.softCanvasBackdrop(
         baseColor: SLColors.bgMain,
         accentColor: SLColors.warning,
@@ -359,7 +342,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 child: _buildWishTextField(
                   controller: _itemController,
                   hintText: context.tr('util_tnmn_945dda'),
-                  maxLength: 80,
                 ),
               ),
               SLSpacing.w8,
@@ -368,7 +350,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   controller: _priceController,
                   hintText: context.tr('util_gi_072c1a'),
                   keyboardType: TextInputType.number,
-                  maxLength: 12,
                 ),
               ),
               SLSpacing.w8,
@@ -405,7 +386,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
     required TextEditingController controller,
     required String hintText,
     TextInputType? keyboardType,
-    int? maxLength,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -416,7 +396,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
-        maxLength: maxLength,
         cursorColor: SLColors.primary,
         style: SLTheme.quicksand(
           color: SLColors.textPrimary,
@@ -429,7 +408,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
             fontWeight: FontWeight.w700,
           ),
           border: InputBorder.none,
-          counterText: '',
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
         ),
@@ -447,7 +425,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
           padding: const EdgeInsets.symmetric(vertical: 9),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isSelected ? SLColors.primaryLight : SLColors.bgCard,
+            color:
+                isSelected ? SLColors.primaryLight : SLColors.bgCard,
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
               color: isSelected
@@ -565,12 +544,11 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
     final data = _data!;
     final allItems = data.entries
-        .map(
-            (e) => {'key': e.key, ...Map<String, dynamic>.from(e.value as Map)})
+        .map((e) => {'key': e.key, ...Map<String, dynamic>.from(e.value as Map)})
         .toList();
     var items = allItems
-        .where(
-            (item) => item['scope'] == _selectedScope || item['scope'] == null)
+        .where((item) =>
+            item['scope'] == _selectedScope || item['scope'] == null)
         .toList();
     items.sort((a, b) {
       if (a['done'] == true && b['done'] != true) return 1;
@@ -584,7 +562,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
     });
 
     final int totalCount = allItems.length;
-    final int doneCount = allItems.where((item) => item['done'] == true).length;
+    final int doneCount =
+        allItems.where((item) => item['done'] == true).length;
     final int totalPrice = allItems.fold<int>(
       0,
       (sum, item) => sum + (item['est'] as int? ?? 0),
@@ -658,8 +637,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  border: Border.all(
-                      color: SLColors.warning.withValues(alpha: 0.50)),
+                  border:
+                      Border.all(color: SLColors.warning.withValues(alpha: 0.50)),
                 ),
                 child: const Icon(Icons.local_mall_rounded,
                     color: SLColors.warning, size: 28),
@@ -700,7 +679,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
               value: progress.clamp(0.0, 1.0),
               minHeight: 7,
               backgroundColor: SLColors.warningLight,
-              valueColor: const AlwaysStoppedAnimation<Color>(SLColors.success),
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(SLColors.success),
             ),
           ),
           SLSpacing.h8,
@@ -747,7 +727,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
       ),
     );
   }
-
   Widget _buildWishCard({
     required Map<String, dynamic> item,
     required bool isDone,
@@ -784,7 +763,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
               height: 36,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isDone ? SLColors.success : SLColors.bgCard,
+                color:
+                    isDone ? SLColors.success : SLColors.bgCard,
                 border: Border.all(
                   color: isDone
                       ? SLColors.success

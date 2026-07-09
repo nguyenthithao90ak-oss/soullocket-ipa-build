@@ -252,7 +252,7 @@ class _StableAvatarNetworkImageState extends State<_StableAvatarNetworkImage> {
 
   Future<void> _loadDiskCachedProvider(String url) async {
     try {
-      final cachedFile = await AppCacheManager.instance.getFileFromCache(url);
+      final cachedFile = await DefaultCacheManager().getFileFromCache(url);
       if (!mounted || _currentUrl != url) return;
       final file = cachedFile?.file;
       if (file == null || !await file.exists()) return;
@@ -338,6 +338,7 @@ class _StableAvatarNetworkImageState extends State<_StableAvatarNetworkImage> {
 }
 
 extension _MainHomeAvatarSectionExt on _MainHomeTabState {
+
   Widget _buildAvatar(
     String name,
     String url, {
@@ -458,8 +459,7 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
                               value: uploadProgress,
                               valueColor: AlwaysStoppedAnimation<Color>(
                                   Colors.white.withValues(alpha: 0.9)),
-                              backgroundColor:
-                                  Colors.white.withValues(alpha: 0.2),
+                              backgroundColor: Colors.white.withValues(alpha: 0.2),
                             ),
                           ),
                           if (uploadProgress != null)
@@ -535,19 +535,7 @@ class __AnimatedSinglePlaceholderState extends State<_AnimatedSinglePlaceholder>
   final List<_PlaceholderParticle> _particles = [];
 
   final List<String> _emojis = const [
-    '❓',
-    '💖',
-    '🔍',
-    '👤',
-    '✨',
-    '💌',
-    '🎁',
-    '🥰',
-    '🌹',
-    '🔮',
-    '🧸',
-    '🎈',
-    '💎'
+    '❓', '💖', '🔍', '👤', '✨', '💌', '🎁', '🥰', '🌹', '🔮', '🧸', '🎈', '💎'
   ];
 
   final Random _random = Random();
@@ -699,8 +687,7 @@ class __AnimatedSinglePlaceholderState extends State<_AnimatedSinglePlaceholder>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFF4081)
-                              .withValues(alpha: 0.2 * pulse),
+                          color: const Color(0xFFFF4081).withValues(alpha: 0.2 * pulse),
                           blurRadius: 10 + 10 * pulse,
                           spreadRadius: 2 + 5 * pulse,
                         ),
@@ -754,8 +741,7 @@ class __AnimatedSinglePlaceholderState extends State<_AnimatedSinglePlaceholder>
                     animation: _spinController,
                     builder: (context, child) {
                       final rotationValue = _spinController.value * 2 * pi;
-                      final scaleValue = 1.0 -
-                          (sin(_spinController.value * pi * 2).abs() * 0.12);
+                      final scaleValue = 1.0 - (sin(_spinController.value * pi * 2).abs() * 0.12);
                       return Transform.scale(
                         scale: scaleValue,
                         child: Transform.rotate(

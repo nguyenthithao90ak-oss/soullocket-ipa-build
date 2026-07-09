@@ -50,7 +50,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
   Timer? _notificationsDebounce;
   String _lastNotificationsFingerprint = '';
 
-  static const int _notificationsLimit = 30;
+  static const int _notificationsLimit = 50;
 
   @override
   void initState() {
@@ -347,8 +347,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
         title: const Text('Xoá thông báo'),
         content: const Text('Bạn có chắc chắn muốn xoá thông báo này?'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);

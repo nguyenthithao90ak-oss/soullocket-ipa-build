@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_database/firebase_database.dart'
-    show DatabaseReference, FirebaseDatabase, ServerValue;
+import 'package:firebase_database/firebase_database.dart' show DatabaseReference, FirebaseDatabase, ServerValue;
 import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/models/chat_message.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
@@ -10,7 +9,8 @@ import 'package:soullocket_app/utils/app_error_mapper.dart';
 /// Firestore path: houses/{houseId}/chat_room/messages/{msgId}
 /// RTDB chỉ giữ lastMessage + metadata nhẹ để hiển thị badge thông báo
 class InternalChatService {
-  static final InternalChatService _instance = InternalChatService._internal();
+  static final InternalChatService _instance =
+      InternalChatService._internal();
 
   factory InternalChatService() => _instance;
   InternalChatService._internal();
@@ -60,16 +60,17 @@ class InternalChatService {
         .orderBy('ts')
         .snapshots()
         .expand((snapshot) => snapshot.docChanges
-                .where((change) =>
-                    change.type == DocumentChangeType.added ||
-                    change.type == DocumentChangeType.modified)
-                .map((change) {
-              try {
-                return ChatMessage.fromMap(change.doc.id, change.doc.data()!);
-              } catch (_) {
-                return null;
-              }
-            }).whereType<ChatMessage>());
+            .where((change) =>
+                change.type == DocumentChangeType.added ||
+                change.type == DocumentChangeType.modified)
+            .map((change) {
+          try {
+            return ChatMessage.fromMap(change.doc.id, change.doc.data()!);
+          } catch (_) {
+            return null;
+          }
+        })
+            .whereType<ChatMessage>());
   }
 
   // ── LẤY trang tin nhắn (phân trang) ──────────────────────────────────
@@ -86,16 +87,13 @@ class InternalChatService {
     }
 
     final snap = await query.get();
-    return snap.docs
-        .map((doc) {
-          try {
-            return ChatMessage.fromMap(doc.id, doc.data());
-          } catch (_) {
-            return null;
-          }
-        })
-        .whereType<ChatMessage>()
-        .toList();
+    return snap.docs.map((doc) {
+      try {
+        return ChatMessage.fromMap(doc.id, doc.data());
+      } catch (_) {
+        return null;
+      }
+    }).whereType<ChatMessage>().toList();
   }
 
   // ── THÊM REACTION ─────────────────────────────────────────────────────
@@ -137,7 +135,8 @@ class InternalChatService {
       if (raw is! Map) return;
 
       // Kiểm tra xem Firestore đã có dữ liệu chưa (tránh migrate 2 lần)
-      final existingCount = await _messagesRef(houseId).limit(1).get();
+      final existingCount =
+          await _messagesRef(houseId).limit(1).get();
       if (existingCount.docs.isNotEmpty) return;
 
       final batch = _firestore.batch();
@@ -155,12 +154,10 @@ class InternalChatService {
 
       if (count > 0) {
         await batch.commit();
-        debugPrint(
-            '[InternalChatService] Migrated $count messages for house $houseId');
+        debugPrint('[InternalChatService] Migrated $count messages for house $houseId');
       }
     } catch (e) {
-      debugPrint(
-          '[InternalChatService] Migration error: ${AppErrorMapper.resolve(e).message}');
+      debugPrint('[InternalChatService] Migration error: ${AppErrorMapper.resolve(e).message}');
     }
   }
 }

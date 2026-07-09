@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../../settings_tab.dart';
 
 extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
@@ -137,8 +136,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
                           alignment: Alignment.center,
                           clipBehavior: Clip.none,
                           children: [
-                            if (UiPrefs.notifier.value.countdownStyleKey ==
-                                'floating_hearts') ...[
+                             if (UiPrefs.notifier.value.countdownStyleKey == 'floating_hearts') ...[
                               // Outer decorative thin ring
                               Container(
                                 width: 94,

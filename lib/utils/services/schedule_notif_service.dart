@@ -310,9 +310,7 @@ class ScheduleNotifService {
       events: events,
       eventKey: 'sys:birthday:user1:pre7',
       rawDate: identity.dobU1,
-      name: identity.nameU1.trim().isEmpty
-          ? 'người thương'
-          : identity.nameU1.trim(),
+      name: identity.nameU1.trim().isEmpty ? 'người thương' : identity.nameU1.trim(),
       advanceDays: 7,
       now: now,
       todayMs: todayMs,
@@ -332,9 +330,7 @@ class ScheduleNotifService {
       events: events,
       eventKey: 'sys:birthday:user2:pre7',
       rawDate: identity.dobU2,
-      name: identity.nameU2.trim().isEmpty
-          ? 'người thương'
-          : identity.nameU2.trim(),
+      name: identity.nameU2.trim().isEmpty ? 'người thương' : identity.nameU2.trim(),
       advanceDays: 7,
       now: now,
       todayMs: todayMs,
@@ -343,8 +339,7 @@ class ScheduleNotifService {
     final anchor = _parseFlexibleDate(identity.startDate);
     if (anchor != null) {
       for (final milestone in const [30, 100, 365]) {
-        final milestoneDate =
-            _startOfDay(anchor).add(Duration(days: milestone));
+        final milestoneDate = _startOfDay(anchor).add(Duration(days: milestone));
         final dateKey = _formatDateKey(milestoneDate);
         final dateMs = milestoneDate.millisecondsSinceEpoch;
         events.add(
@@ -418,14 +413,7 @@ class ScheduleNotifService {
     '🌟 Bộ đèn sao trần phòng ngủ lãng mạn',
   ];
 
-  void _addAdvanceNoticeBirthdayEvent(
-      {required List<UpcomingEvent> events,
-      required String eventKey,
-      required String rawDate,
-      required String name,
-      required int advanceDays,
-      required DateTime now,
-      required int todayMs}) {
+  void _addAdvanceNoticeBirthdayEvent({required List<UpcomingEvent> events, required String eventKey, required String rawDate, required String name, required int advanceDays, required DateTime now, required int todayMs}) {
     final parsed = _parseFlexibleDate(rawDate);
     if (parsed == null) return;
     var bd = DateTime(now.year, parsed.month, parsed.day);
@@ -435,15 +423,8 @@ class ScheduleNotifService {
     final rk = _formatDateKey(rd);
     final rms = rd.millisecondsSinceEpoch;
     if (rms < todayMs) return;
-    final g = _giftSuggestions[
-        (parsed.day + parsed.month + advanceDays) % _giftSuggestions.length];
-    events.add(UpcomingEvent(
-        eventKey: '$eventKey:$rk',
-        dateKey: rk,
-        dateMs: rms,
-        title: '🎂 Sinh nhật $name sắp tới! Gợi ý quà: $g',
-        source: 'system',
-        daysUntil: _daysUntil(rms, todayMs)));
+    final g = _giftSuggestions[(parsed.day + parsed.month + advanceDays) % _giftSuggestions.length];
+    events.add(UpcomingEvent(eventKey: '$eventKey:$rk', dateKey: rk, dateMs: rms, title: '🎂 Sinh nhật $name sắp tới! Gợi ý quà: $g', source: 'system', daysUntil: _daysUntil(rms, todayMs)));
   }
 
   DateTime _startOfDay(DateTime date) {

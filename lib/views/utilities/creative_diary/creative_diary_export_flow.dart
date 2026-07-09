@@ -205,7 +205,9 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     if (!isSuccess) {
       final message = result['errorMessage']?.toString().trim();
       throw Exception(
-        message != null && message.isNotEmpty ? message : errSaveFailed,
+        message != null && message.isNotEmpty
+            ? message
+            : errSaveFailed,
       );
     }
   }
@@ -240,7 +242,8 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     }
     final unlocked = await _confirmRewardedSave(
       title: confirmAdTitle,
-      message: confirmAdMsg,
+      message:
+          confirmAdMsg,
     );
     if (!unlocked) {
       return;
@@ -349,7 +352,8 @@ extension _CreativeDiaryExportFlowPart on _CreativeDiaryScreenState {
     }
     final unlocked = await _confirmRewardedSave(
       title: confirmAdTitle,
-      message: confirmAdMsg,
+      message:
+          confirmAdMsg,
     );
     if (!unlocked) {
       return;

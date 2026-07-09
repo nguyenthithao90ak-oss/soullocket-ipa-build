@@ -66,12 +66,16 @@ class SettingsSyncService {
   Completer<void>? _backupCompleter;
 
   static const List<String> _syncKeys = [
+    'il_theme_key',
+    'il_falling_effect',
     'il_avatar_size',
     'il_countdown_size',
     'il_avatar_frame',
     'il_countdown_style',
     'il_countdown_top_label',
     'il_countdown_bottom_label',
+    'il_font_key',
+    'il_home_block_tone',
     'il_custom_background_url',
     'il_home_show_house_name',
     'il_auto_reply_text',
@@ -257,8 +261,7 @@ class SettingsSyncService {
             await prefs.setDouble(key, value.toDouble());
             restoredAnySetting = true;
           } else if (value is List) {
-            await prefs.setStringList(
-                key, value.map((e) => e.toString()).toList());
+            await prefs.setStringList(key, value.map((e) => e.toString()).toList());
             restoredAnySetting = true;
           }
         }
@@ -341,24 +344,15 @@ class SettingsSyncService {
   }
 
   Future<String?> _resolveHouseId(SharedPreferences prefs, String uid) async {
-    await SecureStorageService.instance.migrateFromPrefs(
-        SecureStorageService.keyHouseId, prefs.getString('il_house_id'));
-    await SecureStorageService.instance.migrateFromPrefs(
-        SecureStorageService.keyAuthUid, prefs.getString('il_auth_uid'));
-    final cached = (await SecureStorageService.instance
-                .read(SecureStorageService.keyHouseId))
-            ?.trim() ??
-        '';
-    final cachedAuthUid = (await SecureStorageService.instance
-                .read(SecureStorageService.keyAuthUid))
-            ?.trim() ??
-        '';
+    await SecureStorageService.instance.migrateFromPrefs(SecureStorageService.keyHouseId, prefs.getString('il_house_id'));
+    await SecureStorageService.instance.migrateFromPrefs(SecureStorageService.keyAuthUid, prefs.getString('il_auth_uid'));
+    final cached = (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
+    final cachedAuthUid = (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? '';
     if (cached.isNotEmpty) {
       if (cachedAuthUid == uid) {
         return cached;
       }
-      await SecureStorageService.instance
-          .delete(SecureStorageService.keyHouseId);
+      await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
       await SecureStorageService.instance.delete(SecureStorageService.keyRole);
       await prefs.remove('il_house_id');
       await prefs.remove('il_role');
@@ -368,10 +362,8 @@ class SettingsSyncService {
       final snap = await _db.child('users/$uid/houseId').get();
       final houseId = snap.value?.toString().trim() ?? '';
       if (houseId.isNotEmpty) {
-        await SecureStorageService.instance
-            .write(SecureStorageService.keyHouseId, houseId);
-        await SecureStorageService.instance
-            .write(SecureStorageService.keyAuthUid, uid);
+        await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
+        await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
         await prefs.remove('il_house_id');
         await prefs.remove('il_auth_uid');
         return houseId;

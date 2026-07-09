@@ -47,9 +47,7 @@ extension _MainHomeDerivedStateHelper on _MainHomeTabState {
     final isSingle = relMode == 'single';
 
     final houseName = _houseSettings?['houseName'] ??
-        (isSingle
-            ? context.tr('home_nginhcati_dd5d98')
-            : context.tr('home_nginhtnhyu_dbebce'));
+        (isSingle ? context.tr('home_nginhcati_dd5d98') : context.tr('home_nginhtnhyu_dbebce'));
     final rawNameU1 =
         (_houseSettings?['nameU1']?.toString().trim().isNotEmpty ?? false)
             ? _houseSettings!['nameU1'].toString().trim()
@@ -58,17 +56,9 @@ extension _MainHomeDerivedStateHelper on _MainHomeTabState {
         (_houseSettings?['nameU2']?.toString().trim().isNotEmpty ?? false)
             ? _houseSettings!['nameU2'].toString().trim()
             : context.tr('home_ngiy_5bab37');
-
-    final nameU1 = rawNameU1.toLowerCase() == 'bạn nam'
-        ? context.tr('male_role_default')
-        : (rawNameU1.toLowerCase() == 'bạn nữ'
-            ? context.tr('female_role_default')
-            : rawNameU1);
-    final nameU2 = rawNameU2.toLowerCase() == 'bạn nữ'
-        ? context.tr('female_role_default')
-        : (rawNameU2.toLowerCase() == 'bạn nam'
-            ? context.tr('male_role_default')
-            : rawNameU2);
+            
+    final nameU1 = rawNameU1.toLowerCase() == 'bạn nam' ? context.tr('male_role_default') : (rawNameU1.toLowerCase() == 'bạn nữ' ? context.tr('female_role_default') : rawNameU1);
+    final nameU2 = rawNameU2.toLowerCase() == 'bạn nữ' ? context.tr('female_role_default') : (rawNameU2.toLowerCase() == 'bạn nam' ? context.tr('male_role_default') : rawNameU2);
     final avtUser1 = _houseSettings?['avtUser1']?.toString().trim() ?? '';
     final avtUser2 = _houseSettings?['avtUser2']?.toString().trim() ?? '';
     final dobU1 = _houseSettings?['dobU1']?.toString() ?? '';
@@ -90,12 +80,10 @@ extension _MainHomeDerivedStateHelper on _MainHomeTabState {
             : _houseSettings?['dayUnit']?.toString();
     final resolvedCircleTopLabel = isSingle
         ? null
-        : _resolveCountdownLabel(
-            countdownTopLabelSource, context.tr('home_bnnhau_d90054'));
+        : _resolveCountdownLabel(countdownTopLabelSource, context.tr('home_bnnhau_d90054'));
     final resolvedCircleBottomLabel = isSingle
         ? null
-        : _resolveCountdownLabel(
-            countdownBottomLabelSource, context.tr('home_ngy_48e4b0'));
+        : _resolveCountdownLabel(countdownBottomLabelSource, context.tr('home_ngy_48e4b0'));
     final circleTopLabel = isSingle
         ? context.tr('home_tuicati_5c654c')
         : _resolveCountdownLabel(
@@ -108,13 +96,12 @@ extension _MainHomeDerivedStateHelper on _MainHomeTabState {
             _houseSettings?['dayUnit']?.toString(),
             context.tr('home_ngy_48e4b0'),
           );
-    final screenWidth = MediaQuery.sizeOf(context).width;
+    final screenWidth = MediaQuery.of(context).size.width;
     final responsiveCircleMax =
         (screenWidth - 20).clamp(280.0, UiPrefs.maxCountdownSizePx).toDouble();
     final circleSize = min(
       responsiveCircleMax,
-      uiPrefs.countdownSizePx
-          .clamp(UiPrefs.minCountdownSizePx, UiPrefs.maxCountdownSizePx),
+      uiPrefs.countdownSizePx.clamp(UiPrefs.minCountdownSizePx, UiPrefs.maxCountdownSizePx),
     ).toDouble();
 
     final homeShowHouseName =

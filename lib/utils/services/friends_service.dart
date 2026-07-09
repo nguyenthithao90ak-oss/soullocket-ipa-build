@@ -134,20 +134,12 @@ class FriendsService {
 
       // Đọc 2 field cần thiết từ settings thay vì load toàn bộ node
       final settingsSnaps = await Future.wait([
-        _db
-            .ref(
-                'houses_public/$normalizedToHouseId/settings/friendRequestPolicy')
-            .get(),
-        _db
-            .ref(
-                'houses_public/$normalizedToHouseId/settings/friendRequestLimit')
-            .get(),
+        _db.ref('houses_public/$normalizedToHouseId/settings/friendRequestPolicy').get(),
+        _db.ref('houses_public/$normalizedToHouseId/settings/friendRequestLimit').get(),
       ]);
       final settings = <String, dynamic>{
-        if (settingsSnaps[0].exists)
-          'friendRequestPolicy': settingsSnaps[0].value,
-        if (settingsSnaps[1].exists)
-          'friendRequestLimit': settingsSnaps[1].value,
+        if (settingsSnaps[0].exists) 'friendRequestPolicy': settingsSnaps[0].value,
+        if (settingsSnaps[1].exists) 'friendRequestLimit': settingsSnaps[1].value,
       };
 
       final policyStr = settings['friendRequestPolicy']?.toString() ?? 'all';

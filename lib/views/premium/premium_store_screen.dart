@@ -814,14 +814,12 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
           return '~${formatter.format(perDay).replaceAll(' ', '')}/ngày';
         }
 
-        final formatter =
-            NumberFormat.simpleCurrency(name: product.currencyCode);
+        final formatter = NumberFormat.simpleCurrency(name: product.currencyCode);
         return '~${formatter.format(perDay).replaceAll(' ', '')}/ngày';
       }
     } catch (_) {}
 
-    if (info != null &&
-        (product.currencyCode.isEmpty || product.currencyCode == 'VND')) {
+    if (info != null && (product.currencyCode.isEmpty || product.currencyCode == 'VND')) {
       final perDay = (info.priceVnd / durationDays).round();
       return '~${_formatVnd(perDay)}/ngày';
     }
@@ -1273,6 +1271,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       ],
     );
   }
+
 
   Widget _buildProductCard(ProductDetails product) {
     final info = _planInfoFor(product);

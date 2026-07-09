@@ -141,6 +141,12 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
           Color(0xFFFDE68A),
           Color(0xFFFFFBEB),
         ];
+      case 'none':
+        return const [
+          Color(0xFF888888),
+          Color(0xFFAAAAAA),
+          Color(0xFFDDDDDD),
+        ];
       case 'rose':
       default:
         return const [
@@ -447,6 +453,26 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
   }
 
   Widget _buildWidgetHeartPreview(Color textColor, {double size = 72}) {
+    // Trường hợp 'none': hiển thị emoji trái tim đơn giản, không màu, không glow
+    if (_widgetHeartColorKey == 'none') {
+      final styleKey = _normalizeWidgetHeartStyleKey(_widgetHeartStyleKey);
+      final emojiSize = size * 0.62;
+      return SizedBox(
+        width: size,
+        height: size,
+        child: Center(
+          child: Text(
+            styleKey,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: emojiSize,
+              height: 1,
+            ),
+          ),
+        ),
+      );
+    }
+
     final tick = _widgetPreviewTickNotifier.value;
     final palette = _widgetHeartPalette(_widgetHeartColorKey);
     final primary = palette[0];
@@ -1331,11 +1357,18 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
                                           ),
                                         if (showDiaryPreview) ...[
                                           SizedBox(height: diaryBlockGap),
-                                          _buildWidgetDiaryPreview(
-                                            textColor,
-                                            width: diaryPreviewWidth,
-                                            height: diaryPreviewHeight,
-                                          ),
+                                          // Tỉ lệ 3 tim : 1 ảnh nhật ký — tick % 4 == 3 mới hiện ảnh
+                                          if (_widgetPreviewTickNotifier.value % 4 == 3)
+                                            _buildWidgetDiaryPreview(
+                                              textColor,
+                                              width: diaryPreviewWidth,
+                                              height: diaryPreviewHeight,
+                                            )
+                                          else
+                                            _buildWidgetHeartPreview(
+                                              textColor,
+                                              size: heartSize,
+                                            ),
                                         ],
                                       ],
                                     ),
@@ -1369,18 +1402,8 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
       },
     );
   }
-  static Future<Map<String, String>>? _cachedSoulEventPreviewFuture;
 
   Future<Map<String, String>> _loadSoulEventPreviewData() async {
-    if (_cachedSoulEventPreviewFuture != null) {
-      return _cachedSoulEventPreviewFuture!;
-    }
-    
-    _cachedSoulEventPreviewFuture = _loadSoulEventPreviewDataInternal();
-    return _cachedSoulEventPreviewFuture!;
-  }
-
-  Future<Map<String, String>> _loadSoulEventPreviewDataInternal() async {
     final houseId = _houseId ?? '';
     if (houseId.isEmpty) {
       return {
@@ -1503,7 +1526,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
             style: SLTheme.quicksand(
               color: textColor,
               fontWeight: FontWeight.w900,
-              fontSize: fontSize + 4.0,
+              fontSize: fontSize,
               height: 1.15,
               letterSpacing: -0.1,
             ),
@@ -1539,16 +1562,12 @@ class _WidgetDiaryPreviewStream extends StatefulWidget {
 class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
   static const double _outerRadius = 18;
 
-  late Future<List<String>> _imageUrlsFuture;
-  Timer? _rotationTimer;
+  late Stream<DatabaseEvent> _memoriesStream;
 
   @override
   void initState() {
     super.initState();
     _updateStream();
-    _rotationTimer = Timer.periodic(const Duration(minutes: 1), (_) {
-      if (mounted) setState(() {});
-    });
   }
 
   @override
@@ -1559,14 +1578,11 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
     }
   }
 
-  @override
-  void dispose() {
-    _rotationTimer?.cancel();
-    super.dispose();
-  }
-
   void _updateStream() {
-    _imageUrlsFuture = widget.state._loadWidgetDiaryUrls(limit: 24);
+    _memoriesStream = widget.state._dbRef
+        .child('houses/${widget.houseId}/memories')
+        .limitToLast(8)
+        .onValue;
   }
 
   Widget _buildEmptyPreview() {
@@ -1633,27 +1649,34 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<String>>(
-      future: _imageUrlsFuture,
+    return StreamBuilder<DatabaseEvent>(
+      stream: _memoriesStream,
       builder: (context, snapshot) {
-        final imageUrls = snapshot.data ?? const <String>[];
+        final imageLimit = switch (widget.layoutKey) {
+          'grid' => 4,
+          'duo' => 2,
+          _ => 1,
+        };
+        final imageUrls = widget.state._extractWidgetDiaryUrls(
+          snapshot.data?.snapshot.value,
+          limit: imageLimit,
+        );
         if (imageUrls.isEmpty) {
           return _buildEmptyPreview();
         }
 
-        final timeOffset = (DateTime.now().millisecondsSinceEpoch ~/ 60000);
+        final previewKey = '${widget.layoutKey}_${imageUrls.join('|')}';
         final filledUrls = switch (widget.layoutKey) {
           'grid' => List<String?>.generate(
               4,
-              (index) => imageUrls[(index + timeOffset) % imageUrls.length],
+              (index) => index < imageUrls.length ? imageUrls[index] : null,
             ),
           'duo' => List<String?>.generate(
               2,
-              (index) => imageUrls[(index + timeOffset) % imageUrls.length],
+              (index) => index < imageUrls.length ? imageUrls[index] : null,
             ),
-          _ => <String?>[imageUrls[timeOffset % imageUrls.length]],
+          _ => <String?>[imageUrls.first],
         };
-        final previewKey = '${widget.layoutKey}_${filledUrls.join('|')}';
 
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 320),

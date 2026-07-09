@@ -374,13 +374,9 @@ class PurchaseService {
         continue;
       }
 
-      if (purchase.status == PurchaseStatus.error) {
+      if (purchase.status == PurchaseStatus.error ||
+          purchase.status == PurchaseStatus.canceled) {
         _statusController.add(VipPurchaseState.error);
-        if (purchase.pendingCompletePurchase) {
-          await _iap.completePurchase(purchase);
-        }
-      } else if (purchase.status == PurchaseStatus.canceled) {
-        _statusController.add(VipPurchaseState.idle);
         if (purchase.pendingCompletePurchase) {
           await _iap.completePurchase(purchase);
         }
@@ -475,14 +471,8 @@ class PurchaseService {
   }
 
   Future<String?> _resolveCurrentHouseId(String uid) async {
-    final cachedHouseId = (await SecureStorageService.instance
-                .read(SecureStorageService.keyHouseId))
-            ?.trim() ??
-        '';
-    final cachedAuthUid = (await SecureStorageService.instance
-                .read(SecureStorageService.keyAuthUid))
-            ?.trim() ??
-        '';
+    final cachedHouseId = (await SecureStorageService.instance.read(SecureStorageService.keyHouseId))?.trim() ?? '';
+    final cachedAuthUid = (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? '';
     if (cachedHouseId.isNotEmpty && cachedAuthUid == uid) {
       return cachedHouseId;
     }
@@ -490,10 +480,8 @@ class PurchaseService {
     final primarySnap = await _db.ref('users/$uid/houseId').get();
     final primaryValue = primarySnap.value?.toString().trim() ?? '';
     if (primaryValue.isNotEmpty) {
-      await SecureStorageService.instance
-          .write(SecureStorageService.keyHouseId, primaryValue);
-      await SecureStorageService.instance
-          .write(SecureStorageService.keyAuthUid, uid);
+      await SecureStorageService.instance.write(SecureStorageService.keyHouseId, primaryValue);
+      await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
       return primaryValue;
     }
 
@@ -501,10 +489,8 @@ class PurchaseService {
     final legacyValue = legacySnap.value?.toString().trim() ?? '';
     if (legacyValue.isNotEmpty) {
       await _db.ref('users/$uid').update({'houseId': legacyValue});
-      await SecureStorageService.instance
-          .write(SecureStorageService.keyHouseId, legacyValue);
-      await SecureStorageService.instance
-          .write(SecureStorageService.keyAuthUid, uid);
+      await SecureStorageService.instance.write(SecureStorageService.keyHouseId, legacyValue);
+      await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, uid);
       return legacyValue;
     }
 
@@ -707,9 +693,7 @@ class PurchaseService {
       );
     }
 
-    if (!forceRefresh &&
-        _cachedAccessInfo != null &&
-        _cachedAccessUid == user.uid) {
+    if (!forceRefresh && _cachedAccessInfo != null && _cachedAccessUid == user.uid) {
       return _cachedAccessInfo!;
     }
 
@@ -722,8 +706,7 @@ class PurchaseService {
     final userVipSnap = await _db.ref('users/${user.uid}/vip').get();
     if (userVipSnap.exists) {
       final userVipData = _toMap(userVipSnap.value);
-      final userAccess =
-          _vipAccessFromPayload(userVipData, planField: 'vipPlan');
+      final userAccess = _vipAccessFromPayload(userVipData, planField: 'vipPlan');
       if (userAccess.isVip) {
         access = userAccess;
       }

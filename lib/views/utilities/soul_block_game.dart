@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -24,7 +23,6 @@ import '../../utils/services/house_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../premium/premium_store_screen.dart';
 import '../../utils/services/game_download_service.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 
 part 'soul_block/soul_block_panels.dart';
 part 'soul_block/soul_block_refined_panels.dart';
@@ -48,8 +46,8 @@ class SoulBlockGame extends StatefulWidget {
     this.storageKeyPrefix = 'soul_block',
     this.gameTitle = 'SOUL BLOCK',
     String? loadErrorMessage,
-  }) : loadErrorMessage = loadErrorMessage ??
-            L10nService().translate('util_khngthkhin_d28984');
+  }) : loadErrorMessage =
+            loadErrorMessage ?? L10nService().translate('util_khngthkhin_d28984');
 
   final String storageKeyPrefix;
   final String gameTitle;
@@ -64,12 +62,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         TickerProviderStateMixin,
         WidgetsBindingObserver,
         _SoulBlockStrategyLogic {
-  int _boardSize = 8;
-  _SoulPieceOption? _holdPiece;
-  bool _draggingFromHold = false;
-  final GlobalKey _holdAreaKey = GlobalKey();
-  final int _rotationsLeft = 3;
-
+  static const int _boardSize = 8;
   static const double _boardGap = 1.8;
   static const double _boardPanelPadding = 10;
   static const double _boardLayoutSafetyInset = 12.0;
@@ -132,7 +125,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
   Set<int> _clearingRows = <int>{};
   Set<int> _clearingCols = <int>{};
-  Set<Point<int>> _clearingCells = <Point<int>>{};
 
   Offset _dragPosition = Offset.zero;
   Offset _boardOrigin = Offset.zero;
@@ -179,7 +171,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   Uint8List? _liftSfxBytes;
   Uint8List? _placeSfxBytes;
   Uint8List? _clearSfxBytes;
-  Uint8List? _bombSfxBytes;
   Uint8List? _streakSfxBytes;
   Uint8List? _bestScoreSfxBytes;
   Uint8List? _memoryBurstSfxBytes;
@@ -646,14 +637,12 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _dragBoardMask = null;
       _clearingRows = <int>{};
       _clearingCols = <int>{};
-      _clearingCells = <Point<int>>{};
       _floatingText = null;
       _memoryBurstSnapshot = null;
       _snapBackPieceId = null;
       _isBusy = false;
       _isGameOver = nextRun.tray.isEmpty || nextRun.recommendedMove == null;
-      _continueUsedThisRun =
-          restoringExistingRun ? _continueUsedThisRun : false;
+      _continueUsedThisRun = restoringExistingRun ? _continueUsedThisRun : false;
       _isReviving = false;
       _isRestarting = false;
       _isOpeningGameplay = false;
@@ -939,13 +928,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
 
         for (var doc in albumSnap.docs) {
           final data = doc.data();
-          for (final key in <String>[
-            'url',
-            'imageUrl',
-            'photoUrl',
-            'mediaUrl',
-            'thumbUrl'
-          ]) {
+          for (final key in <String>['url', 'imageUrl', 'photoUrl', 'mediaUrl', 'thumbUrl']) {
             final url = (data[key] as String? ?? '').trim();
             if (url.isNotEmpty && url.startsWith('http') && seenUrls.add(url)) {
               nextGallery.add(url);
@@ -994,6 +977,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
   }
 
+
+
   List<List<_SoulTile?>> _createEmptyBoard() {
     return List<List<_SoulTile?>>.generate(
       _boardSize,
@@ -1010,10 +995,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       int pieceId,
     ) {
       for (final Point<int> cell in cells) {
-        if (cell.y >= 0 &&
-            cell.y < _boardSize &&
-            cell.x >= 0 &&
-            cell.x < _boardSize) {
+        if (cell.y >= 0 && cell.y < _boardSize &&
+            cell.x >= 0 && cell.x < _boardSize) {
           board[cell.y][cell.x] = _SoulTile(
             toneIndex: toneIndex,
             pieceId: pieceId,
@@ -1030,162 +1013,96 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       // Pattern A: Row 7 (6/8) + Col 7 (6/8) + row 0 (6/8) → user đặt 3 ô là nổ
       <List<Point<int>>>[
         <Point<int>>[
-          const Point<int>(0, 7),
-          const Point<int>(1, 7),
-          const Point<int>(2, 7),
-          const Point<int>(3, 7),
-          const Point<int>(4, 7),
-          const Point<int>(5, 7),
+          const Point<int>(0, 7), const Point<int>(1, 7), const Point<int>(2, 7),
+          const Point<int>(3, 7), const Point<int>(4, 7), const Point<int>(5, 7),
         ],
         <Point<int>>[
-          const Point<int>(7, 0),
-          const Point<int>(7, 1),
-          const Point<int>(7, 2),
-          const Point<int>(7, 3),
-          const Point<int>(7, 4),
-          const Point<int>(7, 5),
+          const Point<int>(7, 0), const Point<int>(7, 1), const Point<int>(7, 2),
+          const Point<int>(7, 3), const Point<int>(7, 4), const Point<int>(7, 5),
         ],
         <Point<int>>[
-          const Point<int>(0, 0),
-          const Point<int>(1, 0),
-          const Point<int>(2, 0),
-          const Point<int>(3, 0),
-          const Point<int>(4, 0),
-          const Point<int>(5, 0),
+          const Point<int>(0, 0), const Point<int>(1, 0), const Point<int>(2, 0),
+          const Point<int>(3, 0), const Point<int>(4, 0), const Point<int>(5, 0),
         ],
         <Point<int>>[
-          const Point<int>(2, 3),
-          const Point<int>(3, 3),
-          const Point<int>(2, 4),
-          const Point<int>(3, 4),
+          const Point<int>(2, 3), const Point<int>(3, 3),
+          const Point<int>(2, 4), const Point<int>(3, 4),
         ],
       ],
       // Pattern B: 2 rows gần đầy + cluster trung tâm
       <List<Point<int>>>[
         <Point<int>>[
-          const Point<int>(0, 6),
-          const Point<int>(1, 6),
-          const Point<int>(2, 6),
-          const Point<int>(4, 6),
-          const Point<int>(5, 6),
-          const Point<int>(6, 6),
+          const Point<int>(0, 6), const Point<int>(1, 6), const Point<int>(2, 6),
+          const Point<int>(4, 6), const Point<int>(5, 6), const Point<int>(6, 6),
         ],
         <Point<int>>[
-          const Point<int>(0, 7),
-          const Point<int>(1, 7),
-          const Point<int>(2, 7),
-          const Point<int>(3, 7),
-          const Point<int>(5, 7),
-          const Point<int>(6, 7),
+          const Point<int>(0, 7), const Point<int>(1, 7), const Point<int>(2, 7),
+          const Point<int>(3, 7), const Point<int>(5, 7), const Point<int>(6, 7),
         ],
         <Point<int>>[
-          const Point<int>(0, 0),
-          const Point<int>(0, 1),
-          const Point<int>(0, 2),
-          const Point<int>(0, 3),
-          const Point<int>(0, 5),
-          const Point<int>(0, 6),
+          const Point<int>(0, 0), const Point<int>(0, 1), const Point<int>(0, 2),
+          const Point<int>(0, 3), const Point<int>(0, 5), const Point<int>(0, 6),
         ],
         <Point<int>>[
-          const Point<int>(3, 3),
-          const Point<int>(4, 3),
-          const Point<int>(3, 4),
-          const Point<int>(4, 4),
+          const Point<int>(3, 3), const Point<int>(4, 3),
+          const Point<int>(3, 4), const Point<int>(4, 4),
         ],
       ],
       // Pattern C: Col 0 (6/8) + Col 7 (5/8) + row 7 gần đầy
       <List<Point<int>>>[
         <Point<int>>[
-          const Point<int>(7, 0),
-          const Point<int>(7, 1),
-          const Point<int>(7, 2),
-          const Point<int>(7, 5),
-          const Point<int>(7, 6),
+          const Point<int>(7, 0), const Point<int>(7, 1), const Point<int>(7, 2),
+          const Point<int>(7, 5), const Point<int>(7, 6),
         ],
         <Point<int>>[
-          const Point<int>(0, 7),
-          const Point<int>(0, 6),
-          const Point<int>(0, 5),
-          const Point<int>(0, 2),
-          const Point<int>(0, 1),
-          const Point<int>(0, 0),
+          const Point<int>(0, 7), const Point<int>(0, 6), const Point<int>(0, 5),
+          const Point<int>(0, 2), const Point<int>(0, 1), const Point<int>(0, 0),
         ],
         <Point<int>>[
-          const Point<int>(0, 0),
-          const Point<int>(1, 0),
-          const Point<int>(2, 0),
-          const Point<int>(3, 0),
-          const Point<int>(5, 0),
-          const Point<int>(6, 0),
+          const Point<int>(0, 0), const Point<int>(1, 0), const Point<int>(2, 0),
+          const Point<int>(3, 0), const Point<int>(5, 0), const Point<int>(6, 0),
         ],
         <Point<int>>[
-          const Point<int>(4, 3),
-          const Point<int>(5, 3),
-          const Point<int>(4, 4),
-          const Point<int>(5, 4),
+          const Point<int>(4, 3), const Point<int>(5, 3),
+          const Point<int>(4, 4), const Point<int>(5, 4),
         ],
       ],
       // Pattern D: Diagonal clusters + 2 near-full rows
       <List<Point<int>>>[
         <Point<int>>[
-          const Point<int>(0, 0),
-          const Point<int>(1, 0),
-          const Point<int>(2, 0),
-          const Point<int>(3, 0),
-          const Point<int>(4, 0),
-          const Point<int>(6, 0),
+          const Point<int>(0, 0), const Point<int>(1, 0), const Point<int>(2, 0),
+          const Point<int>(3, 0), const Point<int>(4, 0), const Point<int>(6, 0),
         ],
         <Point<int>>[
-          const Point<int>(1, 7),
-          const Point<int>(2, 7),
-          const Point<int>(3, 7),
-          const Point<int>(4, 7),
-          const Point<int>(5, 7),
-          const Point<int>(6, 7),
+          const Point<int>(1, 7), const Point<int>(2, 7), const Point<int>(3, 7),
+          const Point<int>(4, 7), const Point<int>(5, 7), const Point<int>(6, 7),
         ],
         <Point<int>>[
-          const Point<int>(2, 2),
-          const Point<int>(3, 2),
+          const Point<int>(2, 2), const Point<int>(3, 2),
           const Point<int>(2, 3),
         ],
         <Point<int>>[
-          const Point<int>(5, 5),
-          const Point<int>(6, 5),
-          const Point<int>(6, 4),
-          const Point<int>(5, 4),
+          const Point<int>(5, 5), const Point<int>(6, 5),
+          const Point<int>(6, 4), const Point<int>(5, 4),
         ],
       ],
       // Pattern E: 3 near-full cols spread
       <List<Point<int>>>[
         <Point<int>>[
-          const Point<int>(0, 0),
-          const Point<int>(0, 1),
-          const Point<int>(0, 2),
-          const Point<int>(0, 4),
-          const Point<int>(0, 5),
-          const Point<int>(0, 6),
+          const Point<int>(0, 0), const Point<int>(0, 1), const Point<int>(0, 2),
+          const Point<int>(0, 4), const Point<int>(0, 5), const Point<int>(0, 6),
         ],
         <Point<int>>[
-          const Point<int>(4, 0),
-          const Point<int>(4, 1),
-          const Point<int>(4, 2),
-          const Point<int>(4, 4),
-          const Point<int>(4, 5),
-          const Point<int>(4, 6),
+          const Point<int>(4, 0), const Point<int>(4, 1), const Point<int>(4, 2),
+          const Point<int>(4, 4), const Point<int>(4, 5), const Point<int>(4, 6),
         ],
         <Point<int>>[
-          const Point<int>(7, 0),
-          const Point<int>(7, 1),
-          const Point<int>(7, 2),
-          const Point<int>(7, 4),
-          const Point<int>(7, 5),
-          const Point<int>(7, 6),
+          const Point<int>(7, 0), const Point<int>(7, 1), const Point<int>(7, 2),
+          const Point<int>(7, 4), const Point<int>(7, 5), const Point<int>(7, 6),
         ],
         <Point<int>>[
-          const Point<int>(2, 3),
-          const Point<int>(3, 3),
-          const Point<int>(5, 3),
-          const Point<int>(6, 3),
+          const Point<int>(2, 3), const Point<int>(3, 3),
+          const Point<int>(5, 3), const Point<int>(6, 3),
         ],
       ],
     ];
@@ -1255,7 +1172,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       boardExtent,
       devicePixelRatio: devicePixelRatio,
     );
-    final double innerExtent = boardExtent - (_boardPanelPadding * 2) - 6.0;
+    final double innerExtent = boardExtent - (_boardPanelPadding * 2);
     final double contentExtent =
         (_boardCellExtent * _boardSize) + (_boardGap * (_boardSize - 1));
     _boardContentInset = max(0, innerExtent - contentExtent) / 2;
@@ -1366,13 +1283,11 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     );
   }
 
-  void _startDrag(_SoulPieceOption piece, Offset globalPosition,
-      {bool fromHold = false}) {
+  void _startDrag(_SoulPieceOption piece, Offset globalPosition) {
     if (_isGameOver || _isBusy || _view != _SoulGameView.gameplay) {
       return;
     }
 
-    _draggingFromHold = fromHold;
     _updateBoardMetrics();
     _dragBoardMask = _boardMask(_board);
     _dragPieceRenderCache = _pieceRenderCache(piece);
@@ -1431,42 +1346,14 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     _clearDragVisualState();
   }
 
-  bool _isInsideHoldArea(Offset globalPosition) {
-    final RenderBox? box =
-        _holdAreaKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null) return false;
-    final position = box.localToGlobal(Offset.zero);
-    final size = box.size;
-    return Rect.fromLTWH(position.dx, position.dy, size.width, size.height)
-        .contains(globalPosition);
-  }
-
   Future<void> _endDrag() async {
-    if (_draggingPiece != null) {
+    if (_draggingPiece != null && _previewRow >= 0 && _previewCol >= 0) {
       final piece = _draggingPiece!;
-      if (_previewRow >= 0 && _previewCol >= 0) {
-        final row = _previewRow;
-        final col = _previewCol;
-        _clearDragVisualState();
-        await _placePieceAt(piece, row, col);
-        return;
-      }
-
-      if (!_draggingFromHold && _isInsideHoldArea(_dragPosition)) {
-        _clearDragVisualState();
-        _emitPlaceFeedback();
-        setState(() {
-          final temp = _holdPiece;
-          _holdPiece = piece;
-          _tray = List<_SoulPieceOption>.from(_tray)
-            ..removeWhere((item) => item.id == piece.id);
-          if (temp != null) {
-            _tray.add(temp);
-          }
-        });
-        _markTrayVisualDirty();
-        return;
-      }
+      final row = _previewRow;
+      final col = _previewCol;
+      _clearDragVisualState();
+      await _placePieceAt(piece, row, col);
+      return;
     }
     final _SoulPieceOption? piece = _draggingPiece;
     _cancelDrag();
@@ -1597,22 +1484,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       );
     }
 
-    final bombClearedCells = <Point<int>>[];
-    if (piece.isBomb) {
-      final int centerRow = row + piece.template.height ~/ 2;
-      final int centerCol = col + piece.template.width ~/ 2;
-      for (int r = centerRow - 1; r <= centerRow + 1; r++) {
-        for (int c = centerCol - 1; c <= centerCol + 1; c++) {
-          if (r >= 0 && r < _boardSize && c >= 0 && c < _boardSize) {
-            if (placedBoard[r][c] != null) {
-              placedBoard[r][c] = null;
-              bombClearedCells.add(Point<int>(c, r));
-            }
-          }
-        }
-      }
-    }
-
     final clearedRows = <int>[];
     final clearedCols = <int>[];
     for (var boardRow = 0; boardRow < _boardSize; boardRow++) {
@@ -1634,46 +1505,16 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
 
     final clearedNow = clearedRows.length + clearedCols.length;
-    int gainedScore = _scoreGainFor(piece.template, clearedNow, _combo);
-    if (piece.isBomb) {
-      gainedScore += bombClearedCells.length * 10;
-    }
-    if (piece.isGold) {
-      gainedScore *= 2;
-    }
+    final gainedScore = _scoreGainFor(piece.template, clearedNow, _combo);
     final nextScore = _score + gainedScore;
     final nextCombo = clearedNow > 0 ? _combo + 1 : 0;
     final nextStreak = clearedNow > 0 ? _streak + 1 : 0;
     final bool beatBestThisMove =
         _score <= _bestScore && nextScore > _bestScore;
-    final List<_SoulPieceOption> remainingTray;
-    if (_draggingFromHold) {
-      remainingTray = _tray;
-    } else {
-      remainingTray = List<_SoulPieceOption>.from(_tray)
-        ..removeWhere((item) => item.id == piece.id);
-    }
+    final remainingTray = List<_SoulPieceOption>.from(_tray)
+      ..removeWhere((item) => item.id == piece.id);
 
-    if (piece.isBomb) {
-      _emitBombFeedback();
-    } else {
-      _emitPlaceFeedback();
-    }
-    if (piece.isBomb && bombClearedCells.isNotEmpty) {
-      _showFloatingMessage(
-        'BOOM! +${bombClearedCells.length * 10}',
-        color: const Color(0xFFFF4500),
-      );
-      _triggerScreenPulse();
-    }
-    if (piece.isGold) {
-      _showFloatingMessage(
-        'GOLD! X2 POINTS',
-        color: const Color(0xFFFFD700),
-      );
-      _triggerScreenPulse();
-    }
-
+    _emitPlaceFeedback();
     if (clearedNow > 0) {
       _emitClearFeedback(
         clearedCount: clearedNow,
@@ -1700,9 +1541,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     setState(() {
       _board = placedBoard;
       _tray = remainingTray;
-      if (_draggingFromHold) {
-        _holdPiece = null;
-      }
       _turn += 1;
       _score = nextScore;
       _combo = nextCombo;
@@ -1710,11 +1548,10 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _scorePulseTick += 1;
       _clearingRows = clearedRows.toSet();
       _clearingCols = clearedCols.toSet();
-      _clearingCells = bombClearedCells.toSet();
     });
 
-    if (clearedNow > 0 || bombClearedCells.isNotEmpty) {
-      await Future<void>.delayed(const Duration(milliseconds: 150));
+    if (clearedNow > 0) {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
       if (!mounted) {
         return;
       }
@@ -1736,7 +1573,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
 
     final replenishedTray =
-        remainingTray.isEmpty ? _buildSmartBatch(resolvedBoard) : remainingTray;
+        remainingTray.isEmpty ? _buildFastTray(resolvedBoard) : remainingTray;
     final nextRecommended = _recommendMoveFor(resolvedBoard, replenishedTray);
     final noMovesLeft = replenishedTray.isEmpty || nextRecommended == null;
 
@@ -1746,7 +1583,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _recommendedMove = nextRecommended;
       _clearingRows = <int>{};
       _clearingCols = <int>{};
-      _clearingCells = <Point<int>>{};
       _clearedLines += clearedNow;
       _isGameOver = noMovesLeft;
       _isBusy = false;
@@ -1769,8 +1605,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       );
     }
     */
-    final bool shouldTriggerBurst = (clearedNow >= 2) ||
-        (clearedNow == 1 && nextStreak.isEven && nextStreak >= 2);
+    final bool shouldTriggerBurst = (clearedNow >= 2) || (clearedNow == 1 && nextStreak.isEven && nextStreak >= 2);
     if (clearedNow > 0 && shouldTriggerBurst) {
       _triggerMemoryBurstReward(
         clearedCount: clearedNow,
@@ -1785,39 +1620,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     if (noMovesLeft) {
       await _handleGameOverTransition();
     }
-  }
-
-  void _rotatePiece(_SoulPieceOption piece) {
-    if (_isGameOver || _isBusy) return;
-
-    _emitClickFeedback();
-
-    final int index = _tray.indexWhere((p) => p.id == piece.id);
-    if (index != -1) {
-      setState(() {
-        _tray[index] = _SoulPieceOption(
-          id: piece.id,
-          template: piece.template.rotate(),
-          toneIndex: piece.toneIndex,
-        );
-        _recommendedMove = _recommendMoveFor(_board, _tray);
-      });
-      _markTrayVisualDirty();
-    } else if (_holdPiece != null && _holdPiece!.id == piece.id) {
-      setState(() {
-        _holdPiece = _SoulPieceOption(
-          id: piece.id,
-          template: piece.template.rotate(),
-          toneIndex: piece.toneIndex,
-        );
-        _recommendedMove = _recommendMoveFor(_board, _tray);
-      });
-      _markTrayVisualDirty();
-    }
-  }
-
-  void _setBoardSize(int size) {
-    setState(() => _boardSize = size);
   }
 
   Future<void> _handleGameOverTransition() async {
@@ -1937,7 +1739,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _recommendedMove = nextRecommended;
       _clearingRows = revivedRows;
       _clearingCols = <int>{};
-      _clearingCells = <Point<int>>{};
       _continueUsedThisRun = true;
       _isReviving = false;
       _isGameOver = false;
@@ -1960,7 +1761,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
     setState(() {
       _clearingRows = <int>{};
-      _clearingCells = <Point<int>>{};
     });
     unawaited(_persistSavedRun());
   }
@@ -2063,8 +1863,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       'id': piece.id,
       'templateId': piece.template.id,
       'toneIndex': piece.toneIndex,
-      'isGold': piece.isGold,
-      'isBomb': piece.isBomb,
     };
   }
 
@@ -2074,11 +1872,10 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
     final Map<String, dynamic> json = Map<String, dynamic>.from(raw);
     final String templateId = (json['templateId'] as String? ?? '').trim();
-    final _SoulPieceTemplate? template =
-        _kSoulBlockTemplates.cast<_SoulPieceTemplate?>().firstWhere(
-              (_SoulPieceTemplate? item) => item?.id == templateId,
-              orElse: () => null,
-            );
+    final _SoulPieceTemplate? template = _kSoulBlockTemplates.cast<_SoulPieceTemplate?>().firstWhere(
+      (_SoulPieceTemplate? item) => item?.id == templateId,
+      orElse: () => null,
+    );
     if (template == null) {
       return null;
     }
@@ -2086,8 +1883,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       id: (json['id'] as num?)?.toInt() ?? 0,
       template: template,
       toneIndex: (json['toneIndex'] as num?)?.toInt() ?? 0,
-      isGold: json['isGold'] == true,
-      isBomb: json['isBomb'] == true,
     );
   }
 
@@ -2116,8 +1911,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
           )
           .toList(growable: false),
       'tray': _tray.map(_pieceToJson).toList(growable: false),
-      'holdPiece': _holdPiece == null ? null : _pieceToJson(_holdPiece!),
-      'boardSize': _boardSize,
     };
     await prefs.setString(_savedRunKey, jsonEncode(payload));
   }
@@ -2137,14 +1930,13 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         return null;
       }
       final Map<String, dynamic> json = Map<String, dynamic>.from(decoded);
-      final int savedBoardSize = (json['boardSize'] as num?)?.toInt() ?? 8;
       final List<dynamic> boardRows = (json['board'] as List?) ?? <dynamic>[];
-      if (boardRows.length != savedBoardSize) {
+      if (boardRows.length != _boardSize) {
         return null;
       }
       final List<List<_SoulTile?>> board = boardRows.map((Object? row) {
         final List<dynamic> cells = row is List ? row : <dynamic>[];
-        if (cells.length != savedBoardSize) {
+        if (cells.length != _boardSize) {
           throw const FormatException('invalid board row');
         }
         return cells.map(_tileFromJson).toList(growable: false);
@@ -2160,8 +1952,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       }
       _pieceSequence = max(
         (json['pieceSequence'] as num?)?.toInt() ?? 0,
-        tray.fold<int>(
-            0, (int maxId, _SoulPieceOption piece) => max(maxId, piece.id)),
+        tray.fold<int>(0, (int maxId, _SoulPieceOption piece) => max(maxId, piece.id)),
       );
       _score = (json['score'] as num?)?.toInt() ?? 0;
       _bestScore = max(_bestScore, (json['bestScore'] as num?)?.toInt() ?? 0);
@@ -2170,16 +1961,12 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _turn = (json['turn'] as num?)?.toInt() ?? 0;
       _clearedLines = (json['clearedLines'] as num?)?.toInt() ?? 0;
       _continueUsedThisRun = json['continueUsedThisRun'] == true;
-      final _SoulPieceOption? holdPiece =
-          json['holdPiece'] == null ? null : _pieceFromJson(json['holdPiece']);
       return _PreparedSoulRun(
         board: board,
         tray: tray,
         recommendedMove: recommendedMove,
         sessionId: (json['sessionId'] as num?)?.toInt() ??
             DateTime.now().microsecondsSinceEpoch,
-        holdPiece: holdPiece,
-        boardSize: savedBoardSize,
       );
     } catch (_) {
       return null;

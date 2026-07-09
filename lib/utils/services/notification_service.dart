@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
-
+import 'package:permission_handler/permission_handler.dart' as app_permission;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soullocket_app/utils/services/auth/auth_house_context_service.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:soullocket_app/views/app_entry.dart';
@@ -77,7 +78,11 @@ class NotificationService {
       return true;
     }
 
-
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      final androidStatus =
+          await app_permission.Permission.notification.request();
+      if (!androidStatus.isGranted) return false;
+    }
 
     final settings = await _fcm.requestPermission(
       alert: true,
@@ -199,56 +204,47 @@ class NotificationService {
         .ref('users/${user.uid}/fcmToken')
         .set(token);
 
-    // FCM token giờ chỉ lưu độc lập tại users/{uid}/fcmToken
-    // Không lưu gộp vào houses/{houseId}/fcmTokens nữa để tách biệt hoàn toàn thiết bị theo UID
+    // Dùng cache trước, fallback RTDB nếu cache miss
+    String? houseId = await AuthHouseContextService.quickHouseId();
+    if (houseId == null || houseId.isEmpty) {
+      final houseIdSnap =
+          await FirebaseDatabase.instance.ref('users/${user.uid}/houseId').get();
+      houseId = houseIdSnap.value?.toString();
+      if (houseId == null || houseId.isEmpty) {
+        final houseSnap = await FirebaseDatabase.instance
+            .ref('users/${user.uid}/house_id')
+            .get();
+        houseId = houseSnap.value?.toString();
+      }
+      if (houseId != null && houseId.isNotEmpty) {
+        AuthHouseContextService.setMemHouseId(houseId);
+      }
+    }
+
+    if (houseId != null && houseId.isNotEmpty) {
+      await FirebaseDatabase.instance
+          .ref('houses/$houseId/fcmTokens/${user.uid}')
+          .set(token);
+    }
   }
 
+  /// Khi FCM Token thay đổi (đổi máy, cài lại App...)
   Future<void> _onTokenRefresh(String newToken) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     await FirebaseDatabase.instance
         .ref('users/${user.uid}/fcmToken')
         .set(newToken);
-
-    // FCM token giờ chỉ lưu độc lập tại users/{uid}/fcmToken
-    // Không lưu gộp vào houses/{houseId}/fcmTokens nữa để tách biệt hoàn toàn thiết bị theo UID
-  }
-
-  /// Dọn dẹp FCM token khi người dùng đăng xuất
-  Future<void> clearTokenOnSignOut() async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final houseId = await HouseService().getCurrentHouseId();
-        if (houseId != null && houseId.isNotEmpty) {
-          await FirebaseDatabase.instance
-              .ref('houses/$houseId/fcmTokens/${user.uid}')
-              .remove();
-        }
-      }
-    } catch (e) {
-      debugPrint('[NotificationService] clearTokenOnSignOut error: $e');
-    }
   }
 
   /// Xử lý thông báo khi App đang mở — hiển thị Local Notification
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
+    final notification = message.notification;
+    if (notification == null || _shouldSkipForegroundMessage(message)) return;
+
     final type = message.data['type']?.toString() ?? '';
     final screen = message.data['screen']?.toString() ?? '';
-    final isInteractionOrMerge = type == 'soul_merge' ||
-        screen == 'soul_merge' ||
-        type == 'partner_care' ||
-        type == 'interaction' ||
-        type == 'photo_shot';
-
-    // Yêu cầu: Không hiện thông báo in-app (Overlay/Heads-up) khi đang trong app đối với sự kiện gửi icon/bắn tim/tương tác (ôm, hôn...)
-    // Chỉ hiện thông báo Push Notification của Hệ thống khi khóa màn hình hoặc thoát app.
-    if (isInteractionOrMerge) return;
-
-    final isOverlayTarget = type == 'chat' || screen == 'chat';
-
-    // 1. Luôn hiển thị bong bóng (nếu được cấp quyền) ngay cả khi không có notification block (Data-only FCM)
-    if (isOverlayTarget) {
+    if (type == 'soul_merge' || screen == 'soul_merge' || type == 'chat' || screen == 'chat') {
       try {
         final granted = await FlutterOverlayWindow.isPermissionGranted();
         if (granted) {
@@ -268,10 +264,6 @@ class NotificationService {
         debugPrint('Error showing overlay in foreground: $e');
       }
     }
-
-    // 2. Xử lý hiển thị heads-up (Local Notification)
-    final notification = message.notification;
-    if (notification == null || _shouldSkipForegroundMessage(message)) return;
 
     await showLocalNotification(
       title: notification.title ?? '',
@@ -643,9 +635,7 @@ class NotificationService {
         prefs.getBool('il_notifications_enabled') ?? true;
     final sleepReminderEnabled =
         prefs.getBool('il_smart_reminder_sleep') ?? true;
-    if (!notificationsEnabled ||
-        !sleepReminderEnabled ||
-        !await hasPermission()) {
+    if (!notificationsEnabled || !sleepReminderEnabled || !await hasPermission()) {
       await cancelDailySleepReminder();
       return;
     }
@@ -718,9 +708,7 @@ class NotificationService {
     SharedPreferences prefs,
     String role,
   ) async {
-    final fallback = role == 'user2'
-        ? L10nService().translate('female_role_default')
-        : L10nService().translate('male_role_default');
+    final fallback = role == 'user2' ? L10nService().translate('female_role_default') : L10nService().translate('male_role_default');
     final cachedAuthUid = (prefs.getString('il_auth_uid') ?? '').trim();
     final currentUid = FirebaseAuth.instance.currentUser?.uid.trim() ?? '';
     final canUseSessionCache =
@@ -764,17 +752,13 @@ class NotificationService {
 
     final nightTimeStr = prefs.getString('il_good_night_time') ?? '22:15';
     final nightParts = nightTimeStr.split(':');
-    final nightHour =
-        nightParts.isNotEmpty ? (int.tryParse(nightParts[0]) ?? 22) : 22;
-    final nightMinute =
-        nightParts.length > 1 ? (int.tryParse(nightParts[1]) ?? 15) : 15;
+    final nightHour = nightParts.isNotEmpty ? (int.tryParse(nightParts[0]) ?? 22) : 22;
+    final nightMinute = nightParts.length > 1 ? (int.tryParse(nightParts[1]) ?? 15) : 15;
 
     final morningTimeStr = prefs.getString('il_good_morning_time') ?? '05:55';
     final morningParts = morningTimeStr.split(':');
-    final morningHour =
-        morningParts.isNotEmpty ? (int.tryParse(morningParts[0]) ?? 5) : 5;
-    final morningMinute =
-        morningParts.length > 1 ? (int.tryParse(morningParts[1]) ?? 55) : 55;
+    final morningHour = morningParts.isNotEmpty ? (int.tryParse(morningParts[0]) ?? 5) : 5;
+    final morningMinute = morningParts.length > 1 ? (int.tryParse(morningParts[1]) ?? 55) : 55;
 
     await _maybeSendAutoTimedGreeting(
       houseId: houseId,

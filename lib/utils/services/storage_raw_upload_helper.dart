@@ -40,24 +40,19 @@ class StorageRawUploadHelper {
 
     try {
       if (!CloudflareR2Service.instance.isConfigured) {
-        throw Exception(
-            'Chưa cấu hình R2. Thêm --dart-define R2 keys vào lệnh build.');
+        throw Exception('Chưa cấu hình R2. Thêm --dart-define R2 keys vào lệnh build.');
       }
       CloudflareR2Service.instance.init();
 
       final tempDir = await getTemporaryDirectory();
-      final ext = _isImageContentType(resolvedContentType)
-          ? _imageExtension(resolvedContentType)
-          : '.bin';
-      final tempPath = p.join(tempDir.path,
-          'r2_upload_${DateTime.now().microsecondsSinceEpoch}$ext');
+      final ext = _isImageContentType(resolvedContentType) ? _imageExtension(resolvedContentType) : '.bin';
+      final tempPath = p.join(tempDir.path, 'r2_upload_${DateTime.now().microsecondsSinceEpoch}$ext');
       final tempFile = File(tempPath);
 
       try {
         if (!kIsWeb && file.path.isNotEmpty) {
           if (_isImageContentType(resolvedContentType)) {
-            final compressed =
-                await _compressImageFile(File(file.path), resolvedContentType);
+            final compressed = await _compressImageFile(File(file.path), resolvedContentType);
             await tempFile.writeAsBytes(compressed);
           } else {
             await File(file.path).copy(tempPath);
@@ -70,11 +65,9 @@ class StorageRawUploadHelper {
           await tempFile.writeAsBytes(dataToUpload);
         }
 
-        final r2Url = await CloudflareR2Service.instance
-            .uploadFile(tempFile, folderPath: 'media');
+        final r2Url = await CloudflareR2Service.instance.uploadFile(tempFile, folderPath: 'media');
         if (r2Url == null || r2Url.isEmpty) {
-          throw Exception(
-              'Máy chủ ảnh (R2) không phản hồi. Vui lòng thử lại sau.');
+          throw Exception('Máy chủ ảnh (R2) không phản hồi. Vui lòng thử lại sau.');
         }
         return r2Url;
       } finally {
@@ -83,11 +76,9 @@ class StorageRawUploadHelper {
         }
       }
     } catch (e) {
-      final msg =
-          e is Exception ? e.toString().replaceFirst('Exception: ', '') : null;
+      final msg = e is Exception ? e.toString().replaceFirst('Exception: ', '') : null;
       debugPrint('Lỗi upload ảnh: $e');
-      throw Exception(msg ??
-          'Lỗi tải ảnh lên máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.');
+      throw Exception(msg ?? 'Lỗi tải ảnh lên máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.');
     }
   }
 
@@ -199,12 +190,11 @@ class StorageRawUploadHelper {
 
     try {
       CloudflareR2Service.instance.init();
-
+      
       final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(tempDir.path,
-          'r2_music_upload_${DateTime.now().microsecondsSinceEpoch}.mp3');
+      final tempPath = p.join(tempDir.path, 'r2_music_upload_${DateTime.now().microsecondsSinceEpoch}.mp3');
       final tempFile = File(tempPath);
-
+      
       try {
         if (!kIsWeb && file.path.isNotEmpty) {
           await File(file.path).copy(tempPath);
@@ -212,9 +202,8 @@ class StorageRawUploadHelper {
           final fileBytes = await file.readAsBytes();
           await tempFile.writeAsBytes(fileBytes);
         }
-
-        final r2Url = await CloudflareR2Service.instance
-            .uploadFile(tempFile, folderPath: 'media');
+        
+        final r2Url = await CloudflareR2Service.instance.uploadFile(tempFile, folderPath: 'media');
         if (r2Url == null || r2Url.isEmpty) {
           throw Exception('R2 upload failed.');
         }
@@ -225,8 +214,7 @@ class StorageRawUploadHelper {
         }
       }
     } catch (e) {
-      debugPrint(
-          'Lỗi khi upload file nhạc $storagePath: ${AppErrorMapper.resolve(
+      debugPrint('Lỗi khi upload file nhạc $storagePath: ${AppErrorMapper.resolve(
         e,
         fallbackMessage: 'Không tải file nhạc lên đám mây được.',
       ).message}');
@@ -304,23 +292,19 @@ class StorageRawUploadHelper {
 
     try {
       CloudflareR2Service.instance.init();
-
+      
       final tempDir = await getTemporaryDirectory();
-      final ext = _isImageContentType(resolvedContentType)
-          ? _imageExtension(resolvedContentType)
-          : '.bin';
-      final tempPath = p.join(tempDir.path,
-          'r2_upload_${DateTime.now().microsecondsSinceEpoch}$ext');
+      final ext = _isImageContentType(resolvedContentType) ? _imageExtension(resolvedContentType) : '.bin';
+      final tempPath = p.join(tempDir.path, 'r2_upload_${DateTime.now().microsecondsSinceEpoch}$ext');
       final tempFile = File(tempPath);
-
+      
       try {
         final dataToUpload = _isImageContentType(resolvedContentType)
             ? await _compressImageBytes(fileBytes, resolvedContentType)
             : fileBytes;
         await tempFile.writeAsBytes(dataToUpload);
-
-        final r2Url = await CloudflareR2Service.instance
-            .uploadFile(tempFile, folderPath: 'media');
+        
+        final r2Url = await CloudflareR2Service.instance.uploadFile(tempFile, folderPath: 'media');
         if (r2Url == null || r2Url.isEmpty) {
           throw Exception('R2 upload failed.');
         }

@@ -314,8 +314,8 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen>
                                   });
                                 },
                                 style: TextButton.styleFrom(
-                                  backgroundColor: const Color(0xFFD81B60)
-                                      .withValues(alpha: 0.1),
+                                  backgroundColor:
+                                      const Color(0xFFD81B60).withValues(alpha: 0.1),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20),
                                   ),
@@ -713,8 +713,7 @@ class _SearchItemTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border:
-            Border.all(color: const Color(0xFFF3D9E6).withValues(alpha: 0.5)),
+        border: Border.all(color: const Color(0xFFF3D9E6).withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFD81B60).withValues(alpha: 0.04),
@@ -840,8 +839,7 @@ class _SearchItemTile extends StatelessWidget {
                         icon: Container(
                           padding: SLSpacing.all8,
                           decoration: BoxDecoration(
-                            color:
-                                const Color(0xFFD81B60).withValues(alpha: 0.1),
+                            color: const Color(0xFFD81B60).withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(

@@ -4,7 +4,6 @@ import '../../utils/services/l10n_service.dart';
 import '../utilities/calendar_screen.dart';
 import '../../core/sl_page_physics.dart';
 
-
 class MilestoneEvent {
   final String title;
   final DateTime date;
@@ -408,10 +407,10 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                                   color: Colors.white24,
                                   shape: BoxShape.circle,
                                 ),
-                                child: Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(4.0),
-                                    child: Image.asset('assets/images/interaction_stickers/custom/numbered/sticker_005.png'),
+                                child: const Center(
+                                  child: Text(
+                                    '🐱❤️🐶',
+                                    style: TextStyle(fontSize: 22),
                                   ),
                                 ),
                               ),
@@ -543,10 +542,10 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                   shape: BoxShape.circle,
                   border: Border.all(color: const Color(0xFFFFC0CB), width: 2),
                 ),
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Image.asset('assets/images/interaction_stickers/custom/numbered/sticker_158.png'), // Thỏ ôm tim/chờ đợi
+                child: const Center(
+                  child: Text(
+                    '🌸',
+                    style: TextStyle(fontSize: 36),
                   ),
                 ),
               ),
@@ -595,52 +594,63 @@ class _MilestonesScreenState extends State<MilestonesScreen>
   }
 
   Widget _buildEventItemCard(MilestoneEvent event, {required bool isUpcoming}) {
-    final (countdownText, badgeBgColor, badgeTextColor) = switch ((isUpcoming, event.diffDays)) {
-      (true, 0) => (
-          L10nService().translate('milestone_today'),
-          const Color(0xFFDCFCE7),
-          const Color(0xFF166534)
-        ),
-      (true, 1) => (
-          L10nService().translate('milestone_tomorrow'),
-          const Color(0xFFECFEFF),
-          const Color(0xFF155E75)
-        ),
-      (true, final d) => (
-          L10nService().format('milestone_days_left', {'days': d.toString()}),
-          const Color(0xFFFCE7F3),
-          const Color(0xFF9D174D)
-        ),
-      (false, -1) => (
-          L10nService().translate('milestone_yesterday'),
-          const Color(0xFFF1F5F9),
-          const Color(0xFF475569)
-        ),
-      (false, _) => (
-          L10nService().format('milestone_days_passed', {'days': event.diffDays.abs().toString()}),
-          const Color(0xFFF1F5F9),
-          const Color(0xFF475569)
-        ),
-    };
+    String countdownText = '';
+    Color badgeBgColor;
+    Color badgeTextColor;
 
-    final (stickerPath, iconBgColor) = switch (event.type) {
-      'birthday' => (
-          'assets/images/interaction_stickers/custom/numbered/sticker_108.png',
-          const Color(0xFFFEF3C7)
-        ),
-      'anniversary' => (
-          'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
-          const Color(0xFFFCE7F3)
-        ),
-      'holiday' => (
-          'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
-          const Color(0xFFEDE9FE)
-        ),
-      _ => (
-          'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
-          const Color(0xFFDBEAFE)
-        ),
-    };
+    if (isUpcoming) {
+      if (event.diffDays == 0) {
+        countdownText = L10nService().translate('milestone_today');
+        badgeBgColor = const Color(0xFFDCFCE7);
+        badgeTextColor = const Color(0xFF166534);
+      } else if (event.diffDays == 1) {
+        countdownText = L10nService().translate('milestone_tomorrow');
+        badgeBgColor = const Color(0xFFECFEFF);
+        badgeTextColor = const Color(0xFF155E75);
+      } else {
+        countdownText = L10nService().format('milestone_days_left', {'days': event.diffDays.toString()});
+        badgeBgColor = const Color(0xFFFCE7F3);
+        badgeTextColor = const Color(0xFF9D174D);
+      }
+    } else {
+      final passedDays = event.diffDays.abs();
+      if (passedDays == 1) {
+        countdownText = L10nService().translate('milestone_yesterday');
+        badgeBgColor = const Color(0xFFF1F5F9);
+        badgeTextColor = const Color(0xFF475569);
+      } else {
+        countdownText = L10nService().format('milestone_days_passed', {'days': passedDays.toString()});
+        badgeBgColor = const Color(0xFFF1F5F9);
+        badgeTextColor = const Color(0xFF475569);
+      }
+    }
+
+    IconData eventIcon;
+    Color iconColor;
+    Color iconBgColor;
+    switch (event.type) {
+      case 'birthday':
+        eventIcon = Icons.cake_rounded;
+        iconColor = const Color(0xFFD97706);
+        iconBgColor = const Color(0xFFFEF3C7);
+        break;
+      case 'anniversary':
+        eventIcon = Icons.favorite_rounded;
+        iconColor = const Color(0xFFDB2777);
+        iconBgColor = const Color(0xFFFCE7F3);
+        break;
+      case 'holiday':
+        eventIcon = Icons.celebration_rounded;
+        iconColor = const Color(0xFF7C3AED);
+        iconBgColor = const Color(0xFFEDE9FE);
+        break;
+      case 'calendar':
+      default:
+        eventIcon = Icons.event_available_rounded;
+        iconColor = const Color(0xFF2563EB);
+        iconBgColor = const Color(0xFFDBEAFE);
+        break;
+    }
 
     final weekdays = [
       L10nService().translate('milestone_weekday_1'),
@@ -677,22 +687,23 @@ class _MilestonesScreenState extends State<MilestonesScreen>
               Transform.rotate(
                 angle: -0.05,
                 child: Container(
-                  width: 48,
-                  height: 48,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
                     color: iconBgColor,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                        color: iconColor.withValues(alpha: 0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Image.asset(stickerPath),
+                  child: Icon(
+                    eventIcon,
+                    color: iconColor,
+                    size: 20,
                   ),
                 ),
               ),

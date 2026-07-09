@@ -1,6 +1,11 @@
+
 part of '../messenger_screen.dart';
 
 extension _MessengerRoomListPart on _MessengerScreenState {
+
+
+
+
   Widget _buildFriendAvatarCluster(
     String friendId,
     Color statusColor, {
@@ -131,11 +136,13 @@ extension _MessengerRoomListPart on _MessengerScreenState {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: highlighted ? const Color(0xFFFFEEF5) : const Color(0xFFF8FAFC),
+        color:
+            highlighted ? const Color(0xFFFFEEF5) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color:
-              highlighted ? const Color(0xFFF8BBD0) : const Color(0xFFE2E8F0),
+          color: highlighted
+              ? const Color(0xFFF8BBD0)
+              : const Color(0xFFE2E8F0),
         ),
       ),
       child: Text(
@@ -312,8 +319,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
                             Positioned(
                               right: 3,
                               bottom: 3,
-                              child: _buildStatusDot(
-                                  _internalPartnerStatusColor()),
+                              child: _buildStatusDot(_internalPartnerStatusColor()),
                             ),
                           ],
                         ),
@@ -651,4 +657,6 @@ extension _MessengerRoomListPart on _MessengerScreenState {
       ),
     );
   }
+
+
 }

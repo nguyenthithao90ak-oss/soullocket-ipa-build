@@ -105,17 +105,18 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
           fallbackMessage: loginErrorFallback,
         ).message}');
         setState(() {
-          _errorText = '${_adminLoginErrorText(
-            error,
-            invalidEmail: invalidEmailMsg,
-            wrongCreds: wrongCredsMsg,
-            disabled: disabledMsg,
-            tooManyRequests: tooManyRequestsMsg,
-            networkFailed: networkFailedMsg,
-            adminRoleMissing: adminRoleMissingTerm,
-            noAccess: noAccessMsg,
-            genericError: genericLoginErrorMsg,
-          )}\n(Sai $newFailedAttempts/$maxFailedAttempts lần)';
+          _errorText =
+              '${_adminLoginErrorText(
+                error,
+                invalidEmail: invalidEmailMsg,
+                wrongCreds: wrongCredsMsg,
+                disabled: disabledMsg,
+                tooManyRequests: tooManyRequestsMsg,
+                networkFailed: networkFailedMsg,
+                adminRoleMissing: adminRoleMissingTerm,
+                noAccess: noAccessMsg,
+                genericError: genericLoginErrorMsg,
+              )}\n(Sai $newFailedAttempts/$maxFailedAttempts lần)';
         });
       }
     } finally {
@@ -291,8 +292,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                                 width: double.infinity,
                                 padding: SLSpacing.all12,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFF4D6D)
-                                      .withValues(alpha: 0.14),
+                                  color:
+                                      const Color(0xFFFF4D6D).withValues(alpha: 0.14),
                                   borderRadius: SLRadius.lgAll,
                                   border: Border.all(
                                     color: const Color(0xFFFF4D6D)

@@ -277,8 +277,7 @@ class LocalDatabaseService {
     final expiresAt = row['expires_at'] as int? ?? 0;
     final now = DateTime.now().millisecondsSinceEpoch;
     if (expiresAt > 0 && now > expiresAt) {
-      await db
-          .delete('cache_entries', where: 'cache_key = ?', whereArgs: [key]);
+      await db.delete('cache_entries', where: 'cache_key = ?', whereArgs: [key]);
       return null;
     }
 
@@ -538,8 +537,7 @@ class LocalDatabaseService {
             where: 'id = ?',
             whereArgs: [id],
           );
-          debugPrint(
-              '[SyncQueue] Failed $action -> $taskPath: ${AppErrorMapper.cleanMessage(e)}');
+          debugPrint('[SyncQueue] Failed $action -> $taskPath: ${AppErrorMapper.cleanMessage(e)}');
           if (!retryable || reachedRetryLimit) {
             shouldStopProcessing = _isBlockingQueueError(e);
           }

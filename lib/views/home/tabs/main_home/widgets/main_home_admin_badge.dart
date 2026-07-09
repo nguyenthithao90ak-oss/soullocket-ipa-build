@@ -1,18 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
+part of '../../main_home_tab.dart';
 
-class MainHomeAdminBadge extends StatelessWidget {
-  final double iconSize;
-  final EdgeInsetsGeometry padding;
-
-  const MainHomeAdminBadge({
-    super.key,
-    this.iconSize = 14,
-    this.padding = const EdgeInsets.only(left: 6),
-  });
-
-  @override
-  Widget build(BuildContext context) {
+extension _MainHomeAdminBadgeExt on _MainHomeTabState {
+  Widget _buildAdminBadge({
+    double iconSize = 14,
+    EdgeInsetsGeometry padding = const EdgeInsets.only(left: 6),
+  }) {
     return Padding(
       padding: padding,
       child: Container(

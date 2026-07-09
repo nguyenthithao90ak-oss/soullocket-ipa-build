@@ -86,9 +86,7 @@ class DiaryItem extends StatelessWidget {
       rawName = normalizeDisplayName(houseNameForRole(authorRole));
     }
     if (rawName.isEmpty) {
-      rawName = isMyPost
-          ? context.tr('home_ti_a843eb')
-          : context.tr('home_ngiy_5bab37');
+      rawName = isMyPost ? context.tr('home_ti_a843eb') : context.tr('home_ngiy_5bab37');
     }
 
     final displayName = rawName;
@@ -96,8 +94,8 @@ class DiaryItem extends StatelessWidget {
     // Phân biệt màu sắc theo vai (Nam: Xanh dương, Nữ: Hồng)
     final isMale = authorRole == 'user1';
     final isFemale = authorRole == 'user2';
-    final Color accentColor = isMale
-        ? const Color(0xFF0288D1)
+    final Color accentColor = isMale 
+        ? const Color(0xFF0288D1) 
         : (isFemale ? _diarySoftPink : const Color(0xFF7B1FA2));
 
     final isShortText = post.content.trim().length < 30;
@@ -120,8 +118,7 @@ class DiaryItem extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.12),
                     borderRadius: SLRadius.mdAll,
-                    border:
-                        Border.all(color: accentColor.withValues(alpha: 0.25)),
+                    border: Border.all(color: accentColor.withValues(alpha: 0.25)),
                   ),
                   child: Text(
                     '$displayName ${post.mood}',
@@ -189,8 +186,7 @@ class DiaryItem extends StatelessWidget {
                   ),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 24),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                     child: Text(
                       post.content,
                       textAlign: TextAlign.center,
@@ -238,8 +234,7 @@ class DiaryItem extends StatelessWidget {
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.0,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Color(0xFFE98FB1)),
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE98FB1)),
                       ),
                     ),
                   ),
@@ -247,8 +242,7 @@ class DiaryItem extends StatelessWidget {
                     height: 120,
                     color: Colors.white.withValues(alpha: 0.08),
                     alignment: Alignment.center,
-                    child: const Icon(Icons.broken_image_rounded,
-                        color: Color(0xFFE98FB1), size: 26),
+                    child: const Icon(Icons.broken_image_rounded, color: Color(0xFFE98FB1), size: 26),
                   ),
                 ),
               ),

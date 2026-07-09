@@ -189,7 +189,8 @@ class DeeplinkService {
     final normalizedPath = uri.path.endsWith('/') && uri.path.length > 1
         ? uri.path.substring(0, uri.path.length - 1)
         : uri.path;
-    return normalizedPath == '/gift.html' || normalizedPath == '/gift';
+    return normalizedPath == '/gift.html' ||
+        normalizedPath == '/gift';
   }
 
   static bool isSupportedLoveCardUri(Uri uri) {

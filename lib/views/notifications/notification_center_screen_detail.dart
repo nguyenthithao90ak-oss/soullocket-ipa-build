@@ -134,8 +134,7 @@ extension _NotificationCenterScreenDetail on _NotificationCenterScreenState {
                             if (locked)
                               _buildMetaChip(
                                 icon: Icons.lock_rounded,
-                                label: context
-                                    .tr('notifications_system_notification'),
+                                label: context.tr('notifications_system_notification'),
                                 accent: SLColors.warning,
                                 highlighted: true,
                               )

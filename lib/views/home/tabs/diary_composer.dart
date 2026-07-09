@@ -28,8 +28,7 @@ class DiaryComposer extends StatefulWidget {
   State<DiaryComposer> createState() => _DiaryComposerState();
 }
 
-class _DiaryComposerState extends State<DiaryComposer>
-    with SingleTickerProviderStateMixin {
+class _DiaryComposerState extends State<DiaryComposer> with SingleTickerProviderStateMixin {
   final FocusNode _focusNode = FocusNode();
   bool _isFocused = false;
   bool _isButtonPressed = false;
@@ -116,15 +115,15 @@ class _DiaryComposerState extends State<DiaryComposer>
                                     ? moodColor.withValues(alpha: 0.18)
                                     : const Color(0xFFF2F4F8),
                                 border: Border.all(
-                                  color:
-                                      active ? moodColor : Colors.transparent,
+                                  color: active
+                                      ? moodColor
+                                      : Colors.transparent,
                                   width: 2.2,
                                 ),
                                 boxShadow: active
                                     ? [
                                         BoxShadow(
-                                          color:
-                                              moodColor.withValues(alpha: 0.3),
+                                          color: moodColor.withValues(alpha: 0.3),
                                           blurRadius: 10,
                                           offset: const Offset(0, 3),
                                         )
@@ -195,8 +194,7 @@ class _DiaryComposerState extends State<DiaryComposer>
                     color: SLColors.textPrimary,
                   ),
                   decoration: InputDecoration(
-                    hintText: L10nService()
-                        .translate(context.tr('home_hmnaythnog_0c01f7')),
+                    hintText: L10nService().translate(context.tr('home_hmnaythnog_0c01f7')),
                     hintStyle: SLTheme.quicksand(
                       color: SLColors.textTertiary,
                       fontSize: 14,
@@ -217,8 +215,7 @@ class _DiaryComposerState extends State<DiaryComposer>
             AnimatedBuilder(
               animation: _breathingAnimation,
               builder: (context, child) {
-                final scale =
-                    (_isButtonPressed ? 0.96 : 1.0) * _breathingAnimation.value;
+                final scale = (_isButtonPressed ? 0.96 : 1.0) * _breathingAnimation.value;
                 return Transform.scale(
                   scale: scale,
                   child: child,
@@ -258,13 +255,11 @@ class _DiaryComposerState extends State<DiaryComposer>
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
                           : Text(
-                              L10nService()
-                                  .translate(context.tr('home_lutms_b4b0f3')),
+                              L10nService().translate(context.tr('home_lutms_b4b0f3')),
                               style: SLTheme.quicksand(
                                 color: Colors.white,
                                 fontSize: 15.5,

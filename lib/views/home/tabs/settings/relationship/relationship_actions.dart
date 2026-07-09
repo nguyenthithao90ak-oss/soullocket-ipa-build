@@ -208,9 +208,7 @@ class SettingsRelationshipActionRunner {
 
     await NotificationService().sendHouseNotification(
       houseId: houseId,
-      title: isSingleRelationship
-          ? L10nService().translate('home_xadliunh_bbb016')
-          : L10nService().translate('home_yucuchiata_be1aa9'),
+      title: isSingleRelationship ? L10nService().translate('home_xadliunh_bbb016') : L10nService().translate('home_yucuchiata_be1aa9'),
       body: isSingleRelationship
           ? L10nService().translate('home_yucuxadliu_357698')
           : L10nService().translate('home_yucuchiata_df645c'),
@@ -283,9 +281,7 @@ class SettingsRelationshipActions {
     required bool isSingle,
   }) {
     return RelationshipActionDescriptor(
-      label: isSingle
-          ? L10nService().translate('home_qutqrvochu_d848a8')
-          : L10nService().translate('home_honttktniq_937193'),
+      label: isSingle ? L10nService().translate('home_qutqrvochu_d848a8') : L10nService().translate('home_honttktniq_937193'),
       description: isSingle
           ? L10nService().translate('home_mlungvochu_aabe86')
           : L10nService().translate('home_honttbcghp_90b64c'),
@@ -300,9 +296,7 @@ class SettingsRelationshipActions {
     if (isBusy) {
       return L10nService().translate('home_angxlyucu_0b316c');
     }
-    return isSingle
-        ? L10nService().translate('home_xadliunh_bbb016')
-        : L10nService().translate('home_chiatayxad_3b2b07');
+    return isSingle ? L10nService().translate('home_xadliunh_bbb016') : L10nService().translate('home_chiatayxad_3b2b07');
   }
 
   static bool canWithdrawBreakup(BreakupRequestData? request) {
@@ -332,9 +326,7 @@ class SettingsRelationshipActions {
     if (request.isScheduled) {
       return L10nService().translate('home_lnlchxadli_6e8028');
     }
-    return isSingle
-        ? L10nService().translate('home_angchxadli_e9699c')
-        : L10nService().translate('home_angchxlchi_6eafab');
+    return isSingle ? L10nService().translate('home_angchxadli_e9699c') : L10nService().translate('home_angchxlchi_6eafab');
   }
 
   static String breakupStatusDescription({
@@ -362,9 +354,7 @@ class SettingsRelationshipActions {
   static String statusLabel({
     required bool isSingle,
   }) {
-    return isSingle
-        ? L10nService().translate('home_cthn_4e27b8')
-        : L10nService().translate('home_angyu_cea065');
+    return isSingle ? L10nService().translate('home_cthn_4e27b8') : L10nService().translate('home_angyu_cea065');
   }
 
   static String _formatDateTime(int value) {

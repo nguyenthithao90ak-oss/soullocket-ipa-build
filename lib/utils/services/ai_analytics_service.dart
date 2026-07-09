@@ -45,10 +45,8 @@ class AILoveAnalyticsService {
     final normalizedHouseId = houseId.trim();
     if (normalizedHouseId.isEmpty) return _emptyResult();
     // Pull only the most recent diary entries to avoid scanning the entire history.
-    final snap = await _db
-        .ref('houses/$normalizedHouseId/diaries')
-        .limitToLast(30)
-        .get();
+    final snap =
+        await _db.ref('houses/$normalizedHouseId/diaries').limitToLast(30).get();
     if (!snap.exists || snap.value is! Map) return _emptyResult();
 
     final data = Map<String, dynamic>.from(snap.value as Map);

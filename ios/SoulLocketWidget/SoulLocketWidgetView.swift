@@ -145,6 +145,12 @@ struct HeartPalette {
                 secondary: Color(hex: "FDE68A"),
                 glow: Color(hex: "FFFBEA")
             )
+        case "none":
+            return HeartPalette(
+                primary: Color.clear,
+                secondary: Color.clear,
+                glow: Color.clear
+            )
         case "rose":
             fallthrough
         default:
@@ -273,6 +279,7 @@ private func resolveHeartEmoji(_ styleKey: String) -> String {
 
 struct HeartClusterView: View {
     let styleKey: String
+    let colorKey: String
     let animated: Bool
     let palette: HeartPalette
     let size: CGFloat
@@ -324,6 +331,14 @@ struct HeartClusterView: View {
     }
 
     var body: some View {
+        // 'none': chỉ hiển thị emoji thuần túy, không màu, không glow
+        if colorKey == "none" {
+            Text(resolveHeartEmoji(styleKey))
+                .font(.system(size: scaled(42)))
+                .scaleEffect(pulse)
+                .offset(x: scaled(sway * 0.35), y: scaled(drift))
+                .frame(width: size, height: size)
+        } else {
         ZStack {
             Circle()
                 .fill(
@@ -370,6 +385,7 @@ struct HeartClusterView: View {
         }
         .frame(width: size, height: size)
         .shadow(color: palette.primary.opacity(animated ? 0.30 : 0.16), radius: size * 0.24, y: 3)
+        }
     }
 }
 
@@ -423,6 +439,7 @@ struct WidgetCenterVisualView: View {
             TimelineView(.periodic(from: .now, by: 6)) { context in
                 HeartClusterView(
                     styleKey: data.heartStyleKey,
+                    colorKey: data.heartColorKey,
                     animated: true,
                     palette: palette,
                     size: heartSize,
@@ -432,6 +449,7 @@ struct WidgetCenterVisualView: View {
         } else {
             HeartClusterView(
                 styleKey: data.heartStyleKey,
+                colorKey: data.heartColorKey,
                 animated: false,
                 palette: palette,
                 size: heartSize,
@@ -757,10 +775,50 @@ struct PersonCard: View {
         return "\(icon) \(battery)%"
     }
 
+    private var weatherIcon: String? {
+        guard !weather.isEmpty else { return nil }
+        let parts = weather.components(separatedBy: " ")
+        if let firstPart = parts.first, !firstPart.isEmpty {
+            if firstPart.contains("℃") || firstPart.contains("°C") || firstPart.contains("°") {
+                return nil
+            }
+            return firstPart
+        }
+        return nil
+    }
+
+    private var zodiacSymbol: String? {
+        guard stars != "--" && !stars.isEmpty else { return nil }
+        let parts = stars.components(separatedBy: " ")
+        if parts.count >= 1 {
+            return parts[0]
+        }
+        return nil
+    }
+
+    private var ageText: String? {
+        guard stars != "--" && !stars.isEmpty else { return nil }
+        let parts = stars.components(separatedBy: " ")
+        if parts.count >= 2 {
+            return parts[1]
+        }
+        return nil
+    }
+
     var body: some View {
         VStack(spacing: 5) {
             ZStack(alignment: .bottomTrailing) {
                 AvatarView(path: avatarPath, name: name, size: avatarSize, accentColor: theme.accentColor)
+                
+                if let weatherIcon = weatherIcon {
+                    Text(weatherIcon)
+                        .font(.system(size: avatarSize * 0.25))
+                        .padding(3)
+                        .background(Color.white)
+                        .clipShape(Circle())
+                        .shadow(color: Color.black.opacity(0.15), radius: 2, y: 1)
+                        .offset(x: avatarSize * 0.04, y: avatarSize * 0.04)
+                }
             }
 
             Text(name)
@@ -769,12 +827,21 @@ struct PersonCard: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
-            if !weather.isEmpty {
-                InfoChip(label: weather, theme: theme)
-            }
-
-            if stars != "--" && !stars.isEmpty {
-                InfoChip(label: "★ \(stars)", theme: theme)
+            if let zodiacSymbol = zodiacSymbol, let ageText = ageText {
+                HStack(spacing: 4) {
+                    Text(zodiacSymbol)
+                        .font(.system(size: 15))
+                    Text(ageText)
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundColor(theme.secondaryTextColor)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(theme.chipBackground)
+                .overlay(
+                    Capsule().stroke(theme.chipBorder, lineWidth: 0.8)
+                )
+                .clipShape(Capsule())
             } else if !status.isEmpty {
                 Text(status)
                     .font(.system(size: 9, weight: .medium, design: .rounded))
@@ -861,15 +928,6 @@ struct LockScreenWidgetView: View {
                         .font(.system(size: 18, weight: .heavy, design: .rounded))
                 }
                 Spacer()
-                if data.battery2 >= 0 {
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Image(systemName: data.isCharging2 ? "battery.100.bolt" : "battery.50")
-                            .font(.system(size: 14))
-                        Text("\(data.battery2)%")
-                            .font(.system(size: 11, weight: .bold, design: .rounded))
-                    }
-                    .opacity(0.7)
-                }
             }
             .modifier(TransparentWidgetBackground())
         case .accessoryCircular:

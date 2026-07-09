@@ -17,15 +17,11 @@ class _SoulPieceOption {
     required this.id,
     required this.template,
     required this.toneIndex,
-    this.isGold = false,
-    this.isBomb = false,
   });
 
   final int id;
   final _SoulPieceTemplate template;
   final int toneIndex;
-  final bool isGold;
-  final bool isBomb;
 }
 
 class _SoulPieceTemplate {
@@ -58,27 +54,6 @@ class _SoulPieceTemplate {
   Set<int> get cellKeySet => _cellKeyCache[id] ??= cells
       .map((Point<int> cell) => (cell.x << 16) ^ (cell.y & 0xFFFF))
       .toSet();
-
-  _SoulPieceTemplate rotate() {
-    final rotatedCells = cells.map((p) => Point<int>(-p.y, p.x)).toList();
-    final minX = rotatedCells.map((p) => p.x).reduce(min);
-    final minY = rotatedCells.map((p) => p.y).reduce(min);
-    final normalizedCells =
-        rotatedCells.map((p) => Point<int>(p.x - minX, p.y - minY)).toList();
-
-    final newWidth = normalizedCells.map((p) => p.x).reduce(max) + 1;
-    final newHeight = normalizedCells.map((p) => p.y).reduce(max) + 1;
-
-    return _SoulPieceTemplate(
-      id: id,
-      label: label,
-      cells: normalizedCells,
-      tier: tier,
-      width: newWidth,
-      height: newHeight,
-      cellCount: cellCount,
-    );
-  }
 }
 
 class _PlacementEval {
@@ -169,16 +144,12 @@ class _PreparedSoulRun {
     required this.tray,
     required this.recommendedMove,
     required this.sessionId,
-    this.holdPiece,
-    this.boardSize,
   });
 
   final List<List<_SoulTile?>> board;
   final List<_SoulPieceOption> tray;
   final _RecommendedMove? recommendedMove;
   final int sessionId;
-  final _SoulPieceOption? holdPiece;
-  final int? boardSize;
 }
 
 class _LeaderboardEntry {

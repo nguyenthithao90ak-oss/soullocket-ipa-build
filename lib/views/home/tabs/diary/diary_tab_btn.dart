@@ -31,9 +31,7 @@ class DiaryTabBtn extends StatelessWidget {
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: active
-              ? Colors.white.withValues(alpha: 0.92)
-              : Colors.transparent,
+          color: active ? Colors.white.withValues(alpha: 0.92) : Colors.transparent,
           borderRadius: SLRadius.lgAll,
           boxShadow: active
               ? [
@@ -86,9 +84,7 @@ class DiaryTabBtn extends StatelessWidget {
               child: Icon(
                 icon,
                 size: 14,
-                color: active
-                    ? Colors.white
-                    : palette.first.withValues(alpha: 0.82),
+                color: active ? Colors.white : palette.first.withValues(alpha: 0.82),
               ),
             ),
             SLSpacing.w8,

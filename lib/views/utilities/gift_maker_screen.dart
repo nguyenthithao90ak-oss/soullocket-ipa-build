@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -56,6 +56,7 @@ class GiftMakerScreen extends StatefulWidget {
         return const [Color(0xFF4338CA), Color(0xFF3B82F6)];
     }
   }
+
 
   String _giftTeaser(GiftType type) {
     switch (type) {
@@ -165,6 +166,8 @@ class GiftMakerScreen extends StatefulWidget {
 }
 
 class _GiftMakerScreenState extends State<GiftMakerScreen> {
+
+
   static const String _pendingUploadKeyPrefix = 'gift_maker_';
   final _giftService = GiftMakerService();
   final _storageService = StorageService();
@@ -200,7 +203,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
       _showSnack(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage: msgPickFail,
+          fallbackMessage:
+              msgPickFail,
         ).message,
       );
     }
@@ -209,9 +213,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
   @override
   void initState() {
     super.initState();
-    _senderCtrl.text = widget.myName.trim().isNotEmpty
-        ? widget.myName.trim()
-        : context.tr('util_ngithng_ec713c');
+    _senderCtrl.text =
+        widget.myName.trim().isNotEmpty ? widget.myName.trim() : context.tr('util_ngithng_ec713c');
     _refreshGiftStreams();
     unawaited(_promptPendingUploadRetryIfNeeded());
   }
@@ -330,7 +333,8 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
         _showSnack(
           AppErrorMapper.resolve(
             e,
-            fallbackMessage: msgUploadFail,
+            fallbackMessage:
+                msgUploadFail,
           ).message,
         );
       }
@@ -523,8 +527,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                                 );
                                 if (!mounted) return;
                                 navigator.pop();
-                                _showSnack(L10nService().format(
-                                    'util_gift_link_copied', {'id': giftId}));
+                                _showSnack(L10nService().format('util_gift_link_copied', {'id': giftId}));
                               },
                               icon: const Icon(Icons.link_rounded),
                               style: OutlinedButton.styleFrom(
@@ -877,8 +880,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                     ),
                   ),
                   Text(
-                    L10nService().format('util_gift_type_label',
-                        {'type': GiftMakerService.giftLabel(_selectedType)}),
+                    L10nService().format('util_gift_type_label', {'type': GiftMakerService.giftLabel(_selectedType)}),
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFFD81B60),
@@ -1219,8 +1221,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.80),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                    color: const Color(0xFFFCE7F3).withValues(alpha: 0.5)),
+                border: Border.all(color: const Color(0xFFFCE7F3).withValues(alpha: 0.5)),
               ),
               child: _selectedImage != null
                   ? ClipRRect(
@@ -1239,9 +1240,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _selectedImage != null
-                        ? context.tr('util_chnnh_d05e7e')
-                        : context.tr('util_nhkmnh_607916'),
+                    _selectedImage != null ? context.tr('util_chnnh_d05e7e') : context.tr('util_nhkmnh_607916'),
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w800,
                       color: const Color(0xFF374151),
@@ -1280,8 +1279,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFECFDF5).withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(22),
-        border:
-            Border.all(color: const Color(0xFFD1FAE5).withValues(alpha: 0.8)),
+        border: Border.all(color: const Color(0xFFD1FAE5).withValues(alpha: 0.8)),
       ),
       child: Row(
         children: [
@@ -1313,8 +1311,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(32),
-        border:
-            Border.all(color: Colors.white.withValues(alpha: 0.70), width: 1.2),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.70), width: 1.2),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFFF4F93).withValues(alpha: 0.04),
@@ -1470,8 +1467,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(28),
-          border:
-              Border.all(color: const Color(0xFFFFD6E2).withValues(alpha: 0.6)),
+          border: Border.all(color: const Color(0xFFFFD6E2).withValues(alpha: 0.6)),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFFFF758C).withValues(alpha: 0.04),
@@ -1541,8 +1537,7 @@ class _GiftMakerScreenState extends State<GiftMakerScreen> {
                   ),
                   SLSpacing.h4,
                   Text(
-                    L10nService().format('util_gift_created_date',
-                        {'date': _formatCreatedAt(gift.ts)}),
+                    L10nService().format('util_gift_created_date', {'date': _formatCreatedAt(gift.ts)}),
                     style: SLTheme.quicksand(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w800,

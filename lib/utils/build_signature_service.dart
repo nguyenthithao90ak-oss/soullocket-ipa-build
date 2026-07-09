@@ -51,8 +51,7 @@ class BuildSignatureService {
     final isTrusted = raw?['isTrusted'] == true;
     return AppSignatureStatus(
       status: status,
-      reasonCode:
-          reasonCode.isEmpty ? _signatureMismatchReasonCode : reasonCode,
+      reasonCode: reasonCode.isEmpty ? _signatureMismatchReasonCode : reasonCode,
       isTrusted: isTrusted,
     );
   }

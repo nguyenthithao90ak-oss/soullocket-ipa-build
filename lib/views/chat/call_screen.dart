@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../utils/services/ad_suppression_guard.dart';
@@ -79,9 +79,7 @@ class _IncomingCallOverlayState extends State<IncomingCallOverlay>
             children: [
               // Header
               Text(
-                widget.isVideo
-                    ? L10nService().translate('chat_video_call_title')
-                    : L10nService().translate('chat_voice_call_title'),
+                widget.isVideo ? L10nService().translate('chat_video_call_title') : L10nService().translate('chat_voice_call_title'),
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 16,
@@ -121,12 +119,12 @@ class _IncomingCallOverlayState extends State<IncomingCallOverlay>
                   child: ClipOval(
                     child: widget.callerAvatar.isNotEmpty
                         ? CachedNetworkImage(
-                            memCacheWidth: 250,
+                            memCacheWidth: 720,
                             imageUrl: widget.callerAvatar,
                             fit: BoxFit.cover,
                             filterQuality: FilterQuality.medium,
-                            placeholder: (context, url) =>
-                                Container(color: const Color(0xFF1F2937)),
+                            placeholder: (context, url) => const Center(
+                                child: CircularProgressIndicator()),
                             errorWidget: (context, url, error) =>
                                 _defaultAvatar(),
                           )
@@ -247,8 +245,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content:
-                  Text(L10nService().translate('chat_call_connect_failed')),
+              content: Text(L10nService().translate('chat_call_connect_failed')),
               backgroundColor: Colors.red),
         );
         Navigator.pop(context);
@@ -357,9 +354,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                         ),
                         SLSpacing.h8,
                         Text(
-                          _connected
-                              ? _duration
-                              : L10nService().translate('chat_connecting'),
+                          _connected ? _duration : L10nService().translate('chat_connecting'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
@@ -391,9 +386,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                           _SmallCallButton(
                             icon:
                                 _speakerOn ? Icons.volume_up : Icons.volume_off,
-                            label: _speakerOn
-                                ? L10nService().translate('chat_speaker')
-                                : L10nService().translate('chat_speaker_off'),
+                            label: _speakerOn ? L10nService().translate('chat_speaker') : L10nService().translate('chat_speaker_off'),
                             onTap: () =>
                                 setState(() => _speakerOn = !_speakerOn),
                           ),
@@ -401,9 +394,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                             _SmallCallButton(
                               icon:
                                   _camOff ? Icons.videocam_off : Icons.videocam,
-                              label: _camOff
-                                  ? L10nService().translate('chat_camera_on')
-                                  : L10nService().translate('chat_camera_off'),
+                              label: _camOff ? L10nService().translate('chat_camera_on') : L10nService().translate('chat_camera_off'),
                               onTap: () => setState(() => _camOff = !_camOff),
                             ),
                         ],
@@ -416,9 +407,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                         children: [
                           _CallButton(
                             icon: _micMuted ? Icons.mic_off : Icons.mic,
-                            label: _micMuted
-                                ? L10nService().translate('chat_mic_on')
-                                : L10nService().translate('chat_mic_off'),
+                            label: _micMuted ? L10nService().translate('chat_mic_on') : L10nService().translate('chat_mic_off'),
                             color: _micMuted
                                 ? Colors.grey.shade700
                                 : Colors.white24,
@@ -435,8 +424,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                           ),
                           _CallButton(
                             icon: Icons.flip_camera_ios,
-                            label:
-                                L10nService().translate('chat_switch_camera'),
+                            label: L10nService().translate('chat_switch_camera'),
                             color: Colors.white24,
                             onTap: () {},
                             size: 60,
@@ -473,8 +461,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                  color: const Color(0xFFE91E8C).withValues(alpha: 0.6),
-                  width: 3),
+                  color: const Color(0xFFE91E8C).withValues(alpha: 0.6), width: 3),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFFE91E8C).withValues(alpha: 0.3),
@@ -486,12 +473,12 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
             child: ClipOval(
               child: widget.partnerAvatar.isNotEmpty
                   ? CachedNetworkImage(
-                      memCacheWidth: 250,
+                      memCacheWidth: 720,
                       imageUrl: widget.partnerAvatar,
                       fit: BoxFit.cover,
                       filterQuality: FilterQuality.medium,
                       placeholder: (context, url) =>
-                          Container(color: const Color(0xFF1F2937)),
+                          const Center(child: CircularProgressIndicator()),
                       errorWidget: (context, url, error) => _defaultAvatar(),
                     )
                   : _defaultAvatar(),

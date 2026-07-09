@@ -30,8 +30,7 @@ class FastBackdropFilter extends StatelessWidget {
         (kIsWeb && resolvedGraphicsQuality != 'high');
     if (useLiteFallback) {
       return ColoredBox(
-        color: fallbackColor ??
-            Colors.black.withValues(alpha: kIsWeb ? 0.04 : 0.05),
+        color: fallbackColor ?? Colors.black.withValues(alpha: kIsWeb ? 0.04 : 0.05),
         child: child,
       );
     }

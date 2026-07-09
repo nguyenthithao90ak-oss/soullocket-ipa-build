@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
@@ -17,6 +16,7 @@ import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart' as ll;
 import 'package:permission_handler/permission_handler.dart' as app_permission;
 import '../../utils/services/offline_cache_service.dart';
+
 
 import '../../core/constants/app_config.dart';
 import '../../core/fast_backdrop_filter.dart';
@@ -82,9 +82,6 @@ class MapScreen extends StatefulWidget {
   final String partnerName;
   final String myAvatarUrl;
   final String partnerAvatarUrl;
-
-  static final ValueNotifier<bool> isMapScreenActive =
-      ValueNotifier<bool>(false);
 
   const MapScreen({
     super.key,
@@ -218,20 +215,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       ? context.tr('map_bnvtrcabn_fdf5bc')
       : context.tr('map_bnkhongcch_486245');
 
-  void _setViewingMap(bool active) {
-    try {
-      FirebaseDatabase.instance
-          .ref(
-              'houses/${widget.houseId}/presence/${widget.myRole}/isViewingMap')
-          .set(active ? true : null);
-    } catch (_) {}
-  }
-
   @override
   void initState() {
     super.initState();
-    MapScreen.isMapScreenActive.value = true;
-    _setViewingMap(true);
     WidgetsBinding.instance.addObserver(this);
     _setPartnerListenerActive(true);
     _initMap();
@@ -239,8 +225,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    MapScreen.isMapScreenActive.value = false;
-    _setViewingMap(false);
     WidgetsBinding.instance.removeObserver(this);
     _cancelTransientMapWork(resetRouteFetch: true);
     _setRealtimePipelinesActive(false);
@@ -264,8 +248,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      MapScreen.isMapScreenActive.value = true;
-      _setViewingMap(true);
       _setPartnerListenerActive(true);
       _setRealtimePipelinesActive(true);
       if (!_isMapReady && _isLoading) {
@@ -286,8 +268,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
-      MapScreen.isMapScreenActive.value = false;
-      _setViewingMap(false);
       if (AppLifecyclePresenceGuard.shouldKeepPresenceOnline) {
         return;
       }
@@ -816,8 +796,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           ? await compute(jsonDecode, response.body)
           : jsonDecode(response.body);
       final map = decoded as Map<String, dynamic>;
-      final routes = map['routes'];
-      if (routes is! List || routes.isEmpty) return null;
+      final routes = map['routes'];      if (routes is! List || routes.isEmpty) return null;
 
       final route = routes.first as Map<String, dynamic>;
       final geometry = route['geometry'];
@@ -1519,61 +1498,58 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     ),
                   ),
                 ],
-                if (!marker.compact)
-                  () {
-                    var displayText = marker.title;
-                    if (marker.battery != null) {
-                      final pct = marker.battery!;
-                      final isCharging = marker.isCharging == true;
-                      final batteryEmoji =
-                          isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
-                      displayText += ' $batteryEmoji $pct%';
-                    }
+                if (!marker.compact) () {
+                  var displayText = marker.title;
+                  if (marker.battery != null) {
+                    final pct = marker.battery!;
+                    final isCharging = marker.isCharging == true;
+                    final batteryEmoji = isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                    displayText += ' $batteryEmoji $pct%';
+                  }
 
-                    if (marker.speed != null && marker.speed! > 0) {
-                      final speedKmh = (marker.speed! * 3.6).round();
-                      if (speedKmh > 20) {
-                        displayText += '\n🚗 $speedKmh km/h';
-                      } else if (speedKmh > 2) {
-                        displayText += '\n🚶 $speedKmh km/h';
-                      } else {
-                        displayText += '\nĐứng yên';
-                      }
-                    } else if (marker.speed != null) {
+                  if (marker.speed != null && marker.speed! > 0) {
+                    final speedKmh = (marker.speed! * 3.6).round();
+                    if (speedKmh > 20) {
+                      displayText += '\n🚗 $speedKmh km/h';
+                    } else if (speedKmh > 2) {
+                      displayText += '\n🚶 $speedKmh km/h';
+                    } else {
                       displayText += '\nĐứng yên';
                     }
+                  } else if (marker.speed != null) {
+                    displayText += '\nĐứng yên';
+                  }
 
-                    return Positioned(
-                      bottom: markerHeight - 4,
-                      child: Container(
-                        constraints: const BoxConstraints(maxWidth: 140),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color:
-                              const Color(0xFF18191A).withValues(alpha: 0.94),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: marker.color.withValues(alpha: 0.22),
-                          ),
-                        ),
-                        child: Text(
-                          displayText,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: SLTheme.quicksand(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            height: 1.2,
-                          ),
+                  return Positioned(
+                    bottom: markerHeight - 4,
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 140),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF18191A).withValues(alpha: 0.94),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: marker.color.withValues(alpha: 0.22),
                         ),
                       ),
-                    );
-                  }(),
+                      child: Text(
+                        displayText,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: SLTheme.quicksand(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          height: 1.2,
+                        ),
+                      ),
+                    ),
+                  );
+                }(),
               ],
             ),
           ),

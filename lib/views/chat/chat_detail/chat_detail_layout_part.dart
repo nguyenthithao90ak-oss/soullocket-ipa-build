@@ -1,3 +1,4 @@
+
 part of '../chat_detail_screen.dart';
 
 extension _ChatDetailLayoutPart on _ChatDetailScreenState {
@@ -132,7 +133,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
         final isMe = _isInternal
             ? msg.senderId == _currentRole
             : msg.senderId == widget.myHouseId;
-
+        
         bool isLatestMe = false;
         if (isMe) {
           final firstMeIndex = _messages.indexWhere((m) => _isInternal
@@ -177,9 +178,8 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
-        color: hasChatBackground
-            ? Colors.white.withValues(alpha: 0.92)
-            : Colors.white,
+        color:
+            hasChatBackground ? Colors.white.withValues(alpha: 0.92) : Colors.white,
         child: Text(
           'Tài khoản này không còn khả dụng nên cuộc chat hiện đã bị khóa.',
           textAlign: TextAlign.center,
@@ -193,9 +193,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
 
     return Container(
       decoration: BoxDecoration(
-        color: hasChatBackground
-            ? Colors.white.withValues(alpha: 0.9)
-            : Colors.white,
+        color: hasChatBackground ? Colors.white.withValues(alpha: 0.9) : Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -207,7 +205,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -234,8 +232,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
                         : const Color(0xFFF0F2F5),
                     borderRadius: BorderRadius.circular(24),
                     border: hasChatBackground
-                        ? Border.all(
-                            color: Colors.white.withValues(alpha: 0.35))
+                        ? Border.all(color: Colors.white.withValues(alpha: 0.35))
                         : null,
                   ),
                   child: Row(

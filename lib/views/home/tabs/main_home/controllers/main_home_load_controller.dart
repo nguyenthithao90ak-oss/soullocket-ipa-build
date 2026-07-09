@@ -1,3 +1,4 @@
+
 part of '../../main_home_tab.dart';
 
 extension _MainHomeLoadController on _MainHomeTabState {
@@ -35,10 +36,6 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _settingsSubscription = null;
     _membersSubscription?.cancel();
     _membersSubscription = null;
-    for (final sub in _presenceSubList) {
-      sub.cancel();
-    }
-    _presenceSubList.clear();
     _presenceSubscription?.cancel();
     _presenceSubscription = null;
     _missInteractionSubscription?.cancel();
@@ -120,13 +117,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
 
       _showLatestSnackBarImpl('⚠️ $title: $body');
     }, onError: (Object error) {
-      if (error.toString().contains('permission-denied')) {
-        debugPrint(
-            '[MainHome] new device notification listener: permission-denied (ignored)');
-        _newDeviceNotificationSubscription?.cancel();
-      } else {
-        debugPrint('[MainHome] new device notification listener error: $error');
-      }
+      debugPrint('[MainHome] new device notification listener error: $error');
     });
   }
 
@@ -202,9 +193,14 @@ extension _MainHomeLoadController on _MainHomeTabState {
   }
 
   void _updatePresenceDataImpl(Map<String, dynamic> nextPresence) {
-    _presenceData = nextPresence;
     _presenceDataNotifier.value = nextPresence;
-    _presenceUiSignature = _presenceUiSignatureForPayloadImpl(nextPresence);
+    final nextSignature = _presenceUiSignatureForPayloadImpl(nextPresence);
+    if (_presenceUiSignature == nextSignature || !mounted) {
+      _presenceUiSignature = nextSignature;
+      return;
+    }
+
+    _presenceUiSignature = nextSignature;
   }
 
   bool _updatePresenceDataIfNeededImpl(Map<String, dynamic> nextPresence) {
@@ -329,8 +325,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
     });
   }
 
-  void _startDelayedListeners(
-      String houseId, int sessionId, bool Function() isStale) {
+  void _startDelayedListeners(String houseId, int sessionId, bool Function() isStale) {
     _delayedListenersTimer?.cancel();
     _delayedListenersTimer = Timer(const Duration(seconds: 3), () {
       if (!mounted || isStale()) return;
@@ -341,8 +336,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
     });
   }
 
-  void _startDelayedMapAndWeather(
-      String houseId, int sessionId, bool Function() isStale) {
+  void _startDelayedMapAndWeather(String houseId, int sessionId, bool Function() isStale) {
     _delayedMapWeatherTimer?.cancel();
     _delayedMapWeatherTimer = Timer(const Duration(seconds: 6), () {
       if (!mounted || isStale()) return;
@@ -425,8 +419,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
         _houseSettings = Map<String, dynamic>.from(
           Map<dynamic, dynamic>.from(initialSettingsSnap.value as Map),
         );
-        final msgCacheSettingsFail =
-            L10nService().translate('home_clixyra_775791');
+        final msgCacheSettingsFail = L10nService().translate('home_clixyra_775791');
         try {
           await OfflineCacheService.saveCache(cacheKey, _houseSettings);
         } catch (e) {
@@ -451,7 +444,6 @@ extension _MainHomeLoadController on _MainHomeTabState {
     bool Function() isStale,
     String msgMembersFail,
   ) {
-    _membersSubscription?.cancel();
     _membersSubscription =
         _dbRef.child('houses/$houseId/members').onValue.listen(
       (event) {
@@ -487,94 +479,74 @@ extension _MainHomeLoadController on _MainHomeTabState {
     );
   }
 
-  void _updatePresenceField(
-    String role,
-    String field,
-    dynamic value, {
-    required bool Function() isStale,
-  }) {
-    if (isStale()) return;
-    final roleData = Map<String, dynamic>.from(
-        _presenceData[role] is Map ? _presenceData[role] as Map : {});
-    roleData[field] = value;
-    final nextPresence = Map<String, dynamic>.from(_presenceData);
-    nextPresence[role] = roleData;
-    _hasLoadedPresenceSnapshot = true;
-    final didUpdatePresence = _updatePresenceDataIfNeededImpl(nextPresence);
-
-    if (didUpdatePresence && _isRoleOnline('user1') && _isRoleOnline('user2')) {
-      DailyQuestService().recordProgress('simultaneous_online');
-    }
-
-    if (didUpdatePresence) {
-      final partnerPresence = _presenceForRole(_partnerRole);
-      final partnerWeatherRaw = partnerPresence?['weather'];
-      if (partnerWeatherRaw is Map) {
-        unawaited(
-          _maybeSendAutomaticWeatherCare(
-            _toStringDynamicMap(partnerWeatherRaw),
-          ),
-        );
-      }
-    }
-
-    if (didUpdatePresence && _houseSettings != null) {
-      _scheduleLoveWidgetSync(
-        _houseSettings!,
-        includeDiaryMedia: false,
-      );
-    }
-  }
-
   void _setupPresenceSubscription(
     String houseId,
     int sessionId,
     bool Function() isStale,
     String msgPresenceFail,
   ) {
-    for (final sub in _presenceSubList) {
-      sub.cancel();
-    }
-    _presenceSubList.clear();
+    _presenceSubscription =
+        _dbRef.child('houses/$houseId/presence').onValue.listen(
+      (event) {
+        if (isStale() || !_isTabActive) return;
+        if (event.snapshot.value != null && mounted) {
+          final raw = event.snapshot.value;
+          if (raw is Map) {
+            final map = _toStringDynamicMap(raw);
+            _hasLoadedPresenceSnapshot = true;
+            final didUpdatePresence = _updatePresenceDataIfNeededImpl(map);
 
-    final roles = ['user1', 'user2'];
-    final fields = [
-      'status',
-      'lastSeen',
-      'device',
-      'weather',
-      'city',
-      'activeSessionCount'
-    ];
-
-    for (final role in roles) {
-      for (final field in fields) {
-        final sub = _dbRef
-            .child('houses/$houseId/presence/$role/$field')
-            .onValue
-            .listen(
-          (event) {
-            if (isStale() || !_isTabActive) return;
-            _updatePresenceField(role, field, event.snapshot.value,
-                isStale: isStale);
-          },
-          onError: (Object error) {
-            debugPrint(
-              'Home presence field $role/$field listener failed: ${AppErrorMapper.resolve(
-                error,
-                fallbackMessage: msgPresenceFail,
-              ).message}',
-            );
-            if (mounted) {
-              setState(() {
-                _hasLoadedPresenceSnapshot = true;
-              });
+            if (didUpdatePresence &&
+                _isRoleOnline('user1') &&
+                _isRoleOnline('user2')) {
+              DailyQuestService().recordProgress('simultaneous_online');
             }
-          },
+
+            if (didUpdatePresence) {
+              final partnerPresence = _presenceForRole(_partnerRole);
+              final partnerWeatherRaw = partnerPresence?['weather'];
+              if (partnerWeatherRaw is Map) {
+                unawaited(
+                  _maybeSendAutomaticWeatherCare(
+                    _toStringDynamicMap(partnerWeatherRaw),
+                  ),
+                );
+              }
+            }
+
+            if (didUpdatePresence && _houseSettings != null) {
+              _scheduleLoveWidgetSync(
+                _houseSettings!,
+                includeDiaryMedia: false,
+              );
+            }
+          }
+        } else if (mounted) {
+          _hasLoadedPresenceSnapshot = true;
+          final didUpdatePresence =
+              _updatePresenceDataIfNeededImpl(const <String, dynamic>{});
+          if (didUpdatePresence && _houseSettings != null) {
+            _scheduleLoveWidgetSync(
+              _houseSettings!,
+              includeDiaryMedia: false,
+            );
+          }
+        }
+      },
+      onError: (Object error) {
+        debugPrint(
+          'Home presence listener failed: ${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: msgPresenceFail,
+          ).message}',
         );
-        _presenceSubList.add(sub);
-      }
-    }
+        if (mounted) {
+          setState(() {
+            _hasLoadedPresenceSnapshot = true;
+          });
+        }
+      },
+    );
   }
 
   void _setupAlertsAndPartnerInbox(
@@ -583,7 +555,6 @@ extension _MainHomeLoadController on _MainHomeTabState {
     bool Function() isStale,
     String userUid,
   ) {
-    _alertSubscription?.cancel();
     _alertSubscription = _dbRef
         .child('houses/$houseId/alerts')
         .onChildAdded
@@ -594,8 +565,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
       final payload = _MissYouAlertPayload.fromMap(data);
       final sentAt = payload.sentAtMs;
       final now = DateTime.now().millisecondsSinceEpoch;
-      final isExpired =
-          sentAt > 0 && now - sentAt > const Duration(hours: 24).inMilliseconds;
+      final isExpired = sentAt > 0 &&
+          now - sentAt > const Duration(hours: 24).inMilliseconds;
 
       if (isExpired) {
         final key = event.snapshot.key;
@@ -620,7 +591,6 @@ extension _MainHomeLoadController on _MainHomeTabState {
       debugPrint('Home alerts listener failed: $error');
     });
 
-    _partnerInboxSubscription?.cancel();
     _partnerInboxSubscription = _dbRef
         .child('houses/$houseId/partner_inbox/$_currentRole')
         .onChildAdded
@@ -631,8 +601,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
       final payload = _MissYouAlertPayload.fromMap(data);
       final sentAt = payload.sentAtMs;
       final now = DateTime.now().millisecondsSinceEpoch;
-      final isExpired =
-          sentAt > 0 && now - sentAt > const Duration(hours: 24).inMilliseconds;
+      final isExpired = sentAt > 0 &&
+          now - sentAt > const Duration(hours: 24).inMilliseconds;
 
       final key = event.snapshot.key;
       if (isExpired) {
@@ -666,7 +636,6 @@ extension _MainHomeLoadController on _MainHomeTabState {
     bool Function() isStale,
     String userUid,
   ) {
-    _missInteractionSubscription?.cancel();
     _missInteractionSubscription = _dbRef
         .child('houses/$houseId/interactions/miss')
         .onValue
@@ -699,11 +668,10 @@ extension _MainHomeLoadController on _MainHomeTabState {
     String msgCacheSettingsFail,
     String msgLoadDataFail,
   ) {
-    _settingsSubscription?.cancel();
-    _settingsSubscription =
-        _dbRef.child('houses/$houseId/settings').onValue.listen((event) async {
+    _settingsSubscription = Stream.fromFuture(
+      _dbRef.child('houses/$houseId/settings').get(),
+    ).listen((snapshot) async {
       if (isStale()) return;
-      final snapshot = event.snapshot;
       if (snapshot.value is Map && mounted) {
         final settings = Map<String, dynamic>.from(
           Map<dynamic, dynamic>.from(snapshot.value as Map),
@@ -720,9 +688,10 @@ extension _MainHomeLoadController on _MainHomeTabState {
                 fallback: _showWeather,
               )
             : _showWeather;
-        final visibilityPrefsChanged =
-            nextShowStatus != _showStatus || nextShowWeather != _showWeather;
-        final relMode = (settings['relationshipMode'] ?? 'single').toString();
+        final visibilityPrefsChanged = nextShowStatus != _showStatus ||
+            nextShowWeather != _showWeather;
+        final relMode =
+            (settings['relationshipMode'] ?? 'single').toString();
         final settingsKey = _buildInsightSettingsKeyImpl(settings, relMode);
         final payloadSignature =
             _buildCanonicalSettingsPayloadSignatureImpl(settings);
@@ -848,10 +817,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
     }
 
     final sessionId = _invalidateLiveWorkSessionImpl();
-    if (isNewHouseContext) {
-      // ⚡ Chỉ cancel bindings cũ khi đổi nhà context mới, tránh teardown listener rác
-      _cancelLiveWorkBindingsImpl();
-    }
+    // ⚡ Luôn cancel bindings cũ trước khi setup lại, tránh duplicate listener
+    _cancelLiveWorkBindingsImpl();
 
     bool isStale() {
       return _isLiveWorkSessionStaleImpl(
@@ -922,8 +889,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
           if (!shouldKeepVisibleState) {
             _selectedHomeToolId = null;
             _houseSettings = null;
-            // Giữ presenceData cũ đến khi listener đầu tiên kích hoạt
-            // để tránh flash "trắng" UI khi chỉ thay đổi settings
+            _presenceData = <String, dynamic>{};
             _hasLoadedPresenceSnapshot = false;
             _insightData = null;
           }
@@ -966,8 +932,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
         // Setup immediate active bindings
         _wrapSetup(() => _listenHighlights(houseId), 'Highlights');
         _wrapSetup(() => _listenHomeCalendarEvents(houseId), 'Calendar');
-        _wrapSetup(
-            () => _listenHealthCycleForWidgetSync(houseId), 'HealthCycle');
+        _wrapSetup(() => _listenHealthCycleForWidgetSync(houseId), 'HealthCycle');
 
         // 3. Delayed bindings setup
         _startDelayedListeners(houseId, sessionId, isStale);
@@ -983,16 +948,13 @@ extension _MainHomeLoadController on _MainHomeTabState {
 
         // 4. Stream subscriptions setup
         _setupMembersSubscription(houseId, sessionId, isStale, msgMembersFail);
-        _setupPresenceSubscription(
-            houseId, sessionId, isStale, msgPresenceFail);
-        unawaited(_albumService.cleanupExpiredTrash(houseId));
+        _setupPresenceSubscription(houseId, sessionId, isStale, msgPresenceFail);
 
         // Setup presence fallback timer
         _startPresenceSnapshotFallback(sessionId, isStale);
 
         _setupAlertsAndPartnerInbox(houseId, sessionId, isStale, user.uid);
-        _setupMissInteractionSubscription(
-            houseId, sessionId, isStale, user.uid);
+        _setupMissInteractionSubscription(houseId, sessionId, isStale, user.uid);
         _setupSettingsSubscription(
           houseId,
           sessionId,
@@ -1010,7 +972,6 @@ extension _MainHomeLoadController on _MainHomeTabState {
         setState(() {
           _houseSettings = _buildDefaultHomeSettings();
           _presenceData = {};
-          _presenceDataNotifier.value = _presenceData;
           _hasLoadedPresenceSnapshot = false;
           _isLoading = false;
         });

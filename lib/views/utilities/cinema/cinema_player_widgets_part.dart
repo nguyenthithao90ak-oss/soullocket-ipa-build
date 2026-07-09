@@ -1,4 +1,4 @@
-part of '../cinema_screen.dart';
+﻿part of '../cinema_screen.dart';
 
 extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
   Widget _buildContainedImage(
@@ -72,8 +72,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.34),
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.12)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -197,8 +196,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                                     style: SLTheme.quicksand(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.w700,
-                                      color:
-                                          Colors.white.withValues(alpha: 0.82),
+                                      color: Colors.white.withValues(alpha: 0.82),
                                     ),
                                   ),
                                 ],
@@ -223,7 +221,9 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
     final statusText = _isAdjustingTitlePosition
         ? context.tr('util_kokhitiuti_9b7acb')
         : (_videoStatus ??
-            (exportAvailable ? null : context.tr('util_tnhnngxutv_f2e071')));
+            (exportAvailable
+                ? null
+                : context.tr('util_tnhnngxutv_f2e071')));
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -243,9 +243,8 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                 icon: _isAdjustingTitlePosition
                     ? Icons.check_rounded
                     : Icons.open_with_rounded,
-                label: _isAdjustingTitlePosition
-                    ? context.tr('util_xongvtr_ff01dd')
-                    : context.tr('util_kotiu_d73736'),
+                label:
+                    _isAdjustingTitlePosition ? context.tr('util_xongvtr_ff01dd') : context.tr('util_kotiu_d73736'),
                 onTap: _toggleTitleAdjustment,
                 accent: accent,
               ),
@@ -257,9 +256,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
               ),
               _buildControlChip(
                 icon: Icons.movie_creation_outlined,
-                label: _hasFreshExport
-                    ? context.tr('util_tolivideo_5701c9')
-                    : context.tr('util_tovideo_db7d4b'),
+                label: _hasFreshExport ? context.tr('util_tolivideo_5701c9') : context.tr('util_tovideo_db7d4b'),
                 onTap:
                     !exportAvailable || _isExportingVideo ? null : _createVideo,
                 accent: accent,
@@ -267,9 +264,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
               ),
               _buildControlChip(
                 icon: Icons.download_rounded,
-                label: _isSavingVideo
-                    ? context.tr('util_anglu_4d30b6')
-                    : context.tr('util_tixung_d129df'),
+                label: _isSavingVideo ? context.tr('util_anglu_4d30b6') : context.tr('util_tixung_d129df'),
                 onTap: exportAvailable && _hasFreshExport && !_isSavingVideo
                     ? _saveVideoToDevice
                     : null,

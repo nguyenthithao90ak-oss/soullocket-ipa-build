@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../single_match_hub_screen.dart';
 
 List<String> _singleMatchParseTags(String raw) {
@@ -243,8 +242,7 @@ class _StreamGroup {
           debugPrint(
             '[SingleMatch] merged stream failed: ${AppErrorMapper.resolve(
               error,
-              fallbackMessage:
-                  L10nService().translate('match_khngthtidl_74b99d'),
+              fallbackMessage: L10nService().translate('match_khngthtidl_74b99d'),
             ).message}',
           );
         },

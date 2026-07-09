@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../../settings_tab.dart';
 
 extension _CountdownModeIndependentScreenViewPart
@@ -151,9 +150,7 @@ extension _CountdownModeIndependentScreenViewPart
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  _singleMode
-                      ? context.tr('home_tngquanhmn_0e1b6b')
-                      : context.tr('home_hnhtrnhiqu_cbcf59'),
+                  _singleMode ? context.tr('home_tngquanhmn_0e1b6b') : context.tr('home_hnhtrnhiqu_cbcf59'),
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w900,
                     fontSize: 14,
@@ -346,9 +343,7 @@ extension _CountdownModeIndependentScreenViewPart
               border: Border.all(color: statusColor.withValues(alpha: 0.22)),
             ),
             child: Text(
-              isAccepted
-                  ? context.tr('home_ghpni_369328')
-                  : context.tr('home_chghpni_0a2955'),
+              isAccepted ? context.tr('home_ghpni_369328') : context.tr('home_chghpni_0a2955'),
               style: SLTheme.quicksand(
                 fontSize: 11,
                 fontWeight: FontWeight.w900,
@@ -456,8 +451,7 @@ extension _CountdownModeIndependentScreenViewPart
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildLoveTimeCell(
-                value: detail['h']!, label: context.tr('home_gi_770f40')),
+            _buildLoveTimeCell(value: detail['h']!, label: context.tr('home_gi_770f40')),
             const SizedBox(width: 8),
             _buildLoveTimeCell(
               value: detail['m']!,
@@ -465,8 +459,7 @@ extension _CountdownModeIndependentScreenViewPart
               alternate: true,
             ),
             const SizedBox(width: 8),
-            _buildLoveTimeCell(
-                value: detail['s']!, label: context.tr('home_giy_392758')),
+            _buildLoveTimeCell(value: detail['s']!, label: context.tr('home_giy_392758')),
           ],
         );
       },
@@ -991,7 +984,8 @@ extension _CountdownModeIndependentScreenViewPart
                               );
                             },
                             icon: const Icon(Icons.close_rounded),
-                            label: Text(context.tr('home_thotkhnggi_4055ed')),
+                            label:
+                                Text(context.tr('home_thotkhnggi_4055ed')),
                           ),
                         ),
                       ],
@@ -1170,8 +1164,7 @@ extension _CountdownModeIndependentScreenViewPart
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      themeData.orbB
-                          .withValues(alpha: themeData.isDark ? 0.14 : 0.16),
+                      themeData.orbB.withValues(alpha: themeData.isDark ? 0.14 : 0.16),
                       themeData.orbB.withValues(alpha: 0.02),
                     ],
                   ),
@@ -1206,9 +1199,7 @@ extension _CountdownModeIndependentScreenViewPart
                         style: SLTheme.quicksand(
                           fontSize: 9.6,
                           fontWeight: FontWeight.w800,
-                          color: themeData.isDark
-                              ? accent
-                              : accent.withValues(alpha: 0.90),
+                          color: themeData.isDark ? accent : accent.withValues(alpha: 0.90),
                         ),
                       ),
                     ),
@@ -1218,7 +1209,8 @@ extension _CountdownModeIndependentScreenViewPart
                     child: _isAddingSpace
                         ? CircularProgressIndicator(
                             strokeWidth: 2.2,
-                            valueColor: AlwaysStoppedAnimation<Color>(accent),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(accent),
                           )
                         : Column(
                             mainAxisSize: MainAxisSize.min,
@@ -1232,13 +1224,11 @@ extension _CountdownModeIndependentScreenViewPart
                                     colors: themeData.isDark
                                         ? [
                                             accent.withValues(alpha: 0.22),
-                                            themeData.orbB
-                                                .withValues(alpha: 0.14),
+                                            themeData.orbB.withValues(alpha: 0.14),
                                           ]
                                         : [
                                             accent.withValues(alpha: 0.16),
-                                            themeData.orbB
-                                                .withValues(alpha: 0.10),
+                                            themeData.orbB.withValues(alpha: 0.10),
                                           ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
@@ -1249,9 +1239,7 @@ extension _CountdownModeIndependentScreenViewPart
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: accent.withValues(
-                                          alpha:
-                                              themeData.isDark ? 0.20 : 0.18),
+                                      color: accent.withValues(alpha: themeData.isDark ? 0.20 : 0.18),
                                       blurRadius: 20,
                                       offset: const Offset(0, 6),
                                     ),
@@ -1960,21 +1948,17 @@ extension _CountdownModeIndependentScreenViewPart
         return StatefulBuilder(
           builder: (context, setSheetState) {
             final isDark = themeData.isDark;
-            final sheetBgColor =
-                isDark ? const Color(0xFF1E1E2E) : Colors.white;
-            final cardBgColor =
-                isDark ? const Color(0xFF2E2E3E) : const Color(0xFFF9F9FB);
+            final sheetBgColor = isDark ? const Color(0xFF1E1E2E) : Colors.white;
+            final cardBgColor = isDark ? const Color(0xFF2E2E3E) : const Color(0xFFF9F9FB);
             final titleColor = isDark ? Colors.white : const Color(0xFF1F2937);
             final subColor = isDark ? Colors.white70 : const Color(0xFF4B5563);
-            final labelColor =
-                isDark ? Colors.white54 : const Color(0xFF6B7280);
+            final labelColor = isDark ? Colors.white54 : const Color(0xFF6B7280);
             final accentColor = themeData.orbA;
 
             return Container(
               decoration: BoxDecoration(
                 color: sheetBgColor,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
               child: Column(
@@ -2022,15 +2006,12 @@ extension _CountdownModeIndependentScreenViewPart
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
                       color: cardBgColor,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark
-                            ? Colors.white10
-                            : Colors.black.withValues(alpha: 0.05),
+                        color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
                       ),
                     ),
                     child: Row(
@@ -2048,8 +2029,7 @@ extension _CountdownModeIndependentScreenViewPart
                         ),
                         InkWell(
                           onTap: () async {
-                            await Clipboard.setData(
-                                ClipboardData(text: _selfSpaceHouseId));
+                            await Clipboard.setData(ClipboardData(text: _selfSpaceHouseId));
                             _showMessage('Đã sao chép mã nhà vào bộ nhớ tạm.');
                           },
                           borderRadius: BorderRadius.circular(8),
@@ -2098,16 +2078,13 @@ extension _CountdownModeIndependentScreenViewPart
                         itemCount: _incomingSpaceRequests.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
-                          final request =
-                              _incomingSpaceRequests.values.elementAt(index);
-                          final senderLabel =
-                              request.fromHouseName.trim().isNotEmpty
-                                  ? request.fromHouseName.trim()
-                                  : 'Nhà ẩn danh';
+                          final request = _incomingSpaceRequests.values.elementAt(index);
+                          final senderLabel = request.fromHouseName.trim().isNotEmpty
+                              ? request.fromHouseName.trim()
+                              : 'Nhà ẩn danh';
 
                           final requestId = request.requestId;
-                          final isActionBusy =
-                              _spaceRequestActionIds.contains(requestId);
+                          final isActionBusy = _spaceRequestActionIds.contains(requestId);
 
                           return Container(
                             padding: const EdgeInsets.all(12),
@@ -2115,9 +2092,7 @@ extension _CountdownModeIndependentScreenViewPart
                               color: cardBgColor,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: isDark
-                                    ? Colors.white10
-                                    : Colors.black.withValues(alpha: 0.05),
+                                color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
                               ),
                             ),
                             child: Column(
@@ -2127,8 +2102,7 @@ extension _CountdownModeIndependentScreenViewPart
                                   children: [
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             senderLabel,
@@ -2192,12 +2166,10 @@ extension _CountdownModeIndependentScreenViewPart
                                         backgroundColor: accentColor,
                                         foregroundColor: Colors.white,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(10),
                                         ),
                                         elevation: 0,
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 16, vertical: 8),
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                       ),
                                       child: isActionBusy
                                           ? const SizedBox(
@@ -2205,9 +2177,7 @@ extension _CountdownModeIndependentScreenViewPart
                                               height: 16,
                                               child: CircularProgressIndicator(
                                                 strokeWidth: 2,
-                                                valueColor:
-                                                    AlwaysStoppedAnimation(
-                                                        Colors.white),
+                                                valueColor: AlwaysStoppedAnimation(Colors.white),
                                               ),
                                             )
                                           : Text(

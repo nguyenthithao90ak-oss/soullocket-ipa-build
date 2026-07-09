@@ -139,8 +139,8 @@ class UiPrefsState {
     avatarSizePx: 90,
     countdownSizePx: 400,
     avatarFrameKey: 'off',
-    // Default countdown visual: default (Cân bằng)
-    countdownStyleKey: 'default',
+    // Default countdown visual: glass (kính mờ)
+    countdownStyleKey: 'glass',
     countdownTopLabel: '',
     countdownBottomLabel: '',
     countdownTextColor: '',
@@ -314,8 +314,9 @@ class UiPrefs {
         }
       }
       if (totalMemoryMB <= 0) {
-        totalMemoryMB =
-            defaultTargetPlatform == TargetPlatform.iOS ? 3072 : 4096;
+        totalMemoryMB = defaultTargetPlatform == TargetPlatform.iOS
+            ? 3072
+            : 4096;
       }
       final cpuCores = Platform.numberOfProcessors;
 
@@ -338,8 +339,9 @@ class UiPrefs {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     // Đọc theme đã lưu từ SharedPreferences, fallback về default nếu chưa có.
-    final themeKey =
-        (prefs.getString(_kThemeKey) ?? UiPrefsState.defaults.themeKey).trim();
+    final themeKey = (prefs.getString(_kThemeKey) ??
+            UiPrefsState.defaults.themeKey)
+        .trim();
     final effectKey = (prefs.getString(_kFallingEffectKey) ??
             UiPrefsState.defaults.fallingEffectKey)
         .trim();
@@ -477,8 +479,7 @@ class UiPrefs {
     await prefs.setString(_kCountdownTopLabelKey, normalized.countdownTopLabel);
     await prefs.setString(
         _kCountdownBottomLabelKey, normalized.countdownBottomLabel);
-    await prefs.setString(
-        _kCountdownTextColorKey, normalized.countdownTextColor);
+    await prefs.setString(_kCountdownTextColorKey, normalized.countdownTextColor);
     await prefs.setString(_kFontKey, normalized.fontKey);
     await prefs.setString(_kHomeBlockToneKey, normalized.homeBlockToneKey);
     await prefs.setBool(_kLiteModeKey, normalized.liteMode);
