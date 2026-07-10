@@ -369,6 +369,14 @@ class AuthHouseContextService {
         ownerUid = ownerUidSnap2.value?.toString().trim();
       }
       if (ownerUid != null && ownerUid.isNotEmpty) {
+        final localRole = prefs.getString('il_role');
+        if (localRole == 'user1' || localRole == 'user2') {
+          try {
+            await _db.child('houses/$houseId/members/$uid/role').set(localRole);
+          } catch (_) {}
+          return;
+        }
+        
         final resolvedRole = (ownerUid == uid) ? 'user1' : 'user2';
         await prefs.setString('il_role', resolvedRole);
         await SecureStorageService.instance

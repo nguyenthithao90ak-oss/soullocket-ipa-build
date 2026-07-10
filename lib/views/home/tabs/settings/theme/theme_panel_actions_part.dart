@@ -55,7 +55,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
             '${_formatCountdownUnlockExpiry(_countdownAdUnlockExpiryMs)}. '
             'Sau thời điểm này app sẽ yêu cầu xem quảng cáo lại.'
         : 'Xem 1 quảng cáo để mở toàn bộ ${premiumStyles.length} giao diện '
-            'Quảng cáo trong 7 ngày. Hết hạn sẽ reset và cần xem lại.';
+            'Quảng cáo trong 5 tiếng. Hết hạn sẽ reset và cần xem lại.';
 
     return Container(
       width: double.infinity,
@@ -145,7 +145,7 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
                 ? Icons.ondemand_video_rounded
                 : (isActive ? Icons.check_rounded : Icons.play_arrow_rounded);
             final subtitle = isLocked
-                ? 'Mở khóa 7 ngày cho toàn bộ giao diện quảng cáo.'
+                ? 'Mở khóa 5 tiếng cho toàn bộ giao diện quảng cáo.'
                 : isActive
                     ? 'Đang dùng • Hết hạn '
                         '${_formatCountdownUnlockExpiry(_countdownAdUnlockExpiryMs)}.'

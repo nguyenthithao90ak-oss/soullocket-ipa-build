@@ -564,11 +564,11 @@ abstract final class _L10nStaticData {
     'countdown_golden_sunset': 'Hoàng hôn',
     'countdown_neon_pulse': 'Nhịp đập',
     'countdown_unlock_ad':
-        'Nhóm giao diện Quảng cáo chỉ cần xem 1 quảng cáo để mở toàn bộ trong 7 ngày.',
+        'Nhóm giao diện Quảng cáo chỉ cần xem 1 quảng cáo để mở toàn bộ trong 5 tiếng.',
     'countdown_unlock_pro':
         'Tài khoản Pro dùng mọi giao diện vòng đếm không cần xem quảng cáo.',
     'countdown_unlock_success':
-        'Đã mở toàn bộ giao diện Quảng cáo trong 7 ngày!',
+        'Đã mở toàn bộ giao diện Quảng cáo trong 5 tiếng!',
     'countdown_unlock_fail': 'Chưa thể mở khóa lúc này. Bạn thử lại sau.',
     'lang_vi': 'Tiếng Việt',
     'lang_en': 'English',

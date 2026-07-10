@@ -511,7 +511,7 @@ class _CountdownModeEditorScreenState
         _styleKey = normalized;
       });
       _showMessage(
-          'Đã mở khóa "${_countdownStyleOptions.firstWhere((e) => e.value == normalized).key}" trong 7 ngày!');
+          'Đã mở khóa "${_countdownStyleOptions.firstWhere((e) => e.value == normalized).key}" trong 5 tiếng!');
     } finally {
       if (mounted) {
         setState(() => _isUnlockingCountdownStyle = false);

@@ -1617,7 +1617,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       );
   }
 
-  static const Duration _kCountdownQuickUnlockWindow = Duration(days: 7);
+  static const Duration _kCountdownQuickUnlockWindow = Duration(hours: 5);
   static const List<String> _kCountdownQuickPremiumStyleKeys = <String>[
     'floating_hearts',
     'galaxy',
@@ -2339,7 +2339,7 @@ class _CountdownQuickCustomizeSheetContentState
                     });
                     await onUnlocked(option);
                     widget.homeState._showLatestSnackBar(
-                        'Đã mở khóa "${option.label}" trong 7 ngày!');
+                        'Đã mở khóa "${option.label}" trong 5 tiếng!');
                   } else {
                     widget.homeState._showLatestSnackBar(
                         'Chưa mở khóa. Vui lòng xem hết quảng cáo.');
@@ -2505,6 +2505,210 @@ class _CountdownQuickCustomizeSheetContentState
           ),
         ],
       ),
+    );
+  }
+
+  Widget buildCollapsedSection({
+    required String title,
+    required String description,
+    required IconData icon,
+    required List<_CountdownQuickOption> options,
+    required String selectedValue,
+    required Future<void> Function(_CountdownQuickOption option) onSelect,
+  }) {
+    final selectedOption = options.firstWhere((o) => o.value == selectedValue, orElse: () => options.first);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFF0DDE4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF4A00E0).withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Icon(icon, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: SLTheme.quicksand(
+                        fontSize: 14.8,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF4A3640),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      description,
+                      style: SLTheme.quicksand(
+                        fontSize: 12.1,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF8E6F7E),
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: () {
+                HapticFeedback.selectionClick();
+                _showOptionsDialog(title, options, selectedValue, onSelect);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7F2F5),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFF0DDE4)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Đang chọn: ${selectedOption.label}',
+                        style: SLTheme.quicksand(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFFD81B60),
+                        ),
+                      ),
+                    ),
+                    const Icon(
+                      Icons.arrow_drop_down_circle_rounded,
+                      color: Color(0xFFD81B60),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showOptionsDialog(
+    String title,
+    List<_CountdownQuickOption> options,
+    String selectedValue,
+    Future<void> Function(_CountdownQuickOption option) onSelect,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              margin: EdgeInsets.fromLTRB(12, 0, 12, max(MediaQuery.of(context).padding.bottom, 12.0)),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: SLTheme.quicksand(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF4A3640),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: options.map((option) {
+                            final isLocked = option.isPremium && !_unlockedStyles.contains(option.value);
+                            if (isLocked) {
+                              return buildLockedAdButton(
+                                option: option,
+                                onUnlocked: (opt) async {
+                                  HapticFeedback.selectionClick();
+                                  await onSelect(opt);
+                                  setModalState(() { selectedValue = opt.value; });
+                                  setState(() {});
+                                },
+                              );
+                            }
+                            return buildOptionChip(
+                              option: option,
+                              selected: selectedValue == option.value,
+                              onTap: () async {
+                                HapticFeedback.selectionClick();
+                                await onSelect(option);
+                                setModalState(() { selectedValue = option.value; });
+                                setState(() {});
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        child: Text(
+                          'Đóng',
+                          style: SLTheme.quicksand(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF806575),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -3622,7 +3826,7 @@ class _CountdownQuickCustomizeSheetContentState
                   ),
                 ),
                 const SizedBox(height: 14),
-                buildSection(
+                buildCollapsedSection(
                   title: 'Giao diện vòng đếm',
                   description: 'Đổi phong cách hiển thị vòng đếm ngày.',
                   icon: Icons.change_circle_rounded,

@@ -677,17 +677,25 @@ extension _SettingsTabShell on _SettingsTabState {
         ], isDark),
 
         _buildSectionTitle(context.tr('settings_other_features_title'), topPadding: 16),
-        _buildiOSSectionCard([
-          if (_relationshipMode != 'single') ...[
-            _buildiOSRow(
-              icon: Icons.people_alt_rounded,
-              iconBgColor: const Color(0xFFAB47BC),
-              title: _activeRoleKey == 'user1' ? context.tr('settings_swap_role_to_female') : context.tr('settings_swap_role_to_male'),
-              isDark: isDark,
+        if (_relationshipMode != 'single') ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildActionBtn(
+              icon: Icons.swap_horiz_rounded,
+              label: _activeRoleKey == 'user1'
+                  ? context.tr('settings_swap_role_to_female')
+                  : context.tr('settings_swap_role_to_male'),
+              gradient: const [
+                Color(0xFF42A5F5),
+                Color(0xFF1E88E5),
+              ],
+              textColor: const Color(0xFF1E88E5),
               onTap: _swapRole,
             ),
-            _buildDivider(isDark),
-          ],
+          ),
+          const SizedBox(height: 12),
+        ],
+        _buildiOSSectionCard([
           _buildiOSRow(
             icon: Icons.support_agent_rounded,
             iconBgColor: const Color(0xFF4FC3F7),
