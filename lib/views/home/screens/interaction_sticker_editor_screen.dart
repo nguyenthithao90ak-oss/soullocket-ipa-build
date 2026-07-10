@@ -29,7 +29,7 @@ class _InteractionStickerEditorScreenState
       'label': 'Giận',
       'emoji': '😾',
       'defaultPath':
-          'assets/images/interaction_stickers/custom/numbered/sticker_338.png',
+          'assets/images/interaction_stickers/custom/numbered/sticker_339.png',
       'path': '',
       'gradient': [const Color(0xFFFFE6DC), const Color(0xFFFFF6F2)],
       'accent': const Color(0xFFE26A3A),
@@ -79,7 +79,7 @@ class _InteractionStickerEditorScreenState
       'label': 'Khóc',
       'emoji': '😭',
       'defaultPath':
-          'assets/images/interaction_stickers/custom/numbered/sticker_268.png',
+          'assets/images/interaction_stickers/custom/numbered/sticker_165.png',
       'path': '',
       'gradient': [const Color(0xFFDDEBFF), const Color(0xFFF4F8FF)],
       'accent': const Color(0xFF5B8DEF),
@@ -89,7 +89,7 @@ class _InteractionStickerEditorScreenState
       'label': 'Troll',
       'emoji': '💩',
       'defaultPath':
-          'assets/images/interaction_stickers/custom/numbered/sticker_267.png',
+          'assets/images/interaction_stickers/custom/numbered/sticker_173.png',
       'path': '',
       'gradient': [const Color(0xFFFFE1B9), const Color(0xFFFFF4E6)],
       'accent': const Color(0xFFB96B2C),
@@ -135,13 +135,13 @@ class _InteractionStickerEditorScreenState
     'assets/images/interaction_stickers/custom/numbered/sticker_068.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_069.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_276.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_267.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_173.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_072.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_270.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_085.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_268.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_165.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_343.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_338.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_339.png',
   ];
 
   late final List<String> _stickerPool;

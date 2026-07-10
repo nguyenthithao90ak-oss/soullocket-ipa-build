@@ -37,7 +37,7 @@ final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     emoji: '\u{1F63E}',
     icon: Icons.sentiment_very_dissatisfied_rounded,
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_338.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_339.png',
     gradient: [const Color(0xFFFFE6DC), const Color(0xFFFFF6F2)],
     accent: const Color(0xFFE26A3A),
   ),
@@ -77,7 +77,7 @@ final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     emoji: '\u{1F62D}',
     icon: Icons.face_retouching_natural_rounded,
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_268.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_165.png',
     gradient: [const Color(0xFFDDEBFF), const Color(0xFFF4F8FF)],
     accent: const Color(0xFF5B8DEF),
   ),
@@ -87,7 +87,7 @@ final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     emoji: '\u{1F4A9}',
     icon: Icons.bolt_rounded,
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_267.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_173.png',
     gradient: [const Color(0xFFFFE1B9), const Color(0xFFFFF4E6)],
     accent: const Color(0xFFB96B2C),
   ),

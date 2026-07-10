@@ -1169,11 +1169,18 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         });
       }
 
-      // Scroll to bottom
+      // Scroll to bottom (0.0 for reverse list view)
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_chatScrollController.hasClients) {
-          _chatScrollController
-              .jumpTo(_chatScrollController.position.maxScrollExtent);
+          if (isFirstLoad) {
+            _chatScrollController.jumpTo(0.0);
+          } else {
+            _chatScrollController.animateTo(
+              0.0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
         }
       });
     });

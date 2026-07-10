@@ -70,7 +70,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: L10nService().translate('home_gin_6a4c8c'),
     emoji: '\u{1F63E}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_338.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_339.png',
     weight: 12,
     gradient: [const Color(0xFFFFE6DC), const Color(0xFFFFF6F2)],
     accent: const Color(0xFFE26A3A),
@@ -182,7 +182,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: L10nService().translate('home_khc_92394f'),
     emoji: '\u{1F62D}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_268.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_165.png',
     weight: 8,
     showInSmartSuggestion: false,
     gradient: [const Color(0xFFDDEBFF), const Color(0xFFF4F8FF)],
@@ -205,7 +205,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: 'Troll',
     emoji: '\u{1F4A9}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_267.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_173.png',
     weight: 6,
     showInSmartSuggestion: false,
     gradient: [const Color(0xFFFFE1B9), const Color(0xFFFFF4E6)],
