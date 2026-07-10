@@ -2606,9 +2606,19 @@ class _CountdownQuickCustomizeSheetContentState
                         ),
                       ),
                     ),
+                    Text(
+                      'Tùy chọn',
+                      style: SLTheme.quicksand(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFFD81B60),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
                     const Icon(
                       Icons.arrow_drop_down_circle_rounded,
                       color: Color(0xFFD81B60),
+                      size: 22,
                     ),
                   ],
                 ),
