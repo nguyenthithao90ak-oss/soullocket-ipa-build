@@ -48,7 +48,11 @@ class DiaryList extends StatelessWidget {
       physics: const BouncingScrollPhysics(),
       controller: scrollController,
       slivers: [
-        if (header != null) SliverToBoxAdapter(child: header!),
+        if (header != null)
+          SliverSafeArea(
+            bottom: false,
+            sliver: SliverToBoxAdapter(child: header!),
+          ),
         SliverToBoxAdapter(
           child: Column(
             children: [

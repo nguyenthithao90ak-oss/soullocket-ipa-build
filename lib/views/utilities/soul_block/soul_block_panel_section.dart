@@ -394,19 +394,55 @@ class _SoulExplosionPainter extends CustomPainter {
       _particlePaint.color = particle.color.withValues(alpha: opacity);
       if (particle.simpleDraw) {
         canvas.drawCircle(_kExplosionOrigin, width / 2.4, _particlePaint);
-      } else if (particle.isShard) {
-        final RRect shard = RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: _kExplosionOrigin,
-            width: width,
-            height: height,
-          ),
-          Radius.circular(height),
-        );
-        canvas.drawRRect(shard, _particlePaint);
       } else {
-        final double radius = width / 2.3;
-        canvas.drawCircle(_kExplosionOrigin, radius, _particlePaint);
+        if (particle.shapeType == 1) {
+          // Draw Star
+          final Path path = Path();
+          final double r = width / 1.8;
+          final double innerR = r * 0.45;
+          for (int i = 0; i < 5; i++) {
+            final double a = i * 2 * pi / 5 - pi / 2;
+            final double px = cos(a) * r;
+            final double py = sin(a) * r;
+            if (i == 0) {
+              path.moveTo(px, py);
+            } else {
+              path.lineTo(px, py);
+            }
+            
+            final double a2 = a + pi / 5;
+            final double px2 = cos(a2) * innerR;
+            final double py2 = sin(a2) * innerR;
+            path.lineTo(px2, py2);
+          }
+          path.close();
+          canvas.drawPath(path, _particlePaint);
+        } else if (particle.shapeType == 2) {
+          // Draw Diamond
+          final Path path = Path();
+          final double r = width / 1.8;
+          path.moveTo(0, -r);
+          path.lineTo(r * 0.7, 0);
+          path.lineTo(0, r);
+          path.lineTo(-r * 0.7, 0);
+          path.close();
+          canvas.drawPath(path, _particlePaint);
+        } else if (particle.shapeType == 3 || particle.isShard) {
+          // Draw Shard/RRect
+          final RRect shard = RRect.fromRectAndRadius(
+            Rect.fromCenter(
+              center: _kExplosionOrigin,
+              width: width,
+              height: height,
+            ),
+            Radius.circular(height),
+          );
+          canvas.drawRRect(shard, _particlePaint);
+        } else {
+          // Draw Circle
+          final double radius = width / 2.3;
+          canvas.drawCircle(_kExplosionOrigin, radius, _particlePaint);
+        }
       }
 
       canvas.restore();

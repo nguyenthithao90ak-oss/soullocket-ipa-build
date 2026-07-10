@@ -76,12 +76,7 @@ class DiaryHeaderSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(
-        10,
-        MediaQuery.paddingOf(context).top + 10,
-        10,
-        6,
-      ),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
       child: Row(
         children: [
           Expanded(

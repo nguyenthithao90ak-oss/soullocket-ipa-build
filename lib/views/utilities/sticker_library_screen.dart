@@ -513,7 +513,7 @@ class _StickerLibraryTile extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(6, 4, 6, 0),
               child: Text(
-                'Sticker ${index + 1}',
+                _getStickerLabel(assetPath),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -528,6 +528,15 @@ class _StickerLibraryTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getStickerLabel(String path) {
+    final filename = path.split('/').last.split('.').first;
+    final numberMatch = RegExp(r'\d+').firstMatch(filename);
+    if (numberMatch != null) {
+      return 'Sticker ${numberMatch.group(0)}';
+    }
+    return filename;
   }
 }
 

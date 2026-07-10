@@ -33,29 +33,7 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
     await _persistAndSyncWidgetAppearance();
   }
 
-  Future<void> _openPremiumStoreFromWidgetPanel() async {
-    if (!AppConfig.isPurchaseEnabled) {
-      _showToast(context.tr('home_mcnyangtmn_fdd99c'), success: false);
-      return;
-    }
 
-    final houseId = _houseId?.trim();
-    if (houseId == null || houseId.isEmpty) {
-      _showToast(context.tr('home_hyvonhtrck_c33334'), success: false);
-      return;
-    }
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => PremiumStoreScreen(
-          houseId: houseId,
-          myName: _nameU1.trim().isEmpty
-              ? context.tr('home_bn_1fd75b')
-              : _nameU1.trim(),
-        ),
-      ),
-    );
-    await _loadVipStatus();
-  }
 
   Future<void> _handleWidgetThemeChanged(String value) async {
     _updateThemeDraft(() => _draftWidgetThemeKey = value);

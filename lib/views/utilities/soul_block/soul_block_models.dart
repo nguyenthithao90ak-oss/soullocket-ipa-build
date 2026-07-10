@@ -252,6 +252,7 @@ class _ExplosionParticle {
     required this.delayFraction,
     required this.isShard,
     required this.simpleDraw,
+    required this.shapeType,
   });
 
   final Offset startOffset;
@@ -264,6 +265,7 @@ class _ExplosionParticle {
   final double delayFraction;
   final bool isShard;
   final bool simpleDraw;
+  final int shapeType;
 }
 
 class _MemoryBurstSnapshot {

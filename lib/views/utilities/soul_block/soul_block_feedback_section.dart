@@ -570,23 +570,23 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
             _SoulBlockPerformanceTier.low ||
         (profile.tier == _SoulBlockPerformanceTier.mid && clearedCount >= 3);
     final int particleCount = subtle
-        ? min((4 + (clearedCount * 2)).clamp(6, 10), profile.subtleParticleCap)
+        ? min((8 + (clearedCount * 4)).clamp(10, 24), profile.subtleParticleCap * 2)
         : min(
-            (6 + (clearedCount * 3)).clamp(10, 18), profile.strongParticleCap);
+            (14 + (clearedCount * 5)).clamp(20, 40), profile.strongParticleCap * 2);
     final double maxDistance = subtle
-        ? ((34 + (clearedCount * 7)).clamp(36, 72).toDouble() *
+        ? ((60 + (clearedCount * 12)).clamp(70, 140).toDouble() *
             profile.subtleDistanceScale)
-        : ((48 + (clearedCount * 9)).clamp(52, 112).toDouble() *
+        : ((90 + (clearedCount * 15)).clamp(100, 180).toDouble() *
             profile.strongDistanceScale);
     final List<_ExplosionParticle> particles = <_ExplosionParticle>[];
 
     for (int index = 0; index < particleCount; index++) {
-      // Downward falling cone: pi/2 is straight down, +/- 0.8 radians (about 45 degrees)
-      final double angle = (pi / 2.0) + (_random.nextDouble() * 1.6 - 0.8);
-      // Shorter distance to keep particles centered near grid cells
+      // 360 degree explosion
+      final double angle = _random.nextDouble() * pi * 2.0;
+      // Further distance for more spectacular bursts
       final double distance =
-          (10.0 + (_random.nextDouble() * maxDistance * 0.40))
-              .clamp(10.0, 64.0);
+          (15.0 + (_random.nextDouble() * maxDistance * 0.85))
+              .clamp(15.0, 140.0);
       final bool isShard = index.isEven;
       particles.add(
         _ExplosionParticle(
@@ -616,6 +616,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
               profile.delayScale,
           isShard: isShard,
           simpleDraw: simpleParticles,
+          shapeType: _random.nextInt(4),
         ),
       );
     }

@@ -73,6 +73,74 @@ extension _SettingsTabShell on _SettingsTabState {
     }
   }
 
+  Future<void> _swapRole() async {
+    final fallbackErrMsg = context.tr('home_clixyra_775791');
+    final houseId = _houseId?.trim();
+    if (houseId != null &&
+        houseId.isNotEmpty &&
+        !await _ensureCanModifySharedInfo()) {
+      return;
+    }
+    if (!mounted) return;
+    final roleChangeTitle = context.tr('change_role');
+    final previousRole = _activeRoleKey == 'user2' ? 'user2' : 'user1';
+    final nextRole = _activeRoleKey == 'user1' ? 'user2' : 'user1';
+    final roleTerm = _displayNameForRole(nextRole);
+
+    final prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      _activeRoleKey = nextRole;
+    });
+
+    await prefs.setString('il_role', nextRole);
+    await prefs.setString('il_user_name', roleTerm);
+    RoleUtils.roleNotifier.value = nextRole;
+
+    if (_relationshipMode == 'single') {
+      _showToast(
+        'Chế độ độc thân không hỗ trợ đổi vai Nam/Nữ.',
+        success: false,
+      );
+    } else {
+      _showToast(
+        'Đã đổi thành công sang vai $roleTerm 🎉',
+        success: true,
+      );
+    }
+
+    final resolvedHouseId =
+        (_houseId ?? await _houseService.getCurrentHouseId())?.trim();
+    if (resolvedHouseId != null && resolvedHouseId.isNotEmpty) {
+      try {
+        await PresenceService().goOffline(
+          houseId: resolvedHouseId,
+          role: previousRole,
+        );
+      } catch (e) {
+        debugPrint(
+          'swap role presence cleanup failed: ${AppErrorMapper.resolve(
+            e,
+            fallbackMessage: fallbackErrMsg,
+          ).message}',
+        );
+      }
+      unawaited(
+        PushNotificationHelper.systemEvent(
+          toHouseId: resolvedHouseId,
+          type: 'role_change',
+          title: roleChangeTitle,
+          content:
+              'Thiết bị này vừa chuyển từ ${_displayNameForRole(previousRole)} sang ${_displayNameForRole(nextRole)} trong phần Cài đặt.',
+          extra: {
+            'previousRole': previousRole,
+            'role': nextRole,
+          },
+        ),
+      );
+    }
+  }
+
   String _resolveSettingsMyName() {
     return _activeRoleKey == 'user2' ? _nameU2 : _nameU1;
   }
@@ -610,7 +678,16 @@ extension _SettingsTabShell on _SettingsTabState {
 
         _buildSectionTitle(context.tr('settings_other_features_title'), topPadding: 16),
         _buildiOSSectionCard([
-
+          if (_relationshipMode != 'single') ...[
+            _buildiOSRow(
+              icon: Icons.people_alt_rounded,
+              iconBgColor: const Color(0xFFAB47BC),
+              title: _activeRoleKey == 'user1' ? context.tr('settings_swap_role_to_female') : context.tr('settings_swap_role_to_male'),
+              isDark: isDark,
+              onTap: _swapRole,
+            ),
+            _buildDivider(isDark),
+          ],
           _buildiOSRow(
             icon: Icons.support_agent_rounded,
             iconBgColor: const Color(0xFF4FC3F7),

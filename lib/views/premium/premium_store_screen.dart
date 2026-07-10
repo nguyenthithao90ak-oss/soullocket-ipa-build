@@ -749,11 +749,11 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
 
   String _badgeLabel(ProductDetails product, VipPlanInfo? info) {
     final planId = _planIdForProduct(product);
-    if (planId == VipProduct.yearly && (info?.savePercent ?? 0) > 0) {
-      return _tr('Tiết kiệm ${info!.savePercent}%', 'Save ${info!.savePercent}%');
+    if (planId == VipProduct.yearly && info != null && info.savePercent > 0) {
+      return _tr('Tiết kiệm ${info.savePercent}%', 'Save ${info.savePercent}%');
     }
-    if (planId == VipProduct.sixMonths && (info?.savePercent ?? 0) > 0) {
-      return _tr('Tiết kiệm ${info!.savePercent}%', 'Save ${info!.savePercent}%');
+    if (planId == VipProduct.sixMonths && info != null && info.savePercent > 0) {
+      return _tr('Tiết kiệm ${info.savePercent}%', 'Save ${info.savePercent}%');
     }
     if (planId == VipProduct.monthly) {
       return _tr('Phổ biến', 'Popular');

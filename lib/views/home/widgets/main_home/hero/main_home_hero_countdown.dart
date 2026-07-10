@@ -592,7 +592,8 @@ class _MainHomeHeroCountdownCircleState
 
     final countdownTextColorStr = UiPrefs.notifier.value.countdownTextColor;
     Color? customTextColor;
-    if (countdownTextColorStr.isNotEmpty) {
+    final isMultiColor = countdownTextColorStr == '#MULTI';
+    if (countdownTextColorStr.isNotEmpty && !isMultiColor) {
       try {
         customTextColor =
             Color(int.parse(countdownTextColorStr.replaceFirst('#', '0xFF')));
@@ -688,20 +689,42 @@ class _MainHomeHeroCountdownCircleState
                             ),
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
-                              child: Text(
-                                widget.circleTopLabel,
-                                maxLines: 1,
-                                textAlign: TextAlign.center,
-                                style: SLTheme.textStyleForKey(
-                                  labelFont,
-                                  fontSize: (widget.circleSize * 0.11)
-                                      .clamp(18.0, 42.0),
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.5,
-                                  color: customTextColor ??
-                                      countdownVisual.topLabelColor,
-                                ),
-                              ),
+                              child: isMultiColor 
+                                ? ShaderMask(
+                                    shaderCallback: (bounds) => LinearGradient(
+                                      colors: countdownVisual.numberGradient,
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ).createShader(bounds),
+                                    blendMode: BlendMode.srcIn,
+                                    child: Text(
+                                      widget.circleTopLabel,
+                                      maxLines: 1,
+                                      textAlign: TextAlign.center,
+                                      style: SLTheme.textStyleForKey(
+                                        labelFont,
+                                        fontSize: (widget.circleSize * 0.11)
+                                            .clamp(18.0, 42.0),
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.5,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : Text(
+                                    widget.circleTopLabel,
+                                    maxLines: 1,
+                                    textAlign: TextAlign.center,
+                                    style: SLTheme.textStyleForKey(
+                                      labelFont,
+                                      fontSize: (widget.circleSize * 0.11)
+                                          .clamp(18.0, 42.0),
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.5,
+                                      color: customTextColor ??
+                                          countdownVisual.topLabelColor,
+                                    ),
+                                  ),
                             ),
                           ),
                         ),
@@ -774,20 +797,42 @@ class _MainHomeHeroCountdownCircleState
                             ),
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
-                              child: Text(
-                                widget.circleBottomLabel,
-                                maxLines: 1,
-                                textAlign: TextAlign.center,
-                                style: SLTheme.textStyleForKey(
-                                  labelFont,
-                                  fontSize: (widget.circleSize * 0.12)
-                                      .clamp(20.0, 46.0),
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.5,
-                                  color: customTextColor ??
-                                      countdownVisual.bottomLabelColor,
-                                ),
-                              ),
+                              child: isMultiColor
+                                ? ShaderMask(
+                                    shaderCallback: (bounds) => LinearGradient(
+                                      colors: countdownVisual.numberGradient,
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ).createShader(bounds),
+                                    blendMode: BlendMode.srcIn,
+                                    child: Text(
+                                      widget.circleBottomLabel,
+                                      maxLines: 1,
+                                      textAlign: TextAlign.center,
+                                      style: SLTheme.textStyleForKey(
+                                        labelFont,
+                                        fontSize: (widget.circleSize * 0.12)
+                                            .clamp(20.0, 46.0),
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.5,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : Text(
+                                    widget.circleBottomLabel,
+                                    maxLines: 1,
+                                    textAlign: TextAlign.center,
+                                    style: SLTheme.textStyleForKey(
+                                      labelFont,
+                                      fontSize: (widget.circleSize * 0.12)
+                                          .clamp(20.0, 46.0),
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.5,
+                                      color: customTextColor ??
+                                          countdownVisual.bottomLabelColor,
+                                    ),
+                                  ),
                             ),
                           ),
                         ),

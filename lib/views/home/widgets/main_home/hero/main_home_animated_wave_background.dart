@@ -34,7 +34,7 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
   double _lastZ = 0.0;
   bool _isFirstEvent = true;
   double _shakeIntensity = 0.0;
-  final List<_RippleEffect> _ripples = [];
+  final List<_TapInteractionEffect> _tapEffects = [];
   // Throttle sensor: chỉ xử lý 1 event mỗi 16ms (~60fps)
   int _lastSensorProcessedMs = 0;
 
@@ -112,14 +112,14 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
             _shakeIntensity = (_shakeIntensity + 0.45).clamp(0.0, 1.5);
 
             final now = DateTime.now();
-            if (_ripples.isEmpty ||
-                now.difference(_ripples.last.startTime).inMilliseconds > 250) {
-              if (_ripples.length >= 3) {
-                _ripples.removeAt(0);
+            if (_tapEffects.isEmpty ||
+                now.difference(_tapEffects.last.startTime).inMilliseconds > 250) {
+              if (_tapEffects.length >= 3) {
+                _tapEffects.removeAt(0);
               }
               final random = Random();
-              _ripples.add(
-                _RippleEffect(
+              _tapEffects.add(
+                _TapInteractionEffect(
                   centerOffset: Offset(
                     (random.nextDouble() - 0.5) * 80.0,
                     (random.nextDouble() - 0.5) * 80.0,
@@ -219,7 +219,7 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
 
           // Filter out expired ripples
           final now = DateTime.now();
-          _ripples.removeWhere((r) => r.getProgress(now) >= 1.0);
+          _tapEffects.removeWhere((r) => r.getProgress(now) >= 1.0);
         }
 
         return CustomPaint(
@@ -230,7 +230,7 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
             tiltX: _tiltX,
             tiltY: _tiltY,
             shakeIntensity: _shakeIntensity,
-            ripples: List.from(_ripples),
+            tapEffects: List.from(_tapEffects),
           ),
         );
       },
@@ -267,11 +267,11 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
               if (centerX > 0.0 && centerY > 0.0) {
                 final offset = Offset(localPos.dx - centerX, localPos.dy - centerY);
                 _shakeIntensity = (_shakeIntensity + 0.45).clamp(0.0, 1.5);
-                if (_ripples.length >= 3) {
-                  _ripples.removeAt(0);
+                if (_tapEffects.length >= 4) {
+                  _tapEffects.removeAt(0);
                 }
-                _ripples.add(
-                  _RippleEffect(
+                _tapEffects.add(
+                  _TapInteractionEffect(
                     centerOffset: offset,
                     startTime: DateTime.now(),
                     duration: const Duration(milliseconds: 1500),
@@ -294,7 +294,7 @@ class _WavePainter extends CustomPainter {
   final double tiltX;
   final double tiltY;
   final double shakeIntensity;
-  final List<_RippleEffect> ripples;
+  final List<_TapInteractionEffect> tapEffects;
 
   _WavePainter(
     this.animationValue,
@@ -303,8 +303,14 @@ class _WavePainter extends CustomPainter {
     this.tiltX = 0.0,
     this.tiltY = 0.0,
     this.shakeIntensity = 0.0,
-    this.ripples = const [],
+    this.tapEffects = const [],
   });
+
+  
+  MaskFilter? _getBlur(double sigma) {
+    if (quality != 'high') return null;
+    return MaskFilter.blur(BlurStyle.normal, sigma);
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -339,12 +345,22 @@ class _WavePainter extends CustomPainter {
       _drawFireworks(canvas, width, height, center, radius);
     } else if (styleKey == 'lava') {
       _drawLava(canvas, width, height, center, radius);
+    } else if (styleKey == 'cherry_blossom') {
+      _drawCherryBlossom(canvas, width, height, center, radius);
+    } else if (styleKey == 'meteor_shower') {
+      _drawMeteorShower(canvas, width, height, center, radius);
+    } else if (styleKey == 'deep_ocean') {
+      _drawDeepOcean(canvas, width, height, center, radius);
+    } else if (styleKey == 'golden_sunset') {
+      _drawGoldenSunset(canvas, width, height, center, radius);
+    } else if (styleKey == 'neon_pulse') {
+      _drawNeonPulse(canvas, width, height, center, radius);
     } else {
       _drawDefaultWaves(canvas, width, height, center, radius);
     }
 
-    // Draw concentric ripples from shake at the end of paint so they overlay on any background style
-    _drawShakeRipples(canvas, center, radius);
+    // Draw tap effects specific to style at the end of paint so they overlay on any background style
+    _drawTapEffects(canvas, center, radius);
   }
 
   void _drawHeartPath(
@@ -359,9 +375,9 @@ class _WavePainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     if (quality == 'high') {
-      paint.maskFilter = MaskFilter.blur(BlurStyle.normal, size * 0.25);
+      paint.maskFilter = _getBlur(size * 0.25);
     } else if (quality == 'balanced') {
-      paint.maskFilter = MaskFilter.blur(BlurStyle.normal, size * 0.15);
+      paint.maskFilter = _getBlur(size * 0.15);
     }
 
     final path = Path();
@@ -429,9 +445,9 @@ class _WavePainter extends CustomPainter {
 
       bubblePaint.color = Colors.white.withValues(alpha: 0.15 * opacity);
       if (quality == 'high') {
-        bubblePaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+        bubblePaint.maskFilter = _getBlur(2);
       } else if (quality == 'balanced') {
-        bubblePaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
+        bubblePaint.maskFilter = _getBlur(1);
       } else {
         bubblePaint.maskFilter = null;
       }
@@ -597,9 +613,9 @@ class _WavePainter extends CustomPainter {
         ).createShader(Rect.fromCircle(center: center, radius: radius * 0.7));
       
       if (quality == 'high') {
-        swirl1.maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+        swirl1.maskFilter = _getBlur(12);
       } else {
-        swirl1.maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+        swirl1.maskFilter = _getBlur(5);
       }
       canvas.drawCircle(
         Offset(
@@ -624,7 +640,7 @@ class _WavePainter extends CustomPainter {
           startAngle: angle + pi,
           endAngle: angle + pi * 3,
         ).createShader(Rect.fromCircle(center: center, radius: radius * 0.5))
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+        ..maskFilter = _getBlur(8);
       canvas.drawCircle(
         Offset(
           center.dx + cos(angle + pi) * radius * 0.15,
@@ -667,9 +683,9 @@ class _WavePainter extends CustomPainter {
         ..strokeWidth = 3.5 + pulse * 2.0
         ..strokeCap = StrokeCap.round;
       if (quality == 'high') {
-        paint.maskFilter = MaskFilter.blur(BlurStyle.normal, 6 + pulse * 4);
+        paint.maskFilter = _getBlur(6 + pulse * 4);
       } else if (quality == 'balanced') {
-        paint.maskFilter = MaskFilter.blur(BlurStyle.normal, 3 + pulse * 2);
+        paint.maskFilter = _getBlur(3 + pulse * 2);
       }
       canvas.drawLine(
         center,
@@ -691,9 +707,9 @@ class _WavePainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3.0;
       if (quality == 'high') {
-        paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+        paint.maskFilter = _getBlur(5);
       } else if (quality == 'balanced') {
-        paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+        paint.maskFilter = _getBlur(3);
       }
       canvas.drawCircle(center, ringR, paint);
     }
@@ -776,9 +792,9 @@ class _WavePainter extends CustomPainter {
         ).createShader(Rect.fromLTWH(0, yBase - amp * 2, width, amp * 4));
       
       if (quality == 'high') {
-        paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+        paint.maskFilter = _getBlur(8);
       } else if (quality == 'balanced') {
-        paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+        paint.maskFilter = _getBlur(3);
       }
       
       canvas.drawPath(path, paint);
@@ -846,9 +862,9 @@ class _WavePainter extends CustomPainter {
         ..color = facetColors[i]
             .withValues(alpha: facetOpacities[i] * (0.6 + pulse * 0.4));
       if (quality == 'high') {
-        paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+        paint.maskFilter = _getBlur(4);
       } else if (quality == 'balanced') {
-        paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+        paint.maskFilter = _getBlur(2);
       }
       canvas.drawPath(path, paint);
     }
@@ -861,7 +877,7 @@ class _WavePainter extends CustomPainter {
         ..color = Colors.white.withValues(alpha: 0.5 + pulse * 0.4)
         ..strokeWidth = 1.5 + pulse * 1.5;
       if (quality == 'high') {
-        paint.maskFilter = MaskFilter.blur(BlurStyle.normal, 2 + pulse * 3);
+        paint.maskFilter = _getBlur(2 + pulse * 3);
       }
       canvas.drawLine(
         center,
@@ -882,7 +898,7 @@ class _WavePainter extends CustomPainter {
       final paint = Paint()
         ..color = Colors.white.withValues(alpha: 0.5 + pulse * 0.45);
       if (quality == 'high') {
-        paint.maskFilter = MaskFilter.blur(BlurStyle.normal, 2 + pulse * 2);
+        paint.maskFilter = _getBlur(2 + pulse * 2);
       }
       canvas.drawCircle(
         Offset(
@@ -909,9 +925,9 @@ class _WavePainter extends CustomPainter {
         endAngle: crystalAngle + pi * 2,
       ).createShader(Rect.fromCircle(center: center, radius: radius * 0.22));
       if (quality == 'high') {
-        centerPaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+        centerPaint.maskFilter = _getBlur(6);
       } else {
-        centerPaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+        centerPaint.maskFilter = _getBlur(3);
       }
       canvas.drawCircle(center, radius * 0.22, centerPaint);
     }
@@ -945,9 +961,9 @@ class _WavePainter extends CustomPainter {
       ..strokeWidth = radius * 0.16
       ..strokeCap = StrokeCap.round;
     if (quality == 'high') {
-      stripePaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+      stripePaint.maskFilter = _getBlur(2);
     } else if (quality == 'balanced') {
-      stripePaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
+      stripePaint.maskFilter = _getBlur(1);
     }
     
     final stripeColors = [
@@ -979,7 +995,7 @@ class _WavePainter extends CustomPainter {
         ..color = stripeColors[(i + 1) % stripeColors.length]
             .withValues(alpha: 0.34 + sin(progress * pi) * 0.22);
       if (quality == 'high') {
-        paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5);
+        paint.maskFilter = _getBlur(1.5);
       }
       canvas.drawCircle(Offset(x, y), size, paint);
     }
@@ -1044,9 +1060,9 @@ class _WavePainter extends CustomPainter {
       final paint = Paint()
         ..color = colors[i % colors.length].withValues(alpha: 0.72);
       if (quality == 'high') {
-        paint.maskFilter = MaskFilter.blur(BlurStyle.normal, 3 + pulse * 3);
+        paint.maskFilter = _getBlur(3 + pulse * 3);
       } else if (quality == 'balanced') {
-        paint.maskFilter = MaskFilter.blur(BlurStyle.normal, 1.5 + pulse * 1.5);
+        paint.maskFilter = _getBlur(1.5 + pulse * 1.5);
       }
       canvas.drawCircle(p, 2.8 + pulse * 3.2, paint);
       
@@ -1057,7 +1073,7 @@ class _WavePainter extends CustomPainter {
           Paint()
             ..color = colors[i % colors.length].withValues(alpha: 0.18)
             ..strokeWidth = 1.4
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+            ..maskFilter = _getBlur(5),
         );
       }
     }
@@ -1071,9 +1087,9 @@ class _WavePainter extends CustomPainter {
         ..strokeWidth = 1.8 + (1 - burst) * 2.8
         ..color = colors[i % colors.length].withValues(alpha: (1 - burst) * 0.42);
       if (quality == 'high') {
-        paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+        paint.maskFilter = _getBlur(4);
       } else if (quality == 'balanced') {
-        paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+        paint.maskFilter = _getBlur(2);
       }
       canvas.drawCircle(center, burstRadius, paint);
     }
@@ -1133,9 +1149,9 @@ class _WavePainter extends CustomPainter {
           ..color = colors[b % colors.length].withValues(alpha: 1 - t)
           ..strokeWidth = 2.0;
         if (quality == 'high') {
-          paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+          paint.maskFilter = _getBlur(2);
         } else if (quality == 'balanced') {
-          paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
+          paint.maskFilter = _getBlur(1);
         }
         canvas.drawLine(
           Offset(anchors[b].dx, sy + 25),
@@ -1175,9 +1191,9 @@ class _WavePainter extends CustomPainter {
             ..strokeWidth = 1.5 + (1 - burstProgress) * 2.0
             ..strokeCap = StrokeCap.round;
           if (quality == 'high') {
-            paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+            paint.maskFilter = _getBlur(3);
           } else if (quality == 'balanced') {
-            paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5);
+            paint.maskFilter = _getBlur(1.5);
           }
           canvas.drawLine(start, end, paint);
 
@@ -1185,9 +1201,9 @@ class _WavePainter extends CustomPainter {
             final paintDot = Paint()
               ..color = Colors.white.withValues(alpha: 1 - burstProgress);
             if (quality == 'high') {
-              paintDot.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+              paintDot.maskFilter = _getBlur(2);
             } else if (quality == 'balanced') {
-              paintDot.maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
+              paintDot.maskFilter = _getBlur(1);
             }
             canvas.drawCircle(
               end,
@@ -1201,9 +1217,9 @@ class _WavePainter extends CustomPainter {
           final paintFlash = Paint()
             ..color = Colors.white.withValues(alpha: 1 - burstProgress / 0.4);
           if (quality == 'high') {
-            paintFlash.maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+            paintFlash.maskFilter = _getBlur(5);
           } else if (quality == 'balanced') {
-            paintFlash.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5);
+            paintFlash.maskFilter = _getBlur(2.5);
           }
           canvas.drawCircle(
             anchors[b],
@@ -1284,7 +1300,7 @@ class _WavePainter extends CustomPainter {
             ).createShader(
               Rect.fromCircle(center: Offset(x, y), radius: blobRadius * 1.5),
             )
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+            ..maskFilter = _getBlur(8),
         );
 
         canvas.drawCircle(
@@ -1292,7 +1308,7 @@ class _WavePainter extends CustomPainter {
           blobRadius * 0.3,
           Paint()
             ..color = Colors.white.withValues(alpha: 0.4)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+            ..maskFilter = _getBlur(4),
         );
       }
     }
@@ -1328,9 +1344,9 @@ class _WavePainter extends CustomPainter {
         ).createShader(Rect.fromLTWH(0, y - 50, width, height - y + 50));
       
       if (quality == 'high') {
-        paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+        paint.maskFilter = _getBlur(3);
       } else if (quality == 'balanced') {
-        paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5);
+        paint.maskFilter = _getBlur(1.5);
       }
 
       canvas.drawPath(path, paint);
@@ -1344,58 +1360,646 @@ class _WavePainter extends CustomPainter {
       final paint = Paint()
         ..color = lavaColors[i % lavaColors.length].withValues(alpha: (1 - p) * 0.8);
       if (quality == 'high') {
-        paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+        paint.maskFilter = _getBlur(2);
       }
       canvas.drawCircle(Offset(sx, sy), 1.5 + (i % 3), paint);
     }
   }
 
-  void _drawShakeRipples(Canvas canvas, Offset center, double radius) {
-    if (ripples.isEmpty) return;
-    final now = DateTime.now();
-    for (final ripple in ripples) {
-      final progress = ripple.getProgress(now);
-      if (progress >= 1.0) continue;
+  void _drawCherryBlossom(Canvas canvas, double width, double height, Offset center, double radius) {
+    // Nền gradient hồng pastel mềm mại
+    final bgPaint = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(0, -0.3),
+        colors: [
+          const Color(0xFFFFF0F5).withValues(alpha: 0.95),
+          const Color(0xFFFFE4EC).withValues(alpha: 0.9),
+          const Color(0xFFFFC1D4).withValues(alpha: 0.7),
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
+    canvas.drawCircle(center, radius, bgPaint);
 
-      final maxR = radius * 0.95;
-      final currentRadius = maxR * progress;
+    // Lớp glow hồng nhẹ ở tâm
+    if (quality != 'low') {
+      final glowPaint = Paint()
+        ..color = const Color(0xFFFF69B4).withValues(alpha: 0.12)
+        ..maskFilter = _getBlur(40);
+      canvas.drawCircle(
+        Offset(center.dx, center.dy + sin(animationValue * pi * 2) * 10),
+        radius * 0.5,
+        glowPaint,
+      );
+    }
 
-      // Fade out as it expands
-      final opacity = (1.0 - progress) * 0.4;
+    final count = quality == 'low' ? 8 : (quality == 'balanced' ? 16 : 28);
+    final petalColors = [
+      const Color(0xFFFFB7C5),
+      const Color(0xFFF8A4B8),
+      const Color(0xFFFFCDD2),
+      const Color(0xFFFF8FAB),
+      const Color(0xFFFFE0E6),
+    ];
+    final paint = Paint()..style = PaintingStyle.fill;
 
-      final ripplePaint = Paint()
-        ..color = const Color(0xFFFFEBF2).withValues(alpha: opacity)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3.0 + (1.0 - progress) * 4.0;
+    for (var i = 0; i < count; i++) {
+      final startX = width * ((i * 0.19 + 0.05) % 1.0);
+      final speed = 0.15 + (i * 0.07 % 0.35);
+      final size = 5.0 + (i * 3.7 % 10);
 
-      if (quality == 'high') {
-        ripplePaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.0);
+      final progress = (animationValue * speed + (i * 0.11)) % 1.0;
+      final swayAmount = 25.0 + (i % 4) * 8;
+      final y = -size * 2 + progress * (height + size * 4) + tiltY * (0.3 + i * 0.08);
+      final x = startX + sin((animationValue * pi * 2.5) + i * 1.3) * swayAmount
+          + cos((animationValue * pi * 1.7) + i * 0.7) * swayAmount * 0.4
+          + tiltX * (0.3 + i * 0.08);
+      final opacity = sin(progress * pi) * (0.6 + (i % 3) * 0.15);
+
+      final colorIdx = i % petalColors.length;
+      paint.color = petalColors[colorIdx].withValues(alpha: opacity.clamp(0.0, 1.0));
+
+      if (quality == 'high' && size > 7) {
+        paint.maskFilter = _getBlur(size * 0.12);
       }
 
+      canvas.save();
+      canvas.translate(x, y);
+      final rotSpeed = (i % 2 == 0 ? 1.0 : -1.0) * (0.6 + (i % 5) * 0.15);
+      canvas.rotate(animationValue * pi * rotSpeed + i * 0.5);
+
+      // 5 cánh hoa anh đào
+      final petalCount = 5;
+      for (var p = 0; p < petalCount; p++) {
+        canvas.save();
+        canvas.rotate(p * 2 * pi / petalCount);
+        final petal = Path();
+        petal.moveTo(0, 0);
+        petal.quadraticBezierTo(size * 0.5, -size * 0.6, 0, -size);
+        petal.quadraticBezierTo(-size * 0.5, -size * 0.6, 0, 0);
+        canvas.drawPath(petal, paint);
+        canvas.restore();
+      }
+      // Nhụy hoa nhỏ ở giữa
+      canvas.drawCircle(Offset.zero, size * 0.15,
+        Paint()..color = const Color(0xFFFFEB3B).withValues(alpha: opacity * 0.9));
+      canvas.restore();
+    }
+  }
+
+  void _drawMeteorShower(Canvas canvas, double width, double height, Offset center, double radius) {
+    // Nền trời đêm gradient sâu
+    final bgPaint = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(0.2, -0.5),
+        colors: [
+          const Color(0xFF1A1A3E).withValues(alpha: 0.98),
+          const Color(0xFF0D0D2B).withValues(alpha: 0.98),
+          const Color(0xFF050510).withValues(alpha: 0.98),
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
+    canvas.drawCircle(center, radius, bgPaint);
+
+    // Dải ngân hà mờ
+    if (quality != 'low') {
+      final milkyPaint = Paint()
+        ..color = const Color(0xFF6366F1).withValues(alpha: 0.06)
+        ..maskFilter = _getBlur(50);
+      final milkyPath = Path();
+      milkyPath.moveTo(0, height * 0.2);
+      milkyPath.quadraticBezierTo(width * 0.3, height * 0.4, width * 0.6, height * 0.15);
+      milkyPath.quadraticBezierTo(width * 0.8, height * 0.05, width, height * 0.3);
+      milkyPath.lineTo(width, height * 0.4);
+      milkyPath.quadraticBezierTo(width * 0.7, height * 0.15, width * 0.4, height * 0.35);
+      milkyPath.quadraticBezierTo(width * 0.15, height * 0.5, 0, height * 0.35);
+      milkyPath.close();
+      canvas.drawPath(milkyPath, milkyPaint);
+    }
+
+    // Sao nhấp nháy nhiều lớp
+    final starCount = quality == 'low' ? 15 : (quality == 'balanced' ? 30 : 55);
+    final starPaint = Paint();
+    for (var i = 0; i < starCount; i++) {
+      final x = width * ((i * 0.137 + 0.03) % 1.0);
+      final y = height * ((i * 0.193 + 0.02) % 1.0);
+      final twinkleSpeed = 3.0 + (i % 5) * 1.5;
+      final twinkle = (sin(animationValue * pi * twinkleSpeed + i * 1.7) + 1) * 0.5;
+      final starSize = 0.5 + (i % 4) * 0.5;
+      final starColor = i % 7 == 0
+          ? const Color(0xFFBBDEFB)
+          : (i % 5 == 0 ? const Color(0xFFFFCDD2) : Colors.white);
+      starPaint.color = starColor.withValues(alpha: (0.2 + 0.8 * twinkle).clamp(0.0, 1.0));
+      canvas.drawCircle(Offset(x, y), starSize, starPaint);
+
+      // Tia sáng cho sao lớn
+      if (quality != 'low' && starSize > 1.2 && twinkle > 0.7) {
+        starPaint.color = starColor.withValues(alpha: twinkle * 0.3);
+        canvas.drawLine(Offset(x - starSize * 2, y), Offset(x + starSize * 2, y), starPaint..strokeWidth = 0.5);
+        canvas.drawLine(Offset(x, y - starSize * 2), Offset(x, y + starSize * 2), starPaint);
+        starPaint.strokeWidth = 0.0;
+      }
+    }
+
+    // Sao băng với đuôi dài gradient và glow
+    final meteorCount = quality == 'low' ? 2 : (quality == 'balanced' ? 3 : 5);
+    for (var i = 0; i < meteorCount; i++) {
+      final speed = 0.8 + (i * 0.35);
+      final progress = (animationValue * speed + (i * 0.25)) % 1.0;
+      if (progress > 0.7) continue;
+
+      final tailLength = 50.0 + (i * 15);
+      final angle = -pi / 4 - (i * 0.15);
+      final originX = width * (0.2 + (i * 0.18) % 0.7);
+      final originY = -20.0;
+
+      final headX = originX + progress * width * 0.8 * cos(angle + pi / 2);
+      final headY = originY + progress * height * 1.3;
+      final tailX = headX - tailLength * cos(angle + pi / 4);
+      final tailY = headY - tailLength * sin(angle + pi / 4).abs();
+
+      // Glow quanh đầu sao băng
+      if (quality != 'low') {
+        canvas.drawCircle(
+          Offset(headX, headY),
+          4,
+          Paint()
+            ..color = Colors.white.withValues(alpha: 0.5)
+            ..maskFilter = _getBlur(6),
+        );
+      }
+
+      // Đuôi gradient
+      final meteorPaint = Paint()
+        ..strokeWidth = 2.5
+        ..strokeCap = StrokeCap.round
+        ..shader = LinearGradient(
+          colors: [
+            Colors.white,
+            const Color(0xFFBBDEFB).withValues(alpha: 0.6),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.3, 1.0],
+        ).createShader(Rect.fromPoints(Offset(headX, headY), Offset(tailX, tailY)));
+      canvas.drawLine(Offset(headX, headY), Offset(tailX, tailY), meteorPaint);
+
+      // Đầu sao băng sáng
+      canvas.drawCircle(Offset(headX, headY), 2.0, Paint()..color = Colors.white);
+    }
+  }
+
+  void _drawDeepOcean(Canvas canvas, double width, double height, Offset center, double radius) {
+    // Nền gradient đại dương xanh sâu
+    final bgPaint = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(0, 0.5),
+        colors: [
+          const Color(0xFF0077B6).withValues(alpha: 0.8),
+          const Color(0xFF023E8A).withValues(alpha: 0.85),
+          const Color(0xFF03045E).withValues(alpha: 0.9),
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
+    canvas.drawCircle(center, radius, bgPaint);
+
+    // Ánh sáng caustic từ trên mặt nước chiếu xuống
+    if (quality != 'low') {
+      for (var i = 0; i < 4; i++) {
+        final cx = center.dx + sin(animationValue * pi * 2 + i * 1.5) * radius * 0.3;
+        final cy = center.dy - radius * 0.4 + cos(animationValue * pi * 1.5 + i) * 15;
+        canvas.drawOval(
+          Rect.fromCenter(center: Offset(cx, cy), width: radius * 0.5, height: radius * 0.15),
+          Paint()
+            ..color = const Color(0xFF90E0EF).withValues(alpha: 0.08 + sin(animationValue * pi * 3 + i) * 0.04)
+            ..maskFilter = _getBlur(25),
+        );
+      }
+    }
+
+    // Bọt khí nổi lên với ánh sáng phản chiếu
+    final count = quality == 'low' ? 10 : (quality == 'balanced' ? 18 : 30);
+    for (var i = 0; i < count; i++) {
+      final startX = width * ((i * 0.23 + 0.05) % 1.0);
+      final speed = 0.12 + (i * 0.08 % 0.3);
+      final size = 2.0 + (i * 4.3 % 12);
+
+      final progress = (animationValue * speed + (i * 0.17)) % 1.0;
+      final wobble = sin((animationValue * pi * 4) + i * 2.3) * (8 + size * 0.5);
+      final y = height + size - progress * (height + size * 3) + tiltY * (0.2 + i * 0.06);
+      final x = startX + wobble + tiltX * (0.2 + i * 0.06);
+      final opacity = sin(progress * pi);
+
+      // Bọt khí chính — viền tròn bán trong suốt
       canvas.drawCircle(
-        Offset(center.dx + ripple.centerOffset.dx, center.dy + ripple.centerOffset.dy),
-        currentRadius,
-        ripplePaint,
+        Offset(x, y),
+        size,
+        Paint()
+          ..color = const Color(0xFFCAF0F8).withValues(alpha: 0.25 * opacity)
+          ..style = PaintingStyle.fill,
+      );
+      canvas.drawCircle(
+        Offset(x, y),
+        size,
+        Paint()
+          ..color = const Color(0xFF90E0EF).withValues(alpha: 0.4 * opacity)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.8,
       );
 
-      // Draw secondary delayed ripple ring
-      if (progress > 0.2) {
-        final progress2 = (progress - 0.2) / 0.8;
-        final opacity2 = (1.0 - progress2) * 0.25;
-        final ripplePaint2 = Paint()
-          ..color = const Color(0xFFFFD4E5).withValues(alpha: opacity2)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.0 + (1.0 - progress2) * 3.0;
-
-        if (quality == 'high') {
-          ripplePaint2.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
-        }
-
+      // Ánh sáng phản chiếu trên bọt khí
+      if (size > 4) {
         canvas.drawCircle(
-          Offset(center.dx + ripple.centerOffset.dx, center.dy + ripple.centerOffset.dy),
-          maxR * 0.85 * progress2,
-          ripplePaint2,
+          Offset(x - size * 0.25, y - size * 0.3),
+          size * 0.2,
+          Paint()..color = Colors.white.withValues(alpha: 0.5 * opacity),
         );
+      }
+    }
+
+    // Rong biển nhẹ lay ở dưới
+    if (quality != 'low') {
+      final seaweedPaint = Paint()
+        ..color = const Color(0xFF2D6A4F).withValues(alpha: 0.25)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+        ..strokeCap = StrokeCap.round;
+      for (var i = 0; i < 5; i++) {
+        final baseX = width * (0.1 + i * 0.2);
+        final baseY = height * 0.95;
+        final sway = sin(animationValue * pi * 2 + i * 1.2) * 12;
+        final path = Path();
+        path.moveTo(baseX, baseY);
+        path.quadraticBezierTo(
+          baseX + sway, baseY - height * 0.12,
+          baseX + sway * 0.6, baseY - height * 0.22,
+        );
+        canvas.drawPath(path, seaweedPaint);
+      }
+    }
+  }
+
+  void _drawGoldenSunset(Canvas canvas, double width, double height, Offset center, double radius) {
+    // Nền gradient hoàng hôn nhiều lớp
+    final sunBob = sin(animationValue * pi * 1.5);
+    final sunCenter = Offset(center.dx, center.dy + sunBob * 8);
+
+    final bgPaint = Paint()
+      ..shader = RadialGradient(
+        center: Alignment(0, -0.2 + sunBob * 0.05),
+        colors: [
+          const Color(0xFFFFF8E1).withValues(alpha: 0.95),
+          const Color(0xFFFFCC80).withValues(alpha: 0.85),
+          const Color(0xFFFF8A65).withValues(alpha: 0.7),
+          const Color(0xFFE65100).withValues(alpha: 0.5),
+        ],
+        stops: const [0.0, 0.3, 0.6, 1.0],
+      ).createShader(Rect.fromCircle(center: sunCenter, radius: radius));
+    canvas.drawCircle(center, radius, bgPaint);
+
+    // Mặt trời rực rỡ với nhiều lớp glow
+    final sunRadius = radius * 0.18;
+    if (quality != 'low') {
+      // Outer glow
+      canvas.drawCircle(
+        sunCenter,
+        sunRadius * 3,
+        Paint()
+          ..color = const Color(0xFFFFB74D).withValues(alpha: 0.12)
+          ..maskFilter = _getBlur(30),
+      );
+      // Mid glow
+      canvas.drawCircle(
+        sunCenter,
+        sunRadius * 1.8,
+        Paint()
+          ..color = const Color(0xFFFFCC02).withValues(alpha: 0.2)
+          ..maskFilter = _getBlur(15),
+      );
+    }
+    // Sun core
+    canvas.drawCircle(
+      sunCenter,
+      sunRadius,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            const Color(0xFFFFF9C4),
+            const Color(0xFFFFD54F),
+            const Color(0xFFFF9800),
+          ],
+        ).createShader(Rect.fromCircle(center: sunCenter, radius: sunRadius)),
+    );
+
+    // Tia nắng mặt trời xoay chậm
+    if (quality != 'low') {
+      final rayCount = quality == 'balanced' ? 8 : 14;
+      final rayPaint = Paint()..strokeCap = StrokeCap.round;
+      for (var i = 0; i < rayCount; i++) {
+        final angle = (i * 2 * pi / rayCount) + animationValue * pi * 0.3;
+        final rayLen = sunRadius * 1.5 + sin(animationValue * pi * 4 + i * 2) * sunRadius * 0.5;
+        final startR = sunRadius * 1.1;
+        final sx = sunCenter.dx + cos(angle) * startR;
+        final sy = sunCenter.dy + sin(angle) * startR;
+        final ex = sunCenter.dx + cos(angle) * (startR + rayLen);
+        final ey = sunCenter.dy + sin(angle) * (startR + rayLen);
+        rayPaint
+          ..strokeWidth = 1.5
+          ..shader = LinearGradient(
+            colors: [
+              const Color(0xFFFFD54F).withValues(alpha: 0.5),
+              Colors.transparent,
+            ],
+          ).createShader(Rect.fromPoints(Offset(sx, sy), Offset(ex, ey)));
+        canvas.drawLine(Offset(sx, sy), Offset(ex, ey), rayPaint);
+      }
+    }
+
+    // Hạt bụi vàng lấp lánh bay
+    final dustCount = quality == 'low' ? 12 : (quality == 'balanced' ? 25 : 40);
+    final dustColors = [
+      const Color(0xFFFFCC80),
+      const Color(0xFFFFE082),
+      const Color(0xFFFFD54F),
+      const Color(0xFFFFF9C4),
+    ];
+    final dustPaint = Paint();
+    for (var i = 0; i < dustCount; i++) {
+      final x = width * ((i * 0.31 + 0.02) % 1.0);
+      final y = height * ((i * 0.43 + 0.05) % 1.0);
+      final progress = (animationValue * 0.3 + i * 0.07) % 1.0;
+      final moveX = x + sin(progress * pi * 3 + i * 0.7) * 25;
+      final moveY = y + cos(progress * pi * 2 + i * 1.1) * 18;
+      final opacity = sin(progress * pi) * (0.4 + (i % 3) * 0.15);
+      final dotSize = 1.0 + (i % 4) * 0.8;
+      dustPaint.color = dustColors[i % dustColors.length].withValues(alpha: opacity.clamp(0.0, 1.0));
+      canvas.drawCircle(Offset(moveX, moveY), dotSize, dustPaint);
+    }
+  }
+
+  void _drawNeonPulse(Canvas canvas, double width, double height, Offset center, double radius) {
+    // Nền đen sâu
+    canvas.drawCircle(center, radius, Paint()..color = const Color(0xFF030308).withValues(alpha: 0.92));
+
+    final pulse = sin(animationValue * pi * 6);
+    final pulse2 = sin(animationValue * pi * 4 + pi / 3);
+
+    // Multi-color neon rings
+    final neonColors = [
+      const Color(0xFFFF003C), // Đỏ neon
+      const Color(0xFF00F0FF), // Cyan neon
+      const Color(0xFFBF00FF), // Tím neon
+      const Color(0xFF39FF14), // Xanh lá neon
+    ];
+
+    // Vòng neon nhịp đập
+    for (int c = 0; c < neonColors.length; c++) {
+      final ringPulse = sin(animationValue * pi * 6 + c * pi / 2);
+      final ringRadius = radius * (0.25 + c * 0.12) + ringPulse * radius * 0.06;
+      final ringPaint = Paint()
+        ..color = neonColors[c].withValues(alpha: 0.35 + ringPulse * 0.15)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5 + ringPulse;
+      if (quality != 'low') {
+        ringPaint.maskFilter = _getBlur(8 + ringPulse * 4);
+      }
+      canvas.drawCircle(center, ringRadius, ringPaint);
+    }
+
+    // Tia sáng xoay xung quanh tâm
+    final rayCount = quality == 'low' ? 8 : (quality == 'balanced' ? 16 : 24);
+    for (int i = 0; i < rayCount; i++) {
+      final angle = (i * 2 * pi / rayCount) + animationValue * pi * 1.5;
+      final colorIdx = i % neonColors.length;
+      final rayPulse = sin(animationValue * pi * 8 + i * 0.5);
+      final innerR = radius * 0.15;
+      final outerR = innerR + (12 + rayPulse * 15).clamp(0.0, 30.0);
+      final rayPaint = Paint()
+        ..strokeWidth = 1.5 + rayPulse * 0.5
+        ..strokeCap = StrokeCap.round
+        ..color = neonColors[colorIdx].withValues(alpha: (0.3 + rayPulse * 0.3).clamp(0.0, 1.0));
+      if (quality == 'high') {
+        rayPaint.maskFilter = _getBlur(3 + rayPulse * 2);
+      }
+      canvas.drawLine(
+        Offset(center.dx + cos(angle) * innerR, center.dy + sin(angle) * innerR),
+        Offset(center.dx + cos(angle) * outerR, center.dy + sin(angle) * outerR),
+        rayPaint,
+      );
+    }
+
+    // Hạt neon bay lơ lửng
+    final particleCount = quality == 'low' ? 6 : (quality == 'balanced' ? 12 : 20);
+    for (var i = 0; i < particleCount; i++) {
+      final angle = animationValue * pi * (0.5 + i * 0.15) + i * 2 * pi / particleCount;
+      final dist = radius * (0.3 + (i % 4) * 0.1) + sin(animationValue * pi * 3 + i) * 10;
+      final px = center.dx + cos(angle) * dist;
+      final py = center.dy + sin(angle) * dist;
+      final pSize = 1.5 + (i % 3);
+      final pColor = neonColors[i % neonColors.length];
+      final pOpacity = (0.4 + sin(animationValue * pi * 5 + i * 1.3) * 0.4).clamp(0.0, 1.0);
+      canvas.drawCircle(
+        Offset(px, py),
+        pSize,
+        Paint()..color = pColor.withValues(alpha: pOpacity),
+      );
+      if (quality != 'low' && pSize > 2) {
+        canvas.drawCircle(
+          Offset(px, py),
+          pSize * 2,
+          Paint()
+            ..color = pColor.withValues(alpha: pOpacity * 0.2)
+            ..maskFilter = _getBlur(5),
+        );
+      }
+    }
+
+    // Pulse glow ở giữa
+    if (quality != 'low') {
+      canvas.drawCircle(
+        center,
+        radius * 0.12 + pulse2 * 5,
+        Paint()
+          ..color = const Color(0xFFFF003C).withValues(alpha: 0.15 + pulse * 0.1)
+          ..maskFilter = _getBlur(15 + pulse * 8),
+      );
+    }
+  }
+
+  void _drawTapEffects(Canvas canvas, Offset center, double radius) {
+    if (tapEffects.isEmpty) return;
+    final now = DateTime.now();
+
+    for (final effect in tapEffects) {
+      final rawProgress = effect.getProgress(now);
+      if (rawProgress >= 1.0) continue;
+
+      // Easing curve (easeOutCubic) to make explosion pop fast then slow down
+      final progress = 1.0 - pow(1.0 - rawProgress, 3);
+      final origin = Offset(center.dx + effect.centerOffset.dx, center.dy + effect.centerOffset.dy);
+      final rng = Random(effect.seed);
+      final fadeOpacity = (1.0 - rawProgress);
+
+      if (styleKey == 'fireworks' || styleKey == 'meteor_shower' || styleKey == 'galaxy') {
+        // --- Starburst / Fireworks ---
+        final particleCount = quality == 'low' ? 8 : (quality == 'balanced' ? 14 : 20);
+        final paint = Paint()
+          ..strokeCap = StrokeCap.round
+          ..blendMode = BlendMode.plus;
+          
+        for (int i = 0; i < particleCount; i++) {
+          final angle = rng.nextDouble() * pi * 2;
+          final speed = 40.0 + rng.nextDouble() * 100.0;
+          final pDist = progress * speed;
+          
+          final px = origin.dx + cos(angle) * pDist;
+          final py = origin.dy + sin(angle) * pDist + (progress * progress * 20.0); // Slight gravity
+          
+          final trailLength = (speed * 0.15 * fadeOpacity).clamp(2.0, 15.0);
+          final size = 1.5 + rng.nextDouble() * 2.5;
+          
+          paint.color = (rng.nextBool() ? const Color(0xFFFFD54F) : const Color(0xFF00F5FF))
+              .withValues(alpha: fadeOpacity * (0.6 + rng.nextDouble() * 0.4));
+          paint.strokeWidth = size * fadeOpacity;
+          
+          canvas.drawLine(
+            Offset(px - cos(angle) * trailLength, py - sin(angle) * trailLength),
+            Offset(px, py),
+            paint,
+          );
+        }
+      } else if (styleKey == 'candy' || styleKey == 'hyper') {
+        // --- Confetti ---
+        final colors = [const Color(0xFFFF6FB7), const Color(0xFF53D8FF), const Color(0xFFFFD54F), const Color(0xFFB388FF), const Color(0xFF69F0AE)];
+        final particleCount = quality == 'low' ? 6 : (quality == 'balanced' ? 10 : 15);
+        final paint = Paint()..style = PaintingStyle.fill;
+        for (int i = 0; i < particleCount; i++) {
+          final angle = rng.nextDouble() * pi * 2;
+          final speed = 30.0 + rng.nextDouble() * 60.0;
+          final pDist = progress * speed;
+          final gravity = progress * progress * 50.0; 
+          
+          final px = origin.dx + cos(angle) * pDist;
+          final py = origin.dy + sin(angle) * pDist + gravity;
+          
+          final size = 3.0 + rng.nextDouble() * 5.0;
+          paint.color = colors[rng.nextInt(colors.length)].withValues(alpha: fadeOpacity);
+          canvas.drawCircle(Offset(px, py), size * fadeOpacity, paint);
+        }
+      } else if (styleKey == 'cherry_blossom') {
+        // --- Petal Burst ---
+        final colors = [const Color(0xFFFFB7C5), const Color(0xFFF8A4B8), const Color(0xFFFFCDD2), const Color(0xFFFFF0F5)];
+        final particleCount = quality == 'low' ? 4 : (quality == 'balanced' ? 6 : 9);
+        final paint = Paint()..style = PaintingStyle.fill;
+        for (int i = 0; i < particleCount; i++) {
+          final angle = rng.nextDouble() * pi * 2;
+          final speed = 30.0 + rng.nextDouble() * 50.0;
+          final pDist = progress * speed;
+          
+          final drift = sin(progress * pi * 3 + i) * 15.0; // Swaying motion
+          final px = origin.dx + cos(angle) * pDist + drift;
+          final py = origin.dy + sin(angle) * pDist + progress * 25.0;
+          
+          final size = 4.0 + rng.nextDouble() * 4.0;
+          paint.color = colors[rng.nextInt(colors.length)].withValues(alpha: fadeOpacity);
+          
+          canvas.save();
+          canvas.translate(px, py);
+          canvas.rotate(progress * pi * 5 * (rng.nextBool() ? 1 : -1) + angle);
+          final petal = Path();
+          petal.moveTo(0, 0);
+          petal.quadraticBezierTo(size * 0.5, -size * 0.6, 0, -size);
+          petal.quadraticBezierTo(-size * 0.5, -size * 0.6, 0, 0);
+          canvas.drawPath(petal, paint);
+          canvas.restore();
+        }
+      } else if (styleKey == 'floating_hearts' || styleKey == 'glow') {
+        // --- Heart / Glow Burst ---
+        final particleCount = quality == 'low' ? 4 : (quality == 'balanced' ? 6 : 10);
+        final paint = Paint()..style = PaintingStyle.fill;
+        if (styleKey == 'glow') {
+          paint.blendMode = BlendMode.plus;
+        }
+        for (int i = 0; i < particleCount; i++) {
+          final angle = rng.nextDouble() * pi * 2;
+          final speed = 20.0 + rng.nextDouble() * 40.0;
+          final pDist = progress * speed;
+          
+          final px = origin.dx + cos(angle) * pDist;
+          final py = origin.dy + sin(angle) * pDist - progress * 30.0; // Float up
+          
+          final size = 3.0 + rng.nextDouble() * 6.0;
+          paint.color = const Color(0xFFFF4F93).withValues(alpha: fadeOpacity * 0.85);
+          
+          final path = Path();
+          path.moveTo(px, py + size / 4);
+          path.cubicTo(px - size, py - size * 0.7, px - size * 0.5, py - size, px, py - size / 4);
+          path.cubicTo(px + size * 0.5, py - size, px + size, py - size * 0.7, px, py + size / 4);
+          canvas.drawPath(path, paint);
+        }
+      } else if (styleKey == 'lava') {
+        // --- Lava Bubbles ---
+        final colors = [const Color(0xFFFF1744), const Color(0xFFFF9100), const Color(0xFFFFEA00)];
+        final particleCount = quality == 'low' ? 4 : (quality == 'balanced' ? 6 : 10);
+        final paint = Paint()
+          ..style = PaintingStyle.fill
+          ..blendMode = BlendMode.screen;
+        for (int i = 0; i < particleCount; i++) {
+          final angle = rng.nextDouble() * pi * 2;
+          final speed = 15.0 + rng.nextDouble() * 35.0;
+          final pDist = progress * speed;
+          
+          final px = origin.dx + cos(angle) * pDist;
+          final py = origin.dy + sin(angle) * pDist - progress * 15.0;
+          
+          final size = 4.0 + rng.nextDouble() * 7.0;
+          paint.color = colors[rng.nextInt(colors.length)].withValues(alpha: fadeOpacity);
+          canvas.drawCircle(Offset(px, py), size * fadeOpacity, paint);
+        }
+      } else if (styleKey == 'neon' || styleKey == 'neon_pulse' || styleKey == 'aurora') {
+        // --- Neon Pulse ---
+        final ringColor = styleKey == 'aurora' ? const Color(0xFF00FFEA) : const Color(0xFFFF003C);
+        final paint = Paint()
+          ..color = ringColor.withValues(alpha: fadeOpacity * 0.8)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3.0 * fadeOpacity
+          ..blendMode = BlendMode.plus;
+          
+        canvas.drawCircle(origin, progress * 55.0, paint);
+        
+        final particleCount = quality == 'low' ? 4 : 8;
+        for (int i = 0; i < particleCount; i++) {
+          final angle = rng.nextDouble() * pi * 2;
+          final px = origin.dx + cos(angle) * progress * 65.0;
+          final py = origin.dy + sin(angle) * progress * 65.0;
+          canvas.drawCircle(
+            Offset(px, py), 
+            2.5 * fadeOpacity, 
+            Paint()..color = Colors.white.withValues(alpha: fadeOpacity)..blendMode = BlendMode.plus
+          );
+        }
+      } else {
+        // --- Default Ripple (Plain/Glass/Deep Ocean/Golden Sunset) ---
+        final maxR = radius * 0.6;
+        final currentRadius = maxR * progress;
+        final baseColor = (styleKey == 'deep_ocean') ? const Color(0xFF90E0EF) :
+                          (styleKey == 'golden_sunset') ? const Color(0xFFFFD54F) : const Color(0xFFFFEBF2);
+
+        final ripplePaint = Paint()
+          ..color = baseColor.withValues(alpha: fadeOpacity * 0.6)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.0 + fadeOpacity * 3.0;
+
+        canvas.drawCircle(origin, currentRadius, ripplePaint);
+
+        if (progress > 0.2) {
+          final progress2 = (progress - 0.2) / 0.8;
+          final opacity2 = (1.0 - rawProgress) * 0.4;
+          final ripplePaint2 = Paint()
+            ..color = baseColor.withValues(alpha: opacity2)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.0 + fadeOpacity * 2.0;
+
+          canvas.drawCircle(origin, maxR * 0.75 * progress2, ripplePaint2);
+        }
       }
     }
   }
@@ -1406,20 +2010,21 @@ class _WavePainter extends CustomPainter {
         oldDelegate.styleKey != styleKey ||
         oldDelegate.quality != quality ||
         oldDelegate.shakeIntensity != shakeIntensity ||
-        oldDelegate.ripples.length != ripples.length;
+        oldDelegate.tapEffects.length != tapEffects.length;
   }
 }
 
-class _RippleEffect {
+class _TapInteractionEffect {
   final Offset centerOffset;
   final DateTime startTime;
   final Duration duration;
+  final int seed;
 
-  _RippleEffect({
+  _TapInteractionEffect({
     required this.centerOffset,
     required this.startTime,
     required this.duration,
-  });
+  }) : seed = startTime.microsecondsSinceEpoch;
 
   double getProgress(DateTime now) {
     final elapsed = now.difference(startTime).inMilliseconds;

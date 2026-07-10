@@ -409,14 +409,26 @@ mixin _SoulBlockStrategyLogic {
       chosenTemplates = _pickBatchWinnerPool(rankedBatches, progress);
     }
 
-    return chosenTemplates.map(_spawnPieceFromTemplate).toList(growable: false);
+    final bool shouldRescue = boardStress >= 0.80;
+    bool gaveBomb = false;
+    return chosenTemplates.map((t) {
+      bool makeBomb = false;
+      if (!gaveBomb && shouldRescue && _random.nextInt(100) < 50) {
+        makeBomb = true;
+        gaveBomb = true;
+      }
+      return _spawnPieceFromTemplate(t, forceBomb: makeBomb);
+    }).toList(growable: false);
   }
 
-  _SoulPieceOption _spawnPieceFromTemplate(_SoulPieceTemplate template) {
+  _SoulPieceOption _spawnPieceFromTemplate(
+    _SoulPieceTemplate template, {
+    bool forceBomb = false,
+  }) {
     _pieceSequence += 1;
     final int roll = _random.nextInt(100);
-    final bool isGold = roll < 10; // 10%
-    final bool isBomb = !isGold && (roll >= 10 && roll < 15); // 5%
+    final bool isGold = roll < 12; // 12% (buffed from 10)
+    final bool isBomb = forceBomb || (!isGold && (roll >= 12 && roll < 20)); // 8% or forced
     return _SoulPieceOption(
       id: _pieceSequence,
       template: template,

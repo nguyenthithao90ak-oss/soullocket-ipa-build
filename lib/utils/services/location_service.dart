@@ -56,12 +56,7 @@ class LocationService {
         onTimeout: () => LocationPermission.denied,
       );
 
-      if (permission == LocationPermission.deniedForever) {
-        await prefs.setBool('il_gps_prompted', true);
-        return false;
-      }
-
-      if (permission == LocationPermission.denied) {
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
         if (context == null || !context.mounted) {
           return false;
         }

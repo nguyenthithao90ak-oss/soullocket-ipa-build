@@ -557,7 +557,12 @@ abstract final class _L10nStaticData {
     'countdown_aurora': 'Cực quang',
     'countdown_crystal': 'Pha lê',
     'countdown_fireworks': 'Pháo hoa',
-    'countdown_lava': 'Dung nham',
+    'countdown_lava': 'Dung nham cháy',
+    'countdown_cherry_blossom': 'Mưa anh đào',
+    'countdown_meteor_shower': 'Sao băng',
+    'countdown_deep_ocean': 'Bọt biển',
+    'countdown_golden_sunset': 'Hoàng hôn',
+    'countdown_neon_pulse': 'Nhịp đập',
     'countdown_unlock_ad':
         'Nhóm giao diện Quảng cáo chỉ cần xem 1 quảng cáo để mở toàn bộ trong 7 ngày.',
     'countdown_unlock_pro':
@@ -1179,7 +1184,7 @@ abstract final class _L10nStaticData {
     'advanced': 'Advanced Settings',
     'continue_action': 'Continue',
     'settings_private_login_title': 'Private sign-in info',
-    'settings_private_login_subtitle':
+    'settings_private_subtitle':
         'Use your Google account or Email for secure sign-in.',
     'settings_email_plain': 'Email',
     'settings_email_unverified': 'Not verified',
@@ -1862,7 +1867,12 @@ abstract final class _L10nStaticData {
     'countdown_aurora': 'Aurora',
     'countdown_crystal': 'Crystal',
     'countdown_fireworks': 'Fireworks',
-    'countdown_lava': 'Lava Burn',
+    'countdown_lava': 'Burning Lava',
+    'countdown_cherry_blossom': 'Cherry Blossom',
+    'countdown_meteor_shower': 'Meteor Shower',
+    'countdown_deep_ocean': 'Deep Ocean',
+    'countdown_golden_sunset': 'Golden Sunset',
+    'countdown_neon_pulse': 'Neon Pulse',
     'countdown_unlock_ad':
         'Ad styles need only one rewarded ad to unlock the whole group for 7 days.',
     'countdown_unlock_pro':

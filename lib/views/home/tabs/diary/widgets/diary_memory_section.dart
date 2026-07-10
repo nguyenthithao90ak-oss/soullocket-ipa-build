@@ -27,6 +27,7 @@ typedef DiaryPrepareMemoryFeedCallback = PreparedDiaryMemoryFeed Function({
 });
 
 class DiaryMemorySection extends StatefulWidget {
+  final Widget? header;
   final String? houseId;
   final Future<ConnectivityResult>? connectivityFuture;
   final Stream<DatabaseEvent>? memoriesStream;
@@ -58,6 +59,7 @@ class DiaryMemorySection extends StatefulWidget {
 
   const DiaryMemorySection({
     super.key,
+    this.header,
     required this.houseId,
     required this.connectivityFuture,
     required this.memoriesStream,
@@ -515,6 +517,11 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                           controller: _scrollController,
                           physics: const BouncingScrollPhysics(),
                           slivers: [
+                            if (widget.header != null)
+                              SliverSafeArea(
+                                bottom: false,
+                                sliver: SliverToBoxAdapter(child: widget.header!),
+                              ),
                             SliverToBoxAdapter(
                               child: _DiaryMemoryHeroCard(
                                 totalPhotos: filteredCount,

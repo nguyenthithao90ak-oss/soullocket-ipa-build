@@ -1625,6 +1625,11 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     'crystal',
     'fireworks',
     'lava',
+    'cherry_blossom',
+    'meteor_shower',
+    'deep_ocean',
+    'golden_sunset',
+    'neon_pulse',
   ];
 
   /// Trả về Set các style đã được mở khóa riêng lẻ qua xem quảng cáo.
@@ -1690,6 +1695,11 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         'crystal',
         'fireworks',
         'lava',
+        'cherry_blossom',
+        'meteor_shower',
+        'deep_ocean',
+        'golden_sunset',
+        'neon_pulse',
       };
       if (!allowedCountdownStyleKeys.contains(resolvedCountdownStyleKey)) {
         if (mounted) {
@@ -1898,6 +1908,41 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         value: 'lava',
         icon: Icons.whatshot_rounded,
         accent: const Color(0xFFE53935),
+        isPremium: true,
+      ),
+      _CountdownQuickOption(
+        label: context.tr('countdown_cherry_blossom'),
+        value: 'cherry_blossom',
+        icon: Icons.filter_vintage_rounded,
+        accent: const Color(0xFFFF8DA1),
+        isPremium: true,
+      ),
+      _CountdownQuickOption(
+        label: context.tr('countdown_meteor_shower'),
+        value: 'meteor_shower',
+        icon: Icons.auto_awesome_rounded,
+        accent: const Color(0xFF818CF8),
+        isPremium: true,
+      ),
+      _CountdownQuickOption(
+        label: context.tr('countdown_deep_ocean'),
+        value: 'deep_ocean',
+        icon: Icons.waves_rounded,
+        accent: const Color(0xFF00B4DB),
+        isPremium: true,
+      ),
+      _CountdownQuickOption(
+        label: context.tr('countdown_golden_sunset'),
+        value: 'golden_sunset',
+        icon: Icons.wb_twilight_rounded,
+        accent: const Color(0xFFFF9800),
+        isPremium: true,
+      ),
+      _CountdownQuickOption(
+        label: context.tr('countdown_neon_pulse'),
+        value: 'neon_pulse',
+        icon: Icons.graphic_eq_rounded,
+        accent: const Color(0xFFFF003C),
         isPremium: true,
       ),
     ];
@@ -2469,6 +2514,7 @@ class _CountdownQuickCustomizeSheetContentState
   }) {
     final colors = [
       '', // Mặc định
+      '#MULTI', // Dải màu đa sắc
       '#FFFFFF', // Trắng
       '#000000', // Đen
       '#F44336', // Đỏ
@@ -2555,7 +2601,8 @@ class _CountdownQuickCustomizeSheetContentState
               children: colors.map((hex) {
                 final isSelected = selectedColorHex == hex;
                 final isDefault = hex.isEmpty;
-                final color = isDefault
+                final isMulti = hex == '#MULTI';
+                final color = isDefault || isMulti
                     ? Colors.transparent
                     : Color(int.parse(hex.replaceFirst('#', '0xFF')));
 
@@ -2571,6 +2618,9 @@ class _CountdownQuickCustomizeSheetContentState
                     decoration: BoxDecoration(
                       color: color,
                       shape: BoxShape.circle,
+                      gradient: isMulti ? const SweepGradient(
+                        colors: [Color(0xFF00C6FF), Color(0xFF9D50BB), Color(0xFFF44336), Color(0xFF00C6FF)],
+                      ) : null,
                       border: Border.all(
                         color: isSelected
                             ? const Color(0xFFD81B60)
@@ -2584,13 +2634,19 @@ class _CountdownQuickCustomizeSheetContentState
                             color: isSelected
                                 ? const Color(0xFFD81B60)
                                 : const Color(0xFF8E6F7E))
-                        : (isSelected
-                            ? Icon(Icons.check_rounded,
-                                size: 20,
-                                color: color.computeLuminance() > 0.5
-                                    ? Colors.black
-                                    : Colors.white)
-                            : null),
+                        : (isMulti 
+                            ? (isSelected
+                                ? const Icon(Icons.check_rounded,
+                                    size: 20,
+                                    color: Colors.white)
+                                : null)
+                            : (isSelected
+                                ? Icon(Icons.check_rounded,
+                                    size: 20,
+                                    color: color.computeLuminance() > 0.5
+                                        ? Colors.black
+                                        : Colors.white)
+                                : null)),
                   ),
                 );
               }).toList(),

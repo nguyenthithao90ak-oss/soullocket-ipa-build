@@ -31,6 +31,7 @@ class _DiaryTabShell extends StatelessWidget {
     // Build memory section once and cache it
     final memorySection = DiaryMemorySection(
       key: const ValueKey('diary_memory_section'),
+      header: header,
       houseId: state._houseId,
       connectivityFuture: state._connectivityFuture,
       memoriesStream: state._getMemoriesStream(),

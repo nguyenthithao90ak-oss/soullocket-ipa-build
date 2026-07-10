@@ -103,10 +103,6 @@ class PermissionHelper {
       return true;
     }
 
-    if (status == LocationPermission.deniedForever) {
-      return false;
-    }
-
     if (!context.mounted) return false;
     final shouldRequest = await _showDisclosureDialog(context, title, disclosure);
     if (shouldRequest != true) {
@@ -129,9 +125,6 @@ class PermissionHelper {
     final status = await Geolocator.checkPermission();
     if (status == LocationPermission.always) {
       return true;
-    }
-    if (status == LocationPermission.deniedForever) {
-      return false;
     }
     if (!context.mounted) return false;
 

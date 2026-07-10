@@ -1752,7 +1752,6 @@ class _SoulBlockGameState extends State<SoulBlockGame>
       _isBusy = false;
     });
 
-    /* 
     if (clearedNow > 0) {
       _triggerExplosionEffect(
         clearedCount: clearedNow,
@@ -1767,8 +1766,14 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         clearedCols: <int>[col],
         subtle: true,
       );
+    } else if (bombClearedCells.isNotEmpty) {
+      _triggerExplosionEffect(
+        clearedCount: 2,
+        clearedRows: <int>[row],
+        clearedCols: <int>[col],
+        subtle: false,
+      );
     }
-    */
     final bool shouldTriggerBurst = (clearedNow >= 2) ||
         (clearedNow == 1 && nextStreak.isEven && nextStreak >= 2);
     if (clearedNow > 0 && shouldTriggerBurst) {

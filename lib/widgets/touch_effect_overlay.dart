@@ -36,9 +36,9 @@ class _TouchEffectOverlayState extends State<TouchEffectOverlay>
       final p = _particles[i];
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += 0.12; // gravity
+      p.vy += 0.08; // Softer gravity
       p.rotation += p.rotationSpeed;
-      p.life -= kIsWeb ? 0.035 : 0.03;
+      p.life -= kIsWeb ? 0.025 : 0.018; // Longer life
       if (p.life <= 0) {
         _particles.removeAt(i);
       }
@@ -63,7 +63,7 @@ class _TouchEffectOverlayState extends State<TouchEffectOverlay>
   void _addParticles(Offset position, {int? countOverride}) {
     if (!mounted) return;
     final int count = countOverride ??
-        (kIsWeb ? 2 + _random.nextInt(2) : 2 + _random.nextInt(2));
+        (kIsWeb ? 3 + _random.nextInt(3) : 4 + _random.nextInt(4));
 
     _ensureTickerRunning();
     for (int i = 0; i < count; i++) {
@@ -79,12 +79,12 @@ class _TouchEffectOverlayState extends State<TouchEffectOverlay>
           size: (kIsWeb ? 6.0 : 7.0) + _random.nextDouble() * 8.0,
           color: _randomColor(),
           rotation: _random.nextDouble() * math.pi,
-          rotationSpeed: (_random.nextDouble() - 0.5) * 0.25,
-          type: _random.nextInt(3), // 0: star, 1: heart, 2: circle
+          rotationSpeed: (_random.nextDouble() - 0.5) * 0.15,
+          type: _random.nextInt(4), // 0: star, 1: heart, 2: circle, 3: diamond
         ),
       );
     }
-    const maxParticles = kIsWeb ? 20 : 32;
+    const maxParticles = kIsWeb ? 30 : 60;
     if (_particles.length > maxParticles) {
       _particles.removeRange(0, _particles.length - maxParticles);
     }
@@ -97,6 +97,8 @@ class _TouchEffectOverlayState extends State<TouchEffectOverlay>
       Color(0xFFFFD54F), // Yellow/Gold
       Color(0xFF9EE7FF), // Light Blue
       Color(0xFFB388FF), // Light Purple
+      Color(0xFF00E5FF), // Cyan
+      Color(0xFF69F0AE), // Mint Green
       Color(0xFFFFFFFF), // White
     ];
     return colors[_random.nextInt(colors.length)];
@@ -185,6 +187,7 @@ class _TouchEffectPainter extends CustomPainter {
   static final Path _baseStarPath = _createBaseStarPath();
   static final Path _baseStarCorePath = _createBaseStarCorePath();
   static final Path _baseHeartPath = _createBaseHeartPath();
+  static final Path _baseDiamondPath = _createBaseDiamondPath();
 
   static Path _createBaseStarPath() {
     final path = Path();
@@ -220,6 +223,17 @@ class _TouchEffectPainter extends CustomPainter {
     return path;
   }
 
+  static Path _createBaseDiamondPath() {
+    final path = Path();
+    const double size = 0.8;
+    path.moveTo(0, -size);
+    path.lineTo(size * 0.7, 0);
+    path.lineTo(0, size);
+    path.lineTo(-size * 0.7, 0);
+    path.close();
+    return path;
+  }
+
   _TouchEffectPainter({required this.particles, required this.useGlow});
 
   @override
@@ -241,40 +255,69 @@ class _TouchEffectPainter extends CustomPainter {
           p.size * Curves.easeOutCubic.transform(p.life.clamp(0.0, 1.0));
 
       if (p.type == 0) {
-        _drawStar(canvas, paint, currentSize);
+        _drawStar(canvas, paint, currentSize, useGlow);
       } else if (p.type == 1) {
-        _drawHeart(canvas, paint, currentSize);
-      } else {
-        canvas.drawCircle(Offset.zero, currentSize * 0.4, paint);
+        _drawHeart(canvas, paint, currentSize, useGlow);
+      } else if (p.type == 2) {
+        if (useGlow) {
+          paint.maskFilter = MaskFilter.blur(BlurStyle.normal, currentSize * 0.4);
+          canvas.drawCircle(Offset.zero, currentSize * 0.4, paint);
+        }
         paint.maskFilter = null;
+        canvas.drawCircle(Offset.zero, currentSize * 0.35, paint);
         paint.color = Colors.white.withValues(alpha: p.life.clamp(0.0, 1.0));
         canvas.drawCircle(Offset.zero, currentSize * 0.15, paint);
+      } else {
+        _drawDiamond(canvas, paint, currentSize, useGlow);
       }
 
       canvas.restore();
     }
   }
 
-  void _drawStar(Canvas canvas, Paint paint, double radius) {
+  void _drawStar(Canvas canvas, Paint paint, double radius, bool useGlow) {
     canvas.save();
     canvas.scale(radius, radius);
+    if (useGlow) {
+      paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.4);
+      canvas.drawPath(_baseStarPath, paint);
+    }
+    paint.maskFilter = null;
     canvas.drawPath(_baseStarPath, paint);
 
-    paint.maskFilter = null;
     paint.color = Colors.white.withValues(alpha: paint.color.a);
-
     canvas.drawPath(_baseStarCorePath, paint);
     canvas.restore();
   }
 
-  void _drawHeart(Canvas canvas, Paint paint, double size) {
+  void _drawHeart(Canvas canvas, Paint paint, double size, bool useGlow) {
     canvas.save();
     canvas.scale(size, size);
+    if (useGlow) {
+      paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.4);
+      canvas.drawPath(_baseHeartPath, paint);
+    }
+    paint.maskFilter = null;
     canvas.drawPath(_baseHeartPath, paint);
 
-    paint.maskFilter = null;
     paint.color = Colors.white.withValues(alpha: paint.color.a * 0.8);
     canvas.drawPath(_baseHeartPath, paint);
+    canvas.restore();
+  }
+
+  void _drawDiamond(Canvas canvas, Paint paint, double size, bool useGlow) {
+    canvas.save();
+    canvas.scale(size, size);
+    if (useGlow) {
+      paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.4);
+      canvas.drawPath(_baseDiamondPath, paint);
+    }
+    paint.maskFilter = null;
+    canvas.drawPath(_baseDiamondPath, paint);
+
+    paint.color = Colors.white.withValues(alpha: paint.color.a * 0.9);
+    canvas.scale(0.5, 0.5);
+    canvas.drawPath(_baseDiamondPath, paint);
     canvas.restore();
   }
 

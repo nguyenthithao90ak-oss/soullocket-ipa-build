@@ -112,12 +112,10 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                                             child: SizedBox(
                                               width: cellExtent,
                                               height: cellExtent,
-                                              child: RepaintBoundary(
-                                                child: _buildBoardCell(
-                                                  row: row,
-                                                  col: col,
-                                                  cellExtent: cellExtent,
-                                                ),
+                                              child: _buildBoardCell(
+                                                row: row,
+                                                col: col,
+                                                cellExtent: cellExtent,
                                               ),
                                             ),
                                           );
@@ -393,22 +391,20 @@ extension _SoulBlockBoard on _SoulBlockGameState {
           _dragPieceRenderCache ?? _pieceRenderCache(draggingPiece);
       final int localX = col - _previewCol;
       final int localY = row - _previewRow;
-      return RepaintBoundary(
-        child: _buildGlossyBlock(
-          width: cellExtent,
-          height: cellExtent,
-          tone: renderCache.tone,
-          isPreview: true,
-          isFloating: true,
-          connectTop: _templateKeyContains(
-              renderCache.templateCells, localX, localY - 1),
-          connectRight: _templateKeyContains(
-              renderCache.templateCells, localX + 1, localY),
-          connectBottom: _templateKeyContains(
-              renderCache.templateCells, localX, localY + 1),
-          connectLeft: _templateKeyContains(
-              renderCache.templateCells, localX - 1, localY),
-        ),
+      return _buildGlossyBlock(
+        width: cellExtent,
+        height: cellExtent,
+        tone: renderCache.tone,
+        isPreview: true,
+        isFloating: true,
+        connectTop: _templateKeyContains(
+            renderCache.templateCells, localX, localY - 1),
+        connectRight: _templateKeyContains(
+            renderCache.templateCells, localX + 1, localY),
+        connectBottom: _templateKeyContains(
+            renderCache.templateCells, localX, localY + 1),
+        connectLeft: _templateKeyContains(
+            renderCache.templateCells, localX - 1, localY),
       );
     }
 

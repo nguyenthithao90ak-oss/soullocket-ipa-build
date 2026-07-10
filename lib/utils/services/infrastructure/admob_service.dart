@@ -531,6 +531,7 @@ class AdMobService {
 
   Future<bool> showAppOpenAdIfEligible() async {
     if (kIsWeb) return false;
+    if (kDebugMode) return false;
     if (AdSuppressionGuard.instance.isSuppressed) {
       debugPrint('AdMobService: App Open ad suppressed by AdSuppressionGuard.');
       return false;
@@ -722,6 +723,10 @@ class AdMobService {
     Duration loadTimeout = const Duration(seconds: 5),
   }) async {
     if (kIsWeb) return false;
+    if (kDebugMode) {
+      debugPrint('AdMobService: auto-granted reward in debug mode.');
+      return true;
+    }
     if (await isProUser()) {
       debugPrint('AdMobService: rewarded skipped because user is Pro.');
       return false;
@@ -824,6 +829,10 @@ class AdMobService {
 
   Future<bool> showSoulGameRewardedAd() async {
     if (kIsWeb) return false;
+    if (kDebugMode) {
+      debugPrint('AdMobService: auto-granted soul game reward in debug mode.');
+      return true;
+    }
     if (await isProUser()) return false;
 
     final nowMs = DateTime.now().millisecondsSinceEpoch;
@@ -902,6 +911,7 @@ class AdMobService {
   // ─── BANNER AD ───────────────────────────────────────────────
   Future<BannerAd?> createBannerAd({required Function(Ad) onAdLoaded}) async {
     if (kIsWeb) return null;
+    if (kDebugMode) return null;
     await initialize();
     if (!_sdkInitialized) {
       debugPrint(
@@ -995,6 +1005,7 @@ class AdMobService {
 
   Future<bool> showInterstitialAd() async {
     if (kIsWeb) return false;
+    if (kDebugMode) return false;
     if (await isProUser()) return false;
     if (AdSuppressionGuard.instance.isSuppressed) {
       debugPrint(

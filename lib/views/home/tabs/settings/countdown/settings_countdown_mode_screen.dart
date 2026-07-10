@@ -73,15 +73,28 @@ class _CountdownModeIndependentScreenState
     MapEntry(L10nService().translate('countdown_crystal'), 'crystal'),
     MapEntry(L10nService().translate('countdown_fireworks'), 'fireworks'),
     MapEntry(L10nService().translate('countdown_lava'), 'lava'),
+    MapEntry(L10nService().translate('countdown_cherry_blossom'), 'cherry_blossom'),
+    MapEntry(L10nService().translate('countdown_meteor_shower'), 'meteor_shower'),
+    MapEntry(L10nService().translate('countdown_deep_ocean'), 'deep_ocean'),
+    MapEntry(L10nService().translate('countdown_golden_sunset'), 'golden_sunset'),
+    MapEntry(L10nService().translate('countdown_neon_pulse'), 'neon_pulse'),
   ];
 
   static const Set<String> _premiumCountdownStyleKeys = <String>{
     'floating_hearts',
+    'glass',
+    'glow',
+    'candy',
     'galaxy',
     'aurora',
     'crystal',
     'fireworks',
     'lava',
+    'cherry_blossom',
+    'meteor_shower',
+    'deep_ocean',
+    'golden_sunset',
+    'neon_pulse',
   };
 
   static bool _isPremiumCountdownStyleKey(String styleKey) {

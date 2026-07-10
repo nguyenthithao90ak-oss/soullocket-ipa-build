@@ -606,6 +606,201 @@ class _CountdownModeStyleData {
             ),
           ],
         );
+      case 'cherry_blossom':
+        return _CountdownModeStyleData(
+          outerColor: null,
+          outerGradient: const LinearGradient(
+            colors: [Color(0xFFFFEBF5), Color(0xFFFFD4E5), Color(0xFFFFB6C1)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          outerBorder: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 3.5),
+          shadows: [
+            BoxShadow(
+              color: const Color(0xFFFF69B4).withValues(alpha: 0.3),
+              blurRadius: 40,
+              spreadRadius: 4,
+              offset: const Offset(0, 12),
+            ),
+          ],
+          innerColor: Colors.white.withValues(alpha: 0.2),
+          innerGradient: LinearGradient(
+            colors: [
+              Colors.white.withValues(alpha: 0.3),
+              Colors.white.withValues(alpha: 0.1),
+            ],
+          ),
+          innerBorder: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.2),
+          numberGradient: const [Color(0xFFE91E63), Color(0xFFFF8DA1)],
+          topColor: const Color(0xFFAD1457),
+          bottomColor: const Color(0xFFF48FB1),
+          labelShadows: [
+            Shadow(color: Colors.white.withValues(alpha: 0.8), blurRadius: 6),
+          ],
+          numberShadows: [
+            Shadow(
+              color: const Color(0xFFE91E63).withValues(alpha: 0.25),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        );
+      case 'meteor_shower':
+        return _CountdownModeStyleData(
+          outerColor: const Color(0xFF0F172A),
+          outerGradient: const LinearGradient(
+            colors: [Color(0xFF050B14), Color(0xFF1E293B)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          outerBorder: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 2.5),
+          shadows: [
+            BoxShadow(
+              color: const Color(0xFF38BDF8).withValues(alpha: 0.35),
+              blurRadius: 45,
+              spreadRadius: 5,
+              offset: const Offset(0, 15),
+            ),
+          ],
+          innerColor: Colors.black.withValues(alpha: 0.15),
+          innerGradient: LinearGradient(
+            colors: [
+              Colors.black.withValues(alpha: 0.2),
+              Colors.black.withValues(alpha: 0.05),
+            ],
+          ),
+          innerBorder: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1),
+          numberGradient: const [Color(0xFFE0F2FE), Color(0xFF38BDF8), Color(0xFF818CF8)],
+          topColor: Colors.white,
+          bottomColor: const Color(0xFFBAE6FD),
+          labelShadows: [
+            Shadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 8),
+          ],
+          numberShadows: [
+            Shadow(
+              color: const Color(0xFF38BDF8).withValues(alpha: 0.4),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        );
+      case 'deep_ocean':
+        return _CountdownModeStyleData(
+          outerColor: null,
+          outerGradient: const LinearGradient(
+            colors: [Color(0xFF00B4DB), Color(0xFF0083B0)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          outerBorder: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 3),
+          shadows: [
+            BoxShadow(
+              color: const Color(0xFF0083B0).withValues(alpha: 0.4),
+              blurRadius: 50,
+              spreadRadius: 6,
+              offset: const Offset(0, 16),
+            ),
+          ],
+          innerColor: Colors.white.withValues(alpha: 0.1),
+          innerGradient: LinearGradient(
+            colors: [
+              Colors.white.withValues(alpha: 0.15),
+              Colors.white.withValues(alpha: 0.05),
+            ],
+          ),
+          innerBorder: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1),
+          numberGradient: const [Colors.white, Color(0xFFE0F7FA)],
+          topColor: Colors.white,
+          bottomColor: const Color(0xFFB2EBF2),
+          labelShadows: [
+            Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 8),
+          ],
+          numberShadows: [
+            Shadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        );
+      case 'golden_sunset':
+        return _CountdownModeStyleData(
+          outerColor: null,
+          outerGradient: const LinearGradient(
+            colors: [Color(0xFFFF7E5F), Color(0xFFFEB47B)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          outerBorder: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 3.5),
+          shadows: [
+            BoxShadow(
+              color: const Color(0xFFFF7E5F).withValues(alpha: 0.45),
+              blurRadius: 48,
+              spreadRadius: 5,
+              offset: const Offset(0, 14),
+            ),
+          ],
+          innerColor: Colors.white.withValues(alpha: 0.15),
+          innerGradient: LinearGradient(
+            colors: [
+              Colors.white.withValues(alpha: 0.2),
+              Colors.white.withValues(alpha: 0.05),
+            ],
+          ),
+          innerBorder: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 1.5),
+          numberGradient: const [Color(0xFFFFF3E0), Color(0xFFFFCC80)],
+          topColor: Colors.white,
+          bottomColor: const Color(0xFFFFE0B2),
+          labelShadows: [
+            Shadow(color: const Color(0xFFD84315).withValues(alpha: 0.5), blurRadius: 10),
+          ],
+          numberShadows: [
+            Shadow(
+              color: const Color(0xFFD84315).withValues(alpha: 0.4),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        );
+      case 'neon_pulse':
+        return _CountdownModeStyleData(
+          outerColor: const Color(0xFF050505),
+          outerGradient: const LinearGradient(
+            colors: [Color(0xFF0F0F0F), Color(0xFF000000)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          outerBorder: Border.all(color: const Color(0xFFFF003C).withValues(alpha: 0.6), width: 4),
+          shadows: [
+            BoxShadow(
+              color: const Color(0xFFFF003C).withValues(alpha: 0.55),
+              blurRadius: 60,
+              spreadRadius: 8,
+              offset: const Offset(0, 18),
+            ),
+          ],
+          innerColor: Colors.black.withValues(alpha: 0.3),
+          innerGradient: LinearGradient(
+            colors: [
+              Colors.black.withValues(alpha: 0.4),
+              Colors.black.withValues(alpha: 0.1),
+            ],
+          ),
+          innerBorder: Border.all(color: const Color(0xFFFF003C).withValues(alpha: 0.4), width: 1.5),
+          numberGradient: const [Color(0xFFFF8AA5), Color(0xFFFF003C)],
+          topColor: Colors.white,
+          bottomColor: const Color(0xFFFFB3C6),
+          labelShadows: [
+            Shadow(color: Colors.black.withValues(alpha: 0.8), blurRadius: 12),
+          ],
+          numberShadows: [
+            Shadow(
+              color: const Color(0xFFFF003C).withValues(alpha: 0.6),
+              blurRadius: 25,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        );
       case 'off':
       default:
         return _CountdownModeStyleData(

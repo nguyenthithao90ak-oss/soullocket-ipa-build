@@ -2,6 +2,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -979,6 +980,16 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       _transientCreateRetryCount = 0;
       if (!mounted) return;
       final resolvedHouseName = houseName;
+
+      if (myRole != 'user1') {
+        try {
+          await FirebaseDatabase.instance
+              .ref('houses/$createdHouseId/members/${user.uid}/role')
+              .set(myRole);
+        } catch (e) {
+          debugPrint('[HouseOnboarding] Failed to sync role to db: $e');
+        }
+      }
 
       final prefs = await OfflineCacheService.getPrefs();
       await prefs.setString('il_user_name', myDisplayName);
