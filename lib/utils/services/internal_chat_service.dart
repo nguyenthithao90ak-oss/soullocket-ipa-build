@@ -28,6 +28,9 @@ class InternalChatService {
 
   // ── GỬI tin nhắn mới ─────────────────────────────────────────────────
   Future<String> sendMessage(String houseId, ChatMessage message) async {
+    if (message.text.trim().length > 2000) {
+      throw Exception('Tin nhắn vượt quá giới hạn 2000 ký tự.');
+    }
     final now = DateTime.now().millisecondsSinceEpoch;
     final payload = <String, dynamic>{
       ...message.toMap(),

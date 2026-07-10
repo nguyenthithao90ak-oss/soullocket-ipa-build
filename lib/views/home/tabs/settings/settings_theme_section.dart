@@ -793,77 +793,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 12),
-                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    // Trung tâm ủy quyền — compact inline row
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(7),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0277BD)
-                                  .withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.admin_panel_settings_rounded,
-                              size: 16,
-                              color: Color(0xFF0277BD),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              context.tr('theme_permission_center'),
-                              style: SLTheme.quicksand(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF334155),
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 34,
-                            child: ElevatedButton.icon(
-                              onPressed: _isGrantingPermissions
-                                  ? null
-                                  : _requestAllPermissions,
-                              icon: _isGrantingPermissions
-                                  ? const SizedBox(
-                                      width: 13,
-                                      height: 13,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(Icons.verified_user_rounded,
-                                      size: 15),
-                              label: Text(
-                                Platform.isIOS
-                                    ? context.tr('home_thitlpquyn_942e97')
-                                    : context.tr('theme_grant_all_perms'),
-                                style: SLTheme.quicksand(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                elevation: 0,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+
                   ],
                 ),
               ),

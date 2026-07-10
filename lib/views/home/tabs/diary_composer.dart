@@ -189,6 +189,7 @@ class _DiaryComposerState extends State<DiaryComposer>
                   controller: widget.composerController,
                   minLines: 3,
                   maxLines: 6,
+                  maxLength: 5000,
                   style: SLTheme.quicksand(
                     fontWeight: FontWeight.w800,
                     fontSize: 14.5,

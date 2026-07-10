@@ -264,6 +264,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
                         child: TextField(
                           controller: _msgController,
                           maxLines: null,
+                          maxLength: 2000,
                           textInputAction: TextInputAction.send,
                           style: const TextStyle(
                             fontSize: 15,
@@ -280,6 +281,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
                             isDense: true,
                             contentPadding:
                                 const EdgeInsets.symmetric(vertical: 8),
+                            counterText: '',
                           ),
                           onSubmitted: (_) => _sendMsg(),
                         ),

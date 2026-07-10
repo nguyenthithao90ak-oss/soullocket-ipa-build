@@ -67,6 +67,9 @@ class DiaryService {
     String imageUrl = '',
   }) async {
     if (content.trim().isEmpty) throw 'Nội dung không được để trống.';
+    if (content.trim().length > 5000) {
+      throw 'Nội dung nhật ký vượt quá giới hạn 5000 ký tự.';
+    }
 
     final now = DateTime.now().millisecondsSinceEpoch;
     final postData = {
@@ -112,6 +115,9 @@ class DiaryService {
     required String newContent,
   }) async {
     if (newContent.trim().isEmpty) throw 'Nội dung không được để trống.';
+    if (newContent.trim().length > 5000) {
+      throw 'Nội dung nhật ký vượt quá giới hạn 5000 ký tự.';
+    }
     await _diariesRef(houseId).doc(postId).update({
       'content': _sanitize(newContent),
       'editedAt': DateTime.now().millisecondsSinceEpoch,

@@ -59,34 +59,54 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       });
     }
 
+    // Safety fallback: Tắt loading sau 5s nếu mạng quá yếu hoặc không load được
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted && _isLoading) setState(() => _isLoading = false);
+    });
+
+    // Tối ưu hóa: Đọc createdAt một lần duy nhất
+    unawaited(() async {
+      try {
+        final rawDateSnap = await FirebaseDatabase.instance.ref('houses/$houseId/createdAt').get();
+        if (rawDateSnap.exists && rawDateSnap.value != null) {
+          final startDate = DateTime.fromMillisecondsSinceEpoch(int.parse(rawDateSnap.value.toString()));
+          if (mounted) {
+            setState(() {
+              _startDateStr = '${startDate.day.toString().padLeft(2, '0')}/${startDate.month.toString().padLeft(2, '0')}/${startDate.year}';
+            });
+          }
+        }
+      } catch (_) {}
+    }());
+
     _settingsSub?.cancel();
     _settingsSub = FirebaseDatabase.instance
-        .ref('houses/$houseId')
+        .ref('houses/$houseId/settings')
         .onValue
         .listen((event) async {
       final snap = event.snapshot;
-      if (!snap.exists) return;
-      final houseData = Map<String, dynamic>.from(snap.value as Map);
-      final settings = houseData['settings'] is Map
-          ? Map<String, dynamic>.from(houseData['settings'] as Map)
-          : {};
-
+      if (!snap.exists || snap.value == null) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+      final settings = Map<String, dynamic>.from(snap.value as Map);
       bool isPaired = settings['isPaired'] == true;
 
-      // Check real members count to guarantee paired status
+      // Check real members count to guarantee paired status (chỉ đọc members một lần duy nhất nếu chưa paired)
       if (!isPaired && !_hasCheckedMembers) {
         _hasCheckedMembers = true;
         try {
-          final membersSnap = houseData['members'];
-          if (membersSnap is Map) {
-            if (membersSnap.length >= 2) {
+          final membersSnap = await FirebaseDatabase.instance.ref('houses/$houseId/members').get();
+          if (membersSnap.exists && membersSnap.value is Map) {
+            final membersMap = membersSnap.value as Map;
+            if (membersMap.length >= 2) {
               isPaired = true;
               // Background update
-              FirebaseDatabase.instance.ref('houses/$houseId/settings/isPaired').set(true);
-              FirebaseDatabase.instance.ref('houses/$houseId/settings/relationshipMode').set('couple');
+              unawaited(FirebaseDatabase.instance.ref('houses/$houseId/settings/isPaired').set(true));
+              unawaited(FirebaseDatabase.instance.ref('houses/$houseId/settings/relationshipMode').set('couple'));
               try {
-                FirebaseDatabase.instance.ref('single_match_active_pool/$houseId').remove();
-                FirebaseDatabase.instance.ref('houses/$houseId/settings/singleMatch/enabled').set(false);
+                unawaited(FirebaseDatabase.instance.ref('single_match_active_pool/$houseId').remove());
+                unawaited(FirebaseDatabase.instance.ref('houses/$houseId/settings/singleMatch/enabled').set(false));
               } catch (_) {}
             }
           }
@@ -102,8 +122,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           _avatarU1 = settings['avatarU1']?.toString();
           _avatarU2 = settings['avatarU2']?.toString();
           
-          final rawDate = houseData['createdAt'] ?? settings['createdAt'];
-          if (rawDate != null) {
+          final rawDate = settings['createdAt'];
+          if (rawDate != null && _startDateStr == null) {
             try {
               final startDate = DateTime.fromMillisecondsSinceEpoch(int.parse(rawDate.toString()));
               _startDateStr = '${startDate.day.toString().padLeft(2, '0')}/${startDate.month.toString().padLeft(2, '0')}/${startDate.year}';

@@ -82,17 +82,26 @@ class SoulMergeService {
   Future<void> sendSoulMessage(String text, {String? imageUrl}) async {
     try {
       final user = _auth.currentUser;
-      if (user == null) return;
+      if (user == null) {
+        throw Exception('Chưa đăng nhập tài khoản.');
+      }
 
       final houseId = await _houseService.getCurrentHouseId();
-      if (houseId == null || houseId.isEmpty) return;
+      if (houseId == null || houseId.isEmpty) {
+        throw Exception('Không tìm thấy mã nhà hoặc chưa ghép nối.');
+      }
+
+      final trimmed = text.trim();
+      if (trimmed.length > 2000) {
+        throw Exception('Tin nhắn vượt quá giới hạn 2000 ký tự.');
+      }
 
       final prefs = await SharedPreferences.getInstance();
       final role = _normalizeRole(prefs.getString('il_role'));
 
       final ref = _db.ref('houses/$houseId/soul_merge/chat');
       await ref.push().set({
-        if (text.isNotEmpty) 'text': text.trim(),
+        if (trimmed.isNotEmpty) 'text': trimmed,
         if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
         'sender': role,
         'timestamp': ServerValue.timestamp,
@@ -117,6 +126,7 @@ class SoulMergeService {
       }
     } catch (e) {
       debugPrint('[SoulMergeService] sendSoulMessage error: $e');
+      rethrow;
     }
   }
 

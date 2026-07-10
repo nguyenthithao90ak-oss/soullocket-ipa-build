@@ -120,6 +120,7 @@ class ChatInputArea extends StatelessWidget {
                         child: TextField(
                           controller: controller,
                           maxLines: null,
+                          maxLength: 2000,
                           textInputAction: TextInputAction.send,
                           style: const TextStyle(
                             fontSize: 15,
@@ -136,6 +137,7 @@ class ChatInputArea extends StatelessWidget {
                             isDense: true,
                             contentPadding:
                                 const EdgeInsets.symmetric(vertical: 8),
+                            counterText: '',
                           ),
                           onSubmitted: (_) => onSend(),
                         ),

@@ -595,6 +595,22 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
           .where((entry) => !entry.value)
           .map((entry) => entry.key)
           .toList();
+
+      if (!kIsWeb) {
+        final locStatus = await app_permission.Permission.location.status;
+        if (locStatus.isPermanentlyDenied || locStatus.isRestricted) {
+          if (!settingsLockedPermissions.contains('GPS')) {
+             settingsLockedPermissions.add('GPS');
+          }
+        }
+        final notifStatus = await app_permission.Permission.notification.status;
+        if (notifStatus.isPermanentlyDenied || notifStatus.isRestricted) {
+          if (!settingsLockedPermissions.contains(notifLabel)) {
+             settingsLockedPermissions.add(notifLabel);
+          }
+        }
+      }
+
       _showToast(
         deniedPermissions.isEmpty
             ? 'Đã cấp đủ ${statuses.length}/${statuses.length} quyền cần thiết.'

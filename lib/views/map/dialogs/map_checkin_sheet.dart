@@ -72,6 +72,7 @@ extension _MapCheckinSheetExt on _MapScreenState {
                   label: context.tr('map_tnaim_ae1e33'),
                   hint: context.tr('map_vdquncafei_701fce'),
                   icon: Icons.place_rounded,
+                  maxLength: 100,
                 ),
                 SLSpacing.h12,
                 _buildCheckinTextField(
@@ -80,55 +81,78 @@ extension _MapCheckinSheetExt on _MapScreenState {
                   hint: context.tr('map_luliknimcm_f10773'),
                   icon: Icons.note_alt_rounded,
                   maxLines: 2,
+                  maxLength: 300,
                 ),
                 SLSpacing.h16,
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () async {
-                      final msgLimitFull = context.tr('map_ttia30vtrg_8875b5');
-                      final pinSnapshot =
-                          await _mapPinLimitService.getSnapshot(widget.houseId);
-                      final isCurrentPlaceAlreadyPinned =
-                          pinSnapshot.containsLocation(
-                        activePoint.latitude,
-                        activePoint.longitude,
-                      );
-                      if (pinSnapshot.isFull && !isCurrentPlaceAlreadyPinned) {
+                      try {
+                        final msgLimitFull = context.tr('map_ttia30vtrg_8875b5');
+                        final pinSnapshot =
+                            await _mapPinLimitService.getSnapshot(widget.houseId);
+                        final isCurrentPlaceAlreadyPinned =
+                            pinSnapshot.containsLocation(
+                          activePoint.latitude,
+                          activePoint.longitude,
+                        );
+                        if (pinSnapshot.isFull && !isCurrentPlaceAlreadyPinned) {
+                          if (!ctx.mounted) return;
+                          ScaffoldMessenger.of(ctx).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                msgLimitFull,
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                          return;
+                        }
+
+                        final uid =
+                            FirebaseAuth.instance.currentUser?.uid ?? 'unknown';
+                        final name = nameCtrl.text.trim().isEmpty
+                            ? 'Check-in của ${widget.myName}'
+                            : nameCtrl.text.trim();
+                        final note = noteCtrl.text.trim();
+
+                        if (name.length > 100) {
+                          throw Exception('Tên check-in không được vượt quá 100 ký tự.');
+                        }
+                        if (note.length > 300) {
+                          throw Exception('Ghi chú không được vượt quá 300 ký tự.');
+                        }
+
+                        final checkinRef =
+                            _dbRef.child('checkins/${widget.houseId}').push();
+                        await checkinRef.set({
+                          'lat': activePoint.latitude,
+                          'lng': activePoint.longitude,
+                          'name': name,
+                          'note': note,
+                          'role': widget.myRole,
+                          'uid': uid,
+                          'author': widget.myName,
+                          'ts': DateTime.now().millisecondsSinceEpoch,
+                        });
+
+                        _listenCheckins();
+                        DailyQuestService().recordProgress('map_checkin');
+
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      } catch (e) {
                         if (!ctx.mounted) return;
                         ScaffoldMessenger.of(ctx).showSnackBar(
                           SnackBar(
                             content: Text(
-                              msgLimitFull,
+                              'Check-in thất bại: ${AppErrorMapper.resolve(e).message}',
+                              style: const TextStyle(color: Colors.white),
                             ),
-                            behavior: SnackBarBehavior.floating,
+                            backgroundColor: _kMapPinkDeep,
                           ),
                         );
-                        return;
                       }
-
-                      final uid =
-                          FirebaseAuth.instance.currentUser?.uid ?? 'unknown';
-                      final name = nameCtrl.text.trim().isEmpty
-                          ? 'Check-in của ${widget.myName}'
-                          : nameCtrl.text.trim();
-                      final checkinRef =
-                          _dbRef.child('checkins/${widget.houseId}').push();
-                      await checkinRef.set({
-                        'lat': activePoint.latitude,
-                        'lng': activePoint.longitude,
-                        'name': name,
-                        'note': noteCtrl.text.trim(),
-                        'role': widget.myRole,
-                        'uid': uid,
-                        'author': widget.myName,
-                        'ts': DateTime.now().millisecondsSinceEpoch,
-                      });
-
-                      _listenCheckins();
-                      DailyQuestService().recordProgress('map_checkin');
-
-                      if (ctx.mounted) Navigator.pop(ctx);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _kMapPinkDeep,
@@ -162,10 +186,12 @@ extension _MapCheckinSheetExt on _MapScreenState {
     required String hint,
     required IconData icon,
     int maxLines = 1,
+    int? maxLength,
   }) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
+      maxLength: maxLength,
       style: SLTheme.quicksand(fontWeight: FontWeight.w800),
       decoration: InputDecoration(
         labelText: label,

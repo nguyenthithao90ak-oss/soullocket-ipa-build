@@ -509,11 +509,7 @@ class DiaryMemoryController extends ChangeNotifier {
           .child('houses/$normalizedHouseId/memories')
           .orderByChild('ts')
           .limitToLast(_memoryQueryLimit);
-      _memoriesStream = _memoriesQuery!.onValue.handleError((Object error) {
-        debugPrint(
-          '[DiaryMemory] memories stream failed: ${AppErrorMapper.resolve(error).message}',
-        );
-      });
+      _memoriesStream = _memoriesQuery!.onValue;
     }
     return _memoriesStream;
   }

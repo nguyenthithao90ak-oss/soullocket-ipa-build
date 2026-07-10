@@ -678,10 +678,27 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
           final relMode =
               (data['relationshipMode'] ?? syncedRelationshipMode ?? 'single')
                   .toString();
-          final storedRole = _normalizeSettingsRoleKey(
-              data['role']?.toString() ??
-                  data['currentRole']?.toString() ??
-                  data['activeRole']?.toString());
+          final localPrefs = await SharedPreferences.getInstance();
+          var storedRole = localPrefs.getString('il_role');
+          if (storedRole != 'user1' && storedRole != 'user2') {
+            try {
+              final memberSnap = await _dbRef.child('houses/$_houseId/members/${user.uid}').get();
+              if (memberSnap.exists && memberSnap.value is Map) {
+                final memberData = Map<String, dynamic>.from(memberSnap.value as Map);
+                final role = memberData['role']?.toString().trim();
+                if (role == 'user1' || role == 'user2') {
+                  final cleanRole = role == 'user2' ? 'user2' : 'user1';
+                  storedRole = cleanRole;
+                  await localPrefs.setString('il_role', cleanRole);
+                  await SecureStorageService.instance.write(SecureStorageService.keyRole, cleanRole);
+                  RoleUtils.roleNotifier.value = cleanRole;
+                }
+              }
+            } catch (e) {
+              debugPrint('[Settings] Failed to restore role: $e');
+            }
+          }
+          storedRole = (storedRole == 'user2') ? 'user2' : 'user1';
           final activeRoleKey = _resolveSettingsActiveRoleKey(
             relationshipMode: relMode,
             storedRole: storedRole,

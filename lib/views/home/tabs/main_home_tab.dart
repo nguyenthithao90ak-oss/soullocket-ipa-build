@@ -4307,7 +4307,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                     ],
                   ),
                   child: Image.asset(
-                    'assets/images/interaction_stickers/custom/numbered/sticker_343.png',
+                    'assets/images/interaction_stickers/custom/numbered/sticker_181.png',
                     fit: BoxFit.contain,
                   ),
                 ),

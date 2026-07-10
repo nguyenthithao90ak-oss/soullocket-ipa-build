@@ -120,7 +120,7 @@ class AppEntryController {
     Future.delayed(const Duration(milliseconds: 100), () async {
       if (!isMounted()) return;
       try {
-        await NotificationService().initialize();
+        await NotificationService().requestPermissionAndInit();
       } catch (e) {
         final errorInfo = AppErrorMapper.resolve(
           e,

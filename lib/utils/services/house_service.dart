@@ -87,11 +87,26 @@ class HouseService {
     bool forceRefreshToken = false,
   }) async {
     firebase_auth.User? user = _auth.currentUser;
-    for (var attempt = 0; attempt < 5; attempt++) {
+    if (user == null) return;
+
+    // Fast path: Lấy token trực tiếp không cần reload user profile để tránh một cuộc gọi mạng chậm dư thừa
+    try {
+      final token = await user
+          .getIdToken(forceRefreshToken)
+          .timeout(const Duration(seconds: 5));
+      if ((token ?? '').trim().isNotEmpty) {
+        return;
+      }
+    } catch (error) {
+      debugPrint('[HouseService] Fast getIdToken failed: $error. Falling back to retry loop.');
+    }
+
+    // Slow retry path (nếu gặp lỗi mạng hoặc token trống)
+    for (var attempt = 0; attempt < 3; attempt++) {
       user = _auth.currentUser ?? user;
       if (user != null) {
         try {
-          await user.reload().timeout(const Duration(seconds: 4));
+          await user.reload().timeout(const Duration(seconds: 3));
         } catch (error) {
           debugPrint(
               '[HouseService] user.reload skipped: ${AppErrorMapper.resolve(
@@ -104,7 +119,7 @@ class HouseService {
         try {
           final token = await user
               .getIdToken(forceRefreshToken || attempt > 0)
-              .timeout(const Duration(seconds: 5));
+              .timeout(const Duration(seconds: 4));
           if ((token ?? '').trim().isNotEmpty) {
             return;
           }
@@ -117,8 +132,8 @@ class HouseService {
         }
       }
 
-      if (attempt < 4) {
-        await Future.delayed(Duration(milliseconds: 450 + (attempt * 250)));
+      if (attempt < 2) {
+        await Future.delayed(Duration(milliseconds: 300 + (attempt * 150)));
       }
     }
   }
@@ -485,7 +500,7 @@ class HouseService {
         throw Exception('Vui lòng nhập mã ghép nối.');
       }
       
-      await _refreshCallableSecurityContext(force: true);
+      await _refreshCallableSecurityContext(force: false);
       
       final prefs = await SharedPreferences.getInstance();
       final oldHouseId = prefs.getString('il_house_id');

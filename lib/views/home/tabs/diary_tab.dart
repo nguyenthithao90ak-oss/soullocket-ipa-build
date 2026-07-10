@@ -841,6 +841,11 @@ class _DiaryTabState extends State<DiaryTab>
     _isTabActive = widget.isActiveListenable.value;
     if (_isTabActive) {
       _startDiaryActiveTimer();
+      if (_deferMemoryLoad) {
+        Future.delayed(const Duration(milliseconds: 400), () {
+          if (mounted) setState(() => _deferMemoryLoad = false);
+        });
+      }
     }
     widget.isActiveListenable.addListener(_onActiveChanged);
     _feedController.addListener(_handleFeedControllerChange);

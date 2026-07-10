@@ -19,11 +19,10 @@ class PresenceService {
   PresenceService._internal();
 
   static const Duration onlineFreshness = Duration(minutes: 15);
-  // Tối ưu: tăng heartbeat lên 180s thay vì 120s → giảm 33% lượng writes presence
-  // local grace period cho phép presence vẫn "online" thêm 2 phút sau heartbeat cuối
-  // ⚡ Tăng từ 180s lên 300s (5 phút) để giảm writes
-  static const Duration heartbeatInterval = Duration(seconds: 300);
-  static const Duration staleSessionThreshold = Duration(minutes: 15);
+  // Heartbeat mỗi 60s để session luôn fresh trong ngưỡng 30 phút stale threshold.
+  // Lightweight heartbeat chỉ ghi 1 field 'ts' → ít writes, ít băng thông.
+  static const Duration heartbeatInterval = Duration(seconds: 60);
+  static const Duration staleSessionThreshold = Duration(minutes: 30);
   static const Duration justDisconnectedThreshold = Duration(minutes: 1);
 
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
@@ -537,8 +536,15 @@ class PresenceService {
       final resolvedDevice =
           preferredDevice ?? data['device']?.toString().trim();
 
+      // Grace period: chỉ ghi 'offline' nếu lastSeen đã cũ hơn 3 phút
+      // Tránh race condition khi 2 thiết bị heartbeat gần nhau (lệch đồng hồ, mạng chậm)
+      final shouldMarkOffline = freshSessionCount == 0 &&
+          (resolvedLastSeen == 0 ||
+              nowMs - resolvedLastSeen > const Duration(minutes: 3).inMilliseconds);
       await ref.update({
-        'status': freshSessionCount > 0 ? 'online' : 'offline',
+        'status': freshSessionCount > 0
+            ? 'online'
+            : (shouldMarkOffline ? 'offline' : 'online'),
         'lastSeen': freshSessionCount > 0
             ? resolvedLastSeen
             : (lastSeenMs ?? resolvedLastSeen),
@@ -599,14 +605,14 @@ class PresenceService {
         if (_activeDeviceType != null) 'device': _activeDeviceType,
         'deviceId': deviceId,
       }).timeout(const Duration(seconds: 3));
-      // ⚡ onDisconnect xóa session + update status offline ngay
-      // Tránh tình trạng "online ảo" khi app crash/force-close
-      await _myPresenceRef!.onDisconnect().update({
-        'sessions/$_mySessionId': null,
-        'status': 'offline',
-        'lastSeen': ServerValue.timestamp,
-        if (_activeDeviceType != null) 'device': _activeDeviceType,
-      }).timeout(const Duration(seconds: 3));
+      // ⚡ onDisconnect chỉ xóa đúng session của mình — không ghi 'status: offline'
+      // vào node cha để tránh đè trạng thái của thiết bị/session khác đang online cùng vai.
+      // Status sẽ được tính lại từ sessions map khi heartbeat tiếp theo chạy.
+      await _myPresenceRef!
+          .child('sessions/$_mySessionId')
+          .onDisconnect()
+          .remove()
+          .timeout(const Duration(seconds: 3));
       await _refreshAggregatePresence(
         _myPresenceRef!,
         nowMs: now,

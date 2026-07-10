@@ -674,6 +674,15 @@ extension _SettingsTabShell on _SettingsTabState {
             isDark: isDark,
             onTap: () => _togglePanel('dataHealth'),
           ),
+          _buildDivider(isDark),
+          _buildiOSRow(
+            icon: Icons.admin_panel_settings_rounded,
+            iconBgColor: const Color(0xFF9575CD),
+            title: context.tr('theme_permission_center'),
+            subtitle: 'Quản lý cấp quyền hệ thống',
+            isDark: isDark,
+            onTap: _isGrantingPermissions ? () {} : _requestAllPermissions,
+          ),
         ], isDark),
 
         _buildSectionTitle(context.tr('settings_other_features_title'), topPadding: 16),

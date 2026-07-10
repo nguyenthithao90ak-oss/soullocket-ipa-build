@@ -19,6 +19,7 @@ import '../../../utils/services/soul_merge_service.dart';
 import '../../../utils/services/house_service.dart';
 import '../../../utils/services/notification_service.dart';
 import '../../../core/sl_theme.dart';
+import '../../../utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
 
@@ -74,6 +75,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   bool _hasProcessedFirstMessages = false;
   String _myRole = 'user1';
   List<Map<String, dynamic>> _chatHistory = [];
+  List<Map<String, dynamic>> _chatHistoryReversed = [];
   final ScrollController _chatScrollController = ScrollController();
   bool _overlayEnabled = false;
   StreamSubscription<dynamic>? _overlayListenerSub;
@@ -453,50 +455,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     return Colors.white70;
   }
 
-  List<Widget> _buildSparkles() {
-    const double radius = 45;
-    // 4 sparkles thay vì 6 — tiết kiệm render
-    const fixedSizes = [6.0, 4.5, 6.0, 4.5];
-    const sparkleColors = [
-      Color(0xFFFF80B3),
-      Color(0xFFD8A4FF),
-      Color(0xFFFFEAA0),
-      Color(0xFFFFB7D5),
-    ];
-    final sparkleAngles = [0.0, 90.0, 180.0, 270.0];
-    final pulseVal = _pulseAnim.value; // 0.0 → 1.0
-    return List.generate(sparkleAngles.length, (i) {
-      final angleRad = sparkleAngles[i] * math.pi / 180;
-      final dx = math.cos(angleRad) * radius;
-      final dy = math.sin(angleRad) * radius;
-      // Use FIXED size for position math — positions never shift
-      final size = fixedSizes[i];
-      // Alternate sparkles breathe in/out opposite phases
-      final opacity =
-          (i % 2 == 0 ? (0.3 + 0.65 * pulseVal) : (0.95 - 0.65 * pulseVal))
-              .clamp(0.0, 1.0);
-      return Positioned(
-        // 80 = half of the 160px Container — static center
-        left: 80 + dx - size / 2,
-        top: 80 + dy - size / 2,
-        child: IgnorePointer(
-          child: Opacity(
-            opacity: opacity,
-            child: Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: sparkleColors[i % sparkleColors.length],
-                // BoxShadow removed for Flat performance
-              ),
-            ),
-          ),
-        ),
-      );
-    });
-  }
-
   Future<List<Map<String, String>>> _fetchMemoriesData() async {
     try {
       final houseId = await _mergeService.getCurrentHouseId();
@@ -506,16 +464,16 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           .collection('houses')
           .doc(houseId)
           .collection('album')
-          .orderBy('timestamp', descending: true)
-          .limit(50)
+          .orderBy('ts', descending: true)
+          .limit(15)
           .get();
 
       final diarySnap = await FirebaseFirestore.instance
           .collection('houses')
           .doc(houseId)
           .collection('diaries')
-          .orderBy('timestamp', descending: true)
-          .limit(50)
+          .orderBy('ts', descending: true)
+          .limit(15)
           .get();
 
       final List<Map<String, String>> items = [];
@@ -719,6 +677,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     final latestPhotos = photoMessages.length > 3
         ? photoMessages.sublist(photoMessages.length - 3)
         : photoMessages;
+    // chatHistoryReversed là instance field, được update mỗi khi _chatHistory thay đổi
 
     return Scaffold(
       backgroundColor: const Color(0xFF1A0533),
@@ -862,7 +821,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
           // 4. Floating message bubbles
           for (final msg in _floatingMessages)
-            FloatingMessageWidget(key: msg.id, message: msg),
+            RepaintBoundary(
+              key: msg.id,
+              child: FloatingMessageWidget(message: msg),
+            ),
 
           for (int i = 0; i < latestPhotos.length; i++)
             PersistentFloatingPhotoWidget(
@@ -971,11 +933,14 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                     ),
                                   ),
                                 ),
-                                // Sparkle dots
+                                // Sparkle dots — dùng CustomPaint thay vì rebuild widget list mỗi frame
                                 AnimatedBuilder(
                                   animation: _pulseAnim,
-                                  builder: (context, _) => Stack(
-                                    children: _buildSparkles(),
+                                  builder: (context, _) => CustomPaint(
+                                    size: const Size(160, 160),
+                                    painter: _SparklePainter(
+                                      pulseValue: _pulseAnim.value,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -1182,6 +1147,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
       setState(() {
         _chatHistory = list;
+        _chatHistoryReversed = list.reversed.toList();
         _lastMsgTimestamp = maxTimestamp;
         _lastSeenMsgTimestamp = maxTimestamp;
       });
@@ -1335,7 +1301,22 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
-    await _mergeService.sendSoulMessage(trimmed);
+    try {
+      await _mergeService.sendSoulMessage(trimmed);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gửi tin nhắn thất bại: ${AppErrorMapper.resolve(e).message}',
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFFFF4F93),
+          ),
+        );
+      }
+      return;
+    }
 
     // Send push notification to partner's main home screen
     if (_houseId != null && _houseId!.isNotEmpty) {
@@ -1466,7 +1447,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                             horizontal: 12, vertical: 8),
                         itemCount: _chatHistory.length,
                         itemBuilder: (context, index) {
-                          final msg = _chatHistory.reversed.elementAt(index);
+                          final msg = _chatHistoryReversed[index];
                           final sender = (msg['sender'] ?? '').toString();
                           final isSelf = (sender == _myRole);
                           final text = (msg['text'] ?? '').toString();
@@ -1679,6 +1660,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: TextField(
                       controller: _customMsgController,
+                      maxLength: 2000,
                       style: SLTheme.quicksand(
                         color: Colors.white,
                         fontSize: 14,
@@ -1696,6 +1678,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                         focusedBorder: InputBorder.none,
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                        counterText: '',
                       ),
                       onSubmitted: (_) => _sendCustomMessage(),
                     ),
@@ -2552,7 +2535,8 @@ class _ParticlePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _ParticlePainter oldDelegate) =>
+      progress != oldDelegate.progress;
 }
 
 class TinyHeart {
@@ -2934,7 +2918,8 @@ class HeartsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant HeartsPainter oldDelegate) => true;
+  bool shouldRepaint(covariant HeartsPainter oldDelegate) =>
+      !identical(hearts, oldDelegate.hearts) || hearts.length != oldDelegate.hearts.length;
 }
 
 class FloatingMessage {
@@ -3193,6 +3178,50 @@ class _PersistentFloatingPhotoWidgetState
       child: content,
     );
   }
+}
+
+// ─── Sparkle Painter — thay thế _buildSparkles() widget list ─────────────────
+class _SparklePainter extends CustomPainter {
+  final double pulseValue;
+
+  static const _radius = 45.0;
+  static const _sizes = [6.0, 4.5, 6.0, 4.5];
+  static const _colors = [
+    Color(0xFFFF80B3),
+    Color(0xFFD8A4FF),
+    Color(0xFFFFEAA0),
+    Color(0xFFFFB7D5),
+  ];
+  static const _angles = [0.0, 90.0, 180.0, 270.0];
+
+  const _SparklePainter({required this.pulseValue});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+    final centerX = size.width / 2;
+    final centerY = size.height / 2;
+
+    for (int i = 0; i < _angles.length; i++) {
+      final angleRad = _angles[i] * math.pi / 180;
+      final dx = math.cos(angleRad) * _radius;
+      final dy = math.sin(angleRad) * _radius;
+      final opacity = (i % 2 == 0
+              ? (0.3 + 0.65 * pulseValue)
+              : (0.95 - 0.65 * pulseValue))
+          .clamp(0.0, 1.0);
+      paint.color = _colors[i % _colors.length].withValues(alpha: opacity);
+      canvas.drawCircle(
+        Offset(centerX + dx, centerY + dy),
+        _sizes[i] / 2,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SparklePainter old) =>
+      pulseValue != old.pulseValue;
 }
 
 // ─── Cute Background Pattern Painter ──────────────────────────────────────────
