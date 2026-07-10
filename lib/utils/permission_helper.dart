@@ -103,14 +103,6 @@ class PermissionHelper {
       return true;
     }
 
-    // Removed iOS bypass to enforce disclosure dialog on all platforms
-
-    if (!context.mounted) return false;
-    final shouldRequest = await _showDisclosureDialog(context, title, disclosure);
-    if (shouldRequest != true) {
-      return false;
-    }
-
     final result = await _withLifecyclePresenceGuard(
       Geolocator.requestPermission,
     );
@@ -127,14 +119,6 @@ class PermissionHelper {
     final status = await Geolocator.checkPermission();
     if (status == LocationPermission.always) {
       return true;
-    }
-    if (!context.mounted) return false;
-
-    // Removed iOS bypass to enforce disclosure dialog on all platforms
-    final shouldRequest =
-        await _showDisclosureDialog(context, title, disclosure);
-    if (shouldRequest != true) {
-      return false;
     }
 
     final result = await _withLifecyclePresenceGuard(

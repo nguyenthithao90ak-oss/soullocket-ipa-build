@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/sl_notice.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 
 class JoinHouseDialog extends StatefulWidget {
@@ -35,6 +36,17 @@ class _JoinHouseDialogState extends State<JoinHouseDialog> {
       setState(() => _errorMessage = 'Vui lòng nhập mã ghép nối.');
       return;
     }
+
+    // Hiển thị cảnh báo và xác nhận lần cuối
+    final confirm = await SLNotice.showConfirmDialog(
+      context,
+      title: 'Cảnh báo ghép đôi',
+      message: 'Chú ý:\n- Người tạo mã: GIỮ NGUYÊN toàn bộ dữ liệu.\n- Bạn (Người nhập mã): SẼ BỊ XÓA TOÀN BỘ dữ liệu cũ (ảnh, nhật ký, tin nhắn...) và đồng bộ theo dữ liệu của người tạo mã.\n\nBạn có chắc chắn muốn xóa dữ liệu của mình để tiến hành ghép đôi không?',
+      confirmText: 'Tôi đồng ý xóa và ghép đôi',
+      cancelText: 'Hủy',
+      isDanger: true,
+    );
+    if (confirm != true || !mounted) return;
 
     setState(() {
       _isLoading = true;

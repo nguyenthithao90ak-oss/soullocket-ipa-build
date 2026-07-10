@@ -1,5 +1,6 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
+import 'dart:math';
 import 'dart:ui' as ui;
 import 'dart:io';
 import 'dart:convert';
@@ -379,6 +380,7 @@ class _HomeScreenState extends State<HomeScreen>
   bool _didCheckPendingDeviceNotice = false;
   bool _isShowingBreakupEntryNotice = false;
   bool _isHouseUnpairedCache = false;
+  bool _didShowFirstTabSwitchPairingPrompt = false;
   final _houseService = HouseService();
   final _houseSettingsService = HouseSettingsService();
   final _breakupService = BreakupService();
@@ -620,9 +622,6 @@ class _HomeScreenState extends State<HomeScreen>
       setState(() {
         _isHouseUnpairedCache = isUnpaired;
       });
-      if (isUnpaired) {
-        _maybeShowDailyPairingNotice();
-      }
     }
     unawaited(_syncIncomingCallListener(houseId));
     unawaited(_checkExpiredProGracePeriod(houseId));
@@ -1153,9 +1152,13 @@ class _HomeScreenState extends State<HomeScreen>
     final nextIndex = index.clamp(0, _navItems.length - 1);
     if (!mounted) return;
     
-    if (_isHouseUnpairedCache && nextIndex != 0) {
-      _showPairingRequiredDialog();
-      return;
+    if (_isHouseUnpairedCache && _currentIndex != nextIndex) {
+      if (!_didShowFirstTabSwitchPairingPrompt) {
+        _didShowFirstTabSwitchPairingPrompt = true;
+        _showPairingRequiredDialog();
+      } else {
+        unawaited(_maybeShowRandomPairingNotice());
+      }
     }
 
     final oldIndex = _currentIndex;
@@ -1198,6 +1201,37 @@ class _HomeScreenState extends State<HomeScreen>
     }
     _backgroundTabIndexNotifier.value = nextIndex;
     _setActiveTabIndex(nextIndex);
+  }
+
+  Future<void> _maybeShowRandomPairingNotice() async {
+    if (!mounted) return;
+    try {
+      final prefs = await OfflineCacheService.getPrefs();
+      final dateKey = 'il_random_pairing_notice_date';
+      final countKey = 'il_random_pairing_notice_count';
+
+      final now = DateTime.now();
+      final todayStr = '${now.year}-${now.month}-${now.day}';
+
+      final lastDate = prefs.getString(dateKey);
+      int count = prefs.getInt(countKey) ?? 0;
+
+      if (lastDate != todayStr) {
+        count = 0;
+        await prefs.setString(dateKey, todayStr);
+        await prefs.setInt(countKey, 0);
+      }
+
+      if (count < 3) {
+        // Tỷ lệ ngẫu nhiên 20% khi chuyển tab
+        if (Random().nextInt(5) == 0) {
+          await prefs.setInt(countKey, count + 1);
+          if (mounted) {
+            _showPairingRequiredDialog();
+          }
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> _openPinnedCountdownModeIfNeeded() async {

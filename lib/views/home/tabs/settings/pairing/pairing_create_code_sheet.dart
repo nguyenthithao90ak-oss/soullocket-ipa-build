@@ -114,22 +114,22 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFE8F5E9),
+                color: const Color(0xFFFFEBEE),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF81C784), width: 1.5),
+                border: Border.all(color: const Color(0xFFEF5350), width: 1.5),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.check_circle_outline_rounded, color: Color(0xFF2E7D32), size: 20),
+                  const Icon(Icons.warning_amber_rounded, color: Color(0xFFC62828), size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Lưu ý: Bạn là NGƯỜI TẠO MÃ. Toàn bộ hình ảnh, nhật ký và dữ liệu của bạn sẽ được GIỮ NGUYÊN. Người nhập mã sẽ được liên kết vào tài khoản này để sử dụng chung dữ liệu.',
+                      'Lưu ý: Bạn là NGƯỜI TẠO MÃ. Toàn bộ hình ảnh, nhật ký và dữ liệu của bạn sẽ được GIỮ NGUYÊN. Tuy nhiên, toàn bộ dữ liệu hiện tại của NGƯỜI NHẬP MÃ SẼ BỊ XÓA HOÀN TOÀN trước khi liên kết vào tài khoản này để dùng chung dữ liệu.',
                       style: SLTheme.quicksand(
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF2E7D32),
+                        color: const Color(0xFFC62828),
                         height: 1.4,
                       ),
                     ),

@@ -504,7 +504,47 @@ class HouseService {
       
       final prefs = await SharedPreferences.getInstance();
       final oldHouseId = prefs.getString('il_house_id');
-      
+
+      // Kiểm tra tính hợp lệ của mã trước khi dọn dẹp dữ liệu tránh xoá nhầm
+      bool isCodeOrHouseValid = false;
+      if (code.length == 12 && int.tryParse(code) != null) {
+        isCodeOrHouseValid = await FirebaseDatabase.instance.ref('pairing_codes/$code').get().then((snap) => snap.exists);
+      } else {
+        isCodeOrHouseValid = await FirebaseDatabase.instance.ref('houses/$code/settings').get().then((snap) => snap.exists);
+      }
+
+      if (isCodeOrHouseValid && oldHouseId != null && oldHouseId.isNotEmpty && oldHouseId != code) {
+        // Chỉ dọn dẹp khi người dùng cũ ở chế độ độc thân (chỉ có tối đa 1 thành viên)
+        try {
+          final oldMembersSnap = await FirebaseDatabase.instance.ref('houses/$oldHouseId/members').get();
+          if (!oldMembersSnap.exists || (oldMembersSnap.value is Map && (oldMembersSnap.value as Map).length <= 1)) {
+            // Thực hiện xoá vật lý dữ liệu Firestore trước khi cập nhật quyền (houseId) mới
+            final diariesSnap = await FirebaseFirestore.instance.collection('houses').doc(oldHouseId).collection('diaries').get();
+            final albumSnap = await FirebaseFirestore.instance.collection('houses').doc(oldHouseId).collection('album').get();
+            final trashSnap = await FirebaseFirestore.instance.collection('houses').doc(oldHouseId).collection('album_trash').get();
+            final chatSnap = await FirebaseFirestore.instance.collection('houses').doc(oldHouseId).collection('chat_room_messages').get();
+
+            final batch = FirebaseFirestore.instance.batch();
+            for (var doc in diariesSnap.docs) {
+              batch.delete(doc.reference);
+            }
+            for (var doc in albumSnap.docs) {
+              batch.delete(doc.reference);
+            }
+            for (var doc in trashSnap.docs) {
+              batch.delete(doc.reference);
+            }
+            for (var doc in chatSnap.docs) {
+              batch.delete(doc.reference);
+            }
+            await batch.commit();
+            debugPrint('[HouseService] Old house Firestore data deleted: $oldHouseId');
+          }
+        } catch (e) {
+          debugPrint('[HouseService] Failed to delete old house Firestore data: $e');
+        }
+      }
+
       final response = await CloudFunctionsHelper.callSecure<dynamic>(
         'joinHouseSecure',
         payload: <String, dynamic>{
