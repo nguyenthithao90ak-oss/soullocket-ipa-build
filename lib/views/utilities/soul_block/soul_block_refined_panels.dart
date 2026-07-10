@@ -20,34 +20,32 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                 child: Column(
                   children: <Widget>[
                     Container(
-                      padding: const EdgeInsets.fromLTRB(18, 24, 18, 20),
+                      padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(34),
+                        borderRadius: BorderRadius.circular(32),
                         gradient: LinearGradient(
                           colors: <Color>[
-                            Colors.white.withValues(alpha: 0.18),
-                            _kSoulPanelTop.withValues(alpha: 0.22),
-                            _kSoulPanelBottom.withValues(alpha: 0.96),
+                            const Color(0xFF1F2F6F).withValues(alpha: 0.50),
+                            const Color(0xFF0F173B).withValues(alpha: 0.92),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         border: Border.all(
-                          color: _kSoulChrome.withValues(alpha: 0.22),
-                          width: 1.1,
+                          color: const Color(0xFF5B8CFF).withValues(alpha: 0.35),
+                          width: 1.5,
                         ),
                         boxShadow: <BoxShadow>[
                           BoxShadow(
-                            color:
-                                const Color(0xFF182B63).withValues(alpha: 0.30),
-                            blurRadius: 26,
-                            spreadRadius: -10,
-                            offset: const Offset(0, 18),
+                            color: const Color(0xFF5B8CFF).withValues(alpha: 0.15),
+                            blurRadius: 36,
+                            spreadRadius: -6,
+                            offset: const Offset(0, 12),
                           ),
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.20),
+                            color: Colors.black.withValues(alpha: 0.40),
                             blurRadius: 22,
-                            spreadRadius: -12,
+                            spreadRadius: -8,
                             offset: const Offset(0, 16),
                           ),
                         ],
@@ -55,25 +53,40 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                       child: Column(
                         children: <Widget>[
                           Container(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(28),
+                              shape: BoxShape.circle,
+                              color: const Color(0xFF0C1435),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.12),
+                                color: const Color(0xFF36D1FF).withValues(alpha: 0.45),
+                                width: 1.8,
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF36D1FF).withValues(alpha: 0.22),
+                                  blurRadius: 22,
+                                  spreadRadius: 2,
+                                ),
+                              ],
                             ),
-                            child: _buildGameLogo(size: 88),
+                            child: _buildGameLogo(size: 80),
                           ),
                           const SizedBox(height: 18),
-                          Text(
-                            widget.gameTitle,
-                            textAlign: TextAlign.center,
-                            style: SLTheme.quicksand(
-                              fontSize: 34,
-                              fontWeight: FontWeight.w900,
-                              color: _kSoulIvory,
-                              letterSpacing: 1.0,
+                          ShaderMask(
+                            shaderCallback: (bounds) => const LinearGradient(
+                              colors: [Colors.white, Color(0xFFDCE7FF), Color(0xFF8C6CFF)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ).createShader(bounds),
+                            child: Text(
+                              widget.gameTitle,
+                              textAlign: TextAlign.center,
+                              style: SLTheme.quicksand(
+                                fontSize: 36,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                letterSpacing: 1.5,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -90,33 +103,40 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                           const SizedBox(height: 18),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 13,
+                              horizontal: 22,
+                              vertical: 12,
                             ),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(22),
+                              borderRadius: BorderRadius.circular(24),
                               gradient: LinearGradient(
                                 colors: <Color>[
-                                  _kSoulChrome.withValues(alpha: 0.24),
-                                  Colors.white.withValues(alpha: 0.08),
+                                  const Color(0xFFFFD85E).withValues(alpha: 0.12),
+                                  Colors.white.withValues(alpha: 0.04),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               border: Border.all(
-                                color: _kSoulChrome.withValues(alpha: 0.34),
-                                width: 1.1,
+                                color: const Color(0xFFFFD85E).withValues(alpha: 0.45),
+                                width: 1.2,
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFFD85E).withValues(alpha: 0.05),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
                                 const Icon(
                                   Icons.emoji_events_rounded,
-                                  color: _kSoulChrome,
-                                  size: 20,
+                                  color: Color(0xFFFFD85E),
+                                  size: 22,
                                 ),
-                                const SizedBox(width: 10),
+                                const SizedBox(width: 12),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   mainAxisSize: MainAxisSize.min,
@@ -124,19 +144,18 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                                     Text(
                                       'BEST RUN',
                                       style: SLTheme.quicksand(
-                                        fontSize: 10.4,
-                                        fontWeight: FontWeight.w800,
-                                        color: Colors.white
-                                            .withValues(alpha: 0.70),
-                                        letterSpacing: 0.8,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w900,
+                                        color: const Color(0xFFFFD85E).withValues(alpha: 0.85),
+                                        letterSpacing: 1.0,
                                       ),
                                     ),
                                     Text(
                                       _formatNumber(_bestScore),
                                       style: SLTheme.quicksand(
-                                        fontSize: 21,
+                                        fontSize: 22,
                                         fontWeight: FontWeight.w900,
-                                        color: _kSoulIvory,
+                                        color: Colors.white,
                                         letterSpacing: 0.2,
                                       ),
                                     ),
@@ -164,7 +183,7 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                         ...<int>[8, 9].map((int size) {
                           final bool isSelected = _boardSize == size;
                           return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: GestureDetector(
                               onTap: () {
                                 if (!_isOpeningGameplay) {
@@ -172,28 +191,45 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                                   _setBoardSize(size);
                                 }
                               },
-                              child: Container(
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 14, vertical: 6),
+                                    horizontal: 18, vertical: 8),
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(20),
+                                  gradient: isSelected
+                                      ? const LinearGradient(
+                                          colors: [Color(0xFF36D1FF), Color(0xFF5B8CFF)],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        )
+                                      : null,
                                   color: isSelected
-                                      ? _kSoulChrome.withValues(alpha: 0.18)
+                                      ? null
                                       : Colors.white.withValues(alpha: 0.05),
                                   border: Border.all(
                                     color: isSelected
-                                        ? _kSoulChrome.withValues(alpha: 0.6)
-                                        : Colors.white.withValues(alpha: 0.1),
-                                    width: 1.2,
+                                        ? const Color(0xFF36D1FF).withValues(alpha: 0.8)
+                                        : Colors.white.withValues(alpha: 0.12),
+                                    width: 1.5,
                                   ),
+                                  boxShadow: isSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: const Color(0xFF5B8CFF).withValues(alpha: 0.35),
+                                            blurRadius: 10,
+                                            spreadRadius: 1,
+                                          ),
+                                        ]
+                                      : null,
                                 ),
                                 child: Text(
                                   '${size}x$size',
                                   style: SLTheme.quicksand(
-                                    fontSize: 13,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w900,
                                     color: isSelected
-                                        ? _kSoulChrome
+                                        ? Colors.white
                                         : Colors.white60,
                                   ),
                                 ),
@@ -225,77 +261,82 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                         );
                       },
                       child: Container(
+                        width: double.infinity,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(28),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF36D1FF), Color(0xFF8C6CFF)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                           boxShadow: <BoxShadow>[
                             BoxShadow(
-                              color: const Color(0xFF15295F)
-                                  .withValues(alpha: 0.38),
+                              color: const Color(0xFF8C6CFF).withValues(alpha: 0.45),
                               blurRadius: 28,
-                              spreadRadius: -12,
-                              offset: const Offset(0, 18),
+                              spreadRadius: -4,
+                              offset: const Offset(0, 10),
                             ),
                           ],
                         ),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _isOpeningGameplay
-                                ? null
-                                : _startSessionFromMenu,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _kSoulChrome,
-                              foregroundColor: const Color(0xFF17233F),
-                              disabledBackgroundColor: const Color(0xFFF7E39D),
-                              disabledForegroundColor: const Color(0xFF2A3558),
-                              padding: const EdgeInsets.symmetric(vertical: 22),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(28),
-                              ),
-                              elevation: 0,
+                        child: ElevatedButton(
+                          onPressed: _isOpeningGameplay
+                              ? null
+                              : _startSessionFromMenu,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: Colors.transparent,
+                            disabledForegroundColor: Colors.white.withOpacity(0.5),
+                            padding: const EdgeInsets.symmetric(vertical: 22),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(28),
                             ),
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 140),
-                              child: _isOpeningGameplay
-                                  ? Row(
-                                      key: const ValueKey<String>(
-                                          'play-loading'),
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: <Widget>[
-                                        const SizedBox(
-                                          width: 22,
-                                          height: 22,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2.6,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                              Color(0xFF253052),
-                                            ),
+                            elevation: 0,
+                          ),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 140),
+                            child: _isOpeningGameplay
+                                ? Row(
+                                    key: const ValueKey<String>(
+                                        'play-loading'),
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.6,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                            Colors.white,
                                           ),
                                         ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          'SETTING BOARD',
-                                          style: SLTheme.quicksand(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w900,
-                                            letterSpacing: 0.9,
-                                          ),
-                                        ),
-                                      ],
-                                    )
-                                  : Text(
-                                      'PLAY',
-                                      key: const ValueKey<String>('play-idle'),
-                                      style: SLTheme.quicksand(
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 1.0,
                                       ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        'SETTING BOARD',
+                                        style: SLTheme.quicksand(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                          letterSpacing: 0.9,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Text(
+                                    'PLAY',
+                                    key: const ValueKey<String>('play-idle'),
+                                    style: SLTheme.quicksand(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                      letterSpacing: 1.0,
                                     ),
-                            ),
+                                  ),
                           ),
                         ),
                       ),
@@ -307,15 +348,24 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                         borderRadius: BorderRadius.circular(26),
                         gradient: LinearGradient(
                           colors: <Color>[
-                            Colors.white.withValues(alpha: 0.12),
-                            _kSoulPanelBottom.withValues(alpha: 0.94),
+                            const Color(0xFF0F173B).withValues(alpha: 0.85),
+                            const Color(0xFF0A1436).withValues(alpha: 0.95),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.10),
+                          color: const Color(0xFF5B8CFF).withValues(alpha: 0.20),
+                          width: 1.2,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            blurRadius: 18,
+                            spreadRadius: -4,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
                       child: Row(
                         children: <Widget>[

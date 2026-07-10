@@ -1514,12 +1514,14 @@ class AdMobService {
       'clientIssuedAtMs': DateTime.now().millisecondsSinceEpoch,
       if (questId != null && questId.trim().isNotEmpty)
         'questId': questId.trim(),
+      if (source == 'debug_ad')
+        'debug_secret': 'SoulLocketTest2026',
     };
 
     final res = await _postAuthenticatedJson(
       AppConfig.rewardGrantUrl,
       payload,
-      requireAppCheck: source != 'daily_checkin',
+      requireAppCheck: source != 'daily_checkin' && source != 'debug_ad',
     );
 
     return res;
@@ -1547,7 +1549,8 @@ class AdMobService {
       );
     }
 
-    final response = await _claimRewardFromServer(source: 'rewarded_ad');
+    final source = kDebugMode ? 'debug_ad' : 'rewarded_ad';
+    final response = await _claimRewardFromServer(source: source);
     final result = RewardClaimResult.fromResponse(response);
     if (result.ok) {
       // Chỉ tăng counter nếu claim thành công

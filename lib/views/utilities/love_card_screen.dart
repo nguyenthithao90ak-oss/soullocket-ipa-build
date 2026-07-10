@@ -428,9 +428,15 @@ class _LoveCardScreenState extends State<LoveCardScreen>
       return;
     }
 
-    final data = Map<dynamic, dynamic>.from(snapshot.value as Map);
+    final rawValue = snapshot.value;
+    if (rawValue is! Map) {
+      return;
+    }
+
+    final data = Map<dynamic, dynamic>.from(rawValue);
     final hasUnread = data.values.any((card) {
-      final map = Map<dynamic, dynamic>.from(card as Map);
+      if (card is! Map) return false;
+      final map = Map<dynamic, dynamic>.from(card);
       return map['fromUid'] != widget.myUid && map['isOpened'] == false;
     });
 
@@ -786,7 +792,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
     if (displayName.isNotEmpty) {
       return displayName;
     }
-    return context.tr('util_ngithngcab_27bf12');
+    return L10nService().translate('util_ngithngcab_27bf12');
   }
 
   String _resolveSenderName() {

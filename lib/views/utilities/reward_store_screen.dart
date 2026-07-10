@@ -589,11 +589,37 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
               await _adMob.incrementDailyRewardedAdCountDebug();
             } else {
               debugPrint(
-                  'AdMobService: Debug mode fallback points grant failed from server.');
+                  'AdMobService: Debug mode fallback points grant failed from server. Trying direct RTDB write.');
+              final user = _auth.currentUser;
+              if (user != null) {
+                await _dbRef.update({
+                  'users/${user.uid}/points': ServerValue.increment(AdMobService.rewardedMainPoints),
+                });
+                result = const RewardClaimResult(
+                  ok: true,
+                  granted: AdMobService.rewardedMainPoints,
+                );
+                await _adMob.incrementDailyRewardedAdCountDebug();
+              }
             }
           } catch (fallbackError) {
             debugPrint(
-                'AdMobService: Debug mode fallback points grant exception: $fallbackError');
+                'AdMobService: Debug mode fallback points grant exception: $fallbackError. Trying direct RTDB write.');
+            final user = _auth.currentUser;
+            if (user != null) {
+              try {
+                await _dbRef.update({
+                  'users/${user.uid}/points': ServerValue.increment(AdMobService.rewardedMainPoints),
+                });
+                result = const RewardClaimResult(
+                  ok: true,
+                  granted: AdMobService.rewardedMainPoints,
+                );
+                await _adMob.incrementDailyRewardedAdCountDebug();
+              } catch (rtdbErr) {
+                debugPrint('Direct RTDB fallback write failed: $rtdbErr');
+              }
+            }
           }
         }
 

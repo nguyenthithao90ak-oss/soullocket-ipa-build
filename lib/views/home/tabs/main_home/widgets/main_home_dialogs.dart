@@ -787,7 +787,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
       initialDate = DateTime.tryParse(curStartDate) ?? DateTime.now();
     }
 
-    // LÆ°u context-dependent objects trÆ°á»›c async gap
+    // Lưu context-dependent objects trước async gap
     if (!mounted) return;
     final scaffoldMessenger = ScaffoldMessenger.maybeOf(context);
 

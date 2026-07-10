@@ -588,7 +588,7 @@ class ChatService {
             .add(msgPayload);
         final messageId = docRef.id;
 
-        await _dbRef.update({
+        unawaited(_dbRef.update({
           'chats/$roomId/lastMessage': _lastMessageWriteMap(
             senderId: myHouseId,
             type: type,
@@ -596,7 +596,9 @@ class ChatService {
             messageId: messageId,
           ),
           'chats/$roomId/updatedAt': ServerValue.timestamp,
-        });
+        }).catchError((e) {
+          debugPrint('[ChatService] Failed to update chat metadata on RTDB: $e');
+        }));
       },
       permissionMessage:
           'Không thể gửi tin nhắn lúc này. Có thể một trong hai bên đã chặn nhau hoặc quyền Firebase chưa đồng bộ.',

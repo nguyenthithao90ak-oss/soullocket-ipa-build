@@ -10,6 +10,7 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
       final bestScore = prefs.getInt(_bestScoreKey) ?? 0;
       final soundEnabled = prefs.getBool(_soundEnabledKey) ?? true;
       final vibrationEnabled = prefs.getBool(_vibrationEnabledKey) ?? true;
+      final smoothGraphics = prefs.getBool(_smoothGraphicsKey) ?? false;
       final storedAutoTrayShuffleEnabled =
           prefs.getBool(_autoTrayShuffleEnabledKey) ?? false;
       final leaderboard = _decodeLeaderboard(
@@ -40,6 +41,7 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
         _bestScore = max(_bestScore, bestScore);
         _soundEnabled = soundEnabled;
         _vibrationEnabled = vibrationEnabled;
+        _smoothGraphics = smoothGraphics;
         _leaderboard = leaderboard;
         _houseId = houseId;
         _memoryBurstGallery = memoryBurstGallery;

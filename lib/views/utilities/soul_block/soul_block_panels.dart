@@ -1054,6 +1054,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
       builder: (BuildContext context) {
         var sound = _soundEnabled;
         var vibration = _vibrationEnabled;
+        var smoothGraphics = _smoothGraphics;
         return StatefulBuilder(
           builder: (context, setModalState) {
             return SafeArea(
@@ -1123,6 +1124,16 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                             onChanged: (value) async {
                               setModalState(() => vibration = value);
                               await _setVibrationEnabled(value);
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          _SettingsSwitchTile(
+                            icon: Icons.flash_on_rounded,
+                            title: 'Smooth Graphics (Reduce Lag)',
+                            value: smoothGraphics,
+                            onChanged: (value) async {
+                              setModalState(() => smoothGraphics = value);
+                              await _setSmoothGraphicsEnabled(value);
                             },
                           ),
                           const SizedBox(height: 16),

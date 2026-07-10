@@ -999,7 +999,7 @@ extension _SettingsTabPersistence on _SettingsTabState {
 //       });
 //       if (mounted) _showToast(context.tr('saved_info'), success: true);
 //     } catch (e) {
-//       if (mounted) _showToast('Lá»—i lÆ°u: $e', success: false);
+//       if (mounted) _showToast('Lỗi lưu: $e', success: false);
 //     }
 //   }
 

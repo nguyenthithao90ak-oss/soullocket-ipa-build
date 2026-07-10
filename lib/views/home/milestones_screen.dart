@@ -88,6 +88,26 @@ class _MilestonesScreenState extends State<MilestonesScreen>
         ));
       }
 
+      // Cột mốc tháng (kỷ niệm tháng yêu nhau: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 tháng)
+      final milestoneMonths = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+      for (final m in milestoneMonths) {
+        final milestoneDate = DateTime(
+          startDtMidnight.year,
+          startDtMidnight.month + m,
+          startDtMidnight.day,
+        );
+        final diff = milestoneDate.difference(todayMidnight).inDays;
+        final title = L10nService().localeCode == 'vi'
+            ? 'Kỷ niệm $m tháng bên nhau 💖'
+            : 'Celebrating $m months of love 💖';
+        allEvents.add(MilestoneEvent(
+          title: title,
+          date: milestoneDate,
+          type: 'anniversary',
+          diffDays: diff,
+        ));
+      }
+
       // Cột mốc năm (kỷ niệm năm yêu nhau)
       for (int y = 1; y <= 25; y++) {
         final annivDate = DateTime(startDtMidnight.year + y, startDtMidnight.month, startDtMidnight.day);

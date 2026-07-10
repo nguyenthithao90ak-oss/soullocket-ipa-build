@@ -40,18 +40,24 @@ class InternalChatService {
     // Ghi tin nhắn vào Firestore
     final docRef = await _messagesRef(houseId).add(payload);
 
-    // Cập nhật lastMessage lên RTDB (nhẹ, chỉ vài bytes để hiển thị badge)
-    await _rtdb.child('houses/$houseId/chat_room/lastMessage').set({
+    // Cập nhật lastMessage lên RTDB (chạy ngầm bất đồng bộ để gửi tin nhắn siêu tốc)
+    unawaited(_rtdb.child('houses/$houseId/chat_room/lastMessage').set({
       'text': message.type == 'image' ? '[Hình ảnh]' : message.text,
       'ts': now,
       'senderId': message.senderId,
       'isRead': false,
       'type': message.type,
       'messageId': docRef.id,
-    });
-    await _rtdb
+    }).catchError((e) {
+      debugPrint('[InternalChatService] Failed to set lastMessage on RTDB: $e');
+    }));
+
+    unawaited(_rtdb
         .child('houses/$houseId/chat_room/updatedAt')
-        .set(ServerValue.timestamp);
+        .set(ServerValue.timestamp)
+        .catchError((e) {
+      debugPrint('[InternalChatService] Failed to set updatedAt on RTDB: $e');
+    }));
 
     return docRef.id;
   }

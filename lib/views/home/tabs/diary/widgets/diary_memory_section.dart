@@ -593,23 +593,22 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 24, bottom: 12, left: 10, right: 10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.70),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.86)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF7C8BFF).withValues(alpha: 0.08),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Row(
+    return Container(
+      margin: const EdgeInsets.only(top: 24, bottom: 12, left: 16, right: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.90)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF7C8BFF).withValues(alpha: 0.12),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
           children: [
             Container(
               width: 36,
@@ -676,8 +675,7 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -697,7 +695,7 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(top: 20, bottom: 8, left: 12, right: 12),
+      margin: const EdgeInsets.only(top: 20, bottom: 8, left: 16, right: 16),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -705,7 +703,7 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.90),
           width: 1.2,
@@ -1366,8 +1364,8 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Wrap(
-                spacing: 6,
-                runSpacing: 6,
+                spacing: 8,
+                runSpacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   ...statusChips,

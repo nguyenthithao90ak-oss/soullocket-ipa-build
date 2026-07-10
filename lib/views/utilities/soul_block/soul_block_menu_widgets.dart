@@ -47,21 +47,21 @@ class _MenuMiniButton extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: <Color>[
-              Colors.white.withValues(alpha: 0.10),
-              _kSoulPanelTop.withValues(alpha: 0.12),
-              _kSoulPanelBottom.withValues(alpha: 0.88),
+              Colors.white.withValues(alpha: 0.05),
+              _kSoulPanelTop.withValues(alpha: 0.08),
+              _kSoulPanelBottom.withValues(alpha: 0.92),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.10),
+            color: const Color(0xFF5B8CFF).withValues(alpha: 0.15),
             width: 1.0,
           ),
           boxShadow: <BoxShadow>[
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.16),
+              color: Colors.black.withValues(alpha: 0.25),
               blurRadius: 12,
               spreadRadius: -8,
               offset: const Offset(0, 8),

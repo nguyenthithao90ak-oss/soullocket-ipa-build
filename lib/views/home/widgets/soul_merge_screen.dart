@@ -814,16 +814,20 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           ),
 
           // Isolated tap hearts particle overlay
-          TapHeartsOverlay(
-            key: _heartsOverlayKey,
-            style: _activeStyle,
+          Positioned.fill(
+            child: IgnorePointer(
+              child: TapHeartsOverlay(
+                key: _heartsOverlayKey,
+                style: _activeStyle,
+              ),
+            ),
           ),
 
           // 4. Floating message bubbles
           for (final msg in _floatingMessages)
-            RepaintBoundary(
+            FloatingMessageWidget(
               key: msg.id,
-              child: FloatingMessageWidget(message: msg),
+              message: msg,
             ),
 
           for (int i = 0; i < latestPhotos.length; i++)
@@ -3021,52 +3025,57 @@ class _FloatingMessageWidgetState extends State<FloatingMessageWidget>
         ? const Color(0xFFFF4F93)
         : const Color(0xFF9C2A6F);
 
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Positioned(
-          left: widget.message.position.dx,
-          top: widget.message.position.dy + _slideAnim.value,
-          child: Opacity(
-            opacity: _opacityAnim.value.clamp(0.0, 1.0),
-            child: Transform.scale(
-              scale: _scaleAnim.value,
-              child: child,
+    return Positioned(
+      left: widget.message.position.dx,
+      top: widget.message.position.dy,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Transform.translate(
+            offset: Offset(0, _slideAnim.value),
+            child: Opacity(
+              opacity: _opacityAnim.value.clamp(0.0, 1.0),
+              child: Transform.scale(
+                scale: _scaleAnim.value,
+                child: child,
+              ),
             ),
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.65,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.72),
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(widget.message.isSelf ? 16 : 4),
-            bottomRight: Radius.circular(widget.message.isSelf ? 4 : 16),
-          ),
-          border: Border.all(
-            color: themeColor.withValues(alpha: 0.5),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: themeColor.withValues(alpha: 0.25),
-              blurRadius: 10,
-              spreadRadius: 1,
+          );
+        },
+        child: RepaintBoundary(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.65,
             ),
-          ],
-        ),
-        child: Text(
-          widget.message.text,
-          style: SLTheme.quicksand(
-            color: Colors.white,
-            fontSize: 14.5,
-            fontWeight: FontWeight.w700,
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.72),
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(16),
+                topRight: const Radius.circular(16),
+                bottomLeft: Radius.circular(widget.message.isSelf ? 16 : 4),
+                bottomRight: Radius.circular(widget.message.isSelf ? 4 : 16),
+              ),
+              border: Border.all(
+                color: themeColor.withValues(alpha: 0.5),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: themeColor.withValues(alpha: 0.25),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Text(
+              widget.message.text,
+              style: SLTheme.quicksand(
+                color: Colors.white,
+                fontSize: 14.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ),
       ),

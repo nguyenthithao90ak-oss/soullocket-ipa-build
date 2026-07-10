@@ -77,8 +77,8 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   static const double _memoryBurstCardAspectRatio = 0.9;
   static const double _dragLiftOffset = 12;
   static const int _trayPreviewGridSize = 5;
-  static const double _dragUpdateEpsilon = 0.5;
-  static const double _dragOverlayUpdateEpsilon = 1.6;
+  static const double _dragUpdateEpsilon = 1.2;
+  static const double _dragOverlayUpdateEpsilon = 2.8;
   static const Duration _autoTrayShuffleInterval = Duration(seconds: 30);
   static const Duration _autoTrayShuffleRetryDelay = Duration(seconds: 3);
 
@@ -86,6 +86,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   String get _soundEnabledKey => '${widget.storageKeyPrefix}_sound_enabled';
   String get _vibrationEnabledKey =>
       '${widget.storageKeyPrefix}_vibration_enabled';
+  String get _smoothGraphicsKey => '${widget.storageKeyPrefix}_smooth_graphics';
   String get _leaderboardKey =>
       '${widget.storageKeyPrefix}_local_leaderboard_v2';
   String get _autoTrayShuffleEnabledKey =>
@@ -188,6 +189,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   bool _audioReady = false;
   bool _soundEnabled = true;
   bool _vibrationEnabled = true;
+  bool _smoothGraphics = false;
   bool _isBusy = false;
   bool _isGameOver = false;
   bool _continueUsedThisRun = false;
@@ -380,6 +382,14 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     if (value) {
       HapticFeedback.selectionClick();
     }
+  }
+
+  Future<void> _setSmoothGraphicsEnabled(bool value) async {
+    setState(() {
+      _smoothGraphics = value;
+      _performanceProfile = _resolvePerformanceProfile();
+    });
+    await _persistSetting(_smoothGraphicsKey, value);
   }
 
   bool get _canRunAutoTrayShuffle =>
@@ -682,6 +692,9 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   }
 
   _SoulBlockPerformanceProfile _resolvePerformanceProfile() {
+    if (_smoothGraphics) {
+      return _SoulBlockPerformanceProfile.low;
+    }
     final MediaQueryData? mediaQuery = MediaQuery.maybeOf(context);
     final view = WidgetsBinding.instance.platformDispatcher.views.isNotEmpty
         ? WidgetsBinding.instance.platformDispatcher.views.first

@@ -270,6 +270,13 @@ class UtilityService {
       icon: Icons.health_and_safety_rounded,
       colors: [const Color(0xFFFF80AB), const Color(0xFFF06292)],
     ),
+    UtilityApp(
+      id: 'couple_connect',
+      title: 'home_qunllinkt_df5d77',
+      icon: Icons.link_rounded,
+      colors: [const Color(0xFF6A1B9A), const Color(0xFFAB47BC)],
+      isTool: true,
+    ),
   ];
 
   List<String> _sanitizeAppIds(Iterable<String> rawIds) {

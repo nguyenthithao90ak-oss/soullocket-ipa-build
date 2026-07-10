@@ -50,6 +50,7 @@ import '../../utilities/health_screen.dart';
 import '../../utilities/local_album_screen.dart';
 import '../../utilities/soul_events/soul_events_screen.dart';
 import 'package:soullocket_app/core/sl_route.dart';
+import '../../relationship/couple_connect_screen.dart';
 
 // import '../../utils/sl_notice.dart';
 
@@ -433,10 +434,15 @@ class _UtilitiesTabState extends State<UtilitiesTab>
           context, SLRoute(builder: (_) => const LocalAlbumScreen()));
       return;
     }
-
     final houseId = _houseId;
     if (houseId == null || houseId.isEmpty) {
       SLNotice.showInfo(context, context.tr('home_angtidliun_f42fcd'));
+      return;
+    }
+
+    if (id == 'couple_connect') {
+      Navigator.push(
+          context, SLRoute(builder: (_) => CoupleConnectScreen(houseId: houseId)));
       return;
     }
 
