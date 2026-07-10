@@ -135,18 +135,37 @@ struct CoupleWidgetProvider: TimelineProvider {
     }
 }
 
+// ─── Entry Point Launcher để tránh load metadata iOS 16 Live Activity trên iOS 15 ───
 @main
-struct SoulLocketWidgetBundle: WidgetBundle {
-    var body: some Widget {
-        WidgetCoupleProvider()
+struct SoulLocketWidgetLauncher {
+    static func main() {
         #if canImport(ActivityKit)
         if #available(iOS 16.1, *) {
-            SoulLocketLiveActivity()
+            SoulLocketWidgetBundle16.main()
+            return
         }
         #endif
+        SoulLocketWidgetBundle15.main()
     }
 }
 
+// ─── iOS 16.1+ Widget Bundle (Includes Live Activity) ────────────────────────
+#if canImport(ActivityKit)
+@available(iOS 16.1, *)
+struct SoulLocketWidgetBundle16: WidgetBundle {
+    var body: some Widget {
+        WidgetCoupleProvider()
+        SoulLocketLiveActivity()
+    }
+}
+#endif
+
+// ─── iOS 15 Widget Bundle (No Live Activity) ───────────────────────────────
+struct SoulLocketWidgetBundle15: WidgetBundle {
+    var body: some Widget {
+        WidgetCoupleProvider()
+    }
+}
 
 struct WidgetCoupleProvider: Widget {
     let kind: String = "WidgetCoupleProvider"
@@ -161,7 +180,11 @@ struct WidgetCoupleProvider: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: CoupleWidgetProvider()) { entry in
-            SoulLocketWidgetView(entry: entry)
+            if #available(iOS 16.0, *) {
+                SoulLocketWidgetView16(entry: entry)
+            } else {
+                SoulLocketWidgetView15(entry: entry)
+            }
         }
         .configurationDisplayName("SoulLocket")
         .description("Hiển thị thông tin cặp đôi của bạn.")

@@ -811,14 +811,15 @@ struct PersonCard: View {
     }
 }
 
-struct SoulLocketWidgetView: View {
+@available(iOS 16.0, *)
+struct SoulLocketWidgetView16: View {
     let entry: CoupleEntry
     @Environment(\.widgetFamily) var family
 
     var body: some View {
         let theme = WidgetTheme.from(entry.data.bgTheme)
 
-        if #available(iOS 16.0, *), isLockScreen(family: family) {
+        if isLockScreen(family: family) {
             LockScreenWidgetView(data: entry.data, family: family, theme: theme, date: entry.date)
         } else {
             ZStack {
@@ -854,9 +855,46 @@ struct SoulLocketWidgetView: View {
         }
     }
 
-    @available(iOS 16.0, *)
     private func isLockScreen(family: WidgetFamily) -> Bool {
         return family == .accessoryCircular || family == .accessoryRectangular || family == .accessoryInline
+    }
+}
+
+struct SoulLocketWidgetView15: View {
+    let entry: CoupleEntry
+    @Environment(\.widgetFamily) var family
+
+    var body: some View {
+        let theme = WidgetTheme.from(entry.data.bgTheme)
+
+        ZStack {
+            LinearGradient(
+                colors: theme.gradient,
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
+            if entry.data.bgTheme == "premium" {
+                PremiumAuroraBackdrop(accentColor: theme.accentColor)
+            } else if entry.data.bgTheme == "cosmic" {
+                PremiumCosmicBackdrop()
+            } else {
+                WidgetBackgroundDecorations(bgTheme: entry.data.bgTheme, accentColor: theme.accentColor)
+            }
+
+            switch family {
+            case .systemSmall:
+                SmallWidgetView(data: entry.data, theme: theme, date: entry.date)
+            case .systemMedium:
+                MediumWidgetView(data: entry.data, theme: theme, date: entry.date)
+            case .systemLarge:
+                LargeWidgetView(data: entry.data, theme: theme, date: entry.date)
+            default:
+                SmallWidgetView(data: entry.data, theme: theme, date: entry.date)
+            }
+        }
+        .modifier(WidgetContainerBackground(theme: theme, data: entry.data))
     }
 }
 

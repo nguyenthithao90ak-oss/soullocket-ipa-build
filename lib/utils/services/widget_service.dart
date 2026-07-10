@@ -844,7 +844,10 @@ class WidgetService {
       final dir = await getApplicationDocumentsDirectory();
       final file = File('${dir.path}/$filename');
       if (useExisting && await file.exists()) {
-        return file.path;
+        final fileSize = await file.length();
+        if (fileSize > 100) {
+          return file.path;
+        }
       }
 
       final sourceFile = await _storageService.getCachedNetworkFile(
@@ -853,7 +856,20 @@ class WidgetService {
         cacheKey: filename,
       );
       if (sourceFile != null && await sourceFile.exists()) {
-        await file.writeAsBytes(await sourceFile.readAsBytes(), flush: true);
+        final bytes = await sourceFile.readAsBytes();
+        try {
+          final compressedBytes = await FlutterImageCompress.compressWithList(
+            bytes,
+            minHeight: 180,
+            minWidth: 180,
+            quality: 80,
+          );
+          await file.writeAsBytes(compressedBytes, flush: true);
+          debugPrint('✅ Widget avatar compressed and saved: ${(compressedBytes.length / 1024).toStringAsFixed(2)}KB');
+        } catch (compressErr) {
+          debugPrint('⚠️ Error compressing widget avatar, fallback to raw: $compressErr');
+          await file.writeAsBytes(bytes, flush: true);
+        }
         return file.path;
       }
     } catch (e) {
