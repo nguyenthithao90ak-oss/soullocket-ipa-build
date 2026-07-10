@@ -129,7 +129,7 @@ class AlbumService {
         .collection('houses')
         .doc(houseId)
         .collection('album')
-        .orderBy('ts', descending: true)
+        .orderBy('timestamp', descending: true)
         .limit(albumStreamPageSize)
         .snapshots()
         .map((event) {
@@ -152,11 +152,11 @@ class AlbumService {
         .collection('houses')
         .doc(houseId)
         .collection('album')
-        .orderBy('ts', descending: true)
+        .orderBy('timestamp', descending: true)
         .limit(limit);
 
     if (endBeforeTs != null) {
-      query = query.where('ts', isLessThan: endBeforeTs);
+      query = query.where('timestamp', isLessThan: endBeforeTs);
     }
 
     final snap = await query.get();
@@ -405,7 +405,7 @@ class AlbumService {
         .collection('houses')
         .doc(houseId)
         .collection('album')
-        .orderBy('ts', descending: true)
+        .orderBy('timestamp', descending: true)
         .limit(limit)
         .get();
 

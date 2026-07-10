@@ -103,6 +103,8 @@ class PermissionHelper {
       return true;
     }
 
+    // Removed iOS bypass to enforce disclosure dialog on all platforms
+
     if (!context.mounted) return false;
     final shouldRequest = await _showDisclosureDialog(context, title, disclosure);
     if (shouldRequest != true) {
@@ -128,6 +130,7 @@ class PermissionHelper {
     }
     if (!context.mounted) return false;
 
+    // Removed iOS bypass to enforce disclosure dialog on all platforms
     final shouldRequest =
         await _showDisclosureDialog(context, title, disclosure);
     if (shouldRequest != true) {

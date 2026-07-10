@@ -24,7 +24,7 @@ class DiaryService {
   // ── LISTEN realtime ────────────────────────────────────────────────────
   Stream<List<DiaryPost>> streamDiary(String houseId, {int limit = 80}) {
     return _diariesRef(houseId)
-        .orderBy('ts', descending: true)
+        .orderBy('timestamp', descending: true)
         .limit(limit)
         .snapshots()
         .map((snapshot) {
@@ -141,7 +141,7 @@ class DiaryService {
     int limit = 80,
   }) async {
     final snap = await _getQueryWithCacheFallback(
-      _diariesRef(houseId).orderBy('ts', descending: true).limit(limit),
+      _diariesRef(houseId).orderBy('timestamp', descending: true).limit(limit),
     );
 
     final posts = <DiaryPost>[];
@@ -165,7 +165,7 @@ class DiaryService {
     DocumentSnapshot<Map<String, dynamic>>? startAfter,
   }) async {
     Query<Map<String, dynamic>> query =
-        _diariesRef(houseId).orderBy('ts', descending: true).limit(limit);
+        _diariesRef(houseId).orderBy('timestamp', descending: true).limit(limit);
 
     if (startAfter != null) {
       query = query.startAfterDocument(startAfter);

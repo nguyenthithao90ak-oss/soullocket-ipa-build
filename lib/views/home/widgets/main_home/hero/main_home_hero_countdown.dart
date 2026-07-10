@@ -599,6 +599,12 @@ class _MainHomeHeroCountdownCircleState
             Color(int.parse(countdownTextColorStr.replaceFirst('#', '0xFF')));
       } catch (_) {}
     }
+    final multiColorGradient = const [
+      Color(0xFF00C6FF),
+      Color(0xFF9D50BB),
+      Color(0xFFF44336),
+      Color(0xFF00C6FF),
+    ];
 
     final labelHeight = (widget.circleSize * 0.15).clamp(24.0, 72.0).toDouble();
     final numberHeight =
@@ -692,7 +698,7 @@ class _MainHomeHeroCountdownCircleState
                               child: isMultiColor 
                                 ? ShaderMask(
                                     shaderCallback: (bounds) => LinearGradient(
-                                      colors: countdownVisual.numberGradient,
+                                      colors: multiColorGradient,
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                     ).createShader(bounds),
@@ -745,9 +751,11 @@ class _MainHomeHeroCountdownCircleState
                             fit: BoxFit.scaleDown,
                             child: ShaderMask(
                               shaderCallback: (bounds) => LinearGradient(
-                                colors: customTextColor != null
-                                    ? [customTextColor, customTextColor]
-                                    : countdownVisual.numberGradient,
+                                colors: isMultiColor
+                                    ? multiColorGradient
+                                    : customTextColor != null
+                                        ? [customTextColor, customTextColor]
+                                        : countdownVisual.numberGradient,
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ).createShader(bounds),
@@ -800,7 +808,7 @@ class _MainHomeHeroCountdownCircleState
                               child: isMultiColor
                                 ? ShaderMask(
                                     shaderCallback: (bounds) => LinearGradient(
-                                      colors: countdownVisual.numberGradient,
+                                      colors: multiColorGradient,
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                     ).createShader(bounds),

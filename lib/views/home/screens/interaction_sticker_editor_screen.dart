@@ -19,7 +19,7 @@ class _InteractionStickerEditorScreenState
       'label': 'Nhớ',
       'emoji': '💖',
       'defaultPath':
-          'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+          'assets/images/interaction_stickers/custom/numbered/sticker_343.png',
       'path': '',
       'gradient': [const Color(0xFFFFD8E6), const Color(0xFFFFF3F7)],
       'accent': const Color(0xFFD94C86),
@@ -29,7 +29,7 @@ class _InteractionStickerEditorScreenState
       'label': 'Giận',
       'emoji': '😾',
       'defaultPath':
-          'assets/images/interaction_stickers/custom/numbered/sticker_154.png',
+          'assets/images/interaction_stickers/custom/numbered/sticker_338.png',
       'path': '',
       'gradient': [const Color(0xFFFFE6DC), const Color(0xFFFFF6F2)],
       'accent': const Color(0xFFE26A3A),
@@ -39,7 +39,7 @@ class _InteractionStickerEditorScreenState
       'label': 'Tức',
       'emoji': '😡',
       'defaultPath':
-          'assets/images/interaction_stickers/custom/numbered/sticker_049.png',
+          'assets/images/interaction_stickers/custom/numbered/sticker_291.png',
       'path': '',
       'gradient': [const Color(0xFFFFD7DC), const Color(0xFFFFF1F3)],
       'accent': const Color(0xFFE53935),
@@ -49,7 +49,7 @@ class _InteractionStickerEditorScreenState
       'label': 'Hôn',
       'emoji': '💋',
       'defaultPath':
-          'assets/images/interaction_stickers/custom/numbered/sticker_047.png',
+          'assets/images/interaction_stickers/custom/numbered/sticker_228.png',
       'path': '',
       'gradient': [const Color(0xFFFFE1EC), const Color(0xFFFFF7FA)],
       'accent': const Color(0xFFE14A8B),
@@ -59,7 +59,7 @@ class _InteractionStickerEditorScreenState
       'label': 'Trêu',
       'emoji': '🤡',
       'defaultPath':
-          'assets/images/interaction_stickers/custom/numbered/sticker_070.png',
+          'assets/images/interaction_stickers/custom/numbered/sticker_276.png',
       'path': '',
       'gradient': [const Color(0xFFE8E1FF), const Color(0xFFF8F5FF)],
       'accent': const Color(0xFF7B61D9),
@@ -69,7 +69,7 @@ class _InteractionStickerEditorScreenState
       'label': 'Ôm',
       'emoji': '🐨',
       'defaultPath':
-          'assets/images/interaction_stickers/custom/numbered/sticker_082.png',
+          'assets/images/interaction_stickers/custom/numbered/sticker_270.png',
       'path': '',
       'gradient': [const Color(0xFFDDF3FF), const Color(0xFFF5FBFF)],
       'accent': const Color(0xFF2D8FE3),
@@ -79,7 +79,7 @@ class _InteractionStickerEditorScreenState
       'label': 'Khóc',
       'emoji': '😭',
       'defaultPath':
-          'assets/images/interaction_stickers/custom/numbered/sticker_089.png',
+          'assets/images/interaction_stickers/custom/numbered/sticker_268.png',
       'path': '',
       'gradient': [const Color(0xFFDDEBFF), const Color(0xFFF4F8FF)],
       'accent': const Color(0xFF5B8DEF),
@@ -89,7 +89,7 @@ class _InteractionStickerEditorScreenState
       'label': 'Troll',
       'emoji': '💩',
       'defaultPath':
-          'assets/images/interaction_stickers/custom/numbered/sticker_071.png',
+          'assets/images/interaction_stickers/custom/numbered/sticker_267.png',
       'path': '',
       'gradient': [const Color(0xFFFFE1B9), const Color(0xFFFFF4E6)],
       'accent': const Color(0xFFB96B2C),
@@ -134,14 +134,14 @@ class _InteractionStickerEditorScreenState
     'assets/images/interaction_stickers/custom/numbered/sticker_067.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_068.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_069.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_070.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_071.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_276.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_267.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_072.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_082.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_270.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_085.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_089.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_154.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_268.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_343.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_338.png',
   ];
 
   late final List<String> _stickerPool;

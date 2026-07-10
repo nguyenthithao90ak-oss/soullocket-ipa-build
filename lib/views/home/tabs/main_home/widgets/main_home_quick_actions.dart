@@ -117,7 +117,7 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
                             ? _buildInteractionVisual(
                                 visual: '\u{1F496}',
                                 assetPath:
-                                    'assets/images/interaction_stickers/custom/numbered/sticker_082.png',
+                                    'assets/images/interaction_stickers/custom/numbered/sticker_270.png',
                                 size: 84,
                                 emojiSize: 72,
                                 preferAsset: true,

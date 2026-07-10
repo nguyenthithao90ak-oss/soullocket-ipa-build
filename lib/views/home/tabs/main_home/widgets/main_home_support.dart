@@ -100,6 +100,10 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
   late AnimationController _controller;
   final List<_ParticleData> _particles = [];
   late final List<Widget> _particleWidgets;
+  
+  // Tối ưu hóa: Cache tĩnh cho hiệu ứng nổ nhỏ để loại bỏ jank
+  late final Widget _expSparkle;
+  late final Widget _expAssetOrEmoji;
 
   @override
   void initState() {
@@ -140,13 +144,29 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
       ));
     }
 
+    // Khởi tạo cache tĩnh 1 lần duy nhất thay vì mỗi khung hình
+    _expSparkle = const Text('✨', style: TextStyle(fontSize: 14));
+    if (hasAsset) {
+      _expAssetOrEmoji = Image.asset(
+        widget.assetPath!,
+        width: 14,
+        height: 14,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.low,
+        gaplessPlayback: true,
+      );
+    } else {
+      _expAssetOrEmoji = Text(widget.emoji, style: const TextStyle(fontSize: 14));
+    }
+
     _particleWidgets = List.generate(_particles.length, (i) {
       // Hạt ảnh kỷ niệm (hạt cuối)
       if (hasImage && i == particleCount) {
         final p = _particles[i];
-        return Container(
-          width: p.size,
-          height: p.size,
+        return RepaintBoundary(
+          child: Container(
+            width: p.size,
+            height: p.size,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.white, width: 3),
@@ -178,12 +198,13 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
               ),
             ),
           ),
-        );
+        ));
       }
 
       // Hạt tim thông thường
       final p = _particles[i];
-      return hasAsset
+      return RepaintBoundary(
+        child: hasAsset
           ? Image.asset(
               widget.assetPath!,
               width: p.size,
@@ -216,7 +237,8 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
                   ),
                 ],
               ),
-            );
+            ),
+      );
     });
 
     _controller.addStatusListener((status) {
@@ -302,23 +324,7 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
                 final dy = sin(angle) * distance;
 
                 final bool isSparkle = i % 2 == 0;
-                final Widget expChild = isSparkle
-                    ? const Text(
-                        '✨',
-                        style: TextStyle(fontSize: 14),
-                      )
-                    : (widget.assetPath != null &&
-                            widget.assetPath!.trim().isNotEmpty
-                        ? Image.asset(
-                            widget.assetPath!,
-                            width: 14,
-                            height: 14,
-                            fit: BoxFit.contain,
-                          )
-                        : Text(
-                            widget.emoji,
-                            style: const TextStyle(fontSize: 14),
-                          ));
+                final Widget expChild = isSparkle ? _expSparkle : _expAssetOrEmoji;
 
                 explosionWidgets.add(
                   Transform.translate(

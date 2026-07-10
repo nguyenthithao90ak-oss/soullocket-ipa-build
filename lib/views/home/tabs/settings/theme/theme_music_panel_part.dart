@@ -177,7 +177,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
         description: _bgMusicUrl.isEmpty
             ? context.tr('theme_music_no_music')
             : musicLabel,
-        themeColor: const Color(0xFFec407a),
+        themeColor: const Color(0xFFFF8F00),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -380,7 +380,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                 icon: Icons.aspect_ratio_rounded,
                 title: context.tr('theme_frame_size'),
                 description: context.tr('theme_frame_size_desc'),
-                themeColor: const Color(0xFFFF4D73),
+                themeColor: const Color(0xFF8E24AA), // Tím mộng mơ
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -476,7 +476,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                 title:
                     '${context.tr('font_label')} & ${context.tr('lang_label')}',
                 description: context.tr('theme_font_lang_desc'),
-                themeColor: const Color(0xFF00C8FF),
+                themeColor: const Color(0xFF1E88E5), // Xanh lam
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -531,7 +531,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                 icon: Icons.calendar_month_rounded,
                 title: context.tr('theme_add_new_memory'),
                 description: context.tr('theme_memory_desc'),
-                themeColor: const Color(0xFFFF77A8),
+                themeColor: const Color(0xFFE53935), // Đỏ Ruby
                 child: Column(
                   children: [
                     Padding(
@@ -684,8 +684,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
               _ThemeSectionCard(
                 icon: Icons.settings_suggest_rounded,
                 title: context.tr('theme_perf_title'),
-                description: context.tr('theme_perf_desc'),
-                themeColor: const Color(0xFF0288D1),
+                description: context.tr('theme_advanced_desc'),
+                themeColor: const Color(0xFF43A047), // Xanh lá
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -940,10 +940,10 @@ class _ThemeSectionCardState extends State<_ThemeSectionCard>
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
+                    gradient: LinearGradient(
                       colors: [
-                        Color(0xFFFF6E9F), // Rose pink
-                        Color(0xFFFF8EA8), // Coral pink
+                        widget.themeColor, 
+                        widget.themeColor.withValues(alpha: 0.65), 
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -951,7 +951,7 @@ class _ThemeSectionCardState extends State<_ThemeSectionCard>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFF8EA8).withValues(alpha: 0.35),
+                        color: widget.themeColor.withValues(alpha: 0.35),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),

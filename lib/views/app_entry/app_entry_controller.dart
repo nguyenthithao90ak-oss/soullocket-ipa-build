@@ -75,8 +75,7 @@ class AppEntryController {
         _interactionMetricsService =
             interactionMetricsService ?? InteractionMetricsService();
 
-  static const String _notificationPermissionPromptedPrefsKey =
-      'il_notification_permission_prompted_v1';
+
   static const Duration _deviceRegistrationCooldown = Duration(seconds: 15);
 
   final HouseService _houseService;
@@ -477,17 +476,10 @@ class AppEntryController {
 
   Future<void> requestStartupPermissionsIfNeeded(BuildContext context) async {
     if (kIsWeb || !context.mounted) return;
-    final activeContext = context;
-
-    final prefs = await getPrefs();
-    final hasPromptedNotification =
-        prefs.getBool(_notificationPermissionPromptedPrefsKey) ?? false;
-    if (!activeContext.mounted) return;
-
-    if (!hasPromptedNotification) {
-      await NotificationService().requestPermissionAndInit();
-      await prefs.setBool(_notificationPermissionPromptedPrefsKey, true);
-    }
+    
+    // Luôn gọi requestPermissionAndInit. 
+    // Hệ điều hành (OS) sẽ tự quyết định có hiện hộp thoại không (nếu user đã từ chối vĩnh viễn thì OS sẽ bỏ qua).
+    await NotificationService().requestPermissionAndInit();
   }
 
   Future<void> clearPresenceSession() async {

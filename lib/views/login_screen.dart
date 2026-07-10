@@ -437,12 +437,24 @@ class _LoginScreenState extends State<LoginScreen> {
           await prefs.remove('il_remembered_email');
         }
 
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          final cachedAuthUid = (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? prefs.getString('il_auth_uid')?.trim() ?? '';
+          if (cachedAuthUid.isNotEmpty && cachedAuthUid != user.uid) {
+            await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
+            await SecureStorageService.instance.delete(SecureStorageService.keyRole);
+            await prefs.remove('il_house_id');
+            await prefs.remove('il_role');
+          }
+          await prefs.setString('il_auth_uid', user.uid);
+          await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, user.uid);
+        }
+
         if (sessionRole == 'user1' || sessionRole == 'user2') {
           await prefs.setString('il_role', sessionRole!);
           await SecureStorageService.instance.write(SecureStorageService.keyRole, sessionRole);
         }
 
-        final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
           try {
             final houseId = await HouseService()
@@ -450,9 +462,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 .timeout(const Duration(seconds: 4));
             if (houseId != null && houseId.isNotEmpty) {
               await prefs.setString('il_house_id', houseId);
-              await prefs.setString('il_auth_uid', user.uid);
               await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
-              await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, user.uid);
             }
           } catch (_) {}
         }
@@ -678,12 +688,24 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
       final prefs = await SharedPreferences.getInstance();
+      final user = result.user;
+      if (user != null) {
+        final cachedAuthUid = (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? prefs.getString('il_auth_uid')?.trim() ?? '';
+        if (cachedAuthUid.isNotEmpty && cachedAuthUid != user.uid) {
+          await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
+          await SecureStorageService.instance.delete(SecureStorageService.keyRole);
+          await prefs.remove('il_house_id');
+          await prefs.remove('il_role');
+        }
+        await prefs.setString('il_auth_uid', user.uid);
+        await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, user.uid);
+      }
+
       if (storedRole == 'user1' || storedRole == 'user2') {
         await prefs.setString('il_role', storedRole!);
         await SecureStorageService.instance.write(SecureStorageService.keyRole, storedRole);
       }
 
-      final user = result.user;
       if (user != null) {
         try {
           final houseId = await HouseService()
@@ -691,9 +713,7 @@ class _LoginScreenState extends State<LoginScreen> {
               .timeout(const Duration(seconds: 4));
           if (houseId != null && houseId.isNotEmpty) {
             await prefs.setString('il_house_id', houseId);
-            await prefs.setString('il_auth_uid', user.uid);
             await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
-            await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, user.uid);
           }
         } catch (_) {}
       }

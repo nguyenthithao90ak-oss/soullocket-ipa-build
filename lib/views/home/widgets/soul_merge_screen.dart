@@ -45,6 +45,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   List<Map<String, String>> _memoriesData = [];
   final List<ExplodingPhoto> _activePhotos = [];
   final List<({Offset position, UniqueKey id})> _activeParticleExplosions = [];
+  int _explosionCount = 0;
   Timer? _explosionTimer;
   final math.Random _random = math.Random();
 
@@ -505,16 +506,16 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           .collection('houses')
           .doc(houseId)
           .collection('album')
-          .orderBy('ts', descending: true)
-          .limit(15)
+          .orderBy('timestamp', descending: true)
+          .limit(50)
           .get();
 
       final diarySnap = await FirebaseFirestore.instance
           .collection('houses')
           .doc(houseId)
           .collection('diaries')
-          .orderBy('ts', descending: true)
-          .limit(15)
+          .orderBy('timestamp', descending: true)
+          .limit(50)
           .get();
 
       final List<Map<String, String>> items = [];
@@ -631,8 +632,24 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   void _spawnPhotoExplosion(
       {Map<String, String>? specificItem, Offset? specificPosition}) {
     if (_memoriesData.isEmpty && specificItem == null) return;
-    final randomItem =
-        specificItem ?? _memoriesData[_random.nextInt(_memoriesData.length)];
+    
+    Map<String, String>? randomItem = specificItem;
+    if (randomItem == null) {
+      final textItems = _memoriesData.where((e) => e['type'] == 'text').toList();
+      final photoItems = _memoriesData.where((e) => e['type'] == 'photo').toList();
+      
+      if (textItems.isNotEmpty && photoItems.isNotEmpty) {
+        _explosionCount++;
+        // 3 nhật ký nổ 1 ảnh
+        if (_explosionCount % 4 == 0) {
+          randomItem = photoItems[_random.nextInt(photoItems.length)];
+        } else {
+          randomItem = textItems[_random.nextInt(textItems.length)];
+        }
+      } else {
+        randomItem = _memoriesData[_random.nextInt(_memoriesData.length)];
+      }
+    }
 
     final size = MediaQuery.of(context).size;
     final double x = 30 + _random.nextDouble() * (size.width - 200);
@@ -940,7 +957,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(55),
                                       child: Image.asset(
-                                        'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+                                        'assets/images/interaction_stickers/custom/numbered/sticker_181.png',
                                         width: 82,
                                         height: 82,
                                         fit: BoxFit.contain,

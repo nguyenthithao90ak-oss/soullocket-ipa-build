@@ -130,6 +130,17 @@ class PresenceService {
       );
       return freshSessionCount > 0;
     }
+
+    final status = data['status']?.toString();
+    if (status == 'online') {
+      return true;
+    }
+
+    final activeSessionCount = data['activeSessionCount'];
+    if (activeSessionCount is num && activeSessionCount.toInt() > 0) {
+      return true;
+    }
+
     return false;
   }
 
@@ -161,6 +172,10 @@ class PresenceService {
     }
     final sessions = data['sessions'];
     if (sessions is! Map || sessions.isEmpty) {
+      final activeCount = data['activeSessionCount'];
+      if (activeCount is num) {
+        return activeCount.toInt();
+      }
       return 0;
     }
     return _countFreshSessions(
