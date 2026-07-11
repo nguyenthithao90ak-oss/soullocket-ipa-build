@@ -846,14 +846,22 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
                               ),
                             ],
                     ),
-                    child: Icon(
-                      item.$3,
-                      size: 22,
-                      color: locked
-                          ? color.withValues(alpha: 0.5)
-                          : selected
-                              ? color
-                              : const Color(0xFF9CA3AF),
+                    child: Center(
+                      child: SlAvatarFrame(
+                        frameKey: key,
+                        size: 36,
+                        accentColor: selected
+                            ? color
+                            : (locked
+                                ? const Color(0xFFE2E8F0)
+                                : const Color(0xFF94A3B8)),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF1F5F9),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 5),

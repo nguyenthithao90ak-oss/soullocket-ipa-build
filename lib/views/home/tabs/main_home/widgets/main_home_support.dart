@@ -65,6 +65,7 @@ class ShootingHeartEffect extends StatefulWidget {
   final String emoji;
   final String? assetPath;
   final String? imageUrl;
+  final bool hasCollision;
 
   const ShootingHeartEffect({
     super.key,
@@ -73,6 +74,7 @@ class ShootingHeartEffect extends StatefulWidget {
     this.emoji = '❤️',
     this.assetPath,
     this.imageUrl,
+    this.hasCollision = false,
   });
 
   @override
@@ -85,6 +87,7 @@ class _ParticleData {
   final double peakHeight;
   final double size;
   final double baseRotation;
+  final bool willCollide;
 
   _ParticleData({
     required this.delay,
@@ -92,6 +95,7 @@ class _ParticleData {
     required this.peakHeight,
     required this.size,
     required this.baseRotation,
+    this.willCollide = false,
   });
 }
 
@@ -110,7 +114,7 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
     super.initState();
     _controller = AnimationController(
       duration: const Duration(
-          milliseconds: 2400), // Increased duration for smoothness
+          milliseconds: 2800), // Rơi chậm hơn (tăng từ 2400 lên 2800)
       vsync: this,
     );
 
@@ -130,6 +134,7 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
         size:
             random.nextDouble() * 20 + 45, // Significantly larger size (45-65)
         baseRotation: (random.nextDouble() - 0.5) * 0.72,
+        willCollide: widget.hasCollision && i < 2, // 2 hạt sẽ va chạm giữa chừng
       ));
     }
 
@@ -145,18 +150,22 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
     }
 
     // Khởi tạo cache tĩnh 1 lần duy nhất thay vì mỗi khung hình
-    _expSparkle = const Text('✨', style: TextStyle(fontSize: 14));
+    _expSparkle = const RepaintBoundary(child: Text('✨', style: TextStyle(fontSize: 14)));
     if (hasAsset) {
-      _expAssetOrEmoji = Image.asset(
-        widget.assetPath!,
-        width: 14,
-        height: 14,
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.low,
-        gaplessPlayback: true,
+      _expAssetOrEmoji = RepaintBoundary(
+        child: Image.asset(
+          widget.assetPath!,
+          width: 14,
+          height: 14,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.low,
+          gaplessPlayback: true,
+        ),
       );
     } else {
-      _expAssetOrEmoji = Text(widget.emoji, style: const TextStyle(fontSize: 14));
+      _expAssetOrEmoji = RepaintBoundary(
+        child: Text(widget.emoji, style: const TextStyle(fontSize: 14)),
+      );
     }
 
     _particleWidgets = List.generate(_particles.length, (i) {
@@ -218,8 +227,8 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
                   height: 1,
                   shadows: [
                     Shadow(
-                      color: Colors.pinkAccent.withValues(alpha: 0.5),
-                      blurRadius: 10,
+                      color: Colors.pinkAccent.withValues(alpha: 0.3),
+                      blurRadius: 3,
                     ),
                   ],
                 ),
@@ -232,8 +241,8 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
                 height: 1,
                 shadows: [
                   Shadow(
-                    color: Colors.pinkAccent.withValues(alpha: 0.5),
-                    blurRadius: 10,
+                    color: Colors.pinkAccent.withValues(alpha: 0.3),
+                    blurRadius: 3,
                   ),
                 ],
               ),
@@ -290,7 +299,18 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
             // Scale drops at the end
             double currentScale = 1.0;
             double currentOpacity = 1.0;
-            if (t < 0.1) {
+            bool isCollidingNow = false;
+
+            if (p.willCollide && t >= 0.45 && t <= 0.6) {
+              // Va chạm và nổ ở giữa (từ 45% đến 60% quãng đường)
+              final collideProgress = ((t - 0.45) / 0.15).clamp(0.0, 1.0);
+              currentScale = 1.0 - collideProgress;
+              currentOpacity = 1.0 - collideProgress;
+              isCollidingNow = true;
+            } else if (p.willCollide && t > 0.6) {
+              currentScale = 0.0;
+              currentOpacity = 0.0;
+            } else if (t < 0.1) {
               currentScale = t * 10; // pop in
             } else if (t > 0.8) {
               currentScale = 1.0 - (t - 0.8) * 5; // shrink out
@@ -299,7 +319,9 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
 
             // Calculate pixel translation instead of alignment
             final translateX = currentX * halfWidth;
-            final translateY = (currentY - 0.25) * halfHeight;
+            // Nếu hạt sẽ va chạm, ép currentY thấp dần về 0 (tâm màn hình) tại điểm va chạm
+            final effectiveY = p.willCollide && t >= 0.45 ? (currentY * (1 - ((t - 0.45) / 0.15).clamp(0.0, 1.0))) : currentY;
+            final translateY = (effectiveY - 0.25) * halfHeight;
 
             final mainWidget = Transform.rotate(
               angle: p.baseRotation +
@@ -310,9 +332,37 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
               ),
             );
 
-            // Hiệu ứng nổ nhỏ tỏa ra khi chuẩn bị đáp đất (tới gần avatar)
+            // Hiệu ứng nổ nhỏ tỏa ra khi chuẩn bị đáp đất (tới gần avatar) hoặc khi va chạm giữa chừng
             final List<Widget> explosionWidgets = [];
-            if (t > 0.8) {
+            if (isCollidingNow) {
+              final collideProgress = ((t - 0.45) / 0.15).clamp(0.0, 1.0);
+              final ext = collideProgress; // 0.0 -> 1.0
+              final expOpacity = (1.0 - ext).clamp(0.0, 1.0);
+              final expScale = 0.6 + (1.0 - ext) * 0.8; // To hơn khi nổ giữa màn hình
+
+              for (int i = 0; i < 8; i++) {
+                final angle = i * (2 * pi / 8) + (p.baseRotation * 3);
+                final distance = ext * 80.0; // Tỏa ra tối đa 80px
+                final dx = cos(angle) * distance;
+                final dy = sin(angle) * distance;
+
+                final bool isSparkle = i % 2 == 0;
+                final Widget expChild = isSparkle ? _expSparkle : _expAssetOrEmoji;
+
+                explosionWidgets.add(
+                  Transform.translate(
+                    offset: Offset(dx, dy),
+                    child: Transform.scale(
+                      scale: expScale,
+                      child: Opacity(
+                        opacity: expOpacity,
+                        child: expChild,
+                      ),
+                    ),
+                  ),
+                );
+              }
+            } else if (!p.willCollide && t > 0.8) {
               final ext = (t - 0.8) * 5.0; // 0.0 -> 1.0
               final expOpacity = (1.0 - ext).clamp(0.0, 1.0);
               final expScale = 0.4 + (1.0 - ext) * 0.6; // 1.0 -> 0.4
@@ -345,16 +395,17 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
               child: Center(
                 child: Transform.translate(
                   offset: Offset(translateX, translateY),
-                  child: Opacity(
-                    opacity: currentOpacity,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      clipBehavior: Clip.none,
-                      children: [
-                        mainWidget,
-                        ...explosionWidgets,
-                      ],
-                    ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.none,
+                    children: [
+                      if (currentOpacity > 0)
+                        Opacity(
+                          opacity: currentOpacity,
+                          child: mainWidget,
+                        ),
+                      ...explosionWidgets,
+                    ],
                   ),
                 ),
               ),

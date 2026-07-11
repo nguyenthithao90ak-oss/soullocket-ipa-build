@@ -99,12 +99,11 @@ class GenderSelectionDialog extends StatelessWidget {
                         SizedBox(
                           width: optionWidth,
                           child: _buildOption(
-                            assetPath:
-                                'assets/images/interaction_stickers/custom/numbered/sticker_092.png',
+                            assetPath: 'assets/images/avatar_male.jpg',
                             title: L10nService().translate('Nam'),
                             desc:
                                 L10nService().translate('Giao diện đằng trai'),
-                            color: const Color(0xFF29B6F6),
+                            color: const Color(0xFF64B5F6), // Xanh dương nhẹ (Light Blue 300)
                             compact: isCompactLayout,
                             onTap: () => onSelected('user1'),
                           ),
@@ -112,8 +111,7 @@ class GenderSelectionDialog extends StatelessWidget {
                         SizedBox(
                           width: optionWidth,
                           child: _buildOption(
-                            assetPath:
-                                'assets/images/interaction_stickers/custom/numbered/sticker_086.png',
+                            assetPath: 'assets/images/avatar_female.jpg',
                             title: L10nService().translate('Nữ'),
                             desc: L10nService().translate('Giao diện đằng gái'),
                             color: const Color(0xFFFF4081),
@@ -149,14 +147,14 @@ class GenderSelectionDialog extends StatelessWidget {
           horizontal: 12,
         ),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: color.withValues(alpha: 0.08), // Đổ màu nền nhẹ theo tone màu chủ đạo
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: color.withValues(alpha: 0.35), width: 2),
+          border: Border.all(color: color.withValues(alpha: 0.5), width: 1.5), // Viền sắc nét hơn
           boxShadow: [
             BoxShadow(
-              color: color.withValues(alpha: 0.12),
-              blurRadius: 16,
-              spreadRadius: -2,
+              color: color.withValues(alpha: 0.15), // Tỏa sáng nhẹ nhàng ra xung quanh
+              blurRadius: 24,
+              spreadRadius: 0,
             ),
           ],
         ),
@@ -164,16 +162,18 @@ class GenderSelectionDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(compact ? 10 : 12),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.08),
+                color: color.withValues(alpha: 0.15), // Nền avatar đậm màu hơn chút để nổi bật
                 shape: BoxShape.circle,
               ),
-              child: Image.asset(
-                assetPath,
-                width: compact ? 54 : 64,
-                height: compact ? 54 : 64,
-                fit: BoxFit.contain,
+              child: ClipOval(
+                child: Image.asset(
+                  assetPath,
+                  width: compact ? 54 : 64,
+                  height: compact ? 54 : 64,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
             const SizedBox(height: 12),

@@ -375,12 +375,77 @@ extension _SettingsTabThemeSection on _SettingsTabState {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Khung & Kích thước
+              // 1. Hình nền & Hiệu ứng
+              _ThemeSectionCard(
+                icon: Icons.palette_rounded,
+                title: context.tr('theme_bg_effect_title'),
+                description: context.tr('theme_bg_effect_desc'),
+                themeColor: const Color(0xFFE91E63), // Màu hồng Pink
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildLabel(context.tr('theme_color_theme')),
+                    _buildThemeDropdownField(
+                      value: selection.themeKey,
+                      options: config.themes,
+                      onChanged: (value) =>
+                          _updateThemeDraft(() => _draftThemeKey = value),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildLabel(context.tr('theme_falling_effect')),
+                    _buildThemeDropdownField(
+                      value: selection.effectKey,
+                      options: config.effects,
+                      onChanged: (value) =>
+                          _updateThemeDraft(() => _draftEffectKey = value),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildGradientBtn(
+                            label: _isUploadingThemeBackground
+                                ? (_themeUploadProgress != null
+                                    ? context
+                                        .tr('theme_uploading_pct')
+                                        .replaceAll(
+                                            '{pct}',
+                                            (_themeUploadProgress! * 100)
+                                                .toInt()
+                                                .toString())
+                                    : context.tr('theme_uploading_img'))
+                                : context.tr('theme_upload_web_bg'),
+                            gradient: const [
+                              Color(0xFFFF7EA8),
+                              Color(0xFFFF5E92)
+                            ],
+                            onTap: _isUploadingThemeBackground
+                                ? () {}
+                                : _pickThemeBackgroundImage,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildGradientBtn(
+                            label: context.tr('theme_remove_bg'),
+                            gradient: const [
+                              Color(0xFFFF5B6A),
+                              Color(0xFFFF4343)
+                            ],
+                            onTap: _clearThemeBackgroundImage,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // 2. Khung & Kích thước
               _ThemeSectionCard(
                 icon: Icons.aspect_ratio_rounded,
                 title: context.tr('theme_frame_size'),
                 description: context.tr('theme_frame_size_desc'),
-                themeColor: const Color(0xFF8E24AA), // Tím mộng mơ
+                themeColor: const Color(0xFFFF9800), // Màu cam Orange
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -429,44 +494,6 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                         () => _draftHomeBlockToneKey = value,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildGradientBtn(
-                            label: _isUploadingThemeBackground
-                                ? (_themeUploadProgress != null
-                                    ? context
-                                        .tr('theme_uploading_pct')
-                                        .replaceAll(
-                                            '{pct}',
-                                            (_themeUploadProgress! * 100)
-                                                .toInt()
-                                                .toString())
-                                    : context.tr('theme_uploading_img'))
-                                : context.tr('theme_upload_web_bg'),
-                            gradient: const [
-                              Color(0xFFFF7EA8),
-                              Color(0xFFFF5E92)
-                            ],
-                            onTap: _isUploadingThemeBackground
-                                ? () {}
-                                : _pickThemeBackgroundImage,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildGradientBtn(
-                            label: context.tr('theme_remove_bg'),
-                            gradient: const [
-                              Color(0xFFFF5B6A),
-                              Color(0xFFFF4343)
-                            ],
-                            onTap: _clearThemeBackgroundImage,
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
@@ -476,7 +503,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                 title:
                     '${context.tr('font_label')} & ${context.tr('lang_label')}',
                 description: context.tr('theme_font_lang_desc'),
-                themeColor: const Color(0xFF1E88E5), // Xanh lam
+                themeColor: const Color(0xFF1E88E5), // Xanh lam Blue
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -531,7 +558,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                 icon: Icons.calendar_month_rounded,
                 title: context.tr('theme_add_new_memory'),
                 description: context.tr('theme_memory_desc'),
-                themeColor: const Color(0xFFE53935), // Đỏ Ruby
+                themeColor: const Color(0xFFE53935), // Đỏ Red
                 child: Column(
                   children: [
                     Padding(
@@ -684,8 +711,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
               _ThemeSectionCard(
                 icon: Icons.settings_suggest_rounded,
                 title: context.tr('theme_perf_title'),
-                description: context.tr('theme_advanced_desc'),
-                themeColor: const Color(0xFF43A047), // Xanh lá
+                description: context.tr('theme_perf_desc'),
+                themeColor: const Color(0xFF43A047), // Xanh lá Green
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

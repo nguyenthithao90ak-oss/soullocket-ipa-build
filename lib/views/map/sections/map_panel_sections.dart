@@ -694,9 +694,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            SLColors.bgCard,
-            roleColor.withValues(alpha: 0.10),
-            SLColors.bgElevated.withValues(alpha: 0.95),
+            roleColor.withValues(alpha: 0.22),
+            roleColor.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -862,9 +861,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            SLColors.bgCard,
-            _kMapBlue.withValues(alpha: 0.06),
-            SLColors.bgElevated.withValues(alpha: 0.95),
+            _kMapBlue.withValues(alpha: 0.25),
+            _kMapBlue.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -969,9 +967,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            SLColors.bgCard,
-            _kMapPinkDeep.withValues(alpha: 0.08),
-            SLColors.bgElevated.withValues(alpha: 0.95),
+            _kMapPinkDeep.withValues(alpha: 0.25),
+            _kMapPinkDeep.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

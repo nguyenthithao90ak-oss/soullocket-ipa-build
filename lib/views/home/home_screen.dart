@@ -1424,58 +1424,39 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ),
         foregroundChild,
-        ValueListenableBuilder<int>(
-          valueListenable: _activeTabIndexNotifier,
-          builder: (context, activeIndex, _) {
-            final isMainHomeTab = activeIndex == 0;
-            if (!isMainHomeTab || resolvedEffectKey == 'off') {
-              return const SizedBox.shrink();
-            }
-            return ValueListenableBuilder<bool>(
-              valueListenable: _isUserTabSwipingNotifier,
-              builder: (context, isSwiping, _) {
-                // ⚡ Dùng Visibility(maintainState: false) để dispose hẳn AnimationController khi swipe
-                if (isSwiping) return const SizedBox.shrink();
-                return Positioned.fill(
-                  child: RepaintBoundary(
-                    child: IgnorePointer(
-                      child: LegacyFallingEffect(
-                        type: resolvedEffectKey,
-                        isDark: isDark,
-                        density: graphicsQualityKey,
-                        opacity: isDark ? 0.96 : 0.88,
-                        animate: shouldAnimateFallingEffect,
-                      ),
+        if (resolvedEffectKey != 'off')
+          ValueListenableBuilder<bool>(
+            valueListenable: _isUserTabSwipingNotifier,
+            builder: (context, isSwiping, _) {
+              // ⚡ Dùng Visibility(maintainState: false) để dispose hẳn AnimationController khi swipe
+              if (isSwiping) return const SizedBox.shrink();
+              return Positioned.fill(
+                child: RepaintBoundary(
+                  child: IgnorePointer(
+                    child: LegacyFallingEffect(
+                      type: resolvedEffectKey,
+                      isDark: isDark,
+                      density: graphicsQualityKey,
+                      opacity: isDark ? 0.96 : 0.88,
+                      animate: shouldAnimateFallingEffect,
                     ),
                   ),
-                );
-              },
-            );
-          },
-        ),
+                ),
+              );
+            },
+          ),
       ],
     );
 
     if (shouldAnimateEffects) {
-      bodyContent = ValueListenableBuilder<int>(
-        valueListenable: _activeTabIndexNotifier,
-        builder: (context, activeIndex, child) {
-          final resolvedChild = child ?? bodyContent;
-          final isMainHomeTab = activeIndex == 0;
-          if (!isMainHomeTab) {
-            return resolvedChild;
+      bodyContent = ValueListenableBuilder<bool>(
+        valueListenable: _isUserTabSwipingNotifier,
+        builder: (context, isSwiping, childUnderTouch) {
+          final targetChild = childUnderTouch ?? bodyContent;
+          if (isSwiping) {
+            return targetChild;
           }
-          return ValueListenableBuilder<bool>(
-            valueListenable: _isUserTabSwipingNotifier,
-            builder: (context, isSwiping, childUnderTouch) {
-              final targetChild = childUnderTouch ?? resolvedChild;
-              if (isSwiping) {
-                return targetChild;
-              }
-              return TouchEffectOverlay(child: targetChild);
-            },
-            child: resolvedChild,
-          );
+          return TouchEffectOverlay(child: targetChild);
         },
         child: bodyContent,
       );

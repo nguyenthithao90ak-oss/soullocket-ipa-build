@@ -138,6 +138,10 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                 child: ValueListenableBuilder<List<_HomeReactionFlight>>(
                   valueListenable: _reactionFlightsNotifier,
                   builder: (context, flights, _) {
+                    final hasLeft = flights.any((f) => f.shootToRight);
+                    final hasRight = flights.any((f) => !f.shootToRight);
+                    final hasCollision = hasLeft && hasRight;
+
                     return Stack(
                       clipBehavior: Clip.none,
                       children: [
@@ -150,6 +154,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                                 emoji: flight.emoji,
                                 assetPath: flight.assetPath,
                                 imageUrl: flight.imageUrl,
+                                hasCollision: hasCollision,
                                 onComplete: () =>
                                     _removeReactionFlight(flight.id),
                               ),

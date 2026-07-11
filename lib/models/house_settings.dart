@@ -57,7 +57,7 @@ class HouseSettings {
     this.avatarSizePx = 90,
     this.countdownSizePx = 400,
     this.avatarFrame = 'circle',
-    this.countdownStyle = 'default',
+    this.countdownStyle = 'glow',
     this.countdownTopLabel = '',
     this.countdownBottomLabel = '',
     this.liteMode = false,

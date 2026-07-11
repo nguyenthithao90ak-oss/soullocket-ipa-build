@@ -115,9 +115,11 @@ extension _HomeScreenShellControls on _HomeScreenState {
                       pauseAnimations: isSwiping,
                     );
                     final bottomInset = MediaQuery.paddingOf(context).bottom;
+                    final extraBottomPadding = Platform.isIOS 
+                        ? (bottomInset > 0 ? bottomInset / 2.5 : 0.0) // Hạ thấp trên iOS cho gọn
+                        : (bottomInset > 0 ? bottomInset : 0.0);
                     return Padding(
-                      padding: EdgeInsets.only(
-                          bottom: bottomInset > 0 ? bottomInset : 0),
+                      padding: EdgeInsets.only(bottom: extraBottomPadding),
                       child: AnimatedSize(
                         duration: effectProfile.performanceMode || isSwiping
                             ? Duration.zero

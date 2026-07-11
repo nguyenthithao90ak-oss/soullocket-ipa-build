@@ -32,16 +32,55 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   bool _hasCheckedMembers = false;
   StreamSubscription? _settingsSub;
   Stream<List<PairingRequest>>? _incomingRequestsStream;
+  Timer? _guideTimer;
 
   @override
   void initState() {
     super.initState();
     _loadHouseId();
+    _startGuideTimer();
+  }
+
+  void _startGuideTimer() {
+    _guideTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted && !_isPaired) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.help_outline_rounded, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Bạn cần ghép nối nhưng không biết cách?\nHãy ấn vào nút [?] ở góc trái nhé!',
+                    style: SLTheme.quicksand(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        height: 1.4),
+                  ),
+                ),
+              ],
+            ),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: const Color(0xFFD81B60),
+            duration: const Duration(seconds: 6),
+            action: SnackBarAction(
+              label: 'XEM',
+              textColor: Colors.white,
+              onPressed: _showDetailedGuide,
+            ),
+          ),
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
     _settingsSub?.cancel();
+    _guideTimer?.cancel();
     super.dispose();
   }
 
@@ -170,6 +209,135 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     _loadHouseId();
   }
 
+  void _showDetailedGuide() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 24),
+              width: 48,
+              height: 6,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            Text(
+              'Hướng dẫn ghép nối',
+              style: SLTheme.quicksand(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF2C1B22),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                children: [
+                  _buildGuideStep(
+                    icon: Icons.person_add_alt_1_rounded,
+                    title: '1. Bạn chưa có nhà chung?',
+                    content:
+                        'Hãy chọn "Tạo mã ghép nối" để tạo một mã gồm 12 số. Sau đó, sao chép mã này và gửi cho người ấy qua tin nhắn (Zalo, Messenger, v.v.).',
+                  ),
+                  _buildGuideStep(
+                    icon: Icons.login_rounded,
+                    title: '2. Người ấy cần làm gì?',
+                    content:
+                        'Người ấy mở ứng dụng, vào phần "Ghép nối", chọn "Nhập mã ghép nối" và dán mã 12 số mà bạn vừa gửi để xin ghép.',
+                  ),
+                  _buildGuideStep(
+                    icon: Icons.check_circle_outline_rounded,
+                    title: '3. Phê duyệt yêu cầu',
+                    content:
+                        'Sau khi người ấy nhập mã, màn hình của bạn (ở mục "Yêu cầu đang chờ duyệt") sẽ hiện lên yêu cầu của họ. Bạn chỉ cần bấm "Chấp nhận"!',
+                  ),
+                  _buildGuideStep(
+                    icon: Icons.favorite_rounded,
+                    title: '4. Tận hưởng không gian riêng',
+                    content:
+                        'Sau khi ghép nối thành công, cả hai có thể cùng viết nhật ký, chia sẻ kỷ niệm, và sử dụng đầy đủ các tính năng dành cho cặp đôi.',
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFD81B60),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  minimumSize: const Size(double.infinity, 56),
+                ),
+                child: Text('ĐÃ HIỂU',
+                    style: SLTheme.quicksand(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGuideStep(
+      {required IconData icon, required String title, required String content}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF0F5),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon, color: const Color(0xFFD81B60), size: 28),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: SLTheme.quicksand(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF2C1B22)),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  content,
+                  style: SLTheme.quicksand(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade700,
+                      height: 1.5),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -191,6 +359,35 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+      floatingActionButton: _isPaired
+          ? null
+          : Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: const Color(0xFF2C1B22),
+                borderRadius: BorderRadius.circular(18), // Khối vuông bo góc
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2C1B22).withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Material(
+                type: MaterialType.transparency,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(18),
+                  onTap: _showDetailedGuide,
+                  child: const Center(
+                    child: Icon(Icons.help_outline_rounded,
+                        color: Colors.white, size: 28),
+                  ),
+                ),
+              ),
+            ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _isPaired

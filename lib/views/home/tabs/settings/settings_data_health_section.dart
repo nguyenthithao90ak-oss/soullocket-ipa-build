@@ -1459,75 +1459,79 @@ extension _SettingsDataHealthSection on _SettingsTabState {
             ),
           ),
           const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            child: Row(
+          _buildSectionBlock(
+            colorTint: const Color(0xFFEF6C00),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF3E0),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.link_rounded,
-                    color: Color(0xFFEF6C00),
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF3E0),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.link_rounded,
+                        color: Color(0xFFEF6C00),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.tr('home_qunllinktq_98c5d9'),
+                            style: SLTheme.quicksand(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFF243041),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            context.tr('home_xemdanhsch_640b35'),
+                            style: SLTheme.quicksand(
+                              fontSize: 11.8,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF66758A),
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.tr('home_qunllinktq_98c5d9'),
-                        style: SLTheme.quicksand(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF243041),
-                        ),
+                const SizedBox(height: 12),
+                _buildActionBtn(
+                  icon: Icons.link_rounded,
+                  label: context.tr('home_qunllinkt_df5d77'),
+                  gradient: const [Color(0xFFFFB74D), Color(0xFFF57C00)],
+                  textColor: Colors.white,
+                  onTap: () {
+                    if (_houseId == null || _houseId!.trim().isEmpty) {
+                      _showToast(
+                        context.tr('home_bncnvonhch_206d8c'),
+                        success: false,
+                      );
+                      return;
+                    }
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            SettingsGiftLinksManagerScreen(houseId: _houseId!),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        context.tr('home_xemdanhsch_640b35'),
-                        style: SLTheme.quicksand(
-                          fontSize: 11.8,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF66758A),
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 12),
-          _buildActionBtn(
-            icon: Icons.link_rounded,
-            label: context.tr('home_qunllinkt_df5d77'),
-            gradient: const [Color(0xFFFFB74D), Color(0xFFF57C00)],
-            textColor: Colors.white,
-            onTap: () {
-              if (_houseId == null || _houseId!.trim().isEmpty) {
-                _showToast(
-                  context.tr('home_bncnvonhch_206d8c'),
-                  success: false,
-                );
-                return;
-              }
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      SettingsGiftLinksManagerScreen(houseId: _houseId!),
-                ),
-              );
-            },
           ),
         ],
       ),

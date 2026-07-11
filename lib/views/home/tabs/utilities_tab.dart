@@ -50,7 +50,7 @@ import '../../utilities/health_screen.dart';
 import '../../utilities/local_album_screen.dart';
 import '../../utilities/soul_events/soul_events_screen.dart';
 import 'package:soullocket_app/core/sl_route.dart';
-import '../../relationship/couple_connect_screen.dart';
+import 'package:soullocket_app/views/home/tabs/settings/settings_gift_links_manager_screen.dart';
 
 // import '../../utils/sl_notice.dart';
 
@@ -442,7 +442,9 @@ class _UtilitiesTabState extends State<UtilitiesTab>
 
     if (id == 'couple_connect') {
       Navigator.push(
-          context, SLRoute(builder: (_) => CoupleConnectScreen(houseId: houseId)));
+          context,
+          SLRoute(
+              builder: (_) => SettingsGiftLinksManagerScreen(houseId: houseId)));
       return;
     }
 
