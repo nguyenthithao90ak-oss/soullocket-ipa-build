@@ -967,25 +967,25 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     final Color shellTop = Color.lerp(
       tone,
       Colors.white,
-      isPreview ? 0.36 : 0.22,
+      isPreview ? 0.60 : 0.45,
     )!;
     final Color shellBottom = Color.lerp(
       tone,
       const Color(0xFF0B1934),
-      isPreview ? 0.10 : 0.28,
+      isPreview ? 0.20 : 0.10,
     )!;
     final Color faceTop = Color.lerp(
       tone,
       Colors.white,
-      isPreview ? 0.50 : 0.30,
+      isPreview ? 0.65 : 0.55,
     )!;
     final Color faceBottom = Color.lerp(
       tone,
       const Color(0xFF050B16),
-      isPreview ? 0.12 : 0.40,
+      isPreview ? 0.25 : 0.15,
     )!;
-    final double previewGlow = isPreview ? 0.28 : 0;
-    final double clearingGlow = isClearing ? 0.22 : 0;
+    final double previewGlow = isPreview ? 0.40 : 0.25;
+    final double clearingGlow = isClearing ? 0.45 : 0;
     final BorderRadius shellRadius = BorderRadius.only(
       topLeft: Radius.circular(
         _blockCornerRadius(connectTop, connectLeft, outerRadius, joinedRadius),
@@ -1059,46 +1059,46 @@ extension _SoulBlockBoard on _SoulBlockGameState {
         borderRadius: shellRadius,
         gradient: LinearGradient(
           colors: <Color>[
-            shellTop.withValues(alpha: isPreview ? 0.94 : 1.0),
-            tone.withValues(alpha: isPreview ? 0.92 : 1.0),
-            shellBottom.withValues(alpha: 0.98),
+            shellTop.withValues(alpha: isPreview ? 0.85 : 0.92),
+            tone.withValues(alpha: isPreview ? 0.75 : 0.82),
+            shellBottom.withValues(alpha: 0.88),
           ],
-          stops: const <double>[0, 0.52, 1],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          stops: const <double>[0, 0.45, 1],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         border: Border.all(
           color: isGold
-              ? const Color(0xFFFFE066).withValues(alpha: 0.6)
+              ? const Color(0xFFFFE066).withValues(alpha: 0.8)
               : (isBomb
-                  ? const Color(0xFFFF7B50).withValues(alpha: 0.6)
-                  : Colors.black.withValues(alpha: isPreview ? 0.08 : 0.14)),
-          width: (isGold || isBomb) ? 1.1 : 0.55,
+                  ? const Color(0xFFFF7B50).withValues(alpha: 0.8)
+                  : Colors.white.withValues(alpha: isPreview ? 0.45 : 0.35)),
+          width: (isGold || isBomb) ? 1.2 : 0.8,
         ),
         boxShadow: <BoxShadow>[
           if (isGold)
             BoxShadow(
-              color: const Color(0xFFFFD700).withValues(alpha: 0.28),
-              blurRadius: shortSide * 0.24,
-              spreadRadius: -shortSide * 0.02,
+              color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+              blurRadius: shortSide * 0.3,
+              spreadRadius: -shortSide * 0.01,
             ),
           if (isBomb)
             BoxShadow(
-              color: const Color(0xFFFF4500).withValues(alpha: 0.28),
-              blurRadius: shortSide * 0.24,
-              spreadRadius: -shortSide * 0.02,
+              color: const Color(0xFFFF4500).withValues(alpha: 0.4),
+              blurRadius: shortSide * 0.3,
+              spreadRadius: -shortSide * 0.01,
             ),
           if (previewGlow > 0)
             BoxShadow(
               color: tone.withValues(alpha: previewGlow),
-              blurRadius: shortSide * 0.36,
-              spreadRadius: -shortSide * 0.04,
+              blurRadius: shortSide * 0.4,
+              spreadRadius: 2,
             ),
           if (clearingGlow > 0)
             BoxShadow(
-              color: const Color(0xFFFFD166).withValues(alpha: clearingGlow),
-              blurRadius: shortSide * 0.44,
-              spreadRadius: -shortSide * 0.02,
+              color: Colors.white.withValues(alpha: clearingGlow),
+              blurRadius: shortSide * 0.5,
+              spreadRadius: 3,
             ),
         ],
       ),
@@ -1110,18 +1110,18 @@ extension _SoulBlockBoard on _SoulBlockGameState {
             borderRadius: faceRadius,
             gradient: LinearGradient(
               colors: <Color>[
-                faceTop.withValues(alpha: isPreview ? 0.94 : 1.0),
-                tone.withValues(alpha: isPreview ? 0.92 : 1.0),
-                faceBottom.withValues(alpha: 0.98),
+                faceTop.withValues(alpha: isPreview ? 0.85 : 0.95),
+                tone.withValues(alpha: isPreview ? 0.80 : 0.90),
+                faceBottom.withValues(alpha: 0.85),
               ],
-              stops: const <double>[0, 0.6, 1],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+              stops: const <double>[0, 0.55, 1],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
             border: Border.all(
               color: Colors.white.withValues(
-                  alpha: isPreview ? 0.52 : (isClearing ? 0.28 : 0.14)),
-              width: isPreview ? 1.0 : 0.7,
+                  alpha: isPreview ? 0.65 : (isClearing ? 0.45 : 0.25)),
+              width: isPreview ? 1.2 : 0.8,
             ),
           ),
           child: Stack(

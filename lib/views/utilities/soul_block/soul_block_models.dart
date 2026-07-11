@@ -378,38 +378,38 @@ class _SoulBlockPerformanceProfile {
   );
 }
 
-const Color _kSoulStageTop = Color(0xFF0B1022);
-const Color _kSoulStageMid = Color(0xFF16244F);
-const Color _kSoulStageBottom = Color(0xFF050814);
-const Color _kSoulPanelTop = Color(0xFF314A9C);
-const Color _kSoulPanelMid = Color(0xFF1A2F73);
-const Color _kSoulPanelBottom = Color(0xFF0A1436);
-const Color _kSoulBoardTop = Color(0xFF1A3270);
-const Color _kSoulBoardMid = Color(0xFF101F49);
-const Color _kSoulBoardBottom = Color(0xFF060C22);
-const Color _kSoulChrome = Color(0xFFDCE7FF);
-const Color _kSoulIvory = Color(0xFFF7FAFF);
+const Color _kSoulStageTop = Color(0xFF1E1128);
+const Color _kSoulStageMid = Color(0xFF150B20);
+const Color _kSoulStageBottom = Color(0xFF0C0512);
+const Color _kSoulPanelTop = Color(0xFF4C276E);
+const Color _kSoulPanelMid = Color(0xFF2F154A);
+const Color _kSoulPanelBottom = Color(0xFF1B0B2E);
+const Color _kSoulBoardTop = Color(0xFF381D58);
+const Color _kSoulBoardMid = Color(0xFF261240);
+const Color _kSoulBoardBottom = Color(0xFF150926);
+const Color _kSoulChrome = Color(0xFFFFD1F5);
+const Color _kSoulIvory = Color(0xFFFFFFFF);
 
 const List<Color> _kSoulTones = <Color>[
-  Color(0xFF5B8CFF),
-  Color(0xFF36D1FF),
-  Color(0xFF45E0B8),
-  Color(0xFF8C6CFF),
-  Color(0xFFFF6FAE),
-  Color(0xFFFFA24D),
-  Color(0xFFFFD85E),
-  Color(0xFF8CE35F),
+  Color(0xFFFF3366), // Pink
+  Color(0xFF00E5FF), // Cyan
+  Color(0xFFB033FF), // Purple
+  Color(0xFFFFB800), // Yellow
+  Color(0xFF33FF55), // Green
+  Color(0xFFFF55BB), // Magenta
+  Color(0xFF6633FF), // Blue-violet
+  Color(0xFF00FFD1), // Mint
 ];
 
 const List<Color> _kSoulBurstPalette = <Color>[
-  Color(0xFFD8E4FF),
-  Color(0xFF8CC7FF),
-  Color(0xFF8DF5E0),
-  Color(0xFFC3A7FF),
-  Color(0xFFFFA8CF),
-  Color(0xFFFFC07B),
-  Color(0xFFFFE59A),
-  Color(0xFFAAF29A),
+  Color(0xFFFF80A2),
+  Color(0xFF80F2FF),
+  Color(0xFFD880FF),
+  Color(0xFFFFDB80),
+  Color(0xFF99FFB2),
+  Color(0xFFFFAEE2),
+  Color(0xFFB299FF),
+  Color(0xFF80FFE8),
 ];
 
 const List<_SoulPieceTemplate> _kSoulBlockTemplates = <_SoulPieceTemplate>[

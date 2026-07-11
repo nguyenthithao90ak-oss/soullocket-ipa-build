@@ -191,10 +191,10 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
       );
     }
 
-    return Container(
+    Widget inputBar = Container(
       decoration: BoxDecoration(
         color: hasChatBackground
-            ? Colors.white.withValues(alpha: 0.9)
+            ? Colors.white.withValues(alpha: 0.55)
             : Colors.white,
         boxShadow: [
           BoxShadow(
@@ -345,5 +345,15 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
         ),
       ),
     );
+
+    if (hasChatBackground) {
+      return ClipRRect(
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
+          child: inputBar,
+        ),
+      );
+    }
+    return inputBar;
   }
 }

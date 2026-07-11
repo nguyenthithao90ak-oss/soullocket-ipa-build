@@ -380,9 +380,7 @@ class _SoulExplosionPainter extends CustomPainter {
       final double width =
           (particle.isShard ? particle.size * 1.7 : particle.size * 1.12) *
               scale;
-      final double height =
-          (particle.isShard ? particle.size * 0.56 : particle.size * 1.12) *
-              scale;
+
 
       canvas.save();
       canvas.translate(
@@ -428,16 +426,14 @@ class _SoulExplosionPainter extends CustomPainter {
           path.close();
           canvas.drawPath(path, _particlePaint);
         } else if (particle.shapeType == 3 || particle.isShard) {
-          // Draw Shard/RRect
-          final RRect shard = RRect.fromRectAndRadius(
-            Rect.fromCenter(
-              center: _kExplosionOrigin,
-              width: width,
-              height: height,
-            ),
-            Radius.circular(height),
-          );
-          canvas.drawRRect(shard, _particlePaint);
+          // Draw Heart instead of Shard
+          final Path path = Path();
+          final double r = width / 1.5;
+          path.moveTo(0, r * 0.35);
+          path.cubicTo(-r * 1.2, -r * 0.8, -r * 1.8, r * 0.6, 0, r * 1.6);
+          path.cubicTo(r * 1.8, r * 0.6, r * 1.2, -r * 0.8, 0, r * 0.35);
+          path.close();
+          canvas.drawPath(path, _particlePaint);
         } else {
           // Draw Circle
           final double radius = width / 2.3;

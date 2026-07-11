@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -1193,12 +1194,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   void _spawnFloatingMessage(String text, bool isSelf) {
     if (!mounted) return;
     final size = MediaQuery.of(context).size;
-    final double x = isSelf
-        ? size.width * 0.25 + _random.nextDouble() * (size.width * 0.1)
-        : size.width * 0.05 + _random.nextDouble() * (size.width * 0.13);
-    final double y = isSelf
-        ? size.height * 0.4 + _random.nextDouble() * 120.0
-        : size.height * 0.2 + _random.nextDouble() * 150.0;
+    // Phân bổ ngẫu nhiên từ 16px đến 15% width (tính từ lề trái hoặc phải)
+    final double x = 20.0 + _random.nextDouble() * (size.width * 0.15);
+    // Trải dài trên màn hình từ 15% đến 65% chiều cao để không chồng chéo
+    final double y = size.height * 0.15 + _random.nextDouble() * (size.height * 0.5);
 
     final msg = FloatingMessage(
       text: text,
@@ -2960,6 +2959,7 @@ class _FloatingMessageWidgetState extends State<FloatingMessageWidget>
   late Animation<double> _scaleAnim;
   late Animation<double> _opacityAnim;
   late Animation<double> _slideAnim;
+  late Animation<double> _horizontalAnim;
 
   @override
   void initState() {
@@ -2972,7 +2972,7 @@ class _FloatingMessageWidgetState extends State<FloatingMessageWidget>
     _scaleAnim = TweenSequence<double>([
       TweenSequenceItem(
         tween: Tween<double>(begin: 0.0, end: 1.0)
-            .chain(CurveTween(curve: Curves.elasticOut)),
+            .chain(CurveTween(curve: Curves.easeOutBack)),
         weight: 15,
       ),
       TweenSequenceItem(
@@ -2981,7 +2981,7 @@ class _FloatingMessageWidgetState extends State<FloatingMessageWidget>
       ),
       TweenSequenceItem(
         tween: Tween<double>(begin: 1.0, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeIn)),
+            .chain(CurveTween(curve: Curves.easeInQuad)),
         weight: 15,
       ),
     ]).animate(_controller);
@@ -3003,10 +3003,17 @@ class _FloatingMessageWidgetState extends State<FloatingMessageWidget>
       ),
     ]).animate(_controller);
 
-    _slideAnim = Tween<double>(begin: 0.0, end: -80.0).animate(
+    _slideAnim = Tween<double>(begin: 0.0, end: -120.0).animate(
       CurvedAnimation(
         parent: _controller,
         curve: Curves.easeOutQuad,
+      ),
+    );
+
+    _horizontalAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.linear,
       ),
     );
 
@@ -3021,22 +3028,22 @@ class _FloatingMessageWidgetState extends State<FloatingMessageWidget>
 
   @override
   Widget build(BuildContext context) {
-    final themeColor = widget.message.isSelf
-        ? const Color(0xFFFF4F93)
-        : const Color(0xFF9C2A6F);
-
     return Positioned(
-      left: widget.message.position.dx,
+      left: widget.message.isSelf ? null : widget.message.position.dx,
+      right: widget.message.isSelf ? widget.message.position.dx : null,
       top: widget.message.position.dy,
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
+          // Tạo dao động ngang nhỏ như bong bóng lơ lửng
+          final wave = math.sin(_horizontalAnim.value * math.pi * 2) * 10;
           return Transform.translate(
-            offset: Offset(0, _slideAnim.value),
+            offset: Offset(wave, _slideAnim.value),
             child: Opacity(
               opacity: _opacityAnim.value.clamp(0.0, 1.0),
               child: Transform.scale(
                 scale: _scaleAnim.value,
+                alignment: widget.message.isSelf ? Alignment.bottomRight : Alignment.bottomLeft,
                 child: child,
               ),
             ),
@@ -3044,36 +3051,67 @@ class _FloatingMessageWidgetState extends State<FloatingMessageWidget>
         },
         child: RepaintBoundary(
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             constraints: BoxConstraints(
               maxWidth: MediaQuery.of(context).size.width * 0.65,
             ),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.72),
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(16),
-                topRight: const Radius.circular(16),
-                bottomLeft: Radius.circular(widget.message.isSelf ? 16 : 4),
-                bottomRight: Radius.circular(widget.message.isSelf ? 4 : 16),
-              ),
-              border: Border.all(
-                color: themeColor.withValues(alpha: 0.5),
-                width: 1.5,
-              ),
               boxShadow: [
                 BoxShadow(
-                  color: themeColor.withValues(alpha: 0.25),
-                  blurRadius: 10,
-                  spreadRadius: 1,
+                  color: widget.message.isSelf
+                      ? const Color(0xFFFF4F93).withValues(alpha: 0.2)
+                      : const Color(0xFF9C2A6F).withValues(alpha: 0.2),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
-            child: Text(
-              widget.message.text,
-              style: SLTheme.quicksand(
-                color: Colors.white,
-                fontSize: 14.5,
-                fontWeight: FontWeight.w700,
+            child: ClipRRect(
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(22),
+                topRight: const Radius.circular(22),
+                bottomLeft: Radius.circular(widget.message.isSelf ? 22 : 4),
+                bottomRight: Radius.circular(widget.message.isSelf ? 4 : 22),
+              ),
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: widget.message.isSelf
+                          ? [
+                              const Color(0xFFFF4F93).withValues(alpha: 0.85),
+                              const Color(0xFFFF7EB3).withValues(alpha: 0.75),
+                            ]
+                          : [
+                              const Color(0xFF6A11CB).withValues(alpha: 0.85),
+                              const Color(0xFF9C2A6F).withValues(alpha: 0.75),
+                            ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      width: 1.0,
+                    ),
+                  ),
+                  child: Text(
+                    widget.message.text,
+                    style: SLTheme.quicksand(
+                      color: Colors.white,
+                      fontSize: 15.0,
+                      fontWeight: FontWeight.w700,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
