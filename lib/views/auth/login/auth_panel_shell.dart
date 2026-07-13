@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
+import '../../../core/fast_backdrop_filter.dart';
 import '../../../utils/services/l10n_service.dart';
 import 'auth_tab_switcher.dart';
 
@@ -32,8 +33,9 @@ class AuthPanelShell extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(32),
-      child: BackdropFilter(
+      child: FastBackdropFilter(
         filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+        fallbackColor: Colors.white.withValues(alpha: 0.85),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 320),
           curve: Curves.easeOutCubic,

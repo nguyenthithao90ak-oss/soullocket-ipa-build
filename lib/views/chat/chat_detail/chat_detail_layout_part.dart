@@ -348,8 +348,9 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
 
     if (hasChatBackground) {
       return ClipRRect(
-        child: BackdropFilter(
+        child: FastBackdropFilter(
           filter: ui.ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
+          fallbackColor: Colors.black.withValues(alpha: 0.1),
           child: inputBar,
         ),
       );

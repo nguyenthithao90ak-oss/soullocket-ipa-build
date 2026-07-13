@@ -147,7 +147,7 @@ class UiPrefsState {
     fontKey: 'quicksand',
     homeBlockToneKey: 'theme',
     liteMode: false,
-    graphicsQualityKey: 'balanced',
+    graphicsQualityKey: 'auto',
     customBackgroundUrl: '',
     touchSound: true,
     confettiFx: false,

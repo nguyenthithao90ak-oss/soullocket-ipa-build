@@ -18,6 +18,78 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
   String? _pairingCode;
   int _durationMinutes = 15;
   String? _errorMsg;
+  Timer? _countdownTimer;
+  String _timeLeftStr = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadActiveCode();
+  }
+
+  Future<void> _loadActiveCode() async {
+    setState(() {
+      _isLoading = true;
+      _errorMsg = null;
+    });
+    try {
+      final active = await PairingService.instance.getActivePairingCode(widget.myHouseId);
+      if (mounted && active != null) {
+        final code = active['code']?.toString();
+        final expiresAt = active['expiresAt'] as int? ?? 0;
+        if (code != null && expiresAt > DateTime.now().millisecondsSinceEpoch) {
+          setState(() {
+            _pairingCode = code;
+          });
+          _startCountdown(expiresAt);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMsg = e.toString();
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _startCountdown(int expiresAt) {
+    _countdownTimer?.cancel();
+    _updateTimeLeft(expiresAt);
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _updateTimeLeft(expiresAt);
+    });
+  }
+
+  void _updateTimeLeft(int expiresAt) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final diff = expiresAt - now;
+    if (diff <= 0) {
+      _countdownTimer?.cancel();
+      if (mounted) {
+        setState(() {
+          _pairingCode = null;
+          _timeLeftStr = '';
+        });
+      }
+    } else {
+      final seconds = (diff / 1000).round();
+      final m = seconds ~/ 60;
+      final s = seconds % 60;
+      final str = '$m phút ${s.toString().padLeft(2, '0')} giây';
+      if (mounted) {
+        setState(() {
+          _timeLeftStr = str;
+        });
+      }
+    }
+  }
 
   Future<void> _createCode() async {
     setState(() {
@@ -27,11 +99,13 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
 
     try {
       final code = await PairingService.instance.createPairingCode(_durationMinutes);
+      final expiresAt = DateTime.now().millisecondsSinceEpoch + (_durationMinutes * 60 * 1000);
       if (mounted) {
         setState(() {
           _pairingCode = code;
           _isLoading = false;
         });
+        _startCountdown(expiresAt);
       }
     } catch (e) {
       if (mounted) {
@@ -47,9 +121,11 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
     if (_pairingCode == null) return;
     try {
       await PairingService.instance.deleteCode(_pairingCode!);
+      _countdownTimer?.cancel();
       if (mounted) {
         setState(() {
           _pairingCode = null;
+          _timeLeftStr = '';
         });
       }
     } catch (_) {}
@@ -57,8 +133,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
 
   @override
   void dispose() {
-    // Optionally delete code when leaving if it's considered temporary for this session
-    // Or let it expire naturally. We'll let it expire naturally to allow backgrounding.
+    _countdownTimer?.cancel();
     super.dispose();
   }
 
@@ -210,7 +285,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
                         const Icon(Icons.timer_outlined, size: 16, color: Color(0xFFE91E63)),
                         const SizedBox(width: 6),
                         Text(
-                          'Mã hết hạn sau $_durationMinutes phút',
+                          _timeLeftStr.isNotEmpty ? 'Mã hết hạn sau: $_timeLeftStr' : 'Mã hết hạn sau $_durationMinutes phút',
                           style: SLTheme.quicksand(
                             fontSize: 13,
                             fontWeight: FontWeight.w800,

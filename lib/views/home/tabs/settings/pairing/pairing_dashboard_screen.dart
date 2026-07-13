@@ -108,7 +108,9 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       try {
         final rawDateSnap = await FirebaseDatabase.instance.ref('houses/$houseId/createdAt').get();
         if (rawDateSnap.exists && rawDateSnap.value != null) {
-          final startDate = DateTime.fromMillisecondsSinceEpoch(int.parse(rawDateSnap.value.toString()));
+          final val = rawDateSnap.value;
+          final ms = val is num ? val.toInt() : (double.tryParse(val.toString())?.toInt() ?? int.tryParse(val.toString()) ?? 0);
+          final startDate = DateTime.fromMillisecondsSinceEpoch(ms);
           if (mounted) {
             setState(() {
               _startDateStr = '${startDate.day.toString().padLeft(2, '0')}/${startDate.month.toString().padLeft(2, '0')}/${startDate.year}';
@@ -164,7 +166,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           final rawDate = settings['createdAt'];
           if (rawDate != null && _startDateStr == null) {
             try {
-              final startDate = DateTime.fromMillisecondsSinceEpoch(int.parse(rawDate.toString()));
+              final ms = rawDate is num ? rawDate.toInt() : (double.tryParse(rawDate.toString())?.toInt() ?? int.tryParse(rawDate.toString()) ?? 0);
+              final startDate = DateTime.fromMillisecondsSinceEpoch(ms);
               _startDateStr = '${startDate.day.toString().padLeft(2, '0')}/${startDate.month.toString().padLeft(2, '0')}/${startDate.year}';
             } catch (_) {}
           }
@@ -702,6 +705,21 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     return StreamBuilder<List<PairingRequest>>(
       stream: _incomingRequestsStream,
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFEBEE),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFEF5350)),
+            ),
+            child: Text(
+              'Lỗi kết nối máy chủ: ${snapshot.error}',
+              textAlign: TextAlign.center,
+              style: SLTheme.quicksand(color: const Color(0xFFC62828), fontSize: 13, fontWeight: FontWeight.w700),
+            ),
+          );
+        }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return _buildEmptyRequestsView();
         }

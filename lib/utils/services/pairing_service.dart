@@ -22,11 +22,18 @@ class PairingRequest {
   });
 
   factory PairingRequest.fromMap(String id, Map<dynamic, dynamic> map) {
+    final rawTs = map['timestamp'];
+    int timestampVal = 0;
+    if (rawTs is num) {
+      timestampVal = rawTs.toInt();
+    } else if (rawTs is String) {
+      timestampVal = double.tryParse(rawTs)?.toInt() ?? int.tryParse(rawTs) ?? 0;
+    }
     return PairingRequest(
       requestId: id,
       guestName: map['guestName']?.toString() ?? 'Khách',
       guestAvatar: map['guestAvatar']?.toString() ?? '',
-      timestamp: map['timestamp'] as int? ?? 0,
+      timestamp: timestampVal,
       status: map['status']?.toString() ?? 'pending',
     );
   }
@@ -81,7 +88,8 @@ class PairingService {
     }
 
     final data = codeSnap.value as Map<dynamic, dynamic>;
-    final expiresAt = data['expiresAt'] as int? ?? 0;
+    final rawExpiresAt = data['expiresAt'];
+    final expiresAt = rawExpiresAt is num ? rawExpiresAt.toInt() : 0;
     if (DateTime.now().millisecondsSinceEpoch > expiresAt) {
       throw Exception('Mã ghép nối đã hết hạn.');
     }
@@ -219,6 +227,34 @@ class PairingService {
   /// Reject a request — xóa luôn để tránh rác dữ liệu trong stream
   Future<void> rejectRequest(String requestId) async {
     await _dbRef.child('pairing_requests/$requestId').remove();
+  }
+
+  /// Retrieves the active pairing code for a given houseId
+  Future<Map<String, dynamic>?> getActivePairingCode(String houseId) async {
+    final snap = await _dbRef
+        .child('pairing_codes')
+        .orderByChild('houseId')
+        .equalTo(houseId)
+        .get();
+
+    if (snap.exists && snap.value is Map) {
+      final map = snap.value as Map<dynamic, dynamic>;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      for (final entry in map.entries) {
+        final data = entry.value as Map<dynamic, dynamic>;
+        final expiresAt = data['expiresAt'] as int? ?? 0;
+        if (expiresAt > now) {
+          return {
+            'code': entry.key.toString(),
+            'houseId': data['houseId']?.toString(),
+            'creatorUid': data['creatorUid']?.toString(),
+            'createdAt': data['createdAt'] as int? ?? 0,
+            'expiresAt': expiresAt,
+          };
+        }
+      }
+    }
+    return null;
   }
 
   /// Delete a code

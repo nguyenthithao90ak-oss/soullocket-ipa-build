@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../core/sl_theme.dart';
+import '../../core/fast_backdrop_filter.dart';
 import '../../utils/services/anti_spam_service.dart';
 import '../../utils/services/auth_service.dart';
 import '../../utils/services/l10n_service.dart';
@@ -867,8 +868,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   Positioned.fill(
-                    child: BackdropFilter(
+                    child: FastBackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+                      fallbackColor: Colors.white.withValues(alpha: 0.85),
                       child: Container(color: Colors.transparent),
                     ),
                   ),
