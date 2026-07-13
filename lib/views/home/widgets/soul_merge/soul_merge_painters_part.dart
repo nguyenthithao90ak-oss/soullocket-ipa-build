@@ -1,49 +1,5 @@
 part of '../soul_merge_screen.dart';
 
-class _SparklePainter extends CustomPainter {
-  final double pulseValue;
-
-  static const _radius = 45.0;
-  static const _sizes = [6.0, 4.5, 6.0, 4.5];
-  static const _colors = [
-    Color(0xFFFF80B3),
-    Color(0xFFD8A4FF),
-    Color(0xFFFFEAA0),
-    Color(0xFFFFB7D5),
-  ];
-  static const _angles = [0.0, 90.0, 180.0, 270.0];
-
-  const _SparklePainter({required this.pulseValue});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    final centerX = size.width / 2;
-    final centerY = size.height / 2;
-
-    for (int i = 0; i < _angles.length; i++) {
-      final angleRad = _angles[i] * math.pi / 180;
-      final dx = math.cos(angleRad) * _radius;
-      final dy = math.sin(angleRad) * _radius;
-      final opacity = (i % 2 == 0
-              ? (0.3 + 0.65 * pulseValue)
-              : (0.95 - 0.65 * pulseValue))
-          .clamp(0.0, 1.0);
-      paint.color = _colors[i % _colors.length].withValues(alpha: opacity);
-      canvas.drawCircle(
-        Offset(centerX + dx, centerY + dy),
-        _sizes[i] / 2,
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _SparklePainter old) =>
-      pulseValue != old.pulseValue;
-}
-
-// ─── Cute Background Pattern Painter ──────────────────────────────────────────
 class _CuteBgPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

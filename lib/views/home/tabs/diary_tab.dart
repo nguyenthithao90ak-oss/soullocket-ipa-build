@@ -1,5 +1,10 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter/services.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -704,6 +709,155 @@ class _DiaryTabState extends State<DiaryTab>
       guardController: _guardController,
       showSnackBar: _showDiarySnackBar,
     );
+  }
+
+  Future<void> _setAsWallpaper(String? url) async {
+    final trimmed = url?.trim() ?? '';
+    if (trimmed.isEmpty) return;
+
+    _showDiarySnackBar('Đang tải ảnh để thiết lập...');
+
+    try {
+      final response = await http.get(Uri.parse(trimmed));
+      if (response.statusCode != 200) {
+        throw Exception('Tải ảnh thất bại: ${response.statusCode}');
+      }
+
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File('${tempDir.path}/wallpaper_temp.jpg');
+      await tempFile.writeAsBytes(response.bodyBytes);
+
+      final size = MediaQuery.sizeOf(context);
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: tempFile.path,
+        aspectRatio: CropAspectRatio(
+          ratioX: size.width,
+          ratioY: size.height,
+        ),
+        compressFormat: ImageCompressFormat.jpg,
+        compressQuality: 90,
+        maxWidth: 1440,
+        maxHeight: 2560,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Cắt ảnh hình nền',
+            toolbarColor: const Color(0xFF160B1F),
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: true,
+          ),
+          IOSUiSettings(
+            title: 'Cắt ảnh hình nền',
+            aspectRatioLockEnabled: true,
+            aspectRatioPickerButtonHidden: true,
+            resetAspectRatioEnabled: false,
+          ),
+        ],
+      );
+
+      if (croppedFile == null) {
+        _showDiarySnackBar('Đã hủy thiết lập hình nền.');
+        return;
+      }
+
+      if (!mounted) return;
+
+      final int? choice = await showDialog<int>(
+        context: context,
+        builder: (dialogCtx) => AlertDialog(
+          backgroundColor: const Color(0xFF160B1F),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0x33FF4F93), width: 1.0),
+          ),
+          title: Text(
+            'Cài đặt hình nền',
+            style: SLTheme.quicksand(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              fontSize: 18,
+            ),
+          ),
+          content: Text(
+            'Bạn muốn cài đặt hình nền này cho màn hình nào?',
+            style: SLTheme.quicksand(
+              color: Colors.white70,
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.spaceEvenly,
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          actions: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF261435),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(dialogCtx, 1),
+                  child: const Text('Màn hình chính'),
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF261435),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(dialogCtx, 2),
+                  child: const Text('Màn hình khóa'),
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF4F93),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(dialogCtx, 3),
+                  child: const Text('Cả hai màn hình'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+
+      if (choice == null) {
+        _showDiarySnackBar('Đã hủy thiết lập hình nền.');
+        return;
+      }
+
+      _showDiarySnackBar('Đang áp dụng hình nền...');
+
+      const channel = MethodChannel('soul_locket/app_control');
+      final result = await channel.invokeMethod<bool>(
+        'setWallpaper',
+        {
+          'filePath': croppedFile.path,
+          'location': choice,
+        },
+      );
+
+      if (result == true) {
+        _showDiarySnackBar('Đã cài đặt hình nền điện thoại thành công! 🎉');
+      } else {
+        _showDiarySnackBar('Cài đặt hình nền thất bại.');
+      }
+    } catch (e) {
+      _showDiarySnackBar('Lỗi: ${e.toString()}');
+    }
   }
 
   Future<void> _retryPendingMemoryUpload() async {
@@ -1540,6 +1694,29 @@ class _DiaryTabState extends State<DiaryTab>
                                                     ),
                                                   ),
                                                   PopupMenuItem<String>(
+                                                    value: 'wallpaper',
+                                                    child: Row(
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.wallpaper_rounded,
+                                                          color: Colors.white,
+                                                          size: 19,
+                                                        ),
+                                                        const SizedBox(
+                                                            width: 12),
+                                                        Text(
+                                                          'Đặt làm hình nền',
+                                                          style:
+                                                              SLTheme.quicksand(
+                                                            color: Colors.white,
+                                                            fontWeight:
+                                                                FontWeight.w800,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  PopupMenuItem<String>(
                                                     value: 'delete',
                                                     child: Row(
                                                       children: [
@@ -1583,6 +1760,12 @@ class _DiaryTabState extends State<DiaryTab>
                                                       await _showMemoryInfoSheet(
                                                           dialogContext,
                                                           currentItem);
+                                                      break;
+                                                    case 'wallpaper':
+                                                      Navigator.pop(
+                                                          dialogContext);
+                                                      await _setAsWallpaper(
+                                                          currentItem['url']);
                                                       break;
                                                     case 'delete':
                                                       Navigator.pop(

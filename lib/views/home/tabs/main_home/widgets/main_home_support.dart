@@ -153,13 +153,12 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
     _expSparkle = const RepaintBoundary(child: Text('✨', style: TextStyle(fontSize: 14)));
     if (hasAsset) {
       _expAssetOrEmoji = RepaintBoundary(
-        child: Image.asset(
+        child: R2StickerImage(
           widget.assetPath!,
           width: 14,
           height: 14,
           fit: BoxFit.contain,
-          filterQuality: FilterQuality.low,
-          gaplessPlayback: true,
+          errorWidget: Text(widget.emoji, style: const TextStyle(fontSize: 14)),
         ),
       );
     } else {
@@ -214,13 +213,12 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
       final p = _particles[i];
       return RepaintBoundary(
         child: hasAsset
-          ? Image.asset(
+          ? R2StickerImage(
               widget.assetPath!,
               width: p.size,
               height: p.size,
               fit: BoxFit.contain,
-              filterQuality: FilterQuality.low, // Optimized
-              errorBuilder: (_, __, ___) => Text(
+              errorWidget: Text(
                 widget.emoji,
                 style: TextStyle(
                   fontSize: p.size,

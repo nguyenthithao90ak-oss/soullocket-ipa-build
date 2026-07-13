@@ -651,7 +651,27 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _startEmailVerifyTimer();
     // ⚡ _activeRoleKey has already been initialized synchronously
+    UiPrefs.notifier.addListener(_syncDraftsFromUiPrefs);
     _scheduleSettingsBootstrap();
+  }
+
+  void _syncDraftsFromUiPrefs() {
+    if (!mounted) return;
+    final ui = UiPrefs.notifier.value;
+    setState(() {
+      _draftThemeKey = ui.themeKey;
+      _draftEffectKey = ui.fallingEffectKey;
+      _draftAvatarSizePx = ui.avatarSizePx;
+      _draftCountdownSizePx = ui.countdownSizePx;
+      _draftAvatarFrameKey = ui.avatarFrameKey;
+      _draftCountdownStyleKey = ui.countdownStyleKey;
+      _draftFontKey = ui.fontKey;
+      _draftHomeBlockToneKey = ui.homeBlockToneKey;
+      _draftGraphicsQualityKey = ui.graphicsQualityKey;
+      _draftCustomBackgroundUrl = ui.customBackgroundUrl;
+      _draftTransparentMode = ui.transparentMode;
+      _draftLiteMode = ui.liteMode;
+    });
   }
 
   void _scheduleSettingsBootstrap() {
@@ -790,6 +810,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    UiPrefs.notifier.removeListener(_syncDraftsFromUiPrefs);
     _bottomBannerAd?.dispose();
     // ✅ FIX: Cancel auto-save timer to ensure settings persist
     _autoSaveThemeTimer?.cancel();

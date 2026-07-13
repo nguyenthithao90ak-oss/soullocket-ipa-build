@@ -391,14 +391,14 @@ const Color _kSoulChrome = Color(0xFF80D4FF);
 const Color _kSoulIvory = Color(0xFFFFFFFF);
 
 const List<Color> _kSoulTones = <Color>[
-  Color(0xFF00C3FF), // Cyan only
-  Color(0xFF00C3FF),
-  Color(0xFF00C3FF),
-  Color(0xFF00C3FF),
-  Color(0xFF00C3FF),
-  Color(0xFF00C3FF),
-  Color(0xFF00C3FF),
-  Color(0xFF00C3FF),
+  Color(0xFF00C3FF), // Cyan
+  Color(0xFFFF4E8B), // Pink
+  Color(0xFFB66BFF), // Purple
+  Color(0xFFFFD84E), // Yellow
+  Color(0xFF4EFF8B), // Green
+  Color(0xFFFF8B4E), // Orange
+  Color(0xFF4E8BFF), // Blue
+  Color(0xFFFF4E4E), // Red
 ];
 
 const List<Color> _kSoulBurstPalette = <Color>[

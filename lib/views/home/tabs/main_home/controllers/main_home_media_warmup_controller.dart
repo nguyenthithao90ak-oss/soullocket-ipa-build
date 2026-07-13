@@ -1,4 +1,3 @@
-// ignore_for_file: unused_element
 part of '../../main_home_tab.dart';
 
 extension _MainHomeMediaWarmupController on _MainHomeTabState {
@@ -66,6 +65,46 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
     if (!mounted) return;
 
     final providers = <ImageProvider<Object>>[];
+
+    // Helper chuyển đổi assetPath thành R2 URL để tải online
+    String getR2Url(String path) {
+      if (path.startsWith('assets/images/')) {
+        final filename = path.substring('assets/images/'.length);
+        return '${AppConfig.r2PublicDomain}/stickers/$filename';
+      }
+      return path;
+    }
+
+    // Các tài nguyên mặc định cần tải trước (avatar nam/nữ mặc định + các sticker hay dùng tại Home)
+    final List<String> defaultAssets = [
+      'assets/images/avatar_male.jpg',
+      'assets/images/avatar_female.jpg',
+      'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_343.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_339.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_228.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_270.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_276.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_165.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_173.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_108.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_158.png',
+    ];
+
+    for (final asset in defaultAssets) {
+      final r2Url = getR2Url(asset);
+      providers.add(
+        CachedNetworkImageProvider(
+          r2Url,
+          // Tối ưu cache size nhỏ cho sticker và avatar mặc định
+          maxWidth: 200,
+          maxHeight: 200,
+        ),
+      );
+    }
+
     final safeAvatarUrl1 = avatarUrl1.trim();
     final safeAvatarUrl2 = avatarUrl2.trim();
     if (safeAvatarUrl1.isNotEmpty) {

@@ -157,8 +157,8 @@ class GameDownloadService extends ChangeNotifier {
           // Tải từ Cloudflare R2 (public domain)
           final fullStoragePath = '${config.storagePath}/$fileName';
           CloudflareR2Service.instance.init();
-          final remoteUrl =
-              '${CloudflareR2Service.publicDomain}/$fullStoragePath';
+          final cleanDomain = _getCleanR2Domain(CloudflareR2Service.publicDomain);
+          final remoteUrl = '$cleanDomain/$fullStoragePath';
 
           await _dio.download(
             remoteUrl,
@@ -204,5 +204,14 @@ class GameDownloadService extends ChangeNotifier {
         await SharedPreferences.getInstance();
     await prefs.setBool('game_downloaded_$gameId', false);
     notifyListeners();
+  }
+
+  String _getCleanR2Domain(String domain) {
+    final d = domain.trim();
+    if (d.startsWith('https://images.weserv.nl/?url=')) {
+      final sub = d.substring('https://images.weserv.nl/?url='.length);
+      return 'https://$sub';
+    }
+    return d;
   }
 }

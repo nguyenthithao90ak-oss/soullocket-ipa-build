@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/l10n_service.dart';
 import '../utilities/calendar_screen.dart';
@@ -431,7 +432,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                                 child: Center(
                                   child: Padding(
                                     padding: const EdgeInsets.all(4.0),
-                                    child: Image.asset('assets/images/interaction_stickers/custom/numbered/sticker_005.png'),
+                                    child: R2StickerImage('assets/images/interaction_stickers/custom/numbered/sticker_005.png'),
                                   ),
                                 ),
                               ),
@@ -566,7 +567,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                 child: Center(
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
-                    child: Image.asset('assets/images/interaction_stickers/custom/numbered/sticker_158.png'), // Thỏ ôm tim/chờ đợi
+                    child: R2StickerImage('assets/images/interaction_stickers/custom/numbered/sticker_158.png'), // Thỏ ôm tim/chờ đợi
                   ),
                 ),
               ),
@@ -712,7 +713,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Image.asset(stickerPath),
+                    child: R2StickerImage(stickerPath),
                   ),
                 ),
               ),

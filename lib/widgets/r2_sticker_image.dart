@@ -7,6 +7,7 @@ class R2StickerImage extends StatelessWidget {
   final BoxFit fit;
   final double? width;
   final double? height;
+  final Widget? errorWidget;
 
   const R2StickerImage(
     this.assetPath, {
@@ -14,6 +15,7 @@ class R2StickerImage extends StatelessWidget {
     this.fit = BoxFit.contain,
     this.width,
     this.height,
+    this.errorWidget,
   });
 
   @override
@@ -41,12 +43,14 @@ class R2StickerImage extends StatelessWidget {
             ),
           ),
         ),
-        errorWidget: (context, url, error) => Image.asset(
-          assetPath,
-          fit: fit,
-          width: width,
-          height: height,
-        ),
+        errorWidget: errorWidget != null
+            ? (context, url, error) => errorWidget!
+            : (context, url, error) => Image.asset(
+                  assetPath,
+                  fit: fit,
+                  width: width,
+                  height: height,
+                ),
       );
     }
 
@@ -56,6 +60,7 @@ class R2StickerImage extends StatelessWidget {
       fit: fit,
       width: width,
       height: height,
+      errorBuilder: errorWidget != null ? (context, error, stackTrace) => errorWidget! : null,
     );
   }
 }
