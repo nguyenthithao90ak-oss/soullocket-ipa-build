@@ -26,6 +26,7 @@ import 'package:soullocket_app/views/single_match/single_match_hub_screen.dart';
 import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart';
 import 'package:soullocket_app/views/home/screens/interaction_sticker_editor_screen.dart';
 import 'package:soullocket_app/widgets/animated_rabbit_sticker.dart';
+import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/utils/services/soul_merge_service.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -42,7 +43,7 @@ import 'package:soullocket_app/utils/services/utility_service.dart';
 import 'package:soullocket_app/utils/services/house_settings_service.dart';
 import 'package:soullocket_app/utils/services/album_service.dart';
 import 'package:soullocket_app/utils/services/notification_service.dart';
-import 'package:soullocket_app/utils/services/storage_service.dart';
+import 'package:soullocket_app/utils/services/storage/storage_service.dart';
 import 'package:soullocket_app/utils/services/utilities/note_service.dart';
 import 'package:soullocket_app/utils/services/pending_upload_service.dart';
 import 'package:soullocket_app/utils/sl_notice.dart';
@@ -62,7 +63,7 @@ import 'package:soullocket_app/views/utilities/creative_diary_screen.dart';
 import 'package:soullocket_app/views/utilities/drawing_studio_screen.dart';
 import 'package:soullocket_app/views/utilities/finance_screen.dart';
 import 'package:soullocket_app/views/utilities/friendly_chat_screen.dart';
-import 'package:soullocket_app/views/utilities/gift_maker_screen.dart';
+
 import 'package:soullocket_app/views/utilities/giftcode_screen.dart';
 import 'package:soullocket_app/views/utilities/habit_screen.dart';
 import 'package:soullocket_app/views/utilities/love_card_screen.dart';
@@ -72,11 +73,11 @@ import 'package:soullocket_app/views/utilities/shared_notes_screen.dart';
 import 'package:soullocket_app/views/utilities/calculator_screen.dart';
 import 'package:soullocket_app/views/utilities/diary_export_screen.dart';
 import 'package:soullocket_app/views/utilities/history_screen.dart';
-import 'package:soullocket_app/features/tarot/tarot_screen.dart';
+import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/utility_sticker_icon.dart';
 import 'package:soullocket_app/views/utilities/utilities_config.dart';
 import 'package:soullocket_app/views/utilities/voice_screen.dart';
-import 'package:soullocket_app/features/wheel/wheel_screen.dart';
+import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
 import 'package:soullocket_app/views/utilities/wishlist_screen.dart';
 import 'package:soullocket_app/utils/zodiac_utils.dart';
 import 'package:soullocket_app/utils/services/widget_service.dart';
@@ -4306,8 +4307,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                       )
                     ],
                   ),
-                  child: Image.asset(
-                    'assets/images/interaction_stickers/custom/numbered/sticker_181.png',
+                  child: const R2StickerImage(
+                    'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
                     fit: BoxFit.contain,
                   ),
                 ),

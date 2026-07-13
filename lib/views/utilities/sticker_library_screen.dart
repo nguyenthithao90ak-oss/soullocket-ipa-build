@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import '../../core/sl_theme.dart';
 
 class StickerLibraryScreen extends StatelessWidget {
@@ -552,17 +553,9 @@ class _StickerArt extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
-      child: Image.asset(
+      child: R2StickerImage(
         assetPath,
         fit: fit,
-        isAntiAlias: true,
-        filterQuality: FilterQuality.medium,
-        errorBuilder: (_, __, ___) => const Center(
-          child: Icon(
-            Icons.broken_image_rounded,
-            color: Colors.grey,
-          ),
-        ),
       ),
     );
   }

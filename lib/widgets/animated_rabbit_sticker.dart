@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 
 const String _interactionStickerPrefix = 'assets/images/interaction_stickers/';
 const String _numberedStickerPrefix =
@@ -37,14 +38,11 @@ class AnimatedRabbitSticker extends StatelessWidget {
   Widget build(BuildContext context) {
     final reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    final image = Image.asset(
+    final image = R2StickerImage(
       assetPath,
       width: width,
       height: height,
       fit: fit,
-      isAntiAlias: isAntiAlias,
-      filterQuality: filterQuality,
-      errorBuilder: errorBuilder,
     );
     if (reduceMotion || !isAnimatedRabbitStickerAsset(assetPath)) {
       return image;

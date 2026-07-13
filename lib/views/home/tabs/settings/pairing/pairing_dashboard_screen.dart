@@ -9,7 +9,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 
 import 'package:soullocket_app/core/constants/app_firebase_paths.dart';
-import 'package:soullocket_app/utils/services/storage_picker_service.dart';
+import 'package:soullocket_app/utils/services/storage/storage_picker_service.dart';
 import 'package:soullocket_app/utils/services/infrastructure/storage_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 

@@ -256,8 +256,8 @@ class NotificationService {
           if (!active) {
             await FlutterOverlayWindow.showOverlay(
               enableDrag: true,
-              height: 80,
-              width: 80,
+              height: 100,
+              width: 100,
               alignment: OverlayAlignment.centerRight,
               overlayTitle: 'Bong bóng tâm hồn',
               overlayContent: 'Lời thì thầm đang kết nối...',

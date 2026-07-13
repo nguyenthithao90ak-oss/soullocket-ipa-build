@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import '../../../utils/services/offline_cache_service.dart';
 import '../../../utils/services/anti_spam_service.dart';
 import '../../../utils/services/auth_service.dart';
@@ -266,6 +268,11 @@ class LoginController extends ChangeNotifier {
           await prefs.remove('il_remembered_email');
         }
 
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          await _prefetchAuthData(user.uid);
+        }
+
         if (!context.mounted) return;
         _showSuccessDialog(
           context,
@@ -382,6 +389,10 @@ class LoginController extends ChangeNotifier {
 
       _failedAuthAttempts = 0; // Reset on success
 
+      if (result.user != null) {
+        await _prefetchAuthData(result.user!.uid);
+      }
+
       if (context.mounted) {
         _showSuccessDialog(
           context,
@@ -482,5 +493,29 @@ class LoginController extends ChangeNotifier {
         ],
       ),
     );
+  }
+
+  Future<void> _prefetchAuthData(String uid) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final snap = await FirebaseDatabase.instance
+          .ref('users/$uid')
+          .get()
+          .timeout(const Duration(seconds: 3));
+      if (snap.exists && snap.value != null) {
+        final data = snap.value as Map;
+        final houseId = data['houseId']?.toString();
+        final role = data['role']?.toString();
+        if (houseId != null && houseId.isNotEmpty) {
+          await prefs.setString('il_house_id', houseId);
+          await prefs.setString('il_auth_uid', uid);
+          if (role != null) {
+            await prefs.setString('il_role', role);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to pre-fetch houseId at login: $e');
+    }
   }
 }

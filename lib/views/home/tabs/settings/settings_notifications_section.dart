@@ -617,6 +617,11 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                   setState(() => _showStatus = v);
                   SoundService().playClick();
                   unawaited(_persistHomeDisplayPrefsQuickly());
+                  if (v) {
+                    PresenceService().reconnectPresence();
+                  } else {
+                    PresenceService().hidePresence();
+                  }
                 }),
                 _buildSwitchRow(context.tr('show_timer_home'), _homeShowTimer,
                     (v) {

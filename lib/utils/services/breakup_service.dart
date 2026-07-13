@@ -12,6 +12,8 @@ import 'auth_service.dart';
 import 'offline_cache_service.dart';
 import 'revenue_security_telemetry_service.dart';
 import 'security_service.dart';
+import 'package:flutter/foundation.dart';
+import 'package:soullocket_app/utils/services/error_logger_service.dart';
 
 enum BreakupStatus {
   none,
@@ -209,12 +211,23 @@ class BreakupService {
   }
 
   Future<BreakupRequestData?> getBreakupRequest(String houseId) async {
-    final snap =
-        await _requestRef(houseId).get().timeout(const Duration(seconds: 3));
-    if (!snap.exists || snap.value == null) return null;
-    final map = _toMap(snap.value);
-    if (map.isEmpty) return null;
-    return BreakupRequestData.fromMap(map);
+    try {
+      final snap = await _requestRef(houseId)
+          .get()
+          .timeout(const Duration(seconds: 3));
+      if (!snap.exists || snap.value == null) return null;
+      final map = _toMap(snap.value);
+      if (map.isEmpty) return null;
+      return BreakupRequestData.fromMap(map);
+    } catch (e, stackTrace) {
+      debugPrint('[BreakupService] Error getting breakup request for $houseId: $e');
+      unawaited(ErrorLoggerService.instance.logError(
+        e,
+        stackTrace,
+        reason: 'Failed to get breakup request for house: $houseId',
+      ));
+      return null;
+    }
   }
 
   Future<String> getCurrentDeviceId() async {
@@ -228,20 +241,29 @@ class BreakupService {
     final currentDeviceId = await getCurrentDeviceId();
     final trustedDeviceIds = <String>{};
 
-    final houseDevicesSnap = await _db
-        .ref('houses/$houseId/security/devices')
-        .get()
-        .timeout(const Duration(seconds: 3));
-    _collectTrustedDeviceIds(houseDevicesSnap.value, trustedDeviceIds);
-
-    if (trustedDeviceIds.isEmpty &&
-        currentUid != null &&
-        currentUid.trim().isNotEmpty) {
-      final globalSnap = await _db
-          .ref('security/devices/${currentUid.trim()}')
+    try {
+      final houseDevicesSnap = await _db
+          .ref('houses/$houseId/security/devices')
           .get()
           .timeout(const Duration(seconds: 3));
-      _collectTrustedDeviceIds(globalSnap.value, trustedDeviceIds);
+      _collectTrustedDeviceIds(houseDevicesSnap.value, trustedDeviceIds);
+
+      if (trustedDeviceIds.isEmpty &&
+          currentUid != null &&
+          currentUid.trim().isNotEmpty) {
+        final globalSnap = await _db
+            .ref('security/devices/${currentUid.trim()}')
+            .get()
+            .timeout(const Duration(seconds: 3));
+        _collectTrustedDeviceIds(globalSnap.value, trustedDeviceIds);
+      }
+    } catch (e, stackTrace) {
+      debugPrint('[BreakupService] Error getting trusted devices: $e');
+      unawaited(ErrorLoggerService.instance.logError(
+        e,
+        stackTrace,
+        reason: 'Failed to get trusted devices meta for house: $houseId',
+      ));
     }
 
     return BreakupTrustedDevicesMeta(

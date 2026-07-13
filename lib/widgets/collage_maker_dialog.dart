@@ -11,7 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/services/image_picker_recovery_service.dart';
-import '../utils/services/storage_service.dart';
+import '../utils/services/storage/storage_service.dart';
 import '../views/utilities/collage_limit_ui_helper.dart';
 import '../utils/services/collage_limit_service.dart';
 import '../utils/collage_generator.dart';

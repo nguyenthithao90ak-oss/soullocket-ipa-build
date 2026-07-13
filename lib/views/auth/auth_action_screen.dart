@@ -4,7 +4,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../utils/services/auth_service.dart';
 import '../../utils/sl_notice.dart';
-import '../login_screen.dart';
+import 'login_screen.dart';
 
 class AuthActionScreen extends StatefulWidget {
   final Uri initialUri;

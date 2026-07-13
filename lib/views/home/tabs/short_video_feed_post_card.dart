@@ -469,6 +469,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
         CachedNetworkImage(
           cacheManager: AppCacheManager.instance,
           maxWidthDiskCache: mediaCacheWidth,
+          memCacheWidth: mediaCacheWidth,
           imageUrl: _mediaUrl,
           fit: BoxFit.cover,
           filterQuality: mediaFilterQuality,
@@ -489,6 +490,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                   child: CachedNetworkImage(
                     cacheManager: AppCacheManager.instance,
                     maxWidthDiskCache: mediaCacheWidth,
+                    memCacheWidth: mediaCacheWidth,
                     imageUrl: _mediaUrl,
                     fit: BoxFit.cover,
                     filterQuality: mediaFilterQuality,

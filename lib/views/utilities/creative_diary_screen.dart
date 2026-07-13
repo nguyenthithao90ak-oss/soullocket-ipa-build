@@ -17,7 +17,7 @@ import '../../core/sl_theme.dart';
 import '../../utils/services/creative_diary_service.dart';
 import '../../utils/services/house_service.dart';
 import '../../utils/services/image_picker_recovery_service.dart';
-import '../../utils/services/storage_service.dart';
+import '../../utils/services/storage/storage_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/admob_service.dart';
 import '../home/tabs/diary/controllers/diary_guard_controller.dart';

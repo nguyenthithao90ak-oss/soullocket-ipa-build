@@ -9,6 +9,7 @@ import '../../core/sl_theme.dart';
 import '../../utils/services/ad_suppression_guard.dart';
 import '../../utils/services/purchase_service.dart';
 import '../../core/constants/app_config.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class VideoCallScreen extends StatefulWidget {
   final String houseId;
@@ -502,7 +503,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
               radius: 56,
               backgroundColor: Colors.white12,
               backgroundImage: widget.targetAvatarUrl != null
-                  ? NetworkImage(widget.targetAvatarUrl!)
+                  ? CachedNetworkImageProvider(widget.targetAvatarUrl!)
                   : null,
               child: widget.targetAvatarUrl == null
                   ? Text(

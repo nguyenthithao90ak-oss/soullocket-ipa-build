@@ -89,9 +89,7 @@ class RelationshipModeDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      L10nService().translate(
-                        'Chọn để app biết nên mở chế độ độc thân hay cặp đôi ngay từ đầu.',
-                      ),
+                      L10nService().translate('auth_msg_role_selection'),
                       textAlign: TextAlign.center,
                       style: SLTheme.quicksand(
                         fontSize: 13,
@@ -109,9 +107,7 @@ class RelationshipModeDialog extends StatelessWidget {
                           child: _buildOption(
                             emoji: '🩷',
                             title: L10nService().translate('Có người yêu'),
-                            description: L10nService().translate(
-                              'Mở giao diện cặp đôi, lưu ngày yêu và đồng bộ với người ấy.',
-                            ),
+                            description: L10nService().translate('auth_msg_role_couple_desc'),
                             color: const Color(0xFFFF4081),
                             onTap: () => onSelected('couple'),
                           ),
@@ -121,9 +117,7 @@ class RelationshipModeDialog extends StatelessWidget {
                           child: _buildOption(
                             emoji: '✨',
                             title: L10nService().translate('Độc thân'),
-                            description: L10nService().translate(
-                              'Mở giao diện cá nhân, dùng app một mình trước.',
-                            ),
+                            description: L10nService().translate('auth_msg_role_single_desc'),
                             color: const Color(0xFF29B6F6),
                             onTap: () => onSelected('single'),
                           ),

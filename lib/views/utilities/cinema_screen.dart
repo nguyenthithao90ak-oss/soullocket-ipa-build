@@ -179,8 +179,11 @@ class _CinemaScreenState extends State<CinemaScreen> {
 
   Future<void> _loadMemoriesOnce() async {
     try {
-      final snapshot =
-          await _dbRef.child('houses/${widget.houseId}/memories').get();
+      final snapshot = await _dbRef
+          .child('houses/${widget.houseId}/memories')
+          .orderByChild('ts')
+          .limitToLast(60)
+          .get();
       final raw = snapshot.value;
       final records = <_CinemaMemoryRecord>[];
 

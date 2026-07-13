@@ -15,7 +15,7 @@ import '../../utils/services/admob_service.dart';
 import '../ui_prefs.dart';
 import '../../core/sl_theme.dart';
 import 'soul_rhythm_music_config.dart';
-import '../../utils/services/game_download_service.dart';
+import '../../utils/services/games/game_download_service.dart';
 import '../../utils/app_error_mapper.dart';
 
 part 'soul_rhythm/ui/soul_rhythm_hud.dart';

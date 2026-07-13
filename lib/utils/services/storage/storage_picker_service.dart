@@ -3,8 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 
-import 'app_lifecycle_presence_guard.dart';
-import 'image_picker_recovery_service.dart';
+import '../app_lifecycle_presence_guard.dart';
+import '../image_picker_recovery_service.dart';
 import 'storage_media_constants.dart';
 import 'storage_web_picker_guard.dart';
 

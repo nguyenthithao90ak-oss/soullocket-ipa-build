@@ -13,20 +13,20 @@ import 'cloudflare_r2_service.dart';
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
 import 'package:soullocket_app/utils/services/secret_vault_media_policy.dart'
     as secret_vault_policy;
-import 'package:soullocket_app/utils/services/storage_app_check_helper.dart';
-import 'package:soullocket_app/utils/services/storage_content_policy.dart';
-import 'package:soullocket_app/utils/services/storage_delete_helper.dart';
-import 'package:soullocket_app/utils/services/storage_download_cache_helper.dart';
-import 'package:soullocket_app/utils/services/storage_finalize_helper.dart';
-import 'package:soullocket_app/utils/services/storage_managed_upload_helper.dart';
-import 'package:soullocket_app/utils/services/storage_media_constants.dart';
-import 'package:soullocket_app/utils/services/storage_path_policy.dart';
-import 'package:soullocket_app/utils/services/storage_picker_service.dart';
-import 'package:soullocket_app/utils/services/storage_raw_upload_helper.dart';
-import 'package:soullocket_app/utils/services/storage_upload_result.dart';
-import 'package:soullocket_app/utils/services/storage_upload_session_helper.dart';
-import 'package:soullocket_app/utils/services/storage_upload_result_mapper.dart';
-import 'package:soullocket_app/utils/services/storage_web_picker_guard.dart';
+import 'package:soullocket_app/utils/services/storage/storage_app_check_helper.dart';
+import 'package:soullocket_app/utils/services/storage/storage_content_policy.dart';
+import 'package:soullocket_app/utils/services/storage/storage_delete_helper.dart';
+import 'package:soullocket_app/utils/services/storage/storage_download_cache_helper.dart';
+import 'package:soullocket_app/utils/services/storage/storage_finalize_helper.dart';
+import 'package:soullocket_app/utils/services/storage/storage_managed_upload_helper.dart';
+import 'package:soullocket_app/utils/services/storage/storage_media_constants.dart';
+import 'package:soullocket_app/utils/services/storage/storage_path_policy.dart';
+import 'package:soullocket_app/utils/services/storage/storage_picker_service.dart';
+import 'package:soullocket_app/utils/services/storage/storage_raw_upload_helper.dart';
+import 'package:soullocket_app/utils/services/storage/storage_upload_result.dart';
+import 'package:soullocket_app/utils/services/storage/storage_upload_session_helper.dart';
+import 'package:soullocket_app/utils/services/storage/storage_upload_result_mapper.dart';
+import 'package:soullocket_app/utils/services/storage/storage_web_picker_guard.dart';
 
 class StorageService {
   StorageService();

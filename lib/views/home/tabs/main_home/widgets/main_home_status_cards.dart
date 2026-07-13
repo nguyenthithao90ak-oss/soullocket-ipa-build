@@ -529,7 +529,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Image.asset('assets/images/interaction_stickers/custom/numbered/sticker_162.png'),
+                    child: R2StickerImage('assets/images/interaction_stickers/custom/numbered/sticker_162.png'),
                   ),
                 ),
                 SLSpacing.w12,
@@ -713,7 +713,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 SizedBox(
                   width: 24,
                   height: 24,
-                  child: Image.asset('assets/images/interaction_stickers/custom/numbered/sticker_160.png'),
+                  child: R2StickerImage('assets/images/interaction_stickers/custom/numbered/sticker_160.png'),
                 ),
                 SLSpacing.w8,
                 Flexible(

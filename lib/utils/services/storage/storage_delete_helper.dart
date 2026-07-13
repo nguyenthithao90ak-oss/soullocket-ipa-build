@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
-import 'cloudflare_r2_service.dart';
+import '../cloudflare_r2_service.dart';
 
 class StorageDeleteHelper {
   const StorageDeleteHelper();

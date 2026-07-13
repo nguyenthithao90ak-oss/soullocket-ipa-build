@@ -318,20 +318,8 @@ class AuthSignInService {
 
     bool? accountExistsHint;
     try {
-      final precheck = await _precheckServerLoginGuard(normalizedEmail);
-      accountExistsHint = precheck.accountExists;
-      if (!precheck.allowed) {
-        throw precheck.message;
-      }
-      if (accountExistsHint == false) {
-        await _recordServerLoginFailure(
-          normalizedEmail,
-          reason: 'account_not_found',
-        );
-        throw accountNotFoundMessage;
-      }
-
-      final userCredential = await _auth
+      final precheckFuture = _precheckServerLoginGuard(normalizedEmail);
+      final authFuture = _auth
           .signInWithEmailAndPassword(
             email: normalizedEmail,
             password: password.trim(),
@@ -341,6 +329,28 @@ class AuthSignInService {
             onTimeout: () =>
                 throw 'Lỗi kết nối máy chủ! Vui lòng kiểm tra lại mạng.',
           );
+
+      final results = await Future.wait([precheckFuture, authFuture]);
+      final precheck = results[0] as _ServerLoginGuardPrecheck;
+      final userCredential = results[1] as firebase_auth.UserCredential;
+
+      accountExistsHint = precheck.accountExists;
+      if (!precheck.allowed) {
+        if (userCredential.user != null) {
+          await signOut();
+        }
+        throw precheck.message;
+      }
+      if (accountExistsHint == false) {
+        await _recordServerLoginFailure(
+          normalizedEmail,
+          reason: 'account_not_found',
+        );
+        if (userCredential.user != null) {
+          await signOut();
+        }
+        throw accountNotFoundMessage;
+      }
 
       if (userCredential.user != null) {
         unawaited(_recordServerLoginSuccess(normalizedEmail));
@@ -1498,7 +1508,36 @@ class AuthSignInService {
         existingRole != 'user1' &&
         existingRole != 'user2';
 
-    // Parallel Phase 2: Check ban status, sync relationship mode, fetch settings, sync security email, register device, detect auto role
+    if (resolvedEmail.contains('@')) {
+      unawaited(
+        _houseContextService
+            .syncSecurityEmailForCurrentUser(
+          user: user,
+          email: resolvedEmail,
+          houseId: houseId,
+        )
+            .catchError((error) {
+          debugPrint('Failed to sync security email: $error');
+        }),
+      );
+    }
+
+    unawaited(
+      DeviceManagerService()
+          .registerCurrentDevice()
+          .timeout(const Duration(seconds: 4))
+          .catchError((error) {
+        debugPrint(
+          'registerCurrentDevice skipped during auth finalize: '
+          '${AppErrorMapper.resolve(
+            error,
+            fallbackMessage: 'Không thể đăng ký thiết bị hiện tại lúc này.',
+          ).message}',
+        );
+      }),
+    );
+
+    // Parallel Phase 2: Check ban status, sync relationship mode, fetch settings, detect auto role
     final phase2Results = await Future.wait([
       _houseContextService.checkBanStatus(
         houseId,
@@ -1524,30 +1563,6 @@ class AuthSignInService {
         })
       else
         Future<DataSnapshot?>.value(null),
-      if (resolvedEmail.contains('@'))
-        _houseContextService
-            .syncSecurityEmailForCurrentUser(
-          user: user,
-          email: resolvedEmail,
-          houseId: houseId,
-        )
-            .catchError((error) {
-          debugPrint('Failed to sync security email: $error');
-        })
-      else
-        Future<void>.value(null),
-      DeviceManagerService()
-          .registerCurrentDevice()
-          .timeout(const Duration(seconds: 4))
-          .catchError((error) {
-        debugPrint(
-          'registerCurrentDevice skipped during auth finalize: '
-          '${AppErrorMapper.resolve(
-            error,
-            fallbackMessage: 'Không thể đăng ký thiết bị hiện tại lúc này.',
-          ).message}',
-        );
-      }),
       if (shouldDetectRole)
         _houseContextService.detectAutoRole(houseId).catchError((error) {
           debugPrint('Failed to detect auto role: $error');
@@ -1586,7 +1601,7 @@ class AuthSignInService {
     }
 
     if (shouldDetectRole) {
-      final role = phase2Results[5] as String;
+      final role = phase2Results[3] as String;
       if (role == 'user1' || role == 'user2') {
         await prefs.setString('il_role', role);
       }

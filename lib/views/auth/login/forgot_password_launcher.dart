@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../forgot_password_screen.dart';
+import '../forgot_password_screen.dart';
 
 class ForgotPasswordLauncher {
   const ForgotPasswordLauncher._();

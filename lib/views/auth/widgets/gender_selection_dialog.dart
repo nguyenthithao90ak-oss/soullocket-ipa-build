@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
@@ -82,9 +83,7 @@ class GenderSelectionDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      L10nService().translate(
-                        'Để ứng dụng hiển thị đúng giao diện\nmà không cần lật lại sau nhé!',
-                      ),
+                      L10nService().translate('auth_msg_role_hint'),
                       textAlign: TextAlign.center,
                       style: SLTheme.quicksand(
                         fontSize: 13,
@@ -168,7 +167,7 @@ class GenderSelectionDialog extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: ClipOval(
-                child: Image.asset(
+                child: R2StickerImage(
                   assetPath,
                   width: compact ? 54 : 64,
                   height: compact ? 54 : 64,

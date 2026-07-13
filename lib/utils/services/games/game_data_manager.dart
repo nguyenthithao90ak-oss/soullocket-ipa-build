@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
-import 'offline_cache_service.dart';
+import '../offline_cache_service.dart';
 
 class GameDataManager {
   static const String _downloadedKeyPrefix = 'game_downloaded_';

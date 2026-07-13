@@ -9,6 +9,7 @@ import 'package:soullocket_app/utils/services/session/presence_status_formatter.
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/role_utils.dart';
 import 'package:soullocket_app/utils/services/device_manager_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PresenceService {
   static const PresenceStatusFormatter _statusFormatter =
@@ -121,7 +122,8 @@ class PresenceService {
 
     final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
     final sessions = data['sessions'];
-    if (sessions is Map) {
+    
+    if (sessions is Map && sessions.isNotEmpty) {
       final freshSessionCount = _countFreshSessions(
         sessions,
         nowMs: now,
@@ -130,16 +132,7 @@ class PresenceService {
       return freshSessionCount > 0;
     }
 
-    final status = data['status']?.toString();
-    if (status == 'online') {
-      return true;
-    }
-
-    final activeSessionCount = data['activeSessionCount'];
-    if (activeSessionCount is num && activeSessionCount.toInt() > 0) {
-      return true;
-    }
-
+    // Nếu không có sessions (bị onDisconnect xoá) hoặc sessions rỗng -> offline
     return false;
   }
 
@@ -325,6 +318,10 @@ class PresenceService {
     if (!_shouldBeOnline || _myPresenceRef == null || _mySessionId == null) {
       return;
     }
+    final prefs = await SharedPreferences.getInstance();
+    final showStatus = prefs.getBool('il_show_status') ?? true;
+    if (!showStatus) return;
+
     if (!_isConnected) {
       debugPrint(
           '[Presence] Skip lightweight heartbeat because connection is offline');
@@ -451,6 +448,10 @@ class PresenceService {
     if (!_shouldBeOnline) {
       return;
     }
+    final prefs = await SharedPreferences.getInstance();
+    final showStatus = prefs.getBool('il_show_status') ?? true;
+    if (!showStatus) return;
+
     // Throttle: không gọi heartbeat quá 1 lần mỗi 180s (3 phút) để giảm writes
     if (_lastMarkActiveAt != null &&
         DateTime.now().difference(_lastMarkActiveAt!).inSeconds < 180) {
@@ -583,6 +584,9 @@ class PresenceService {
     if (!_shouldBeOnline || _activeHouseId == null || _activeRole == null) {
       return;
     }
+    final prefs = await SharedPreferences.getInstance();
+    final showStatus = prefs.getBool('il_show_status') ?? true;
+    if (!showStatus) return;
 
     final nextPath = 'houses/$_activeHouseId/presence/$_activeRole';
     _myPresenceRef = _dbRef.child(nextPath);
@@ -631,6 +635,29 @@ class PresenceService {
         fallbackMessage: 'Không thể ghi trạng thái hiện diện.',
       ).message}');
     }
+  }
+
+  Future<void> hidePresence() async {
+    final houseId = _activeHouseId;
+    final role = _activeRole;
+    if (houseId == null || role == null) return;
+    
+    debugPrint('[Presence] hidePresence start role=$role house=$houseId');
+    _heartbeatTimer?.cancel();
+    await _cleanupPresence(
+      houseId: houseId,
+      role: role,
+      markOfflineIfEmpty: true,
+      lastSeenMs: DateTime.now().millisecondsSinceEpoch,
+    );
+    _myPresenceRef = null;
+    _mySessionId = null;
+    _lastOnlineFingerprint = null;
+  }
+
+  Future<void> reconnectPresence() async {
+    if (!_shouldBeOnline) return;
+    await _doGoOnline();
   }
 
   Future<void> goOffline({

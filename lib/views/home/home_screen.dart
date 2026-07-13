@@ -49,9 +49,8 @@ import '../utilities/calendar_screen.dart';
 import '../utilities/soul_events/soul_events_screen.dart';
 import 'love_insights_screen.dart';
 import '../ui_prefs.dart';
-import 'package:soullocket_app/views/home/tabs/settings/settings_gift_links_manager_screen.dart';
+import 'package:soullocket_app/views/home/tabs/settings/settings_links_manager_screen.dart';
 import 'package:soullocket_app/utils/services/memory_share_service.dart';
-// import 'tabs/community_tab.dart'; // DELETED_COMMUNITY_FEATURE 2026-06-28
 import 'tabs/diary_tab.dart';
 import 'tabs/game_tab.dart';
 import 'tabs/main_home_tab.dart';
@@ -400,6 +399,7 @@ class _HomeScreenState extends State<HomeScreen>
   final GlobalKey _firstGuideBottomNavKey = GlobalKey();
   final GlobalKey _firstGuideDiaryTabKey = GlobalKey();
   final GlobalKey _firstGuideUtilitiesTabKey = GlobalKey();
+  final GlobalKey _firstGuideEntertainmentTabKey = GlobalKey();
   final GlobalKey _firstGuideUpdateTabKey = GlobalKey();
 
   late AnimationController _musicController;
@@ -674,7 +674,7 @@ class _HomeScreenState extends State<HomeScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          '⚠️ ${L10nService().translate('Bạn đang trùng vai')} $roleLabel — ${L10nService().translate('một thiết bị khác cũng đang đăng nhập cùng vai.')}',
+          '⚠️ ${L10nService().translate('auth_err_role_conflict_1')} $roleLabel — ${L10nService().translate('auth_err_role_conflict_2')}',
         ),
         duration: const Duration(seconds: 5),
         behavior: SnackBarBehavior.floating,
@@ -1539,8 +1539,7 @@ class _HomeScreenState extends State<HomeScreen>
                 final shouldAnimateEffects =
                     effectProfile.premiumEffects && resolvedEffectKey == 'off';
                 final shouldAnimateFallingEffect =
-                    effectProfile.animationEnabled &&
-                        resolvedEffectKey != 'off';
+                    !_isUserTabSwiping && resolvedEffectKey != 'off';
 
                 final shellChild = child ?? const SizedBox.shrink();
 
@@ -1569,8 +1568,7 @@ class _HomeScreenState extends State<HomeScreen>
                         effectProfile.premiumEffects &&
                             rotatedEffectKey == 'off';
                     final rotatedShouldAnimateFallingEffect =
-                        effectProfile.animationEnabled &&
-                            rotatedEffectKey != 'off';
+                        !_isUserTabSwiping && rotatedEffectKey != 'off';
                     return _buildShellBody(
                       foregroundChild: shellChild,
                       isDark: rotatedIsDark,
@@ -1655,8 +1653,7 @@ class _HomeScreenState extends State<HomeScreen>
     final key = raw.isEmpty ? 'auto' : raw;
     if (key != 'auto') return key;
 
-    if (resolvedThemeKey == 'off' ||
-        UiPrefs.notifier.value.customBackgroundUrl.isNotEmpty) {
+    if (resolvedThemeKey == 'off') {
       return 'off';
     }
 

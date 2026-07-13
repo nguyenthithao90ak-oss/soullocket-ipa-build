@@ -11,7 +11,7 @@ import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/app_error_mapper.dart';
 import '../../../../../utils/services/l10n_service.dart';
 import '../../../../../widgets/skeleton_container.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+
 
 import '../controllers/diary_memory_controller.dart';
 import 'diary_tab_shell_sections.dart';
@@ -336,8 +336,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                           cacheSnapshot.hasData && cacheSnapshot.data is List;
 
                       if (waitingForLive &&
-                          !hasUsableCache &&
-                          _lastPreparedFeed == null) {
+                          _lastPreparedFeed == null &&
+                          !hasUsableCache) {
                         bodySlivers.add(
                           const SliverToBoxAdapter(
                             child: _DiaryMemoryInlineLoading(),
@@ -350,7 +350,6 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                               snapshot.data?.snapshot.value != null &&
                               snapshot.data!.snapshot.value is Map;
                           final canReuseLastFeed = waitingForLive &&
-                              !hasUsableCache &&
                               _lastPreparedFeed != null;
                           final preparedFeed = canReuseLastFeed
                               ? _lastPreparedFeed!
@@ -401,47 +400,66 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                 ),
                               );
                             }
+
+                            // Dùng SliverList.builder duy nhất cho toàn bộ danh sách ảnh
+                            // để giảm tối đa chi phí GPU/Layout của CustomScrollView
                             bodySlivers.add(
-                              SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                    final item = filteredItems[index];
+                              SliverList.builder(
+                                itemCount: filteredItems.length,
+                                itemBuilder: (context, index) {
+                                  final item = filteredItems[index];
 
-                                    if (item.isHeader) {
-                                      final highlights = item.highlights;
-                                      if (highlights.isNotEmpty) {
-                                        return _DiaryMemorySpecialHeader(
-                                          icon:
-                                              highlights.first['icon'] ?? '💖',
-                                          title: highlights.first['text'] ?? '',
-                                          dateString: item.dateString ?? '',
-                                          totalPhotos: item.totalPhotos ?? 0,
-                                        );
-                                      }
-
+                                  if (item.isHeader) {
+                                    final highlights = item.highlights;
+                                    if (highlights.isNotEmpty) {
+                                      return _DiaryMemorySpecialHeader(
+                                        icon: highlights.first['icon'] ?? '💖',
+                                        title: highlights.first['text'] ?? '',
+                                        dateString: item.dateString ?? '',
+                                        totalPhotos: item.totalPhotos ?? 0,
+                                      );
+                                    } else {
                                       return _DiaryMemoryDateHeader(
                                         dateString: item.dateString ?? '',
                                         totalPhotos: item.totalPhotos ?? 0,
                                       );
                                     }
+                                  } else {
+                                    final rowPhotos = item.photosRow ?? const [];
+                                    if (rowPhotos.isEmpty) {
+                                      return const SizedBox.shrink();
+                                    }
 
-                                    return _DiaryMemoryPhotoRow(
-                                      rowPhotos: item.photosRow ?? const [],
-                                      thumbnailCacheWidth:
-                                          widget.thumbnailCacheWidth,
-                                      selectionListenable:
-                                          widget.selectionListenable,
-                                      selectedMemories: widget.selectedMemories,
-                                      isSelectionMode: widget.isSelectionMode,
-                                      onToggleSelection:
-                                          widget.onToggleSelection,
-                                      onOpenMemory: widget.onOpenMemory,
-                                      allPhotos: filteredPhotos,
-                                      onEnsurePhotoUrl: widget.onEnsurePhotoUrl,
+                                    return Padding(
+                                      padding: const EdgeInsets.only(bottom: 8, left: 10, right: 10),
+                                      child: Row(
+                                        children: [
+                                          for (int i = 0; i < rowPhotos.length; i++) ...[
+                                            if (i > 0) const SizedBox(width: 8),
+                                            Expanded(
+                                              child: AspectRatio(
+                                                aspectRatio: 1.0, // Cố định tỷ lệ vuông cho mỗi ảnh trong hàng
+                                                child: _DiaryMemoryPhotoCell(
+                                                  key: ValueKey(rowPhotos[i]['id'] ?? 'photo_${index * 10 + i}'),
+                                                  photo: rowPhotos[i],
+                                                  index: index * 10 + i,
+                                                  thumbnailCacheWidth: widget.thumbnailCacheWidth,
+                                                  selectionListenable: widget.selectionListenable,
+                                                  selectedMemories: widget.selectedMemories,
+                                                  isSelectionMode: widget.isSelectionMode,
+                                                  onToggleSelection: widget.onToggleSelection,
+                                                  onOpenMemory: widget.onOpenMemory,
+                                                  allPhotos: filteredPhotos,
+                                                  onEnsurePhotoUrl: widget.onEnsurePhotoUrl,
+                                                ),
+                                              ),
+                                            ),
+                                          ]
+                                        ],
+                                      ),
                                     );
-                                  },
-                                  childCount: filteredItems.length,
-                                ),
+                                  }
+                                },
                               ),
                             );
 
@@ -794,8 +812,9 @@ class _DiaryMemorySpecialHeader extends StatelessWidget {
   }
 }
 
-class _DiaryMemoryPhotoRow extends StatefulWidget {
-  final List<Map<String, dynamic>> rowPhotos;
+class _DiaryMemoryPhotoCell extends StatefulWidget {
+  final Map<String, dynamic> photo;
+  final int index;
   final int thumbnailCacheWidth;
   final ValueListenable<int> selectionListenable;
   final Map<String, Map<String, dynamic>> selectedMemories;
@@ -808,8 +827,10 @@ class _DiaryMemoryPhotoRow extends StatefulWidget {
   final List<Map<String, dynamic>> allPhotos;
   final Future<void> Function(Map<String, dynamic> photo) onEnsurePhotoUrl;
 
-  const _DiaryMemoryPhotoRow({
-    required this.rowPhotos,
+  const _DiaryMemoryPhotoCell({
+    super.key,
+    required this.photo,
+    required this.index,
     required this.thumbnailCacheWidth,
     required this.selectionListenable,
     required this.selectedMemories,
@@ -821,11 +842,12 @@ class _DiaryMemoryPhotoRow extends StatefulWidget {
   });
 
   @override
-  State<_DiaryMemoryPhotoRow> createState() => _DiaryMemoryPhotoRowState();
+  State<_DiaryMemoryPhotoCell> createState() => _DiaryMemoryPhotoCellState();
 }
 
-class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
-  final Map<String, int> _retryCount = {};
+class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
+  int _retryCount = 0;
+  bool _urlsRefreshing = false;
 
   @override
   void initState() {
@@ -834,26 +856,28 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
   }
 
   @override
-  void didUpdateWidget(covariant _DiaryMemoryPhotoRow oldWidget) {
+  void didUpdateWidget(covariant _DiaryMemoryPhotoCell oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.rowPhotos != oldWidget.rowPhotos) {
+    if (widget.photo != oldWidget.photo) {
       _refreshUrlsIfNeeded();
     }
   }
-
-  bool _urlsRefreshing = false;
 
   Future<void> _refreshUrlsIfNeeded() async {
     if (_urlsRefreshing) return;
     _urlsRefreshing = true;
     try {
-      for (final photo in widget.rowPhotos) {
-        if (_needsSignedRefresh(photo)) {
-          await _refreshPhotoUrl(photo);
-        }
+      if (_needsSignedRefresh(widget.photo)) {
+        await _refreshPhotoUrl(widget.photo);
       }
     } finally {
-      _urlsRefreshing = false;
+      if (mounted) {
+        setState(() {
+          _urlsRefreshing = false;
+        });
+      } else {
+        _urlsRefreshing = false;
+      }
     }
   }
 
@@ -907,44 +931,15 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.rowPhotos.isEmpty) return const SizedBox.shrink();
-    
-    // Compute optimal crossAxisCount based on number of items
-    int crossAxisCount = 3;
-    if (widget.rowPhotos.length == 1) {
-      crossAxisCount = 1;
-    } else if (widget.rowPhotos.length == 2 || widget.rowPhotos.length == 4) {
-      crossAxisCount = 2;
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12, left: 10, right: 10),
-      child: MasonryGridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: crossAxisCount,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        itemCount: widget.rowPhotos.length,
-        itemBuilder: (context, index) {
-          final photo = widget.rowPhotos[index];
-          return _buildPhotoItem(context, photo, index);
-        },
-      ),
-    );
-  }
-
-  Widget _buildPhotoItem(BuildContext context, Map<String, dynamic> photo, int index) {
+    final photo = widget.photo;
     final photoUrl = _resolvePhotoUrl(photo);
-    final photoId = photo['id']?.toString() ?? 'unknown_$index';
+    final photoId = photo['id']?.toString() ?? 'unknown_${widget.index}';
     
-    // Detect potential transparent images (PNGs from iOS cutout often have png extension or cutout flag)
     final isStickerOrPng = photoUrl.toLowerCase().contains('.png') || photo['isSticker'] == true || photo['isCutout'] == true;
 
     if (photoUrl.isEmpty) {
-      final retries = _retryCount[photoId] ?? 0;
-      if (retries < 1) {
-        _retryCount[photoId] = retries + 1;
+      if (_retryCount < 1) {
+        _retryCount++;
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           if (!mounted) return;
           try {
@@ -981,33 +976,28 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
 
     return ValueListenableBuilder<int>(
       valueListenable: widget.selectionListenable,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          // Remove strong white shadow for stickers to prevent ugly white box behind transparent images
-          boxShadow: isStickerOrPng ? [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ] : [
-            BoxShadow(
-              color: const Color(0xFF5C71D8).withValues(alpha: 0.14),
-              blurRadius: 14,
-              offset: const Offset(0, 6),
-            ),
-            BoxShadow(
-              color: Colors.white.withValues(alpha: 0.72),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(18),
-          child: Hero(
-            tag: 'memory_image_${photo['id']}',
+      child: RepaintBoundary(
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: isStickerOrPng ? [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ] : [
+              BoxShadow(
+                color: const Color(0xFF5C71D8).withValues(alpha: 0.08),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: Hero(
+              tag: 'memory_image_${photo['id']}',
             child: CachedNetworkImage(
               imageUrl: photoUrl,
               memCacheWidth: widget.thumbnailCacheWidth,
@@ -1017,13 +1007,12 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                 color: isStickerOrPng ? Colors.transparent : const Color(0xFFF1F5F9),
               ),
               errorWidget: (context, url, error) {
-                final retries = _retryCount[photoId] ?? 0;
-                if (retries < 2) {
-                  _retryCount[photoId] = retries + 1;
+                if (_retryCount < 2) {
+                  _retryCount++;
                   WidgetsBinding.instance.addPostFrameCallback((_) async {
                     if (!mounted) return;
                     try {
-                      if (retries >= 1) {
+                      if (_retryCount > 1) {
                         photo['broken'] = true;
                       } else {
                         await _refreshStalePhotoUrl(photo);
@@ -1033,7 +1022,7 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
                     }
                   });
                 }
-                if (retries >= 2 || photo['broken'] == true) {
+                if (_retryCount >= 2 || photo['broken'] == true) {
                   return const SizedBox.shrink();
                 }
                 return Container(
@@ -1054,8 +1043,9 @@ class _DiaryMemoryPhotoRowState extends State<_DiaryMemoryPhotoRow> {
           ),
         ),
       ),
-      builder: (context, _, imageChild) {
-        final isSelected = widget.selectedMemories.containsKey(photoId);
+    ),
+    builder: (context, _, imageChild) {
+      final isSelected = widget.selectedMemories.containsKey(photoId);
 
         return GestureDetector(
           onLongPress: () => widget.onToggleSelection(photo),

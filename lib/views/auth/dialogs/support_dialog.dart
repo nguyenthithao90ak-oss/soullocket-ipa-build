@@ -63,9 +63,7 @@ class AuthSupportDialog {
                     ),
                     SLSpacing.h16,
                     Text(
-                      L10nService().translate(
-                        'Vui lòng mô tả vấn đề bạn đang gặp phải, chúng mình sẽ hỗ trợ sớm nhất có thể.',
-                      ),
+                      L10nService().translate('support_msg_describe_issue'),
                       style: SLTheme.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -124,9 +122,7 @@ class AuthSupportDialog {
                             if (description.isEmpty) {
                               AuthFeedbackDialogs.showError(
                                 dialogContext,
-                                L10nService().translate(
-                                  'Vui lòng nhập mô tả vấn đề.',
-                                ),
+                                L10nService().translate('support_err_empty_desc'),
                               );
                               return;
                             }
@@ -135,9 +131,7 @@ class AuthSupportDialog {
                             if (user == null) {
                               AuthFeedbackDialogs.showError(
                                 dialogContext,
-                                L10nService().translate(
-                                  'Bạn cần đăng nhập để gửi hỗ trợ.',
-                                ),
+                                L10nService().translate('support_err_need_login'),
                               );
                               return;
                             }
@@ -206,9 +200,7 @@ class AuthSupportDialog {
                               if (!dialogContext.mounted) return;
                               AuthFeedbackDialogs.showError(
                                 dialogContext,
-                                L10nService().translate(
-                                  'Chưa thể gửi yêu cầu hỗ trợ. Vui lòng thử lại sau.',
-                                ),
+                                L10nService().translate('support_err_failed_send'),
                               );
                               return;
                             }

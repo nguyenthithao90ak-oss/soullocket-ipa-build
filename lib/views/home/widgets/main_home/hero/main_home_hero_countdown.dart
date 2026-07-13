@@ -320,6 +320,8 @@ class _HomeExplodingPhotoWidgetState extends State<HomeExplodingPhotoWidget>
                       : CachedNetworkImage(
                           imageUrl: widget.photo.url,
                           fit: BoxFit.cover,
+                          useOldImageOnUrlChange: true,
+                          fadeInDuration: Duration.zero,
                           errorWidget: (_, __, ___) => Container(
                             color: const Color(0xFFFFE3EC),
                             child: const Center(

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -57,6 +58,25 @@ class AppEntryHomeAssetPreparer {
         try {
           final file = await _cacheManager.getSingleFile(url);
           HomeStartupMediaCache.saveFile(url, file);
+
+          // Decode image vào bộ nhớ đệm (ImageCache) để frame đầu tiên hiển thị ngay lập tức,
+          // tránh tình trạng bị chớp màn hình nền cũ (transparent flash) trong 0.1s.
+          final provider = FileImage(file);
+          final stream = provider.resolve(ImageConfiguration.empty);
+          final completer = Completer<void>();
+          late final ImageStreamListener listener;
+          listener = ImageStreamListener(
+            (info, sync) {
+              stream.removeListener(listener);
+              if (!completer.isCompleted) completer.complete();
+            },
+            onError: (e, stack) {
+              stream.removeListener(listener);
+              if (!completer.isCompleted) completer.completeError(e);
+            },
+          );
+          stream.addListener(listener);
+          await completer.future.timeout(const Duration(milliseconds: 1500));
         } catch (_) {}
       }
 

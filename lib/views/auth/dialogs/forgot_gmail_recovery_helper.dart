@@ -31,9 +31,7 @@ class ForgotGmailRecoveryHelper {
     if (secData == null) {
       AuthFeedbackDialogs.showError(
         context,
-        L10nService().translate(
-          'Không tìm thấy mã nhà hoặc không có kết nối.',
-        ),
+        L10nService().translate('auth_err_missing_house_code'),
       );
       return;
     }
@@ -51,9 +49,7 @@ class ForgotGmailRecoveryHelper {
     if (question.isEmpty) {
       AuthFeedbackDialogs.showError(
         context,
-        L10nService().translate(
-          'Nhà này chưa cài đặt câu hỏi bảo mật để khôi phục.',
-        ),
+        L10nService().translate('auth_err_no_security_q'),
       );
       return;
     }
@@ -70,9 +66,7 @@ class ForgotGmailRecoveryHelper {
     if (!isCorrect) {
       AuthFeedbackDialogs.showError(
         context,
-        L10nService().translate(
-          'Câu trả lời bảo mật không chính xác.',
-        ),
+        L10nService().translate('auth_err_wrong_security_a'),
       );
       return;
     }
@@ -321,9 +315,7 @@ class ForgotGmailRecoveryHelper {
     if (isFamiliarDevice && result == 'reset') {
       AuthFeedbackDialogs.showError(
         context,
-        L10nService().translate(
-          'YÊU CẦU ĐỔI MỚI: Đã ghi nhận yêu cầu. Vì lý do bảo mật, yêu cầu này sẽ được xử lý sau 3 ngày làm việc đối với thiết bị này.',
-        ),
+        L10nService().translate('auth_msg_recovery_requested'),
       );
       await FirebaseDatabase.instance.ref('reset_requests/$houseId').set({
         'requestTs': ServerValue.timestamp,

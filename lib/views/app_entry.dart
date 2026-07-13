@@ -13,7 +13,7 @@ import '../utils/services/house_service.dart';
 import '../utils/services/image_picker_recovery_service.dart';
 import '../utils/services/military_lock_service.dart';
 import '../utils/services/offline_cache_service.dart';
-import '../utils/services/storage_service.dart';
+import '../utils/services/storage/storage_service.dart';
 import '../utils/services/texas_age_gate_service.dart';
 import '../utils/services/widget_action_service.dart';
 import '../utils/services/app_lifecycle_presence_guard.dart';
@@ -33,7 +33,7 @@ import 'auth/lock_appeal_screen.dart';
 import 'consent/consent_gate.dart';
 import 'home/home_screen.dart';
 
-import 'login_screen.dart';
+import 'auth/login_screen.dart';
 import 'home/tabs/diary/controllers/diary_memory_controller.dart';
 
 class AppEntry extends StatefulWidget {
@@ -114,19 +114,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         );
       }
 
-      if (kIsWeb && DeeplinkService.isSupportedGiftUri(Uri.base)) {
-        unawaited(
-          _deeplinkHandler.handleInitialWebGiftLink(
-            context: context,
-            uri: Uri.base,
-            showSnackBar: _showRootSnackBar,
-          ),
-        );
-      }
+  
 
-      if (!(kIsWeb &&
-          (DeeplinkService.isSupportedAuthUri(Uri.base) ||
-              DeeplinkService.isSupportedGiftUri(Uri.base)))) {
+      if (!(kIsWeb && DeeplinkService.isSupportedAuthUri(Uri.base))) {
         unawaited(
           _deeplinkHandler.initialize(
             context: context,
@@ -285,6 +275,18 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
       _lastUserId = user.uid;
       _configureAccessResolution(user);
     });
+
+    final prefs = OfflineCacheService.getPrefsSync();
+    final cachedHouseId = prefs?.getString('il_house_id');
+    if (cachedHouseId != null && cachedHouseId.isNotEmpty) {
+      try {
+        FirebaseDatabase.instance.ref('houses/$cachedHouseId/settings').keepSynced(true);
+        FirebaseDatabase.instance.ref('houses/$cachedHouseId/members').keepSynced(true);
+        FirebaseDatabase.instance.ref('users/${user.uid}').keepSynced(true);
+      } catch (e) {
+        debugPrint('keepSynced error: $e');
+      }
+    }
   }
 
   void _showRootSnackBar(

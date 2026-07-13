@@ -41,8 +41,7 @@ class UtilityService {
     'capsule',
     'calendar',
     'cinema',
-    'gift',
-    'love_card',
+    'surprise_maker',
   };
   static const Set<String> _debugOnlyIds = {
     'sticker_library',
@@ -191,10 +190,10 @@ class UtilityService {
       colors: [const Color(0xFFFC4A1A), const Color(0xFFF7B733)],
     ),
     UtilityApp(
-      id: 'gift',
-      title: 'utility_title_gift',
-      icon: Icons.redeem_rounded,
-      colors: [const Color(0xFF00B09B), const Color(0xFF96C93D)],
+      id: 'surprise_maker',
+      title: 'Thiệp Tình Yêu',
+      icon: Icons.favorite_rounded,
+      colors: [const Color(0xFFFF758C), const Color(0xFFFF7EB3)],
     ),
     UtilityApp(
       id: 'diary_export',

@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import '../utils/services/auth_service.dart';
-import '../utils/services/l10n_service.dart';
-import '../utils/services/security_flow_guard.dart';
-import '../core/sl_theme.dart';
-import '../utils/flexible_date_input.dart';
-import '../utils/app_error_mapper.dart';
-import '../widgets/sensitive_content_guard.dart';
+import '../../utils/services/auth_service.dart';
+import '../../utils/services/l10n_service.dart';
+import '../../utils/services/security_flow_guard.dart';
+import '../../core/sl_theme.dart';
+import '../../utils/flexible_date_input.dart';
+import '../../utils/app_error_mapper.dart';
+import '../../widgets/sensitive_content_guard.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});

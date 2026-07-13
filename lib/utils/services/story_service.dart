@@ -4,7 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'image_picker_recovery_service.dart';
 import 'app_lifecycle_presence_guard.dart';
 import 'pending_upload_service.dart';
-import 'storage_service.dart';
+import 'storage/storage_service.dart';
 
 class StoryService {
   static const String _pendingStoryUploadKeyPrefix = 'story_';

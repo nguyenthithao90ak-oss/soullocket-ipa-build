@@ -340,7 +340,7 @@ mixin _SoulBlockStrategyLogic {
       }
     }
 
-    final bool forceEasyAnchor = (progress < 0.24 || boardStress >= 0.65) &&
+    final bool forceEasyAnchor = (progress < 0.35 || boardStress >= 0.50) &&
         fittingCandidates.any((candidate) => candidate.template.tier == 0);
 
     // Early-game: tính trước piece nào clear được ngay để ưu tiên
@@ -409,11 +409,11 @@ mixin _SoulBlockStrategyLogic {
       chosenTemplates = _pickBatchWinnerPool(rankedBatches, progress);
     }
 
-    final bool shouldRescue = boardStress >= 0.80;
+    final bool shouldRescue = boardStress >= 0.65;
     bool gaveBomb = false;
     return chosenTemplates.map((t) {
       bool makeBomb = false;
-      if (!gaveBomb && shouldRescue && _random.nextInt(100) < 50) {
+      if (!gaveBomb && shouldRescue && _random.nextInt(100) < 85) {
         makeBomb = true;
         gaveBomb = true;
       }
@@ -427,8 +427,8 @@ mixin _SoulBlockStrategyLogic {
   }) {
     _pieceSequence += 1;
     final int roll = _random.nextInt(100);
-    final bool isGold = roll < 12; // 12% (buffed from 10)
-    final bool isBomb = forceBomb || (!isGold && (roll >= 12 && roll < 20)); // 8% or forced
+    final bool isGold = roll < 15; // 15% (buffed from 12)
+    final bool isBomb = forceBomb || (!isGold && (roll >= 15 && roll < 25)); // 10% or forced
     return _SoulPieceOption(
       id: _pieceSequence,
       template: template,

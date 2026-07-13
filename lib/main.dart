@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:soullocket_app/app.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/build_signature_service.dart';
+import 'package:soullocket_app/core/service_locator.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -64,8 +65,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
           if (!active) {
             await FlutterOverlayWindow.showOverlay(
               enableDrag: true,
-              height: 80,
-              width: 80,
+              height: 100,
+              width: 100,
               alignment: OverlayAlignment.centerRight,
               overlayTitle: 'Bong bóng tâm hồn',
               overlayContent: 'Lời thì thầm đang kết nối...',
@@ -261,6 +262,7 @@ void overlayMain() async {
 void main() {
   runZonedGuarded(() async {
     final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+    setupLocator();
     FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
     _configureRenderingDefaults();
     await _configureSystemUiForEdgeToEdge();

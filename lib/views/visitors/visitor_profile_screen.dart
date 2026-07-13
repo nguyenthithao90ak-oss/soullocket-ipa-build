@@ -16,7 +16,7 @@ import '../../utils/services/house_service.dart';
 import '../../utils/services/social_service.dart';
 import '../../utils/services/pending_upload_service.dart';
 import '../../utils/services/house_settings_service.dart';
-import '../../utils/services/storage_service.dart';
+import '../../utils/services/storage/storage_service.dart';
 import '../../utils/app_error_mapper.dart';
 import 'profile/dialogs/profile_appearance_sheet.dart';
 import 'profile/dialogs/profile_confirm_dialog.dart';

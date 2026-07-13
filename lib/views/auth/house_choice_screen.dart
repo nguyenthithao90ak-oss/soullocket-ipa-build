@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:soullocket_app/views/house_onboarding_screen.dart';
+import 'package:soullocket_app/views/auth/house_onboarding_screen.dart';
 
 class HouseChoiceScreen extends StatelessWidget {
   final Future<void> Function()? onHouseCreated;

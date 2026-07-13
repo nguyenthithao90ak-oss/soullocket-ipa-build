@@ -260,22 +260,11 @@ Widget _buildInteractionVisual({
       : (visual is String && visual.startsWith('assets/') ? visual : null);
 
   if (preferAsset && resolvedAssetPath != null) {
-    return Image.asset(
+    return R2StickerImage(
       resolvedAssetPath,
       width: size,
       height: size,
       fit: fit,
-      isAntiAlias: true,
-      filterQuality: FilterQuality.medium,
-      errorBuilder: (_, __, ___) => _buildInteractionVisual(
-        visual: visual,
-        size: size,
-        emojiSize: emojiSize,
-        iconColor: iconColor,
-        fit: fit,
-        emojiShadows: emojiShadows,
-        preferAsset: false,
-      ),
     );
   }
 

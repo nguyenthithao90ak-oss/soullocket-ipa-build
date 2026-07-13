@@ -9,7 +9,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../core/constants/app_config.dart';
 import '../../utils/app_error_mapper.dart';
-import 'storage_service.dart';
+import 'storage/storage_service.dart';
 import 'package:soullocket_app/utils/flexible_date_input.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';

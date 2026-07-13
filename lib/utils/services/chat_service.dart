@@ -15,8 +15,8 @@ import 'anti_spam_service.dart';
 import 'internal_chat_service.dart';
 import 'offline_cache_service.dart';
 import 'package:soullocket_app/utils/services/role_utils.dart';
-import 'storage_service.dart';
-import 'package:soullocket_app/utils/services/storage_upload_result.dart';
+import 'storage/storage_service.dart';
+import 'package:soullocket_app/utils/services/storage/storage_upload_result.dart';
 
 class ChatRoomMeta {
   final String status;

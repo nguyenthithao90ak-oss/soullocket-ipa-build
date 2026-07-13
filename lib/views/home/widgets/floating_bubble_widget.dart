@@ -7,6 +7,8 @@ import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 
 class FloatingBubbleWidget extends StatefulWidget {
   const FloatingBubbleWidget({
@@ -194,7 +196,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        _scrollController.jumpTo(0.0);
       }
     });
   }
@@ -247,8 +249,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
       _showPreview = false;
     });
     // Expand overlay to fit the chat box panel and enable keyboard focus
-    FlutterOverlayWindow.resizeOverlay(
-        WindowSize.matchParent, WindowSize.matchParent, true);
+    FlutterOverlayWindow.resizeOverlay(WindowSize.matchParent, 560, true);
     FlutterOverlayWindow.updateFlag(OverlayFlag.focusPointer);
     _scrollToBottom();
   }
@@ -442,30 +443,60 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
             child: AnimatedBuilder(
               animation: _breatheAnimation,
               builder: (context, child) {
-                return Transform.scale(
-                  scale: _breatheAnimation.value,
-                  child: child,
-                );
-              },
-              child: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFF4F93).withValues(alpha: 0.4),
-                      blurRadius: 12,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 4),
+                final scale = _breatheAnimation.value;
+                final normalized = (scale - 1.0) / 0.06;
+                return Stack(
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.none,
+                  children: [
+                    // Outside breathing neon ring
+                    Container(
+                      width: 58 * scale,
+                      height: 58 * scale,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFFFF4F93).withValues(
+                            alpha: (0.6 * (1.0 - normalized)).clamp(0.0, 1.0),
+                          ),
+                          width: 1.2,
+                        ),
+                      ),
+                    ),
+                    // Central glassmorphic core
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.35),
+                          width: 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFF4F93).withValues(alpha: 0.45),
+                            blurRadius: 12,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(25),
+                          child: R2StickerImage(
+                            'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+                            width: 38,
+                            height: 38,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
-                ),
-                child: Image.asset(
-                  'assets/images/interaction_stickers/custom/numbered/sticker_181.png',
-                  fit: BoxFit.contain,
-                ),
-              ),
+                );
+              },
             ),
           ),
         ),
@@ -487,30 +518,29 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
 
   Widget _buildExpandedChat() {
     return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: _shrinkOverlay,
       onVerticalDragUpdate: (details) {
         if (details.primaryDelta != null && details.primaryDelta! > 8) {
           _shrinkOverlay();
         }
       },
-      child: Container(
-        width: double.infinity,
-        height: double.infinity,
-        color: Colors.transparent,
-        alignment: Alignment.center,
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-          width: double.infinity,
-          height: MediaQuery.of(context).size.height * 0.85,
-          decoration: BoxDecoration(
-            color: const Color(0xEE160B1F),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: const Color(0x33FF4F93),
-              width: 1.0,
+      child: Center(
+        child: GestureDetector(
+          onTap: () {},
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.92,
+            height: 520,
+            decoration: BoxDecoration(
+              color: const Color(0xEE160B1F),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: const Color(0x33FF4F93),
+                width: 1.0,
+              ),
             ),
-          ),
-          child: Column(
-            children: [
+            child: Column(
+              children: [
               // Header
               Container(
                 padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
@@ -641,11 +671,11 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                                       if (imageUrl.isNotEmpty)
                                         ClipRRect(
                                           borderRadius: BorderRadius.circular(14),
-                                          child: Image.network(
-                                            imageUrl,
+                                          child: CachedNetworkImage(
+                                            imageUrl: imageUrl,
                                             fit: BoxFit.cover,
                                             width: 200,
-                                            errorBuilder: (context, error, stackTrace) => Container(
+                                            errorWidget: (context, url, error) => Container(
                                               width: 200, height: 150, color: Colors.white12,
                                               child: const Icon(Icons.broken_image, color: Colors.white54),
                                             ),
@@ -793,7 +823,9 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }
 

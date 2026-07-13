@@ -11,7 +11,7 @@ import 'local_database_service.dart';
 import 'album_service.dart';
 import 'presence_service.dart';
 import 'house_service.dart';
-import 'storage_service.dart';
+import 'storage/storage_service.dart';
 import 'offline_cache_service.dart';
 import 'l10n_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';

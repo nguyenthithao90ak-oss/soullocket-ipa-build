@@ -7,6 +7,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/models/single_match_models.dart';
 import 'package:soullocket_app/views/chat/chat_detail_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../screens/single_match_finding_screen.dart';
 
 class SingleMatchChatsTab extends StatefulWidget {
@@ -147,126 +148,149 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
       );
     }
 
-    return ListView(
+    final hasMappings = _mappings.isNotEmpty;
+    final isEmptyState = _mappings.isEmpty && !_isCreating;
+    
+    int itemCount = 1;
+    if (hasMappings) itemCount += 3 + _mappings.length;
+    if (isEmptyState) itemCount += 2;
+
+    return ListView.builder(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
-      children: [
-        // Nút chat ngẫu nhiên
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFFFFDCE7)),
-          ),
-          child: Column(
-            children: [
-              const Icon(Icons.casino_rounded,
-                  size: 40, color: Color(0xFFFF4F87)),
-              const SizedBox(height: 8),
-              Text(
-                'Trò chuyện ngẫu nhiên',
-                style: SLTheme.quicksand(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF32203B),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Hệ thống chọn người phù hợp nhất với bạn',
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF8A798E),
-                ),
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: _isCreating ? null : _startRandomChat,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF4F87),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  icon: _isCreating
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.chat_rounded),
-                  label: Text(
-                    _isCreating ? 'Đang ghép...' : 'Trò chuyện ngay',
-                    style: SLTheme.quicksand(fontWeight: FontWeight.w900),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (_mappings.isNotEmpty) ...[
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Text(
-                'Lịch sử trò chuyện',
-                style: SLTheme.quicksand(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF32203B),
-                ),
-              ),
-              const Spacer(),
-              Text('${_mappings.length} người',
-                  style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: SLColors.textTertiary,
-                  )),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ..._mappings.map(_buildChatItem),
-        ],
-        if (_mappings.isEmpty && !_isCreating) ...[
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(24),
+      itemCount: itemCount,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return Container(
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFFFFDCE7)),
             ),
             child: Column(
               children: [
-                const Icon(Icons.chat_bubble_outline_rounded,
-                    size: 52, color: SLColors.textTertiary),
-                const SizedBox(height: 12),
+                const Icon(Icons.casino_rounded,
+                    size: 40, color: Color(0xFFFF4F87)),
+                const SizedBox(height: 8),
                 Text(
-                  'Chưa có phòng trò chuyện nào',
+                  'Trò chuyện ngẫu nhiên',
                   style: SLTheme.quicksand(
-                    fontSize: 16,
+                    fontSize: 17,
                     fontWeight: FontWeight.w900,
-                    color: SLColors.textSecondary,
+                    color: const Color(0xFF32203B),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
-                  'Nhấn "Trò chuyện ngay" để kết nối hoặc quay lại tab Ghép đôi để gọi.',
+                  'Hệ thống chọn người phù hợp nhất với bạn',
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: SLColors.textTertiary,
+                    color: const Color(0xFF8A798E),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _isCreating ? null : _startRandomChat,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF4F87),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                    ),
+                    icon: _isCreating
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.chat_rounded),
+                    label: Text(
+                      _isCreating ? 'Đang ghép...' : 'Trò chuyện ngay',
+                      style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-        ],
-      ],
+          );
+        }
+        
+        int offset = 1;
+        if (hasMappings) {
+          if (index == offset) return const SizedBox(height: 18);
+          if (index == offset + 1) {
+            return Row(
+              children: [
+                Text(
+                  'Lịch sử trò chuyện',
+                  style: SLTheme.quicksand(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF32203B),
+                  ),
+                ),
+                const Spacer(),
+                Text('${_mappings.length} người',
+                    style: SLTheme.quicksand(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: SLColors.textTertiary,
+                    )),
+              ],
+            );
+          }
+          if (index == offset + 2) return const SizedBox(height: 12);
+          
+          final mappingIndex = index - (offset + 3);
+          if (mappingIndex < _mappings.length) {
+            return _buildChatItem(_mappings[mappingIndex]);
+          }
+          offset += 3 + _mappings.length;
+        }
+        
+        if (isEmptyState) {
+          if (index == offset) return const SizedBox(height: 24);
+          if (index == offset + 1) {
+            return Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Column(
+                children: [
+                  const Icon(Icons.chat_bubble_outline_rounded,
+                      size: 52, color: SLColors.textTertiary),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Chưa có phòng trò chuyện nào',
+                    style: SLTheme.quicksand(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: SLColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Nhấn "Trò chuyện ngay" để kết nối hoặc quay lại tab Ghép đôi để gọi.',
+                    textAlign: TextAlign.center,
+                    style: SLTheme.quicksand(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: SLColors.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+        }
+        
+        return const SizedBox.shrink();
+      },
     );
   }
 
@@ -294,7 +318,7 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
               radius: 24,
               backgroundColor: const Color(0xFFFFDCE7),
               backgroundImage:
-                  peerAvatar.isNotEmpty ? NetworkImage(peerAvatar) : null,
+                  peerAvatar.isNotEmpty ? CachedNetworkImageProvider(peerAvatar) : null,
               child: peerAvatar.isEmpty
                   ? Text(peerName.isNotEmpty ? peerName[0].toUpperCase() : '?')
                   : null,

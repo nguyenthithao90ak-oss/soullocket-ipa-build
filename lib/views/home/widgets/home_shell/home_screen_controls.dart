@@ -377,6 +377,8 @@ extension _HomeScreenShellControls on _HomeScreenState {
       targetKey = _firstGuideDiaryTabKey;
     } else if (index == 2) {
       targetKey = _firstGuideUtilitiesTabKey;
+    } else if (index == 3) {
+      targetKey = _firstGuideEntertainmentTabKey;
     } else if (index == 4) {
       targetKey = _firstGuideUpdateTabKey;
     }

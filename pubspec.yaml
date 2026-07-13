@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 3.2.1+73
+version: 3.2.1+81
 
 environment:
   sdk: ^3.5.3
@@ -128,6 +128,8 @@ dependencies:
   minio: ^3.5.8
   flutter_staggered_grid_view: ^0.7.0
   live_activities: ^2.4.9
+  go_router: ^17.3.0
+  get_it: ^9.2.1
 dependency_overrides:
   image_cropper_platform_interface: 7.1.0
   google_mobile_ads: ^9.0.0
@@ -143,9 +145,10 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
-  build_runner: ^2.15.0
+  build_runner: ^2.15.1
   very_good_analysis: ^10.2.0
   mockito: ^5.6.4
+  json_serializable: ^6.14.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -183,17 +186,8 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/models/heart.obj
     - assets/docs/
-    - assets/3d.html
     - assets/games/rhythm-tiles/
-    - assets/images/
-    - assets/images/utility_stickers/
-    - assets/images/interaction_stickers/
-    - assets/images/interaction_stickers/custom/numbered/
-    - assets/images/sticker_import/cutout/sheet_02/
-    - assets/images/sticker_import/cutout/sheet_03/
-    - assets/images/sticker_import/cutout/sheet_04/
     - assets/i18n/
     - assets/icon.png
     - assets/icon_foreground.png

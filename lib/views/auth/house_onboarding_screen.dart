@@ -7,18 +7,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../utils/services/l10n_service.dart';
-import '../utils/services/auth_service.dart';
-import '../utils/services/house_service.dart';
-import '../utils/app_error_mapper.dart';
-import '../utils/services/offline_cache_service.dart';
-import '../utils/flexible_date_input.dart';
-import 'app_entry.dart';
-import 'app_entry/widgets/loading_scaffold.dart';
-import 'auth/widgets/gender_selection_dialog.dart';
-import 'auth/widgets/relationship_mode_dialog.dart';
+import '../../utils/services/l10n_service.dart';
+import '../../utils/services/auth_service.dart';
+import '../../utils/services/house_service.dart';
+import '../../utils/app_error_mapper.dart';
+import '../../utils/services/offline_cache_service.dart';
+import '../../utils/flexible_date_input.dart';
+import '../app_entry.dart';
+import '../app_entry/widgets/loading_scaffold.dart';
+import 'widgets/gender_selection_dialog.dart';
+import 'widgets/relationship_mode_dialog.dart';
 import 'login_screen.dart';
-import '../core/sl_theme.dart';
+import '../../core/sl_theme.dart';
 
 class HouseOnboardingScreen extends StatefulWidget {
   final String? initialMode;

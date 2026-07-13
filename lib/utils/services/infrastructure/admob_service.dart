@@ -15,6 +15,7 @@ import 'package:soullocket_app/utils/services/app_check_http_headers.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/app_lifecycle_presence_guard.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
+
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
 import 'package:soullocket_app/utils/services/revenue_security_telemetry_service.dart';
@@ -531,7 +532,7 @@ class AdMobService {
 
   Future<bool> showAppOpenAdIfEligible() async {
     if (kIsWeb) return false;
-    if (kDebugMode) return false;
+    // if (kDebugMode) return false; // Tạm tắt để test hiển thị Open Ad
     if (AdSuppressionGuard.instance.isSuppressed) {
       debugPrint('AdMobService: App Open ad suppressed by AdSuppressionGuard.');
       return false;
@@ -1466,6 +1467,8 @@ class AdMobService {
           },
         );
       }
+      // Log the exact endpoint that failed
+      debugPrint('REWARD_ERR: HTTP ${response.statusCode} - $error (url: $endpoint)');
       return {
         'ok': false,
         if (decodedMap != null) ...decodedMap,

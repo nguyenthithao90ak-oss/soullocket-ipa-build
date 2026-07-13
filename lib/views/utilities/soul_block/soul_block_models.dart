@@ -378,27 +378,27 @@ class _SoulBlockPerformanceProfile {
   );
 }
 
-const Color _kSoulStageTop = Color(0xFF1E1128);
-const Color _kSoulStageMid = Color(0xFF150B20);
-const Color _kSoulStageBottom = Color(0xFF0C0512);
-const Color _kSoulPanelTop = Color(0xFF4C276E);
-const Color _kSoulPanelMid = Color(0xFF2F154A);
-const Color _kSoulPanelBottom = Color(0xFF1B0B2E);
-const Color _kSoulBoardTop = Color(0xFF381D58);
-const Color _kSoulBoardMid = Color(0xFF261240);
-const Color _kSoulBoardBottom = Color(0xFF150926);
-const Color _kSoulChrome = Color(0xFFFFD1F5);
+const Color _kSoulStageTop = Color(0xFF0F172A);
+const Color _kSoulStageMid = Color(0xFF0B1120);
+const Color _kSoulStageBottom = Color(0xFF05080F);
+const Color _kSoulPanelTop = Color(0xFF1E293B);
+const Color _kSoulPanelMid = Color(0xFF141E2F);
+const Color _kSoulPanelBottom = Color(0xFF0B1120);
+const Color _kSoulBoardTop = Color(0xFF162032);
+const Color _kSoulBoardMid = Color(0xFF0F172A);
+const Color _kSoulBoardBottom = Color(0xFF0A0F1A);
+const Color _kSoulChrome = Color(0xFF80D4FF);
 const Color _kSoulIvory = Color(0xFFFFFFFF);
 
 const List<Color> _kSoulTones = <Color>[
-  Color(0xFFFF3366), // Pink
-  Color(0xFF00E5FF), // Cyan
-  Color(0xFFB033FF), // Purple
-  Color(0xFFFFB800), // Yellow
-  Color(0xFF33FF55), // Green
-  Color(0xFFFF55BB), // Magenta
-  Color(0xFF6633FF), // Blue-violet
-  Color(0xFF00FFD1), // Mint
+  Color(0xFF00C3FF), // Cyan only
+  Color(0xFF00C3FF),
+  Color(0xFF00C3FF),
+  Color(0xFF00C3FF),
+  Color(0xFF00C3FF),
+  Color(0xFF00C3FF),
+  Color(0xFF00C3FF),
+  Color(0xFF00C3FF),
 ];
 
 const List<Color> _kSoulBurstPalette = <Color>[

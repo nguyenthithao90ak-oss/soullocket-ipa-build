@@ -5,8 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
-import 'package:soullocket_app/utils/services/notification_service.dart';
-import 'package:soullocket_app/views/app_entry.dart';
+import 'package:soullocket_app/core/app_router.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 
 class MyApp extends StatelessWidget {
@@ -22,9 +21,9 @@ class MyApp extends StatelessWidget {
     return ListenableBuilder(
       listenable: appStateListenable,
       builder: (context, _) {
-        return MaterialApp(
+        return MaterialApp.router(
           title: 'SoulLocket',
-          navigatorKey: NotificationService.navigatorKey,
+          routerConfig: AppRouter.router,
           locale: L10nService().locale,
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
@@ -287,7 +286,6 @@ class MyApp extends StatelessWidget {
             ),
           ),
           debugShowCheckedModeBanner: false,
-          home: const AppEntry(),
         );
       },
     );

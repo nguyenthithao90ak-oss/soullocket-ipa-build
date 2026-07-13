@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, listEquals;
 
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/views/utilities/love_card_screen.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -30,18 +31,18 @@ import '../../utilities/voice_screen.dart';
 import '../../utilities/calendar_screen.dart';
 import '../../utilities/capsule_screen.dart';
 import '../../utilities/cinema_screen.dart';
-import '../../../features/wheel/wheel_screen.dart';
+import '../../../views/utilities/wheel/wheel_screen.dart';
 import '../../utilities/secret_vault_screen.dart';
-import '../../utilities/gift_maker_screen.dart';
+
 import '../../utilities/giftcode_screen.dart';
 import '../../utilities/history_screen.dart';
 import '../../utilities/drawing_studio_screen.dart';
 import '../../utilities/diary_export_screen.dart';
 import '../../utilities/reward_store_screen.dart';
-import '../../../features/tarot/tarot_screen.dart';
+import '../../../views/utilities/tarot/tarot_screen.dart';
 import '../../utilities/collage_maker_screen.dart';
 import '../../utilities/age_zodiac_screen.dart';
-import '../../utilities/love_card_screen.dart';
+
 import '../../utilities/calculator_screen.dart';
 import '../../utilities/creative_diary_screen.dart';
 import '../../utilities/sticker_library_screen.dart';
@@ -50,8 +51,7 @@ import '../../utilities/health_screen.dart';
 import '../../utilities/local_album_screen.dart';
 import '../../utilities/soul_events/soul_events_screen.dart';
 import 'package:soullocket_app/core/sl_route.dart';
-import 'package:soullocket_app/views/home/tabs/settings/settings_gift_links_manager_screen.dart';
-
+import 'package:soullocket_app/views/home/tabs/settings/settings_links_manager_screen.dart';
 // import '../../utils/sl_notice.dart';
 
 // ─── Web-parity: Map ID -> Icon & Colors ───
@@ -444,7 +444,7 @@ class _UtilitiesTabState extends State<UtilitiesTab>
       Navigator.push(
           context,
           SLRoute(
-              builder: (_) => SettingsGiftLinksManagerScreen(houseId: houseId)));
+              builder: (_) => SettingsLinksManagerScreen(houseId: houseId)));
       return;
     }
 
@@ -598,8 +598,11 @@ class _UtilitiesTabState extends State<UtilitiesTab>
         }
         screen = SecretVaultScreen(houseId: houseId);
         break;
-      case 'gift':
-        screen = GiftMakerScreen(houseId: houseId, myName: _myName);
+      case 'surprise_maker':
+        screen = LoveCardScreen(
+          houseId: houseId,
+          myUid: _auth.currentUser!.uid,
+        );
         break;
       case 'giftcode':
         screen = houseId.isEmpty
@@ -627,12 +630,6 @@ class _UtilitiesTabState extends State<UtilitiesTab>
         break;
       case 'age_zodiac':
         screen = AgeZodiacScreen(houseId: houseId);
-        break;
-      case 'love_card':
-        screen = LoveCardScreen(
-          houseId: houseId,
-          myUid: _auth.currentUser!.uid,
-        );
         break;
       case 'creative_diary':
         screen = CreativeDiaryScreen(houseId: houseId);

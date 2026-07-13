@@ -1,10 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
+
 import 'package:app_links/app_links.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
-import 'gift_maker_service.dart';
 import '../../utils/services/love_card_link_service.dart';
 
 /// ============================================================
@@ -13,8 +12,7 @@ import '../../utils/services/love_card_link_service.dart';
 ///
 ///  Link format:
 ///    ${AppConfig.webBaseUrl}/join?house=NH_ABC123
-///    ${AppConfig.webBaseUrl}/gift?id=...
-///
+///    ${AppConfig.webBaseUrl}/join?house=NH_ABC123
 ///  Cách dùng (gọi trong main.dart sau Firebase.initializeApp):
 ///    await DeeplinkService().initialize(onJoinHouse: (houseId) {
 ///      // Trae: navigate tới CoupleConnectScreen với houseId này
@@ -32,10 +30,8 @@ class DeeplinkService {
 
   /// Khởi tạo lắng nghe deeplink
   /// [onJoinHouse] — callback để Trae navigate tới màn hình ghép đôi
-  /// [onOpenGift] — callback để mở hộp quà từ link
   Future<void> initialize({
     required void Function(String houseId) onJoinHouse,
-    FutureOr<void> Function(Uri giftUri)? onOpenGift,
     FutureOr<void> Function(Uri loveCardUri)? onOpenLoveCard,
     FutureOr<void> Function(Uri uri)? onPasswordResetLink,
   }) async {
@@ -46,7 +42,6 @@ class DeeplinkService {
         await _handleUri(
           initialUri,
           onJoinHouse,
-          onOpenGift,
           onOpenLoveCard,
           onPasswordResetLink,
         );
@@ -60,7 +55,6 @@ class DeeplinkService {
             _handleUri(
               uri,
               onJoinHouse,
-              onOpenGift,
               onOpenLoveCard,
               onPasswordResetLink,
             ),
@@ -74,7 +68,6 @@ class DeeplinkService {
   Future<void> _handleUri(
     Uri uri,
     void Function(String) onJoinHouse,
-    FutureOr<void> Function(Uri giftUri)? onOpenGift,
     FutureOr<void> Function(Uri loveCardUri)? onOpenLoveCard,
     FutureOr<void> Function(Uri uri)? onPasswordResetLink,
   ) async {
@@ -90,8 +83,7 @@ class DeeplinkService {
     }
 
     final isJoinPath = isTrustedWebUri && uri.path == '/join';
-    final isGiftPath = isSupportedGiftUri(uri);
-    final isLoveCardPath = isSupportedLoveCardUri(uri);
+    final isLoveCardPath = LoveCardLinkService.isSupportedLoveCardUri(uri);
     final isResetCompletedPath =
         isTrustedAuthCompletionUri && uri.path == '/reset-password-complete';
     final mode = uri.queryParameters['mode'];
@@ -101,11 +93,6 @@ class DeeplinkService {
         final houseId = uri.queryParameters['house']?.trim();
         if (houseId != null && houseId.isNotEmpty) {
           onJoinHouse(houseId);
-        }
-      } else if (isGiftPath && onOpenGift != null) {
-        final giftId = giftIdFromUri(uri) ?? giftPayloadFromUri(uri)?.giftId;
-        if (giftId != null && giftId.isNotEmpty) {
-          await onOpenGift(uri);
         }
       } else if (isLoveCardPath && onOpenLoveCard != null) {
         final payload = LoveCardLinkService.payloadFromUri(uri);
@@ -141,88 +128,7 @@ class DeeplinkService {
     ).toString();
   }
 
-  /// Tạo link mở quà tặng
-  String generateGiftLink(GiftData gift) {
-    // 1. Dữ liệu cần thiết cho web đọc offline
-    final payload = {
-      'gid': gift.giftId,
-      'fromHouseId': gift.fromHouseId,
-      'fromName': gift.fromName,
-      'toHouseId': gift.toHouseId,
-      'msg': gift.message,
-      'img': gift.imageUrl,
-      'ts': gift.ts,
-      'giftType': gift.giftType.toString().split('.').last.replaceAllMapped(
-          RegExp(r'[A-Z]'),
-          (match) =>
-              '_${match.group(0)!.toLowerCase()}'), // e.g. giftBox -> gift_box
-      'features': gift.features,
-    };
-
-    // 2. Chuyển thành Base64Url
-    final jsonStr = jsonEncode(payload);
-    final bytes = utf8.encode(jsonStr);
-    final base64UrlToken = base64Url.encode(bytes).replaceAll('=', '');
-
-    // 3. Link trả về có cả id, h, g, và gift
-    // Liên kết quà tặng cũ cần ?g=... &h=... và ?gift=... để mở không cần đăng nhập.
-    return AppConfig.webUri(
-      '/gift.html',
-      queryParameters: {
-        'id': gift.giftId,
-        'h': gift.fromHouseId,
-        'g': gift.giftId,
-        'gift': base64UrlToken,
-      },
-    ).toString();
-  }
-
   /// Dọn dẹp subscription khi không cần
-  static String? giftIdFromUri(Uri uri) {
-    final id = uri.queryParameters['id'] ?? uri.queryParameters['g'];
-    final trimmed = id?.trim();
-    return trimmed == null || trimmed.isEmpty ? null : trimmed;
-  }
-
-  static bool isSupportedGiftUri(Uri uri) {
-    if (!AppConfig.isTrustedWebUri(uri)) return false;
-    final normalizedPath = uri.path.endsWith('/') && uri.path.length > 1
-        ? uri.path.substring(0, uri.path.length - 1)
-        : uri.path;
-    return normalizedPath == '/gift.html' || normalizedPath == '/gift';
-  }
-
-  static bool isSupportedLoveCardUri(Uri uri) {
-    return LoveCardLinkService.isSupportedLoveCardUri(uri);
-  }
-
-  static String? giftSenderHouseIdFromUri(Uri uri) {
-    final houseId = uri.queryParameters['h'];
-    final trimmed = houseId?.trim();
-    return trimmed == null || trimmed.isEmpty ? null : trimmed;
-  }
-
-  static GiftData? giftPayloadFromUri(Uri uri) {
-    final token = uri.queryParameters['gift'];
-    if (token == null || token.isEmpty) return null;
-
-    try {
-      final decoded = utf8.decode(base64Url.decode(base64Url.normalize(token)));
-      final raw = jsonDecode(decoded);
-      if (raw is! Map) return null;
-
-      final map = Map<String, dynamic>.from(raw);
-      map['giftId'] ??= map['gid'] ?? giftIdFromUri(uri) ?? '';
-      map['fromHouseId'] ??= giftSenderHouseIdFromUri(uri) ?? '';
-      map['imageUrl'] ??= map['img'] ?? '';
-      map['msg'] ??= map['message'] ?? '';
-      map['status'] ??= 'new';
-      return GiftData.fromMap(map);
-    } catch (_) {
-      return null;
-    }
-  }
-
   Future<void> dispose() async {
     await _sub?.cancel();
     _sub = null;

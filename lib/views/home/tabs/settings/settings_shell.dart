@@ -1,3 +1,4 @@
+
 part of '../settings_tab.dart';
 
 extension _SettingsTabShell on _SettingsTabState {
@@ -39,7 +40,7 @@ extension _SettingsTabShell on _SettingsTabState {
   Future<void> _togglePanel(String id) async {
     final sectionId = _sectionIdForPanel(id);
     if (_isBootstrappingSettings) {
-      _showToast(context.tr('settings_loading_data'), success: false);
+      _showToast(L10nService().translate('settings_loading_data'), success: false);
       return;
     }
     if (_shouldShowPendingDeviceGate(sectionId)) {
@@ -171,7 +172,7 @@ extension _SettingsTabShell on _SettingsTabState {
       'cinema',
       'wheel',
       'vault',
-      'gift',
+      'surprise_maker',
       'giftcode',
       'diary_export',
       'tarot',
@@ -181,7 +182,7 @@ extension _SettingsTabShell on _SettingsTabState {
     });
 
     if (currentUid != null && currentUid.isNotEmpty) {
-      ids.add('love_card');
+      ids.add('surprise_maker'); // Keeps backwards compatibility if needed
     }
 
     return ids;
@@ -278,10 +279,13 @@ extension _SettingsTabShell on _SettingsTabState {
       case 'vault':
         screen = houseId.isEmpty ? null : SecretVaultScreen(houseId: houseId);
         break;
-      case 'gift':
+      case 'surprise_maker':
         screen = houseId.isEmpty
             ? null
-            : GiftMakerScreen(houseId: houseId, myName: myName);
+            : LoveCardScreen(
+                houseId: houseId,
+                myUid: currentUid ?? '',
+              );
         break;
       case 'giftcode':
         screen = houseId.isEmpty
@@ -311,7 +315,10 @@ extension _SettingsTabShell on _SettingsTabState {
       case 'love_card':
         screen = houseId.isEmpty || currentUid == null || currentUid.isEmpty
             ? null
-            : LoveCardScreen(houseId: houseId, myUid: currentUid);
+            : LoveCardScreen(
+                houseId: houseId,
+                myUid: _auth.currentUser!.uid,
+              );
         break;
       case 'creative_diary':
         screen = houseId.isEmpty ? null : CreativeDiaryScreen(houseId: houseId);

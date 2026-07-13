@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import '../core/sl_theme.dart';
 
 class LegacyWebUi {
@@ -961,7 +962,7 @@ class SlAvatarFrame extends StatelessWidget {
           Positioned(
             top: -size * 0.08,
             right: -size * 0.08,
-            child: Image.asset(
+            child: R2StickerImage(
               'assets/images/interaction_stickers/custom/numbered/sticker_029.png',
               width: size * 0.35,
               height: size * 0.35,
@@ -971,7 +972,7 @@ class SlAvatarFrame extends StatelessWidget {
           Positioned(
             bottom: -size * 0.08,
             left: -size * 0.08,
-            child: Image.asset(
+            child: R2StickerImage(
               'assets/images/interaction_stickers/custom/numbered/sticker_003.png',
               width: size * 0.35,
               height: size * 0.35,
@@ -985,7 +986,7 @@ class SlAvatarFrame extends StatelessWidget {
           Positioned(
             top: -size * 0.08,
             left: -size * 0.08,
-            child: Image.asset(
+            child: R2StickerImage(
               'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
               width: size * 0.35,
               height: size * 0.35,
@@ -995,7 +996,7 @@ class SlAvatarFrame extends StatelessWidget {
           Positioned(
             bottom: -size * 0.08,
             right: -size * 0.08,
-            child: Image.asset(
+            child: R2StickerImage(
               'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
               width: size * 0.35,
               height: size * 0.35,
@@ -1009,7 +1010,7 @@ class SlAvatarFrame extends StatelessWidget {
           Positioned(
             top: -size * 0.08,
             right: -size * 0.08,
-            child: Image.asset(
+            child: R2StickerImage(
               'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
               width: size * 0.35,
               height: size * 0.35,
@@ -1019,7 +1020,7 @@ class SlAvatarFrame extends StatelessWidget {
           Positioned(
             bottom: -size * 0.08,
             left: -size * 0.08,
-            child: Image.asset(
+            child: R2StickerImage(
               'assets/images/interaction_stickers/custom/numbered/sticker_085.png',
               width: size * 0.35,
               height: size * 0.35,
@@ -1033,7 +1034,7 @@ class SlAvatarFrame extends StatelessWidget {
           Positioned(
             top: -size * 0.08,
             left: -size * 0.08,
-            child: Image.asset(
+            child: R2StickerImage(
               'assets/images/interaction_stickers/custom/numbered/sticker_061.png',
               width: size * 0.35,
               height: size * 0.35,
@@ -1043,7 +1044,7 @@ class SlAvatarFrame extends StatelessWidget {
           Positioned(
             bottom: -size * 0.08,
             right: -size * 0.08,
-            child: Image.asset(
+            child: R2StickerImage(
               'assets/images/interaction_stickers/custom/numbered/sticker_065.png',
               width: size * 0.35,
               height: size * 0.35,
@@ -1059,7 +1060,7 @@ class SlAvatarFrame extends StatelessWidget {
             left: 0,
             right: 0,
             child: Center(
-              child: Image.asset(
+              child: R2StickerImage(
                 'assets/images/interaction_stickers/custom/numbered/sticker_001.png',
                 width: size * 0.45,
                 height: size * 0.45,
@@ -1070,7 +1071,7 @@ class SlAvatarFrame extends StatelessWidget {
           Positioned(
             bottom: -size * 0.08,
             left: -size * 0.08,
-            child: Image.asset(
+            child: R2StickerImage(
               'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
               width: size * 0.3,
               height: size * 0.3,
@@ -1080,7 +1081,7 @@ class SlAvatarFrame extends StatelessWidget {
           Positioned(
             bottom: -size * 0.08,
             right: -size * 0.08,
-            child: Image.asset(
+            child: R2StickerImage(
               'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
               width: size * 0.3,
               height: size * 0.3,
@@ -1095,7 +1096,7 @@ class SlAvatarFrame extends StatelessWidget {
           Positioned(
             top: -size * 0.08,
             left: -size * 0.08,
-            child: Image.asset(
+            child: R2StickerImage(
               'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
               width: size * 0.32,
               height: size * 0.32,
@@ -1105,7 +1106,7 @@ class SlAvatarFrame extends StatelessWidget {
           Positioned(
             bottom: -size * 0.08,
             right: -size * 0.08,
-            child: Image.asset(
+            child: R2StickerImage(
               'assets/images/interaction_stickers/custom/numbered/sticker_003.png',
               width: size * 0.32,
               height: size * 0.32,
@@ -1121,7 +1122,7 @@ class SlAvatarFrame extends StatelessWidget {
         Positioned(
           bottom: -size * 0.1,
           right: -size * 0.15,
-          child: Image.asset(
+          child: R2StickerImage(
             'assets/images/interaction_stickers/custom/numbered/$frameKey.png',
             width: size * 0.65,
             height: size * 0.65,

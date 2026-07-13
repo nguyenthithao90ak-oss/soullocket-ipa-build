@@ -367,28 +367,19 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
       final prefs = await SharedPreferences.getInstance();
       final lastAdStr = prefs.getString('last_bg_ad_time');
       final bool requiresAd = !_isVipActive;
-
+      bool shouldShowAd = requiresAd;
       if (requiresAd && lastAdStr != null) {
         final lastAd = DateTime.tryParse(lastAdStr);
         if (lastAd != null) {
           final diff = DateTime.now().difference(lastAd);
           if (diff.inMinutes < 60) {
-            final remaining = 60 - diff.inMinutes;
-            if (mounted) {
-              setState(() {
-                _isUploadingThemeBackground = false;
-              });
-            }
-            _showToast(
-              L10nService().format('theme_err_ad_cooldown', {'minutes': remaining.toString()}),
-              success: false,
-            );
-            return;
+            // Trong khoảng 60 phút sau khi xem quảng cáo, cho phép tải lên miễn phí
+            shouldShowAd = false;
           }
         }
       }
 
-      if (requiresAd) {
+      if (shouldShowAd) {
         final adMob = AdMobService();
         // ignoreCooldown=true: tránh bị block bởi cooldown 45s giữa các ad toàn màn hình
         // loadTimeout=12s: cho đủ thời gian load ad nếu chưa preload

@@ -58,11 +58,15 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
             .collection('houses')
             .doc(widget.houseId)
             .collection('album')
+            .orderBy('ts', descending: true)
+            .limit(60)
             .get(),
         FirebaseFirestore.instance
             .collection('houses')
             .doc(widget.houseId)
             .collection('memories')
+            .orderBy('ts', descending: true)
+            .limit(60)
             .get(),
       ]);
 

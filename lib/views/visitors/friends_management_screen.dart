@@ -207,40 +207,63 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen>
           return _buildEmptyState('📨', 'Không có lời mời kết bạn nào.');
         }
 
-        return ListView(
+        final receivedList = received.entries.toList();
+        final sentList = sent.entries.toList();
+        
+        final hasReceived = receivedList.isNotEmpty;
+        final hasSent = sentList.isNotEmpty;
+        
+        int itemCount = 0;
+        if (hasReceived) itemCount += receivedList.length + 3;
+        if (hasSent) itemCount += sentList.length + 2;
+
+        return ListView.builder(
           padding: SLSpacing.all16,
-          children: [
-            if (received.isNotEmpty) ...[
-              _buildSectionHeader('Chờ bạn chấp nhận (${received.length})'),
-              SLSpacing.h12,
-              ...received.entries.map((e) => _RequestItemTile(
-                    houseId: e.key,
+          itemCount: itemCount,
+          itemBuilder: (context, rawIndex) {
+            int index = rawIndex;
+            if (hasReceived) {
+              final receivedEnd = receivedList.length + 3;
+              if (index < receivedEnd) {
+                if (index == 0) return _buildSectionHeader('Chờ bạn chấp nhận (${receivedList.length})');
+                if (index == 1) return SLSpacing.h12;
+                if (index == receivedEnd - 1) return SLSpacing.h24;
+                
+                final e = receivedList[index - 2];
+                return _RequestItemTile(
+                  houseId: e.key,
+                  requestId: e.value,
+                  isReceived: true,
+                  onAccept: () => _friendsService.acceptFriendRequest(
                     requestId: e.value,
-                    isReceived: true,
-                    onAccept: () => _friendsService.acceptFriendRequest(
-                      requestId: e.value,
-                      currentHouseId: _myHouseId!,
-                      fromHouseId: e.key,
-                    ),
-                    onDecline: () => _friendsService.declineFriendRequest(
-                        e.value, _myHouseId!),
-                    onTap: () => _openProfile(e.key),
-                  )),
-              SLSpacing.h24,
-            ],
-            if (sent.isNotEmpty) ...[
-              _buildSectionHeader('Lời mời đã gửi (${sent.length})'),
-              SLSpacing.h12,
-              ...sent.entries.map((e) => _RequestItemTile(
-                    houseId: e.key,
-                    requestId: e.value,
-                    isReceived: false,
-                    onCancel: () => _friendsService.cancelSentFriendRequest(
-                        e.value, _myHouseId!),
-                    onTap: () => _openProfile(e.key),
-                  )),
-            ],
-          ],
+                    currentHouseId: _myHouseId!,
+                    fromHouseId: e.key,
+                  ),
+                  onDecline: () => _friendsService.declineFriendRequest(
+                      e.value, _myHouseId!),
+                  onTap: () => _openProfile(e.key),
+                );
+              }
+              index -= receivedEnd;
+            }
+            
+            if (hasSent) {
+              if (index == 0) return _buildSectionHeader('Lời mời đã gửi (${sentList.length})');
+              if (index == 1) return SLSpacing.h12;
+              
+              final e = sentList[index - 2];
+              return _RequestItemTile(
+                houseId: e.key,
+                requestId: e.value,
+                isReceived: false,
+                onCancel: () => _friendsService.cancelSentFriendRequest(
+                    e.value, _myHouseId!),
+                onTap: () => _openProfile(e.key),
+              );
+            }
+            
+            return const SizedBox.shrink();
+          },
         );
       },
     );

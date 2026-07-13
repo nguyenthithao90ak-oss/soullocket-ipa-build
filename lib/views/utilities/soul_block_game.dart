@@ -23,7 +23,7 @@ import '../../utils/services/admob_service.dart';
 import '../../utils/services/house_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../premium/premium_store_screen.dart';
-import '../../utils/services/game_download_service.dart';
+import '../../utils/services/games/game_download_service.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 
 part 'soul_block/soul_block_panels.dart';
@@ -189,7 +189,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   bool _audioReady = false;
   bool _soundEnabled = true;
   bool _vibrationEnabled = true;
-  bool _smoothGraphics = false;
+  bool _smoothGraphics = true;
   bool _isBusy = false;
   bool _isGameOver = false;
   bool _continueUsedThisRun = false;
@@ -1704,10 +1704,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
     }
     if (beatBestThisMove) {
       _emitBestScoreFeedback();
-      _showFloatingMessage(
-        'New Best!',
-        color: const Color(0xFFFFD166),
-      );
+      // Removed 'New Best!' floating message to reduce spam during gameplay.
     }
 
     setState(() {
@@ -1835,7 +1832,12 @@ class _SoulBlockGameState extends State<SoulBlockGame>
   }
 
   void _setBoardSize(int size) {
-    setState(() => _boardSize = size);
+    if (_boardSize == size) return;
+    setState(() {
+      _boardSize = size;
+      _preparedMenuRun = null;
+    });
+    _scheduleMenuRunWarmup();
   }
 
   Future<void> _handleGameOverTransition() async {

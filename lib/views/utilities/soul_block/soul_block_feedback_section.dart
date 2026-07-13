@@ -566,13 +566,10 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     final Color accent =
         _kSoulBurstPalette[_random.nextInt(_kSoulBurstPalette.length)];
     final _SoulBlockPerformanceProfile profile = _performanceProfile;
-    final bool simpleParticles = profile.tier ==
-            _SoulBlockPerformanceTier.low ||
-        (profile.tier == _SoulBlockPerformanceTier.mid && clearedCount >= 3);
+    final bool simpleParticles = true;
     final int particleCount = subtle
-        ? min((8 + (clearedCount * 4)).clamp(10, 24), profile.subtleParticleCap * 2)
-        : min(
-            (14 + (clearedCount * 5)).clamp(20, 40), profile.strongParticleCap * 2);
+        ? min((6 + (clearedCount * 2)).clamp(6, 12), profile.subtleParticleCap)
+        : min((10 + (clearedCount * 3)).clamp(12, 20), profile.strongParticleCap);
     final double maxDistance = subtle
         ? ((60 + (clearedCount * 12)).clamp(70, 140).toDouble() *
             profile.subtleDistanceScale)

@@ -23,7 +23,7 @@ import '../../../widgets/skeleton_container.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../../utils/services/security_service.dart';
 import 'diary_composer.dart';
-import 'package:soullocket_app/views/home/tabs/settings/settings_gift_links_manager_screen.dart';
+import 'package:soullocket_app/views/home/tabs/settings/settings_links_manager_screen.dart';
 
 import 'diary/controllers/diary_composer_controller.dart';
 import 'diary/controllers/diary_feed_controller.dart';
@@ -399,7 +399,7 @@ class _DiaryTabState extends State<DiaryTab>
       if (confirmed == true && mounted && houseId.isNotEmpty) {
         Navigator.of(context).push(
           MaterialPageRoute<void>(
-            builder: (_) => SettingsGiftLinksManagerScreen(houseId: houseId),
+            builder: (_) => SettingsLinksManagerScreen(houseId: houseId),
           ),
         );
       }

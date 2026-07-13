@@ -175,6 +175,13 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
           color: const Color(0xFF7E57C2),
         ),
         FirstSetupSpotlightStep(
+          targetKey: _firstGuideEntertainmentTabKey,
+          title: 'Giải trí & Trò chơi',
+          description: 'Khám phá các trò chơi cặp đôi, bói bài Tarot cùng nhiều tiện ích thú vị khác giúp hai bạn gắn kết hơn.',
+          icon: Icons.sports_esports_rounded,
+          color: const Color(0xFF00B0FF),
+        ),
+        FirstSetupSpotlightStep(
           targetKey: _firstGuideUpdateTabKey,
           title: context.tr('home_theodicpnh_da00d0'),
           description: context.tr('home_mcnygipbnx_4e92af'),
@@ -837,7 +844,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
                 context,
                 SLRoute<void>(
                   builder: (_) =>
-                      SettingsGiftLinksManagerScreen(houseId: houseId),
+                      SettingsLinksManagerScreen(houseId: houseId),
                 ),
               );
             },

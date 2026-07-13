@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
+import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 
 class WalkingStickerOverlay extends StatefulWidget {
   const WalkingStickerOverlay({super.key});
@@ -310,31 +311,11 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
               child: Transform(
                 alignment: Alignment.center,
                 transform: Matrix4.rotationY(_isFlipped ? pi : 0),
-                child: Image.asset(
+                child: R2StickerImage(
                   _currentSticker,
                   width: 56,
                   height: 56,
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    // Fallback visual design if asset is missing or fails
-                    return Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                            color: const Color(0xFFFFB3CA), width: 2),
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.pets_rounded,
-                          color: Color(0xFFD81B60),
-                          size: 26,
-                        ),
-                      ),
-                    );
-                  },
                 ),
               ),
             ),

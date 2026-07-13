@@ -11,7 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../utils/services/pending_upload_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/time_capsule_service.dart';
-import '../../utils/services/storage_service.dart';
+import '../../utils/services/storage/storage_service.dart';
 import '../../core/sl_theme.dart';
 import '../../core/fast_backdrop_filter.dart';
 

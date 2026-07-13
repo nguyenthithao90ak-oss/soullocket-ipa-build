@@ -23,7 +23,7 @@ import '../../../../../utils/services/notification_service.dart';
 import '../../../../../utils/services/offline_cache_service.dart';
 import '../../../../../utils/services/purchase_service.dart';
 import '../../../../../utils/services/security_service.dart';
-import '../../../../../utils/services/storage_service.dart';
+import '../../../../../utils/services/storage/storage_service.dart';
 import 'diary_feed_controller.dart';
 import 'diary_guard_controller.dart';
 import '../../../../ui_prefs.dart';
@@ -828,15 +828,28 @@ class DiaryMemoryController extends ChangeNotifier {
         highlights: highlights,
       ));
 
-      flattenedItems.add((
-        isHeader: false,
-        date: null,
-        dateString: null,
-        totalPhotos: null,
-        photosRow: group.items, // Pass all photos for the Masonry grid
-        groupPhotos: null,
-        highlights: const <Map<String, String>>[],
-      ));
+      final items = group.items;
+      int i = 0;
+      while (i < items.length) {
+        final remaining = items.length - i;
+        int take = 3;
+        if (remaining == 4) {
+          take = 2; // Split 4 vào 2 hàng (2 và 2) để đẹp hơn
+        } else if (remaining < 3) {
+          take = remaining;
+        }
+
+        flattenedItems.add((
+          isHeader: false,
+          date: null,
+          dateString: null,
+          totalPhotos: null,
+          photosRow: items.sublist(i, i + take),
+          groupPhotos: null,
+          highlights: const <Map<String, String>>[],
+        ));
+        i += take;
+      }
     }
 
     return flattenedItems;

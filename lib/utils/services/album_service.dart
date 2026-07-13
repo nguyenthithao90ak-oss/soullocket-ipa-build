@@ -8,7 +8,7 @@ import 'package:soullocket_app/core/constants/app_config.dart';
 import 'daily_quest_service.dart';
 import 'offline_cache_service.dart';
 import 'purchase_service.dart';
-import 'storage_delete_helper.dart';
+import 'storage/storage_delete_helper.dart';
 
 class AlbumService {
   static final AlbumService _instance = AlbumService._internal();

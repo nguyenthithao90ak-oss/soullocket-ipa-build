@@ -12,7 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/services/purchase_service.dart';
 import '../../utils/services/pending_upload_service.dart';
-import '../../utils/services/storage_service.dart';
+import '../../utils/services/storage/storage_service.dart';
 import '../../utils/app_error_mapper.dart';
 import 'dart:ui' as ui;
 import '../../utils/services/activity_history_service.dart';

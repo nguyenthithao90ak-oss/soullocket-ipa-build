@@ -41,7 +41,7 @@ class _LoveCardScreenBody extends StatelessWidget {
     final bottomColor = colors.last;
 
     return Scaffold(
-      backgroundColor: bottomColor,
+      backgroundColor: state.widget.isEmbedded ? Colors.transparent : bottomColor,
       body: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -93,11 +93,12 @@ class _LoveCardScreenBody extends StatelessWidget {
                           : Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                _LoveCardHeaderSection(
-                                  state: state,
-                                  theme: theme,
-                                  colors: colors,
-                                ),
+                                if (!state.widget.isEmbedded)
+                                  _LoveCardHeaderSection(
+                                    state: state,
+                                    theme: theme,
+                                    colors: colors,
+                                  ),
                                 _LoveCardTabSwitcher(
                                   state: state,
                                   theme: theme,

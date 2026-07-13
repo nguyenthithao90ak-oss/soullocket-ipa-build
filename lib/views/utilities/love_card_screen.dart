@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/rendering.dart';
@@ -12,13 +13,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../core/sl_theme.dart';
 import '../../utils/services/activity_history_service.dart';
 import '../../utils/services/love_card_link_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/pending_upload_service.dart';
-import '../../utils/services/storage_service.dart';
+import '../../utils/services/storage/storage_service.dart';
 import 'love_card_public_viewer_screen.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 
@@ -299,11 +298,13 @@ class LoveCardService {
 class LoveCardScreen extends StatefulWidget {
   final String houseId;
   final String myUid;
+  final bool isEmbedded;
 
   const LoveCardScreen({
     super.key,
     required this.houseId,
     required this.myUid,
+    this.isEmbedded = false,
   });
 
   @override
@@ -987,6 +988,26 @@ class _LoveCardScreenState extends State<LoveCardScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isEmbedded) {
+      return _buildInnerContent();
+    }
+    
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: Text(context.tr('util_thiptnhyu_bbbbbc')),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: _buildInnerContent(),
+    );
+  }
+
+  Widget _buildInnerContent() {
     return _LoveCardScreenBody(state: this);
   }
 }

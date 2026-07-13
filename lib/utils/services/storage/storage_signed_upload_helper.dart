@@ -7,7 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
-import 'blurhash_helper.dart';
+import '../blurhash_helper.dart';
 import 'storage_upload_result.dart';
 
 typedef StorageSignedSessionBuilder = Future<Map<String, dynamic>> Function(

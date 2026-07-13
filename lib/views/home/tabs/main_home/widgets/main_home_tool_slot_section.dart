@@ -226,8 +226,12 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
         return UiPrefs.notifier.value.vaultHomeEnabled
             ? _HomeEmbeddedVaultGate(houseId: houseId)
             : null;
-      case 'gift':
-        return GiftMakerScreen(houseId: houseId, myName: myName);
+      case 'surprise_maker':
+      case 'love_card':
+        return LoveCardScreen(
+          houseId: houseId,
+          myUid: FirebaseAuth.instance.currentUser?.uid ?? '',
+        );
       case 'giftcode':
         return GiftcodeScreen(houseId: houseId, myName: myName);
       case 'history':
@@ -247,15 +251,6 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
         return CollageMakerScreen(houseId: houseId);
       case 'age_zodiac':
         return AgeZodiacScreen(houseId: houseId);
-      case 'love_card':
-        final currentUid = _auth.currentUser?.uid;
-        if (currentUid == null || currentUid.isEmpty) {
-          return null;
-        }
-        return LoveCardScreen(
-          houseId: houseId,
-          myUid: currentUid,
-        );
       case 'creative_diary':
         return CreativeDiaryScreen(houseId: houseId);
       default:

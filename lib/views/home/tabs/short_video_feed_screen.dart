@@ -268,7 +268,7 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
             SLSpacing.h16,
             Text(
               L10nService()
-                  .translate('Chưa có bài đăng ảnh\nHãy là người đầu tiên!'),
+                  .translate('diary_msg_no_posts_yet'),
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white38, fontSize: 15),
             ),

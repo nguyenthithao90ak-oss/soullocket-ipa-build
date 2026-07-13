@@ -8,7 +8,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../../core/sl_theme.dart';
 import '../../utilities/block_blast_game.dart';
 import '../../../utils/app_error_mapper.dart';
-import '../../../utils/services/game_download_service.dart';
+import '../../../utils/services/games/game_download_service.dart';
 import '../../../utils/services/admob_service.dart';
 
 class GameTab extends StatefulWidget {

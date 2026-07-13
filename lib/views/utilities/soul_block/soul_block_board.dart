@@ -144,167 +144,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
   }
 
   Widget _buildGameOverOverlay() {
-    return Positioned.fill(
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(32),
-          gradient: LinearGradient(
-            colors: <Color>[
-              const Color(0x00B00020),
-              const Color(0x8820122A),
-              Colors.black.withValues(alpha: 0.72),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Center(
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 24),
-            padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: const LinearGradient(
-                colors: <Color>[
-                  Color(0xFF5A0A18),
-                  Color(0xFF17070D),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              border: Border.all(
-                color: const Color(0xFFFF6B88).withValues(alpha: 0.28),
-              ),
-              boxShadow: <BoxShadow>[
-                BoxShadow(
-                  color: const Color(0xFFFF2D55).withValues(alpha: 0.22),
-                  blurRadius: 28,
-                  spreadRadius: -8,
-                  offset: const Offset(0, 14),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.40),
-                  blurRadius: 24,
-                  offset: const Offset(0, 14),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(
-                  'GAME OVER',
-                  style: SLTheme.quicksand(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFFFF7A9E),
-                    letterSpacing: 1.3,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Score ${_formatNumber(_score)}  |  $_clearedLines lines',
-                  textAlign: TextAlign.center,
-                  style: SLTheme.quicksand(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white70,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                if (!_continueUsedThisRun)
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _isReviving ? null : _reviveFromRewardedAd,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFD166),
-                        foregroundColor: const Color(0xFF101722),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                      ),
-                      icon: _isReviving
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.ondemand_video_rounded),
-                      label: Text(
-                        _isReviving ? 'Loading Ad...' : 'Watch Ad To Continue',
-                        style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-                if (!_continueUsedThisRun) const SizedBox(height: 10),
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed:
-                            _isRestarting ? null : _returnToMenuFromGameOver,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: BorderSide(
-                            color: Colors.white.withValues(alpha: 0.12),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        child: Text(
-                          'Menu',
-                          style: SLTheme.quicksand(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _isRestarting ? null : _restartAfterGameOver,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF5C7A),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        child: Text(
-                          _isRestarting ? 'Loading...' : 'Retry',
-                          style: SLTheme.quicksand(
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                TextButton(
-                  onPressed: _openLeaderboardSheet,
-                  child: Text(
-                    'View Leaderboard',
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFFFFA1B7),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    return _GameOverOverlayContent(this);
   }
 
   bool _hasLinkedTile(
@@ -1219,5 +1059,42 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     return (primaryConnected || secondaryConnected)
         ? joinedRadius
         : exposedRadius;
+  }
+}
+
+class _GameOverOverlayContent extends StatelessWidget {
+  final _SoulBlockGameState state;
+
+  const _GameOverOverlayContent(this.state);
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Container(
+        color: Colors.black54,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'GAME OVER',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  state._restartAfterGameOver();
+                },
+                child: const Text('Chơi lại'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
