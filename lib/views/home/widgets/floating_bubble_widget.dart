@@ -39,7 +39,6 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
   bool _isExpanded = false;
 
   List<dynamic> _chatHistory = [];
-  List<dynamic> _chatHistoryReversed = [];
   String _myRole = 'user1';
   String _partnerName = 'Người ấy';
 
@@ -184,7 +183,6 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
       if (mounted) {
         setState(() {
           _chatHistory = list;
-          _chatHistoryReversed = list.reversed.toList();
         });
         _scrollToBottom();
       }
@@ -196,7 +194,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.jumpTo(0.0);
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
     });
   }
@@ -631,12 +629,11 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                           )
                         : ListView.builder(
                             controller: _scrollController,
-                            reverse: true,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 14, vertical: 10),
                             itemCount: _chatHistory.length,
                             itemBuilder: (context, index) {
-                              final msg = _chatHistoryReversed[index];
+                              final msg = _chatHistory[index];
                               final text = msg['text']?.toString() ?? '';
                               final sender = msg['sender']?.toString() ?? '';
                               final isSelf = (sender == _myRole);
@@ -824,8 +821,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
         ),
       ),
     ),
-  ),
-);
+  );
   }
 }
 
