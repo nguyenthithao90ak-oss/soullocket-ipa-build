@@ -1,6 +1,29 @@
 import WidgetKit
 import SwiftUI
 import UIKit
+import ImageIO
+
+func downsampleImage(at path: String, to size: CGSize) -> UIImage? {
+    let url = URL(fileURLWithPath: path)
+    let imageSourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
+    guard let imageSource = CGImageSourceCreateWithURL(url as CFURL, imageSourceOptions) else {
+        return nil
+    }
+    
+    let maxDimension = max(size.width, size.height) * 2.0 // scale = 2.0 (Retina quality)
+    let downsampleOptions = [
+        kCGImageSourceCreateThumbnailFromImageAlways: true,
+        kCGImageSourceShouldCacheImmediately: true,
+        kCGImageSourceCreateThumbnailWithTransform: true,
+        kCGImageSourceThumbnailMaxPixelSize: maxDimension
+    ] as CFDictionary
+    
+    guard let downsampledImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, downsampleOptions) else {
+        return nil
+    }
+    return UIImage(cgImage: downsampledImage)
+}
+
 
 struct WidgetTheme {
     let gradient: [Color]
@@ -179,7 +202,7 @@ struct AvatarView: View {
 
     var body: some View {
         Group {
-            if let path, let image = UIImage(contentsOfFile: path) {
+            if let path, let image = downsampleImage(at: path, to: CGSize(width: size, height: size)) {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
@@ -398,7 +421,7 @@ struct DiaryCenterPreview: View {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .fill(theme.chipBackground)
 
-            if let path = displayPath, let image = UIImage(contentsOfFile: path) {
+            if let path = displayPath, let image = downsampleImage(at: path, to: CGSize(width: width, height: height)) {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()

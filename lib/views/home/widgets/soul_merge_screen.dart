@@ -898,75 +898,77 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                             width: 160,
                             height: 160,
                             color: Colors.transparent,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                // Vòng neon thở bên ngoài (Breathing neon ring)
-                                AnimatedBuilder(
-                                  animation: _pulseAnim,
-                                  builder: (context, _) {
-                                    final scale = _pulseAnim.value; // dao động từ 1.0 -> 1.15
-                                    // Chuyển đổi thành tỉ lệ từ 0.0 -> 1.0 để làm mờ dần khi mở rộng
-                                    final normalized = (scale - 1.0) / 0.15;
-                                    return Container(
-                                      width: 120 * scale,
-                                      height: 120 * scale,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: const Color(0xFFFF4F93).withValues(
-                                            alpha: (0.6 * (1.0 - normalized)).clamp(0.0, 1.0),
+                            child: RepaintBoundary(
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // Vòng neon thở bên ngoài (Breathing neon ring)
+                                  AnimatedBuilder(
+                                    animation: _pulseAnim,
+                                    builder: (context, _) {
+                                      final scale = _pulseAnim.value; // dao động từ 1.0 -> 1.15
+                                      // Chuyển đổi thành tỉ lệ từ 0.0 -> 1.0 để làm mờ dần khi mở rộng
+                                      final normalized = (scale - 1.0) / 0.15;
+                                      return Container(
+                                        width: 120 * scale,
+                                        height: 120 * scale,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: const Color(0xFFFF4F93).withValues(
+                                              alpha: (0.6 * (1.0 - normalized)).clamp(0.0, 1.0),
+                                            ),
+                                            width: 1.5,
                                           ),
-                                          width: 1.5,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  // Đĩa kính mờ phát sáng trung tâm (Glowing glassmorphic core)
+                                  Container(
+                                    width: 110,
+                                    height: 110,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white.withValues(alpha: 0.12),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(alpha: 0.35),
+                                        width: 1.5,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFFFF4F93).withValues(alpha: 0.45),
+                                          blurRadius: 24,
+                                          spreadRadius: 2,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Center(
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(55),
+                                        child: R2StickerImage(
+                                          'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+                                          width: 82,
+                                          height: 82,
+                                          fit: BoxFit.contain,
+                                          errorWidget: const Icon(
+                                            Icons.favorite_rounded,
+                                            color: Color(0xFFFF80B3),
+                                            size: 60,
+                                          ),
                                         ),
                                       ),
-                                    );
-                                  },
-                                ),
-                                // Đĩa kính mờ phát sáng trung tâm (Glowing glassmorphic core)
-                                Container(
-                                  width: 110,
-                                  height: 110,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.white.withValues(alpha: 0.12),
-                                    border: Border.all(
-                                      color: Colors.white.withValues(alpha: 0.35),
-                                      width: 1.5,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFFFF4F93).withValues(alpha: 0.45),
-                                        blurRadius: 24,
-                                        spreadRadius: 2,
-                                      ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(55),
-                                      child: R2StickerImage(
-                                        'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
-                                        width: 82,
-                                        height: 82,
-                                        fit: BoxFit.contain,
-                                        errorWidget: const Icon(
-                                          Icons.favorite_rounded,
-                                          color: Color(0xFFFF80B3),
-                                          size: 60,
-                                        ),
-                                      ),
                                     ),
                                   ),
-                                ),
-                                // Sparkle dots
-                                AnimatedBuilder(
-                                  animation: _pulseAnim,
-                                  builder: (context, _) => Stack(
-                                    children: _buildSparkles(),
+                                  // Sparkle dots
+                                  AnimatedBuilder(
+                                    animation: _pulseAnim,
+                                    builder: (context, _) => Stack(
+                                      children: _buildSparkles(),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),

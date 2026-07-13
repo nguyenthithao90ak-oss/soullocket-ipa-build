@@ -995,7 +995,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(context.tr('util_thiptnhyu_bbbbbc')),
+        title: Text(context.tr('utility_title_love_card')),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),

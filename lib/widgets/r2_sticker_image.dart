@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
+import 'package:soullocket_app/utils/app_cache_manager.dart';
 
 class R2StickerImage extends StatelessWidget {
   final String assetPath;
@@ -27,6 +28,7 @@ class R2StickerImage extends StatelessWidget {
       
       return CachedNetworkImage(
         imageUrl: r2Url,
+        cacheManager: AppCacheManager.instance,
         fit: fit,
         width: width,
         height: height,

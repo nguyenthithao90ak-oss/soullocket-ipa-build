@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
+import 'package:soullocket_app/utils/app_cache_manager.dart';
 
 const double _kUtilityStickerLogicalSize = 64;
 const Set<String> _kUtilityStickerIds = <String>{
@@ -61,6 +64,9 @@ ImageProvider<Object>? utilityStickerImageProviderForId(
     return null;
   }
 
+  final String filename = assetPath.substring('assets/images/'.length);
+  final String r2Url = '${AppConfig.r2PublicDomain}/stickers/$filename';
+
   final cacheSize = _utilityStickerCacheSize(
     logicalSize: logicalSize,
     devicePixelRatio: devicePixelRatio,
@@ -68,7 +74,10 @@ ImageProvider<Object>? utilityStickerImageProviderForId(
   return ResizeImage.resizeIfNeeded(
     cacheSize,
     cacheSize,
-    AssetImage(assetPath),
+    CachedNetworkImageProvider(
+      r2Url,
+      cacheManager: AppCacheManager.instance,
+    ),
   );
 }
 

@@ -190,7 +190,7 @@ class _SettingsLinksManagerScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      context.tr('home_linkalbum_6590bc'),
+                      context.tr('util_knimalbumn_62ecb7'),
                       style: SLTheme.quicksand(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
@@ -239,7 +239,7 @@ class _SettingsLinksManagerScreenState
                     await Clipboard.setData(
                         ClipboardData(text: _getMemoryDisplayUrl(link.token)));
                     if (!mounted) return;
-                    SLNotice.showInfo(context, context.tr('home_dcpy_a2f864'));
+                    SLNotice.showInfo(context, context.tr('home_copylinkme_7f75af'));
                   },
                   child: Icon(Icons.copy_rounded,
                       size: 20, color: Colors.grey[400]),

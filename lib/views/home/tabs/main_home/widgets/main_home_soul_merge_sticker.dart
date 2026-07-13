@@ -258,57 +258,32 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              // Đuôi nhọn bong bóng thoại chĩa xuống dưới, luôn đứng cố định ở trung tâm sticker (left = 22)
-              if (_showBubble && _bubbleText != null)
-                Positioned(
-                  bottom: 51,
-                  left: 22,
-                  child: AnimatedOpacity(
-                    opacity: _showBubble ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 300),
-                    child: Transform.rotate(
-                      angle: 3.1415926535 / 4,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          border: Border(
-                            bottom: BorderSide(
-                                color: Color(0xFFFFB3CA), width: 1.5),
-                            right: BorderSide(
-                                color: Color(0xFFFFB3CA), width: 1.5),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              // Bong bóng chat hiển thị tin nhắn / mẹo nền trắng viền hồng pastel cực xinh
+              // Bong bóng chat hiển thị tin nhắn / mẹo dạng viên nang Glassmorphic lơ lửng cực sang trọng
               Positioned(
-                bottom: 57,
+                bottom: 60,
                 left: tooltipLeft,
                 child: AnimatedOpacity(
                   opacity: _showBubble ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 300),
+                  duration: const Duration(milliseconds: 250),
                   child: _showBubble && _bubbleText != null
                       ? Container(
                           width: 212,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
+                              horizontal: 14, vertical: 9),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
+                            color: Colors.white.withValues(alpha: 0.95),
+                            borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: const Color(0xFFFFB3CA),
-                              width: 1.5,
+                              color: const Color(0xFFFFC0D3).withValues(alpha: 0.65),
+                              width: 1.2,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFCEBCD0)
-                                    .withValues(alpha: 0.3),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
+                                color: const Color(0xFFFFB3CA)
+                                    .withValues(alpha: 0.22),
+                                blurRadius: 16,
+                                spreadRadius: 1,
+                                offset: const Offset(0, 6),
                               ),
                             ],
                           ),
@@ -316,9 +291,10 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                             _bubbleText!,
                             textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
-                              color: const Color(0xFF5A4656),
-                              fontSize: 11.5,
+                              color: const Color(0xFF4A3445),
+                              fontSize: 12.0,
                               fontWeight: FontWeight.w800,
+                              height: 1.35,
                             ),
                           ),
                         )
@@ -362,23 +338,38 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                   );
                   _loadSettings();
                 },
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 100),
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFF85A1), Color(0xFFF15BB5)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFF4F93).withValues(alpha: 0.4),
-                        blurRadius: 12,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 4),
+                        color: const Color(0xFFFF4F93).withValues(alpha: 0.38),
+                        blurRadius: 14,
+                        spreadRadius: 2.5,
+                        offset: const Offset(0, 5),
                       )
                     ],
                   ),
-                  child: const R2StickerImage(
-                    'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
-                    fit: BoxFit.contain,
+                  child: Padding(
+                    padding: const EdgeInsets.all(2.5),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.15),
+                      ),
+                      child: const R2StickerImage(
+                        'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ),
                 ),
               ),

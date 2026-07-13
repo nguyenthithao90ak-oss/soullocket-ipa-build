@@ -454,13 +454,14 @@ class _CountdownQuickCustomizeSheetContentState
                     const SizedBox(height: 16),
                     Flexible(
                       child: SingleChildScrollView(
-                        child: Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: options.map((option) {
                             final isLocked = option.isPremium && !_unlockedStyles.contains(option.value);
+                            
+                            Widget button;
                             if (isLocked) {
-                              return buildLockedAdButton(
+                              button = buildLockedAdButton(
                                 option: option,
                                 onUnlocked: (opt) async {
                                   HapticFeedback.selectionClick();
@@ -469,16 +470,22 @@ class _CountdownQuickCustomizeSheetContentState
                                   setState(() {});
                                 },
                               );
+                            } else {
+                              button = buildOptionChip(
+                                option: option,
+                                selected: selectedValue == option.value,
+                                onTap: () async {
+                                  HapticFeedback.selectionClick();
+                                  await onSelect(option);
+                                  setModalState(() { selectedValue = option.value; });
+                                  setState(() {});
+                                },
+                              );
                             }
-                            return buildOptionChip(
-                              option: option,
-                              selected: selectedValue == option.value,
-                              onTap: () async {
-                                HapticFeedback.selectionClick();
-                                await onSelect(option);
-                                setModalState(() { selectedValue = option.value; });
-                                setState(() {});
-                              },
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: button,
                             );
                           }).toList(),
                         ),

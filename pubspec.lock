@@ -1217,10 +1217,10 @@ packages:
     dependency: "direct main"
     description:
       name: gma_mediation_unity
-      sha256: "42d039d2b7fb6c2a7702cbe64bbe4465e6d5b29e83e4fd67936366da6f3597e1"
+      sha256: f2326489fa598d4ff0744509df303664f87a6f5f46ab8dfbed81b4c823100df2
       url: "https://pub.dev"
     source: hosted
-    version: "1.8.1"
+    version: "1.8.0"
   go_router:
     dependency: "direct main"
     description:
@@ -2525,10 +2525,10 @@ packages:
     dependency: "direct main"
     description:
       name: video_player
-      sha256: "0431179e1a7a2234a1148f64dde63c73167ca23829815169b24cc0bc6b9444a3"
+      sha256: "48a7bdaa38a3d50ec10c78627abdbfad863fdf6f0d6e08c7c3c040cfd80ae36f"
       url: "https://pub.dev"
     source: hosted
-    version: "2.12.0"
+    version: "2.11.1"
   video_player_android:
     dependency: transitive
     description:
@@ -2541,10 +2541,10 @@ packages:
     dependency: transitive
     description:
       name: video_player_avfoundation
-      sha256: c238f5f0a26845cd0bcc2956049b63065a4d3c40ddfc22c3414cd170bef7fff9
+      sha256: "76097729ef0c976937945afa53f1ca3afa9b50c9a95909ba347bcf93270466fd"
       url: "https://pub.dev"
     source: hosted
-    version: "2.11.0"
+    version: "2.10.0"
   video_player_platform_interface:
     dependency: transitive
     description:

@@ -687,7 +687,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          context.tr('settings_perf_title'),
+                          context.tr('settings_performance_mode_title'),
                           style: SLTheme.quicksand(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
@@ -697,8 +697,8 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                         const SizedBox(height: 4),
                         Text(
                           isPerformanceMode
-                              ? context.tr('settings_perf_status_lite')
-                              : context.tr('settings_perf_status_balanced'),
+                              ? context.tr('settings_perf_preset_smoother')
+                              : context.tr('settings_perf_preset_balanced'),
                           style: SLTheme.quicksand(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -709,7 +709,9 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          context.tr('settings_perf_desc'),
+                          isPerformanceMode
+                              ? context.tr('settings_performance_mode_desc_smooth')
+                              : context.tr('settings_performance_mode_desc_balanced'),
                           style: SLTheme.quicksand(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -728,7 +730,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                   Expanded(
                     child: _buildCompactActionBtn(
                       icon: Icons.electric_bolt_rounded,
-                      label: context.tr('settings_perf_lite_btn'),
+                      label: context.tr('settings_perf_preset_smoother'),
                       isPrimary: isPerformanceMode,
                       onTap: () => _applyPerformancePreset(
                         liteMode: true,
@@ -740,7 +742,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                   Expanded(
                     child: _buildCompactActionBtn(
                       icon: Icons.balance_rounded,
-                      label: context.tr('settings_perf_balanced_btn'),
+                      label: context.tr('settings_perf_preset_balanced'),
                       isPrimary: !isPerformanceMode,
                       onTap: () => _applyPerformancePreset(
                         liteMode: false,

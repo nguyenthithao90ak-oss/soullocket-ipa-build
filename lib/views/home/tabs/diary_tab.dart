@@ -1893,14 +1893,14 @@ class _DiaryTabState extends State<DiaryTab>
     final mediaQuery = MediaQuery.of(context);
     return ((mediaQuery.size.width / 3) * mediaQuery.devicePixelRatio * 1.18)
         .round()
-        .clamp(480, 1440);
+        .clamp(320, 800);
   }
 
   int _postImageCacheWidth(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     return (mediaQuery.size.width * mediaQuery.devicePixelRatio)
         .round()
-        .clamp(720, 1600);
+        .clamp(540, 1200);
   }
 
   ImageProvider<Object> _memoryImageProvider(String url, {int? maxWidth}) {
