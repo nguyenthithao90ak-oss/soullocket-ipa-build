@@ -414,18 +414,22 @@ class AdMobService {
     }
   }
 
-  void _loadRewardedAd({int retryCount = 0}) {
+  void _loadRewardedAd({int retryCount = 0, bool useTestFallback = false}) {
     if (kIsWeb) return;
     if (!_sdkInitialized) return;
     if (_isRewardedAdLoading) return;
     _isRewardedAdLoading = true;
 
+    final targetAdUnitId = useTestFallback
+        ? (Platform.isIOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917')
+        : rewardedMainId;
+
     RewardedAd.load(
-      adUnitId: rewardedMainId,
+      adUnitId: targetAdUnitId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
-          debugPrint('AdMobService: rewarded main loaded.');
+          debugPrint('AdMobService: rewarded main loaded (useTestFallback=$useTestFallback).');
           _rewardedAd = ad;
           _isRewardedAdLoading = false;
         },
@@ -435,32 +439,42 @@ class AdMobService {
             fallbackMessage: 'Quảng cáo thưởng chính chưa tải được.',
           );
           debugPrint(
-              'AdMobService: rewarded main failed to load: ${errorInfo.message}');
+              'AdMobService: rewarded main failed to load (useTestFallback=$useTestFallback): ${errorInfo.message}');
           _rewardedAd = null;
           _isRewardedAdLoading = false;
-          // Retry 2 lần, mỗi lần cách 10s
-          if (retryCount < 2) {
-            Future.delayed(const Duration(seconds: 10), () {
-              _loadRewardedAd(retryCount: retryCount + 1);
-            });
+
+          if (!useTestFallback) {
+            // Nếu dùng ID thật bị lỗi, tự động nạp lại bằng Google Test ID làm fallback
+            _loadRewardedAd(retryCount: retryCount, useTestFallback: true);
+          } else {
+            // Nếu cả Test ID cũng lỗi, thực hiện retry sau 10s
+            if (retryCount < 2) {
+              Future.delayed(const Duration(seconds: 10), () {
+                _loadRewardedAd(retryCount: retryCount + 1, useTestFallback: false);
+              });
+            }
           }
         },
       ),
     );
   }
 
-  void _loadSoulGameRewardedAd() {
+  void _loadSoulGameRewardedAd({bool useTestFallback = false}) {
     if (kIsWeb) return;
     if (!_sdkInitialized) return;
     if (_isSoulGameRewardedAdLoading) return;
     _isSoulGameRewardedAdLoading = true;
 
+    final targetAdUnitId = useTestFallback
+        ? (Platform.isIOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917')
+        : rewardedSoulGameId;
+
     RewardedAd.load(
-      adUnitId: rewardedSoulGameId,
+      adUnitId: targetAdUnitId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
-          debugPrint('AdMobService: rewarded soul game loaded.');
+          debugPrint('AdMobService: rewarded soul game loaded (useTestFallback=$useTestFallback).');
           _soulGameRewardedAd = ad;
           _isSoulGameRewardedAdLoading = false;
         },
@@ -470,9 +484,13 @@ class AdMobService {
             fallbackMessage: 'Quảng cáo thưởng Soul Game chưa tải được.',
           );
           debugPrint(
-              'AdMobService: rewarded soul game failed to load: ${errorInfo.message}');
+              'AdMobService: rewarded soul game failed to load (useTestFallback=$useTestFallback): ${errorInfo.message}');
           _soulGameRewardedAd = null;
           _isSoulGameRewardedAdLoading = false;
+
+          if (!useTestFallback) {
+            _loadSoulGameRewardedAd(useTestFallback: true);
+          }
         },
       ),
     );

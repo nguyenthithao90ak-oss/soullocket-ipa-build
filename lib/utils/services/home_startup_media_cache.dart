@@ -10,12 +10,25 @@ class HomeStartupMediaCache {
   static void saveFile(String url, File file) {
     final normalizedUrl = normalizeUrl(url);
     if (normalizedUrl.isEmpty) return;
-    _files[normalizedUrl] = file;
+    if (file.existsSync() && file.lengthSync() > 0) {
+      _files[normalizedUrl] = file;
+    }
   }
 
   static File? getFile(String url) {
     final normalizedUrl = normalizeUrl(url);
     if (normalizedUrl.isEmpty) return null;
-    return _files[normalizedUrl];
+    final file = _files[normalizedUrl];
+    if (file != null && file.existsSync()) {
+      if (file.lengthSync() == 0) {
+        try {
+          file.deleteSync();
+        } catch (_) {}
+        _files.remove(normalizedUrl);
+        return null;
+      }
+      return file;
+    }
+    return null;
   }
 }

@@ -181,7 +181,7 @@ part of '../../main_home_tab.dart';
 //   }
 // }
 
-class _StableAvatarNetworkImage extends StatefulWidget {
+class _StableAvatarNetworkImage extends StatelessWidget {
   final String imageUrl;
   final String fallbackAsset;
   final BoxFit fit;
@@ -194,153 +194,64 @@ class _StableAvatarNetworkImage extends StatefulWidget {
   });
 
   @override
-  State<_StableAvatarNetworkImage> createState() =>
-      _StableAvatarNetworkImageState();
-}
-
-class _StableAvatarNetworkImageState extends State<_StableAvatarNetworkImage> {
-  ImageProvider<Object>? _currentProvider;
-  ImageProvider<Object>? _lastSuccessfulProvider;
-  ImageProvider<Object>? _diskCachedProvider;
-  String _currentUrl = '';
-  String _lastSuccessfulUrl = '';
-  bool _isCurrentImageReady = false;
-  bool _hasCurrentImageError = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _syncImageProvider();
-  }
-
-  @override
-  void didUpdateWidget(covariant _StableAvatarNetworkImage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final oldUrl = oldWidget.imageUrl.trim();
-    final newUrl = widget.imageUrl.trim();
-    if (oldUrl != newUrl ||
-        oldWidget.fallbackAsset != widget.fallbackAsset ||
-        oldWidget.fit != widget.fit) {
-      _syncImageProvider();
-    }
-  }
-
-  void _syncImageProvider() {
-    final normalizedUrl = widget.imageUrl.trim();
-    _currentUrl = normalizedUrl;
-    _hasCurrentImageError = false;
-
-    if (normalizedUrl.isEmpty) {
-      _currentProvider = null;
-      _diskCachedProvider = null;
-      _isCurrentImageReady = false;
-      return;
-    }
-
-    _currentProvider = CachedNetworkImageProvider(
-      normalizedUrl,
-      maxWidth: 256,
-      maxHeight: 256,
-    );
-    final startupFile = HomeStartupMediaCache.getFile(normalizedUrl);
-    _diskCachedProvider = startupFile != null ? FileImage(startupFile) : null;
-    _isCurrentImageReady = normalizedUrl == _lastSuccessfulUrl;
-    if (_diskCachedProvider == null) {
-      unawaited(_loadDiskCachedProvider(normalizedUrl));
-    }
-  }
-
-  Future<void> _loadDiskCachedProvider(String url) async {
-    try {
-      final cachedFile = await AppCacheManager.instance.getFileFromCache(url);
-      if (!mounted || _currentUrl != url) return;
-      final file = cachedFile?.file;
-      if (file == null || !await file.exists()) return;
-      setState(() {
-        _diskCachedProvider = FileImage(file);
-      });
-    } catch (_) {}
-  }
-
-  void _markCurrentImageReady() {
-    if (!mounted || _isCurrentImageReady || _currentProvider == null) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _isCurrentImageReady || _currentProvider == null) return;
-      setState(() {
-        _isCurrentImageReady = true;
-        _lastSuccessfulProvider = _currentProvider;
-        _lastSuccessfulUrl = _currentUrl;
-      });
-    });
-  }
-
-  void _markCurrentImageError() {
-    if (!mounted || _hasCurrentImageError) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _hasCurrentImageError) return;
-      setState(() {
-        _hasCurrentImageError = true;
-      });
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (_currentProvider == null || _currentUrl.isEmpty) {
+    final url = imageUrl.trim();
+    if (url.isEmpty) {
       return Image.asset(
-        widget.fallbackAsset,
-        fit: widget.fit,
+        fallbackAsset,
+        fit: fit,
         gaplessPlayback: true,
       );
     }
 
-    final placeholderProvider = _lastSuccessfulProvider ?? _diskCachedProvider;
-    final placeholder = placeholderProvider != null
-        ? Image(
-            image: placeholderProvider,
-            fit: widget.fit,
+    final startupFile = HomeStartupMediaCache.getFile(url);
+
+    return CachedNetworkImage(
+      imageUrl: url,
+      fit: fit,
+      maxWidthDiskCache: 256,
+      maxHeightDiskCache: 256,
+      memCacheWidth: 256,
+      memCacheHeight: 256,
+      placeholder: (context, url) {
+        if (startupFile != null && startupFile.existsSync() && startupFile.lengthSync() > 0) {
+          return Image.file(
+            startupFile,
+            fit: fit,
             gaplessPlayback: true,
-            filterQuality: FilterQuality.medium,
-            errorBuilder: (context, error, stackTrace) {
-              return Image.asset(
-                widget.fallbackAsset,
-                fit: widget.fit,
-                gaplessPlayback: true,
-              );
-            },
-          )
-        : Image.asset(
-            widget.fallbackAsset,
-            fit: widget.fit,
-            gaplessPlayback: true,
+            errorBuilder: (_, __, ___) => Image.asset(
+              fallbackAsset,
+              fit: fit,
+              gaplessPlayback: true,
+            ),
           );
-
-    if (_hasCurrentImageError) {
-      return placeholder;
-    }
-
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        if (!_isCurrentImageReady) placeholder,
-        Image(
-          image: _currentProvider!,
-          fit: widget.fit,
+        }
+        return Image.asset(
+          fallbackAsset,
+          fit: fit,
           gaplessPlayback: true,
-          filterQuality: FilterQuality.medium,
-          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-            if (wasSynchronouslyLoaded || frame != null) {
-              _markCurrentImageReady();
-            }
-            return child;
-          },
-          errorBuilder: (_, __, ___) {
-            _markCurrentImageError();
-            return const SizedBox.shrink();
-          },
-        ),
-      ],
+        );
+      },
+      errorWidget: (context, url, error) {
+        // Tự động xóa file cache bị hỏng khi nạp lỗi để lần sau tải lại file sạch
+        unawaited(_cleanCorruptedCache(url));
+        return Image.asset(
+          fallbackAsset,
+          fit: fit,
+          gaplessPlayback: true,
+        );
+      },
     );
+  }
+
+  Future<void> _cleanCorruptedCache(String url) async {
+    try {
+      final cachedFile = await AppCacheManager.instance.getFileFromCache(url);
+      final file = cachedFile?.file;
+      if (file != null && await file.exists()) {
+        await file.delete();
+      }
+    } catch (_) {}
   }
 }
 
