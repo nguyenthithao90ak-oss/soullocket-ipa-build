@@ -1061,9 +1061,9 @@ struct SmallWidgetView: View {
                 data: data,
                 theme: theme,
                 palette: palette,
-                heartSize: 58,
-                diaryWidth: 58,
-                diaryHeight: 70,
+                heartSize: 36,
+                diaryWidth: 36,
+                diaryHeight: 44,
                 date: date
             )
 
@@ -1080,10 +1080,10 @@ struct SmallWidgetView: View {
                 .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.8)
 
-            HStack(spacing: 5) {
-                AvatarView(path: data.avatar1Path, name: data.name1, size: 34, accentColor: theme.accentColor)
+            HStack(spacing: 6) {
+                AvatarView(path: data.avatar1Path, name: data.name1, size: 52, accentColor: theme.accentColor)
 
-                AvatarView(path: data.avatar2Path, name: data.name2, size: 34, accentColor: theme.accentColor)
+                AvatarView(path: data.avatar2Path, name: data.name2, size: 52, accentColor: theme.accentColor)
             }
 
             Text("\(data.name1) & \(data.name2)")
