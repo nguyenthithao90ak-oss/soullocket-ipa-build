@@ -1056,36 +1056,44 @@ struct SmallWidgetView: View {
     }
 
     var body: some View {
-        VStack(spacing: 7) {
+        VStack(spacing: 5) {
             InteractiveWidgetCenterVisualView(
                 data: data,
                 theme: theme,
                 palette: palette,
-                heartSize: 44,
-                diaryWidth: 44,
-                diaryHeight: 54,
+                heartSize: 58,
+                diaryWidth: 58,
+                diaryHeight: 70,
                 date: date
             )
 
             Text(data.resolvedDaysText(referenceDate: Date()))
-                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .font(.system(size: 11.5, weight: .black, design: .rounded))
                 .foregroundColor(theme.textColor)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 3.5)
+                .background(theme.chipBackground)
+                .clipShape(Capsule())
+                .overlay(
+                    Capsule().stroke(theme.chipBorder, lineWidth: 0.9)
+                )
                 .multilineTextAlignment(.center)
-                .minimumScaleFactor(0.78)
+                .minimumScaleFactor(0.8)
 
             HStack(spacing: 5) {
-                AvatarView(path: data.avatar1Path, name: data.name1, size: 36, accentColor: theme.accentColor)
+                AvatarView(path: data.avatar1Path, name: data.name1, size: 34, accentColor: theme.accentColor)
 
-                AvatarView(path: data.avatar2Path, name: data.name2, size: 36, accentColor: theme.accentColor)
+                AvatarView(path: data.avatar2Path, name: data.name2, size: 34, accentColor: theme.accentColor)
             }
 
             Text("\(data.name1) & \(data.name2)")
-                .font(.system(size: 9, weight: .medium, design: .rounded))
+                .font(.system(size: 10.5, weight: .bold, design: .rounded))
                 .foregroundColor(theme.secondaryTextColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
         }
-        .padding(10)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 10)
     }
 }
 
