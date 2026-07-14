@@ -109,7 +109,7 @@ class _CountdownQuickCustomizeSheetContentState
                 });
                 try {
                   final adMob = AdMobService();
-                  final adSuccess = await adMob.showRewardedAd();
+                  final adSuccess = await adMob.showRewardedAd(context: context);
                   if (!mounted) return;
                   if (adSuccess) {
                     final prefs = await SharedPreferences.getInstance();
@@ -1051,6 +1051,7 @@ class _CountdownQuickCustomizeSheetContentState
         final adSuccess = await adMob.showRewardedAd(
           ignoreCooldown: true,
           loadTimeout: const Duration(seconds: 12),
+          context: context,
         );
         if (!mounted) return;
         if (!adSuccess) {

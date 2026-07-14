@@ -114,7 +114,7 @@ class AdMobService {
   ];
   final HouseService _houseService = HouseService();
   final Random _random = Random();
-  static bool _isRewardEndpointDisabled = false;
+  static final bool _isRewardEndpointDisabled = false;
 
   static String? _androidRewardedMainId;
   static String? _androidRewardedCheckinId;
@@ -722,6 +722,7 @@ class AdMobService {
   Future<bool> showRewardedAd({
     bool ignoreCooldown = false,
     Duration loadTimeout = const Duration(seconds: 5),
+    BuildContext? context,
   }) async {
     if (kIsWeb) return false;
     if (kDebugMode) {
@@ -745,19 +746,76 @@ class AdMobService {
           'AdMobService: rewarded skipped because SDK is not initialized.');
       return false;
     }
-    if (_rewardedAd == null) {
-      _loadRewardedAd();
-      final maxWaitMs = loadTimeout.inMilliseconds.clamp(0, 15000);
-      final attempts = (maxWaitMs / 250).ceil().clamp(1, 60);
-      debugPrint(
-          'AdMobService: waiting for rewarded ad, timeout=${maxWaitMs}ms.');
-      for (var i = 0; i < attempts && _rewardedAd == null; i++) {
-        await Future<void>.delayed(const Duration(milliseconds: 250));
-      }
+
+    BuildContext? loadingContext;
+    if (_rewardedAd == null && context != null && context.mounted) {
+      unawaited(
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogCtx) {
+            loadingContext = dialogCtx;
+            return PopScope(
+              canPop: false,
+              child: AlertDialog(
+                backgroundColor: const Color(0xFF160B1F),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: const BorderSide(color: Color(0x33FF4F93), width: 1.0),
+                ),
+                content: Row(
+                  children: [
+                    const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF4F93)),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Text(
+                        'Đang chuẩn bị quảng cáo...',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'Quicksand',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    }
+
+    try {
       if (_rewardedAd == null) {
-        debugPrint('AdMobService: rewarded skipped because ad is not loaded.');
-        return false;
+        _loadRewardedAd();
+        final maxWaitMs = loadTimeout.inMilliseconds.clamp(0, 15000);
+        final attempts = (maxWaitMs / 250).ceil().clamp(1, 60);
+        debugPrint(
+            'AdMobService: waiting for rewarded ad, timeout=${maxWaitMs}ms.');
+        for (var i = 0; i < attempts && _rewardedAd == null; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 250));
+        }
       }
+    } finally {
+      if (loadingContext != null) {
+        try {
+          Navigator.of(loadingContext!).pop();
+        } catch (_) {}
+      }
+    }
+
+    if (_rewardedAd == null) {
+      debugPrint('AdMobService: rewarded skipped because ad is not loaded.');
+      return false;
     }
 
     final completer = Completer<bool>();
@@ -801,9 +859,6 @@ class AdMobService {
         onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
           debugPrint('AdMobService: rewarded earned.');
           didEarnReward = true;
-          if (!completer.isCompleted) {
-            completer.complete(true);
-          }
         },
       );
     } catch (error) {
@@ -1452,9 +1507,7 @@ class AdMobService {
       debugPrint(
         'Reward server rejected request: ${response.statusCode} $error',
       );
-      if (response.statusCode == 404) {
-        _isRewardEndpointDisabled = true;
-      }
+
       if (_isRevenueSecurityError(error)) {
         await RevenueSecurityTelemetryService.instance.logEvent(
           type: 'reward_server_rejected',

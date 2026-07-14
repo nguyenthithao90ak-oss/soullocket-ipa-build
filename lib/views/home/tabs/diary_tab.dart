@@ -1747,29 +1747,30 @@ class _DiaryTabState extends State<DiaryTab>
                                                       ],
                                                     ),
                                                   ),
-                                                  PopupMenuItem<String>(
-                                                    value: 'wallpaper',
-                                                    child: Row(
-                                                      children: [
-                                                        const Icon(
-                                                          Icons.wallpaper_rounded,
-                                                          color: Colors.white,
-                                                          size: 19,
-                                                        ),
-                                                        const SizedBox(
-                                                            width: 12),
-                                                        Text(
-                                                          'Đặt làm hình nền',
-                                                          style:
-                                                              SLTheme.quicksand(
+                                                  if (kIsWeb || !Platform.isIOS)
+                                                    PopupMenuItem<String>(
+                                                      value: 'wallpaper',
+                                                      child: Row(
+                                                        children: [
+                                                          const Icon(
+                                                            Icons.wallpaper_rounded,
                                                             color: Colors.white,
-                                                            fontWeight:
-                                                                FontWeight.w800,
+                                                            size: 19,
                                                           ),
-                                                        ),
-                                                      ],
+                                                          const SizedBox(
+                                                              width: 12),
+                                                          Text(
+                                                            'Đặt làm hình nền',
+                                                            style:
+                                                                SLTheme.quicksand(
+                                                              color: Colors.white,
+                                                              fontWeight:
+                                                                  FontWeight.w800,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
                                                     ),
-                                                  ),
                                                   PopupMenuItem<String>(
                                                     value: 'delete',
                                                     child: Row(

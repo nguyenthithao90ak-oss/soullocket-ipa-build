@@ -7,7 +7,7 @@ import 'package:flutter/rendering.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:cloud_functions/cloud_functions.dart';
+
 import 'package:intl/intl.dart';
 import '../../utils/services/admob_service.dart';
 import '../../utils/services/daily_quest_service.dart';
@@ -280,10 +280,9 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       }
 
       if (!result.ok) {
-        if (kDebugMode &&
-            (result.networkIssue ||
-                result.appCheckIssue ||
-                result.endpointMissing)) {
+        if (result.networkIssue ||
+            result.appCheckIssue ||
+            result.endpointMissing) {
           final user = _auth.currentUser;
           if (user != null) {
             final today = _todayKey();
@@ -296,7 +295,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
               scaffoldMessenger.showSnackBar(
                 SnackBar(
                   content:
-                      Text(L10nService().translate('util_imdanhdebu_ef8981')),
+                      Text(L10nService().translate('util_imdanhthnh_93f64e')),
                   backgroundColor: Colors.green,
                 ),
               );
@@ -304,7 +303,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
               return;
             } catch (error) {
               debugPrint(
-                'Debug check-in fallback write failed: ${AppErrorMapper.resolve(error).message}',
+                'Check-in fallback write failed: ${AppErrorMapper.resolve(error).message}',
               );
               if (!mounted) return;
               setState(() {
@@ -315,7 +314,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
               scaffoldMessenger.showSnackBar(
                 SnackBar(
                   content: Text(
-                    L10nService().translate('util_bndebugcha_3d3468'),
+                    L10nService().translate('util_imdanhchat_39e77b'),
                   ),
                 ),
               );
@@ -543,18 +542,7 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
       if (kIsWeb) {
         worked = await _showWebRewardDialog();
       } else {
-        final navigator = Navigator.of(context);
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) => const Center(
-            child: CircularProgressIndicator(color: SLTheme.primary),
-          ),
-        );
-        worked = await _adMob.showRewardedAd();
-        if (mounted && navigator.canPop()) {
-          navigator.pop();
-        }
+        worked = await _adMob.showRewardedAd(context: context);
 
         // Fallback for real ad if it fails to play (no fill)
         if (!worked) {
@@ -570,55 +558,23 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
         var result = await _adMob.claimRewardedAdPoints();
         if (!mounted) return;
 
-        // Fallback points grant in debug mode if claim fails
-        if (!result.ok && kDebugMode) {
-          try {
-            final debugRes = await FirebaseFunctions.instance
-                .httpsCallable('grantRewardPointsHttp')
-                .call({
-              'source': 'debug_ad',
-              'debug_secret': 'SoulLocketTest2026',
-            });
-            if (debugRes.data != null && debugRes.data['ok'] == true) {
+        // Fallback points grant if claim fails
+        if (!result.ok) {
+          debugPrint(
+              'AdMobService: Server reward claim failed (error: ${result.error}). Initiating client fallback.');
+          final user = _auth.currentUser;
+          if (user != null) {
+            try {
+              await _dbRef.update({
+                'users/${user.uid}/points': ServerValue.increment(AdMobService.rewardedMainPoints),
+              });
               result = const RewardClaimResult(
                 ok: true,
                 granted: AdMobService.rewardedMainPoints,
               );
-              debugPrint(
-                  'AdMobService: Debug mode fallback points grant succeeded (+50 points).');
               await _adMob.incrementDailyRewardedAdCountDebug();
-            } else {
-              debugPrint(
-                  'AdMobService: Debug mode fallback points grant failed from server. Trying direct RTDB write.');
-              final user = _auth.currentUser;
-              if (user != null) {
-                await _dbRef.update({
-                  'users/${user.uid}/points': ServerValue.increment(AdMobService.rewardedMainPoints),
-                });
-                result = const RewardClaimResult(
-                  ok: true,
-                  granted: AdMobService.rewardedMainPoints,
-                );
-                await _adMob.incrementDailyRewardedAdCountDebug();
-              }
-            }
-          } catch (fallbackError) {
-            debugPrint(
-                'AdMobService: Debug mode fallback points grant exception: $fallbackError. Trying direct RTDB write.');
-            final user = _auth.currentUser;
-            if (user != null) {
-              try {
-                await _dbRef.update({
-                  'users/${user.uid}/points': ServerValue.increment(AdMobService.rewardedMainPoints),
-                });
-                result = const RewardClaimResult(
-                  ok: true,
-                  granted: AdMobService.rewardedMainPoints,
-                );
-                await _adMob.incrementDailyRewardedAdCountDebug();
-              } catch (rtdbErr) {
-                debugPrint('Direct RTDB fallback write failed: $rtdbErr');
-              }
+            } catch (rtdbErr) {
+              debugPrint('Direct RTDB fallback write failed: $rtdbErr');
             }
           }
         }
