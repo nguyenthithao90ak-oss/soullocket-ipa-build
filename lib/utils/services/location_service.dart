@@ -14,6 +14,7 @@ import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/permission_helper.dart';
 import 'offline_cache_service.dart';
 import 'package:soullocket_app/views/map/map_screen.dart';
+import 'package:soullocket_app/utils/services/error_logger_service.dart';
 
 class LocationService {
   static const int _kGpsHistoryRetentionDays = 14;
@@ -256,7 +257,22 @@ class LocationService {
       updates['gps/$resolvedHouseId/$resolvedRole/lastKnown'] = lastPayload;
     }
 
-    await _dbRef.update(updates);
+    try {
+      await _dbRef.update(updates);
+    } catch (e, st) {
+      final errStr = e.toString().toLowerCase();
+      if (errStr.contains('permission-denied') ||
+          errStr.contains('permission denied')) {
+        debugPrint(
+            'Location stop write blocked (permission-denied). Silently failing.');
+      } else {
+        ErrorLoggerService.instance.logError(
+          e, st,
+          reason: 'LocationService.stopTracking database update failed',
+          fatal: false,
+        );
+      }
+    }
   }
 
   static int _lastFirebaseUpdateTs = 0;

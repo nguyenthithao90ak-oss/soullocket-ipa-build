@@ -972,6 +972,35 @@ struct LockScreenWidgetView: View {
     }
 }
 
+@available(iOS 16.0, *)
+struct LockScreenWidgetAvatarView: View {
+    let data: CoupleWidgetData
+    let date: Date
+
+    var body: some View {
+        HStack(spacing: 6) {
+            // Avatar người 1
+            AvatarView(path: data.avatar1Path, name: data.name1, size: 28, accentColor: .pink)
+                .frame(width: 28, height: 28)
+            
+            // Số ngày ở giữa kèm tim
+            VStack(spacing: 0) {
+                Image(systemName: "heart.fill")
+                    .font(.system(size: 10))
+                let numberStr = String(data.resolvedDaysText(referenceDate: date).split(separator: " ").first ?? "0")
+                Text(numberStr)
+                    .font(.system(size: 14, weight: .bold))
+            }
+            .frame(minWidth: 32)
+            
+            // Avatar người 2
+            AvatarView(path: data.avatar2Path, name: data.name2, size: 28, accentColor: .pink)
+                .frame(width: 28, height: 28)
+        }
+        .modifier(TransparentWidgetBackground())
+    }
+}
+
 struct TransparentWidgetBackground: ViewModifier {
     @ViewBuilder
     func body(content: Content) -> some View {

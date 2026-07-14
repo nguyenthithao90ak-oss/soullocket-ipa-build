@@ -403,6 +403,7 @@ class _DeviceManagerScreenState extends State<DeviceManagerScreen> {
         ],
       ),
       body: SLTheme.background(
+        themeKey: 'off',
         child: _isLoading
             ? const Center(
                 child: CircularProgressIndicator(color: SLColors.primary))

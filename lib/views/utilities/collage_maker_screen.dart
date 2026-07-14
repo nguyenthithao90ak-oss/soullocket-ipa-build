@@ -267,7 +267,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
   final Set<String> _selectedStickers =
       StickerLibraryScreen.stickers.take(3).toSet();
   static final List<String> _stickerOptions = StickerLibraryScreen.stickers;
-  bool _showAllStickerOptions = false;
+  final bool _showAllStickerOptions = false;
   final TextEditingController _titleCtrl = TextEditingController();
   bool _isGenerating = false;
 

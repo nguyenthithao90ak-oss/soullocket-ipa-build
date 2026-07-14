@@ -1341,12 +1341,16 @@ class StorageService {
             'r2_${nowMs}_${DateTime.now().microsecondsSinceEpoch}.webp',
           );
           if (onProgress != null) onProgress(0.1);
+          final targetWidth = minWidth < 1080 ? 1080 : minWidth;
+          final targetHeight = minHeight < 1920 ? 1920 : minHeight;
+          final targetQuality = quality < 70 ? 70 : quality;
+
           final compressedFile = await FlutterImageCompress.compressAndGetFile(
             file.path,
             tempCompressedPath,
-            minWidth: minWidth,
-            minHeight: minHeight,
-            quality: quality,
+            minWidth: targetWidth,
+            minHeight: targetHeight,
+            quality: targetQuality,
             format: CompressFormat.webp,
           );
           if (onProgress != null) onProgress(0.35);

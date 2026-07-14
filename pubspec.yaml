@@ -133,6 +133,14 @@ dependencies:
 dependency_overrides:
   image_cropper_platform_interface: 7.1.0
   google_mobile_ads: ^9.0.0
+  firebase_auth: 6.5.4
+  firebase_database: 12.4.4
+  firebase_messaging: 16.4.1
+  firebase_storage: 13.4.3
+  firebase_crashlytics: 5.2.4
+  cloud_functions: 6.3.3
+  firebase_app_check: 0.4.5
+  cloud_firestore: 6.6.0
 
 dev_dependencies:
   flutter_test:
@@ -196,6 +204,8 @@ flutter:
     - assets/splash_icon.png
     - assets/splash_icon_rounded.png
     - assets/splash_icon_android12.png
+    - assets/images/avatar_male.jpg
+    - assets/images/avatar_female.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

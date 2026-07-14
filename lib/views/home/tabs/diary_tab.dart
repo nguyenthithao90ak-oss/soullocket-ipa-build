@@ -715,6 +715,60 @@ class _DiaryTabState extends State<DiaryTab>
     final trimmed = url?.trim() ?? '';
     if (trimmed.isEmpty) return;
 
+    if (!kIsWeb && Platform.isIOS) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (dialogCtx) => AlertDialog(
+          backgroundColor: const Color(0xFF160B1F),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0x33FF4F93), width: 1.0),
+          ),
+          title: Text(
+            'Cài đặt hình nền iOS',
+            style: SLTheme.quicksand(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              fontSize: 18,
+            ),
+          ),
+          content: Text(
+            'Hệ điều hành iOS (iPhone) không cho phép ứng dụng bên thứ ba tự động đổi hình nền hệ thống do chính sách bảo mật.\n\nBạn vui lòng tải ảnh này về thiết bị, sau đó vào ứng dụng "Ảnh" -> chọn ảnh -> chọn "Dùng làm hình nền".\n\nBạn có muốn tải ảnh này về máy ngay không?',
+            style: SLTheme.quicksand(
+              color: Colors.white70,
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx, false),
+              child: Text(
+                'Hủy',
+                style: SLTheme.quicksand(color: Colors.white54, fontWeight: FontWeight.w700),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF4F93),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () => Navigator.pop(dialogCtx, true),
+              child: const Text('Tải ảnh'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm == true) {
+        await _downloadSingleImage(url);
+      }
+      return;
+    }
+
     _showDiarySnackBar('Đang tải ảnh để thiết lập...');
 
     try {

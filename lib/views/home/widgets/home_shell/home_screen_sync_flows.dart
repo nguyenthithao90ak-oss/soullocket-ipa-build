@@ -180,6 +180,12 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
           customBackgroundUrl: source.containsKey('customBackgroundUrl')
               ? settings.customBackgroundUrl.trim()
               : currentUi.customBackgroundUrl,
+          countdownTextColor: source.containsKey('countdownTextColor')
+              ? (source['countdownTextColor']?.toString() ?? '').trim()
+              : currentUi.countdownTextColor,
+          homeShowTimer: source.containsKey('homeShowTimer')
+              ? (source['homeShowTimer'] == true || source['homeShowTimer'] == 'true')
+              : currentUi.homeShowTimer,
         );
         final shouldSync = nextUi.themeKey != currentUi.themeKey ||
             nextUi.fallingEffectKey != currentUi.fallingEffectKey ||
@@ -189,6 +195,8 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
             nextUi.countdownStyleKey != currentUi.countdownStyleKey ||
             nextUi.countdownTopLabel != currentUi.countdownTopLabel ||
             nextUi.countdownBottomLabel != currentUi.countdownBottomLabel ||
+            nextUi.countdownTextColor != currentUi.countdownTextColor ||
+            nextUi.homeShowTimer != currentUi.homeShowTimer ||
             nextUi.fontKey != currentUi.fontKey ||
             nextUi.homeBlockToneKey != currentUi.homeBlockToneKey ||
             nextUi.transparentMode != currentUi.transparentMode ||

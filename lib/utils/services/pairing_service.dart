@@ -12,6 +12,7 @@ class PairingRequest {
   final String guestAvatar;
   final int timestamp;
   final String status; // 'pending', 'accepted', 'rejected', 'merged'
+  final String guestEmail;
 
   PairingRequest({
     required this.requestId,
@@ -19,6 +20,7 @@ class PairingRequest {
     required this.guestAvatar,
     required this.timestamp,
     required this.status,
+    required this.guestEmail,
   });
 
   factory PairingRequest.fromMap(String id, Map<dynamic, dynamic> map) {
@@ -35,6 +37,7 @@ class PairingRequest {
       guestAvatar: map['guestAvatar']?.toString() ?? '',
       timestamp: timestampVal,
       status: map['status']?.toString() ?? 'pending',
+      guestEmail: map['guestEmail']?.toString() ?? '',
     );
   }
 }
@@ -105,15 +108,18 @@ class PairingService {
     // Get current user's profile info
     final guestName = user.displayName ?? 'Khách';
     final guestAvatar = user.photoURL ?? '';
+    final guestEmail = user.email ?? '';
 
     await _dbRef.child('pairing_requests/${user.uid}').set({
       'houseId': houseId,
       'guestUid': user.uid,
       'guestName': guestName,
       'guestAvatar': guestAvatar,
+      'guestEmail': guestEmail,
       'timestamp': ServerValue.timestamp,
       'status': 'pending',
     });
+
   }
 
   /// Listens to the status of a request sent by the current user.

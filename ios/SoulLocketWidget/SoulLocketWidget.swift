@@ -155,6 +155,7 @@ struct SoulLocketWidgetLauncher {
 struct SoulLocketWidgetBundle16: WidgetBundle {
     var body: some Widget {
         WidgetCoupleProvider()
+        WidgetCoupleAccessoryAvatarProvider()
         SoulLocketLiveActivity()
     }
 }
@@ -164,6 +165,9 @@ struct SoulLocketWidgetBundle16: WidgetBundle {
 struct SoulLocketWidgetBundle15: WidgetBundle {
     var body: some Widget {
         WidgetCoupleProvider()
+        if #available(iOS 16.0, *) {
+            WidgetCoupleAccessoryAvatarProvider()
+        }
     }
 }
 
@@ -172,7 +176,7 @@ struct WidgetCoupleProvider: Widget {
 
     private var families: [WidgetFamily] {
         if #available(iOS 16.0, *) {
-            return [.systemSmall, .systemMedium, .systemLarge, .accessoryCircular, .accessoryRectangular, .accessoryInline]
+            return [.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular, .accessoryInline]
         } else {
             return [.systemSmall, .systemMedium, .systemLarge]
         }
@@ -189,5 +193,19 @@ struct WidgetCoupleProvider: Widget {
         .configurationDisplayName("SoulLocket")
         .description("Hiển thị thông tin cặp đôi của bạn.")
         .supportedFamilies(families)
+    }
+}
+
+@available(iOS 16.0, *)
+struct WidgetCoupleAccessoryAvatarProvider: Widget {
+    let kind: String = "WidgetCoupleAccessoryAvatarProvider"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: CoupleWidgetProvider()) { entry in
+            LockScreenWidgetAvatarView(data: entry.data, date: entry.date)
+        }
+        .configurationDisplayName("SoulLocket: Avatar & Ngày")
+        .description("Hiện số ngày yêu ở giữa cùng ảnh đại diện 2 người.")
+        .supportedFamilies([.accessoryRectangular])
     }
 }

@@ -72,6 +72,8 @@ class SettingsSyncService {
     'il_countdown_style',
     'il_countdown_top_label',
     'il_countdown_bottom_label',
+    'il_countdown_text_color',
+    'il_home_show_timer',
     'il_custom_background_url',
     'il_home_show_house_name',
     'il_auto_reply_text',
@@ -151,7 +153,7 @@ class SettingsSyncService {
     if (houseId != null && houseId.isNotEmpty && houseBackup.isNotEmpty) {
       houseBackup['updatedAt'] = ServerValue.timestamp;
       houseBackup['schemaVersion'] = 1;
-      await _db.child('houses/$houseId/settings/clientBackups/${user.uid}').set(
+      await _db.child('houses/$houseId/settings_backups/${user.uid}').set(
             houseBackup,
           );
     }

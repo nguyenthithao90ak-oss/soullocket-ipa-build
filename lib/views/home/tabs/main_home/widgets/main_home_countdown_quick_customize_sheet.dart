@@ -1744,6 +1744,44 @@ class _CountdownQuickCustomizeSheetContentState
                   ),
                 ),
                 const SizedBox(height: 12),
+                // --- Chất lượng đồ họa ---
+                buildCollapsedSection(
+                  title: 'Chất lượng đồ họa',
+                  description: 'Tùy chỉnh chất lượng đồ họa và hiệu ứng hiển thị.',
+                  icon: Icons.high_quality_rounded,
+                  options: [
+                    _CountdownQuickOption(
+                      label: 'Tự động',
+                      value: 'auto',
+                      icon: Icons.brightness_auto_rounded,
+                      accent: const Color(0xFF2563EB),
+                    ),
+                    _CountdownQuickOption(
+                      label: 'Thấp (Mượt)',
+                      value: 'low',
+                      icon: Icons.battery_saver_rounded,
+                      accent: const Color(0xFFE11D48),
+                    ),
+                    _CountdownQuickOption(
+                      label: 'Trung bình',
+                      value: 'balanced',
+                      icon: Icons.balance_rounded,
+                      accent: const Color(0xFFD97706),
+                    ),
+                    _CountdownQuickOption(
+                      label: 'Cao (Đẹp)',
+                      value: 'high',
+                      icon: Icons.bolt_rounded,
+                      accent: const Color(0xFF059669),
+                    ),
+                  ],
+                  selectedValue: uiState.graphicsQualityKey.isEmpty ? 'auto' : uiState.graphicsQualityKey,
+                  onSelect: (option) async {
+                    HapticFeedback.selectionClick();
+                    await UiPrefs.saveState(uiState.copyWith(graphicsQualityKey: option.value));
+                  },
+                ),
+                const SizedBox(height: 12),
                 // --- Ngôn ngữ ---
                 buildCollapsedSection(
                   title: 'Ngôn ngữ',
@@ -1767,45 +1805,6 @@ class _CountdownQuickCustomizeSheetContentState
                     await Future.delayed(const Duration(milliseconds: 300));
                     await L10nService().setLocale(option.value);
                   },
-                ),
-                const SizedBox(height: 12),
-                // --- Tone màu nền khối ---
-                buildCollapsedSection(
-                  title: 'Màu nền khối trang chủ',
-                  description: 'Đổi tone màu nền các khối trên trang chủ.',
-                  icon: Icons.palette_rounded,
-                  options: [
-                    _CountdownQuickOption(
-                      label: 'Theo theme',
-                      value: 'theme',
-                      icon: Icons.auto_awesome_rounded,
-                      accent: const Color(0xFFD81B60),
-                    ),
-                    _CountdownQuickOption(
-                      label: 'Sương mù',
-                      value: 'mist',
-                      icon: Icons.cloud_rounded,
-                      accent: const Color(0xFF64B5F6),
-                    ),
-                    _CountdownQuickOption(
-                      label: 'Hoa hồng',
-                      value: 'rose',
-                      icon: Icons.local_florist_rounded,
-                      accent: const Color(0xFFD94C86),
-                    ),
-                    _CountdownQuickOption(
-                      label: 'Thủy tinh',
-                      value: 'glass',
-                      icon: Icons.water_drop_rounded,
-                      accent: const Color(0xFF06B6D4),
-                    ),
-                  ],
-                  selectedValue: uiState.homeBlockToneKey.isEmpty ? 'theme' : uiState.homeBlockToneKey,
-                  onSelect: (option) =>
-                      widget.homeState._saveCountdownQuickUiPrefs(
-                    homeBlockToneKey: option.value,
-                    isVip: widget.isVip,
-                  ),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(

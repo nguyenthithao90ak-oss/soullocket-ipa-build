@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:soullocket_app/utils/services/storage/storage_download_cache_helper.dart';
 import 'package:lottie/lottie.dart';
 
 import '../views/ui_prefs.dart';
@@ -48,7 +48,11 @@ class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
   Future<void> _preloadLottie() async {
     if (kIsWeb) return;
     try {
-      final file = await DefaultCacheManager().getSingleFile(widget.url);
+      final file = await const StorageDownloadCacheHelper().getCachedNetworkFile(
+        widget.url,
+        namespace: 'lottie_anims',
+        ttl: const Duration(days: 30),
+      );
       if (mounted) {
         setState(() {
           _cachedFile = file;

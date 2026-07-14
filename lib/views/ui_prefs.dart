@@ -221,7 +221,7 @@ class UiPrefs {
       MethodChannel('soul_locket/app_control');
 
   static bool _loaded = false;
-  static String _cachedAutoQuality = 'low';
+  static String _cachedAutoQuality = 'balanced';
 
   static double _readDoublePref(
     SharedPreferences prefs,
@@ -319,7 +319,7 @@ class UiPrefs {
       }
       final cpuCores = Platform.numberOfProcessors;
 
-      if (totalMemoryMB <= 3072 || cpuCores <= 4) return 'low';
+      if (totalMemoryMB <= 1536 || cpuCores <= 2) return 'low';
       if (totalMemoryMB >= 6144 && cpuCores >= 8) return 'high';
       return 'balanced';
     } catch (_) {
@@ -500,6 +500,7 @@ class UiPrefs {
     await prefs.setBool(_kTransparentModeKey, normalized.transparentMode);
     await prefs.setString(_kBrandMarkKey, normalized.brandMarkKey);
     await prefs.setStringList(_kHomeBlockOrderKey, normalized.homeBlockOrder);
+    await prefs.setBool(_kHomeShowTimerKey, normalized.homeShowTimer);
 
     try {
       unawaited(SettingsSyncService().backupSettingsToCloud());
@@ -555,8 +556,6 @@ class UiPrefs {
 
   static Future<void> setHomeShowTimer(bool enabled) async {
     await ensureLoaded();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kHomeShowTimerKey, enabled);
-    notifier.value = notifier.value.copyWith(homeShowTimer: enabled);
+    await saveState(notifier.value.copyWith(homeShowTimer: enabled));
   }
 }

@@ -844,7 +844,27 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                         color: const Color(0xFF2C1B22),
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
+                    if (request.guestEmail.isNotEmpty) ...[
+                      Text(
+                        'Email: ${request.guestEmail}',
+                        style: SLTheme.quicksand(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                    ],
+                    Text(
+                      'UID: ${request.requestId}',
+                      style: SLTheme.quicksand(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
                     Text(
                       'Đã gửi yêu cầu ghép nối',
                       style: SLTheme.quicksand(

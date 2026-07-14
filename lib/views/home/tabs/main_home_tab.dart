@@ -480,18 +480,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         ]);
       } catch (_) {}
     }());
-    // Pre-cache sticker assets deferred and chunked to avoid startup stutter
-    Timer(const Duration(seconds: 4), () async {
-      if (!mounted) return;
-      for (var i = 0; i < _kHomeStickerAssets.length; i++) {
-        if (!mounted) break;
-        precacheImage(AssetImage(_kHomeStickerAssets[i]), context);
-        // Chia nhỏ mỗi đợt 10 ảnh, nghỉ 50ms để không block UI thread
-        if (i % 10 == 9) {
-          await Future.delayed(const Duration(milliseconds: 50));
-        }
-      }
-    });
     unawaited(_syncHomeCardFirstTapHintState());
     _restoreWarmHomeCache();
     _warmHomeMedia(

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 
 class InteractionStickerEditorScreen extends StatefulWidget {
   const InteractionStickerEditorScreen({super.key});
@@ -353,7 +354,7 @@ class _InteractionStickerEditorScreenState
                                   child: slot['path'].toString().isNotEmpty
                                       ? Padding(
                                           padding: const EdgeInsets.all(6.0),
-                                          child: Image.asset(
+                                          child: R2StickerImage(
                                             slot['path'].toString(),
                                             fit: BoxFit.contain,
                                           ),
@@ -459,7 +460,7 @@ class _InteractionStickerEditorScreenState
                           padding: const EdgeInsets.all(8),
                           child: Stack(
                             children: [
-                              Center(child: Image.asset(path)),
+                              Center(child: R2StickerImage(path)),
                               Positioned(
                                 bottom: 0,
                                 right: 0,

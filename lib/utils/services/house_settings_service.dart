@@ -11,6 +11,14 @@ import 'offline_cache_service.dart';
 /// HouseSettingsService - realtime listener cho settings nhà
 /// Kết hợp với HouseService hiện tại (HouseService lo phần tạo nhà)
 class HouseSettingsService {
+  static final HouseSettingsService _instance = HouseSettingsService._internal();
+
+  factory HouseSettingsService() {
+    return _instance;
+  }
+
+  HouseSettingsService._internal();
+
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   static const Duration startDateChangeCooldown = Duration(days: 3);
 
