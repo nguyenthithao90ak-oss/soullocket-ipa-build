@@ -378,6 +378,7 @@ class _StableShellBackgroundImageState
               fit: BoxFit.cover,
               gaplessPlayback: true,
               filterQuality: FilterQuality.low,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
             )
           : const SizedBox.shrink(),
     );

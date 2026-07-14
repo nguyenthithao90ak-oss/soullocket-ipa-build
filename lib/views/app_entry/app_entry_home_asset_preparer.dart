@@ -54,7 +54,7 @@ class AppEntryHomeAssetPreparer {
         if (avatar2.isNotEmpty) urls.add(avatar2);
       }
 
-      for (final url in urls) {
+      await Future.wait(urls.map((url) async {
         try {
           final file = await _cacheManager.getSingleFile(url);
           HomeStartupMediaCache.saveFile(url, file);
@@ -78,7 +78,7 @@ class AppEntryHomeAssetPreparer {
           stream.addListener(listener);
           await completer.future.timeout(const Duration(milliseconds: 1500));
         } catch (_) {}
-      }
+      }));
 
       // Preload active Google Fonts to prevent 1s blinking/flickering
       final selectedUiFont = SLTheme.textStyleForKey(

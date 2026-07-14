@@ -301,6 +301,13 @@ class _StableAvatarNetworkImageState extends State<_StableAvatarNetworkImage> {
             fit: widget.fit,
             gaplessPlayback: true,
             filterQuality: FilterQuality.medium,
+            errorBuilder: (context, error, stackTrace) {
+              return Image.asset(
+                widget.fallbackAsset,
+                fit: widget.fit,
+                gaplessPlayback: true,
+              );
+            },
           )
         : Image.asset(
             widget.fallbackAsset,
