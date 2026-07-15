@@ -574,9 +574,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.08),
+        color: accent.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: accent.withValues(alpha: 0.22), width: 0.8),
+        border: Border.all(color: accent.withValues(alpha: 0.35), width: 0.8),
         boxShadow: [
           BoxShadow(
             color: accent.withValues(alpha: 0.05),
@@ -694,8 +694,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            roleColor.withValues(alpha: 0.22),
-            roleColor.withValues(alpha: 0.05),
+            roleColor.withValues(alpha: 0.35),
+            roleColor.withValues(alpha: 0.12),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -747,9 +747,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.16),
+                        color: statusColor.withValues(alpha: 0.22),
                         borderRadius: SLRadius.pillAll,
-                        border: Border.all(color: statusColor.withValues(alpha: 0.30)),
+                        border: Border.all(color: statusColor.withValues(alpha: 0.40)),
                       ),
                       child: Text(
                         statusText,
@@ -861,8 +861,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            _kMapBlue.withValues(alpha: 0.25),
-            _kMapBlue.withValues(alpha: 0.05),
+            _kMapBlue.withValues(alpha: 0.35),
+            _kMapBlue.withValues(alpha: 0.10),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

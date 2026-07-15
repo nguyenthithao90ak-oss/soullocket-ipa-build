@@ -22,30 +22,30 @@ class DailyQuestService {
     'partner_interaction': {
       'target': 3,
       'points': 10,
-      'title': 'Gá»­i tÃ­n hiá»‡u tÃ¬nh yÃªu',
-      'desc': 'Gá»­i tÆ°Æ¡ng tÃ¡c (3 láº§n)',
-      'icon': 'ðŸ’Œ'
+      'title': 'Gửi tín hiệu tình yêu',
+      'desc': 'Gửi tương tác (3 lần)',
+      'icon': '💌'
     },
     'map_checkin': {
       'target': 1,
       'points': 25,
-      'title': 'Check-in cÃ¹ng nhau',
-      'desc': 'LÆ°u 1 vá»‹ trÃ­ má»›i',
-      'icon': 'ðŸ“'
+      'title': 'Check-in cùng nhau',
+      'desc': 'Lưu 1 vị trí mới',
+      'icon': '📍'
     },
     'diary_entry': {
       'target': 1,
       'points': 20,
-      'title': 'Nháº­t kÃ½ chung',
-      'desc': 'ÄÄƒng 1 áº£nh / Ghi chÃº',
-      'icon': 'ðŸ“¸'
+      'title': 'Nhật ký chung',
+      'desc': 'Đăng 1 ảnh / Ghi chú',
+      'icon': '📸'
     },
     'simultaneous_online': {
       'target': 1,
       'points': 25,
-      'title': 'TÆ°Æ¡ng tÃ¡c Ä‘á»“ng thá»i',
-      'desc': 'Cáº£ hai cÃ¹ng online',
-      'icon': 'âœ¨'
+      'title': 'Tương tác đồng thời',
+      'desc': 'Cả hai cùng online',
+      'icon': '✨'
     },
   };
 
@@ -90,15 +90,15 @@ class DailyQuestService {
     } catch (e) {
       debugPrint('Daily quest progress error: ${AppErrorMapper.resolve(
         e,
-        fallbackMessage: 'KhÃ´ng thá»ƒ ghi tiáº¿n Ä‘á»™ nhiá»‡m vá»¥ ngÃ y.',
+        fallbackMessage: 'Không thể ghi tiến độ nhiệm vụ ngày.',
       ).message}');
     }
   }
 
   void _onQuestCompleted(int points, String title) {
     _notification.showLocalNotification(
-      title: 'Nhiá»‡m vá»¥ hoÃ n thÃ nh! ðŸŽ‰',
-      body: 'Báº¡n Ä‘Ã£ hoÃ n thÃ nh "$title" vÃ  nháº­n Ä‘Æ°á»£c +$points Ä‘iá»ƒm.',
+      title: 'Nhiệm vụ hoàn thành! 🎉',
+      body: 'Bạn đã hoàn thành "$title" và nhận được +$points điểm.',
       data: {'screen': 'reward_store'},
       dedupeKey: 'quest_${DateTime.now().millisecondsSinceEpoch}',
     );
