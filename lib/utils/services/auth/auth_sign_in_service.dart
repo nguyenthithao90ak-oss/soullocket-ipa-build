@@ -1176,23 +1176,20 @@ class AuthSignInService {
 
   Future<void> signOut() async {
     final prefs = await _prefs;
-    
-    // 1. Thực hiện các tác vụ mạng/SDK song song để giảm tổng thời gian chờ xuống tối thiểu
-    final List<Future<void>> asyncCleanups = [];
-
+    // 1. Set presence offline with a very short timeout
     try {
       final houseId = await HouseService().getCurrentHouseId();
       final role = RoleUtils.currentRoleSync();
       if (houseId != null && houseId.isNotEmpty && role != null) {
-        asyncCleanups.add(
-          PresenceService().goOffline(
-            houseId: houseId,
-            role: role,
-          ).timeout(const Duration(seconds: 2)).catchError((_) {})
-        );
+        await PresenceService().goOffline(
+          houseId: houseId,
+          role: role,
+        ).timeout(const Duration(milliseconds: 300)).catchError((_) {});
       }
     } catch (_) {}
 
+    // 2. Fire and forget other network/SDK cleanups so we don't block the UI
+    final List<Future<void>> asyncCleanups = [];
     asyncCleanups.add(
       NotificationService().clearTokenOnSignOut()
           .timeout(const Duration(seconds: 2))
@@ -1215,27 +1212,21 @@ class AuthSignInService {
           .catchError((_) {})
     );
 
-    // Chờ các dịch vụ mạng/SDK hoàn tất song song, tối đa 2.5 giây
-    if (asyncCleanups.isNotEmpty) {
-      await Future.wait(asyncCleanups).timeout(
-        const Duration(milliseconds: 2500),
-        onTimeout: () => [],
-      );
-    }
+    Future.wait(asyncCleanups).catchError((_) => []);
 
-    // 2. Thực hiện đăng xuất FirebaseAuth
+    // 3. Thực hiện đăng xuất FirebaseAuth (bắt buộc chờ nhưng timeout ngắn)
     try {
-      await _auth.signOut().timeout(const Duration(seconds: 2));
+      await _auth.signOut().timeout(const Duration(seconds: 1));
     } catch (_) {}
 
-    // 3. Thực hiện dọn dẹp dữ liệu cục bộ song song
+    // 4. Thực hiện dọn dẹp dữ liệu cục bộ (fire and forget)
     try {
-      await Future.wait([
+      Future.wait([
         SettingsSyncService().clearLocalSyncedSettings().catchError((_) {}),
         _clearSensitiveLocalData(prefs).catchError((_) {}),
         SecureStorageService.instance.deleteAll().catchError((_) {}),
         OfflineCacheService.clearAllCache().catchError((_) {}),
-      ]);
+      ]).catchError((_) => []);
     } catch (_) {}
 
     // 4. Các tác vụ UI/Memory nhẹ chạy đồng bộ lập tức

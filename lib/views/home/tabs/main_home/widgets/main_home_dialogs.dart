@@ -421,37 +421,44 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                                         );
                                       },
                                     ),
-                                    ValueListenableBuilder<String?>(
-                                      valueListenable: _interactionDragHoveredNotifier,
-                                      builder: (context, hoveredVal, _) {
-                                        final isHovered = hoveredVal == 'edit_stickers';
-                                        return GestureDetector(
-                                          onTap: () {
-                                            _hideInteractionDragOverlay();
-                                            _openStickerCustomization();
-                                          },
-                                          child: AnimatedScale(
-                                            scale: isHovered ? 1.2 : 1.0,
-                                            duration: const Duration(milliseconds: 200),
-                                            curve: Curves.easeOutBack,
-                                            child: Container(
-                                              key: _interactionDragOptionKeys['edit_stickers'],
-                                              padding: const EdgeInsets.all(6),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFF4CAF50),
-                                                shape: BoxShape.circle,
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: const Color(0xFF4CAF50).withValues(alpha: 0.4),
-                                                    blurRadius: 8,
-                                                    offset: const Offset(0, 2),
+                                    FutureBuilder<bool>(
+                                      future: kDebugMode ? Future.value(true) : PurchaseService().isVip(),
+                                      initialData: kDebugMode,
+                                      builder: (context, snapshot) {
+                                        if (snapshot.data != true) return const SizedBox.shrink();
+                                        return ValueListenableBuilder<String?>(
+                                          valueListenable: _interactionDragHoveredNotifier,
+                                          builder: (context, hoveredVal, _) {
+                                            final isHovered = hoveredVal == 'edit_stickers';
+                                            return GestureDetector(
+                                              onTap: () {
+                                                _hideInteractionDragOverlay();
+                                                _openStickerCustomization();
+                                              },
+                                              child: AnimatedScale(
+                                                scale: isHovered ? 1.2 : 1.0,
+                                                duration: const Duration(milliseconds: 200),
+                                                curve: Curves.easeOutBack,
+                                                child: Container(
+                                                  key: _interactionDragOptionKeys['edit_stickers'],
+                                                  padding: const EdgeInsets.all(6),
+                                                  decoration: BoxDecoration(
+                                                    color: const Color(0xFF4CAF50),
+                                                    shape: BoxShape.circle,
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: const Color(0xFF4CAF50).withValues(alpha: 0.4),
+                                                        blurRadius: 8,
+                                                        offset: const Offset(0, 2),
+                                                      ),
+                                                    ],
+                                                    border: Border.all(color: Colors.white, width: 1.5),
                                                   ),
-                                                ],
-                                                border: Border.all(color: Colors.white, width: 1.5),
+                                                  child: const Icon(Icons.edit_rounded, color: Colors.white, size: 16),
+                                                ),
                                               ),
-                                              child: const Icon(Icons.edit_rounded, color: Colors.white, size: 16),
-                                            ),
-                                          ),
+                                            );
+                                          },
                                         );
                                       },
                                     ),

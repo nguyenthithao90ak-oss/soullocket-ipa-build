@@ -74,6 +74,46 @@ class StoragePickerService {
     });
   }
 
+  Future<List<XFile>> pickMultipleMusicFiles({int maxFiles = 5}) async {
+    if (kIsWeb) {
+      StorageWebPickerGuard.arm(const Duration(seconds: 4));
+      try {
+        final result = await FilePicker.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: storageMusicPickerExtensions,
+          allowMultiple: true,
+        );
+        if (result != null && result.files.isNotEmpty) {
+          return result.files
+              .take(maxFiles)
+              .map((f) => platformFileToXFile(f))
+              .whereType<XFile>()
+              .toList();
+        }
+      } finally {
+        StorageWebPickerGuard.arm();
+      }
+      return [];
+    }
+
+    final list = await _guardedPicker<List<XFile>>(() async {
+      final result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: storageMusicPickerExtensions,
+        allowMultiple: true,
+      );
+      if (result == null || result.files.isEmpty) {
+        return <XFile>[];
+      }
+      return result.files
+          .take(maxFiles)
+          .map((f) => platformFileToXFile(f))
+          .whereType<XFile>()
+          .toList();
+    });
+    return list ?? <XFile>[];
+  }
+
   Future<XFile?> pickImage() async {
     if (kIsWeb) {
       StorageWebPickerGuard.arm(const Duration(seconds: 4));

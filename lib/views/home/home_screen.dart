@@ -402,7 +402,6 @@ class _HomeScreenState extends State<HomeScreen>
   final GlobalKey _firstGuideEntertainmentTabKey = GlobalKey();
   final GlobalKey _firstGuideUpdateTabKey = GlobalKey();
 
-  late AnimationController _musicController;
 
   StreamSubscription? _callSub;
   StreamSubscription? _pairingSub;
@@ -482,14 +481,7 @@ class _HomeScreenState extends State<HomeScreen>
     ];
     // Pre-init tất cả các tab để chuyển đổi mượt ngay từ lần đầu
     _tabPageCache[_currentIndex] = _buildTabPage(_currentIndex);
-    _musicController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2500),
-    );
-    final musicService = MusicService();
-    musicService.isPlayingNotifier.addListener(_handleMusicPlaybackChanged);
-    musicService.isVisibleNotifier.addListener(_handleMusicVisibilityChanged);
-    _syncMusicAnimationState();
+
 
     UiPrefs.ensureLoaded().then((_) {
       if (!mounted) return;
@@ -504,7 +496,7 @@ class _HomeScreenState extends State<HomeScreen>
     _startupAnimationTimer = Timer(_homeStartupAnimationDelay, () {
       if (!mounted || _allowStartupAnimations) return;
       setState(() => _allowStartupAnimations = true);
-      _syncMusicAnimationState();
+
     });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       unawaited(_consumePendingWidgetAction());
@@ -682,14 +674,6 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  void _handleMusicPlaybackChanged() {
-    _syncMusicAnimationState();
-  }
-
-  void _handleMusicVisibilityChanged() {
-    _syncMusicAnimationState();
-  }
-
   void _handleUiPrefsChanged() {
     _syncVipThemeRotateTimer();
     unawaited(_prewarmShellMedia());
@@ -713,38 +697,12 @@ class _HomeScreenState extends State<HomeScreen>
     final resolvedEffectKey = uiState.liteMode
         ? 'off'
         : _resolveEffectKey(uiState.fallingEffectKey, resolvedThemeKey);
-    final musicService = MusicService();
 
-    final hasAnimatedMusicButton = !kIsWeb &&
-        musicService.isVisibleNotifier.value &&
-        musicService.isPlayingNotifier.value;
     final hasFallingEffect = resolvedEffectKey != 'off';
     final hasTouchEffects =
         effectProfile.premiumEffects && resolvedEffectKey == 'off';
 
-    return hasAnimatedMusicButton || hasFallingEffect || hasTouchEffects;
-  }
-
-  void _syncMusicAnimationState() {
-    final musicService = MusicService();
-    final shouldAnimate = mounted &&
-        _allowStartupAnimations &&
-        !kIsWeb &&
-        !_isUserTabSwiping &&
-        musicService.isVisibleNotifier.value &&
-        musicService.isPlayingNotifier.value;
-    if (shouldAnimate) {
-      if (!_musicController.isAnimating) {
-        _musicController.repeat(reverse: true);
-      }
-      return;
-    }
-    if (_musicController.isAnimating) {
-      _musicController.stop();
-    }
-    if (_musicController.value != 0) {
-      _musicController.value = 0;
-    }
+    return hasFallingEffect || hasTouchEffects;
   }
 
   void _syncVipThemeRotateTimer() {
@@ -959,10 +917,6 @@ class _HomeScreenState extends State<HomeScreen>
     _prewarmMediaTimer?.cancel();
     _appUpdateTimer?.cancel();
     _inactivityTimer?.cancel();
-    final musicService = MusicService();
-    musicService.isPlayingNotifier.removeListener(_handleMusicPlaybackChanged);
-    musicService.isVisibleNotifier
-        .removeListener(_handleMusicVisibilityChanged);
     UiPrefs.notifier.removeListener(_handleUiPrefsChanged);
     _vipThemeRotateTimer?.cancel();
     _pageController.dispose();
@@ -970,7 +924,7 @@ class _HomeScreenState extends State<HomeScreen>
     _backgroundTabIndexNotifier.dispose(); // ⚡ Dispose background notifier
     _vipThemeRotationTickNotifier.dispose();
     _jumpNotifier.dispose();
-    _musicController.dispose();
+
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -1123,16 +1077,11 @@ class _HomeScreenState extends State<HomeScreen>
         state == AppLifecycleState.detached ||
         state == AppLifecycleState.inactive) {
       _detachNotificationBadgeListener(resetCounter: false);
-      _musicController.stop();
-      if (_musicController.value != 0) {
-        _musicController.value = 0;
-      }
       // Tạm dừng inactivity timer khi app vào background
       _inactivityTimer?.cancel();
     } else if (state == AppLifecycleState.resumed) {
       unawaited(_syncNotificationBadgeListener(forceRestart: true));
       unawaited(WidgetService.checkAndProcessPendingWidgetActions());
-      _syncMusicAnimationState();
       _checkScheduleNotifs();
       unawaited(_maybeShowBreakupEntryNotice());
       // Khởi động lại inactivity timer khi app resume
@@ -1283,12 +1232,12 @@ class _HomeScreenState extends State<HomeScreen>
       _isUserTabSwiping = true;
       _isUserTabSwipingNotifier.value = true;
       SLTheme.isTabSwiping.value = true;
-      _syncMusicAnimationState();
+
     } else if (shouldStopTracking && _isUserTabSwiping && mounted) {
       _isUserTabSwiping = false;
       _isUserTabSwipingNotifier.value = false;
       SLTheme.isTabSwiping.value = false;
-      _syncMusicAnimationState();
+
     }
     return false;
   }

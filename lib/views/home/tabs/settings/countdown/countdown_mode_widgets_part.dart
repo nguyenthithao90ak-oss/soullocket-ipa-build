@@ -1119,7 +1119,7 @@ class _CountdownModeGlowOrb extends StatelessWidget {
 }
 
 /// Overlay trái tim hồng bay bổng, xoay lật 3D đa chiều như giọt nước.
-/// Cảm biến trọng trường 360 độ cực nhạy và chân thực.
+/// Hiệu ứng nâng cấp: Bong bóng trái tim bay lên, mờ ảo, đa dạng icon.
 class FloatingHeartsRingOverlay extends StatefulWidget {
   const FloatingHeartsRingOverlay({super.key, required this.size, this.enableMotion = true});
   final double size;
@@ -1132,7 +1132,7 @@ class FloatingHeartsRingOverlay extends StatefulWidget {
 
 class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  static const int _kCount = 10;
+  static const int _kCount = 35; // Tăng số lượng hạt lên 35
 
   late final List<_HeartParticle> _particles;
   late final AnimationController _animController;
@@ -1146,7 +1146,7 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
     _initParticles();
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 6), // one full cycle
+      duration: const Duration(seconds: 15), // Chu kỳ dài để mượt mà
     )..addListener(_onTick);
     
     _updateAnimationState();
@@ -1191,76 +1191,128 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
 
   void _initParticles() {
     final rng = Object.hashAll([widget.size, identityHashCode(this)]);
+    final iconChoices = [
+      Icons.favorite_rounded,
+      Icons.favorite_rounded,
+      Icons.favorite_rounded,
+      Icons.favorite_border_rounded,
+      Icons.star_rounded,
+    ];
+
     _particles = List.generate(_kCount, (i) {
-      final base = (i / _kCount) * 2 * math.pi;
-      final jitter = ((rng ^ (i * 2654435761)) & 0xFFFF) / 0xFFFF;
+      final jitter1 = ((rng ^ (i * 2654435761)) & 0xFFFF) / 0xFFFF;
+      final jitter2 = ((rng ^ (i * 1234567)) & 0xFFFF) / 0xFFFF;
+      final jitter3 = ((rng ^ (i * 9876543)) & 0xFFFF) / 0xFFFF;
+      
       return _HeartParticle(
-        angle: base + (jitter - 0.5) * 1.5,
-        rFrac: 0.22 + ((jitter * 17) % 1.0) * 0.40,
-        size: 18.0 + ((jitter * 13) % 1.0) * 26.0,
-        phaseOffset: ((rng ^ (i * 1234567)) & 0xFFFF) / 0xFFFF,
-        speedMultiplier: 0.8 + ((jitter * 15) % 1.0) * 0.6,
-        floatAmplitude: 10.0 + ((jitter * 7) % 1.0) * 14.0,
-        opacity: 0.6 + ((jitter * 11) % 1.0) * 0.35,
+        startX: 0.1 + (jitter1 * 0.8), // Phân bố từ 10% đến 90% chiều rộng
+        speed: 0.4 + jitter2 * 0.6,
+        size: 14.0 + (jitter3 * 22.0),
+        wobbleAmplitude: 8.0 + (jitter1 * 20.0),
+        wobbleSpeed: 2.0 + (jitter2 * 4.0),
+        phase: jitter1,
+        rotationSpeed: (jitter2 - 0.5) * 4.0, // Xoay trái hoặc phải
+        colorIndex: (jitter3 * _kHeartColors.length).toInt() % _kHeartColors.length,
+        icon: iconChoices[(jitter1 * iconChoices.length).toInt() % iconChoices.length],
+        isGlow: jitter2 > 0.7, // 30% hạt có viền sáng
       );
     });
   }
 
   void _onTick() {
     final progress = _animController.value;
-    _autoTiltX = math.sin(progress * math.pi * 2 * 0.3 * 6) * 4.0;
-    _autoTiltY = math.cos(progress * math.pi * 2 * 0.2 * 6) * 3.0;
+    // Vẫn giữ lại autoTilt nhẹ nhàng cho khung nền (nếu cần)
+    _autoTiltX = math.sin(progress * math.pi * 2 * 6) * 2.0;
+    _autoTiltY = math.cos(progress * math.pi * 2 * 6) * 1.5;
   }
 
   @override
   Widget build(BuildContext context) {
-    final radius = widget.size / 2;
-
     return IgnorePointer(
       child: SizedBox(
         width: widget.size,
         height: widget.size,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(widget.size / 2),
-          child: AnimatedBuilder(
-            animation: _animController,
-            builder: (context, _) {
-              final progress = _animController.value;
-              final tiltX = _autoTiltX;
-              final tiltY = _autoTiltY;
+        // Không dùng ClipRRect để hạt có thể lơ lửng mờ ảo ra rìa một chút
+        child: AnimatedBuilder(
+          animation: _animController,
+          builder: (context, _) {
+            final progress = _animController.value;
 
-              return RepaintBoundary(
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: List.generate(_kCount, (i) {
-                    final p = _particles[i];
-                    final double localProgress =
-                        (progress * p.speedMultiplier + p.phaseOffset) % 1.0;
-                    final double t = math.sin(localProgress * 2 * math.pi);
-                    final double currentR =
-                        radius * p.rFrac + (t * p.floatAmplitude);
-                    final double angle = p.angle + (t * 0.6);
+            return RepaintBoundary(
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: List.generate(_kCount, (i) {
+                  final p = _particles[i];
+                  
+                  // Tính toán tiến trình vòng lặp của hạt này (từ 0.0 đến 1.0)
+                  final double localProgress = (progress * p.speed + p.phase) % 1.0;
+                  
+                  // Bay từ dưới lên trên: y = 1.1 -> -0.1
+                  final double cy = widget.size * (1.1 - localProgress * 1.2);
+                  
+                  // Lắc lư ngang theo hình sin
+                  final double t = math.sin(localProgress * p.wobbleSpeed * 2 * math.pi);
+                  final double cx = (widget.size * p.startX) + (t * p.wobbleAmplitude) + _autoTiltX;
 
-                    final double cx =
-                        radius + currentR * math.cos(angle) + tiltX;
-                    final double cy =
-                        radius + currentR * math.sin(angle) + tiltY;
+                  // Tính độ mờ (fade in/fade out)
+                  double opacity = 1.0;
+                  if (localProgress < 0.1) {
+                    opacity = localProgress / 0.1; // Fade in ở 10% đầu
+                  } else if (localProgress > 0.8) {
+                    opacity = (1.0 - localProgress) / 0.2; // Fade out ở 20% cuối
+                  }
+                  
+                  // Scale up lúc mới xuất hiện
+                  final double scale = localProgress < 0.1 ? (localProgress / 0.1) : 1.0;
+                  
+                  // Xoay tròn
+                  final double angle = localProgress * p.rotationSpeed * math.pi;
 
-                    return Positioned(
-                      left: cx - p.size / 2,
-                      top: cy - p.size / 2,
-                      child: Icon(
-                        Icons.favorite_rounded,
-                        size: p.size,
-                        color: _kHeartColors[i % _kHeartColors.length]
-                            .withValues(alpha: p.opacity),
+                  final Color baseColor = _kHeartColors[p.colorIndex];
+
+                  return Positioned(
+                    left: cx - p.size / 2,
+                    top: cy - p.size / 2,
+                    child: Opacity(
+                      opacity: opacity.clamp(0.0, 1.0),
+                      child: Transform.translate(
+                        offset: Offset(0, _autoTiltY), // Thêm độ nảy nhè nhẹ
+                        child: Transform.rotate(
+                          angle: angle,
+                          child: Transform.scale(
+                            scale: scale,
+                            child: p.isGlow 
+                              ? Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: baseColor.withValues(alpha: 0.6),
+                                        blurRadius: 12,
+                                        spreadRadius: 2,
+                                      ),
+                                    ]
+                                  ),
+                                  child: Icon(
+                                    p.icon,
+                                    size: p.size,
+                                    color: baseColor,
+                                  ),
+                                )
+                              : Icon(
+                                  p.icon,
+                                  size: p.size,
+                                  color: baseColor.withValues(alpha: 0.85),
+                                ),
+                          ),
+                        ),
                       ),
-                    );
-                  }),
-                ),
-              );
-            },
-          ),
+                    ),
+                  );
+                }),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -1269,30 +1321,37 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
   static const List<Color> _kHeartColors = [
     Color(0xFFFF85C0),
     Color(0xFFFF4D94),
-    Color(0xFF8C52FF), // Thêm sắc tím ảo diệu
+    Color(0xFF8C52FF), // Sắc tím ảo diệu
     Color(0xFFFF6BAD),
-    Color(0xFF5CE1E6), // Thêm sắc xanh nước biển lấp lánh
+    Color(0xFF5CE1E6), // Xanh nước biển lấp lánh
     Color(0xFFE8367E),
     Color(0xFFFFD6EC),
     Color(0xFFFF8DC7),
+    Color(0xFFFFFFFF), // Trắng pha lê
   ];
 }
 
 class _HeartParticle {
   const _HeartParticle({
-    required this.angle,
-    required this.rFrac,
+    required this.startX,
+    required this.speed,
     required this.size,
-    required this.phaseOffset,
-    required this.speedMultiplier,
-    required this.floatAmplitude,
-    required this.opacity,
+    required this.wobbleAmplitude,
+    required this.wobbleSpeed,
+    required this.phase,
+    required this.rotationSpeed,
+    required this.colorIndex,
+    required this.icon,
+    required this.isGlow,
   });
-  final double angle;
-  final double rFrac;
+  final double startX;
+  final double speed;
   final double size;
-  final double phaseOffset;
-  final double speedMultiplier;
-  final double floatAmplitude;
-  final double opacity;
+  final double wobbleAmplitude;
+  final double wobbleSpeed;
+  final double phase;
+  final double rotationSpeed;
+  final int colorIndex;
+  final IconData icon;
+  final bool isGlow;
 }

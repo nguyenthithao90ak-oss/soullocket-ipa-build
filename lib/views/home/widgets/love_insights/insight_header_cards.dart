@@ -62,31 +62,38 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        ShaderMask(
-                          shaderCallback: (bounds) => LinearGradient(
-                            colors: [
-                              scoreColor.withValues(alpha: 0.8),
-                              scoreColor
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ).createShader(bounds),
-                          child: Text(
-                            '${insight.loveScore}',
-                            style: SLTheme.quicksand(
-                              fontSize: 54,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              height: 0.9,
-                            ),
-                          ),
+                        TweenAnimationBuilder<double>(
+                          tween: Tween<double>(begin: 0, end: insight.loveScore.toDouble()),
+                          duration: const Duration(milliseconds: 1500),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, value, child) {
+                            return ShaderMask(
+                              shaderCallback: (bounds) => LinearGradient(
+                                colors: [
+                                  scoreColor.withValues(alpha: 0.8),
+                                  scoreColor
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ).createShader(bounds),
+                              child: Text(
+                                '${value.toInt()}',
+                                style: SLTheme.quicksand(
+                                  fontSize: 64,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  height: 0.9,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(left: 4, bottom: 6),
+                          padding: const EdgeInsets.only(left: 4, bottom: 8),
                           child: Text(
                             '/100',
                             style: SLTheme.quicksand(
-                              fontSize: 18,
+                              fontSize: 20,
                               fontWeight: FontWeight.w800,
                               color: const Color(0xFF908C99),
                             ),
@@ -97,12 +104,16 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                     SLSpacing.h12,
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
+                        horizontal: 14,
+                        vertical: 8,
                       ),
                       decoration: BoxDecoration(
                         color: scoreColor.withValues(alpha: 0.10),
                         borderRadius: SLRadius.pillAll,
+                        border: Border.all(
+                          color: scoreColor.withValues(alpha: 0.2),
+                          width: 1,
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -111,14 +122,14 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                             _isSingle
                                 ? Icons.local_fire_department_rounded
                                 : Icons.favorite_rounded,
-                            size: 15,
+                            size: 16,
                             color: scoreColor,
                           ),
                           SLSpacing.w8,
                           Text(
                             levelLabel,
                             style: SLTheme.quicksand(
-                              fontSize: 13,
+                              fontSize: 14,
                               fontWeight: FontWeight.w900,
                               color: scoreColor,
                             ),
@@ -131,10 +142,10 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
               ),
               SLSpacing.w16,
               Container(
-                width: 108,
+                width: 110,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 8,
-                  vertical: 16,
+                  vertical: 18,
                 ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
@@ -172,21 +183,28 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                       ),
                     ),
                     SLSpacing.h8,
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [Color(0xFFD81B60), Color(0xFF8E24AA)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ).createShader(bounds),
-                      child: Text(
-                        '$loveDays',
-                        style: SLTheme.quicksand(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          height: 0.95,
-                        ),
-                      ),
+                    TweenAnimationBuilder<double>(
+                      tween: Tween<double>(begin: 0, end: loveDays.toDouble()),
+                      duration: const Duration(milliseconds: 1500),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, child) {
+                        return ShaderMask(
+                          shaderCallback: (bounds) => const LinearGradient(
+                            colors: [Color(0xFFD81B60), Color(0xFF8E24AA)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ).createShader(bounds),
+                          child: Text(
+                            '${value.toInt()}',
+                            style: SLTheme.quicksand(
+                              fontSize: 38,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              height: 0.95,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     SLSpacing.h8,
                     Text(
@@ -213,7 +231,7 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
           SLSpacing.h8,
           SLSpacing.h8,
           Container(
-            height: 16,
+            height: 18,
             decoration: BoxDecoration(
               color: const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(20),
@@ -232,20 +250,27 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
               borderRadius: BorderRadius.circular(20),
               child: Stack(
                 children: [
-                  FractionallySizedBox(
-                    widthFactor: progress / 100,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            scoreColor.withValues(alpha: 0.6),
-                            scoreColor,
-                          ],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
+                  TweenAnimationBuilder<double>(
+                    tween: Tween<double>(begin: 0, end: progress / 100),
+                    duration: const Duration(milliseconds: 1500),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, child) {
+                      return FractionallySizedBox(
+                        widthFactor: value,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                scoreColor.withValues(alpha: 0.5),
+                                scoreColor,
+                              ],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 ],
               ),

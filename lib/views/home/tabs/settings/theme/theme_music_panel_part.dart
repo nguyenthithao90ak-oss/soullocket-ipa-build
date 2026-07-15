@@ -29,30 +29,54 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
     _togglePanel('account');
   }
 
-  Future<void> _pickAndStoreMusicFileLocally() async {
+  Future<void> _pickAndStoreMultipleMusicFilesLocally() async {
     if (_playlist.length >= 5) {
       _showToast('Đã đạt giới hạn tối đa 5 bài hát trong danh sách phát.', success: false);
       return;
     }
 
-    final picked = await _storageService.pickMusicFile();
-    if (picked == null) {
+    final int maxAllowed = 5 - _playlist.length;
+    final pickedFiles = await _storageService.pickMultipleMusicFiles(maxFiles: maxAllowed);
+    if (pickedFiles.isEmpty) {
       return;
     }
 
     setState(() => _isLoading = true);
     try {
-      final rawFileName = picked.name.isNotEmpty
-          ? picked.name
-          : picked.path.split(RegExp(r'[\\/]')).last;
-      final localPath = await _storageService.saveMusicFileLocally(picked);
-      final type = MusicService.inferMediaType(localPath);
-      final title = rawFileName.trim().isNotEmpty
-          ? rawFileName.trim()
-          : _deriveMusicTitle(localPath);
+      bool anyCloudSynced = false;
+      for (final picked in pickedFiles) {
+        if (_playlist.length >= 5) break;
 
-      final track = MusicTrack(url: localPath, title: title, type: type);
-      _playlist.add(track);
+        final rawFileName = picked.name.isNotEmpty
+            ? picked.name
+            : picked.path.split(RegExp(r'[\\/]')).last;
+        final localPath = await _storageService.saveMusicFileLocally(picked);
+        final type = MusicService.inferMediaType(localPath);
+        final title = rawFileName.trim().isNotEmpty
+            ? rawFileName.trim()
+            : _deriveMusicTitle(localPath);
+
+        final track = MusicTrack(url: localPath, title: title, type: type);
+        _playlist.add(track);
+
+        if (_isVipActive) {
+          try {
+            final localFile = File(localPath);
+            if (await localFile.exists()) {
+              CloudflareR2Service.instance.init();
+              final remoteUrl = await CloudflareR2Service.instance.uploadFile(
+                localFile,
+                folderPath: 'music/${_houseId ?? 'unknown'}',
+              );
+              if (remoteUrl != null) {
+                anyCloudSynced = true;
+              }
+            }
+          } catch (e) {
+            debugPrint('Music R2 upload failed: $e');
+          }
+        }
+      }
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('il_local_music_playlist', jsonEncode(_playlist.map((e) => e.toJson()).toList()));
@@ -60,22 +84,6 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
 
       final ui = UiPrefs.notifier.value;
       await UiPrefs.saveState(ui.copyWith(musicAutoplay: false));
-
-      String? remoteMusicUrl;
-      if (_isVipActive) {
-        try {
-          final localFile = File(localPath);
-          if (await localFile.exists()) {
-            CloudflareR2Service.instance.init();
-            remoteMusicUrl = await CloudflareR2Service.instance.uploadFile(
-              localFile,
-              folderPath: 'music/${_houseId ?? 'unknown'}',
-            );
-          }
-        } catch (e) {
-          debugPrint('Music R2 upload failed: $e');
-        }
-      }
 
       await _saveMusicSettingsToFirebase();
       await MusicService().reloadPlaylist();
@@ -87,9 +95,9 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
         _musicAutoplay = false;
       });
       _showToast(
-        _isVipActive && remoteMusicUrl != null
-            ? 'Đã lưu và đồng bộ nhạc lên đám mây.'
-            : 'Đã lưu file nhạc trên thiết bị này.',
+        _isVipActive && anyCloudSynced
+            ? 'Đã lưu và đồng bộ ${pickedFiles.length} bài hát lên đám mây.'
+            : 'Đã lưu ${pickedFiles.length} bài hát trên thiết bị này.',
         success: true,
       );
     } catch (e) {
@@ -290,7 +298,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
             _buildGradientBtn(
               label: _isLoading ? 'Đang tải file...' : (_playlist.length < 5 ? 'Thêm bài hát (${_playlist.length}/5)' : 'Đã đạt giới hạn 5 bài'),
               gradient: const [Color(0xFF8E24AA), Color(0xFFD81B60)],
-              onTap: _isLoading || _playlist.length >= 5 ? () {} : _pickAndStoreMusicFileLocally,
+              onTap: _isLoading || _playlist.length >= 5 ? () {} : _pickAndStoreMultipleMusicFilesLocally,
             ),
             SLSpacing.h8,
             _buildGradientBtn(
@@ -304,6 +312,113 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AnimatedMusicButton extends StatefulWidget {
+  const _AnimatedMusicButton({Key? key}) : super(key: key);
+
+  @override
+  State<_AnimatedMusicButton> createState() => _AnimatedMusicButtonState();
+}
+
+class _AnimatedMusicButtonState extends State<_AnimatedMusicButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 2500));
+    MusicService().isPlayingNotifier.addListener(_syncAnimation);
+    _syncAnimation();
+  }
+
+  void _syncAnimation() {
+    final isPlaying = MusicService().isPlayingNotifier.value;
+    if (isPlaying) {
+      if (!_controller.isAnimating) _controller.repeat(reverse: true);
+    } else {
+      if (_controller.isAnimating) _controller.stop();
+      if (_controller.value != 0) _controller.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    MusicService().isPlayingNotifier.removeListener(_syncAnimation);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: MusicService().isPlayingNotifier,
+      builder: (context, isPlaying, child) {
+        if (!isPlaying) return const SizedBox.shrink();
+        return GestureDetector(
+          onTap: MusicService().toggle,
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              final val = _controller.value;
+              final scale = 1.0 + (val * 0.05);
+              return Transform.scale(
+                scale: scale,
+                child: Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [SLTheme.primary, SLTheme.accentPurple],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: SLTheme.primary.withValues(alpha: 0.4),
+                        blurRadius: 15,
+                        spreadRadius: val * 3,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(4, (index) {
+                          final baseHeights = [10.0, 18.0, 14.0, 22.0];
+                          final animatedHeight = baseHeights[index] +
+                              ((index.isEven ? 1 : -1) * val * 8);
+                          return Container(
+                            width: 3,
+                            height: animatedHeight,
+                            margin:
+                                const EdgeInsets.symmetric(horizontal: 1.5),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.45),
+                              borderRadius: SLRadius.smAll,
+                            ),
+                          );
+                        }),
+                      ),
+                      const Icon(
+                        Icons.music_note,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

@@ -46,13 +46,27 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
         return Wrap(
           spacing: 12,
           runSpacing: 12,
-          children: [
-            for (final card in cards)
-              SizedBox(
-                width: itemWidth,
+          children: List.generate(cards.length, (index) {
+            final card = cards[index];
+            return SizedBox(
+              width: itemWidth,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0.0, end: 1.0),
+                duration: Duration(milliseconds: 500 + (index * 150)),
+                curve: Curves.easeOutQuart,
+                builder: (context, value, child) {
+                  return Transform.scale(
+                    scale: 0.9 + (0.1 * value),
+                    child: Opacity(
+                      opacity: value,
+                      child: child,
+                    ),
+                  );
+                },
                 child: _buildMetricCard(card),
               ),
-          ],
+            );
+          }),
         );
       },
     );
@@ -98,20 +112,28 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
           Row(
             children: [
               Container(
-                width: 34,
-                height: 34,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: card.accent.withValues(alpha: 0.10),
-                  borderRadius: SLRadius.mdAll,
+                  gradient: LinearGradient(
+                    colors: [card.accent.withValues(alpha: 0.15), card.accent.withValues(alpha: 0.05)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: card.accent.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
                 ),
-                child: Icon(card.icon, size: 18, color: card.accent),
+                child: Icon(card.icon, size: 20, color: card.accent),
               ),
               SLSpacing.w8,
               Expanded(
                 child: Text(
                   card.title,
                   style: SLTheme.quicksand(
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFF6D6670),
                     letterSpacing: 0.15,
@@ -120,30 +142,37 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
               ),
             ],
           ),
-          SLSpacing.h12,
+          SLSpacing.h16,
           ShaderMask(
             shaderCallback: (bounds) => LinearGradient(
-              colors: [card.accent, card.accent.withValues(alpha: 0.6)],
+              colors: [card.accent, card.accent.withValues(alpha: 0.7)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ).createShader(bounds),
             child: Text(
               card.value,
               style: SLTheme.quicksand(
-                fontSize: 32,
+                fontSize: 34,
                 fontWeight: FontWeight.w900,
                 color: Colors.white,
                 height: 0.95,
               ),
             ),
           ),
-          SLSpacing.h8,
-          Text(
-            card.subtitle,
-            style: SLTheme.quicksand(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: card.accent,
+          SLSpacing.h6,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: card.accent.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              card.subtitle,
+              style: SLTheme.quicksand(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: card.accent,
+              ),
             ),
           ),
         ],

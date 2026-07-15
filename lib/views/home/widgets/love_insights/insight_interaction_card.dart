@@ -21,30 +21,26 @@ extension _InsightInteractionCardExt on _LoveInsightsScreenState {
           if (_isSingle)
             _buildSingleInteractionOverview(insight)
           else
-            Row(
+            Column(
               children: [
-                Expanded(
-                  child: _buildPersonStatBlock(
-                    name: insight.nameU1,
-                    primaryLabel:
-                        L10nService().translate('home_xemnhtk_37a828'),
-                    primaryValue: insight.viewU1,
-                    secondaryLabel: L10nService().translate('home_mapp_ab1833'),
-                    secondaryValue: insight.openU1,
-                    accent: const Color(0xFF1976D2),
-                  ),
+                _buildComparisonBar(
+                  label: L10nService().translate('home_xemnhtk_37a828'),
+                  val1: insight.viewU1,
+                  val2: insight.viewU2,
+                  name1: insight.nameU1,
+                  name2: insight.nameU2,
+                  color1: const Color(0xFF1976D2),
+                  color2: const Color(0xFFD81B60),
                 ),
-                SLSpacing.w12,
-                Expanded(
-                  child: _buildPersonStatBlock(
-                    name: insight.nameU2,
-                    primaryLabel:
-                        L10nService().translate('home_xemnhtk_37a828'),
-                    primaryValue: insight.viewU2,
-                    secondaryLabel: L10nService().translate('home_mapp_ab1833'),
-                    secondaryValue: insight.openU2,
-                    accent: const Color(0xFFD81B60),
-                  ),
+                SLSpacing.h16,
+                _buildComparisonBar(
+                  label: L10nService().translate('home_mapp_ab1833'),
+                  val1: insight.openU1,
+                  val2: insight.openU2,
+                  name1: insight.nameU1,
+                  name2: insight.nameU2,
+                  color1: const Color(0xFF1976D2),
+                  color2: const Color(0xFFD81B60),
                 ),
               ],
             ),
@@ -143,66 +139,105 @@ extension _InsightInteractionCardExt on _LoveInsightsScreenState {
     );
   }
 
-  Widget _buildPersonStatBlock({
-    required String name,
-    required String primaryLabel,
-    required int primaryValue,
-    required String secondaryLabel,
-    required int secondaryValue,
-    required Color accent,
+  Widget _buildComparisonBar({
+    required String label,
+    required int val1,
+    required int val2,
+    required String name1,
+    required String name2,
+    required Color color1,
+    required Color color2,
   }) {
-    return Container(
-      padding: SLSpacing.all12,
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.07),
-        borderRadius: SLRadius.lgAll,
-        border: Border.all(color: accent.withValues(alpha: 0.12)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
+    final maxVal = max(1, max(val1, val2));
+    final p1 = val1 / maxVal;
+    final p2 = val2 / maxVal;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: SLTheme.quicksand(
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            color: const Color(0xFF504A55),
+          ),
+        ),
+        SLSpacing.h8,
+        _buildSingleBar(name1, val1, p1, color1),
+        SLSpacing.h6,
+        _buildSingleBar(name2, val2, p2, color2),
+      ],
+    );
+  }
+
+  Widget _buildSingleBar(String name, int val, double ratio, Color color) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 50,
+          child: Text(
             name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: SLTheme.quicksand(
-              fontSize: 13,
-              fontWeight: FontWeight.w900,
-              color: accent,
-            ),
-          ),
-          SLSpacing.h8,
-          _buildDualLineMetric(primaryLabel, primaryValue, accent),
-          SLSpacing.h8,
-          _buildDualLineMetric(
-            secondaryLabel,
-            secondaryValue,
-            const Color(0xFF64748B),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDualLineMetric(String label, int value, Color color) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: SLTheme.quicksand(
               fontSize: 11,
               fontWeight: FontWeight.w800,
-              color: const Color(0xFF6C6770),
+              color: const Color(0xFF8B8590),
             ),
           ),
         ),
-        Text(
-          '$value',
-          style: SLTheme.quicksand(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            color: color,
+        SLSpacing.w8,
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Stack(
+                alignment: Alignment.centerLeft,
+                children: [
+                  Container(
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: ratio),
+                    duration: const Duration(milliseconds: 1000),
+                    curve: Curves.easeOutQuart,
+                    builder: (context, value, child) {
+                      return FractionallySizedBox(
+                        widthFactor: value,
+                        child: Container(
+                          height: 14,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [color.withValues(alpha: 0.6), color],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+        SLSpacing.w8,
+        SizedBox(
+          width: 32,
+          child: Text(
+            '$val',
+            textAlign: TextAlign.right,
+            style: SLTheme.quicksand(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: color,
+            ),
           ),
         ),
       ],

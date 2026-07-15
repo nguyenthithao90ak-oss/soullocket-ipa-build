@@ -93,6 +93,9 @@ class StorageService {
 
   Future<XFile?> pickMusicFile() => _pickerService.pickMusicFile();
 
+  Future<List<XFile>> pickMultipleMusicFiles({int maxFiles = 5}) =>
+      _pickerService.pickMultipleMusicFiles(maxFiles: maxFiles);
+
   bool isSupportedMusicFileName(String fileNameOrPath) {
     final extension = p.extension(fileNameOrPath).toLowerCase();
     return storageMusicPickerExtensions

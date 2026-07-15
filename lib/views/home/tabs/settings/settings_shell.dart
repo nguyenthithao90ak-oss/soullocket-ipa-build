@@ -394,6 +394,11 @@ extension _SettingsTabShell on _SettingsTabState {
               right: 0,
               child: _buildSettingsHeader(),
             ),
+            const Positioned(
+              bottom: 120,
+              right: 20,
+              child: _AnimatedMusicButton(),
+            ),
           ],
         ),
       ),

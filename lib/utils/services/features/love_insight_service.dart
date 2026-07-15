@@ -863,6 +863,33 @@ class LoveInsightService {
       now: now,
     );
 
+    final sortedDays = activeDays.toList()..sort((a, b) => b.compareTo(a));
+    int currentStreak = 0;
+    DateTime currentDay = DateTime(now.year, now.month, now.day);
+    if (sortedDays.isNotEmpty) {
+      String todayStr = currentDay.toIso8601String().split('T').first;
+      String yesterdayStr = currentDay.subtract(const Duration(days: 1)).toIso8601String().split('T').first;
+      if (sortedDays.first == todayStr) {
+        // Start from today
+      } else if (sortedDays.first == yesterdayStr) {
+        currentDay = currentDay.subtract(const Duration(days: 1));
+      }
+      for (final d in sortedDays) {
+        if (d == currentDay.toIso8601String().split('T').first) {
+          currentStreak++;
+          currentDay = currentDay.subtract(const Duration(days: 1));
+        } else {
+          break;
+        }
+      }
+    }
+
+    // Tăng điểm thưởng nếu chuỗi tương tác dài
+    if (currentStreak >= 3) {
+      loveScore += (currentStreak >= 7 ? 5 : 3);
+      loveScore = min(100, loveScore);
+    }
+
     final suggestion = await _buildSuggestion(
       isSingle: isSingle,
       loveDays: loveDays,
@@ -877,6 +904,9 @@ class LoveInsightService {
       offU2: offU2,
       daysSinceLastMemory: daysSinceLastMemory,
       balanceRatio: balanceRatio,
+      currentStreak: currentStreak,
+      nameU1: nameU1,
+      nameU2: nameU2,
       timeline: timeline,
       now: now,
     );
@@ -932,6 +962,9 @@ class LoveInsightService {
     required double offU2,
     required double daysSinceLastMemory,
     required double balanceRatio,
+    required int currentStreak,
+    required String nameU1,
+    required String nameU2,
     required List<LoveInsightTimelineEntry> timeline,
     required DateTime now,
   }) async {
@@ -950,6 +983,9 @@ class LoveInsightService {
       if (daysSinceLastMemory >= 6) {
         return _tr('love_insight_suggest_single_slow_rhythm');
       }
+      if (currentStreak >= 5) {
+        return 'Bạn đang có chuỗi $currentStreak ngày tương tác liên tiếp cực kỳ tích cực. Cứ giữ nhịp này, năng lượng yêu thương sẽ ngày càng rực rỡ!';
+      }
       if (loveScore >= 85) {
         return 'Bạn đang giữ nhịp sống rất ổn và đều. Hãy tiếp tục lưu lại những khoảnh khắc đẹp để hành trình của chính mình ngày càng đáng nhớ hơn.';
       }
@@ -964,11 +1000,23 @@ class LoveInsightService {
       }
       return _tr('love_insight_suggest_single_need_self_care');
     }
+
     if (memoryThisMonth <= 1 &&
         activeDays <= 3 &&
         milestoneSuggestion != null) {
       return milestoneSuggestion;
     }
+    
+    if (currentStreak >= 7) {
+      return 'Thật tuyệt vời! Hai bạn đã duy trì tương tác suốt $currentStreak ngày liên tục. Sự đều đặn này chính là chìa khóa của một tình yêu bền vững.';
+    }
+
+    if (shareU1 > 0.8) {
+      return 'Có vẻ $nameU1 đang là người chủ động tạo phần lớn kỷ niệm. $nameU2 ơi, hãy gửi một lời yêu thương nhỏ để cân bằng lại nhịp tim chung nhé!';
+    } else if (shareU2 > 0.8) {
+      return 'Gần đây $nameU2 đang chăm chút cho nhà chung rất nhiều. $nameU1 hãy đáp lại bằng một bức ảnh hoặc nhật ký ngọt ngào nhé!';
+    }
+
     if (daysSinceLastMemory >= 6) {
       return _tr('love_insight_suggest_couple_sparse_shared_marks');
     }

@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'house_service.dart';
+import 'notification_service.dart';
 
 class SoulMergeService {
   final FirebaseDatabase _db = FirebaseDatabase.instance;
@@ -106,6 +107,17 @@ class SoulMergeService {
         'sender': role,
         'timestamp': ServerValue.timestamp,
       });
+
+      // Gửi thông báo Push đến người yêu
+      final body = trimmed.isNotEmpty
+          ? trimmed
+          : (imageUrl != null ? 'Đã gửi một ảnh' : 'Đã thì thầm với bạn trong Soul Merge 💕');
+      NotificationService().sendPartnerNotification(
+        houseId: houseId,
+        title: 'Soul Merge',
+        body: body,
+        data: {'type': 'soul_merge'},
+      );
 
       // Prune chat messages to keep database lightweight
       final snap = await ref.orderByChild('timestamp').get();
