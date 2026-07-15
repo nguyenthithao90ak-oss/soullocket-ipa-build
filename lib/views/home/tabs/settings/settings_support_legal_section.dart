@@ -245,10 +245,22 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     }
     if (confirm == true) {
       debugPrint('[LOGOUT] confirm == true. Starting signOut...');
+      
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+
       try {
         await _authService.signOut();
         debugPrint('[LOGOUT] signOut success');
       } catch (e, st) {
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop();
+        }
         debugPrint('[LOGOUT] signOut error: $e\n$st');
         if (!mounted) return;
         SLNotice.showError(
@@ -257,19 +269,16 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         );
         return;
       }
+
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+
       if (!mounted) {
         debugPrint('[LOGOUT] Widget not mounted after signOut!');
         return;
       }
-      try {
-        debugPrint('[LOGOUT] Navigating to LoginScreen...');
-        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
-        );
-      } catch (e, st) {
-        debugPrint('[LOGOUT] Navigator error: $e\n$st');
-      }
+      // Navigator push removed: AppEntry automatically handles routing to LoginScreen via auth state.
     }
   }
 
@@ -526,12 +535,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
             await _authService.signOut();
           } catch (_) {}
           if (!mounted) return;
-          try {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const LoginScreen()),
-              (route) => false,
-            );
-          } catch (_) {}
+          // AppEntry automatically handles routing to LoginScreen via auth state.
         } catch (e) {
           if (!mounted) return;
           if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {

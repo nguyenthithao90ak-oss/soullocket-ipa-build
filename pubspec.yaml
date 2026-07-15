@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 3.2.1+89
+version: 3.2.1+90
 
 environment:
   sdk: ^3.5.3
@@ -206,6 +206,30 @@ flutter:
     - assets/splash_icon_android12.png
     - assets/images/avatar_male.jpg
     - assets/images/avatar_female.jpg
+
+    # Home screen bundled interaction stickers
+    - assets/images/interaction_stickers/custom/numbered/sticker_001.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_002.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_003.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_004.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_005.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_006.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_007.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_008.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_056.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_098.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_108.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_158.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_160.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_162.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_165.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_173.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_228.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_270.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_276.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_291.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_339.png
+    - assets/images/interaction_stickers/custom/numbered/sticker_343.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

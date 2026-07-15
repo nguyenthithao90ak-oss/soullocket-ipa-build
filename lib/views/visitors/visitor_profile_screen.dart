@@ -1335,6 +1335,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         if (img.isNotEmpty)
           CachedNetworkImage(
               maxWidthDiskCache: 300,
+              memCacheWidth: 300,
               imageUrl: img,
               fit: BoxFit.cover,
               filterQuality: FilterQuality.low,

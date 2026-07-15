@@ -16,9 +16,22 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
     if (!mounted) return;
     setState(() {
       _musicAutoplay = prefs.getBool('il_music_autoplay') ?? false;
-      _bgMusicUrl = (prefs.getString('il_local_music_url') ?? '').trim();
-      _bgMusicTitle = (prefs.getString('il_local_music_title') ?? '').trim();
-      _bgMusicType = (prefs.getString('il_local_music_type') ?? 'audio').trim();
+      final playlistJson = prefs.getString('il_local_music_playlist');
+      _playlist = [];
+      if (playlistJson != null && playlistJson.isNotEmpty) {
+        try {
+          final List<dynamic> decoded = jsonDecode(playlistJson);
+          _playlist = decoded.map((e) => MusicTrack.fromJson(e)).where((t) => MusicService.isLocalAudioPath(t.url)).toList();
+        } catch (_) {}
+      }
+      if (_playlist.isEmpty) {
+        final localUrl = (prefs.getString('il_local_music_url') ?? '').trim();
+        if (MusicService.isLocalAudioPath(localUrl)) {
+          final type = (prefs.getString('il_local_music_type') ?? 'audio').trim();
+          final title = (prefs.getString('il_local_music_title') ?? '').trim();
+          _playlist = [MusicTrack(url: localUrl, title: title, type: type)];
+        }
+      }
       _notifAnniversary = prefs.getBool('il_notif_anniversary') ?? true;
       _notifPost = prefs.getBool('il_notif_post') ?? true;
       _notifChat = prefs.getBool('il_notif_chat') ?? true;

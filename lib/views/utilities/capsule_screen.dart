@@ -450,6 +450,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                           width: double.infinity,
                                           height: 220,
                                           fit: BoxFit.cover,
+                                          memCacheWidth: 600,
                                           filterQuality: FilterQuality.medium,
                                           placeholder: (_, __) =>
                                               const SizedBox(

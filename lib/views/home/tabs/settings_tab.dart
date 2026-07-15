@@ -1,5 +1,6 @@
 // ignore_for_file: unused_field
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -14,7 +15,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:in_app_review/in_app_review.dart';
-import '../../auth/login_screen.dart';
 import '../../app_entry.dart';
 import 'package:soullocket_app/views/chat/chat_detail_screen.dart';
 import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart'
@@ -466,9 +466,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   String _selectedSecurityQuestion =
       L10nService().translate('home_ngysinhcab_82062b');
   String _housePin = '';
-  String _bgMusicUrl = '';
-  String _bgMusicTitle = '';
-  String _bgMusicType = 'audio';
+  List<MusicTrack> _playlist = [];
   bool _isSavingTheme = false;
   String _vipPlanCode = '';
 
@@ -1163,12 +1161,21 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
             const SizedBox(height: 10),
             OutlinedButton.icon(
               onPressed: () async {
-                await _authService.signOut();
-                if (!context.mounted) return;
-                Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  (_) => false,
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
                 );
+                try {
+                  await _authService.signOut();
+                } finally {
+                  if (context.mounted) {
+                    Navigator.of(context, rootNavigator: true).pop();
+                  }
+                }
+                // AppEntry automatically handles routing to LoginScreen via auth state.
               },
               icon: const Icon(
                 Icons.logout_rounded,

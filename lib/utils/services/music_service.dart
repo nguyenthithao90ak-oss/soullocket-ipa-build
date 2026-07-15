@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
@@ -7,6 +8,28 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'offline_cache_service.dart';
+
+class MusicTrack {
+  final String url;
+  final String title;
+  final String type;
+
+  MusicTrack({required this.url, required this.title, required this.type});
+
+  factory MusicTrack.fromJson(Map<String, dynamic> json) {
+    return MusicTrack(
+      url: json['url'] ?? '',
+      title: json['title'] ?? '',
+      type: json['type'] ?? 'audio',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'url': url,
+        'title': title,
+        'type': type,
+      };
+}
 
 class MusicService {
   static final MusicService _instance = MusicService._internal();
@@ -20,8 +43,8 @@ class MusicService {
   final ValueNotifier<bool> isPlayingNotifier = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isVisibleNotifier = ValueNotifier<bool>(false);
 
-  String? _currentUrl;
-  String _currentType = 'audio';
+  List<MusicTrack> _playlist = [];
+  int _currentIndex = 0;
 
   static String _normalizedMediaPath(String url) {
     final trimmed = url.trim();
@@ -40,25 +63,13 @@ class MusicService {
   }
 
   static bool isLocalAudioPath(String path) {
-    if (kIsWeb) {
-      return false;
-    }
-
+    if (kIsWeb) return false;
     final trimmed = path.trim();
-    if (trimmed.isEmpty) {
-      return false;
-    }
-
+    if (trimmed.isEmpty) return false;
     final uri = Uri.tryParse(trimmed);
-    if (uri != null && uri.hasScheme) {
-      return false;
-    }
-
+    if (uri != null && uri.hasScheme) return false;
     final normalizedPath = _normalizedMediaPath(trimmed);
-    if (normalizedPath.isEmpty) {
-      return false;
-    }
-
+    if (normalizedPath.isEmpty) return false;
     return _hasSupportedAudioExtension(normalizedPath);
   }
 
@@ -68,9 +79,7 @@ class MusicService {
 
   static String inferMediaType(String url) {
     final path = _normalizedMediaPath(url);
-    if (path.endsWith('.mp4')) {
-      return 'video';
-    }
+    if (path.endsWith('.mp4')) return 'video';
     return 'audio';
   }
 
@@ -78,17 +87,30 @@ class MusicService {
     isPlayingNotifier.value = state == PlayerState.playing;
   }
 
+  void _onPlayerComplete() {
+    if (_playlist.isEmpty) return;
+    _currentIndex = (_currentIndex + 1) % _playlist.length;
+    final nextTrack = _playlist[_currentIndex];
+    if (isSupportedMusicUrl(nextTrack.url)) {
+      play(nextTrack.url, type: nextTrack.type);
+    } else {
+      stop();
+      isVisibleNotifier.value = false;
+    }
+  }
+
   StreamSubscription<PlayerState>? _playerStateSub;
+  StreamSubscription<void>? _playerCompleteSub;
   bool _isInitialized = false;
 
   Future<void> init() async {
     if (_isInitialized) return;
     _isInitialized = true;
 
-    _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    _audioPlayer.setReleaseMode(ReleaseMode.stop);
 
-    _playerStateSub =
-        _audioPlayer.onPlayerStateChanged.listen(_onPlayerStateChanged);
+    _playerStateSub = _audioPlayer.onPlayerStateChanged.listen(_onPlayerStateChanged);
+    _playerCompleteSub = _audioPlayer.onPlayerComplete.listen((_) => _onPlayerComplete());
 
     UiPrefs.notifier.addListener(_handleUiPrefsChanged);
 
@@ -102,6 +124,8 @@ class MusicService {
 
     _playerStateSub?.cancel();
     _playerStateSub = null;
+    _playerCompleteSub?.cancel();
+    _playerCompleteSub = null;
     UiPrefs.notifier.removeListener(_handleUiPrefsChanged);
     _audioPlayer.dispose();
     isPlayingNotifier.dispose();
@@ -112,73 +136,62 @@ class MusicService {
     final state = UiPrefs.notifier.value;
     if (!state.musicAutoplay) {
       if (isPlayingNotifier.value) {
-        stop(keepCurrentUrl: true);
+        stop(keepPlaylist: true);
       }
     } else {
-      if (!isPlayingNotifier.value && _currentUrl != null) {
-        play(_currentUrl!, type: _currentType);
+      if (!isPlayingNotifier.value && _playlist.isNotEmpty) {
+        final track = _playlist[_currentIndex];
+        play(track.url, type: track.type);
       }
     }
   }
 
   Future<void> _applyResolvedMusic() async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
-        await SharedPreferences.getInstance();
-    final localMusicData = _readLocalMusicData(prefs);
-    final data = localMusicData;
-    final url = _resolveMusicUrl(data);
-    final type = _resolveMusicType(data, url);
+    final prefs = OfflineCacheService.getPrefsSync() ?? await SharedPreferences.getInstance();
+    _playlist = _readLocalMusicData(prefs);
+    _currentIndex = 0;
     final allowLocalAutoplay = prefs.getBool('il_music_autoplay') ?? false;
-    final previousUrl = _currentUrl;
 
-    if (url.isEmpty) {
+    if (_playlist.isEmpty) {
       await stop();
       isVisibleNotifier.value = false;
       return;
     }
 
     isVisibleNotifier.value = true;
-    _currentUrl = url;
-    _currentType = type;
+    final track = _playlist[_currentIndex];
 
     if (allowLocalAutoplay) {
-      if (url != previousUrl || !isPlayingNotifier.value) {
-        await play(url, type: type);
-      }
+      await play(track.url, type: track.type);
     } else {
-      await stop(keepCurrentUrl: true);
+      await stop(keepPlaylist: true);
     }
   }
 
-  Map<String, dynamic> _readLocalMusicData(SharedPreferences prefs) {
-    final localUrl = (prefs.getString('il_local_music_url') ?? '').trim();
-    if (!isLocalAudioPath(localUrl)) {
-      return <String, dynamic>{};
-    }
-
-    return <String, dynamic>{
-      'bgMusic': localUrl,
-      'musicLink': (prefs.getString('il_local_music_link') ?? localUrl).trim(),
-      'musicType': (prefs.getString('il_local_music_type') ?? 'audio').trim(),
-      'musicTitle': (prefs.getString('il_local_music_title') ?? '').trim(),
-      'musicAutoEnabled': true,
-    };
-  }
-
-  String _resolveMusicUrl(Map<String, dynamic> data) {
-    final candidates = <String>[
-      (data['bgMusic'] ?? '').toString().trim(),
-    ];
-    for (final candidate in candidates) {
-      if (isSupportedMusicUrl(candidate)) {
-        return candidate;
+  List<MusicTrack> _readLocalMusicData(SharedPreferences prefs) {
+    final playlistJson = prefs.getString('il_local_music_playlist');
+    if (playlistJson != null && playlistJson.isNotEmpty) {
+      try {
+        final List<dynamic> decoded = jsonDecode(playlistJson);
+        final list = decoded.map((e) => MusicTrack.fromJson(e)).where((t) => isLocalAudioPath(t.url)).toList();
+        if (list.isNotEmpty) return list;
+      } catch (e) {
+        debugPrint('Error decoding playlist: $e');
       }
     }
-    return '';
+
+    final localUrl = (prefs.getString('il_local_music_url') ?? '').trim();
+    if (isLocalAudioPath(localUrl)) {
+      final type = (prefs.getString('il_local_music_type') ?? 'audio').trim();
+      final title = (prefs.getString('il_local_music_title') ?? '').trim();
+      return [MusicTrack(url: localUrl, title: title, type: type)];
+    }
+
+    return [];
   }
 
-  String _resolveMusicType(Map<String, dynamic> _, String url) {
-    return inferMediaType(url);
+  Future<void> reloadPlaylist() async {
+    await _applyResolvedMusic();
   }
 
   Future<void> play(String url, {String? type}) async {
@@ -190,8 +203,6 @@ class MusicService {
       return;
     }
 
-    _currentUrl = normalizedUrl;
-    _currentType = type ?? inferMediaType(normalizedUrl);
     isVisibleNotifier.value = true;
     try {
       await _audioPlayer.play(DeviceFileSource(normalizedUrl));
@@ -204,12 +215,12 @@ class MusicService {
     }
   }
 
-  Future<void> stop({bool keepCurrentUrl = false}) async {
+  Future<void> stop({bool keepPlaylist = false}) async {
     await _audioPlayer.stop();
     isPlayingNotifier.value = false;
-    if (!keepCurrentUrl) {
-      _currentUrl = null;
-      _currentType = 'audio';
+    if (!keepPlaylist) {
+      _playlist.clear();
+      _currentIndex = 0;
     }
   }
 
@@ -219,11 +230,13 @@ class MusicService {
       return;
     }
 
-    if (_currentUrl != null) {
-      await play(_currentUrl!, type: _currentType);
+    if (_playlist.isNotEmpty) {
+      final track = _playlist[_currentIndex];
+      await play(track.url, type: track.type);
     }
   }
 
-  String get currentType => _currentType;
-  String? get currentUrl => _currentUrl;
+  String get currentType => _playlist.isNotEmpty && _currentIndex < _playlist.length ? _playlist[_currentIndex].type : 'audio';
+  String? get currentUrl => _playlist.isNotEmpty && _currentIndex < _playlist.length ? _playlist[_currentIndex].url : null;
+  List<MusicTrack> get playlist => _playlist;
 }

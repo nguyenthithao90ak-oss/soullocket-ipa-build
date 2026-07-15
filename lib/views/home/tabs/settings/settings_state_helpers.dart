@@ -820,7 +820,7 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
               _nameU1Ctrl.text = _nameU1;
               _nameU2Ctrl.text = _nameU2;
               _loveUnitCtrl.text = _loveUnit;
-              _musicLinkCtrl.text = _bgMusicUrl;
+              _musicLinkCtrl.text = _playlist.isNotEmpty ? _playlist.first.url : '';
             });
           }
           _markSettingsBootstrapComplete();

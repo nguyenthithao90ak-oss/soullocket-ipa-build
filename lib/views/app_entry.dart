@@ -529,9 +529,9 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    _removeSplashOnce();
     // Kiểm tra bảo trì ở TOP LEVEL - tất cả user, mọi màn hình, không bypass được
     if (_isMaintenance) {
-      _removeSplashOnce();
       return const BlockedScaffold(
         title: 'Bảo trì hệ thống',
         message:
@@ -544,7 +544,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
 
   Widget _buildContent(BuildContext context) {
     if (kIsWeb && DeeplinkService.isSupportedAuthUri(Uri.base)) {
-      _removeSplashOnce();
       return AuthActionScreen(initialUri: Uri.base);
     }
 
@@ -553,7 +552,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     }
 
     if (_isCompromised) {
-      _removeSplashOnce();
       return const BlockedScaffold(
         title: 'Thiết bị không an toàn',
         message:
@@ -563,7 +561,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     }
 
     if (!_isAuthenticated) {
-      _removeSplashOnce();
       return LockedScaffold(onUnlock: _checkAppLock);
     }
 
@@ -578,7 +575,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         }
 
         if (snapshot.hasError) {
-          _removeSplashOnce();
           return BlockedScaffold(
             title: 'Lỗi xác thực',
             message: kDebugMode
@@ -596,7 +592,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
           _hasTriggeredInitialAppOpenAd = false;
           _initialAccessState = null;
           _accessStateFuture = null;
-          _removeSplashOnce();
           return const ConsentGate(child: LoginScreen());
         }
 
@@ -624,7 +619,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
             }
 
             if (accessSnap.hasError) {
-              _removeSplashOnce();
               return BlockedScaffold(
                 title: 'Lỗi hệ thống',
                 message:
@@ -636,7 +630,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
             }
 
             if (accessState?.isMaintenance == true) {
-              _removeSplashOnce();
               return const BlockedScaffold(
                 title: 'Bảo trì hệ thống',
                 message:
@@ -646,7 +639,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
             }
 
             if (accessState?.blockReason != null) {
-              _removeSplashOnce();
               return BlockedScaffold(
                 title: 'Tài khoản bị khóa',
                 message: accessState!.blockReason!,
@@ -668,7 +660,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
             if (houseId == null || houseId.isEmpty) {
               unawaited(_appEntryController.handleMissingHouseSession());
               _hasTriggeredInitialAppOpenAd = false;
-              _removeSplashOnce();
               return ConsentGate(
                 onReady: () async {
                   await _appEntryController.requestStartupPermissionsIfNeeded(

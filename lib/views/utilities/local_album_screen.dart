@@ -129,19 +129,26 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
   Future<void> _loadItems() async {
     if (_albumDir == null) return;
     setState(() => _isLoading = true);
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getStringList(_prefsKey) ?? [];
-    _items = [];
-    for (final s in raw) {
-      final item = LocalAlbumItem.fromJson(s);
-      if (item.fileName.isEmpty) continue;
-      final file = File('${_albumDir!}/${item.fileName}');
-      if (!await file.exists()) continue;
-      _items.add(item);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getStringList(_prefsKey) ?? [];
+      _items = [];
+      for (final s in raw) {
+        final item = LocalAlbumItem.fromJson(s);
+        if (item.fileName.isEmpty) continue;
+        final file = File('${_albumDir!}/${item.fileName}');
+        if (!await file.exists()) continue;
+        _items.add(item);
+      }
+      _items.sort((a, b) => b.addedAtMs.compareTo(a.addedAtMs));
+      _applyFilters();
+    } catch (e) {
+      debugPrint('Error loading local album: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
-    _items.sort((a, b) => b.addedAtMs.compareTo(a.addedAtMs));
-    _applyFilters();
-    setState(() => _isLoading = false);
   }
 
   Future<void> _saveItems() async {

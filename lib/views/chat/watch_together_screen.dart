@@ -876,7 +876,9 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                             AspectRatio(
                               aspectRatio:
                                   _videoPlayerController!.value.aspectRatio,
-                              child: VideoPlayer(_videoPlayerController!),
+                              child: RepaintBoundary(
+                                child: VideoPlayer(_videoPlayerController!),
+                              ),
                             ),
                             if (!_videoPlayerController!.value.isPlaying)
                               Container(

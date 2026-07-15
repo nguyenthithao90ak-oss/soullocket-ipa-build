@@ -94,13 +94,20 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
 
   Future<void> _loadInitialFeed() async {
     setState(() => _isLoading = true);
-    final posts = await _fetchPage(null);
-    if (mounted) {
-      setState(() {
-        _posts = posts;
-        _isLoading = false;
-        _hasMore = posts.length >= 10;
-      });
+    try {
+      final posts = await _fetchPage(null);
+      if (mounted) {
+        setState(() {
+          _posts = posts;
+          _hasMore = posts.length >= 10;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading initial feed: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -108,18 +115,25 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
     if (_isLoadingMore || !_hasMore || _posts.isEmpty) return;
     setState(() => _isLoadingMore = true);
     final oldestTs = _posts.last.timestamp.millisecondsSinceEpoch;
-    final olderPosts = await _fetchPage(oldestTs);
+    try {
+      final olderPosts = await _fetchPage(oldestTs);
 
-    if (mounted) {
-      setState(() {
-        if (olderPosts.isEmpty) {
-          _hasMore = false;
-        } else {
-          _posts.addAll(olderPosts);
-          _hasMore = olderPosts.length >= 10;
-        }
-        _isLoadingMore = false;
-      });
+      if (mounted) {
+        setState(() {
+          if (olderPosts.isEmpty) {
+            _hasMore = false;
+          } else {
+            _posts.addAll(olderPosts);
+            _hasMore = olderPosts.length >= 10;
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading more feed: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingMore = false);
+      }
     }
   }
 

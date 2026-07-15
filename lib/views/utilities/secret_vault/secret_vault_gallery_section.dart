@@ -468,6 +468,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                         imageUrl: photo['url'],
                         fit: BoxFit.cover,
                         maxWidthDiskCache: 600,
+                        memCacheWidth: 600,
                         filterQuality: FilterQuality.medium,
                         placeholder: (context, url) => Container(
                           decoration: BoxDecoration(

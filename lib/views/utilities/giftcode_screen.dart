@@ -78,21 +78,36 @@ class _GiftcodeScreenState extends State<GiftcodeScreen> {
     }
 
     setState(() => _isLoading = true);
-    final result = await _giftcodeService.redeemGiftcode(
-      houseId: widget.houseId,
-      code: code,
-    );
-    if (!mounted) return;
+    try {
+      final result = await _giftcodeService.redeemGiftcode(
+        houseId: widget.houseId,
+        code: code,
+      );
+      if (!mounted) return;
 
-    setState(() => _isLoading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(result.message),
-        backgroundColor: result.success ? Colors.green : Colors.red,
-      ),
-    );
-    if (result.success) {
-      _codeController.clear();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.message),
+          backgroundColor: result.success ? Colors.green : Colors.red,
+        ),
+      );
+      if (result.success) {
+        _codeController.clear();
+      }
+    } catch (e) {
+      debugPrint('Error redeeming giftcode: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Có lỗi xảy ra, vui lòng thử lại.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 

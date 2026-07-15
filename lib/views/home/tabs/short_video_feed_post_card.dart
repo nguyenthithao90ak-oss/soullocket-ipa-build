@@ -430,7 +430,9 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
             child: SizedBox(
               width: _videoCtrl!.value.size.width,
               height: _videoCtrl!.value.size.height,
-              child: VideoPlayer(_videoCtrl!),
+              child: RepaintBoundary(
+                child: VideoPlayer(_videoCtrl!),
+              ),
             ),
           ),
         );

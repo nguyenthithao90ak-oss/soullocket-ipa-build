@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/storage/storage_download_cache_helper.dart';
-import 'package:soullocket_app/core/constants/app_config.dart';
 
 class R2StickerImage extends StatelessWidget {
   final String assetPath;
@@ -22,15 +21,54 @@ class R2StickerImage extends StatelessWidget {
   // Lưu trữ in-memory cache của các sticker file đã được nạp thành công để tránh nháy khi rebuild
   static final Map<String, File> _resolvedStickerFiles = {};
 
+  static const Set<String> _bundledHomeStickers = {
+    'assets/images/interaction_stickers/custom/numbered/sticker_001.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_003.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_006.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_007.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_056.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_108.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_158.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_160.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_162.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_165.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_173.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_228.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_270.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_276.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_291.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_339.png',
+    'assets/images/interaction_stickers/custom/numbered/sticker_343.png',
+  };
+
   @override
   Widget build(BuildContext context) {
+    return RepaintBoundary(child: _buildContent(context));
+  }
+
+  Widget _buildContent(BuildContext context) {
+    if (_bundledHomeStickers.contains(assetPath)) {
+      return Image.asset(
+        assetPath,
+        fit: fit,
+        width: width,
+        height: height,
+        errorBuilder: errorWidget != null ? (context, error, stackTrace) => errorWidget! : null,
+      );
+    }
+
     // Chỉ các sticker tương tác (nằm trong thư mục interaction_stickers) mới chuyển sang nạp từ R2
     if (assetPath.startsWith('assets/images/interaction_stickers/')) {
-      final String filename = assetPath.substring('assets/images/'.length);
-      final String r2Url = '${AppConfig.r2PublicDomain}/stickers/$filename';
+      final String r2Url = '/stickers/${assetPath.substring('assets/images/'.length)}';
       
       // Nếu file đã được nạp và lưu trong RAM cache, trả về trực tiếp Image.file đồng bộ để không bị nháy
       final cachedFile = _resolvedStickerFiles[r2Url];
+
       if (cachedFile != null && cachedFile.existsSync()) {
         return Image.file(
           cachedFile,

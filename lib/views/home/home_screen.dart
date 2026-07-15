@@ -1484,16 +1484,7 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
         ),
-        ValueListenableBuilder<bool>(
-          valueListenable: _isUserTabSwipingNotifier,
-          builder: (context, isSwiping, child) {
-            return TickerMode(
-              enabled: !isSwiping,
-              child: child ?? const SizedBox.shrink(),
-            );
-          },
-          child: _buildMusicButton(),
-        ),
+
         ValueListenableBuilder<int>(
           valueListenable: _activeTabIndexNotifier,
           builder: (context, activeIndex, _) {

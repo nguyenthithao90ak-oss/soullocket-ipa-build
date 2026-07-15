@@ -76,6 +76,7 @@ class VisitorProfileHeaderSection extends StatelessWidget {
         if (headerImageUrl.isNotEmpty)
           CachedNetworkImage(
             maxWidthDiskCache: 2160,
+            memCacheWidth: 1080,
             imageUrl: headerImageUrl,
             fit: BoxFit.cover,
             filterQuality: FilterQuality.medium,

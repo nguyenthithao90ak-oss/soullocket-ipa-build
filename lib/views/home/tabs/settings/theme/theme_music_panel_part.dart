@@ -20,37 +20,21 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
   }
 
   String _syncModeLabel() {
-    if (_bgMusicUrl.isEmpty) return 'Chưa có nhạc nền';
+    if (_playlist.isEmpty) return 'Chưa có nhạc nền';
     if (_isVipActive) return 'Âm nhạc đang được đồng bộ qua đám mây.';
     return 'File nhạc chỉ được lưu trên thiết bị này. Dùng PRO để đồng bộ.';
   }
 
   void _showVipAccountDetail() {
-    // Mở panel VIP trong settings
     _togglePanel('account');
   }
 
-  /// Xoá file nhạc cũ trên R2 (dựa vào URL đã lưu trong Firebase)
-  Future<void> _deleteOldRemoteMusic() async {
-    final houseId = (_houseId ?? '').trim();
-    if (houseId.isEmpty) return;
-    try {
-      final snap = await _dbRef
-          .child('houses/$houseId/settings/musicUrl')
-          .get()
-          .timeout(const Duration(seconds: 3));
-      if (snap.exists && snap.value is String) {
-        final oldUrl = snap.value.toString().trim();
-        if (oldUrl.isNotEmpty && CloudflareR2Service.instance.isR2Url(oldUrl)) {
-          CloudflareR2Service.instance.init();
-          await CloudflareR2Service.instance.deleteFile(oldUrl);
-          debugPrint('Đã xoá file nhạc cũ trên R2: $oldUrl');
-        }
-      }
-    } catch (_) {}
-  }
-
   Future<void> _pickAndStoreMusicFileLocally() async {
+    if (_playlist.length >= 5) {
+      _showToast('Đã đạt giới hạn tối đa 5 bài hát trong danh sách phát.', success: false);
+      return;
+    }
+
     final picked = await _storageService.pickMusicFile();
     if (picked == null) {
       return;
@@ -58,8 +42,6 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
 
     setState(() => _isLoading = true);
     try {
-      final previousLocalPath =
-          MusicService.isLocalAudioPath(_bgMusicUrl) ? _bgMusicUrl : '';
       final rawFileName = picked.name.isNotEmpty
           ? picked.name
           : picked.path.split(RegExp(r'[\\/]')).last;
@@ -69,26 +51,16 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
           ? rawFileName.trim()
           : _deriveMusicTitle(localPath);
 
+      final track = MusicTrack(url: localPath, title: title, type: type);
+      _playlist.add(track);
+
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('il_local_music_url', localPath);
-      await prefs.setString('il_local_music_link', localPath);
-      await prefs.setString('il_local_music_type', type);
-      await prefs.setString('il_local_music_title', title);
+      await prefs.setString('il_local_music_playlist', jsonEncode(_playlist.map((e) => e.toJson()).toList()));
       await prefs.setBool('il_music_autoplay', false);
 
       final ui = UiPrefs.notifier.value;
       await UiPrefs.saveState(ui.copyWith(musicAutoplay: false));
 
-      if (previousLocalPath.isNotEmpty && previousLocalPath != localPath) {
-        await _storageService.deleteLocalFile(previousLocalPath);
-      }
-
-      // Xoá file nhạc cũ trên R2 nếu có (cả khi thay nhạc)
-      if (_isVipActive) {
-        await _deleteOldRemoteMusic();
-      }
-
-      // Nếu là PRO → upload lên R2 để đồng bộ
       String? remoteMusicUrl;
       if (_isVipActive) {
         try {
@@ -105,26 +77,18 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
         }
       }
 
-      await _saveMusicSettingsToFirebase(
-        localPath: localPath,
-        remoteUrl: remoteMusicUrl,
-        title: title,
-        type: type,
-      );
-      await MusicService().stop();
+      await _saveMusicSettingsToFirebase();
+      await MusicService().reloadPlaylist();
+      await MusicService().stop(keepPlaylist: true);
 
       if (!mounted) return;
       setState(() {
         _isLoading = false;
         _musicAutoplay = false;
-        _bgMusicUrl = localPath;
-        _bgMusicTitle = title;
-        _bgMusicType = type;
-        _musicLinkCtrl.text = localPath;
       });
       _showToast(
         _isVipActive && remoteMusicUrl != null
-            ? 'Đã lưu và đồng bộ nhạc lên đám mây cho thiết bị khác.'
+            ? 'Đã lưu và đồng bộ nhạc lên đám mây.'
             : 'Đã lưu file nhạc trên thiết bị này.',
         success: true,
       );
@@ -135,25 +99,53 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
     }
   }
 
-  Future<void> _saveMusicSettingsToFirebase({
-    required String localPath,
-    String? remoteUrl,
-    required String title,
-    required String type,
-  }) async {
+  Future<void> _removeTrack(int index) async {
+    final track = _playlist[index];
+    final prefs = await SharedPreferences.getInstance();
+    
+    _playlist.removeAt(index);
+    await prefs.setString('il_local_music_playlist', jsonEncode(_playlist.map((e) => e.toJson()).toList()));
+
+    if (MusicService.isLocalAudioPath(track.url)) {
+      await _storageService.deleteLocalFile(track.url);
+    }
+
+    await _saveMusicSettingsToFirebase();
+    await MusicService().reloadPlaylist();
+
+    if (_playlist.isEmpty) {
+      await prefs.setBool('il_music_autoplay', false);
+      final ui = UiPrefs.notifier.value;
+      await UiPrefs.saveState(ui.copyWith(musicAutoplay: false));
+      setState(() {
+        _musicAutoplay = false;
+      });
+      await MusicService().stop();
+    }
+
+    if (!mounted) return;
+    setState(() {});
+    _showToast('Đã xóa bài hát khỏi danh sách phát.');
+  }
+
+  Future<void> _saveMusicSettingsToFirebase() async {
     final houseId = (_houseId ?? '').trim();
     if (houseId.isEmpty) return;
 
     final updates = <String, dynamic>{
-      'musicTitle': title,
-      'musicType': type,
+      'musicPlaylist': jsonEncode(_playlist.map((e) => e.toJson()).toList()),
       'musicUpdatedAt': ServerValue.timestamp,
     };
-    if (remoteUrl != null && remoteUrl.isNotEmpty) {
-      updates['musicUrl'] = remoteUrl;
-      updates['musicSyncMode'] = 'cloud';
+
+    if (_playlist.isNotEmpty) {
+      updates['musicUrl'] = _playlist.first.url;
+      updates['musicTitle'] = _playlist.first.title;
+      updates['musicType'] = _playlist.first.type;
+      updates['musicSyncMode'] = _isVipActive ? 'cloud' : 'local';
     } else {
       updates['musicUrl'] = '';
+      updates['musicTitle'] = '';
+      updates['musicType'] = 'audio';
       updates['musicSyncMode'] = 'local';
     }
 
@@ -164,19 +156,14 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
   }
 
   Widget _buildMusicPanel({bool hideBackButton = false}) {
-    final musicLabel = _bgMusicTitle.trim().isNotEmpty
-        ? _bgMusicTitle.trim()
-        : (_bgMusicUrl.isEmpty
-            ? 'Đang dùng nhạc mặc định'
-            : _deriveMusicTitle(_bgMusicUrl));
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: _ThemeSectionCard(
         icon: Icons.music_note_rounded,
         title: context.tr('theme_music_panel'),
-        description: _bgMusicUrl.isEmpty
+        description: _playlist.isEmpty
             ? context.tr('theme_music_no_music')
-            : musicLabel,
+            : '${_playlist.length} bài hát trong danh sách phát',
         themeColor: const Color(0xFFFF8F00),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,7 +174,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
               label: context.tr('theme_music_autoplay_label'),
               switchValue: _musicAutoplay,
               onSwitchChanged: (v) async {
-                if (_bgMusicUrl.isEmpty && v) {
+                if (_playlist.isEmpty && v) {
                   _showToast(
                     'Hãy lưu file nhạc trên máy trước khi bật tự phát.',
                     success: false,
@@ -203,9 +190,9 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.setBool('il_music_autoplay', v);
                 if (!v) {
-                  await MusicService().stop();
-                } else if (_bgMusicUrl.isNotEmpty) {
-                  await MusicService().play(_bgMusicUrl);
+                  await MusicService().stop(keepPlaylist: true);
+                } else if (_playlist.isNotEmpty) {
+                  await MusicService().play(_playlist.first.url, type: _playlist.first.type);
                 }
                 if (!mounted) return;
                 _showToast(
@@ -217,89 +204,93 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
               },
             ),
             const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: SLSpacing.all12,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF3F7),
-                borderRadius: SLRadius.mdAll,
-                border: Border.all(color: const Color(0xFFF48FB1)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+            if (_playlist.isNotEmpty)
+              Container(
+                width: double.infinity,
+                padding: SLSpacing.all12,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3F7),
+                  borderRadius: SLRadius.mdAll,
+                  border: Border.all(color: const Color(0xFFF48FB1)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (int i = 0; i < _playlist.length; i++)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Row(
                           children: [
-                            Text(
-                              musicLabel,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: SLTextStyles.quicksand(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFF6A1B4D),
+                            Expanded(
+                              child: Text(
+                                '${i + 1}. ${_playlist[i].title}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: SLTextStyles.quicksand(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF6A1B4D),
+                                ),
                               ),
                             ),
-                            SLSpacing.h4,
-                            Text(
-                              _bgMusicUrl.isEmpty
-                                  ? context.tr('theme_music_no_music')
-                                  : _syncModeLabel(),
-                              style: SLTextStyles.quicksand(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF6A1B4D),
-                                height: 1.45,
-                              ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () => _removeTrack(i),
                             ),
                           ],
                         ),
                       ),
-                      if (AppConfig.isPurchaseEnabled)
-                        GestureDetector(
-                          onTap: () => _showVipAccountDetail(),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFFFD54F), Color(0xFFFF8F00)],
-                              ),
-                              borderRadius: BorderRadius.circular(8),
+                    SLSpacing.h4,
+                    Text(
+                      _syncModeLabel(),
+                      style: SLTextStyles.quicksand(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF6A1B4D),
+                        height: 1.45,
+                      ),
+                    ),
+                    if (AppConfig.isPurchaseEnabled)
+                      GestureDetector(
+                        onTap: () => _showVipAccountDetail(),
+                        child: Container(
+                          margin: const EdgeInsets.only(top: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFFFD54F), Color(0xFFFF8F00)],
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.star_rounded,
-                                    size: 12, color: Color(0xFF3E2723)),
-                                const SizedBox(width: 3),
-                                Text(
-                                  'PRO',
-                                  style: SLTextStyles.quicksand(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFF3E2723),
-                                  ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.star_rounded,
+                                  size: 12, color: Color(0xFF3E2723)),
+                              const SizedBox(width: 3),
+                              Text(
+                                'PRO',
+                                style: SLTextStyles.quicksand(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF3E2723),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                    ],
-                  ),
-                ],
+                      ),
+                  ],
+                ),
               ),
-            ),
             SLSpacing.h8,
             _buildGradientBtn(
-              label: _isLoading ? 'Đang lưu file...' : 'Lưu file MP3/MP4',
+              label: _isLoading ? 'Đang tải file...' : (_playlist.length < 5 ? 'Thêm bài hát (${_playlist.length}/5)' : 'Đã đạt giới hạn 5 bài'),
               gradient: const [Color(0xFF8E24AA), Color(0xFFD81B60)],
-              onTap: _isLoading ? () {} : _pickAndStoreMusicFileLocally,
+              onTap: _isLoading || _playlist.length >= 5 ? () {} : _pickAndStoreMusicFileLocally,
             ),
             SLSpacing.h8,
             _buildGradientBtn(
@@ -307,59 +298,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
               gradient: const [Color(0xFFFFB74D), Color(0xFFFF9800)],
               textColor: Colors.black87,
               onTap: () {
-                _showToast(context.tr('theme_music_guide_desc'));
-              },
-            ),
-            SLSpacing.h8,
-            _buildGradientBtn(
-              label: context.tr('theme_music_remove'),
-              gradient: const [Color(0xFFEF9A9A), Color(0xFFE57373)],
-              textColor: Colors.black87,
-              onTap: () async {
-                final previousLocalPath =
-                    MusicService.isLocalAudioPath(_bgMusicUrl)
-                        ? _bgMusicUrl
-                        : '';
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.remove('il_local_music_url');
-                await prefs.remove('il_local_music_link');
-                await prefs.remove('il_local_music_type');
-                await prefs.remove('il_local_music_title');
-                await prefs.setBool('il_music_autoplay', false);
-
-                final ui = UiPrefs.notifier.value;
-                await UiPrefs.saveState(ui.copyWith(musicAutoplay: false));
-
-                if (previousLocalPath.isNotEmpty) {
-                  await _storageService.deleteLocalFile(previousLocalPath);
-                }
-
-                // Xoá file trên R2 nếu có
-                await _deleteOldRemoteMusic();
-
-                // Xoá cả remote settings nếu có
-                final houseId = (_houseId ?? '').trim();
-                if (houseId.isNotEmpty) {
-                  await _dbRef.child('houses/$houseId/settings').update({
-                    'musicUrl': '',
-                    'musicSyncMode': '',
-                    'musicTitle': '',
-                    'musicType': 'audio',
-                    'musicUpdatedAt': ServerValue.timestamp,
-                  }).catchError((_) {});
-                }
-
-                if (!mounted) return;
-                setState(() {
-                  _musicAutoplay = false;
-                  _bgMusicUrl = '';
-                  _bgMusicTitle = '';
-                  _bgMusicType = 'audio';
-                  _musicLinkCtrl.clear();
-                });
-                await MusicService().stop();
-                if (!mounted) return;
-                _showToast(context.tr('theme_music_removed'));
+                _showToast('Bạn có thể tải lên tối đa 5 bài hát để phát dưới dạng danh sách. Hỗ trợ định dạng âm thanh.');
               },
             ),
           ],

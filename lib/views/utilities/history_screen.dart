@@ -389,6 +389,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   child: CachedNetworkImage(
                     imageUrl: entry.previewUrl,
                     fit: BoxFit.cover,
+                    memCacheWidth: 150,
                     filterQuality: FilterQuality.medium,
                     placeholder: (_, __) => const Center(
                       child: CircularProgressIndicator(strokeWidth: 2),

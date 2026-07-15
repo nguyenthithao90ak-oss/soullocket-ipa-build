@@ -934,7 +934,7 @@ class AdMobService {
     _soulGameRewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
         _lastSoulGameRewardedShownMs = DateTime.now().millisecondsSinceEpoch;
-        _lastFullscreenAdShownMs = _lastRewardedShownMs;
+        _lastFullscreenAdShownMs = _lastSoulGameRewardedShownMs;
         _sendAdImpressionPing('rewarded', rewardedSoulGameId);
       },
       onAdDismissedFullScreenContent: (ad) async {
