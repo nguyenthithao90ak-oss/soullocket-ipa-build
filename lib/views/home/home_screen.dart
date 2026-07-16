@@ -462,6 +462,7 @@ class _HomeScreenState extends State<HomeScreen>
         ValueNotifier<int>(_currentIndex); // ⚡ Init background notifier
     _vipThemeRotationTickNotifier = ValueNotifier<int>(0);
     _navCollapsedNotifier = ValueNotifier<bool>(_navCollapsed);
+    _isBottomNavVisibleNotifier = ValueNotifier<bool>(true);
     _isUserTabSwipingNotifier = ValueNotifier<bool>(false);
     _jumpNotifier = ValueNotifier<({int source, int target})?>(null);
     _pageController = PageController(initialPage: _currentIndex);
@@ -922,8 +923,11 @@ class _HomeScreenState extends State<HomeScreen>
     _vipThemeRotateTimer?.cancel();
     _pageController.dispose();
     _activeTabIndexNotifier.dispose();
-    _backgroundTabIndexNotifier.dispose(); // ⚡ Dispose background notifier
+    _backgroundTabIndexNotifier.dispose();
     _vipThemeRotationTickNotifier.dispose();
+    _navCollapsedNotifier.dispose();
+    _isBottomNavVisibleNotifier.dispose();
+    _isUserTabSwipingNotifier.dispose();
     _jumpNotifier.dispose();
 
     WidgetsBinding.instance.removeObserver(this);
@@ -1463,8 +1467,21 @@ class _HomeScreenState extends State<HomeScreen>
           child: Scaffold(
             extendBody: true,
             // ⚡ Dùng child param để foregroundContent không bị rebuild khi UiPrefs thay đổi
-            body: ValueListenableBuilder<UiPrefsState>(
-              valueListenable: UiPrefs.notifier,
+            body: NotificationListener<UserScrollNotification>(
+              onNotification: (notification) {
+                if (notification.direction == ScrollDirection.reverse) {
+                  if (_isBottomNavVisibleNotifier.value) {
+                    _isBottomNavVisibleNotifier.value = false;
+                  }
+                } else if (notification.direction == ScrollDirection.forward) {
+                  if (!_isBottomNavVisibleNotifier.value) {
+                    _isBottomNavVisibleNotifier.value = true;
+                  }
+                }
+                return false;
+              },
+              child: ValueListenableBuilder<UiPrefsState>(
+                valueListenable: UiPrefs.notifier,
               builder: (context, uiState, child) {
                 final effectProfile = _resolveHomeEffectProfile(
                   uiState,
@@ -1524,6 +1541,7 @@ class _HomeScreenState extends State<HomeScreen>
                 );
               },
               child: foregroundContent,
+            ),
             ),
             bottomNavigationBar: ValueListenableBuilder<UiPrefsState>(
               valueListenable: UiPrefs.notifier,

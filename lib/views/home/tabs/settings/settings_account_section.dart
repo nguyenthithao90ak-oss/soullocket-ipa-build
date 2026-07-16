@@ -1038,7 +1038,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 _buildInput(
                   _loveUnitCtrl,
                   context.tr('unit_hint'),
-                  maxLength: 14,
+                  maxLength: 30,
                   accentColor: const Color(0xFFCE93D8),
                 ),
               ],

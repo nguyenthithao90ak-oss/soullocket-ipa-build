@@ -4,7 +4,17 @@ part of '../../home_screen.dart';
 extension _HomeScreenShellControls on _HomeScreenState {
   Widget _buildBottomNav({required bool isDark}) {
     return ValueListenableBuilder<bool>(
-      valueListenable: _navCollapsedNotifier,
+      valueListenable: _isBottomNavVisibleNotifier,
+      builder: (context, isVisible, child) {
+        return AnimatedSlide(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+          offset: isVisible ? Offset.zero : const Offset(0, 1.2),
+          child: child,
+        );
+      },
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _navCollapsedNotifier,
       builder: (context, navCollapsed, _) {
         return ValueListenableBuilder<bool>(
           valueListenable: UiPrefs.captureModeNotifier,
@@ -55,6 +65,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
           },
         );
       },
+    );
     );
   }
 
