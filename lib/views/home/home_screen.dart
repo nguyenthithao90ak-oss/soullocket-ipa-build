@@ -372,6 +372,7 @@ class _HomeScreenState extends State<HomeScreen>
   bool _navHiddenUntilRestart = false;
   bool _hideNavForDiarySelection = false;
   late final ValueNotifier<bool> _navCollapsedNotifier;
+  late final ValueNotifier<bool> _isBottomNavVisibleNotifier;
   late final ValueNotifier<bool> _isUserTabSwipingNotifier;
   bool _didCheckCoupleOnboarding = false;
   bool _didCheckNewUserWelcomeNotice = false;

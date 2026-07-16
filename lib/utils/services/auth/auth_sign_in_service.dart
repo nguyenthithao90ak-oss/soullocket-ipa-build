@@ -1044,6 +1044,17 @@ class AuthSignInService {
       await recordRollingRegisterLimit();
       return userCredential;
     } on firebase_auth.FirebaseAuthException catch (error) {
+      if (error.code == 'email-already-in-use') {
+        try {
+          final loginCredential = await _auth.signInWithEmailAndPassword(
+            email: email.trim(),
+            password: password.trim(),
+          );
+          return loginCredential;
+        } catch (_) {
+          throw handleFirebaseAuthError(error);
+        }
+      }
       throw handleFirebaseAuthError(error);
     } catch (error) {
       if (error is String) rethrow;
