@@ -21,6 +21,7 @@ import 'package:soullocket_app/utils/services/notification_service.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
+import 'package:soullocket_app/utils/services/giftcode_service.dart';
 
 part 'soul_merge/exploding_photo_part.dart';
 part 'soul_merge/particle_explosion_part.dart';
@@ -1343,6 +1344,61 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   void _sendCustomMessage() {
     final text = _customMsgController.text.trim();
     if (text.isEmpty) return;
+
+    if (text.startsWith('/')) {
+      String code = '';
+      if (text.toLowerCase().startsWith('/code ')) {
+        code = text.substring(6).trim();
+      } else if (text.toLowerCase().startsWith('/giftcode ')) {
+        code = text.substring(10).trim();
+      } else {
+        code = text.substring(1).trim();
+      }
+
+      final RegExp giftcodeRegex = RegExp(r'^[a-zA-Z0-9_-]{3,32}$');
+      if (giftcodeRegex.hasMatch(code)) {
+        _customMsgController.clear();
+        FocusScope.of(context).unfocus();
+        unawaited(() async {
+          try {
+            final result = await GiftcodeService().redeemGiftcode(
+              houseId: _houseId ?? '',
+              code: code,
+            );
+            if (!mounted) return;
+
+            String displayMessage = result.message;
+            if (result.success) {
+              final days = result.daysAdded ?? 0;
+              if (days > 0) {
+                displayMessage = '🎉 Chúc mừng! Bạn đã nhận thành công $days ngày VIP PRO.';
+              } else {
+                displayMessage = '🎉 Chúc mừng! Bạn đã kích hoạt mã quà tặng thành công.';
+              }
+            }
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(displayMessage),
+                backgroundColor: result.success ? Colors.green : Colors.red,
+              ),
+            );
+          } catch (e) {
+            debugPrint('Error redeeming giftcode in soul merge chat: $e');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Có lỗi xảy ra khi kích hoạt Giftcode.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        }());
+        return;
+      }
+    }
+
     _customMsgController.clear();
     unawaited(_sendSoulMessage(text));
     FocusScope.of(context).unfocus();

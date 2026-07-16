@@ -111,7 +111,7 @@ class StoragePickerService {
           .whereType<XFile>()
           .toList();
     });
-    return list ?? <XFile>[];
+    return list;
   }
 
   Future<XFile?> pickImage() async {

@@ -1161,6 +1161,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
             const SizedBox(height: 10),
             OutlinedButton.icon(
               onPressed: () async {
+                final navigator = Navigator.of(context, rootNavigator: true);
                 showDialog(
                   context: context,
                   barrierDismissible: false,
@@ -1170,10 +1171,9 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
                 );
                 try {
                   await _authService.signOut();
-                } finally {
-                  if (context.mounted) {
-                    Navigator.of(context, rootNavigator: true).pop();
-                  }
+                  navigator.popUntil((route) => route.isFirst);
+                } catch (_) {
+                  navigator.pop();
                 }
                 // AppEntry automatically handles routing to LoginScreen via auth state.
               },

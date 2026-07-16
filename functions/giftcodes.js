@@ -664,13 +664,17 @@ exports.redeemGiftcode = functions
       const db = admin.database();
       const now = Date.now();
       const codeRef = db.ref(`admin_system/giftcodes/${code}`);
+      const codeSnap = await codeRef.once('value');
+      if (!codeSnap.exists()) {
+        throw new Error('giftcode_not_found');
+      }
+
       const houseMarkerKey = sanitizeKey(houseId);
       let abortReason = '';
       let daysAdded = 0;
 
       const codeTxn = await codeRef.transaction((current) => {
         if (!current) {
-          abortReason = 'giftcode_not_found';
           return;
         }
 

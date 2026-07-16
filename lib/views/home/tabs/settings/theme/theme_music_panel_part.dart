@@ -317,7 +317,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
 }
 
 class _AnimatedMusicButton extends StatefulWidget {
-  const _AnimatedMusicButton({Key? key}) : super(key: key);
+  const _AnimatedMusicButton();
 
   @override
   State<_AnimatedMusicButton> createState() => _AnimatedMusicButtonState();

@@ -246,6 +246,8 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     if (confirm == true) {
       debugPrint('[LOGOUT] confirm == true. Starting signOut...');
       
+      final navigator = Navigator.of(context, rootNavigator: true);
+      
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -257,10 +259,9 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       try {
         await _authService.signOut();
         debugPrint('[LOGOUT] signOut success');
+        navigator.popUntil((route) => route.isFirst);
       } catch (e, st) {
-        if (mounted) {
-          Navigator.of(context, rootNavigator: true).pop();
-        }
+        navigator.pop();
         debugPrint('[LOGOUT] signOut error: $e\n$st');
         if (!mounted) return;
         SLNotice.showError(
@@ -268,10 +269,6 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           context.tr('home_chathngxut_9630af'),
         );
         return;
-      }
-
-      if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
       }
 
       if (!mounted) {

@@ -36,6 +36,60 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       return;
     }
 
+    if (text.startsWith('/')) {
+      String code = '';
+      if (text.toLowerCase().startsWith('/code ')) {
+        code = text.substring(6).trim();
+      } else if (text.toLowerCase().startsWith('/giftcode ')) {
+        code = text.substring(10).trim();
+      } else {
+        code = text.substring(1).trim();
+      }
+
+      final RegExp giftcodeRegex = RegExp(r'^[a-zA-Z0-9_-]{3,32}$');
+      if (giftcodeRegex.hasMatch(code)) {
+        _isSendingMessage = true;
+        _msgController.clear();
+        try {
+          final result = await GiftcodeService().redeemGiftcode(
+            houseId: widget.myHouseId,
+            code: code,
+          );
+          if (!mounted) return;
+
+          String displayMessage = result.message;
+          if (result.success) {
+            final days = result.daysAdded ?? 0;
+            if (days > 0) {
+              displayMessage = '🎉 Chúc mừng! Bạn đã nhận thành công $days ngày VIP PRO.';
+            } else {
+              displayMessage = '🎉 Chúc mừng! Bạn đã kích hoạt mã quà tặng thành công.';
+            }
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(displayMessage),
+              backgroundColor: result.success ? Colors.green : Colors.red,
+            ),
+          );
+        } catch (e) {
+          debugPrint('Error redeeming giftcode in chat: $e');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Có lỗi xảy ra khi kích hoạt Giftcode.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        } finally {
+          _isSendingMessage = false;
+        }
+        return;
+      }
+    }
+
     if (!await SecurityService().guardAction(context, 'chat_send_message')) {
       return;
     }
