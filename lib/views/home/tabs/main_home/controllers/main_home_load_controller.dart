@@ -1,4 +1,4 @@
-part of '../../main_home_tab.dart';
+﻿part of '../../main_home_tab.dart';
 
 extension _MainHomeLoadController on _MainHomeTabState {
   int _invalidateLiveWorkSessionImpl() => ++_liveWorkSessionId;
@@ -49,8 +49,6 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _newDeviceNotificationSubscription = null;
     _partnerInboxSubscription?.cancel();
     _partnerInboxSubscription = null;
-    _albumSubscription?.cancel();
-    _albumSubscription = null;
     _noteSubscription?.cancel();
     _noteSubscription = null;
     _homeCalendarSubscription?.cancel();
@@ -118,7 +116,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
           ? data['msg'].toString().trim()
           : msgNewDeviceBody;
 
-      _showLatestSnackBarImpl('⚠️ $title: $body');
+      _showLatestSnackBarImpl('âš ï¸ $title: $body');
     }, onError: (Object error) {
       if (error.toString().contains('permission-denied')) {
         debugPrint(
@@ -849,7 +847,7 @@ extension _MainHomeLoadController on _MainHomeTabState {
 
     final sessionId = _invalidateLiveWorkSessionImpl();
     if (isNewHouseContext) {
-      // ⚡ Chỉ cancel bindings cũ khi đổi nhà context mới, tránh teardown listener rác
+      // âš¡ Chá»‰ cancel bindings cÅ© khi Ä‘á»•i nhÃ  context má»›i, trÃ¡nh teardown listener rÃ¡c
       _cancelLiveWorkBindingsImpl();
     }
 
@@ -922,8 +920,8 @@ extension _MainHomeLoadController on _MainHomeTabState {
           if (!shouldKeepVisibleState) {
             _selectedHomeToolId = null;
             _houseSettings = null;
-            // Giữ presenceData cũ đến khi listener đầu tiên kích hoạt
-            // để tránh flash "trắng" UI khi chỉ thay đổi settings
+            // Giá»¯ presenceData cÅ© Ä‘áº¿n khi listener Ä‘áº§u tiÃªn kÃ­ch hoáº¡t
+            // Ä‘á»ƒ trÃ¡nh flash "tráº¯ng" UI khi chá»‰ thay Ä‘á»•i settings
             _hasLoadedPresenceSnapshot = false;
             _insightData = null;
           }
@@ -985,7 +983,6 @@ extension _MainHomeLoadController on _MainHomeTabState {
         _setupMembersSubscription(houseId, sessionId, isStale, msgMembersFail);
         _setupPresenceSubscription(
             houseId, sessionId, isStale, msgPresenceFail);
-        unawaited(_albumService.cleanupExpiredTrash(houseId));
 
         // Setup presence fallback timer
         _startPresenceSnapshotFallback(sessionId, isStale);
@@ -1027,3 +1024,4 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _lastFetchTime = DateTime.now();
   }
 }
+

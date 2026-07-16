@@ -236,20 +236,21 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                   Row(
                     children: <Widget>[
                       Expanded(
-                        child: Row(
-                          children: List<Widget>.generate(
-                            widget.reel.items.length,
-                            (segmentIndex) {
-                              final isDone = segmentIndex < _index;
-                              final isActive = segmentIndex == _index;
-                              return Expanded(
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                    right: segmentIndex ==
-                                            widget.reel.items.length - 1
-                                        ? 0
-                                        : 4,
-                                  ),
+                        child: Builder(
+                          builder: (context) {
+                            final count = widget.reel.items.length;
+                            final gap = count > 50 ? 0.0 : (count > 25 ? 1.0 : (count > 10 ? 2.0 : 4.0));
+                            return Row(
+                              children: List<Widget>.generate(
+                                count,
+                                (segmentIndex) {
+                                  final isDone = segmentIndex < _index;
+                                  final isActive = segmentIndex == _index;
+                                  return Expanded(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(
+                                        right: segmentIndex == count - 1 ? 0 : gap,
+                                      ),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(999),
                                     child: SizedBox(
@@ -298,10 +299,12 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                               );
                             },
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Material(
+                        );
+                      }
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Material(
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () => Navigator.of(context).maybePop(),

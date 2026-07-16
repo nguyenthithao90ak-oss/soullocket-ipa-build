@@ -1132,7 +1132,7 @@ class FloatingHeartsRingOverlay extends StatefulWidget {
 
 class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  static const int _kCount = 35; // Tăng số lượng hạt lên 35
+  static const int _kCount = 50; // Tăng số lượng hạt lên 50 cho dày hơn nhưng không quá lag
 
   late final List<_HeartParticle> _particles;
   late final AnimationController _animController;
@@ -1197,6 +1197,7 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
       Icons.favorite_rounded,
       Icons.favorite_border_rounded,
       Icons.star_rounded,
+      Icons.favorite,
     ];
 
     _particles = List.generate(_kCount, (i) {
@@ -1205,23 +1206,22 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
       final jitter3 = ((rng ^ (i * 9876543)) & 0xFFFF) / 0xFFFF;
       
       return _HeartParticle(
-        startX: 0.1 + (jitter1 * 0.8), // Phân bố từ 10% đến 90% chiều rộng
-        speed: 0.4 + jitter2 * 0.6,
-        size: 14.0 + (jitter3 * 22.0),
-        wobbleAmplitude: 8.0 + (jitter1 * 20.0),
-        wobbleSpeed: 2.0 + (jitter2 * 4.0),
+        startX: 0.05 + (jitter1 * 0.9), // Phân bố rộng hơn từ 5% đến 95% vì đã có ClipOval
+        speed: 0.3 + jitter2 * 0.7,
+        size: 10.0 + (jitter3 * 28.0), // Size đa dạng hơn
+        wobbleAmplitude: 10.0 + (jitter1 * 30.0),
+        wobbleSpeed: 1.5 + (jitter2 * 4.5),
         phase: jitter1,
-        rotationSpeed: (jitter2 - 0.5) * 4.0, // Xoay trái hoặc phải
+        rotationSpeed: (jitter2 - 0.5) * 5.0, // Xoay nhanh hơn chút
         colorIndex: (jitter3 * _kHeartColors.length).toInt() % _kHeartColors.length,
         icon: iconChoices[(jitter1 * iconChoices.length).toInt() % iconChoices.length],
-        isGlow: jitter2 > 0.7, // 30% hạt có viền sáng
+        isGlow: jitter2 > 0.8, // Giảm tỷ lệ glow xuống 20% để đỡ lag khi tăng số lượng
       );
     });
   }
 
   void _onTick() {
     final progress = _animController.value;
-    // Vẫn giữ lại autoTilt nhẹ nhàng cho khung nền (nếu cần)
     _autoTiltX = math.sin(progress * math.pi * 2 * 6) * 2.0;
     _autoTiltY = math.cos(progress * math.pi * 2 * 6) * 1.5;
   }
@@ -1232,84 +1232,79 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
       child: SizedBox(
         width: widget.size,
         height: widget.size,
-        // Không dùng ClipRRect để hạt có thể lơ lửng mờ ảo ra rìa một chút
         child: AnimatedBuilder(
           animation: _animController,
           builder: (context, _) {
             final progress = _animController.value;
 
             return RepaintBoundary(
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: List.generate(_kCount, (i) {
-                  final p = _particles[i];
-                  
-                  // Tính toán tiến trình vòng lặp của hạt này (từ 0.0 đến 1.0)
-                  final double localProgress = (progress * p.speed + p.phase) % 1.0;
-                  
-                  // Bay từ dưới lên trên: y = 1.1 -> -0.1
-                  final double cy = widget.size * (1.1 - localProgress * 1.2);
-                  
-                  // Lắc lư ngang theo hình sin
-                  final double t = math.sin(localProgress * p.wobbleSpeed * 2 * math.pi);
-                  final double cx = (widget.size * p.startX) + (t * p.wobbleAmplitude) + _autoTiltX;
+              child: ClipOval(
+                child: Stack(
+                  clipBehavior: Clip.hardEdge,
+                  children: List.generate(_kCount, (i) {
+                    final p = _particles[i];
+                    
+                    final double localProgress = (progress * p.speed + p.phase) % 1.0;
+                    
+                    // Bay từ dưới lên trên: y = 1.1 -> -0.1
+                    final double cy = widget.size * (1.1 - localProgress * 1.2);
+                    
+                    // Lắc lư ngang theo hình sin
+                    final double t = math.sin(localProgress * p.wobbleSpeed * 2 * math.pi);
+                    final double cx = (widget.size * p.startX) + (t * p.wobbleAmplitude) + _autoTiltX;
 
-                  // Tính độ mờ (fade in/fade out)
-                  double opacity = 1.0;
-                  if (localProgress < 0.1) {
-                    opacity = localProgress / 0.1; // Fade in ở 10% đầu
-                  } else if (localProgress > 0.8) {
-                    opacity = (1.0 - localProgress) / 0.2; // Fade out ở 20% cuối
-                  }
-                  
-                  // Scale up lúc mới xuất hiện
-                  final double scale = localProgress < 0.1 ? (localProgress / 0.1) : 1.0;
-                  
-                  // Xoay tròn
-                  final double angle = localProgress * p.rotationSpeed * math.pi;
+                    double opacity = 1.0;
+                    if (localProgress < 0.1) {
+                      opacity = localProgress / 0.1;
+                    } else if (localProgress > 0.85) {
+                      opacity = (1.0 - localProgress) / 0.15;
+                    }
+                    
+                    final double scale = localProgress < 0.1 ? (localProgress / 0.1) : 1.0;
+                    final double angle = localProgress * p.rotationSpeed * math.pi;
+                    final Color baseColor = _kHeartColors[p.colorIndex];
 
-                  final Color baseColor = _kHeartColors[p.colorIndex];
-
-                  return Positioned(
-                    left: cx - p.size / 2,
-                    top: cy - p.size / 2,
-                    child: Opacity(
-                      opacity: opacity.clamp(0.0, 1.0),
-                      child: Transform.translate(
-                        offset: Offset(0, _autoTiltY), // Thêm độ nảy nhè nhẹ
-                        child: Transform.rotate(
-                          angle: angle,
-                          child: Transform.scale(
-                            scale: scale,
-                            child: p.isGlow 
-                              ? Container(
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: baseColor.withValues(alpha: 0.6),
-                                        blurRadius: 12,
-                                        spreadRadius: 2,
-                                      ),
-                                    ]
-                                  ),
-                                  child: Icon(
+                    return Positioned(
+                      left: cx - p.size / 2,
+                      top: cy - p.size / 2,
+                      child: Opacity(
+                        opacity: opacity.clamp(0.0, 1.0),
+                        child: Transform.translate(
+                          offset: Offset(0, _autoTiltY),
+                          child: Transform.rotate(
+                            angle: angle,
+                            child: Transform.scale(
+                              scale: scale,
+                              child: p.isGlow 
+                                ? Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: baseColor.withValues(alpha: 0.5),
+                                          blurRadius: 10,
+                                          spreadRadius: 1,
+                                        ),
+                                      ]
+                                    ),
+                                    child: Icon(
+                                      p.icon,
+                                      size: p.size,
+                                      color: baseColor,
+                                    ),
+                                  )
+                                : Icon(
                                     p.icon,
                                     size: p.size,
-                                    color: baseColor,
+                                    color: baseColor.withValues(alpha: 0.9),
                                   ),
-                                )
-                              : Icon(
-                                  p.icon,
-                                  size: p.size,
-                                  color: baseColor.withValues(alpha: 0.85),
-                                ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                }),
+                    );
+                  }),
+                ),
               ),
             );
           },

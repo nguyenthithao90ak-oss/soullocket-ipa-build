@@ -726,6 +726,16 @@ extension _SettingsTabShell on _SettingsTabState {
             isDark: isDark,
             onTap: _rateApp,
           ),
+          _buildDivider(isDark),
+          _buildiOSRow(
+            icon: Icons.display_settings_rounded,
+            iconBgColor: const Color(0xFFBA68C8),
+            title: 'Cài đặt hiển thị',
+            isDark: isDark,
+            onTap: () {
+              _showToast('Tính năng đang phát triển nhé', success: true);
+            },
+          ),
         ], isDark),
 
         _buildiOSSectionCard([

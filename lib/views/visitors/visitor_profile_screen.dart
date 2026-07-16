@@ -262,8 +262,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       ),
       compressFormat: ImageCompressFormat.jpg,
       compressQuality: 80,
-      maxWidth: 1600,
-      maxHeight: 1280,
+      maxWidth: 1080,
+      maxHeight: 1080,
       uiSettings: [
         IOSUiSettings(
           title: 'Cắt ảnh nền hồ sơ',
@@ -289,8 +289,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
         aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
         compressFormat: ImageCompressFormat.jpg,
         compressQuality: 82,
-        maxWidth: 1080,
-        maxHeight: 1080,
+        maxWidth: 800,
+        maxHeight: 800,
         uiSettings: [
           IOSUiSettings(
             title: 'Cắt avatar hồ sơ',

@@ -106,6 +106,11 @@ extension _SoulBlockBootstrap on _SoulBlockGameState {
       return;
     }
 
+    // Không hiển thị quảng cáo nếu người dùng đang dùng VIP/Pro
+    if (await _adMob.isProUser()) {
+      return;
+    }
+
     final banner = await _adMob.createBannerAd(
       onAdLoaded: (_) {
         if (mounted) {

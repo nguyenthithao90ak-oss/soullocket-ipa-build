@@ -2,20 +2,7 @@ part of '../../main_home_tab.dart';
 
 extension _MainHomeListeners on _MainHomeTabState {
   void _listenHighlights(String houseId) {
-    _albumSubscription?.cancel();
     _noteSubscription?.cancel();
-
-    unawaited(_albumService.migrateAlbumFromRTDB(houseId));
-
-    _albumSubscription = _albumService.streamAlbum(houseId).listen((items) {
-      final nextAlbumHighlights = items
-          .where((item) => item.type.trim().toLowerCase() == 'image')
-          .toList(growable: false);
-      if (_sameAlbumHighlights(_albumHighlights, nextAlbumHighlights)) {
-        return;
-      }
-      _albumHighlights = nextAlbumHighlights;
-    });
 
     _noteSubscription = _noteService.streamNotes(houseId).listen((items) {
       final nextNoteHighlights = items.take(4).toList(growable: false);

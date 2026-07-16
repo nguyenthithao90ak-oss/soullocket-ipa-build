@@ -99,6 +99,10 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
   DateTime? _selectedMonth; // only year/month used, day = 1
   List<DateTime> _availableMonths = [];
 
+  // Scroll indicator state
+  final ValueNotifier<({bool isVisible, String label, double fraction})> _scrollIndicatorNotifier = ValueNotifier((isVisible: false, label: '', fraction: 0.0));
+  Timer? _hideIndicatorTimer;
+
   @override
   void initState() {
     super.initState();
@@ -109,6 +113,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _scrollIndicatorNotifier.dispose();
+    _hideIndicatorTimer?.cancel();
     super.dispose();
   }
 
@@ -196,16 +202,30 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
     );
   }
 
-  /// Filter flattened items by selected month
   List<DiaryMemoryFlattenedItem> _filterByMonth(
     List<DiaryMemoryFlattenedItem> items,
   ) {
     if (_selectedMonth == null || _availableMonths.length <= 1) return items;
-    return items.where((item) {
-      if (!item.isHeader || item.date == null) return true;
-      final d = item.date!;
-      return d.year == _selectedMonth!.year && d.month == _selectedMonth!.month;
-    }).toList();
+    
+    final filtered = <DiaryMemoryFlattenedItem>[];
+    bool includeCurrentGroup = false;
+    
+    for (final item in items) {
+      if (item.isHeader) {
+        final d = item.date;
+        if (d != null && d.year == _selectedMonth!.year && d.month == _selectedMonth!.month) {
+          includeCurrentGroup = true;
+          filtered.add(item);
+        } else {
+          includeCurrentGroup = false;
+        }
+      } else {
+        if (includeCurrentGroup) {
+          filtered.add(item);
+        }
+      }
+    }
+    return filtered;
   }
 
   /// Filter raw photos list by selected month
@@ -328,6 +348,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                       var visiblePhotoCount = 0;
                       var showingCache = false;
                       var filteredCount = 0;
+                      var filteredItems = <DiaryMemoryFlattenedItem>[];
 
                       final waitingForLive = !isOffline &&
                           snapshot.connectionState == ConnectionState.waiting;
@@ -379,7 +400,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                           }
 
                           // Apply month filter
-                          final filteredItems = _filterByMonth(flattenedItems);
+                          filteredItems = _filterByMonth(flattenedItems);
                           final filteredPhotos = _filterPhotosByMonth(photos);
                           filteredCount = _selectedMonth == null
                               ? visiblePhotoCount
@@ -521,45 +542,121 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                         }
                       }
 
-                      return RawScrollbar(
-                        controller: _scrollController,
-                        thumbColor:
-                            const Color(0xFFD81B60).withValues(alpha: 0.6),
-                        radius: const Radius.circular(8),
-                        thickness: 6,
-                        interactive: true,
-                        mainAxisMargin: 32,
-                        crossAxisMargin: 2,
-                        child: CustomScrollView(
-                          key: const ValueKey('memory_content'),
-                          controller: _scrollController,
-                          physics: const BouncingScrollPhysics(),
-                          slivers: [
-                            if (widget.header != null)
-                              SliverSafeArea(
-                                bottom: false,
-                                sliver: SliverToBoxAdapter(child: widget.header!),
-                              ),
-                            SliverToBoxAdapter(
-                              child: _DiaryMemoryHeroCard(
-                                totalPhotos: filteredCount,
-                                isOffline: isOffline,
-                                showingCache: showingCache,
-                                onAdd: _handleAddMemory,
-                                hasPendingUploadRetry:
-                                    widget.hasPendingUploadRetry,
-                                pendingUploadMessage:
-                                    widget.pendingUploadMessage,
-                                onRetryPendingUpload: _handleRetryPendingUpload,
-                                isUploading: _isUploadingMemory,
+                      return Stack(
+                        children: [
+                          NotificationListener<ScrollNotification>(
+                            onNotification: (notification) {
+                              if (filteredItems.isEmpty) return false;
+                              if (notification is ScrollUpdateNotification || notification is ScrollStartNotification) {
+                                final maxExt = notification.metrics.maxScrollExtent;
+                                if (maxExt <= 0) return false;
+                                
+                                double fraction = notification.metrics.pixels / maxExt;
+                                fraction = fraction.clamp(0.0, 1.0);
+                                
+                                final index = (fraction * (filteredItems.length - 1)).round();
+                                final item = filteredItems[index];
+                                final d = item.date;
+                                final label = d != null ? DateFormat('dd/MM/yyyy').format(d) : '';
+                                
+                                _scrollIndicatorNotifier.value = (isVisible: true, label: label, fraction: fraction);
+                                
+                                _hideIndicatorTimer?.cancel();
+                                _hideIndicatorTimer = Timer(const Duration(milliseconds: 1200), () {
+                                  _scrollIndicatorNotifier.value = (isVisible: false, label: _scrollIndicatorNotifier.value.label, fraction: _scrollIndicatorNotifier.value.fraction);
+                                });
+                              }
+                              return false;
+                            },
+                            child: RawScrollbar(
+                              controller: _scrollController,
+                              thumbColor: const Color(0xFFD81B60).withValues(alpha: 0.6),
+                              radius: const Radius.circular(8),
+                              thickness: 6,
+                              interactive: true,
+                              mainAxisMargin: 32,
+                              crossAxisMargin: 2,
+                              child: CustomScrollView(
+                                key: const ValueKey('memory_content'),
+                                controller: _scrollController,
+                                physics: const BouncingScrollPhysics(),
+                                slivers: [
+                                  if (widget.header != null)
+                                    SliverSafeArea(
+                                      bottom: false,
+                                      sliver: SliverToBoxAdapter(child: widget.header!),
+                                    ),
+                                  SliverToBoxAdapter(
+                                    child: _DiaryMemoryHeroCard(
+                                      totalPhotos: filteredCount,
+                                      isOffline: isOffline,
+                                      showingCache: showingCache,
+                                      onAdd: _handleAddMemory,
+                                      hasPendingUploadRetry: widget.hasPendingUploadRetry,
+                                      pendingUploadMessage: widget.pendingUploadMessage,
+                                      onRetryPendingUpload: _handleRetryPendingUpload,
+                                      isUploading: _isUploadingMemory,
+                                    ),
+                                  ),
+                                  ...bodySlivers,
+                                  const SliverPadding(
+                                    padding: EdgeInsets.only(bottom: 128),
+                                  ),
+                                ],
                               ),
                             ),
-                            ...bodySlivers,
-                            const SliverPadding(
-                              padding: EdgeInsets.only(bottom: 128),
-                            ),
-                          ],
-                        ),
+                          ),
+                          ValueListenableBuilder<({bool isVisible, String label, double fraction})>(
+                            valueListenable: _scrollIndicatorNotifier,
+                            builder: (context, state, _) {
+                              if (state.label.isEmpty) return const SizedBox.shrink();
+                              final topMargin = 80.0;
+                              final bottomMargin = 120.0;
+                              final availableHeight = MediaQuery.of(context).size.height - topMargin - bottomMargin;
+                              final topPos = topMargin + state.fraction * availableHeight;
+                              
+                              return Positioned(
+                                right: 16,
+                                top: topPos,
+                                child: IgnorePointer(
+                                  child: AnimatedOpacity(
+                                    duration: const Duration(milliseconds: 200),
+                                    opacity: state.isVisible ? 1.0 : 0.0,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFD81B60),
+                                        borderRadius: BorderRadius.circular(20),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFFD81B60).withValues(alpha: 0.4),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            state.label,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 14),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       );
                     },
                   );

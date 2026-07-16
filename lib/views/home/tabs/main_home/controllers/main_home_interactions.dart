@@ -157,14 +157,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
         '${_currentRole}_${user.uid}_${nowMs}_${_random.nextInt(999999)}';
     final preset = _maybePresetForInteractionType(type);
 
-    // Chọn ngẫu nhiên 1 ảnh kỷ niệm (nếu có)
     String? randomImageUrl;
-    final imageAlbum = _albumHighlights
-        .where((item) => item.url.trim().isNotEmpty)
-        .toList(growable: false);
-    if (imageAlbum.isNotEmpty) {
-      randomImageUrl = imageAlbum[_random.nextInt(imageAlbum.length)].url;
-    }
 
     final flight = _HomeReactionFlight(
       id: eventId,

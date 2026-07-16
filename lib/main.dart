@@ -14,6 +14,7 @@ import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:tiktok_business_sdk/tiktok_business_sdk.dart';
 import 'package:flutter/foundation.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/secure_storage_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -262,6 +263,7 @@ void overlayMain() async {
 void main() {
   runZonedGuarded(() async {
     final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+    await Hive.initFlutter();
     setupLocator();
     FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
     _configureRenderingDefaults();
@@ -821,6 +823,7 @@ Future<void> _purgeDeprecatedSecretsDeferred() async {
 
 Future<void> _warmUpOfflineCache() async {
   try {
+    
     await OfflineCacheService.initialize();
   } catch (e) {
     debugPrint('Prefs init error: ${AppErrorMapper.resolve(

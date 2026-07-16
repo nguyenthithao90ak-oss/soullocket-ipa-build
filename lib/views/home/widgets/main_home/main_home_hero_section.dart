@@ -117,6 +117,9 @@ class _ModernHomeBody extends StatelessWidget {
               desktopMax: 680,
             );
             Widget buildCountdown(bool isSwiping) {
+              final int currentDays = int.tryParse(circleValue) ?? 0;
+              final bool isMilestone = currentDays > 0 && (currentDays % 100 == 0 || currentDays % 30 == 0 || currentDays % 365 == 0);
+              
               return ValueListenableBuilder<bool>(
                 valueListenable: state._isScrollingNotifier,
                 builder: (context, isScrolling, _) {
@@ -134,6 +137,7 @@ class _ModernHomeBody extends StatelessWidget {
                     showDayCounter: showDayCounter,
                     showLoveTimeDetail: showLoveTimeDetail,
                     countdownStyleKey: countdownStyleKey,
+                    isMilestone: isMilestone,
                     enableMotion: effectProfile.animationEnabled &&
                         !state._deferHeavyHomeMotion &&
                         !isSwiping &&

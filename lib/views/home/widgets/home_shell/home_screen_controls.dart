@@ -65,9 +65,9 @@ extension _HomeScreenShellControls on _HomeScreenState {
           },
         );
       },
-    );
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildExpandedBottomNav({
     required bool isDark,
@@ -154,7 +154,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
               ),
             ),
             Positioned(
-              top: 0,
+              top: 12, // Moved down to be inside the rounded block
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -162,31 +162,16 @@ extension _HomeScreenShellControls on _HomeScreenState {
                   onLongPress: _hideBottomNavForSession,
                   borderRadius: SLRadius.pillAll,
                   child: Ink(
-                    width: 28,
-                    height: 10,
+                    width: 40,
+                    height: 20, // Slightly larger hit area
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.12)
-                          : Colors.white,
+                      color: Colors.transparent,
                       borderRadius: SLRadius.pillAll,
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.1)
-                            : accent.withValues(alpha: 0.20),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black
-                              .withValues(alpha: isDark ? 0.2 : 0.06),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
                     ),
                     child: Center(
                       child: Icon(
                         Icons.keyboard_arrow_down_rounded,
-                        size: 10,
+                        size: 16, // Slightly larger to be visible without background
                         color: isDark
                             ? Colors.white.withValues(alpha: 0.8)
                             : accent.withValues(alpha: 0.9),
@@ -246,30 +231,10 @@ extension _HomeScreenShellControls on _HomeScreenState {
                   ),
                 ),
                 child: Center(
-                  child: SizedBox(
-                    width: 14,
-                    height: 10,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Positioned(
-                          top: -5,
-                          child: Icon(
-                            Icons.keyboard_arrow_up_rounded,
-                            size: 14,
-                            color: isDark ? Colors.white : accent,
-                          ),
-                        ),
-                        Positioned(
-                          bottom: -5,
-                          child: Icon(
-                            Icons.keyboard_arrow_up_rounded,
-                            size: 14,
-                            color: isDark ? Colors.white : accent,
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: Icon(
+                    Icons.keyboard_arrow_up_rounded,
+                    size: 16,
+                    color: isDark ? Colors.white : accent,
                   ),
                 ),
               ),
@@ -352,7 +317,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
                   ),
                 ),
               ],
-            ),
+            ).animate(target: isActive ? 1 : 0).shimmer(duration: 400.ms).scaleXY(begin: 0.95, end: 1.0, duration: 200.ms, curve: Curves.easeOutBack),
           ),
         ),
       ),

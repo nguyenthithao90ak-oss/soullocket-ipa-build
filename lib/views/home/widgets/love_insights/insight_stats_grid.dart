@@ -50,21 +50,10 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
             final card = cards[index];
             return SizedBox(
               width: itemWidth,
-              child: TweenAnimationBuilder<double>(
-                tween: Tween<double>(begin: 0.0, end: 1.0),
-                duration: Duration(milliseconds: 500 + (index * 150)),
-                curve: Curves.easeOutQuart,
-                builder: (context, value, child) {
-                  return Transform.scale(
-                    scale: 0.9 + (0.1 * value),
-                    child: Opacity(
-                      opacity: value,
-                      child: child,
-                    ),
-                  );
-                },
-                child: _buildMetricCard(card),
-              ),
+              child: _buildMetricCard(card).animate()
+                  .fade(duration: 600.ms, delay: (150 * index).ms)
+                  .slideY(begin: 0.15, end: 0, duration: 600.ms, delay: (150 * index).ms, curve: Curves.easeOutBack)
+                  .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1), duration: 600.ms, delay: (150 * index).ms, curve: Curves.easeOutBack),
             );
           }),
         );

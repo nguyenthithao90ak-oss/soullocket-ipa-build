@@ -468,11 +468,18 @@ class _WavePainter extends CustomPainter {
     double radius,
   ) {
     if (quality != 'low') {
-      // Pulsing ring - nhẹ, chỉ drawCircle, có lệch nhẹ theo nghiêng
-      // Giảm alpha cho balanced để sóng không quá sáng
+      // Premium pulsing ring with gradient
       final ringAlphaFactor = quality == 'balanced' ? 0.72 : 1.0;
+      
       final ringPaint1 = Paint()
-        ..color = const Color(0xFFFFC6DA).withValues(alpha: 0.13 * (1 - animationValue) * ringAlphaFactor)
+        ..shader = ui.Gradient.radial(
+          center,
+          radius,
+          [
+            const Color(0xFFFFC6DA).withValues(alpha: 0.2 * (1 - animationValue) * ringAlphaFactor),
+            const Color(0xFFFF9EBB).withValues(alpha: 0.0),
+          ],
+        )
         ..style = PaintingStyle.fill;
       canvas.drawCircle(
         Offset(center.dx + tiltX * 0.3, center.dy + tiltY * 0.3),
@@ -482,7 +489,14 @@ class _WavePainter extends CustomPainter {
 
       final phase2 = (animationValue + 0.5) % 1.0;
       final ringPaint2 = Paint()
-        ..color = const Color(0xFFFF9EBB).withValues(alpha: 0.08 * (1 - phase2) * ringAlphaFactor)
+        ..shader = ui.Gradient.radial(
+          center,
+          radius,
+          [
+            const Color(0xFFFF9EBB).withValues(alpha: 0.15 * (1 - phase2) * ringAlphaFactor),
+            const Color(0xFFFF4D94).withValues(alpha: 0.0),
+          ],
+        )
         ..style = PaintingStyle.fill;
       canvas.drawCircle(
         Offset(center.dx + tiltX * 0.3, center.dy + tiltY * 0.3),
@@ -491,19 +505,28 @@ class _WavePainter extends CustomPainter {
       );
     }
 
-    void drawWave(
-      Color color,
-      double amplitude,
-      double frequency,
-      double phaseShift,
-      double verticalOffset,
-    ) {
-      final paint = Paint()
-        ..color = color
-        ..style = PaintingStyle.fill;
-
+    void drawPremiumWave({
+      required List<Color> colors,
+      required double amplitude,
+      required double frequency,
+      required double phaseShift,
+      required double verticalOffset,
+      bool useBlur = false,
+    }) {
       final yBase = height * verticalOffset + (tiltY * 0.75);
       final tiltAmount = tiltX * 3.5;
+
+      final paint = Paint()
+        ..shader = ui.Gradient.linear(
+          Offset(0, yBase - amplitude),
+          Offset(0, height),
+          colors,
+        )
+        ..style = PaintingStyle.fill;
+        
+      if (useBlur && quality == 'high') {
+        paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 8.0);
+      }
 
       final step = quality == 'high' ? 8.0 : 16.0;
       final path = Path()..moveTo(0, height);
@@ -530,50 +553,33 @@ class _WavePainter extends CustomPainter {
       canvas.drawPath(path, paint);
     }
 
-    void drawWaveBezier(
-      Color color,
-      double amplitude,
-      double phaseShift,
-      double verticalOffset,
-    ) {
-      final paint = Paint()
-        ..color = color
-        ..style = PaintingStyle.fill;
-
-      final yBase = height * verticalOffset + (tiltY * 0.75);
-      final t = animationValue * pi * 2 + phaseShift;
-
-      final tiltAmount = tiltX * 3.5;
-      final y0 = yBase + sin(t) * amplitude - tiltAmount;
-      final y1 = yBase + sin(t + pi * 0.5) * amplitude - tiltAmount * 0.5;
-      final y2 = yBase + sin(t + pi) * amplitude;
-      final y3 = yBase + sin(t + pi * 1.5) * amplitude + tiltAmount * 0.5;
-      final yLast = yBase + sin(t + pi * 2) * amplitude + tiltAmount;
-
-      final path = Path()
-        ..moveTo(0, height)
-        ..lineTo(0, y0)
-        ..cubicTo(width * 0.25, y1, width * 0.5, y2, width * 0.75, y3)
-        ..cubicTo(width * 0.88, yBase + sin(t + pi * 1.75) * amplitude + tiltAmount * 0.8, width, yLast, width, yLast)
-        ..lineTo(width, height)
-        ..close();
-
-      canvas.drawPath(path, paint);
-    }
-
     final double shakeAmpMultiplier = 1.0 + shakeIntensity * 1.5;
+    
+    // Nâng cấp: Dùng Gradient dọc tạo chiều sâu (Premium Gradient Waves)
+    final wave1Colors = [
+      const Color(0xFFFFC6DA).withValues(alpha: 0.35),
+      const Color(0xFFFFE0EB).withValues(alpha: 0.1),
+    ];
+    final wave2Colors = [
+      const Color(0xFFFF9EBB).withValues(alpha: 0.45),
+      const Color(0xFFFFC6DA).withValues(alpha: 0.15),
+    ];
+    final wave3Colors = [
+      const Color(0xFFFF72A3).withValues(alpha: 0.55),
+      const Color(0xFFFF9EBB).withValues(alpha: 0.25),
+    ];
+
     if (quality == 'low') {
-      drawWaveBezier(const Color(0xFFFFC6DA).withValues(alpha: 0.32), 18 * shakeAmpMultiplier, 0, 0.55);
-      drawWaveBezier(const Color(0xFFFFB1CA).withValues(alpha: 0.40), 10 * shakeAmpMultiplier, pi, 0.65);
+      drawPremiumWave(colors: wave1Colors, amplitude: 18 * shakeAmpMultiplier, frequency: 1.0, phaseShift: 0, verticalOffset: 0.55);
+      drawPremiumWave(colors: wave3Colors, amplitude: 10 * shakeAmpMultiplier, frequency: 1.5, phaseShift: pi, verticalOffset: 0.65);
     } else if (quality == 'balanced') {
-      // Balanced: giảm alpha ~25% để sóng không quá chói
-      drawWave(const Color(0xFFFFC6DA).withValues(alpha: 0.24), 18 * shakeAmpMultiplier, 1.0, 0, 0.55);
-      drawWave(const Color(0xFFFF9EBB).withValues(alpha: 0.19), 14 * shakeAmpMultiplier, 1.2, pi / 2, 0.60);
-      drawWave(const Color(0xFFFFB1CA).withValues(alpha: 0.30), 10 * shakeAmpMultiplier, 1.5, pi, 0.65);
+      drawPremiumWave(colors: wave1Colors, amplitude: 18 * shakeAmpMultiplier, frequency: 1.0, phaseShift: 0, verticalOffset: 0.55);
+      drawPremiumWave(colors: wave2Colors, amplitude: 14 * shakeAmpMultiplier, frequency: 1.2, phaseShift: pi / 2, verticalOffset: 0.60);
+      drawPremiumWave(colors: wave3Colors, amplitude: 10 * shakeAmpMultiplier, frequency: 1.5, phaseShift: pi, verticalOffset: 0.65);
     } else {
-      drawWave(const Color(0xFFFFC6DA).withValues(alpha: 0.32), 18 * shakeAmpMultiplier, 1.0, 0, 0.55);
-      drawWave(const Color(0xFFFF9EBB).withValues(alpha: 0.26), 14 * shakeAmpMultiplier, 1.2, pi / 2, 0.60);
-      drawWave(const Color(0xFFFFB1CA).withValues(alpha: 0.40), 10 * shakeAmpMultiplier, 1.5, pi, 0.65);
+      drawPremiumWave(colors: wave1Colors, amplitude: 18 * shakeAmpMultiplier, frequency: 1.0, phaseShift: 0, verticalOffset: 0.55, useBlur: true);
+      drawPremiumWave(colors: wave2Colors, amplitude: 14 * shakeAmpMultiplier, frequency: 1.2, phaseShift: pi / 2, verticalOffset: 0.60, useBlur: true);
+      drawPremiumWave(colors: wave3Colors, amplitude: 10 * shakeAmpMultiplier, frequency: 1.5, phaseShift: pi, verticalOffset: 0.65);
     }
   }
 

@@ -89,6 +89,7 @@ class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
         width: widget.width,
         height: widget.height,
         fit: widget.fit,
+        frameRate: const FrameRate(30),
         errorBuilder: (context, error, stackTrace) =>
             widget.errorWidget ?? const SizedBox.shrink(),
       );
@@ -99,6 +100,7 @@ class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
       width: widget.width,
       height: widget.height,
       fit: widget.fit,
+      frameRate: const FrameRate(30),
       errorBuilder: (context, error, stackTrace) =>
           widget.errorWidget ?? const SizedBox.shrink(),
     );

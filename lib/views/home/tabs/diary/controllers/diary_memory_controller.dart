@@ -17,7 +17,7 @@ import '../../../../../utils/services/private_media_url_service.dart';
 import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/services/map_pin_limit_service.dart';
 import '../../../../../utils/services/activity_history_service.dart';
-import '../../../../../utils/services/album_service.dart';
+import '../../../../../utils/helpers/date_highlight_helper.dart';
 import '../../../../../utils/services/l10n_service.dart';
 import '../../../../../utils/services/notification_service.dart';
 import '../../../../../utils/services/offline_cache_service.dart';
@@ -813,7 +813,7 @@ class DiaryMemoryController extends ChangeNotifier {
 
     for (final group in groupedPhotos) {
       final dateString = DateFormat('dd/MM/yyyy').format(group.date);
-      final highlights = AlbumService().getDateHighlights(
+      final highlights = DateHighlightHelper.getDateHighlights(
         group.date.millisecondsSinceEpoch,
         anniversaryDate: startDate,
         includeSpecialDays: relationshipMode != 'single',

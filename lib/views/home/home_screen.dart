@@ -23,6 +23,7 @@ import '../../utils/services/offline_cache_service.dart';
 import '../../core/sl_route.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/auth_service.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../utils/services/device_manager_service.dart';
 import '../../utils/services/friends_service.dart';
 import '../../utils/services/house_service.dart';

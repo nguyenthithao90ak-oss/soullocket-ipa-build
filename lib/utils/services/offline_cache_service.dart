@@ -1,10 +1,12 @@
 import 'dart:convert';
-
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class OfflineCacheService {
   static final OfflineCacheService instance = OfflineCacheService._internal();
   static SharedPreferences? _cachedPrefs;
+  static Box? _hiveBox;
   static Future<void>? _initializingPrefs;
 
   // RAM Cache — giới hạn 50 entries tránh memory leak
@@ -63,7 +65,7 @@ class OfflineCacheService {
   }
 
   static Future<void> initialize() async {
-    if (_cachedPrefs != null) {
+    if (_cachedPrefs != null && _hiveBox != null) {
       return;
     }
     if (_initializingPrefs != null) {
@@ -71,9 +73,34 @@ class OfflineCacheService {
       return;
     }
 
-    final task = SharedPreferences.getInstance().then((prefs) {
-      _cachedPrefs = prefs;
-    });
+    final task = () async {
+      _cachedPrefs = await SharedPreferences.getInstance();
+      _hiveBox = await Hive.openBox('offline_cache');
+      
+      // MIGRATION: Copy các dữ liệu đệm nặng (offline_cache_) từ SharedPreferences sang Hive
+      final prefs = _cachedPrefs!;
+      const migrationKey = 'hive_migration_done';
+      if (!(prefs.getBool(migrationKey) ?? false)) {
+        try {
+          final keysToMigrate = prefs
+              .getKeys()
+              .where((k) => k.startsWith('offline_cache_'))
+              .toList();
+          for (final k in keysToMigrate) {
+            final raw = prefs.getString(k);
+            if (raw != null) {
+              await _hiveBox!.put(k, raw);
+            }
+            await prefs.remove(k);
+          }
+          await prefs.setBool(migrationKey, true);
+          debugPrint('OfflineCacheService: Migrated ${keysToMigrate.length} items to Hive.');
+        } catch (e) {
+          debugPrint('OfflineCacheService: Migration error: $e');
+        }
+      }
+    }();
+    
     _initializingPrefs = task;
     try {
       await task;
@@ -86,31 +113,32 @@ class OfflineCacheService {
 
   static Future<void> saveCache(String key, dynamic data) async {
     final cacheKey = _cacheKey(key);
-    final prefs = await getPrefs();
-    await prefs.setString(cacheKey, jsonEncode(data));
+    await initialize(); // Đảm bảo đã khởi tạo
+    final raw = jsonEncode(data);
+    await _hiveBox?.put(cacheKey, raw);
   }
 
   static Future<dynamic> loadCache(String key) async {
     final cacheKey = _cacheKey(key);
-    final prefs = await getPrefs();
-    final raw = prefs.getString(cacheKey);
+    await initialize();
+    final raw = _hiveBox?.get(cacheKey);
     if (raw == null) return null;
     try {
       return jsonDecode(raw);
     } catch (_) {
-      await prefs.remove(cacheKey);
+      await _hiveBox?.delete(cacheKey);
       return null;
     }
   }
 
   static dynamic loadCacheSync(String key) {
     final cacheKey = _cacheKey(key);
-    final raw = _cachedPrefs?.getString(cacheKey);
+    final raw = _hiveBox?.get(cacheKey);
     if (raw == null) return null;
     try {
       return jsonDecode(raw);
     } catch (_) {
-      _cachedPrefs?.remove(cacheKey);
+      _hiveBox?.delete(cacheKey);
       return null;
     }
   }
@@ -121,18 +149,14 @@ class OfflineCacheService {
 
   static Future<void> deleteCache(String key) async {
     final cacheKey = _cacheKey(key);
-    final prefs = await getPrefs();
-    await prefs.remove(cacheKey);
+    await initialize();
+    await _hiveBox?.delete(cacheKey);
   }
 
   static Future<void> clearAllCache() async {
     clearAllMemoryCache();
-    final prefs = await getPrefs();
-    final keys =
-        prefs.getKeys().where((k) => k.startsWith('offline_cache_')).toList();
-    if (keys.isNotEmpty) {
-      await Future.wait(keys.map((key) => prefs.remove(key)));
-    }
+    await initialize();
+    await _hiveBox?.clear();
   }
 }
 

@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../utils/services/love_insight_service.dart';
 import '../../utils/services/offline_cache_service.dart';
 import '../../utils/services/l10n_service.dart';

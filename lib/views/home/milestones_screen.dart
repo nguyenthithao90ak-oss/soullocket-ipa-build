@@ -267,7 +267,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
       try {
         final startDt = DateTime.parse(widget.startDate!);
         final startDtMidnight = DateTime(startDt.year, startDt.month, startDt.day);
-        daysLove = todayMidnight.difference(startDtMidnight).inDays + 1;
+        daysLove = todayMidnight.difference(startDtMidnight).inDays;
       } catch (_) {}
     }
 

@@ -290,12 +290,15 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void _handleAuthAction() async {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+  Future<void> _handleAuthAction() async {
+    FocusScope.of(context).unfocus();
+
+    final email = _emailController.text.trim().toLowerCase();
+    final password = _passwordController.text;
     var shouldClearPendingHouseSetupDraft = false;
     var handedOffToAppEntry = false;
     String? sessionRole;
+    bool didAutoLogin = false;
 
     if (email.isEmpty || password.isEmpty) {
       _showErrorDialog(
@@ -369,20 +372,30 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
 
-      final relationshipMode = await _ensureRelationshipModeSelected(email);
-      if (relationshipMode == null) {
-        return;
-      }
+      setState(() => _isLoading = true);
+      try {
+        await _authService.signInWithEmailPassword(email, password);
+        didAutoLogin = true;
+        setState(() => _isLoginTab = true);
+      } catch (_) {}
+      if (mounted) setState(() => _isLoading = false);
 
-      sessionRole = await _askGender(email);
-      if (sessionRole == null) {
-        return;
-      }
+      if (!didAutoLogin) {
+        final relationshipMode = await _ensureRelationshipModeSelected(email);
+        if (relationshipMode == null) {
+          return;
+        }
 
-      if (_failedAuthAttempts >= 2) {
-        final passed = await _showMathCaptcha();
-        if (!passed) return;
-        if (!mounted) return;
+        sessionRole = await _askGender(email);
+        if (sessionRole == null) {
+          return;
+        }
+
+        if (_failedAuthAttempts >= 2) {
+          final passed = await _showMathCaptcha();
+          if (!passed) return;
+          if (!mounted) return;
+        }
       }
     } else {
       sessionRole = await _readSavedGender(email);
@@ -431,7 +444,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
         _rememberProxyStateAtLogin();
 
-        await _authService.signInWithEmailPassword(email, password);
+        if (!didAutoLogin) {
+          await _authService.signInWithEmailPassword(email, password);
+        }
 
         final prefs = await SharedPreferences.getInstance();
         if (_rememberMe) {

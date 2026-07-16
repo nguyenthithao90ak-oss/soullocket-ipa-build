@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 import 'package:soullocket_app/core/sl_page_physics.dart';
 import 'dart:math' as math;
 
@@ -313,19 +314,47 @@ class _CinemaScreenState extends State<CinemaScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF09121E),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: <Color>[
-              Color(0xFF08111D),
-              Color(0xFF121728),
-              Color(0xFF1A1020),
-            ],
-          ),
-        ),
-        child: Stack(
+      body: Stack(
+        children: <Widget>[
+          if (reel != null && reel.items.isNotEmpty)
+            Positioned.fill(
+              child: AnimatedSwitcher(
+                duration: const Duration(seconds: 1),
+                child: Container(
+                  key: ValueKey<String>(reel.items.first.imageUrl),
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: reel.items.first.imageUrl.startsWith('http')
+                          ? CachedNetworkImageProvider(reel.items.first.imageUrl)
+                          : FileImage(File(reel.items.first.imageUrl)) as ImageProvider,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
+                    child: Container(color: Colors.black.withValues(alpha: 0.6)),
+                  ),
+                ),
+              ),
+            )
+          else
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: <Color>[
+                      Color(0xFF08111D),
+                      Color(0xFF121728),
+                      Color(0xFF1A1020),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          Positioned.fill(
+            child: Stack(
           children: <Widget>[
             Positioned(
               top: -160,
@@ -442,6 +471,8 @@ class _CinemaScreenState extends State<CinemaScreen> {
           ],
         ),
       ),
-    );
+    ],
+  ),
+);
   }
 }

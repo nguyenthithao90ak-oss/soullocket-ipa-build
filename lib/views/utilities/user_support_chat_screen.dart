@@ -394,11 +394,19 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     }
 
     try {
-      final ticketSnapshot = await _db.ref('support_tickets/$_ticketId').get();
-      final rawTicketData = ticketSnapshot.value;
-      final ticketData = rawTicketData is Map
-          ? Map<String, dynamic>.from(rawTicketData)
-          : <String, dynamic>{};
+      Map<String, dynamic> ticketData = {};
+      try {
+        final ticketSnapshot = await _db
+            .ref('support_tickets/$_ticketId')
+            .get()
+            .timeout(const Duration(seconds: 3));
+        final rawTicketData = ticketSnapshot.value;
+        ticketData = rawTicketData is Map
+            ? Map<String, dynamic>.from(rawTicketData)
+            : <String, dynamic>{};
+      } catch (e) {
+        debugPrint('Error getting ticket metadata (timeout or offline): $e');
+      }
       if (wasAlreadyWaiting &&
           !isMenuCommand &&
           _countWaitingAdminFollowUps(_messages) >=
@@ -410,26 +418,30 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         return;
       }
 
-      await FirebaseFirestore.instance
-          .collection('support_tickets')
-          .doc(_ticketId)
-          .collection('messages')
-          .add({
-        'text': text,
-        'is_bot': false,
-        'is_admin': false,
-        'is_menu_command': isMenuCommand,
-        'sender': _myName,
-        'house_id': _houseId,
-        'ticket_id': _ticketId,
-        'user_uid': currentUser?.uid,
-        'user_email': currentUser?.email?.trim(),
-        'topic_id': topic?.id,
-        'topic_label': topic?.title,
-        'summary': summary,
-        'context': _buildMessageContext(summary: summary, topic: topic),
-        'ts': DateTime.now().millisecondsSinceEpoch,
-      });
+      try {
+        await FirebaseFirestore.instance
+            .collection('support_tickets')
+            .doc(_ticketId)
+            .collection('messages')
+            .add({
+          'text': text,
+          'is_bot': false,
+          'is_admin': false,
+          'is_menu_command': isMenuCommand,
+          'sender': _myName,
+          'house_id': _houseId,
+          'ticket_id': _ticketId,
+          'user_uid': currentUser?.uid,
+          'user_email': currentUser?.email?.trim(),
+          'topic_id': topic?.id,
+          'topic_label': topic?.title,
+          'summary': summary,
+          'context': _buildMessageContext(summary: summary, topic: topic),
+          'ts': DateTime.now().millisecondsSinceEpoch,
+        }).timeout(const Duration(seconds: 3));
+      } catch (e) {
+        debugPrint('Error adding support message to Firestore: $e');
+      }
 
       final updates = <String, dynamic>{
         'last_message': summary,
@@ -526,7 +538,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       }
 
       try {
-        await _db.ref('support_tickets/$_ticketId').update(updates);
+        await _db.ref('support_tickets/$_ticketId').update(updates).timeout(const Duration(seconds: 3));
       } catch (e) {
         debugPrint('Error updating ticket metadata: $e');
       }
@@ -638,16 +650,20 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
 
   Future<void> _saveBotReply(String text) async {
     if (_ticketId == null) return;
-    await FirebaseFirestore.instance
-        .collection('support_tickets')
-        .doc(_ticketId)
-        .collection('messages')
-        .add({
-      'text': text,
-      'is_bot': true,
-      'is_admin': false,
-      'ts': DateTime.now().millisecondsSinceEpoch,
-    });
+    try {
+      await FirebaseFirestore.instance
+          .collection('support_tickets')
+          .doc(_ticketId)
+          .collection('messages')
+          .add({
+        'text': text,
+        'is_bot': true,
+        'is_admin': false,
+        'ts': DateTime.now().millisecondsSinceEpoch,
+      }).timeout(const Duration(seconds: 3));
+    } catch (e) {
+      debugPrint('Error saving bot reply: $e');
+    }
   }
 
   String _normalize(String input) {

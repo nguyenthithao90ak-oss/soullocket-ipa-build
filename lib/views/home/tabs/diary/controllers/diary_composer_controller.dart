@@ -117,7 +117,7 @@ class DiaryComposerController {
           houseId: houseId,
           role: authorRole,
           isPrivate: false,
-        );
+        ).catchError((_) => null);
         // Gửi push notification tới người bên kia kèm nội dung nhật ký
         final mood = selectedMoodVN.value;
         final preview =

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:crypto/crypto.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
@@ -1230,14 +1231,14 @@ class AuthSignInService {
       await _auth.signOut().timeout(const Duration(seconds: 1));
     } catch (_) {}
 
-    // 4. Thực hiện dọn dẹp dữ liệu cục bộ (fire and forget)
+    // 4. Thực hiện dọn dẹp dữ liệu cục bộ (chờ hoàn tất để đảm bảo an toàn)
     try {
-      Future.wait([
+      await Future.wait([
         SettingsSyncService().clearLocalSyncedSettings().catchError((_) {}),
         _clearSensitiveLocalData(prefs).catchError((_) {}),
         SecureStorageService.instance.deleteAll().catchError((_) {}),
         OfflineCacheService.clearAllCache().catchError((_) {}),
-      ]).catchError((_) => []);
+      ]).timeout(const Duration(seconds: 2)).catchError((_) => []);
     } catch (_) {}
 
     // 4. Các tác vụ UI/Memory nhẹ chạy đồng bộ lập tức
@@ -1489,6 +1490,11 @@ class AuthSignInService {
       await SecureStorageService.instance
           .write(SecureStorageService.keyAuthUid, user.uid);
       existingRole = prefs.getString('il_role');
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'houseId': houseId,
+        }, SetOptions(merge: true));
+      } catch (_) {}
     } else {
       await prefs.remove('il_house_id');
       await prefs.remove('il_auth_uid');
@@ -1498,6 +1504,11 @@ class AuthSignInService {
       await SecureStorageService.instance
           .delete(SecureStorageService.keyAuthUid);
       await SecureStorageService.instance.delete(SecureStorageService.keyRole);
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'houseId': FieldValue.delete(),
+        }, SetOptions(merge: true));
+      } catch (_) {}
     }
 
     await prefs.setString(

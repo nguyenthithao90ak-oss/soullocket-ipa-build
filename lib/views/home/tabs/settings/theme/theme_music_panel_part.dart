@@ -306,7 +306,42 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
               gradient: const [Color(0xFFFFB74D), Color(0xFFFF9800)],
               textColor: Colors.black87,
               onTap: () {
-                _showToast('Bạn có thể tải lên tối đa 5 bài hát để phát dưới dạng danh sách. Hỗ trợ định dạng âm thanh.');
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    title: Text(
+                      'Hướng dẫn Âm nhạc',
+                      style: SLTextStyles.quicksand(fontWeight: FontWeight.bold, color: const Color(0xFF6A1B4D)),
+                    ),
+                    content: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('• Số lượng:', style: SLTextStyles.quicksand(fontWeight: FontWeight.bold, color: const Color(0xFF6A1B4D))),
+                          Text('Tối đa 5 bài hát trong danh sách phát.', style: SLTextStyles.quicksand(color: const Color(0xFF3E2723))),
+                          const SizedBox(height: 8),
+                          Text('• Dung lượng:', style: SLTextStyles.quicksand(fontWeight: FontWeight.bold, color: const Color(0xFF6A1B4D))),
+                          Text('Tối đa 20MB cho mỗi bài hát.', style: SLTextStyles.quicksand(color: const Color(0xFF3E2723))),
+                          const SizedBox(height: 8),
+                          Text('• Định dạng hỗ trợ:', style: SLTextStyles.quicksand(fontWeight: FontWeight.bold, color: const Color(0xFF6A1B4D))),
+                          Text('mp3, m4a, aac, wav, ogg, flac, mp4.', style: SLTextStyles.quicksand(color: const Color(0xFF3E2723))),
+                          const SizedBox(height: 8),
+                          Text('• Cơ chế đồng bộ:', style: SLTextStyles.quicksand(fontWeight: FontWeight.bold, color: const Color(0xFF6A1B4D))),
+                          Text('- Tài khoản PRO: Bài hát tự động được tải lên đám mây và đồng bộ sang máy của đối tác.', style: SLTextStyles.quicksand(color: const Color(0xFF3E2723))),
+                          Text('- Tài khoản Thường: Nhạc chỉ được lưu và phát trên thiết bị hiện tại của bạn.', style: SLTextStyles.quicksand(color: const Color(0xFF3E2723))),
+                        ],
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text('Đã hiểu', style: SLTextStyles.quicksand(fontWeight: FontWeight.bold, color: const Color(0xFFD81B60))),
+                      ),
+                    ],
+                  ),
+                );
               },
             ),
           ],

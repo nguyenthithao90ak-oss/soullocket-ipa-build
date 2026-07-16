@@ -251,12 +251,7 @@ class UtilityService {
       icon: Icons.brightness_3_rounded,
       colors: [const Color(0xFFCE93D8), const Color(0xFFAB47BC)],
     ),
-    UtilityApp(
-      id: 'love_card',
-      title: 'utility_title_love_card',
-      icon: Icons.style_rounded,
-      colors: [const Color(0xFFE94057), const Color(0xFFF27185)],
-    ),
+
     UtilityApp(
       id: 'creative_diary',
       title: 'utility_title_creative_diary',

@@ -15,6 +15,7 @@ class _MainHomeHeroCountdownSection extends StatelessWidget {
   final bool showLoveTimeDetail;
   final String countdownStyleKey;
   final bool enableMotion;
+  final bool isMilestone;
   final VoidCallback? onEditStartDate;
   final VoidCallback? onEditTopLabel;
   final VoidCallback? onEditBottomLabel;
@@ -35,6 +36,7 @@ class _MainHomeHeroCountdownSection extends StatelessWidget {
     required this.showLoveTimeDetail,
     required this.countdownStyleKey,
     required this.enableMotion,
+    this.isMilestone = false,
     this.onEditStartDate,
     this.onEditTopLabel,
     this.onEditBottomLabel,
@@ -58,6 +60,7 @@ class _MainHomeHeroCountdownSection extends StatelessWidget {
             circleSize: circleSize,
             countdownStyleKey: countdownStyleKey,
             enableMotion: enableMotion,
+            isMilestone: isMilestone,
             onEditStartDate: onEditStartDate,
             onEditTopLabel: onEditTopLabel,
             onEditBottomLabel: onEditBottomLabel,
@@ -353,6 +356,7 @@ class _MainHomeHeroCountdownCircle extends StatefulWidget {
   final double circleSize;
   final String countdownStyleKey;
   final bool enableMotion;
+  final bool isMilestone;
   final VoidCallback? onEditStartDate;
   final VoidCallback? onEditTopLabel;
   final VoidCallback? onEditBottomLabel;
@@ -368,6 +372,7 @@ class _MainHomeHeroCountdownCircle extends StatefulWidget {
     required this.circleSize,
     required this.countdownStyleKey,
     required this.enableMotion,
+    this.isMilestone = false,
     this.onEditStartDate,
     this.onEditTopLabel,
     this.onEditBottomLabel,
@@ -617,6 +622,11 @@ class _MainHomeHeroCountdownCircleState
     final topGap = (widget.circleSize * 0.05).clamp(8.0, 24.0).toDouble();
     final bottomGap = (widget.circleSize * 0.035).clamp(6.0, 18.0).toDouble();
 
+    // Milestone glow border colour
+    final BorderSide milestoneBorderSide = widget.isMilestone
+        ? const BorderSide(color: Color(0xFFFFD700), width: 3.5)
+        : BorderSide.none;
+
     return KeyedSubtree(
       key: widget.firstGuideHeroKey,
       child: SizedBox(
@@ -626,6 +636,16 @@ class _MainHomeHeroCountdownCircleState
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
+            // 0. Sparkle ring for milestone days
+            if (widget.isMilestone)
+              AnniversarySparkleRing(
+                size: widget.circleSize * 1.2,
+                ringRadius: widget.circleSize * 0.56,
+                enabled: true,
+                primaryColor: const Color(0xFFFFD700),
+                accentColor: const Color(0xFFFF80AB),
+              ),
+
             // 1. The main interactive circle
             GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -637,8 +657,29 @@ class _MainHomeHeroCountdownCircleState
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: countdownVisual.outerColor,
-                  gradient: countdownVisual.outerGradient,
-                  border: countdownVisual.outerBorder,
+                  gradient: widget.isMilestone
+                      ? const RadialGradient(
+                          center: Alignment.topLeft,
+                          radius: 1.2,
+                          colors: [
+                            Color(0xFFFFE082),
+                            Color(0xFFFF6FA3),
+                            Color(0xFFAD1457),
+                          ],
+                        )
+                      : countdownVisual.outerGradient,
+                  border: Border.fromBorderSide(
+                    widget.isMilestone ? milestoneBorderSide : BorderSide.none,
+                  ),
+                  boxShadow: widget.isMilestone
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFFFFD700).withValues(alpha: 0.55),
+                            blurRadius: 28,
+                            spreadRadius: 4,
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Stack(
                   alignment: Alignment.center,
@@ -716,6 +757,8 @@ class _MainHomeHeroCountdownCircleState
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: 0.5,
                                         color: Colors.white,
+                                      ).copyWith(
+                                        shadows: widget.isMilestone ? [Shadow(color: Colors.white.withValues(alpha: 0.6), blurRadius: 12)] : null,
                                       ),
                                     ),
                                   )
@@ -731,6 +774,8 @@ class _MainHomeHeroCountdownCircleState
                                       letterSpacing: 0.5,
                                       color: customTextColor ??
                                           countdownVisual.topLabelColor,
+                                    ).copyWith(
+                                      shadows: widget.isMilestone ? [Shadow(color: Colors.white.withValues(alpha: 0.6), blurRadius: 12)] : null,
                                     ),
                                   ),
                             ),
@@ -781,6 +826,8 @@ class _MainHomeHeroCountdownCircleState
                                           color: Colors.white,
                                           height: 0.96,
                                           letterSpacing: 4.0,
+                                        ).copyWith(
+                                          shadows: widget.isMilestone ? [Shadow(color: Colors.white.withValues(alpha: 0.7), blurRadius: 16)] : null,
                                         ),
                                   );
                                 },
@@ -826,6 +873,8 @@ class _MainHomeHeroCountdownCircleState
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: 0.5,
                                         color: Colors.white,
+                                      ).copyWith(
+                                        shadows: widget.isMilestone ? [Shadow(color: Colors.white.withValues(alpha: 0.6), blurRadius: 12)] : null,
                                       ),
                                     ),
                                   )
@@ -841,6 +890,8 @@ class _MainHomeHeroCountdownCircleState
                                       letterSpacing: 0.5,
                                       color: customTextColor ??
                                           countdownVisual.bottomLabelColor,
+                                    ).copyWith(
+                                      shadows: widget.isMilestone ? [Shadow(color: Colors.white.withValues(alpha: 0.6), blurRadius: 12)] : null,
                                     ),
                                   ),
                             ),

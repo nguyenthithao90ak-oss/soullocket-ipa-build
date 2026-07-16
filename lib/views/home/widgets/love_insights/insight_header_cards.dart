@@ -100,7 +100,8 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                           ),
                         ),
                       ],
-                    ),
+                    ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+                     .scaleXY(end: 1.02, duration: 1000.ms, curve: Curves.easeInOutSine),
                     SLSpacing.h12,
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -308,6 +309,32 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
   }
 
   Widget _buildDailyTipCard(LoveInsightData insight) {
+    String tipEmoji = '💌';
+    if (insight.loveScore >= 85) {
+      tipEmoji = '🔥';
+    } else if (insight.loveScore >= 70) {
+      tipEmoji = '✨';
+    } else if (insight.loveScore >= 40) {
+      tipEmoji = '💖';
+    } else {
+      tipEmoji = '💡';
+    }
+
+    Widget emojiWidget = Text(tipEmoji, style: const TextStyle(fontSize: 24));
+    
+    // Áp dụng animation tuỳ theo emoji
+    if (insight.loveScore >= 85) {
+      emojiWidget = emojiWidget.animate(onPlay: (controller) => controller.repeat(reverse: true))
+          .scaleXY(end: 1.15, duration: 600.ms, curve: Curves.easeInOut)
+          .tint(color: Colors.orange.withValues(alpha: 0.2));
+    } else if (insight.loveScore >= 70) {
+      emojiWidget = emojiWidget.animate(onPlay: (controller) => controller.repeat(reverse: true))
+          .shake(hz: 3, curve: Curves.easeInOut, duration: 1.seconds);
+    } else {
+      emojiWidget = emojiWidget.animate(onPlay: (controller) => controller.repeat(reverse: true))
+          .slideY(end: -0.15, duration: 800.ms, curve: Curves.easeInOut);
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
@@ -350,8 +377,8 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                 ),
               ],
             ),
-            child: const Center(
-              child: Text('💌', style: TextStyle(fontSize: 24)),
+            child: Center(
+              child: emojiWidget,
             ),
           ),
           SLSpacing.w16,
@@ -383,6 +410,7 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
           ),
         ],
       ),
-    );
+    ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+     .shimmer(duration: 4.seconds, color: Colors.white.withValues(alpha: 0.6));
   }
 }

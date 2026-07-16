@@ -257,11 +257,24 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       );
 
       try {
+        // Cho phép dialog hiển thị một chút để người dùng nhận thấy phản hồi
+        await Future.delayed(const Duration(milliseconds: 500));
         await _authService.signOut();
         debugPrint('[LOGOUT] signOut success');
-        navigator.popUntil((route) => route.isFirst);
+        
+        // Đóng loading dialog
+        if (navigator.canPop()) {
+          navigator.pop();
+        }
+        
+        // Đóng toàn bộ các màn hình được push (như SettingsTab) để quay về Home/Login
+        while (navigator.canPop()) {
+          navigator.pop();
+        }
       } catch (e, st) {
-        navigator.pop();
+        if (navigator.canPop()) {
+          navigator.pop();
+        }
         debugPrint('[LOGOUT] signOut error: $e\n$st');
         if (!mounted) return;
         SLNotice.showError(
@@ -270,12 +283,6 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         );
         return;
       }
-
-      if (!mounted) {
-        debugPrint('[LOGOUT] Widget not mounted after signOut!');
-        return;
-      }
-      // Navigator push removed: AppEntry automatically handles routing to LoginScreen via auth state.
     }
   }
 

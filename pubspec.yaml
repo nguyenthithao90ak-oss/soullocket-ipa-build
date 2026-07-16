@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 3.2.2+92
+version: 3.2.3+93
 
 environment:
   sdk: ^3.5.3
@@ -62,7 +62,7 @@ dependencies:
   webview_flutter_wkwebview: ^3.25.1
   permission_handler: ^12.0.1
   qr_flutter: ^4.1.0
-  mobile_scanner: ^7.2.0
+  mobile_scanner: ^7.3.0
   firebase_messaging: ^16.2.0
   flutter_local_notifications: ^22.0.1
   in_app_purchase: ^3.2.3
@@ -92,7 +92,7 @@ dependencies:
   path_provider: ^2.1.5
   share_plus: ^13.2.0
   vision_gallery_saver: ^3.1.1
-  google_mobile_ads: ^9.0.0
+  google_mobile_ads: ^8.0.0
   gma_mediation_unity: ^1.8.0
   image_cropper: ^12.2.1
   local_auth_android: ^2.0.8
@@ -122,9 +122,10 @@ dependencies:
     path: packages/tiktok_business_sdk
   go_router: ^17.3.0
   get_it: ^9.2.1
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
 dependency_overrides:
   image_cropper_platform_interface: 7.1.0
-  google_mobile_ads: ^9.0.0
 
 
 dev_dependencies:
@@ -193,58 +194,12 @@ flutter:
     - assets/images/avatar_female.jpg
 
     # Home screen bundled interaction stickers
-    - assets/images/interaction_stickers/custom/numbered/sticker_001.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_002.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_003.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_004.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_005.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_006.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_007.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_008.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_029.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_030.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_031.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_032.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_045.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_046.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_047.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_048.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_049.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_050.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_051.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_052.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_053.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_054.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_055.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_056.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_057.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_058.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_059.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_060.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_061.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_062.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_063.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_064.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_065.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_066.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_067.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_068.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_069.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_072.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_085.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_098.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_108.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_158.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_160.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_162.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_165.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_173.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_228.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_270.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_276.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_291.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_339.png
-    - assets/images/interaction_stickers/custom/numbered/sticker_343.png
+    - assets/images/utility_stickers/
+    - assets/images/interaction_stickers/
+    - assets/images/interaction_stickers/custom/numbered/
+    - assets/images/sticker_import/cutout/sheet_02/
+    - assets/images/sticker_import/cutout/sheet_03/
+    - assets/images/sticker_import/cutout/sheet_04/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

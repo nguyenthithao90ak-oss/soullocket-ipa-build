@@ -303,14 +303,34 @@ class _CountdownQuickCustomizeSheetContentState
     required String selectedValue,
     required Future<void> Function(_CountdownQuickOption option) onSelect,
   }) {
-    final selectedOption = options.firstWhere((o) => o.value == selectedValue, orElse: () => options.first);
+    final selectedOption = options.firstWhere(
+      (o) => o.value == selectedValue,
+      orElse: () => options.first,
+    );
+    final accent = selectedOption.accent;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFF0DDE4)),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: accent.withValues(alpha: 0.18),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -318,26 +338,29 @@ class _CountdownQuickCustomizeSheetContentState
           Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
+                  gradient: LinearGradient(
+                    colors: [
+                      accent.withValues(alpha: 0.8),
+                      accent,
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF4A00E0).withValues(alpha: 0.3),
+                      color: accent.withValues(alpha: 0.35),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
                   ],
                 ),
-                child: Icon(icon, color: Colors.white, size: 20),
+                child: Icon(icon, color: Colors.white, size: 22),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -345,18 +368,18 @@ class _CountdownQuickCustomizeSheetContentState
                     Text(
                       title,
                       style: SLTheme.quicksand(
-                        fontSize: 14.8,
+                        fontSize: 15.5,
                         fontWeight: FontWeight.w900,
-                        color: const Color(0xFF4A3640),
+                        color: const Color(0xFF2D1B24),
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       description,
                       style: SLTheme.quicksand(
-                        fontSize: 12.1,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF8E6F7E),
+                        color: const Color(0xFF7A6472),
                         height: 1.35,
                       ),
                     ),
@@ -365,47 +388,74 @@ class _CountdownQuickCustomizeSheetContentState
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               onTap: () {
                 HapticFeedback.selectionClick();
                 _showOptionsDialog(title, options, selectedValue, onSelect);
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF7F2F5),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFF0DDE4)),
+                  color: accent.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: accent.withValues(alpha: 0.15),
+                  ),
                 ),
                 child: Row(
                   children: [
+                    Icon(
+                      selectedOption.icon,
+                      color: accent,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        'Đang chọn: ${selectedOption.label}',
-                        style: SLTheme.quicksand(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFFD81B60),
+                      child: RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'Đang dùng: ',
+                              style: SLTheme.quicksand(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF7A6472),
+                              ),
+                            ),
+                            TextSpan(
+                              text: selectedOption.label,
+                              style: SLTheme.quicksand(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w900,
+                                color: accent,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    Text(
-                      'Tùy chọn',
-                      style: SLTheme.quicksand(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFFD81B60),
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: accent.withValues(alpha: 0.15),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.arrow_drop_down_circle_rounded,
-                      color: Color(0xFFD81B60),
-                      size: 22,
+                      child: Icon(
+                        Icons.swap_vert_rounded,
+                        color: accent,
+                        size: 16,
+                      ),
                     ),
                   ],
                 ),

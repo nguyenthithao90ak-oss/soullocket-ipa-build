@@ -36,6 +36,11 @@ class StorageRawUploadHelper {
           originalFileName.isNotEmpty ? originalFileName : storagePath,
     );
 
+    final fileSize = await file.length();
+    if (fileSize > 25 * 1024 * 1024) { // 25MB Limit
+      throw Exception('Tệp tải lên vượt quá giới hạn 25MB. Vui lòng chọn tệp nhỏ hơn.');
+    }
+
     await purgeLegacyCache();
 
     try {

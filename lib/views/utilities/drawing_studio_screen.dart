@@ -178,6 +178,12 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
 
   bool get _hasAnyStroke => _allVisibleStrokes.isNotEmpty;
 
+  bool get _hasOwnStroke {
+    final uid = _auth.currentUser?.uid ?? '';
+    if (uid.isEmpty) return false;
+    return _allVisibleStrokes.any((stroke) => stroke.authorUid == uid);
+  }
+
   List<_DrawStroke> get _allVisibleStrokes => [
         ..._realtimeStrokes.values,
         ..._strokes.where(
@@ -396,22 +402,25 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
 
   void _undoStroke() {
     final uid = _auth.currentUser?.uid ?? '';
-    if (_strokes.isNotEmpty) {
-      final stroke = _strokes.removeLast();
-      _localPendingStrokeIds.remove(stroke.id);
-      setState(() {});
-      return;
-    }
     if (uid.isEmpty) return;
-    final ownStrokes = _realtimeStrokes.entries
-        .where((entry) => entry.value.authorUid == uid)
+
+    final ownStrokes = _allVisibleStrokes
+        .where((stroke) => stroke.authorUid == uid)
         .toList();
     if (ownStrokes.isEmpty) return;
+
     final latest = ownStrokes.last;
-    setState(() => _realtimeStrokes.remove(latest.key));
+
+    if (_localPendingStrokeIds.contains(latest.id)) {
+      _strokes.removeWhere((s) => s.id == latest.id);
+      setState(() => _localPendingStrokeIds.remove(latest.id));
+      return;
+    }
+
+    setState(() => _realtimeStrokes.remove(latest.id));
     unawaited(_drawingService.deleteStroke(
       houseId: widget.houseId,
-      strokeId: latest.key,
+      strokeId: latest.id,
     ));
   }
 
@@ -532,6 +541,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   Future<void> _showBackgroundPicker() async {
     final selected = await showModalBottomSheet<String>(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return SafeArea(
@@ -562,8 +572,9 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                   ),
                 ),
                 SLSpacing.h12,
-                GridView.count(
-                  crossAxisCount: 2,
+                Flexible(
+                  child: GridView.count(
+                    crossAxisCount: 2,
                   mainAxisSpacing: 10,
                   crossAxisSpacing: 10,
                   shrinkWrap: true,
@@ -593,6 +604,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                     const _BackgroundChoice(
                         id: 'sticker_sheet', label: 'Sticker'),
                   ],
+                ),
                 ),
               ],
             ),
@@ -1170,7 +1182,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: _strokes.isEmpty ? null : _undoStroke,
+                      onPressed: _hasOwnStroke ? _undoStroke : null,
                       icon: const Icon(Icons.undo_rounded),
                       label: Text(context.tr('util_hontc_96ce27')),
                       style: _secondaryButtonStyle(),

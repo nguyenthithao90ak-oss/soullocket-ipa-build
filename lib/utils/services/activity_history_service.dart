@@ -8,7 +8,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'connectivity_service.dart';
 import 'local_database_service.dart';
-import 'album_service.dart';
 import 'presence_service.dart';
 import 'house_service.dart';
 import 'storage/storage_service.dart';
@@ -209,7 +208,7 @@ class ActivityHistoryEntry {
     if (moduleKey == 'secret_vault') {
       return false;
     }
-    if (moduleKey == 'album' || moduleKey == 'diary_memory') {
+    if (moduleKey == 'diary_memory') {
       return entityId.trim().isNotEmpty && houseId.trim().isNotEmpty;
     }
     return restorePath.trim().isNotEmpty && restorePayload.isNotEmpty;
@@ -398,39 +397,6 @@ class ActivityHistoryService {
     }
 
     final moduleKey = entry.module.trim().toLowerCase();
-    if (moduleKey == 'album') {
-      try {
-        await AlbumService().restoreFromTrash(
-          houseId: entry.houseId,
-          itemId: entry.entityId,
-        );
-      } catch (e) {
-        debugPrint(
-            'ActivityHistory album restore failed: ${AppErrorMapper.resolve(
-          e,
-          fallbackMessage:
-              L10nService().translate('home_activity_album_restore_error'),
-        ).message}');
-        return false;
-      }
-
-      await add(
-        L10nService().format('home_activity_restored',
-            {'label': entry.effectiveSourceLabel.toLowerCase()}),
-        houseId: entry.houseId,
-        role: entry.role,
-        title: L10nService().translate('home_activity_restored_title'),
-        subtitle: entry.title.isNotEmpty ? entry.title : entry.text,
-        action: 'restore',
-        module: entry.module,
-        entityType: entry.entityType,
-        entityId: entry.entityId,
-        sourceLabel: entry.sourceLabel,
-        previewUrl: entry.previewUrl,
-        previewType: entry.previewType,
-      );
-      return true;
-    }
 
     if (moduleKey == 'diary_memory') {
       try {

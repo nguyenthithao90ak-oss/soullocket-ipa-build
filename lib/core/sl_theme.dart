@@ -773,6 +773,7 @@ class SLTheme {
               opacity: 0.95,
               child: CachedNetworkImage(
                 maxWidthDiskCache: 1440,
+                memCacheHeight: 1440,
                 imageUrl: customBackgroundUrl,
                 fit: BoxFit.cover,
                 filterQuality: FilterQuality.medium,

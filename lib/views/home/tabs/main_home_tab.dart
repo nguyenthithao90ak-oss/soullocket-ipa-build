@@ -34,6 +34,8 @@ import 'dart:math';
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/home_startup_media_cache.dart';
+import 'package:soullocket_app/views/home/widgets/anniversary_sparkle_painter.dart';
+import 'package:soullocket_app/views/home/widgets/anniversary_celebration_dialog.dart';
 import 'package:soullocket_app/utils/services/love_insight_service.dart';
 import 'package:soullocket_app/utils/services/location_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -41,13 +43,11 @@ import 'package:soullocket_app/utils/services/military_lock_service.dart';
 import 'package:soullocket_app/utils/services/presence_service.dart';
 import 'package:soullocket_app/utils/services/utility_service.dart';
 import 'package:soullocket_app/utils/services/house_settings_service.dart';
-import 'package:soullocket_app/utils/services/album_service.dart';
 import 'package:soullocket_app/utils/services/notification_service.dart';
 import 'package:soullocket_app/utils/services/storage/storage_service.dart';
 import 'package:soullocket_app/utils/services/utilities/note_service.dart';
 import 'package:soullocket_app/utils/services/pending_upload_service.dart';
 import 'package:soullocket_app/utils/sl_notice.dart';
-import 'package:soullocket_app/models/album_item.dart';
 import 'package:soullocket_app/models/house_settings.dart';
 import 'package:soullocket_app/models/utilities/shared_note.dart';
 import 'package:soullocket_app/views/home/tabs/settings_tab.dart'
@@ -269,7 +269,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   final LoveInsightService _insightService = LoveInsightService();
   final UtilityService _utilityService = UtilityService();
   final HouseSettingsService _houseSettingsService = HouseSettingsService();
-  final AlbumService _albumService = AlbumService();
   final NoteService _noteService = NoteService();
   final StorageService _storageService = StorageService();
   final NotificationService _notificationService = NotificationService();
@@ -329,14 +328,12 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   StreamSubscription<DatabaseEvent>? _alertSubscription;
   StreamSubscription<DatabaseEvent>? _newDeviceNotificationSubscription;
   StreamSubscription<DatabaseEvent>? _partnerInboxSubscription;
-  StreamSubscription? _albumSubscription;
   StreamSubscription? _noteSubscription;
   StreamSubscription<DatabaseEvent>? _chatSignalSubscription;
   StreamSubscription<DatabaseEvent>? _reactionFlightSubscription;
   StreamSubscription? _gpsSubscription;
 
   LoveInsightData? _insightData;
-  List<AlbumItem> _albumHighlights = [];
   List<SharedNote> _noteHighlights = [];
   StreamSubscription<DatabaseEvent>? _homeCalendarSubscription;
   StreamSubscription<DatabaseEvent>? _healthCycleSyncSubscription;
@@ -538,7 +535,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _alertSubscription?.cancel();
     _newDeviceNotificationSubscription?.cancel();
     _partnerInboxSubscription?.cancel();
-    _albumSubscription?.cancel();
     _noteSubscription?.cancel();
     _homeCalendarSubscription?.cancel();
     _healthCycleSyncSubscription?.cancel();
@@ -599,6 +595,45 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     // automatically adapt based on _isTabActive inside their respective timers/listeners.
     _fetchHouseDataDebounceTimer?.cancel();
     _invalidateLiveWorkSession();
+  }
+
+  Future<void> _checkAnniversaryMilestone() async {
+    if (_houseSettings == null || _houseId == null || !mounted) return;
+    
+    final days = _calculateDays();
+    final shouldShow = await shouldShowAnniversaryDialog(days);
+    
+    if (shouldShow && mounted && _isTabActive) {
+      final nameU1 = _houseSettings?['nameU1']?.toString() ?? 'Bạn';
+      final nameU2 = _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
+      final isCouple = _houseSettings?['relationshipMode'] == 'couple';
+      
+      String coupleLabel = '';
+      if (isCouple && nameU1.isNotEmpty && nameU2.isNotEmpty) {
+        coupleLabel = '$_partnerRoleName & $_myRoleName';
+      }
+      
+      String dayUnit = _houseSettings?['dayUnit']?.toString() ?? 'ngày yêu';
+      if (dayUnit.trim().isEmpty) dayUnit = 'ngày yêu';
+
+      await showAnniversaryCelebrationDialog(
+        context,
+        days: days,
+        coupleLabel: coupleLabel,
+        dayUnit: dayUnit,
+      );
+    }
+  }
+
+  String get _partnerRoleName {
+    final role = _partnerRole;
+    if (role == 'user1') return _houseSettings?['nameU1']?.toString() ?? 'Người ấy';
+    return _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
+  }
+
+  String get _myRoleName {
+    if (_currentRole == 'user1') return _houseSettings?['nameU1']?.toString() ?? 'Bạn';
+    return _houseSettings?['nameU2']?.toString() ?? 'Bạn';
   }
 
   /// Bọc setup listener trong try-catch để tránh crash dây chuyền nếu 1 listener fail
@@ -834,6 +869,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _activeFetchFuture = future;
     return future.then((_) {
       _activeFetchFuture = null;
+      _checkAnniversaryMilestone();
     }, onError: (_) {
       _activeFetchFuture = null;
     });
@@ -1065,24 +1101,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     if (left.length != right.length) return false;
     for (var index = 0; index < left.length; index++) {
       if (left[index] != right[index]) return false;
-    }
-    return true;
-  }
-
-  bool _sameAlbumHighlights(List<AlbumItem> left, List<AlbumItem> right) {
-    if (identical(left, right)) return true;
-    if (left.length != right.length) return false;
-    for (var index = 0; index < left.length; index++) {
-      final l = left[index];
-      final r = right[index];
-      if (l.id != r.id ||
-          l.timestamp != r.timestamp ||
-          l.thumbUrl != r.thumbUrl ||
-          l.url != r.url ||
-          l.caption != r.caption ||
-          l.authorName != r.authorName) {
-        return false;
-      }
     }
     return true;
   }
@@ -2110,8 +2128,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       final DateTime start = DateTime.parse(dateStr.toString());
       final DateTime now = DateTime.now();
       final DateTime current = DateTime(now.year, now.month, now.day);
-      final int diff = current.difference(start).inDays;
-      return diff < 0 ? 0 : diff + 1;
+      final int diff = current
+          .difference(DateTime(start.year, start.month, start.day))
+          .inDays;
+      return diff < 0 ? 0 : diff;
     } catch (e) {
       return 0;
     }
