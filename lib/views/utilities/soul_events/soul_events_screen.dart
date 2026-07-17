@@ -124,12 +124,12 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     return Scaffold(
-      backgroundColor: SLColors.bgMain,
+      backgroundColor: const Color(0xFFFFF3F8),
       appBar: AppBar(
         title: Text('Sự Kiện & Kỷ Niệm',
             style: SLTypography.titleLarge.copyWith(
                 color: SLColors.primary, fontWeight: FontWeight.w900)),
-        backgroundColor: SLColors.bgMain,
+        backgroundColor: const Color(0xFFFFF3F8),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new,
@@ -170,7 +170,17 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
           ),
         ],
       ),
-      body: SLTheme.background(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFFFF3F8),
+              Color(0xFFFFE4ED),
+            ],
+          ),
+        ),
         child: StreamBuilder<List<SoulEvent>>(
           stream: SoulEventService().streamEvents(_houseId!),
           builder: (context, snapshot) {

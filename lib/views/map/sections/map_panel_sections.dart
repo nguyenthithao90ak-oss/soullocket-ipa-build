@@ -245,8 +245,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
           child: Container(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [SLColors.secondarySoft, SLColors.primarySoft],
+              gradient: LinearGradient(
+                colors: [const Color(0xFF1E293B).withValues(alpha: 0.95), const Color(0xFF0F172A).withValues(alpha: 0.95)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -280,13 +280,6 @@ extension _MapPanelSectionsExt on _MapScreenState {
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: _kMapPinkDeep.withValues(alpha: 0.30),
-                            blurRadius: 18,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
                       ),
                       child: const Icon(Icons.explore_rounded, color: Colors.white),
                     ),
@@ -302,11 +295,11 @@ extension _MapPanelSectionsExt on _MapScreenState {
                                   _isSingleRelationship
                                       ? context.tr('map_tngquanvtr_d8954d')
                                       : context.tr('map_tngquandic_6b8ec0'),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 15.5,
-                                    fontWeight: FontWeight.w900,
-                                    color: SLColors.textPrimary,
-                                  ),
+                                    style: SLTheme.quicksand(
+                                      fontSize: 15.5,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                    ),
                                 ),
                               ),
                               _buildLiveStateBadge(uiSnap),
@@ -322,7 +315,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                             style: SLTheme.quicksand(
                               fontSize: 11.1,
                               fontWeight: FontWeight.w700,
-                              color: SLColors.textSecond,
+                              color: Colors.white70,
                               height: 1.35,
                             ),
                           ),
@@ -574,12 +567,12 @@ extension _MapPanelSectionsExt on _MapScreenState {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.16),
+        color: accent.withValues(alpha: 0.22),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: accent.withValues(alpha: 0.35), width: 0.8),
+        border: Border.all(color: accent.withValues(alpha: 0.45), width: 0.8),
         boxShadow: [
           BoxShadow(
-            color: accent.withValues(alpha: 0.05),
+            color: accent.withValues(alpha: 0.15),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -607,7 +600,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             style: SLTheme.quicksand(
               fontSize: 13,
               fontWeight: FontWeight.w900,
-              color: SLColors.textPrimary,
+              color: Colors.white,
             ),
           ),
         ],
@@ -625,6 +618,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                   Expanded(
                     child: _buildPeopleCard(
                       name: widget.myName,
+                      isMe: true,
                       roleColor: _kMapBlue,
                       avatarUrl: widget.myAvatarUrl,
                       gpsPoint: uiSnap.myPoint,
@@ -639,6 +633,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                   Expanded(
                     child: _buildPeopleCard(
                       name: widget.myName,
+                      isMe: true,
                       roleColor: _kMapBlue,
                       avatarUrl: widget.myAvatarUrl,
                       gpsPoint: uiSnap.myPoint,
@@ -652,6 +647,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                   Expanded(
                     child: _buildPeopleCard(
                       name: widget.partnerName,
+                      isMe: false,
                       roleColor: _kMapPinkDeep,
                       avatarUrl: widget.partnerAvatarUrl,
                       gpsPoint: uiSnap.partnerPoint,
@@ -669,6 +665,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
 
   Widget _buildPeopleCard({
     required String name,
+    required bool isMe,
     required Color roleColor,
     required String avatarUrl,
     required _GpsPoint? gpsPoint,
@@ -701,15 +698,15 @@ extension _MapPanelSectionsExt on _MapScreenState {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: roleColor.withValues(alpha: 0.25), width: 0.8),
+        border: Border.all(color: roleColor.withValues(alpha: 0.45), width: 0.8),
         boxShadow: [
           BoxShadow(
-            color: roleColor.withValues(alpha: 0.10),
+            color: roleColor.withValues(alpha: 0.15),
             blurRadius: 15,
             offset: const Offset(0, 6),
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.20),
+            color: Colors.black.withValues(alpha: 0.25),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -740,7 +737,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                       style: SLTheme.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
-                        color: SLColors.textPrimary,
+                        color: Colors.white,
                       ),
                     ),
                     SLSpacing.h4,
@@ -775,7 +772,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             style: SLTheme.quicksand(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
-              color: SLColors.textSecond,
+              color: Colors.white70,
               height: 1.38,
             ),
           ),
@@ -850,6 +847,30 @@ extension _MapPanelSectionsExt on _MapScreenState {
               ),
             ],
           ],
+          if (isMe && !isLive) ...[
+            SLSpacing.h12,
+            SizedBox(
+              width: double.infinity,
+              height: 32,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: roleColor,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
+                ),
+                onPressed: _isBootstrappingLocation
+                    ? null
+                    : () => _bootstrapLocationTracking(),
+                icon: const Icon(Icons.gps_fixed_rounded, size: 14),
+                label: Text(
+                  context.tr('map_btgpscabn_122e9b'),
+                  style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 11),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -861,14 +882,14 @@ extension _MapPanelSectionsExt on _MapScreenState {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            _kMapBlue.withValues(alpha: 0.35),
+            _kMapBlue.withValues(alpha: 0.25),
             _kMapBlue.withValues(alpha: 0.10),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: SLRadius.xlAll,
-        border: Border.all(color: _kMapBlue.withValues(alpha: 0.20), width: 0.8),
+        border: Border.all(color: _kMapBlue.withValues(alpha: 0.45), width: 0.8),
         boxShadow: [
           BoxShadow(
             color: _kMapBlue.withValues(alpha: 0.08),

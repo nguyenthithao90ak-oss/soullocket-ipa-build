@@ -29,16 +29,16 @@ class ConsentGate extends StatefulWidget {
   State<ConsentGate> createState() => _ConsentGateState();
 }
 
-const Color _accentRose = Color(0xFF475569); // Slate 600
-const Color _accentLavender = Color(0xFF475569); // Slate 600
-const Color _accentBlue = Color(0xFF3B82F6); // Professional blue
-const Color _accentGreen = Color(0xFF475569); // Slate 600
-const Color _ink = Color(0xFF0F172A); // Slate 900
-const Color _muted = Color(0xFF64748B); // Slate 500
-const Color _panelBorder = Color(0xFFE2E8F0); // Slate 200
-const Color _dialogBackgroundTop = Color(0xFFF8FAFC); // Slate 50
-const Color _dialogBackgroundBottom = Color(0xFFF1F5F9); // Slate 100
-const Color _cardBackground = Color(0xFFFFFFFF); // White
+const Color _accentRose = Color(0xFFD81B60);
+const Color _accentLavender = Color(0xFF7C4DFF);
+const Color _accentBlue = Color(0xFF2563EB);
+const Color _accentGreen = Color(0xFF0F766E);
+const Color _ink = Color(0xFF24324A);
+const Color _muted = Color(0xFF6B7280);
+const Color _panelBorder = Color(0xFFE9DCE7);
+const Color _dialogBackgroundTop = Color(0xFFFFFCFE);
+const Color _dialogBackgroundBottom = Color(0xFFFFF6FB);
+const Color _cardBackground = Color(0xFFFFFDFE);
 
 Future<void> _openDoc(
     BuildContext context, String title, String assetPath) async {

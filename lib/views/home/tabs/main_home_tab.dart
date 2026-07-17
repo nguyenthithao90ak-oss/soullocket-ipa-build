@@ -29,6 +29,7 @@ import 'package:soullocket_app/widgets/animated_rabbit_sticker.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/utils/services/soul_merge_service.dart';
 import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_dashboard_screen.dart';
+import 'package:soullocket_app/views/home/tabs/main_home/widgets/main_home_shooting_game.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -2158,7 +2159,12 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
             _buildMainContent(
               customBackgroundUrl: uiState.customBackgroundUrl,
             ),
-            const SizedBox.shrink(),
+            Positioned.fill(
+              child: MainHomeShootingGame(
+                user1Avatar: (_houseSettings?['avtUser1'] ?? '').toString(),
+                user2Avatar: (_houseSettings?['avtUser2'] ?? '').toString(),
+              ),
+            ),
           ],
         ),
       ),
