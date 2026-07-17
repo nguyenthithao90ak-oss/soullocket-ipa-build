@@ -37,6 +37,8 @@ class UiPrefsState {
   final String brandMarkKey;
   final List<String> homeBlockOrder;
   final bool homeShowTimer;
+  final bool showAvatarFrameIcon;
+  final String friendlyChatPersona;
 
   const UiPrefsState({
     required this.themeKey,
@@ -66,6 +68,8 @@ class UiPrefsState {
     required this.brandMarkKey,
     required this.homeBlockOrder,
     required this.homeShowTimer,
+    required this.showAvatarFrameIcon,
+    required this.friendlyChatPersona,
   });
 
   UiPrefsState copyWith({
@@ -96,6 +100,8 @@ class UiPrefsState {
     String? brandMarkKey,
     List<String>? homeBlockOrder,
     bool? homeShowTimer,
+    bool? showAvatarFrameIcon,
+    String? friendlyChatPersona,
   }) {
     return UiPrefsState(
       themeKey: themeKey ?? this.themeKey,
@@ -128,6 +134,8 @@ class UiPrefsState {
       brandMarkKey: brandMarkKey ?? this.brandMarkKey,
       homeBlockOrder: homeBlockOrder ?? this.homeBlockOrder,
       homeShowTimer: homeShowTimer ?? this.homeShowTimer,
+      showAvatarFrameIcon: showAvatarFrameIcon ?? this.showAvatarFrameIcon,
+      friendlyChatPersona: friendlyChatPersona ?? this.friendlyChatPersona,
     );
   }
 
@@ -139,15 +147,15 @@ class UiPrefsState {
     avatarSizePx: 90,
     countdownSizePx: 400,
     avatarFrameKey: 'off',
-    // Default countdown visual: glow (Phát sáng)
-    countdownStyleKey: 'glow',
+    // Default countdown visual: default (Cân bằng)
+    countdownStyleKey: 'default',
     countdownTopLabel: '',
     countdownBottomLabel: '',
     countdownTextColor: '',
     fontKey: 'quicksand',
     homeBlockToneKey: 'theme',
     liteMode: false,
-    graphicsQualityKey: 'auto',
+    graphicsQualityKey: 'balanced',
     customBackgroundUrl: '',
     touchSound: true,
     confettiFx: false,
@@ -162,6 +170,8 @@ class UiPrefsState {
     brandMarkKey: SoulLocketBrand.defaultStyleKey,
     homeBlockOrder: ['highlight', 'map', 'insight'],
     homeShowTimer: false,
+    showAvatarFrameIcon: true,
+    friendlyChatPersona: "",
   );
 }
 
@@ -212,6 +222,8 @@ class UiPrefs {
   static const _kBrandMarkKey = 'il_brand_mark_key';
   static const _kHomeBlockOrderKey = 'il_home_block_order';
   static const _kHomeShowTimerKey = 'il_home_show_timer';
+  static const _kShowAvatarFrameIconKey = 'il_show_avatar_frame_icon';
+  static const _kFriendlyChatPersonaKey = 'il_friendly_chat_persona';
 
   static final ValueNotifier<UiPrefsState> notifier =
       ValueNotifier<UiPrefsState>(UiPrefsState.defaults);
@@ -221,7 +233,7 @@ class UiPrefs {
       MethodChannel('soul_locket/app_control');
 
   static bool _loaded = false;
-  static String _cachedAutoQuality = 'balanced';
+  static String _cachedAutoQuality = 'low';
 
   static double _readDoublePref(
     SharedPreferences prefs,
@@ -319,7 +331,7 @@ class UiPrefs {
       }
       final cpuCores = Platform.numberOfProcessors;
 
-      if (totalMemoryMB <= 1536 || cpuCores <= 2) return 'low';
+      if (totalMemoryMB <= 3072 || cpuCores <= 4) return 'low';
       if (totalMemoryMB >= 6144 && cpuCores >= 8) return 'high';
       return 'balanced';
     } catch (_) {
@@ -422,6 +434,9 @@ class UiPrefs {
         homeBlockOrder: homeBlockOrder,
         homeShowTimer: prefs.getBool(_kHomeShowTimerKey) ??
             UiPrefsState.defaults.homeShowTimer,
+        showAvatarFrameIcon: prefs.getBool(_kShowAvatarFrameIconKey) ??
+            UiPrefsState.defaults.showAvatarFrameIcon,
+        friendlyChatPersona: (prefs.getString(_kFriendlyChatPersonaKey) ?? UiPrefsState.defaults.friendlyChatPersona).trim(),
       ),
     );
   }
@@ -500,7 +515,6 @@ class UiPrefs {
     await prefs.setBool(_kTransparentModeKey, normalized.transparentMode);
     await prefs.setString(_kBrandMarkKey, normalized.brandMarkKey);
     await prefs.setStringList(_kHomeBlockOrderKey, normalized.homeBlockOrder);
-    await prefs.setBool(_kHomeShowTimerKey, normalized.homeShowTimer);
 
     try {
       unawaited(SettingsSyncService().backupSettingsToCloud());
@@ -551,11 +565,25 @@ class UiPrefs {
       brandMarkKey: SoulLocketBrand.normalizeStyleKey(state.brandMarkKey),
       homeBlockOrder: state.homeBlockOrder,
       homeShowTimer: state.homeShowTimer,
+      showAvatarFrameIcon: state.showAvatarFrameIcon,
+      friendlyChatPersona: state.friendlyChatPersona.trim(),
     );
   }
 
   static Future<void> setHomeShowTimer(bool enabled) async {
     await ensureLoaded();
-    await saveState(notifier.value.copyWith(homeShowTimer: enabled));
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kHomeShowTimerKey, enabled);
+    notifier.value = notifier.value.copyWith(homeShowTimer: enabled);
+  }
+
+  static Future<void> setShowAvatarFrameIcon(bool enabled) async {
+    await ensureLoaded();
+    await saveState(notifier.value.copyWith(showAvatarFrameIcon: enabled));
+  }
+
+  static Future<void> setFriendlyChatPersona(String persona) async {
+    await ensureLoaded();
+    await saveState(notifier.value.copyWith(friendlyChatPersona: persona.trim()));
   }
 }

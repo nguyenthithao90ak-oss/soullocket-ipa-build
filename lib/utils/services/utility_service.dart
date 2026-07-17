@@ -137,7 +137,7 @@ class UtilityService {
       title: 'utility_title_friendly_chat',
       icon: Icons.smart_toy_rounded,
       colors: [const Color(0xFFD81B60), const Color(0xFFFF8FB7)],
-      isTool: true,
+      isTool: false,
     ),
     UtilityApp(
       id: 'history',

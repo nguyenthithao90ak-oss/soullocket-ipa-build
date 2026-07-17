@@ -1391,5 +1391,20 @@ class WidgetService {
     if (houseId != null && houseId.isNotEmpty) {
       await syncSoulEventWidgetData(houseId: houseId);
     }
+  static Future<void> syncSoulMergeWidgetData({
+    required String message,
+    required String senderName,
+  }) async {
+    try {
+      await ensureInitialized();
+      await _saveWidgetDataIfChanged<String>('soulMergeMessage', message);
+      await _saveWidgetDataIfChanged<String>('soulMergeSenderName', senderName);
+      
+      if (Platform.isIOS) {
+        await HomeWidget.updateWidget(iOSName: iOSWidgetName);
+      }
+    } catch (e) {
+      debugPrint('Error syncing soul merge widget: ${AppErrorMapper.resolve(e).message}');
+    }
   }
 }

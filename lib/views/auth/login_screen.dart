@@ -476,13 +476,15 @@ class _LoginScreenState extends State<LoginScreen> {
         if (user != null) {
           try {
             final houseId = await HouseService()
-                .getCurrentHouseId(preferFresh: false)
-                .timeout(const Duration(seconds: 4));
+                .getCurrentHouseId(preferFresh: true)
+                .timeout(const Duration(seconds: 15));
             if (houseId != null && houseId.isNotEmpty) {
               await prefs.setString('il_house_id', houseId);
               await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
             }
-          } catch (_) {}
+          } catch (e) {
+            debugPrint('[Auth][LoginScreen] Error fetching houseId: $e');
+          }
         }
 
         if (!mounted) return;
@@ -728,13 +730,15 @@ class _LoginScreenState extends State<LoginScreen> {
       if (user != null) {
         try {
           final houseId = await HouseService()
-              .getCurrentHouseId(preferFresh: false)
-              .timeout(const Duration(seconds: 4));
+              .getCurrentHouseId(preferFresh: true)
+              .timeout(const Duration(seconds: 15));
           if (houseId != null && houseId.isNotEmpty) {
             await prefs.setString('il_house_id', houseId);
             await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
           }
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('[Auth][LoginScreen] Error fetching houseId (Social): $e');
+        }
       }
 
       if (!mounted) return;
@@ -884,7 +888,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   Positioned.fill(
                     child: FastBackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+                      filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
                       fallbackColor: Colors.white.withValues(alpha: 0.85),
                       child: Container(color: Colors.transparent),
                     ),

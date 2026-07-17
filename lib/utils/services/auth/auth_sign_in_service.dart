@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:crypto/crypto.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
@@ -1491,9 +1490,7 @@ class AuthSignInService {
           .write(SecureStorageService.keyAuthUid, user.uid);
       existingRole = prefs.getString('il_role');
       try {
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'houseId': houseId,
-        }, SetOptions(merge: true));
+        await FirebaseDatabase.instance.ref('users/${user.uid}/houseId').set(houseId);
       } catch (_) {}
     } else {
       await prefs.remove('il_house_id');
@@ -1505,9 +1502,7 @@ class AuthSignInService {
           .delete(SecureStorageService.keyAuthUid);
       await SecureStorageService.instance.delete(SecureStorageService.keyRole);
       try {
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'houseId': FieldValue.delete(),
-        }, SetOptions(merge: true));
+        await FirebaseDatabase.instance.ref('users/${user.uid}/houseId').remove();
       } catch (_) {}
     }
 

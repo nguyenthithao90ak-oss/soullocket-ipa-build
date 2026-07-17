@@ -391,6 +391,9 @@ class _MainHomeHeroCountdownCircleState
   List<String> _cachedPhotoUrls = [];
   bool _isFetchingPhotos = false;
 
+  bool _isProUser = false;
+  int _dailyExplosionCount = 0;
+
   late AnimationController _countController;
   late Animation<double> _countAnimation;
   int _targetValue = 0;
@@ -411,6 +414,26 @@ class _MainHomeHeroCountdownCircleState
       curve: Curves.easeOutCubic,
     ));
     _countController.forward();
+    
+    unawaited(_ensurePhotosLoaded());
+
+    PurchaseService().isVip().then((isVip) {
+      if (mounted) setState(() => _isProUser = isVip);
+    });
+    _loadExplosionLimit();
+  }
+
+  Future<void> _loadExplosionLimit() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final savedDate = prefs.getString('explosion_date') ?? '';
+    if (savedDate == today) {
+      _dailyExplosionCount = prefs.getInt('explosion_count') ?? 0;
+    } else {
+      _dailyExplosionCount = 0;
+      await prefs.setString('explosion_date', today);
+      await prefs.setInt('explosion_count', 0);
+    }
   }
 
   @override
@@ -450,85 +473,89 @@ class _MainHomeHeroCountdownCircleState
       final firestore = FirebaseFirestore.instance;
       final List<String> urls = [];
       final Set<String> seen = {};
+      void extractUrls(dynamic data) {
+        if (data == null) return;
+        if (data is String) {
+          final s = data.trim();
+          // Lấy tất cả mọi link http không phải âm thanh/video và không chứa khoảng trắng
+          if (s.startsWith('http') && 
+              !s.contains(' ') &&
+              !s.contains('.m4a') && 
+              !s.contains('.mp4') && 
+              !s.contains('.mp3') && 
+              !s.contains('.wav') && 
+              seen.add(s)) {
+            urls.add(s);
+          }
+        } else if (data is Iterable) {
+          for (final item in data) {
+            extractUrls(item);
+          }
+        } else if (data is Map) {
+          data.values.forEach(extractUrls);
+        }
+      }
 
-      // 1. Fetch from diaries collection
+      // 1. Fetch from diaries collection (Firestore)
       try {
         final diariesSnap = await firestore
             .collection('houses')
             .doc(houseId)
             .collection('diaries')
-            .orderBy('ts', descending: true)
             .limit(20)
             .get();
         for (var doc in diariesSnap.docs) {
-          final data = doc.data();
-          final url = (data['imageUrl'] ?? data['url'] ?? '').toString().trim();
-          if (url.isNotEmpty && url.startsWith('http') && seen.add(url)) {
-            urls.add(url);
-          }
+          extractUrls(doc.data());
         }
       } catch (e) {
         debugPrint('[HomeCountdownCircle] diaries fetch error: $e');
       }
 
-      // 2. Fetch from album collection
+      // 2. Fetch from album collection (Firestore)
       try {
         final albumSnap = await firestore
             .collection('houses')
             .doc(houseId)
             .collection('album')
-            .orderBy('ts', descending: true)
             .limit(20)
             .get();
         for (var doc in albumSnap.docs) {
-          final data = doc.data();
-          for (final key in <String>[
-            'url',
-            'imageUrl',
-            'photoUrl',
-            'mediaUrl',
-            'thumbUrl'
-          ]) {
-            final url = (data[key] as String? ?? '').trim();
-            if (url.isNotEmpty && url.startsWith('http') && seen.add(url)) {
-              urls.add(url);
-              break;
-            }
-          }
+          extractUrls(doc.data());
         }
       } catch (e) {
         debugPrint('[HomeCountdownCircle] album fetch error: $e');
       }
 
-      // 3. Fetch from memories collection
+      // 3. Fetch from memories collection (Firestore)
       try {
         final memoriesSnap = await firestore
             .collection('houses')
             .doc(houseId)
             .collection('memories')
-            .orderBy('ts', descending: true)
             .limit(20)
             .get();
         for (var doc in memoriesSnap.docs) {
-          final data = doc.data();
-          for (final key in <String>[
-            'url',
-            'imageUrl',
-            'photoUrl',
-            'mediaUrl'
-          ]) {
-            final url = (data[key] as String? ?? '').trim();
-            if (url.isNotEmpty && url.startsWith('http') && seen.add(url)) {
-              urls.add(url);
-              break;
-            }
-          }
+          extractUrls(doc.data());
         }
       } catch (e) {
         debugPrint('[HomeCountdownCircle] memories fetch error: $e');
       }
 
+      // 4. RTDB Fallback (diary & creative_diary & album & memory)
+      try {
+        final rtdbRefs = ['diary', 'creative_diary', 'album', 'memory', 'memories'];
+        for (final refName in rtdbRefs) {
+          final snap = await FirebaseDatabase.instance.ref('houses/$houseId/$refName').get();
+          if (snap.exists && snap.value != null) {
+            extractUrls(snap.value);
+          }
+        }
+      } catch (e) {
+        debugPrint('[HomeCountdownCircle] rtdb fetch error: $e');
+      }
+
       if (mounted) {
+        urls.shuffle();
         setState(() {
           _cachedPhotoUrls = urls;
         });
@@ -540,9 +567,26 @@ class _MainHomeHeroCountdownCircleState
     }
   }
 
-  void _triggerExplosion(Offset localPos) {
+  void _triggerExplosion(Offset localPos) async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    if (prefs.getString('explosion_date') != today) {
+      _dailyExplosionCount = 0;
+      await prefs.setString('explosion_date', today);
+    }
+    
+    if (_dailyExplosionCount >= 50) return;
+    
+    _dailyExplosionCount++;
+    await prefs.setInt('explosion_count', _dailyExplosionCount);
+
     HapticFeedback.mediumImpact();
     unawaited(_ensurePhotosLoaded());
+
+    if (_cachedPhotoUrls.length > 3) {
+      final first = _cachedPhotoUrls.removeAt(0);
+      _cachedPhotoUrls.add(first);
+    }
 
     final random = Random();
     final int count = 4 + random.nextInt(3); // Burst 4, 5, or 6 photos at once!
@@ -712,6 +756,12 @@ class _MainHomeHeroCountdownCircleState
                         ),
                       ),
                     ),
+                    if (_cachedPhotoUrls.isNotEmpty)
+                      SnowGlobePhotoLayer(
+                        photoUrls: _cachedPhotoUrls.take(3).toList(),
+                        circleSize: widget.circleSize,
+                        enableMotion: widget.enableMotion,
+                      ),
                     if (widget.countdownStyleKey == 'floating_hearts')
                       FloatingHeartsRingOverlay(
                         size: widget.circleSize,
@@ -927,6 +977,14 @@ class _MainHomeHeroCountdownCircleState
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
+                    if (!_isProUser) {
+                      SLNotice.showInfo(context, 'Hiệu ứng bắn tim chỉ dành cho tài khoản Pro!');
+                      return;
+                    }
+                    if (_dailyExplosionCount >= 50) {
+                      SLNotice.showInfo(context, 'Hôm nay bạn đã hết lượt thả tim rồi nhé!');
+                      return;
+                    }
                     _triggerExplosion(Offset(
                         widget.circleSize * 0.1, widget.circleSize * 1.1));
                   },

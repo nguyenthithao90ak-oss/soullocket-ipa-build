@@ -178,7 +178,11 @@ class CreativeDiaryService {
   }
 
   Stream<List<Map<dynamic, dynamic>>> listenToDiaryPages(String houseId) {
-    return _db.ref('houses/$houseId/creative_diary').onValue.map((event) {
+    return _db.ref('houses/$houseId/creative_diary')
+        .orderByChild('timestamp')
+        .limitToLast(20)
+        .onValue
+        .map((event) {
       if (!event.snapshot.exists) return [];
       final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
       return data.entries.map((e) {

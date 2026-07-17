@@ -235,6 +235,16 @@ class NotificationService {
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
     final type = message.data['type']?.toString() ?? '';
     final screen = message.data['screen']?.toString() ?? '';
+    
+    // Đồng bộ iOS Widget cho Soul Merge
+    if (type == 'soul_merge' || screen == 'soul_merge') {
+      try {
+        final text = message.notification?.body ?? message.data['text'] ?? 'Có tin nhắn mới 💕';
+        final senderName = message.data['senderName']?.toString() ?? 'Người ấy';
+        await WidgetService.syncSoulMergeWidgetData(message: text.toString(), senderName: senderName);
+      } catch (_) {}
+    }
+
     final isInteractionOrMerge = type == 'soul_merge' ||
         screen == 'soul_merge' ||
         type == 'partner_care' ||

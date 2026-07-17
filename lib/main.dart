@@ -59,6 +59,15 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         screen == 'soul_merge' ||
         type == 'chat' ||
         screen == 'chat') {
+      
+      // Đồng bộ iOS Widget cho Soul Merge
+      if (type == 'soul_merge' || screen == 'soul_merge') {
+        try {
+          final text = message.notification?.body ?? message.data['text'] ?? 'Có tin nhắn mới 💕';
+          final senderName = message.data['senderName']?.toString() ?? 'Người ấy';
+          await WidgetService.syncSoulMergeWidgetData(message: text.toString(), senderName: senderName);
+        } catch (_) {}
+      }
       try {
         final granted = await FlutterOverlayWindow.isPermissionGranted();
         if (granted) {
@@ -264,6 +273,7 @@ void main() {
   runZonedGuarded(() async {
     final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
     await Hive.initFlutter();
+    unawaited(OfflineSyncQueue.instance.startListening());
     setupLocator();
     FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
     _configureRenderingDefaults();
@@ -306,32 +316,47 @@ void main() {
     };
 
     ErrorWidget.builder = (FlutterErrorDetails details) {
-      return Container(
+      return Material(
         color: SLColors.bgMain,
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.favorite,
-              color: SLColors.primary,
-              size: 44,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Có lỗi nhỏ xảy ra. Hãy thử lại sau nhé!',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.quicksand(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: SLColors.textPrimary,
-                decoration: TextDecoration.none,
+        child: Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.favorite,
+                color: SLColors.primary,
+                size: 44,
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              Text(
+                'Có lỗi nhỏ xảy ra: ${details.exceptionAsString()}', // TEMPORARY DEBUGGING
+                textAlign: TextAlign.center,
+                style: GoogleFonts.quicksand(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: SLColors.danger,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton.icon(
+                onPressed: () {
+                  // Try to pop current route or restart
+                },
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(
+                  'Thử lại',
+                  style: GoogleFonts.quicksand(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     };

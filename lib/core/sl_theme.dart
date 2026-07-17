@@ -456,6 +456,7 @@ class SLShadow {
 /// ─── Main Theme Class ─────────────────────────────────────────
 class SLTheme {
   static final ValueNotifier<bool> isTabSwiping = ValueNotifier<bool>(false);
+  static final ValueNotifier<int?> globalTabRequest = ValueNotifier<int?>(null);
   static const String defaultFontKey = 'quicksand';
   static List<SLFontOption> get fontOptions => [
         SLFontOption(

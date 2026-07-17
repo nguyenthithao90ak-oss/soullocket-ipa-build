@@ -941,7 +941,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
               child: FastBackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Container(
                   decoration: BoxDecoration(
                     color: const Color(0xFF0D121D).withValues(alpha: 0.65),

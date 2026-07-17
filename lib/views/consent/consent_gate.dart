@@ -276,9 +276,6 @@ class _ConsentGateState extends State<ConsentGate> {
                                             'assets/docs/privacy.html',
                                           ),
                                         ),
-                                        const SizedBox(height: 14),
-                                        _buildStartupAcknowledgement(ctx),
-                                        const SizedBox(height: 22),
                                         _buildStartupSectionLabel(
                                           title: context
                                               .tr('consent_tychnlutr_ffd19f'),
@@ -293,6 +290,8 @@ class _ConsentGateState extends State<ConsentGate> {
                                             cookieLevel = value;
                                           }),
                                         ),
+                                        const SizedBox(height: 16),
+                                        _buildStartupAcknowledgement(ctx),
                                         const SizedBox(height: 24),
                                         _buildStartupAgreeBar(
                                           ctx,

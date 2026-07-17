@@ -377,7 +377,7 @@ extension _SettingsTabShell on _SettingsTabState {
                           ),
                           children: [
                             _buildSettingsSyncBanner(),
-                            _buildNewSettingsList(isDark),
+                            ..._buildNewSettingsList(isDark),
                             const SizedBox(height: 18),
                             _buildSettingsFooter(),
                           ],
@@ -398,6 +398,10 @@ extension _SettingsTabShell on _SettingsTabState {
               bottom: 120,
               right: 20,
               child: _AnimatedMusicButton(),
+            ),
+            _DraggableFloatingChatIcon(
+              houseId: (_houseId ?? '').trim(),
+              myName: _resolveSettingsMyName(),
             ),
           ],
         ),
@@ -509,15 +513,17 @@ extension _SettingsTabShell on _SettingsTabState {
   }
 
   Widget _buildiOSSectionCard(List<Widget> children, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: children,
+    return RepaintBoundary(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: children,
+        ),
       ),
     );
   }
@@ -608,9 +614,8 @@ extension _SettingsTabShell on _SettingsTabState {
     );
   }
 
-  Widget _buildNewSettingsList(bool isDark) {
-    return Column(
-      children: [
+  List<Widget> _buildNewSettingsList(bool isDark) {
+    return [
         _buildiOSSectionCard([
           _buildiOSRow(
             icon: Icons.manage_accounts_rounded,
@@ -757,8 +762,7 @@ extension _SettingsTabShell on _SettingsTabState {
             onTap: _deleteAccount,
           ),
         ], isDark),
-      ],
-    );
+    ];
   }
 
   Widget _buildSettingsFooter() {
@@ -1016,6 +1020,185 @@ extension _SettingsTabShell on _SettingsTabState {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DraggableFloatingChatIcon extends StatefulWidget {
+  final String houseId;
+  final String myName;
+
+  const _DraggableFloatingChatIcon({
+    required this.houseId,
+    required this.myName,
+  });
+
+  @override
+  State<_DraggableFloatingChatIcon> createState() => _DraggableFloatingChatIconState();
+}
+
+class _DraggableFloatingChatIconState extends State<_DraggableFloatingChatIcon> {
+  Offset _position = const Offset(20, 200); // Default position
+  bool _isDragging = false;
+  
+  Timer? _speechTimer;
+  String? _currentSpeech;
+  
+  final List<String> _randomSpeeches = [
+    'Hello bạn, mình là Chat Thân Thiện đây!',
+    'Bạn có tâm sự gì không? Kể mình nghe nhé!',
+    'Bấm vào mình để trò chuyện nha!',
+    'Hôm nay của bạn thế nào?',
+    'Mình luôn ở đây để lắng nghe bạn!',
+    'Bạn đang tìm gì trong cài đặt thế?',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPosition();
+    _scheduleNextSpeech();
+  }
+
+  @override
+  void dispose() {
+    _speechTimer?.cancel();
+    super.dispose();
+  }
+
+  void _scheduleNextSpeech() {
+    _speechTimer?.cancel();
+    final randomSeconds = 60 + math.Random().nextInt(240); // 60s to 300s (1 to 5 mins)
+    _speechTimer = Timer(Duration(seconds: randomSeconds), _showSpeech);
+  }
+
+  void _showSpeech() {
+    if (!mounted || _isDragging) {
+      _scheduleNextSpeech();
+      return;
+    }
+    
+    setState(() {
+      _currentSpeech = _randomSpeeches[math.Random().nextInt(_randomSpeeches.length)];
+    });
+    
+    // Hide after 5 seconds
+    Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          _currentSpeech = null;
+        });
+        _scheduleNextSpeech();
+      }
+    });
+  }
+
+  Future<void> _loadPosition() async {
+    final prefs = await SharedPreferences.getInstance();
+    final dx = prefs.getDouble('il_settings_chat_icon_dx');
+    final dy = prefs.getDouble('il_settings_chat_icon_dy');
+    if (dx != null && dy != null) {
+      if (mounted) {
+        setState(() {
+          _position = Offset(dx, dy);
+        });
+      }
+    }
+  }
+
+  Future<void> _savePosition() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('il_settings_chat_icon_dx', _position.dx);
+    await prefs.setDouble('il_settings_chat_icon_dy', _position.dy);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: _position.dx,
+      top: _position.dy,
+      child: GestureDetector(
+        onPanStart: (_) => setState(() => _isDragging = true),
+        onPanUpdate: (details) {
+          setState(() {
+            _position += details.delta;
+          });
+        },
+        onPanEnd: (_) {
+          setState(() => _isDragging = false);
+          _savePosition();
+        },
+        onTap: () {
+          if (widget.houseId.isNotEmpty) {
+            slPush(
+              context,
+              FriendlyChatScreen(houseId: widget.houseId, myName: widget.myName),
+            );
+          } else {
+             // fallback silently if no house ID
+          }
+        },
+        child: AnimatedScale(
+          scale: _isDragging ? 1.1 : 1.0,
+          duration: const Duration(milliseconds: 200),
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: const R2StickerImage(
+                    'assets/images/interaction_stickers/custom/numbered/sticker_330.png',
+                    width: 36,
+                    height: 36,
+                  ),
+                ),
+              ),
+              if (_currentSpeech != null && !_isDragging)
+                Positioned(
+                  bottom: 64, // Positioned above the icon
+                  child: Container(
+                    width: 140,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.12),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        )
+                      ],
+                    ),
+                    child: Text(
+                      _currentSpeech!,
+                      textAlign: TextAlign.center,
+                      style: SLTheme.quicksand(
+                        fontSize: 12.5,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

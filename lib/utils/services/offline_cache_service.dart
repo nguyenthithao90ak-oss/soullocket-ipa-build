@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class OfflineCacheService {
   static final OfflineCacheService instance = OfflineCacheService._internal();
@@ -165,4 +168,194 @@ class _MemoryCacheEntry {
   final DateTime expiresAt;
 
   _MemoryCacheEntry({required this.data, required this.expiresAt});
+}
+
+// ─────────────────────────────────────────────
+// Offline Sync Queue — Lưu các lệnh ghi RTDB
+// khi offline, tự đồng bộ khi có mạng lại.
+// ─────────────────────────────────────────────
+
+/// Một lệnh ghi Firebase RTDB đang chờ đồng bộ.
+class _SyncTask {
+  final String path;
+  final Map<String, dynamic>? data; // null = xóa (delete)
+  final bool isDelete;
+  final int timestamp;
+
+  _SyncTask({
+    required this.path,
+    this.data,
+    this.isDelete = false,
+    required this.timestamp,
+  });
+
+  factory _SyncTask.fromJson(Map<String, dynamic> json) => _SyncTask(
+        path: json['path'] as String,
+        data: json['data'] != null
+            ? Map<String, dynamic>.from(json['data'] as Map)
+            : null,
+        isDelete: json['isDelete'] as bool? ?? false,
+        timestamp: json['timestamp'] as int,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'path': path,
+        'data': data,
+        'isDelete': isDelete,
+        'timestamp': timestamp,
+      };
+}
+
+/// Service quản lý hàng đợi đồng bộ offline cho Firebase Realtime Database.
+///
+/// Sử dụng:
+/// ```dart
+/// // Ghi dữ liệu — tự quyết định online/offline
+/// await OfflineSyncQueue.instance.write('houses/abc123/settings', {'theme': 'dark'});
+///
+/// // Khởi động listener mạng (gọi 1 lần khi app start)
+/// OfflineSyncQueue.instance.startListening();
+/// ```
+class OfflineSyncQueue {
+  static final OfflineSyncQueue instance = OfflineSyncQueue._();
+  OfflineSyncQueue._();
+
+  static const String _hiveBoxName = 'offline_sync_queue';
+  static const String _queueKey = 'pending_tasks';
+  static const int _maxQueueSize = 200;
+
+  Box? _box;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
+  bool _isSyncing = false;
+
+  /// Khởi động listener theo dõi kết nối mạng.
+  /// Gọi 1 lần duy nhất trong `main()` hoặc bootstrap của app.
+  Future<void> startListening() async {
+    _box = await Hive.openBox(_hiveBoxName);
+
+    // Thử sync ngay khi start (trường hợp app khởi động lại khi đang có mạng)
+    _trySyncNow();
+
+    _connectivitySub = Connectivity()
+        .onConnectivityChanged
+        .listen((List<ConnectivityResult> results) {
+      final hasConnection = results.any((r) => r != ConnectivityResult.none);
+      if (hasConnection) {
+        debugPrint('[SyncQueue] Phát hiện có mạng — bắt đầu đồng bộ hàng đợi...');
+        _trySyncNow();
+      }
+    });
+  }
+
+  /// Dừng listener (gọi khi dispose app nếu cần).
+  void stopListening() {
+    _connectivitySub?.cancel();
+    _connectivitySub = null;
+  }
+
+  /// Ghi dữ liệu lên Firebase RTDB.
+  /// Nếu online: ghi thẳng lên Firebase.
+  /// Nếu offline: đưa vào hàng đợi, tự đồng bộ khi có mạng.
+  Future<void> write(String path, Map<String, dynamic> data) async {
+    final isOnline = await _checkConnectivity();
+    if (isOnline) {
+      try {
+        await FirebaseDatabase.instance.ref(path).update(data);
+        debugPrint('[SyncQueue] Ghi online thành công: $path');
+        return;
+      } catch (e) {
+        debugPrint('[SyncQueue] Ghi online thất bại ($path), đẩy vào hàng đợi: $e');
+      }
+    }
+    await _enqueue(_SyncTask(
+      path: path,
+      data: data,
+      timestamp: DateTime.now().millisecondsSinceEpoch,
+    ));
+  }
+
+  /// Đưa một task vào hàng đợi Hive.
+  Future<void> _enqueue(_SyncTask task) async {
+    await _ensureBox();
+    final raw = _box!.get(_queueKey);
+    final List<dynamic> current =
+        raw != null ? List<dynamic>.from(jsonDecode(raw as String)) : [];
+
+    if (current.length >= _maxQueueSize) {
+      // Xóa task cũ nhất để nhường chỗ
+      current.removeAt(0);
+      debugPrint('[SyncQueue] Hàng đợi đầy, xóa task cũ nhất.');
+    }
+
+    current.add(task.toJson());
+    await _box!.put(_queueKey, jsonEncode(current));
+    debugPrint('[SyncQueue] Đã thêm vào hàng đợi: ${task.path} (tổng: ${current.length})');
+  }
+
+  /// Lấy số lượng task đang chờ trong hàng đợi.
+  Future<int> get pendingCount async {
+    await _ensureBox();
+    final raw = _box!.get(_queueKey);
+    if (raw == null) return 0;
+    final list = List<dynamic>.from(jsonDecode(raw as String));
+    return list.length;
+  }
+
+  /// Thực hiện đồng bộ toàn bộ hàng đợi lên Firebase.
+  Future<void> _trySyncNow() async {
+    if (_isSyncing) return;
+    _isSyncing = true;
+    try {
+      await _ensureBox();
+      final raw = _box!.get(_queueKey);
+      if (raw == null) return;
+
+      final List<dynamic> tasks = List<dynamic>.from(jsonDecode(raw as String));
+      if (tasks.isEmpty) return;
+
+      debugPrint('[SyncQueue] Bắt đầu đồng bộ ${tasks.length} task(s)...');
+      final List<dynamic> failed = [];
+
+      for (final taskJson in tasks) {
+        final task = _SyncTask.fromJson(Map<String, dynamic>.from(taskJson as Map));
+        try {
+          if (task.isDelete) {
+            await FirebaseDatabase.instance.ref(task.path).remove();
+          } else if (task.data != null) {
+            await FirebaseDatabase.instance.ref(task.path).update(task.data!);
+          }
+          debugPrint('[SyncQueue] ✓ Đồng bộ thành công: ${task.path}');
+        } catch (e) {
+          debugPrint('[SyncQueue] ✗ Thất bại khi đồng bộ ${task.path}: $e');
+          failed.add(taskJson); // Giữ lại để thử lại sau
+        }
+      }
+
+      // Lưu lại những task thất bại
+      if (failed.isEmpty) {
+        await _box!.delete(_queueKey);
+        debugPrint('[SyncQueue] Hoàn tất — hàng đợi đã trống.');
+      } else {
+        await _box!.put(_queueKey, jsonEncode(failed));
+        debugPrint('[SyncQueue] Còn ${failed.length} task(s) thất bại, sẽ thử lại sau.');
+      }
+    } catch (e) {
+      debugPrint('[SyncQueue] Lỗi khi đồng bộ hàng đợi: $e');
+    } finally {
+      _isSyncing = false;
+    }
+  }
+
+  Future<bool> _checkConnectivity() async {
+    try {
+      final results = await Connectivity().checkConnectivity();
+      return results.any((r) => r != ConnectivityResult.none);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _ensureBox() async {
+    _box ??= await Hive.openBox(_hiveBoxName);
+  }
 }

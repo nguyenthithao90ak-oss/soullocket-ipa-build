@@ -1219,6 +1219,85 @@ class _CountdownQuickCustomizeSheetContentState
     widget.homeState._showLatestSnackBar('Đã xóa ảnh nền trang chủ.');
   }
 
+  Widget buildAvatarIconToggleSection({
+    required bool showIcon,
+    required ValueChanged<bool> onToggle,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFF0DDE4)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF8A2387), Color(0xFFE94057), Color(0xFFF27121)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFE94057).withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.star_border_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hiển thị icon trang trí',
+                    style: SLTheme.quicksand(
+                      fontSize: 14.8,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF4A3640),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Bật/tắt các biểu tượng trang trí trên khung.',
+                    style: SLTheme.quicksand(
+                      fontSize: 12.1,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF8E6F7E),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          Switch(
+            value: showIcon,
+            activeThumbColor: const Color(0xFFD81B60),
+            activeTrackColor: const Color(0xFFFDE8F0),
+            inactiveThumbColor: const Color(0xFFB0B0B0),
+            inactiveTrackColor: const Color(0xFFF0DDE4),
+            onChanged: onToggle,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget buildTimerSection({
     required bool showTimer,
     required ValueChanged<bool> onToggle,
@@ -1793,6 +1872,14 @@ class _CountdownQuickCustomizeSheetContentState
                     avatarFrameKey: option.value,
                     isVip: widget.isVip,
                   ),
+                ),
+                const SizedBox(height: 12),
+                buildAvatarIconToggleSection(
+                  showIcon: uiState.showAvatarFrameIcon,
+                  onToggle: (val) async {
+                    HapticFeedback.selectionClick();
+                    await UiPrefs.setShowAvatarFrameIcon(val);
+                  },
                 ),
                 const SizedBox(height: 12),
                 // --- Chất lượng đồ họa ---

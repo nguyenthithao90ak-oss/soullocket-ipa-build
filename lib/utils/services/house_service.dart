@@ -681,11 +681,11 @@ class HouseService {
         _dbRef
             .child('users/$uid/houseId')
             .get()
-            .timeout(const Duration(seconds: 5)),
+            .timeout(const Duration(seconds: 10)),
         _dbRef
             .child('users/$uid/house_id')
             .get()
-            .timeout(const Duration(seconds: 5)),
+            .timeout(const Duration(seconds: 10)),
       ]);
 
       final primarySnap = results[0];
@@ -757,7 +757,7 @@ class HouseService {
       final ownerSnap = await _dbRef
           .child('houses/$normalizedHouseId/owner_uid')
           .get()
-          .timeout(const Duration(seconds: 3));
+          .timeout(const Duration(seconds: 8));
       if ((ownerSnap.value?.toString().trim() ?? '') == uid) {
         return true;
       }
@@ -765,7 +765,7 @@ class HouseService {
       final memberSnap = await _dbRef
           .child('houses/$normalizedHouseId/members/$uid')
           .get()
-          .timeout(const Duration(seconds: 3));
+          .timeout(const Duration(seconds: 8));
       return memberSnap.exists;
     } on TimeoutException {
       return false;

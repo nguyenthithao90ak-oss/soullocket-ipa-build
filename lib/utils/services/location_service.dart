@@ -180,11 +180,13 @@ class LocationService {
           forceWrite: true);
     } catch (e) {
       if (kDebugMode) {
-        debugPrint(
-            'LocationService.getCurrentPosition error: ${AppErrorMapper.resolve(
+        final errorMsg = AppErrorMapper.resolve(
           e,
           fallbackMessage: 'Không thể lấy vị trí hiện tại lúc này.',
-        ).message}');
+        ).message;
+        if (!errorMsg.contains('thời gian chờ')) {
+          debugPrint('LocationService.getCurrentPosition error: $errorMsg');
+        }
       }
       try {
         final lastKnown = await Geolocator.getLastKnownPosition();

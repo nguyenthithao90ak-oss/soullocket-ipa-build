@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
@@ -8,7 +10,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/sl_theme.dart';
 import '../../utils/services/ai_counselor_service.dart';
-import '../chat/chat_friendly_helper.dart';
+import '../ui_prefs.dart';
+import '../../widgets/r2_sticker_image.dart';
+import '../home/widgets/soul_merge_screen.dart';
+import 'soul_block_game.dart';
 
 class FriendlyChatScreen extends StatefulWidget {
   const FriendlyChatScreen({
@@ -49,6 +54,8 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
 
   bool _isSending = false;
   bool _hasUserInteracted = false;
+  int _currentCountdownDuration = 15;
+  String _persona = 'default';
 
   @override
   void initState() {
@@ -316,25 +323,6 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
     );
   }
 
-  Future<void> _copyAllMessages() async {
-    final lines = _messages
-        .where((message) => message.createdAt > 0)
-        .map((message) =>
-            '${message.isUser ? context.tr('util_bn_1fd75b') : 'SoulLocket AI'}: '
-            '${message.text.trim()}')
-        .where((line) => line.trim().isNotEmpty)
-        .join('\n\n');
-    if (lines.isEmpty) {
-      return;
-    }
-    await Clipboard.setData(ClipboardData(text: lines));
-    if (!mounted) {
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.tr('util_saochponch_7b55fc'))),
-    );
-  }
 
   Future<void> _showMessageActions(int index) async {
     if (index < 0 || index >= _messages.length) {
@@ -426,49 +414,142 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
       isUser: true,
       createdAt: DateTime.now().millisecondsSinceEpoch,
     );
+    
+    // Ước tính thời gian dựa vào độ dài câu hỏi (cơ bản 8s + 1s mỗi 20 ký tự)
+    int estimatedSeconds = 8 + (text.length ~/ 20);
+    if (estimatedSeconds > 35) estimatedSeconds = 35;
+
     setState(() {
       _hasUserInteracted = true;
       _messages.add(userMessage);
       _isSending = true;
+      _currentCountdownDuration = estimatedSeconds;
     });
     _saveCachedHistory();
     _scrollToBottom();
 
     final prompt = _buildPrompt(text);
-    final reply = await _aiService
-        .callTextGeneration(
-          prompt,
-          context.tr('util_bnlchatthn_ad4114'),
-          memoryScope: 'friendly_chat',
-          memoryText: text,
-        )
-        .timeout(
-          const Duration(seconds: 38),
-          onTimeout: () => null,
-        );
+    final persona = UiPrefs.notifier.value.friendlyChatPersona;
+    final personaText = persona.isNotEmpty ? '\nTHÔNG TIN NGƯỜI DÙNG TỰ GIỚI THIỆU: "$persona". HÃY GIAO TIẾP VÀ XƯNG HÔ DỰA THEO ĐÚNG THÔNG TIN NÀY.' : '';
+    final systemInstruction = '''Bạn là "Chat Thân Thiện", một người bạn đồng hành AI vô cùng dễ thương, thấu hiểu và hài hước của ứng dụng SoulLocket.
+Mục tiêu của bạn là lắng nghe, tâm sự và mang lại niềm vui, sự thoải mái cho người dùng.
+Quy tắc:
+1. Xưng hô tự nhiên, ưu tiên dựa theo phần THÔNG TIN NGƯỜI DÙNG TỰ GIỚI THIỆU nếu có, nếu không thì xưng "mình" và gọi "bạn".
+2. Trả lời tự nhiên, gần gũi, như một người bạn thực sự nhắn tin (dùng emoji phong phú).
+3. LUÔN LUÔN trả lời ngắn gọn (1-3 câu), súc tích. Không bao giờ viết dài dòng như một bài luận.
+4. Có thể dựa vào phần "Lịch sử trò chuyện gần đây" (nếu có) để hiểu ngữ cảnh câu chuyện, không cần hỏi lại những gì đã nói.
+5. Luôn phản hồi bằng tiếng Việt.
+6. TỪ CHỐI TẤT CẢ các yêu cầu tạo văn bản dài, viết bài, làm thơ dài, tóm tắt sách, code, hoặc các nội dung vượt quá 500 ký tự, HOẶC CÁC YÊU CẦU ĐỘC HẠI. Đối với các yêu cầu độc hại, vi phạm đạo đức, hãy trả lời chính xác bằng câu: "Xin lỗi tôi không thể thực hiện yêu cầu này".
+7. ĐIỀU HƯỚNG APP: Nếu người dùng yêu cầu mở một trang (Trang chủ, Nhật ký, Tiện ích, Trò chơi/Giải trí, Cập nhật, Cài đặt, Soul Merge, Soul Block), hãy thêm đúng mã lệnh [NAVIGATE:X] vào cuối câu trả lời. X phải là 1 trong các chữ: HOME, DIARY, LOVE, GAMES, UPDATE, SETTINGS, SOUL_MERGE, SOUL_BLOCK. Ví dụ: "Mình mở Soul Merge cho bạn nha! [NAVIGATE:SOUL_MERGE]"$personaText''';
 
-    if (!mounted) {
-      return;
-    }
-
-    String? finalReply = reply;
-    if (finalReply == null || finalReply.trim().isEmpty) {
-      // Fallback khi lỗi kết nối hoặc timeout
-      finalReply = ChatFriendlyHelper.getFriendlyResponse(
-        userText: text,
-        isOffline: true,
-      );
-    }
-
+    final int assistantMsgIndex = _messages.length;
     setState(() {
-      _isSending = false;
       _messages.add(
         _FriendlyChatMessage(
-          text: finalReply!.trim(),
+          text: '', 
           isUser: false,
           createdAt: DateTime.now().millisecondsSinceEpoch,
         ),
       );
+    });
+    _scrollToBottom();
+    
+    String finalReply = '';
+
+    try {
+      final stream = _aiService.streamTextGeneration(
+        prompt,
+        systemInstruction,
+        memoryScope: 'friendly_chat',
+        memoryText: text,
+        persona: _persona,
+      );
+
+      await for (final chunk in stream) {
+        if (!mounted) break;
+        finalReply += chunk;
+        
+        String displayText = finalReply;
+        if (displayText.contains('[NAVIGATE')) {
+           displayText = displayText.split('[NAVIGATE')[0].trim();
+        }
+        
+        setState(() {
+          _messages[assistantMsgIndex] = _messages[assistantMsgIndex].copyWith(text: displayText);
+        });
+        _scrollToBottom();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      if (finalReply.isEmpty) {
+        finalReply = _aiService.lastErrorMessage ?? 'Mình đang gặp chút sự cố kết nối. Bạn đợi một lát rồi nói lại nhé!';
+      }
+    }
+
+    if (!mounted) return;
+    
+    if (finalReply.trim().isEmpty) {
+       finalReply = _aiService.lastErrorMessage ?? 'Lỗi kết nối. Bạn đợi một lát rồi nói lại nhé!';
+    }
+    
+    int? navTarget;
+    if (finalReply.contains('[NAVIGATE:')) {
+      final regex = RegExp(r'\[NAVIGATE:([A-Z_]+)\]');
+      final match = regex.firstMatch(finalReply);
+      if (match != null) {
+        final target = match.group(1);
+        finalReply = finalReply.replaceAll(regex, '').trim();
+        if (target == 'HOME') navTarget = 0;
+        if (target == 'DIARY') navTarget = 1;
+        if (target == 'LOVE') navTarget = 2;
+        if (target == 'GAMES') navTarget = 3;
+        if (target == 'UPDATE') navTarget = 4;
+        if (target == 'SETTINGS') navTarget = -1;
+        if (target == 'SOUL_MERGE') navTarget = 101;
+        if (target == 'SOUL_BLOCK') navTarget = 102;
+      }
+    }
+
+    if (finalReply.contains('[ACTION:')) {
+      final actionRegex = RegExp(r'\[ACTION:([A-Z_]+)\]');
+      final actionMatch = actionRegex.firstMatch(finalReply);
+      if (actionMatch != null) {
+        final actionTarget = actionMatch.group(1);
+        finalReply = finalReply.replaceAll(actionRegex, '').trim();
+        if (actionTarget == 'THEME_DARK') {
+          UiPrefs.setThemeKey('theme-dark');
+        } else if (actionTarget == 'THEME_LIGHT') {
+          UiPrefs.setThemeKey('theme-light');
+        } else if (actionTarget == 'THEME_AUTO') {
+          UiPrefs.setThemeKey('theme-auto');
+        }
+      }
+    }
+
+    if (navTarget != null) {
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (!mounted) return;
+        
+        if (navTarget == 101) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const SoulMergeScreen())
+          );
+        } else if (navTarget == 102) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => SoulBlockGame())
+          );
+        } else {
+          Navigator.of(context).pop();
+          Future.delayed(const Duration(milliseconds: 100), () {
+            SLTheme.globalTabRequest.value = navTarget;
+          });
+        }
+      });
+    }
+
+    setState(() {
+      _isSending = false;
+      _messages[assistantMsgIndex] = _messages[assistantMsgIndex].copyWith(text: finalReply.trim());
     });
     _saveCachedHistory();
     _scrollToBottom();
@@ -476,12 +557,163 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
 
   String _buildPrompt(String text) {
     final name = widget.myName?.trim();
+    
+    final historyContext = StringBuffer();
+    // Bỏ qua tin nhắn chào mừng đầu tiên (index 0) và tin nhắn người dùng vừa gửi (cuối cùng)
+    final recentMessages = _messages.length > 2 
+        ? _messages.sublist(1, _messages.length - 1) 
+        : <_FriendlyChatMessage>[];
+        
+    final last12 = recentMessages.length > 12 ? recentMessages.sublist(recentMessages.length - 12) : recentMessages;
+    
+    if (last12.isNotEmpty) {
+      historyContext.writeln("--- Lịch sử trò chuyện gần đây ---");
+      for (final msg in last12) {
+        final role = msg.isUser ? (name != null && name.isNotEmpty ? name : "Người dùng") : "Chat Thân Thiện";
+        historyContext.writeln("$role: ${msg.text}");
+      }
+      historyContext.writeln("-----------------------------------");
+    }
+
     return [
+      if (historyContext.isNotEmpty) historyContext.toString(),
       if (name != null && name.isNotEmpty)
         L10nService().format('util_chat_prompt_display_name', {'name': name}),
       L10nService().format('util_chat_prompt_user_message', {'text': text}),
       context.tr('util_hytrlitnhi_5313dd'),
     ].join('\n');
+  }
+
+  Future<void> _clearHistory() async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Làm mới trò chuyện',
+          style: SLTheme.quicksand(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        content: Text(
+          'Bạn có chắc muốn xóa lịch sử trò chuyện hiện tại để bắt đầu chủ đề mới không?',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w600, fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Hủy', style: SLTheme.quicksand(color: Colors.grey, fontWeight: FontWeight.bold)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Làm mới', style: SLTheme.quicksand(color: const Color(0xFFD81B60), fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() {
+      _messages.clear();
+      _messages.add(
+        _FriendlyChatMessage(
+          text: L10nService().translate('util_chobnmnhlc_032510'),
+          isUser: false,
+        ),
+      );
+    });
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_cacheKey);
+  }
+
+  void _showPersonaConfigSheet() {
+    final controller = TextEditingController(text: UiPrefs.notifier.value.friendlyChatPersona);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Phong cách trò chuyện',
+                style: SLTheme.quicksand(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF243042),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Giới thiệu bản thân và cách xưng hô (Tối đa 50 ký tự). AI sẽ luôn tuân thủ theo!',
+                style: SLTheme.quicksand(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF6B4A5D),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                maxLength: 50,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Ví dụ: Mình là sếp, hãy gọi là anh/em',
+                  filled: true,
+                  fillColor: const Color(0xFFF9FAFB),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF243042),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    UiPrefs.setFriendlyChatPersona(controller.text);
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD81B60),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    'Lưu cấu hình',
+                    style: SLTheme.quicksand(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _scrollToBottom() {
@@ -512,11 +744,13 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
               }
               final messageIndex = index - 1;
               if (_isSending && messageIndex == _messages.length) {
-                return const _TypingBubble();
+                return _TypingBubble(duration: _currentCountdownDuration);
               }
               return _FriendlyChatBubble(
                 message: _messages[messageIndex],
+                isReporting: _reportingIndexes.contains(messageIndex),
                 onLongPress: () => _showMessageActions(messageIndex),
+                onReport: () => _reportMessage(messageIndex),
               );
             },
           ),
@@ -527,21 +761,34 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
 
     if (widget.embedded) {
       return DecoratedBox(
-        decoration: const BoxDecoration(color: Color(0xFFFFF8F5)),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFFFF0F5), Color(0xFFF3E5F5), Color(0xFFFFF3E0)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         child: SafeArea(top: false, child: content),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8F5),
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFF8F5),
+        backgroundColor: Colors.white.withValues(alpha: 0.7),
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: const SizedBox.expand(),
+          ),
+        ),
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF243042)),
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const _BotLoveAvatar(size: 34),
+            const _BotStickerAvatar(size: 34),
             const SizedBox(width: 10),
             Text(
               context.tr('util_chatthnthi_c39699'),
@@ -553,75 +800,150 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
           ],
         ),
         actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.psychology_alt_rounded, color: Color(0xFFD81B60)),
+            tooltip: 'Chọn Tính Cách AI',
+            initialValue: _persona,
+            onSelected: (value) {
+              setState(() {
+                _persona = value;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Đã chuyển sang tính cách: ${value == 'funny' ? 'Hài hước 😆' : value == 'advice' ? 'Tư vấn 🧠' : 'Mặc định 💖'}'),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'default',
+                child: Text('💖 Mặc định (Dễ thương)'),
+              ),
+              const PopupMenuItem(
+                value: 'funny',
+                child: Text('😆 Hài hước (Lầy lội)'),
+              ),
+              const PopupMenuItem(
+                value: 'advice',
+                child: Text('🧠 Tư vấn (Chín chắn)'),
+              ),
+            ],
+          ),
           IconButton(
-            tooltip: context.tr('util_saochponch_67739c'),
-            onPressed: _copyAllMessages,
-            icon: const Icon(Icons.copy_all_rounded),
+            tooltip: 'Phong cách trò chuyện',
+            onPressed: _showPersonaConfigSheet,
+            icon: const Icon(Icons.tune_rounded, color: Color(0xFF6B4A5D)),
+          ),
+          IconButton(
+            tooltip: 'Làm mới cuộc trò chuyện',
+            onPressed: _clearHistory,
+            icon: const Icon(Icons.refresh_rounded, color: Color(0xFFD81B60)),
           ),
         ],
       ),
-      body: SafeArea(top: false, child: content),
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFFFF0F5), Color(0xFFF3E5F5), Color(0xFFFFF3E0)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(top: false, child: content),
+      ),
     );
   }
 
   Widget _buildInputBar() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFFFD7E3))),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              minLines: 1,
-              maxLines: 4,
-              textInputAction: TextInputAction.newline,
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF243042),
-              ),
-              decoration: InputDecoration(
-                hintText: context.tr('util_nhpiubnmun_30266b'),
-                hintStyle: SLTheme.quicksand(
-                  color: const Color(0xFF9AA4B2),
-                  fontWeight: FontWeight.w700,
-                ),
-                filled: true,
-                fillColor: const Color(0xFFFFF4F7),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-              ),
-              onSubmitted: (_) => _sendMessage(),
-            ),
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.6),
+            border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.8))),
           ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: FilledButton(
-              onPressed: _isSending ? null : _sendMessage,
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFD81B60),
-                disabledBackgroundColor: const Color(0xFFF3B4C9),
-                padding: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _messageController,
+                  minLines: 1,
+                  maxLines: 4,
+                  maxLength: 500,
+                  textInputAction: TextInputAction.newline,
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF243042),
+                  ),
+                  decoration: InputDecoration(
+                    hintText: context.tr('util_nhpiubnmun_30266b'),
+                    hintStyle: SLTheme.quicksand(
+                      color: const Color(0xFF9AA4B2),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.7),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      borderSide: const BorderSide(color: Colors.white, width: 1.5),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      borderSide: const BorderSide(color: Colors.white, width: 1.5),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      borderSide: const BorderSide(color: Color(0xFFD81B60), width: 1.5),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                  ),
+                  onSubmitted: (_) => _sendMessage(),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFD81B60), Color(0xFFFF8FB7)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFD81B60).withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: _isSending ? null : _sendMessage,
+                    child: Center(
+                      child: Icon(
+                        Icons.send_rounded,
+                        size: 22,
+                        color: _isSending ? Colors.white.withValues(alpha: 0.5) : Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              child: const Icon(Icons.send_rounded, size: 22),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -630,11 +952,15 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
 class _FriendlyChatBubble extends StatelessWidget {
   const _FriendlyChatBubble({
     required this.message,
+    this.isReporting = false,
     this.onLongPress,
+    this.onReport,
   });
 
   final _FriendlyChatMessage message;
+  final bool isReporting;
   final VoidCallback? onLongPress;
+  final VoidCallback? onReport;
 
   @override
   Widget build(BuildContext context) {
@@ -647,26 +973,52 @@ class _FriendlyChatBubble extends StatelessWidget {
         ),
         child: Container(
           margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           decoration: BoxDecoration(
-            color: isUser ? const Color(0xFFD81B60) : Colors.white,
             borderRadius: BorderRadius.circular(18),
-            border: isUser ? null : Border.all(color: const Color(0xFFFFD7E3)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
+            boxShadow: isUser
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFFD81B60).withValues(alpha: 0.25),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
           ),
-          child: Text(
-            message.text,
-            style: SLTheme.quicksand(
-              fontSize: 14,
-              height: 1.35,
-              fontWeight: FontWeight.w700,
-              color: isUser ? Colors.white : const Color(0xFF243042),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: isUser ? 0.001 : 12, sigmaY: isUser ? 0.001 : 12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                decoration: BoxDecoration(
+                  gradient: isUser
+                      ? const LinearGradient(
+                          colors: [Color(0xFFD81B60), Color(0xFFFF8FB7)],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        )
+                      : null,
+                  color: isUser ? null : Colors.white.withValues(alpha: 0.65),
+                  borderRadius: BorderRadius.circular(18),
+                  border: isUser ? null : Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
+                ),
+                child: Text(
+                  message.text,
+                  style: SLTheme.quicksand(
+                    fontSize: 14,
+                    height: 1.35,
+                    fontWeight: FontWeight.w700,
+                    color: isUser ? Colors.white : const Color(0xFF243042),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -682,10 +1034,36 @@ class _FriendlyChatBubble extends StatelessWidget {
           children: [
             const Padding(
               padding: EdgeInsets.only(bottom: 40),
-              child: _BotLoveAvatar(size: 28),
+              child: _BotStickerAvatar(size: 28),
             ),
             const SizedBox(width: 8),
             Flexible(child: bubble),
+            if (onReport != null) ...[
+              const SizedBox(width: 2),
+              if (isReporting)
+                const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFD81B60)),
+                  ),
+                )
+              else
+                Material(
+                  color: Colors.transparent,
+                  child: IconButton(
+                    icon: Icon(
+                      message.reported ? Icons.check_circle_rounded : Icons.outlined_flag_rounded,
+                      size: 20,
+                      color: message.reported ? const Color(0xFF16A34A) : const Color(0xFF9AA4B2),
+                    ),
+                    tooltip: 'Báo cáo',
+                    splashRadius: 20,
+                    onPressed: message.reported ? null : onReport,
+                  ),
+                ),
+            ]
           ],
         ),
       );
@@ -705,40 +1083,49 @@ class _AiDisclosureCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFFD7E3)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.info_rounded,
-            color: Color(0xFFD81B60),
-            size: 20,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              context.tr('util_tinnhncthc_aeaabb'),
-              style: SLTheme.quicksand(
-                color: const Color(0xFF5E6A7D),
-                fontSize: 12,
-                height: 1.35,
-                fontWeight: FontWeight.w800,
-              ),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.info_rounded,
+                  color: Color(0xFFD81B60),
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    context.tr('util_tinnhncthc_aeaabb'),
+                    style: SLTheme.quicksand(
+                      color: const Color(0xFF5E6A7D),
+                      fontSize: 12,
+                      height: 1.35,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
 class _TypingBubble extends StatefulWidget {
-  const _TypingBubble();
+  final int duration;
+  const _TypingBubble({required this.duration});
 
   @override
   State<_TypingBubble> createState() => _TypingBubbleState();
@@ -747,18 +1134,31 @@ class _TypingBubble extends StatefulWidget {
 class _TypingBubbleState extends State<_TypingBubble>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  late int _countdown;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
+    _countdown = widget.duration;
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat();
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      if (_countdown > 0) {
+        setState(() => _countdown--);
+      } else {
+        timer.cancel();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _timer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -773,30 +1173,38 @@ class _TypingBubbleState extends State<_TypingBubble>
         children: [
           const Padding(
             padding: EdgeInsets.only(bottom: 10),
-            child: _BotLoveAvatar(size: 28),
+            child: _BotStickerAvatar(size: 28),
           ),
           const SizedBox(width: 8),
           Container(
             margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            decoration: BoxDecoration(
-              color: Colors.white,
+            child: ClipRRect(
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFFFFD7E3)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  context.tr('util_angson_6c571a'),
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF7A8598),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.65),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Chờ bot xíu... ${_countdown}s',
+                        style: SLTheme.quicksand(
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF7A8598),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _TypingDots(controller: _controller),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                _TypingDots(controller: _controller),
-              ],
+              ),
             ),
           ),
         ],
@@ -846,61 +1254,31 @@ class _TypingDots extends StatelessWidget {
   }
 }
 
-class _BotLoveAvatar extends StatelessWidget {
-  const _BotLoveAvatar({required this.size});
+class _BotStickerAvatar extends StatelessWidget {
+  const _BotStickerAvatar({required this.size});
 
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
       width: size,
       height: size,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFD81B60), Color(0xFFFF8FB7)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFD81B60).withValues(alpha: 0.22),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Icon(
-              Icons.smart_toy_rounded,
-              color: Colors.white,
-              size: size * 0.58,
-            ),
-          ),
-          Positioned(
-            right: -1,
-            bottom: -1,
-            child: Container(
-              width: size * 0.42,
-              height: size * 0.42,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.favorite_rounded,
-                color: const Color(0xFFD81B60),
-                size: size * 0.28,
-              ),
-            ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.7),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD81B60).withValues(alpha: 0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(size * 0.12),
+        child: const R2StickerImage('assets/images/interaction_stickers/custom/numbered/sticker_330.png'),
       ),
     );
   }
@@ -919,9 +1297,12 @@ class _FriendlyChatMessage {
   final int createdAt;
   final bool reported;
 
-  _FriendlyChatMessage copyWith({bool? reported}) {
+  _FriendlyChatMessage copyWith({
+    String? text,
+    bool? reported,
+  }) {
     return _FriendlyChatMessage(
-      text: text,
+      text: text ?? this.text,
       isUser: isUser,
       createdAt: createdAt,
       reported: reported ?? this.reported,

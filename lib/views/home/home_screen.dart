@@ -41,6 +41,7 @@ import '../../utils/services/update_checker_service.dart';
 import '../../utils/services/local_action_throttle_service.dart';
 import '../../widgets/legacy_falling_effect.dart';
 import '../../widgets/touch_effect_overlay.dart';
+import 'widgets/doodle_background.dart';
 import '../notifications/notification_center_screen.dart';
 import '../chat/chat_detail_screen.dart';
 import '../relationship/couple_connect_screen.dart';
@@ -120,7 +121,7 @@ class _TabActivationHostState extends State<_TabActivationHost> {
   late final ValueNotifier<bool> _isActiveNotifier;
   late bool _isVisible;
   Widget? _cachedChild;
-  bool _pendingStateUpdate = false; // ⚡ batch multiple listener fires
+
 
   @override
   void initState() {
@@ -136,20 +137,19 @@ class _TabActivationHostState extends State<_TabActivationHost> {
   }
 
   bool _calculateVisibility() {
+    final activeIndex = widget.activeIndexListenable.value;
+    final isSwiping = widget.isSwipingListenable.value;
+    if (isSwiping) {
+      // Chỉ hiển thị tab hiện tại và 2 tab kề bên để tránh giật lag do render toàn bộ 5 tab
+      return (widget.tabIndex - activeIndex).abs() <= 1;
+    }
+
     final jump = widget.jumpListenable.value;
     if (jump != null) {
       return widget.tabIndex == jump.source || widget.tabIndex == jump.target;
     }
-    final activeIndex = widget.activeIndexListenable.value;
     if (activeIndex == widget.tabIndex) {
       return true;
-    }
-    final isSwiping = widget.isSwipingListenable.value;
-    if (isSwiping) {
-      final floorIndex = widget.backgroundIndexListenable.value;
-      if (widget.tabIndex == floorIndex || widget.tabIndex == floorIndex + 1) {
-        return true;
-      }
     }
     return false;
   }
@@ -199,26 +199,19 @@ class _TabActivationHostState extends State<_TabActivationHost> {
   }
 
   void _onStateChanged() {
-    // ⚡ Multiple listenables may fire in the same microtask batch during a swipe.
-    //   Coalesce them into a single setState via a deferred microtask.
-    if (_pendingStateUpdate) return;
-    _pendingStateUpdate = true;
-    Future.microtask(() {
-      if (!mounted) {
-        _pendingStateUpdate = false;
-        return;
-      }
-      _pendingStateUpdate = false;
-      final nextActive = widget.activeIndexListenable.value == widget.tabIndex;
-      final nextVisible = _calculateVisibility();
-      if (_isActiveNotifier.value != nextActive || _isVisible != nextVisible) {
-        setState(() {
-          _isActiveNotifier.value = nextActive;
-          _isVisible = nextVisible;
-        });
-      }
-    });
+    if (!mounted) return;
+    final nextActive = widget.activeIndexListenable.value == widget.tabIndex;
+    final nextVisible = _calculateVisibility();
+    if (_isActiveNotifier.value != nextActive || _isVisible != nextVisible) {
+      // Cập nhật ngay lập tức không delay microtask - tránh 1 frame blank
+      // khi jumpToPage đã render tab mới nhưng visibility vẫn chưa được update
+      _isActiveNotifier.value = nextActive;
+      _isVisible = nextVisible;
+      if (mounted) setState(() {});
+    }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -327,9 +320,9 @@ class _HomePreloadPageViewState extends State<_HomePreloadPageView> {
   @override
   Widget build(BuildContext context) {
     final axisDirection = _axisDirectionFor(context);
-    // Render tab lân cận (cacheExtent = 1.0) để pre-render 1 tab kế tiếp,
-    // giúp chuyển tab mượt nhưng không làm tràn RAM như khi để 2.0 (tải 5 tab cùng lúc).
-    const cacheExtent = 0.5;
+    // Tắt hoàn toàn cacheExtent (0.0) vì giờ đã dùng jumpToPage thay vì animateToPage.
+    // Việc này giúp tiết kiệm lượng lớn RAM và loại bỏ hoàn toàn giật lag do render ngầm.
+    const cacheExtent = 0.0;
 
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
@@ -458,6 +451,7 @@ class _HomeScreenState extends State<HomeScreen>
     RoleUtils.roleNotifier.addListener(_handleGlobalRoleChanged);
     RoleUtils.duplicateRoleNotifier.addListener(_handleDuplicateRoleWarning);
     _currentIndex = widget.initialTab.clamp(0, _navItems.length - 1);
+
     _activeTabIndexNotifier = ValueNotifier<int>(_currentIndex);
     _backgroundTabIndexNotifier =
         ValueNotifier<int>(_currentIndex); // ⚡ Init background notifier
@@ -489,8 +483,11 @@ class _HomeScreenState extends State<HomeScreen>
     UiPrefs.ensureLoaded().then((_) {
       if (!mounted) return;
       UiPrefs.notifier.addListener(_handleUiPrefsChanged);
-      _handleUiPrefsChanged();
-      _listenForSettings();
+      SLTheme.globalTabRequest.addListener(_handleGlobalTabRequest);
+
+      if (widget.initialTab != 0) {
+        _listenForSettings();
+      }
     });
     unawaited(_openPinnedCountdownModeIfNeeded());
     _hydrateNavCollapsed();
@@ -633,21 +630,77 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildTabPage(int index) {
+    Widget child = _TabActivationHost(
+      tabIndex: index,
+      activeIndexListenable: _activeTabIndexNotifier,
+      backgroundIndexListenable: _backgroundTabIndexNotifier,
+      isSwipingListenable: _isUserTabSwipingNotifier,
+      jumpListenable: _jumpNotifier,
+      builder: _tabBuilders[index],
+    );
+
+    if (index != 0) {
+      child = ValueListenableBuilder<UiPrefsState>(
+        valueListenable: UiPrefs.notifier,
+        builder: (context, uiState, childWidget) {
+          final themeKey = _resolveThemeKey(uiState.themeKey);
+          final isDark = _usesDarkShell(index, _isDarkTheme(themeKey), usesCustomBackground: false);
+          final gradient = _resolveTabShellGradient(
+            tabIndex: index,
+            themeKey: themeKey,
+            isDark: isDark,
+            usesCustomBackground: false,
+          );
+          
+          Widget content = childWidget!;
+          if (index == 1) {
+            content = DoodleBackground(
+              isDark: isDark,
+              opacity: 0.08,
+              child: content,
+            );
+          }
+          
+          return DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: gradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: content,
+          );
+        },
+        child: child,
+      );
+    }
+
     return _KeepAliveTabPage(
       key: PageStorageKey<String>('home-tab-$index-$_homeReloadCounter'),
-      child: _TabActivationHost(
-        tabIndex: index,
-        activeIndexListenable: _activeTabIndexNotifier,
-        backgroundIndexListenable: _backgroundTabIndexNotifier,
-        isSwipingListenable: _isUserTabSwipingNotifier,
-        jumpListenable: _jumpNotifier,
-        builder: _tabBuilders[index],
-      ),
+      child: child,
     );
   }
 
   Widget _tabPageForIndex(int index) {
     return _tabPageCache.putIfAbsent(index, () => _buildTabPage(index));
+  }
+
+  void _handleGlobalTabRequest() {
+    final target = SLTheme.globalTabRequest.value;
+    if (target != null && mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      if (target == -1) {
+        _openSettings();
+      } else if (target != _currentIndex) {
+        _pageController.animateToPage(
+          target,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOutCubic,
+        );
+      }
+      SLTheme.globalTabRequest.value = null;
+    }
   }
 
   void _handleGlobalRoleChanged() {
@@ -921,6 +974,7 @@ class _HomeScreenState extends State<HomeScreen>
     _appUpdateTimer?.cancel();
     _inactivityTimer?.cancel();
     UiPrefs.notifier.removeListener(_handleUiPrefsChanged);
+    SLTheme.globalTabRequest.removeListener(_handleGlobalTabRequest);
     _vipThemeRotateTimer?.cancel();
     _pageController.dispose();
     _activeTabIndexNotifier.dispose();
@@ -1108,12 +1162,7 @@ class _HomeScreenState extends State<HomeScreen>
     if (!mounted) return;
     
     if (_isHouseUnpairedCache && _currentIndex != nextIndex) {
-      if (!_didShowFirstTabSwitchPairingPrompt) {
-        _didShowFirstTabSwitchPairingPrompt = true;
-        _showPairingRequiredDialog();
-      } else {
-        unawaited(_maybeShowRandomPairingNotice());
-      }
+      unawaited(_checkAndShowPairingNotice());
     }
 
     final oldIndex = _currentIndex;
@@ -1131,24 +1180,18 @@ class _HomeScreenState extends State<HomeScreen>
         _setActiveTabIndex(nextIndex);
         return;
       }
-      final pageDistance = (currentPage - nextIndex).abs();
-      final duration = Duration(
-        milliseconds: pageDistance > 1.0 ? 200 : 140,
-      );
       _isUserTabSwipingNotifier.value = true;
       SLTheme.isTabSwiping.value = true;
-      final isJumping = pageDistance > 1.0;
-      if (isJumping) {
-        _jumpNotifier.value = (source: oldIndex, target: nextIndex);
-      }
+      
+      _jumpNotifier.value = (source: oldIndex, target: nextIndex);
+
       await _pageController.animateToPage(
         nextIndex,
-        duration: duration,
-        curve: Curves.easeOutQuart,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
       );
-      if (isJumping) {
-        _jumpNotifier.value = null;
-      }
+
+      _jumpNotifier.value = null;
       _isUserTabSwipingNotifier.value = false;
       SLTheme.isTabSwiping.value = false;
       _setActiveTabIndex(nextIndex);
@@ -1158,10 +1201,18 @@ class _HomeScreenState extends State<HomeScreen>
     _setActiveTabIndex(nextIndex);
   }
 
-  Future<void> _maybeShowRandomPairingNotice() async {
+  Future<void> _checkAndShowPairingNotice() async {
     if (!mounted) return;
     try {
       final prefs = await OfflineCacheService.getPrefs();
+      final lastTimeMs = prefs.getInt('il_last_pairing_notice_time') ?? 0;
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+
+      // Giới hạn tần suất 15 phút 1 lần theo yêu cầu user
+      if (nowMs - lastTimeMs < 15 * 60 * 1000) {
+        return;
+      }
+
       final dateKey = 'il_random_pairing_notice_date';
       final countKey = 'il_random_pairing_notice_count';
 
@@ -1177,9 +1228,11 @@ class _HomeScreenState extends State<HomeScreen>
         await prefs.setInt(countKey, 0);
       }
 
-      if (count < 3) {
-        // Tỷ lệ ngẫu nhiên 20% khi chuyển tab
-        if (Random().nextInt(5) == 0) {
+      // Giới hạn 5 lần 1 ngày (tăng nhẹ so với 3 vì đã có 15p cooldown)
+      if (count < 5) {
+        // Random 30% chance or if it's the very first time today
+        if (count == 0 || Random().nextInt(3) == 0) {
+          await prefs.setInt('il_last_pairing_notice_time', nowMs);
           await prefs.setInt(countKey, count + 1);
           if (mounted) {
             _showPairingRequiredDialog();
@@ -1407,11 +1460,10 @@ class _HomeScreenState extends State<HomeScreen>
       bodyContent = ValueListenableBuilder<bool>(
         valueListenable: _isUserTabSwipingNotifier,
         builder: (context, isSwiping, childUnderTouch) {
-          final targetChild = childUnderTouch ?? bodyContent;
-          if (isSwiping) {
-            return targetChild;
-          }
-          return TouchEffectOverlay(child: targetChild);
+          return TouchEffectOverlay(
+            isEnabled: !isSwiping,
+            child: childUnderTouch ?? bodyContent,
+          );
         },
         child: bodyContent,
       );

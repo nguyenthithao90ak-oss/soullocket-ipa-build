@@ -22,6 +22,14 @@ class DiaryGuardController extends ChangeNotifier {
     refreshConnectivity();
   }
 
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
   final FirebaseAuth _auth;
   final MilitaryLockService _militaryLockService;
 
@@ -43,12 +51,13 @@ class DiaryGuardController extends ChangeNotifier {
               results.isNotEmpty ? results.first : ConnectivityResult.none,
         )
         .catchError((_) => ConnectivityResult.none);
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   Future<void> loadPrivacyNoticeState() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      if (_disposed) return;
       final uid = _auth.currentUser?.uid ?? 'guest';
       final hasSeen = prefs.getBool('il_diary_privacy_seen_$uid') ?? false;
       final nextValue = !hasSeen;
@@ -56,16 +65,16 @@ class DiaryGuardController extends ChangeNotifier {
         return;
       }
       _showDiaryPrivacyNotice = nextValue;
-      notifyListeners();
+      if (!_disposed) notifyListeners();
     } catch (_) {}
   }
 
   Future<void> dismissPrivacyNotice() async {
-    if (!_showDiaryPrivacyNotice) {
+    if (!_showDiaryPrivacyNotice || _disposed) {
       return;
     }
     _showDiaryPrivacyNotice = false;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -87,6 +96,9 @@ class DiaryGuardController extends ChangeNotifier {
     } catch (_) {
       nextAuthenticated = false;
     }
+    // Guard: controller có thể bị dispose trong khi await ở trên
+    if (_disposed) return nextAuthenticated;
+
     final shouldNotify =
         _isCheckingAuth || _isAuthenticated != nextAuthenticated;
 
@@ -117,6 +129,7 @@ class DiaryGuardController extends ChangeNotifier {
       authSuccess = false;
     }
 
+    if (_disposed) return;
     _isAuthenticated = authSuccess;
     _isCheckingAuth = false;
     notifyListeners();

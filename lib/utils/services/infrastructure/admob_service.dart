@@ -1522,9 +1522,12 @@ class AdMobService {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final error =
           decodedMap?['error']?.toString() ?? _rewardHttpError(response);
-      debugPrint(
-        'Reward server rejected request: ${response.statusCode} $error',
-      );
+      
+      if (response.statusCode != 404) {
+        debugPrint(
+          'Reward server rejected request: ${response.statusCode} $error',
+        );
+      }
 
       if (_isRevenueSecurityError(error)) {
         await RevenueSecurityTelemetryService.instance.logEvent(
@@ -1539,7 +1542,9 @@ class AdMobService {
         );
       }
       // Log the exact endpoint that failed
-      debugPrint('REWARD_ERR: HTTP ${response.statusCode} - $error (url: $endpoint)');
+      if (response.statusCode != 404) {
+        debugPrint('REWARD_ERR: HTTP ${response.statusCode} - $error (url: $endpoint)');
+      }
       return {
         'ok': false,
         if (decodedMap != null) ...decodedMap,

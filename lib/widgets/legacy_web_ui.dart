@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
@@ -963,7 +962,7 @@ class SlAvatarFrame extends StatelessWidget {
             top: -size * 0.08,
             right: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_029.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -997,7 +996,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             right: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -1011,7 +1010,7 @@ class SlAvatarFrame extends StatelessWidget {
             top: -size * 0.08,
             right: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -1021,7 +1020,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             left: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_085.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_162.png',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -1035,7 +1034,7 @@ class SlAvatarFrame extends StatelessWidget {
             top: -size * 0.08,
             left: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_061.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_236.png',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -1045,7 +1044,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             right: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_065.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_045.png',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -1072,7 +1071,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             left: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
               width: size * 0.3,
               height: size * 0.3,
               fit: BoxFit.contain,
@@ -1082,7 +1081,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             right: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
               width: size * 0.3,
               height: size * 0.3,
               fit: BoxFit.contain,
@@ -1097,7 +1096,7 @@ class SlAvatarFrame extends StatelessWidget {
             top: -size * 0.08,
             left: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
+              'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
               width: size * 0.32,
               height: size * 0.32,
               fit: BoxFit.contain,

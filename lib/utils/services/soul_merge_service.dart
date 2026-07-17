@@ -112,11 +112,16 @@ class SoulMergeService {
       final body = trimmed.isNotEmpty
           ? trimmed
           : (imageUrl != null ? 'Đã gửi một ảnh' : 'Đã thì thầm với bạn trong Soul Merge 💕');
+      
+      final myName = user.displayName?.trim().isNotEmpty == true 
+          ? user.displayName!.trim() 
+          : 'Người ấy';
+          
       NotificationService().sendPartnerNotification(
         houseId: houseId,
         title: 'Soul Merge',
         body: body,
-        data: {'type': 'soul_merge'},
+        data: {'type': 'soul_merge', 'senderName': myName},
       );
 
       // Prune chat messages to keep database lightweight

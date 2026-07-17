@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/storage/storage_download_cache_helper.dart';
 
@@ -78,16 +79,13 @@ class R2NetworkImage extends StatelessWidget {
         }
 
         // Tải online trực tiếp nếu cache đĩa chưa sẵn sàng
-        return Image.network(
-          cleanUrl,
+        return CachedNetworkImage(
+          imageUrl: cleanUrl,
           fit: fit,
           width: width,
           height: height,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return placeholder ?? _buildPlaceholder();
-          },
-          errorBuilder: (context, error, stackTrace) => _buildErrorWidget(),
+          placeholder: (context, url) => placeholder ?? _buildPlaceholder(),
+          errorWidget: (context, url, error) => _buildErrorWidget(),
         );
       },
     );

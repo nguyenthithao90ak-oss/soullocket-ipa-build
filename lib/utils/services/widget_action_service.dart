@@ -60,6 +60,15 @@ class WidgetActionService {
     return action;
   }
 
+
+  void triggerAction(WidgetLaunchAction action) {
+    if (_controller.hasListener) {
+      _controller.add(action);
+      return;
+    }
+    _pendingAction = action;
+  }
+
   void _handleUri(Uri? uri) {
     final action = _parseAction(uri);
     if (action == null) return;

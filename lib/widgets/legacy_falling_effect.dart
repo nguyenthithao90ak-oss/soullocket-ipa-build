@@ -61,21 +61,18 @@ class _LegacyFallingEffectState extends State<LegacyFallingEffect>
   }
 
   void _syncAnimationState() {
-    final shouldAnimateNow =
-        _shouldAnimate && TickerMode.valuesOf(context).enabled;
+    final shouldAnimateNow = _shouldAnimate;
     if (shouldAnimateNow) {
       final controller = _controller ??= AnimationController(
         vsync: this,
         duration: _animationLoopDuration,
       );
       if (!controller.isAnimating) {
-        // ⚡ Delay animation start by 3s to reduce initial app startup lag
+        // Delay animation start to reduce initial app startup lag
         if (!_startupDelayApplied) {
           _startupDelayApplied = true;
           Future.delayed(_initialAnimationDelay, () {
-            if (mounted &&
-                _shouldAnimate &&
-                TickerMode.valuesOf(context).enabled) {
+            if (mounted && _shouldAnimate) {
               controller.repeat();
             }
           });
@@ -307,8 +304,7 @@ class _LegacyFallingEffectState extends State<LegacyFallingEffect>
       child: AnimatedBuilder(
         animation: controller,
         builder: (context, child) {
-          final shouldAnimateNow =
-              _shouldAnimate && TickerMode.valuesOf(context).enabled;
+          final shouldAnimateNow = _shouldAnimate;
           if (shouldAnimateNow) {
             _tickParticles();
           }

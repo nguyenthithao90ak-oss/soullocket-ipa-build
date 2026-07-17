@@ -484,7 +484,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
         if (!useLiteBackdrop)
           Positioned.fill(
             child: ImageFiltered(
-              imageFilter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+              imageFilter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
               child: Transform.scale(
                 scale: 1.08,
                 child: Opacity(

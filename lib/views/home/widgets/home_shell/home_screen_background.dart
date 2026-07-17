@@ -133,20 +133,8 @@ extension _HomeScreenShellBackground on _HomeScreenState {
     bool isDark, {
     required bool usesCustomBackground,
   }) {
-    switch (tabIndex) {
-      case 1:
-        return true;
-      case 2:
-        return false;
-      case 3:
-        return true;
-      case 4:
-        return true;
-      case 5:
-        return false;
-      default:
-        return isDark;
-    }
+    if (tabIndex == 1) return false; // Nháº­t kÃ½ luÃ´n sÃ¡ng
+    return isDark;
   }
 
   List<Color> _resolveTabShellGradient({
@@ -155,6 +143,31 @@ extension _HomeScreenShellBackground on _HomeScreenState {
     required bool isDark,
     required bool usesCustomBackground,
   }) {
+    if (tabIndex == 1) {
+      // Nháº­t kÃ½: MÃ u pastel há»“ng sÃ¡ng áº¥m Ã¡p (Ná»•i báº­t nháº¥t)
+      return const [
+        Color(0xFFFFE4E1),
+        Color(0xFFFFC0CB),
+        Color(0xFFFBC2EB),
+        Color(0xFFFF9A9E),
+      ];
+    } else if (tabIndex == 2) {
+      // Tiá»‡n Ã­ch: Xanh ngá»c thanh lá»‹ch
+      return isDark
+          ? const [Color(0xFF001F3F), Color(0xFF003366), Color(0xFF00509E)]
+          : const [Color(0xFFE0F7FA), Color(0xFFB2EBF2), Color(0xFF80DEEA)];
+    } else if (tabIndex == 3) {
+      // Giáº£i trÃ­: TÃ­m huyá»n bÃ­
+      return isDark
+          ? const [Color(0xFF1A1025), Color(0xFF311B4B), Color(0xFF4A2377)]
+          : const [Color(0xFFF3E5F5), Color(0xFFE1BEE7), Color(0xFFCE93D8)];
+    } else if (tabIndex == 4) {
+      // Cáº­p nháº­t: Xanh lÃ¡ má» thÆ° giÃ£n
+      return isDark
+          ? const [Color(0xFF00251A), Color(0xFF004D40), Color(0xFF00695C)]
+          : const [Color(0xFFE8F5E9), Color(0xFFC8E6C9), Color(0xFFA5D6A7)];
+    }
+    
     return _resolveShellGradient(themeKey, isDark);
   }
 

@@ -445,8 +445,10 @@ class WebRTCService {
         // Có thể trigger thư viện tắt chuông hoặc ẩn Incoming Call Screen
       }
     }, onError: (error) {
-      debugPrint(
-          'Error listening for incoming calls (childChanged): ${AppErrorMapper.resolve(error).message}');
+      final msg = AppErrorMapper.resolve(error).message;
+      if (!msg.contains('permission to access')) {
+        debugPrint('Error listening for incoming calls (childChanged): $msg');
+      }
     });
 
     return callsRef.onChildAdded.listen((event) {
@@ -467,8 +469,10 @@ class WebRTCService {
           : val['callerId']?.toString().trim() ?? 'Người lạ';
       onIncomingCall(roomId, callerId, val);
     }, onError: (error) {
-      debugPrint(
-          'Error listening for incoming calls (childAdded): ${AppErrorMapper.resolve(error).message}');
+      final msg = AppErrorMapper.resolve(error).message;
+      if (!msg.contains('permission to access')) {
+        debugPrint('Error listening for incoming calls (childAdded): $msg');
+      }
     });
   }
 }

@@ -36,7 +36,7 @@ class AppEntryAccessResolution {
 class AppEntryAccessResolver {
   static const Duration _prefsTimeout = Duration(seconds: 3);
   static const Duration _adminTimeout = Duration(seconds: 3);
-  static const Duration _remoteTimeout = Duration(seconds: 4);
+  static const Duration _remoteTimeout = Duration(seconds: 10);
 
   AppEntryAccessResolver({
     AuthService? authService,

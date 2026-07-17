@@ -320,20 +320,26 @@ class _CinemaScreenState extends State<CinemaScreen> {
             Positioned.fill(
               child: AnimatedSwitcher(
                 duration: const Duration(seconds: 1),
-                child: Container(
+                child: Stack(
                   key: ValueKey<String>(reel.items.first.imageUrl),
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: reel.items.first.imageUrl.startsWith('http')
-                          ? CachedNetworkImageProvider(reel.items.first.imageUrl)
-                          : FileImage(File(reel.items.first.imageUrl)) as ImageProvider,
-                      fit: BoxFit.cover,
+                  fit: StackFit.expand,
+                  children: [
+                    reel.items.first.imageUrl.startsWith('http')
+                        ? CachedNetworkImage(
+                            imageUrl: reel.items.first.imageUrl,
+                            fit: BoxFit.cover,
+                            errorWidget: (_, __, ___) => Container(color: Colors.black),
+                          )
+                        : Image.file(
+                            File(reel.items.first.imageUrl),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(color: Colors.black),
+                          ),
+                    BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                      child: Container(color: Colors.black.withValues(alpha: 0.6)),
                     ),
-                  ),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
-                    child: Container(color: Colors.black.withValues(alpha: 0.6)),
-                  ),
+                  ],
                 ),
               ),
             )

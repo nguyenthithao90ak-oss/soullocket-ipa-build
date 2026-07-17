@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+/// Skeleton loading placeholder với hiệu ứng shimmer.
+/// Hỗ trợ cả dark mode và light mode tự động.
 class SkeletonContainer extends StatefulWidget {
   final double width;
   final double height;
@@ -50,33 +52,19 @@ class SkeletonContainer extends StatefulWidget {
 class _SkeletonContainerState extends State<SkeletonContainer>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<Color?> _animation;
+  late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    )..repeat(reverse: true);
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
 
-    _initAnimation();
-  }
-
-  void _initAnimation() {
-    _animation = ColorTween(
-      begin: widget.baseColor ?? const Color(0xFFF2F3F5),
-      end: widget.highlightColor ?? const Color(0xFFE2E4E8),
-    ).animate(_controller);
-  }
-
-  @override
-  void didUpdateWidget(SkeletonContainer oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.baseColor != oldWidget.baseColor ||
-        widget.highlightColor != oldWidget.highlightColor) {
-      _initAnimation();
-    }
+    _animation = Tween<double>(begin: -2.0, end: 2.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -87,18 +75,34 @@ class _SkeletonContainerState extends State<SkeletonContainer>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Container(
-          width: widget.width,
-          height: widget.height,
-          decoration: BoxDecoration(
-            color: _animation.value,
-            borderRadius: widget.borderRadius,
-          ),
-        );
-      },
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final Color base = widget.baseColor ??
+        (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFEEEEEE));
+    final Color highlight = widget.highlightColor ??
+        (isDark ? const Color(0xFF3D3D3D) : const Color(0xFFF5F5F5));
+
+    return ClipRRect(
+      borderRadius: widget.borderRadius,
+      child: SizedBox(
+        width: widget.width,
+        height: widget.height,
+        child: AnimatedBuilder(
+          animation: _animation,
+          builder: (context, _) {
+            return DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment(_animation.value - 1, 0),
+                  end: Alignment(_animation.value + 1, 0),
+                  colors: [base, highlight, highlight, base],
+                  stops: const [0.0, 0.35, 0.65, 1.0],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }

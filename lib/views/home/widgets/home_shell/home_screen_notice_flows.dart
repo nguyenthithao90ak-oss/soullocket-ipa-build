@@ -603,11 +603,13 @@ class _InactivityCountdownDialogState
         children: [
           const Icon(Icons.timer_outlined, color: Color(0xFFFF4B91)),
           const SizedBox(width: 8),
-          Text(
-            context.tr('home_khonghd_inactivity') != 'home_khonghd_inactivity'
-                ? context.tr('home_khonghd_inactivity')
-                : 'Không có hoạt động',
-            style: SLTheme.quicksand(fontSize: 16, fontWeight: FontWeight.w700),
+          Expanded(
+            child: Text(
+              context.tr('home_khonghd_inactivity') != 'home_khonghd_inactivity'
+                  ? context.tr('home_khonghd_inactivity')
+                  : 'Không có hoạt động',
+              style: SLTheme.quicksand(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
           ),
         ],
       ),

@@ -93,6 +93,7 @@ import 'package:soullocket_app/views/home/love_insights_screen.dart';
 import 'package:soullocket_app/views/home/milestones_screen.dart';
 import 'dart:ui' as ui;
 
+import 'package:soullocket_app/views/home/widgets/main_home/hero/snow_globe_photo_layer.dart';
 import '../../../widgets/lottie_async_loader.dart';
 import '../../../core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/core/sl_route.dart';

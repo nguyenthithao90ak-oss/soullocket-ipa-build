@@ -29,6 +29,8 @@ struct CoupleWidgetData {
     var battery2: Int  // -1 = unknown
     var isCharging1: Bool
     var isCharging2: Bool
+    var soulMergeMessage: String
+    var soulMergeSenderName: String
 
     func resolvedDaysText(referenceDate: Date = Date()) -> String {
         var unit = dayUnitText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -108,7 +110,9 @@ struct CoupleWidgetData {
             battery1: battery1Raw == 0 && !(defaults?.object(forKey: "battery1") != nil) ? -1 : battery1Raw,
             battery2: battery2Raw == 0 && !(defaults?.object(forKey: "battery2") != nil) ? -1 : battery2Raw,
             isCharging1: defaults?.bool(forKey: "isCharging1") ?? false,
-            isCharging2: defaults?.bool(forKey: "isCharging2") ?? false
+            isCharging2: defaults?.bool(forKey: "isCharging2") ?? false,
+            soulMergeMessage: defaults?.string(forKey: "soulMergeMessage") ?? "Hãy vào nhà để trò chuyện nhé!",
+            soulMergeSenderName: defaults?.string(forKey: "soulMergeSenderName") ?? "Soul Merge"
         )
     }
 }
@@ -156,6 +160,7 @@ struct SoulLocketWidgetBundle16: WidgetBundle {
     var body: some Widget {
         WidgetCoupleProvider()
         WidgetCoupleAccessoryAvatarProvider()
+        WidgetSoulMergeAccessoryProvider()
         SoulLocketLiveActivity()
     }
 }
@@ -167,6 +172,7 @@ struct SoulLocketWidgetBundle15: WidgetBundle {
         WidgetCoupleProvider()
         if #available(iOS 16.0, *) {
             WidgetCoupleAccessoryAvatarProvider()
+            WidgetSoulMergeAccessoryProvider()
         }
     }
 }
@@ -206,6 +212,20 @@ struct WidgetCoupleAccessoryAvatarProvider: Widget {
         }
         .configurationDisplayName("SoulLocket: Avatar & Ngày")
         .description("Hiện số ngày yêu ở giữa cùng ảnh đại diện 2 người.")
+        .supportedFamilies([.accessoryRectangular])
+    }
+}
+
+@available(iOS 16.0, *)
+struct WidgetSoulMergeAccessoryProvider: Widget {
+    let kind: String = "WidgetSoulMergeAccessoryProvider"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: CoupleWidgetProvider()) { entry in
+            LockScreenSoulMergeWidgetView(data: entry.data)
+        }
+        .configurationDisplayName("SoulLocket: Soul Merge")
+        .description("Hiển thị tin nhắn Soul Merge mới nhất từ người kia.")
         .supportedFamilies([.accessoryRectangular])
     }
 }

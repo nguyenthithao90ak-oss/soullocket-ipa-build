@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 
 class TouchEffectOverlay extends StatefulWidget {
   final Widget child;
+  final bool isEnabled;
 
-  const TouchEffectOverlay({super.key, required this.child});
+  const TouchEffectOverlay({super.key, required this.child, this.isEnabled = true});
 
   @override
   State<TouchEffectOverlay> createState() => _TouchEffectOverlayState();
@@ -108,8 +109,12 @@ class _TouchEffectOverlayState extends State<TouchEffectOverlay>
   Widget build(BuildContext context) {
     return Listener(
       behavior: HitTestBehavior.translucent,
-      onPointerDown: (event) => _addParticles(event.localPosition),
+      onPointerDown: (event) {
+        if (!widget.isEnabled) return;
+        _addParticles(event.localPosition);
+      },
       onPointerMove: (event) {
+        if (!widget.isEnabled) return;
         if (event.buttons == 0 || _particles.length > (kIsWeb ? 18 : 32)) {
           return;
         }

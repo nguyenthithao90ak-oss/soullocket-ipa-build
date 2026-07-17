@@ -14,6 +14,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:in_app_review/in_app_review.dart';
 import '../../app_entry.dart';
 import 'package:soullocket_app/views/chat/chat_detail_screen.dart';
@@ -448,6 +449,8 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _hasPendingEmailVerification = false;
   int _emailVerifyWaitSeconds = 0;
   Timer? _emailVerifyTimer;
+  Timer? _countdownTimer;
+
   bool _didShowGuideOnOpen = false;
   final GlobalKey _accountGuideKey = GlobalKey();
   final GlobalKey _securityGuideKey = GlobalKey();

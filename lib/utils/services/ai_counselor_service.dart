@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
@@ -52,6 +53,63 @@ class AiCounselorService {
       debugPrint(
           '[AiCounselor] getAiChatHistory failed: ${AppErrorMapper.resolve(error).message}');
       return const <AiChatHistoryMessage>[];
+    }
+  }
+
+  Stream<String> streamTextGeneration(
+    String prompt,
+    String systemInstruction, {
+    String? memoryScope,
+    String? memoryText,
+    String? persona,
+  }) async* {
+    lastErrorMessage = null;
+    final user = FirebaseAuth.instance.currentUser;
+    final token = await user?.getIdToken();
+    if (token == null) {
+      lastErrorMessage = 'Bạn cần đăng nhập để dùng tính năng này.';
+      return;
+    }
+
+    final projectId = FirebaseFunctions.instance.app.options.projectId;
+    final url = 'https://us-central1-$projectId.cloudfunctions.net/generateAiReplyStream';
+
+    try {
+      final request = http.Request('POST', Uri.parse(url));
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Content-Type'] = 'application/json';
+      request.body = jsonEncode({
+        'data': {
+          'prompt': prompt,
+          'systemInstruction': systemInstruction,
+          'memoryScope': memoryScope,
+          'memoryText': memoryText,
+          'persona': persona,
+        }
+      });
+
+      final response = await http.Client().send(request);
+      if (response.statusCode != 200) {
+        lastErrorMessage = 'Lỗi kết nối máy chủ (Mã: ${response.statusCode})';
+        return;
+      }
+
+      await for (var line in response.stream.transform(utf8.decoder).transform(const LineSplitter())) {
+        if (line.startsWith('data: ')) {
+          try {
+            final payload = jsonDecode(line.substring(6));
+            if (payload['chunk'] != null) {
+              yield payload['chunk'] as String;
+            }
+            if (payload['text'] != null) {
+              yield payload['text'] as String;
+            }
+          } catch (_) {}
+        }
+      }
+    } catch (e) {
+      debugPrint('[AiCounselor] streamTextGeneration failed: $e');
+      lastErrorMessage = 'Mình đang gặp lỗi kết nối nên chưa trả lời được. Bạn thử lại sau nhé!';
     }
   }
 
@@ -147,60 +205,84 @@ class AiCounselorService {
   ) async {
     const proxyUrl =
         String.fromEnvironment('GEMINI_PROXY_URL', defaultValue: '');
-    if (proxyUrl.isEmpty) {
+    const apiKeysString =
+        String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+    const model =
+        String.fromEnvironment('GEMINI_MODEL', defaultValue: 'gemini-1.5-flash');
+
+    final apiKeys = apiKeysString
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty && e != 'ĐIỀN_KEY_CỦA_BẠN_VÀO_ĐÂY')
+        .toList();
+
+    List<String> urlsToTry = [];
+    if (proxyUrl.isNotEmpty) {
+      urlsToTry.add(proxyUrl);
+    }
+    for (final key in apiKeys) {
+      urlsToTry.add(
+          'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$key');
+    }
+
+    if (urlsToTry.isEmpty) {
       return null;
     }
-    final uri = Uri.parse(proxyUrl);
 
-    try {
-      final response = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'system_instruction': {
-            'parts': [
-              {'text': systemInstruction}
-            ]
-          },
-          'contents': [
-            {
+    for (final url in urlsToTry) {
+      final uri = Uri.parse(url);
+
+      try {
+        final response = await http.post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'system_instruction': {
               'parts': [
-                {'text': prompt}
+                {'text': systemInstruction}
               ]
+            },
+            'contents': [
+              {
+                'parts': [
+                  {'text': prompt}
+                ]
+              }
+            ],
+            'generationConfig': {
+              'temperature': 0.7,
             }
-          ],
-          'generationConfig': {
-            'temperature': 0.7,
-          }
-        }),
-      );
+          }),
+        );
 
-      if (response.statusCode != 200) {
-        return null;
+        if (response.statusCode != 200) {
+          continue; // Try next URL/key
+        }
+
+        final data = jsonDecode(response.body);
+        final candidates = data['candidates'];
+        if (candidates is! List || candidates.isEmpty) {
+          continue;
+        }
+
+        final first = candidates.first;
+        final content = first['content'];
+        final parts = content['parts'];
+        if (parts is! List || parts.isEmpty) {
+          continue;
+        }
+
+        final text = parts.first['text']?.toString().trim();
+        if (text == null || text.isEmpty) {
+          continue;
+        }
+
+        return text;
+      } catch (_) {
+        continue;
       }
-
-      final data = jsonDecode(response.body);
-      final candidates = data['candidates'];
-      if (candidates is! List || candidates.isEmpty) {
-        return null;
-      }
-
-      final first = candidates.first;
-      final content = first['content'];
-      final parts = content['parts'];
-      if (parts is! List || parts.isEmpty) {
-        return null;
-      }
-
-      final text = parts.first['text']?.toString().trim();
-      if (text == null || text.isEmpty) {
-        return null;
-      }
-
-      return text;
-    } catch (_) {
-      return null;
     }
+    return null;
   }
 
   String _mapFunctionsError(FirebaseFunctionsException error) {

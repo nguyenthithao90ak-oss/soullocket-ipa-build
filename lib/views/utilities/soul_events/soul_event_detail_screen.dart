@@ -86,9 +86,9 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
     final dateStr = '${date.day} thg ${date.month}, ${date.year}';
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: SLColors.bgMain,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: SLColors.bgMain,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new, color: color, size: 20),

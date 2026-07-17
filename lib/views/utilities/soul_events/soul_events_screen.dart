@@ -124,12 +124,12 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: SLColors.bgMain,
       appBar: AppBar(
         title: Text('Sự Kiện & Kỷ Niệm',
             style: SLTypography.titleLarge.copyWith(
                 color: SLColors.primary, fontWeight: FontWeight.w900)),
-        backgroundColor: Colors.transparent,
+        backgroundColor: SLColors.bgMain,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new,

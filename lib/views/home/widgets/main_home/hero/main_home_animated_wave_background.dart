@@ -13,7 +13,7 @@ class AnimatedWaveBackground extends StatefulWidget {
   });
 
   static bool hasMotion(String styleKey) {
-    return styleKey != 'plain';
+    return styleKey != 'plain' && styleKey != 'floating_hearts';
   }
 
   @override
@@ -167,7 +167,6 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
 
   bool _shouldAnimateFor() {
     if (!AnimatedWaveBackground.hasMotion(widget.styleKey)) return false;
-    if (!TickerMode.valuesOf(context).enabled) return false;
     return widget.enableMotion;
   }
 
@@ -323,7 +322,7 @@ class _WavePainter extends CustomPainter {
       Path()..addOval(Rect.fromCircle(center: center, radius: radius)),
     );
 
-    if (styleKey == 'plain') {
+    if (styleKey == 'plain' || styleKey == 'floating_hearts') {
       return;
     } else if (styleKey == 'glow') {
       _drawGlowHearts(canvas, width, height);
@@ -345,6 +344,7 @@ class _WavePainter extends CustomPainter {
       _drawFireworks(canvas, width, height, center, radius);
     } else if (styleKey == 'lava') {
       _drawLava(canvas, width, height, center, radius);
+      _drawDefaultWaves(canvas, width, height, center, radius);
     } else if (styleKey == 'cherry_blossom') {
       _drawCherryBlossom(canvas, width, height, center, radius);
     } else if (styleKey == 'meteor_shower') {

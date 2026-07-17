@@ -1350,3 +1350,26 @@ struct StatusSection: View {
     }
 }
 
+@available(iOS 16.0, *)
+struct LockScreenSoulMergeWidgetView: View {
+    let data: CoupleWidgetData
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Image(systemName: "heart.text.square.fill")
+                    .font(.system(size: 14))
+                Text(data.soulMergeSenderName)
+                    .font(.system(size: 13, weight: .bold))
+                Spacer()
+            }
+            Text(data.soulMergeMessage)
+                .font(.system(size: 13))
+                .lineLimit(2)
+                .truncationMode(.tail)
+            Spacer(minLength: 0)
+        }
+        .padding(4)
+    }
+}
+

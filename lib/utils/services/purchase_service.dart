@@ -305,10 +305,13 @@ class PurchaseService {
         );
       }
     } catch (error) {
-      debugPrint('VIP sync error: ${AppErrorMapper.resolve(
+      final msg = AppErrorMapper.resolve(
         error,
         fallbackMessage: 'Không thể đồng bộ VIP lúc này.',
-      ).message}');
+      ).message;
+      if (!msg.contains('Too many attempts')) {
+        debugPrint('VIP sync error: $msg');
+      }
     }
   }
 

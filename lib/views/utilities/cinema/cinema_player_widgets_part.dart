@@ -53,12 +53,17 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final viewport = constraints.biggest;
-          final titleWidth =
-              (viewport.width * 0.72).clamp(250.0, viewport.width - 24.0);
-          final left = (_titleAnchor.dx * viewport.width)
-              .clamp(12.0, viewport.width - titleWidth - 12.0);
-          final top = (_titleAnchor.dy * viewport.height)
-              .clamp(92.0, viewport.height - 220.0);
+          final safeViewportWidth = viewport.width > 0 ? viewport.width : 400.0;
+          final safeViewportHeight = viewport.height > 0 ? viewport.height : 800.0;
+          
+          final maxTitleWidth = (safeViewportWidth - 24.0).clamp(250.0, double.infinity);
+          final titleWidth = (safeViewportWidth * 0.72).clamp(250.0, maxTitleWidth);
+          
+          final maxLeft = (safeViewportWidth - titleWidth - 12.0).clamp(12.0, double.infinity);
+          final left = (_titleAnchor.dx * safeViewportWidth).clamp(12.0, maxLeft);
+          
+          final maxTop = (safeViewportHeight - 220.0).clamp(92.0, double.infinity);
+          final top = (_titleAnchor.dy * safeViewportHeight).clamp(92.0, maxTop);
 
           return Stack(
             children: <Widget>[

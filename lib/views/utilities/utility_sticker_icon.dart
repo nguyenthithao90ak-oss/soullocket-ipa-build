@@ -36,6 +36,9 @@ const Set<String> _kUtilityStickerIds = <String>{
 
 String? utilityStickerAssetForId(String utilityId) {
   final normalizedId = utilityId.trim().toLowerCase();
+  if (normalizedId == 'friendly_chat') {
+    return 'assets/images/interaction_stickers/custom/numbered/sticker_330.png';
+  }
   if (!_kUtilityStickerIds.contains(normalizedId)) {
     return null;
   }

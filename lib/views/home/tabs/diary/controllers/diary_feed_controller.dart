@@ -521,6 +521,7 @@ class DiaryFeedController extends ChangeNotifier {
   }
 
   void _updatePostsVN() {
+    if (_disposed) return;
     final pinnedList = _pinnedPosts;
     final latestList = _latestPosts;
     final paginatedList = _paginatedPosts;
@@ -617,7 +618,9 @@ class DiaryFeedController extends ChangeNotifier {
             );
           }
           _sortDiaryPosts(initialPosts);
-          postsVN.value = initialPosts;
+          if (!_disposed) {
+            postsVN.value = initialPosts;
+          }
           unawaited(_hydrateAuthorNames(initialPosts));
           _setLoading(false);
         }

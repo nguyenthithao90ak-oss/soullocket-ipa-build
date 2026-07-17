@@ -1,61 +1,45 @@
 import 'dart:math';
 
-import '../../utils/services/l10n_service.dart';
+
 
 class ChatFriendlyHelper {
   static List<String> get greetings => [
-        L10nService().translate('chat_friendly_00'),
-        L10nService().translate('chat_friendly_01'),
-        L10nService().translate('chat_friendly_02'),
-        L10nService().translate('chat_friendly_03'),
-        L10nService().translate('chat_friendly_04'),
+        'Chào bạn nha! Hôm nay có chuyện gì vui kể mình nghe với?',
+        'Xin chào! Cần tâm sự gì cứ nói với mình nhé.',
+        'Hi bạn! Mình luôn ở đây để lắng nghe nè.',
       ];
 
   static List<String> get wishes => [
-        L10nService().translate('chat_friendly_05'),
-        L10nService().translate('chat_friendly_06'),
-        L10nService().translate('chat_friendly_07'),
-        L10nService().translate('chat_friendly_08'),
-        L10nService().translate('chat_friendly_09'),
+        'Chúc bạn một ngày thật vui vẻ và nhiều năng lượng nha!',
+        'Ngủ ngon và có những giấc mơ đẹp nhé!',
       ];
 
   static List<String> get encouragements => [
-        L10nService().translate('chat_friendly_10'),
-        L10nService().translate('chat_friendly_11'),
-        L10nService().translate('chat_friendly_12'),
-        L10nService().translate('chat_friendly_13'),
-        L10nService().translate('chat_friendly_14'),
+        'Đừng buồn nhé, mọi chuyện rồi sẽ ổn thôi!',
+        'Bạn làm tốt lắm, hãy cứ tự tin lên nha!',
+        'Cố lên bạn nhé, mình luôn ủng hộ bạn!',
       ];
 
   static List<String> get offlineResponses => [
-        L10nService().translate('chat_friendly_15'),
-        L10nService().translate('chat_friendly_16'),
-        L10nService().translate('chat_friendly_17'),
-        L10nService().translate('chat_friendly_18'),
-        L10nService().translate('chat_friendly_19'),
+        'Mạng có vẻ yếu quá, mình chưa nghe rõ bạn nói gì. Bạn kiểm tra lại wifi 3G nhé!',
+        'Hình như mất kết nối rồi, bạn gửi lại tin nhắn giúp mình nha.',
+        'Mình đang bị rớt mạng một chút, bạn chờ xíu rồi nói lại nha.',
       ];
 
   static Map<String, List<String>> get qaPairs => {
         'mật khẩu|pass': [
-          L10nService().translate('chat_friendly_20'),
-          L10nService().translate('chat_friendly_21'),
+          'Nếu bạn quên mật khẩu, hãy vào Cài đặt và chọn Quên mật khẩu nhé.',
         ],
         'buồn|chán|mệt': [
-          L10nService().translate('chat_friendly_22'),
-          L10nService().translate('chat_friendly_23'),
-          L10nService().translate('chat_friendly_24'),
+          'Thương quá! Đừng buồn nữa nha, đi ăn món gì ngon ngon cho đỡ mệt nhé.',
+          'Mọi chuyện rồi sẽ qua thôi, bạn hãy nghỉ ngơi một chút nha.',
         ],
         'yêu|thích': [
-          L10nService().translate('chat_friendly_25'),
-          L10nService().translate('chat_friendly_26'),
+          'Yêu thương luôn là điều tuyệt vời nhất! Hai bạn hãy luôn hạnh phúc nhé 💕',
+          'Nghe lãng mạn quá! Chúc hai bạn mãi mặn nồng nha.',
         ],
         'tên|là ai': [
-          L10nService().translate('chat_friendly_27'),
-          L10nService().translate('chat_friendly_28'),
-        ],
-        'định vị|bản đồ|vị trí': [
-          L10nService().translate('chat_friendly_29'),
-          L10nService().translate('chat_friendly_30'),
+          'Mình là Trợ lý AI của SoulLocket, luôn sẵn sàng lắng nghe bạn đây!',
         ],
       };
 

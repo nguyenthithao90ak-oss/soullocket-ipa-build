@@ -34,7 +34,7 @@ class AuthPanelShell extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(32),
       child: FastBackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         fallbackColor: Colors.white.withValues(alpha: 0.85),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 320),

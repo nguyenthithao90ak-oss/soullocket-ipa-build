@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/services/storage/storage_download_cache_helper.dart';
@@ -26,14 +27,6 @@ class R2StickerImage extends StatelessWidget {
     'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_003.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_006.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_007.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_029.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_030.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_031.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_032.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_045.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_046.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_047.png',
@@ -50,17 +43,6 @@ class R2StickerImage extends StatelessWidget {
     'assets/images/interaction_stickers/custom/numbered/sticker_058.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_059.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_060.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_061.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_062.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_063.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_064.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_065.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_066.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_067.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_068.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_069.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_072.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_085.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_108.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_158.png',
@@ -142,28 +124,25 @@ class R2StickerImage extends StatelessWidget {
             );
           }
 
-          return Image.network(
-            r2Url,
+          return CachedNetworkImage(
+            imageUrl: r2Url,
             fit: fit,
             width: width,
             height: height,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Container(
-                width: width,
-                height: height,
-                alignment: Alignment.center,
-                child: const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF4F93)),
-                  ),
+            placeholder: (context, url) => Container(
+              width: width,
+              height: height,
+              alignment: Alignment.center,
+              child: const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF4F93)),
                 ),
-              );
-            },
-            errorBuilder: (context, error, stackTrace) {
+              ),
+            ),
+            errorWidget: (context, url, error) {
               if (errorWidget != null) return errorWidget!;
               return Image.asset(
                 assetPath,

@@ -338,28 +338,14 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
             ),
           ),
           children: [
-            ColorFiltered(
-              colorFilter: const ColorFilter.matrix(<double>[
-                -1,  0,  0, 0, 255,
-                 0, -1,  0, 0, 255,
-                 0,  0, -1, 0, 255,
-                 0,  0,  0, 1,   0,
-              ]),
-              child: ColorFiltered(
-                colorFilter: const ColorFilter.mode(
-                  Color(0xFF1E3A8A),
-                  BlendMode.color,
-                ),
-                child: fm.TileLayer(
-                  urlTemplate: AppConfig.openStreetMapTileUrl,
-                  userAgentPackageName: AppConfig.androidPackageName,
-                  maxZoom: 19,
-                  maxNativeZoom: 19,
-                  retinaMode: false,
-                  keepBuffer: 2,
-                  panBuffer: 1,
-                ),
-              ),
+            fm.TileLayer(
+              urlTemplate: AppConfig.openStreetMapTileUrl,
+              userAgentPackageName: AppConfig.androidPackageName,
+              maxZoom: 19,
+              maxNativeZoom: 19,
+              retinaMode: false,
+              keepBuffer: 2,
+              panBuffer: 1,
             ),
             ValueListenableBuilder<List<fm.Polyline>>(
               valueListenable: _historyPolylinesVN,
