@@ -9,9 +9,16 @@ Widget _buildStartupCookieStorageSection(
     width: double.infinity,
     padding: const EdgeInsets.all(13),
     decoration: BoxDecoration(
-      color: Color.lerp(Colors.white, _accentGreen, 0.035),
+      color: Colors.white,
       borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: _accentGreen.withValues(alpha: 0.14)),
+      border: Border.all(color: const Color(0xFFE2E8F0)),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.03),
+          blurRadius: 14,
+          offset: const Offset(0, 6),
+        ),
+      ],
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -23,9 +30,8 @@ Widget _buildStartupCookieStorageSection(
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.76),
-                borderRadius: BorderRadius.circular(13),
-                border: Border.all(color: _accentGreen.withValues(alpha: 0.16)),
+                color: _accentGreen.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.cookie_rounded,
                   color: _accentGreen, size: 20),
@@ -121,19 +127,17 @@ Widget _buildCookieChoiceCard({
           : const EdgeInsets.fromLTRB(9, 11, 11, 11),
       decoration: BoxDecoration(
         color:
-            selected ? Color.lerp(Colors.white, accent, 0.10) : _cardBackground,
+            selected ? accent.withValues(alpha: 0.04) : _cardBackground,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: selected ? accent.withValues(alpha: 0.28) : _panelBorder,
-          width: selected ? 1.35 : 1.0,
+          color: selected ? accent : const Color(0xFFE2E8F0),
+          width: selected ? 1.5 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: selected
-                ? accent.withValues(alpha: 0.08)
-                : Colors.black.withValues(alpha: 0.02),
-            blurRadius: selected ? 14 : 6,
-            offset: const Offset(0, 5),
+            color: Colors.black.withValues(alpha: 0.015),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),

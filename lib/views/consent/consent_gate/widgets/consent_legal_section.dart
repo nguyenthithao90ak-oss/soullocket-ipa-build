@@ -13,14 +13,14 @@ Widget _buildStartupLegalSection({
     width: double.infinity,
     padding: const EdgeInsets.fromLTRB(14, 14, 14, 13),
     decoration: BoxDecoration(
-      color: Color.lerp(Colors.white, accent, 0.045),
+      color: Colors.white,
       borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: accent.withValues(alpha: 0.18)),
+      border: Border.all(color: const Color(0xFFE2E8F0)),
       boxShadow: [
         BoxShadow(
-          color: accent.withValues(alpha: 0.045),
-          blurRadius: 10,
-          offset: const Offset(0, 4),
+          color: Colors.black.withValues(alpha: 0.03),
+          blurRadius: 14,
+          offset: const Offset(0, 6),
         ),
       ],
     ),
@@ -34,9 +34,8 @@ Widget _buildStartupLegalSection({
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.76),
-                borderRadius: BorderRadius.circular(13),
-                border: Border.all(color: accent.withValues(alpha: 0.16)),
+                color: accent.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: accent, size: 20),
             ),
