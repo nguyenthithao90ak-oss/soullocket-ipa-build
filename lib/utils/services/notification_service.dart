@@ -244,12 +244,10 @@ class NotificationService {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final houseId = await HouseService().getCurrentHouseId();
-        if (houseId != null && houseId.isNotEmpty) {
-          await FirebaseDatabase.instance
-              .ref('houses/$houseId/fcmTokens/${user.uid}')
-              .remove();
-        }
+        // Xóa ở đường dẫn chính nơi token được lưu
+        await FirebaseDatabase.instance
+            .ref('users/${user.uid}/fcmToken')
+            .remove();
       }
     } catch (e) {
       debugPrint('[NotificationService] clearTokenOnSignOut error: $e');

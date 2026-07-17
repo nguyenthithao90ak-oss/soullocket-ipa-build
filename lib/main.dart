@@ -915,6 +915,12 @@ void _configureRenderingDefaults() {
   if (kIsWeb) {
     imageCache.maximumSize = 180;
     imageCache.maximumSizeBytes = 120 << 20; // 120 MB
+  } else if (defaultTargetPlatform == TargetPlatform.iOS ||
+      defaultTargetPlatform == TargetPlatform.macOS) {
+    // iOS: giới hạn thấp hơn để tránh bị hệ thống kill vì dùng quá nhiều RAM
+    // (iPhone cũ chỉ có 3-4GB RAM, jetsam rất hung hăng)
+    imageCache.maximumSize = 200;
+    imageCache.maximumSizeBytes = 150 << 20; // 150 MB
   } else {
     imageCache.maximumSize = 400;
     imageCache.maximumSizeBytes = 256 << 20; // 256 MB

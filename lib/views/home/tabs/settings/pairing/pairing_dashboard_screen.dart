@@ -155,6 +155,10 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       }
 
       if (mounted) {
+        if (!_isPaired && isPaired && !_isLoading) {
+          _showCongratulationDialog();
+        }
+
         setState(() {
           _isPaired = isPaired;
           _isLoading = false;
@@ -210,6 +214,94 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     );
     // Reload if merged
     _loadHouseId();
+  }
+
+  void _showCongratulationDialog() {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) {
+        return Center(
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.8, end: 1.0),
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.elasticOut,
+            builder: (context, scale, child) {
+              return Transform.scale(
+                scale: scale,
+                child: child,
+              );
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 32),
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(32),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFD81B60).withValues(alpha: 0.2),
+                    blurRadius: 32,
+                    spreadRadius: 8,
+                  )
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF0F5),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.favorite_rounded, color: Color(0xFFD81B60), size: 64),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Chúc Mừng!',
+                    style: SLTheme.quicksand(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFFD81B60),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Hai bạn đã ghép nối thành công.\nHãy cùng nhau lưu giữ những khoảnh khắc tuyệt vời nhé!',
+                    textAlign: TextAlign.center,
+                    style: SLTheme.quicksand(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.grey.shade700,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD81B60),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      'Tuyệt vời',
+                      style: SLTheme.quicksand(fontSize: 16, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _showDetailedGuide() {

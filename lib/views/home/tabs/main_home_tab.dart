@@ -28,6 +28,7 @@ import 'package:soullocket_app/views/home/screens/interaction_sticker_editor_scr
 import 'package:soullocket_app/widgets/animated_rabbit_sticker.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/utils/services/soul_merge_service.dart';
+import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_dashboard_screen.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';

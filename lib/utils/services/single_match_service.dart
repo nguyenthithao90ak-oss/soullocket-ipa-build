@@ -379,9 +379,10 @@ class SingleMatchService {
 
   /// Fetch active pool (cached 15 phút).
   /// Chỉ chứa user đang bật single match — nhỏ hơn nhiều so với profile index.
-  Future<Map<String, Map<dynamic, dynamic>>> _fetchActivePoolWithCache() async {
+  Future<Map<String, Map<dynamic, dynamic>>> _fetchActivePoolWithCache({bool forceFetch = false}) async {
     final now = DateTime.now();
-    if (_activePoolCache != null &&
+    if (!forceFetch &&
+        _activePoolCache != null &&
         _activePoolCachedAt != null &&
         now.difference(_activePoolCachedAt!) < _poolCacheTtl) {
       return _activePoolCache!;
@@ -782,11 +783,73 @@ class SingleMatchService {
     bool needAudio = false,
     bool needVideo = false,
   }) async {
-    final pool = await _fetchActivePoolWithCache();
-    if (pool.isEmpty) return null;
+    var pool = await _fetchActivePoolWithCache();
+    var scored = _scorePool(pool, currentHouseId, excludeHouseIds, goal, voiceStyle, myTags, myAge, preferredAgeMin, preferredAgeMax, needAudio, needVideo);
 
+    if (scored.isEmpty) {
+      // Force fetch nếu cache không tìm thấy ai phù hợp
+      pool = await _fetchActivePoolWithCache(forceFetch: true);
+      scored = _scorePool(pool, currentHouseId, excludeHouseIds, goal, voiceStyle, myTags, myAge, preferredAgeMin, preferredAgeMax, needAudio, needVideo);
+    }
+
+    if (scored.isEmpty) return null;
+
+    // Sort by score descending
+    scored.sort((a, b) => b.score.compareTo(a.score));
+
+    // Random từ top-N
+    // Nếu pool < 20 → top 3
+    // Pool 20-100 → top 20%
+    // Tối đa 5
+    final topN = () {
+      if (scored.length < 3) return scored.length;
+      if (scored.length < 20) return 3;
+      return (scored.length ~/ 5).clamp(3, 5);
+    }();
+
+    final picked = scored[_random.nextInt(topN)];
+
+    // Lấy data gốc từ pool cache
+    final poolData = await _fetchActivePoolWithCache();
+    final rawEntry = poolData[picked.houseId];
+    if (rawEntry is! Map) return null;
+
+    final prefs = SingleMatchPreferences.fromMap(rawEntry);
+    final peerDob = (rawEntry['dobU1'] ?? '').toString().trim();
+    final peerName = (rawEntry['displayName'] ?? '').toString().trim();
+    return SingleMatchCandidate(
+      houseId: picked.houseId,
+      displayName: peerName.isNotEmpty ? peerName : 'Người ấy',
+      houseName: peerName,
+      avatarUrl: (rawEntry['avatarUrl'] ?? '').toString().trim(),
+      bio: (rawEntry['bio'] ?? '').toString().trim(),
+      intro: prefs.intro,
+      goal: prefs.goal,
+      voiceStyle: prefs.voiceStyle,
+      tags: prefs.tags,
+      allowAudioCalls: prefs.allowAudioCalls,
+      allowVideoCalls: prefs.allowVideoCalls,
+      enabled: true,
+      privacy: 'public',
+      updatedAt: prefs.updatedAt,
+      age: peerDob.isNotEmpty ? ageFromDob(peerDob) : null,
+    );
+  }
+
+  List<_PoolEntry> _scorePool(
+    Map<String, Map<dynamic, dynamic>> pool,
+    String currentHouseId,
+    Set<String> excludeHouseIds,
+    String goal,
+    String voiceStyle,
+    List<String> myTags,
+    int? myAge,
+    int preferredAgeMin,
+    int preferredAgeMax,
+    bool needAudio,
+    bool needVideo,
+  ) {
     final myTagSet = myTags.map((t) => t.toLowerCase()).toSet();
-    // Dùng list thay vì class riêng để giảm allocation
     final scored = <_PoolEntry>[];
 
     for (final entry in pool.entries) {
@@ -860,47 +923,7 @@ class SingleMatchService {
       scored.add(_PoolEntry(hid, score.clamp(24, 98)));
     }
 
-    if (scored.isEmpty) return null;
-
-    // Sort by score descending
-    scored.sort((a, b) => b.score.compareTo(a.score));
-
-    // Random từ top-N
-    // Nếu pool < 20 → top 3
-    // Pool 20-100 → top 20%
-    // Tối đa 5
-    final topN = () {
-      if (scored.length < 20) return 3;
-      return (scored.length ~/ 5).clamp(3, 5);
-    }();
-
-    final picked = scored[_random.nextInt(topN)];
-
-    // Lấy data gốc từ pool cache
-    final poolData = await _fetchActivePoolWithCache();
-    final rawEntry = poolData[picked.houseId];
-    if (rawEntry is! Map) return null;
-
-    final prefs = SingleMatchPreferences.fromMap(rawEntry);
-    final peerDob = (rawEntry['dobU1'] ?? '').toString().trim();
-    final peerName = (rawEntry['displayName'] ?? '').toString().trim();
-    return SingleMatchCandidate(
-      houseId: picked.houseId,
-      displayName: peerName.isNotEmpty ? peerName : 'Người ấy',
-      houseName: peerName,
-      avatarUrl: (rawEntry['avatarUrl'] ?? '').toString().trim(),
-      bio: (rawEntry['bio'] ?? '').toString().trim(),
-      intro: prefs.intro,
-      goal: prefs.goal,
-      voiceStyle: prefs.voiceStyle,
-      tags: prefs.tags,
-      allowAudioCalls: prefs.allowAudioCalls,
-      allowVideoCalls: prefs.allowVideoCalls,
-      enabled: true,
-      privacy: 'public',
-      updatedAt: prefs.updatedAt,
-      age: peerDob.isNotEmpty ? ageFromDob(peerDob) : null,
-    );
+    return scored;
   }
 }
 

@@ -230,8 +230,6 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isSingle) return const SizedBox.shrink();
-
     final isVisible = widget.activeIndex == 0;
     if (!isVisible) return const SizedBox.shrink();
 
@@ -332,11 +330,15 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                   if (_position != null) _savePosition(_position!);
                 },
                 onTap: () async {
-                  await Navigator.push(
-                    context,
-                    SLRoute(builder: (_) => const SoulMergeScreen()),
-                  );
-                  _loadSettings();
+                  if (_isSingle) {
+                    _showPairingBottomSheet(context);
+                  } else {
+                    await Navigator.push(
+                      context,
+                      SLRoute(builder: (_) => const SoulMergeScreen()),
+                    );
+                    _loadSettings();
+                  }
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 100),
@@ -379,5 +381,81 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
       },
     );
   }
-}
 
+  void _showPairingBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final isDark = UiPrefs.notifier.value.themeKey.contains('dark') || 
+            UiPrefs.notifier.value.themeKey.contains('night');
+        final bgColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
+        final textColor = isDark ? Colors.white : const Color(0xFF243041);
+
+        return Container(
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFCE4EC),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.favorite_rounded, color: Color(0xFFF06292), size: 24),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Tính năng dành cho cặp đôi',
+                style: SLTheme.quicksand(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Bạn hãy ghép nối với nửa kia để sử dụng tính năng này nhé!',
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontSize: 14,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const PairingDashboardScreen()));
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF15BB5),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Text(
+                  'Ghép nối ngay',
+                  style: SLTheme.quicksand(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
