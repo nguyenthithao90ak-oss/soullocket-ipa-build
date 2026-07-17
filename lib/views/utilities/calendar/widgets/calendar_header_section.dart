@@ -117,6 +117,7 @@ class CalendarHeaderSection extends StatelessWidget {
                 ),
                 SizedBox(height: compact ? 12 : 16),
                 TableCalendar(
+                  locale: L10nService().localeCode,
                   firstDay: DateTime.utc(2020, 1, 1),
                   lastDay: DateTime.utc(2030, 12, 31),
                   focusedDay: focusedDay,

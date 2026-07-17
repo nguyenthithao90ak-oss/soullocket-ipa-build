@@ -23,6 +23,7 @@ import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'house_service.dart';
 import 'offline_cache_service.dart';
 import 'role_utils.dart';
+import 'widget_service.dart';
 import 'l10n_service.dart';
 
 /// NotificationService — Gra (Logic/Data) chịu trách nhiệm toàn bộ
@@ -151,6 +152,14 @@ class NotificationService {
 
         await _saveFcmToken();
 
+        // iOS: Bật hiển thị thông báo khi app đang mở (foreground)
+        // Nếu không gọi dòng này, iOS sẽ âm thầm bỏ qua notification khi app ở foreground.
+        await _fcm.setForegroundNotificationPresentationOptions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+
         _tokenRefreshSubscription ??=
             _fcm.onTokenRefresh.listen(_onTokenRefresh);
         _foregroundSubscription ??=
@@ -191,6 +200,22 @@ class NotificationService {
   Future<void> _saveFcmToken() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
+
+    // iOS yêu cầu phải có APNS Token trước, nếu chưa có thì chờ tối đa 3 giây.
+    // Nếu bỏ qua bước này, getToken() sẽ trả về null trên thiết bị thật iOS.
+    if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
+      String? apnsToken;
+      for (var i = 0; i < 6; i++) {
+        apnsToken = await _fcm.getAPNSToken();
+        if (apnsToken != null) break;
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+      }
+      if (apnsToken == null) {
+        debugPrint('[NotificationService] APNS token not available yet, skipping FCM token save.');
+        return;
+      }
+    }
 
     final token = await _fcm.getToken();
     if (token == null) return;

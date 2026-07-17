@@ -218,6 +218,8 @@ class _TabActivationHostState extends State<_TabActivationHost> {
     return Visibility(
       visible: _isVisible,
       maintainState: true,
+      maintainAnimation: true,
+      maintainSize: true,
       child: TickerMode(
         enabled: _isActiveNotifier.value,
         child: _cachedChild ?? widget.builder(_isActiveNotifier),

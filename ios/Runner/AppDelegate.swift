@@ -22,7 +22,7 @@ import GoogleMaps
     GeneratedPluginRegistrant.register(with: self)
     
     if #available(iOS 10.0, *) {
-      UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
+      UNUserNotificationCenter.current().delegate = self
     }
 
     if let controller = window?.rootViewController as? FlutterViewController {

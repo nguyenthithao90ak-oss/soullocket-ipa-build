@@ -562,26 +562,11 @@ extension _CollageControlsPanel on _CollageMakerScreenState {
             ),
           ),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSourceButton(
-                  icon: Icons.photo_library_outlined,
-                  label: 'Chọn từ máy',
-                  onTap: _pickDevicePhotos,
-                  accent: _paperRoseDeep,
-                ),
-              ),
-              SizedBox(width: compact ? 10 : 12),
-              Expanded(
-                child: _buildSourceButton(
-                  icon: Icons.favorite_border_rounded,
-                  label: 'Chọn từ kỷ niệm',
-                  onTap: () => _showMemorySheet(context, compact),
-                  accent: _paperMistDeep,
-                ),
-              ),
-            ],
+          _buildSourceButton(
+            icon: Icons.photo_library_outlined,
+            label: 'Chọn từ máy',
+            onTap: _pickDevicePhotos,
+            accent: _paperRoseDeep,
           ),
         ],
       ),

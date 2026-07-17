@@ -1391,6 +1391,8 @@ class WidgetService {
     if (houseId != null && houseId.isNotEmpty) {
       await syncSoulEventWidgetData(houseId: houseId);
     }
+  }
+
   static Future<void> syncSoulMergeWidgetData({
     required String message,
     required String senderName,
