@@ -376,7 +376,7 @@ class _HomeScreenState extends State<HomeScreen>
   bool _didCheckPendingDeviceNotice = false;
   bool _isShowingBreakupEntryNotice = false;
   bool _isHouseUnpairedCache = false;
-  bool _didShowFirstTabSwitchPairingPrompt = false;
+  final bool _didShowFirstTabSwitchPairingPrompt = false;
   final _houseService = HouseService();
   final _houseSettingsService = HouseSettingsService();
   final _breakupService = BreakupService();

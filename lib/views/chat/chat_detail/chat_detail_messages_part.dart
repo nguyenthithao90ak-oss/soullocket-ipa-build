@@ -48,6 +48,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
       _newestMessageTs = _messages.first.timestamp.millisecondsSinceEpoch;
       _oldestMessageTs = _messages.last.timestamp.millisecondsSinceEpoch;
     }
+    _notifyMessagesChanged();
   }
 
   Future<void> _loadInitialMessages() async {
@@ -116,19 +117,21 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
       }
       merged.sort(_compareMessageOrder);
 
+      _messages
+        ..clear()
+        ..addAll(merged);
+      _oldestMessageTs = _messages.isEmpty
+          ? null
+          : _messages.last.timestamp.millisecondsSinceEpoch;
+      _newestMessageTs = _messages.isEmpty
+          ? null
+          : _messages.first.timestamp.millisecondsSinceEpoch;
+
       setState(() {
-        _messages
-          ..clear()
-          ..addAll(merged);
-        _oldestMessageTs = _messages.isEmpty
-            ? null
-            : _messages.last.timestamp.millisecondsSinceEpoch;
-        _newestMessageTs = _messages.isEmpty
-            ? null
-            : _messages.first.timestamp.millisecondsSinceEpoch;
         _hasMoreMessages = older.length >= _ChatDetailScreenState._chatPageSize;
         _isLoadingOlderMessages = false;
       });
+      _notifyMessagesChanged();
     } catch (_) {
       if (mounted) {
         setState(() => _isLoadingOlderMessages = false);
@@ -149,6 +152,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
     _newestMessageTs = _messages.isEmpty
         ? null
         : _messages.first.timestamp.millisecondsSinceEpoch;
+    _notifyMessagesChanged();
     // ⚡ Không cần setState rỗng — widget dùng StreamBuilder hoặc sẽ rebuild
     // khi listener _listenForNewMessages kích hoạt
   }
@@ -167,9 +171,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
           );
     _liveMessageSub = stream.listen((message) {
       if (!mounted) return;
-      setState(() {
-        _upsertLiveMessage(message);
-      });
+      _upsertLiveMessage(message);
     });
   }
 

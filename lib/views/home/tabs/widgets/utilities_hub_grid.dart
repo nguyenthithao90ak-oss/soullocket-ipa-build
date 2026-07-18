@@ -39,11 +39,11 @@ class UtilitiesHubGrid extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         const crossAxisCount = 4;
-        const tileHeight = 112.0;
-        final spacing = width >= 430 ? 14.0 : 12.0;
+        const tileHeight = 122.0; // Tăng chiều cao để chứa icon to hơn
+        final spacing = width >= 430 ? 18.0 : 14.0; // Tăng khoảng cách ngang
         final itemWidth =
             ((width - 44 - (spacing * (crossAxisCount - 1))) / crossAxisCount)
-                .clamp(64.0, 96.0);
+                .clamp(64.0, 100.0);
 
         return CustomScrollView(
           physics: SLResponsive.scrollPhysicsForPlatform(),
@@ -64,7 +64,7 @@ class UtilitiesHubGrid extends StatelessWidget {
               sliver: SliverGrid(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: crossAxisCount,
-                  mainAxisSpacing: 14,
+                  mainAxisSpacing: 20, // Tăng khoảng cách dọc
                   crossAxisSpacing: spacing,
                   childAspectRatio: itemWidth / tileHeight,
                 ),

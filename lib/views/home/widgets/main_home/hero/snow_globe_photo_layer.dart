@@ -253,6 +253,7 @@ class _SnowGlobePhotoLayerState extends State<SnowGlobePhotoLayer>
                 child: CachedNetworkImage(
                   imageUrl: item.url,
                   fit: BoxFit.cover,
+                  memCacheWidth: 200, // Tối ưu RAM: chỉ nạp ảnh nháp 200px
                   errorWidget: (_, __, ___) => Container(
                     color: const Color(0xFFFFE3EC),
                     child: const Icon(

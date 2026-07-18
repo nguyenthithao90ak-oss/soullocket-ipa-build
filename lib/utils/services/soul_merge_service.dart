@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'house_service.dart';
 import 'notification_service.dart';
+import 'widget_service.dart';
 
 class SoulMergeService {
   final FirebaseDatabase _db = FirebaseDatabase.instance;
@@ -281,6 +282,62 @@ class SoulMergeService {
         return <String, dynamic>{};
       });
     }).asBroadcastStream();
+  }
+
+  /// Khởi chạy đồng bộ Widget Soul Merge chủ động
+  Future<void> syncSoulMergeWidgetNow() async {
+    try {
+      final houseId = await _houseService.getCurrentHouseId();
+      if (houseId == null || houseId.isEmpty) return;
+
+      final prefs = await SharedPreferences.getInstance();
+      final myRole = _normalizeRole(prefs.getString('il_role'));
+      final partnerRole = myRole == 'user1' ? 'user2' : 'user1';
+
+      // 1. Get Partner Name
+      final houseSnap = await _db.ref('houses/$houseId').get();
+      if (!houseSnap.exists) return;
+      final houseData = houseSnap.value as Map<dynamic, dynamic>?;
+      if (houseData == null) return;
+
+      final users = houseData['users'] as Map<dynamic, dynamic>?;
+      String partnerName = 'Người ấy';
+      if (users != null && users[partnerRole] != null) {
+        final partnerInfo = users[partnerRole] as Map<dynamic, dynamic>;
+        partnerName = (partnerInfo['name'] as String?)?.trim() ?? 'Người ấy';
+        if (partnerName.isEmpty) partnerName = 'Người ấy';
+      }
+
+      // 2. Get Latest Message
+      final chatSnap = await _db
+          .ref('houses/$houseId/soul_merge/chat')
+          .orderByChild('timestamp')
+          .limitToLast(1)
+          .get();
+
+      String message = 'Hãy vào nhà để trò chuyện...';
+      if (chatSnap.exists && chatSnap.value is Map) {
+        final chatData = chatSnap.value as Map<dynamic, dynamic>;
+        if (chatData.isNotEmpty) {
+          final msgData = chatData.values.first as Map<dynamic, dynamic>;
+          final text = msgData['text'] as String?;
+          final imageUrl = msgData['imageUrl'] as String?;
+          if (text != null && text.trim().isNotEmpty) {
+            message = text.trim();
+          } else if (imageUrl != null && imageUrl.isNotEmpty) {
+            message = 'Đã gửi một ảnh';
+          }
+        }
+      }
+
+      // 3. Sync to Widget
+      await WidgetService.syncSoulMergeWidgetData(
+        message: message,
+        senderName: partnerName,
+      );
+    } catch (e) {
+      debugPrint('[SoulMergeService] syncSoulMergeWidgetNow error: $e');
+    }
   }
 
   String _normalizeRole(String? raw) {

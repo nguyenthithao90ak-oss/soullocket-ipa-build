@@ -4,8 +4,8 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import '../../../core/fast_backdrop_filter.dart';
 import 'package:flutter/services.dart';
+
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../screens/document_viewer_screen.dart';
 import '../screens/global_search_screen.dart';
@@ -158,6 +158,7 @@ part 'settings/settings_shell.dart';
 const Color _kSettingsBgTop = Color(0xFFEAF0F6);
 const Color _kSettingsBgMid = Color(0xFFDCE4EE);
 const Color _kSettingsBgBottom = Color(0xFFCDD8E6);
+// ignore: unused_element
 const Color _kSettingsHeaderBg = Color(0xFFE7EDF4);
 const Color _kSettingsHeaderSurface = Color(0xFFF9FBFD);
 const Color _kSettingsHeaderBorder = Color(0xFFBEC9D7);

@@ -900,7 +900,7 @@ class SLTheme {
     Color focusColor = const Color(0xFFFF8FB1),
     double radius = 24,
   }) {
-    OutlineInputBorder border(Color color, [double width = 1.25]) {
+    OutlineInputBorder border(Color color, [double width = 1.0]) {
       return OutlineInputBorder(
         borderRadius: BorderRadius.circular(radius),
         borderSide: BorderSide(color: color, width: width),
@@ -912,7 +912,7 @@ class SLTheme {
       helperText: helperText,
       hintStyle: SLTheme.quicksand(
         fontSize: 15.5,
-        color: SLColors.textSecond.withValues(alpha: 0.65),
+        color: SLColors.textSecond.withValues(alpha: 0.5),
         fontWeight: FontWeight.w700,
       ),
       helperStyle: SLTheme.quicksand(
@@ -924,11 +924,11 @@ class SLTheme {
       suffixIcon: suffixIcon,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       filled: true,
-      fillColor: fillColor,
-      enabledBorder: border(borderColor),
-      focusedBorder: border(focusColor, 1.8),
-      errorBorder: border(SLColors.danger, 1.5),
-      focusedErrorBorder: border(SLColors.danger, 1.8),
+      fillColor: Colors.white.withValues(alpha: 0.15), // Kính mờ nhẹ
+      enabledBorder: border(Colors.white.withValues(alpha: 0.3), 1.0), // Viền trắng mỏng
+      focusedBorder: border(Colors.white.withValues(alpha: 0.9), 1.5), // Sáng lên khi gõ
+      errorBorder: border(SLColors.danger, 1.2),
+      focusedErrorBorder: border(SLColors.danger, 1.5),
     );
   }
 
@@ -951,18 +951,19 @@ class SLTheme {
           gradient: LinearGradient(
             colors: isDisabled 
                 ? [const Color(0xFFF5D6E0), const Color(0xFFE8C1CD)]
-                : colors,
+                : const [Color(0xFFFF6FA3), Color(0xFF9030C0)], // Gradient rực rỡ và sang trọng hơn
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(32),
           boxShadow: isDisabled 
               ? [] 
               : [
                   BoxShadow(
-                    color: colors[1].withValues(alpha: 0.35),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+                    color: const Color(0xFFFF6FA3).withValues(alpha: 0.4), // Glow shadow
+                    blurRadius: 24,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 10),
                   ),
                 ],
         ),

@@ -24,7 +24,7 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
         physics: const BouncingScrollPhysics(),
         child: Row(
           children: apps.map((app) {
-            return GestureDetector(
+            return SLBouncingButton(
               onTap: () => _onPinnedAppTap(app),
               child: Container(
                 width: 78,

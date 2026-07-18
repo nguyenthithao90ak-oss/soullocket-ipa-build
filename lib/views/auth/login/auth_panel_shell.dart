@@ -40,18 +40,25 @@ class AuthPanelShell extends StatelessWidget {
           duration: const Duration(milliseconds: 320),
           curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.45),
-            borderRadius: BorderRadius.circular(32),
+            color: Colors.white.withValues(alpha: 0.18), // Kính trong suốt Premium
+            borderRadius: BorderRadius.circular(36),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: Colors.white.withValues(alpha: 0.4), // Viền kính sáng bóng
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFF1C3D3).withValues(alpha: 0.2),
+                color: const Color(0xFF6A1B9A).withValues(alpha: 0.08), 
                 blurRadius: 40,
+                spreadRadius: 8,
                 offset: const Offset(0, 16),
-              )
+              ),
+              BoxShadow(
+                color: Colors.white.withValues(alpha: 0.4), 
+                blurRadius: 24,
+                spreadRadius: -4,
+                offset: const Offset(0, -8),
+              ),
             ],
           ),
           padding: EdgeInsets.fromLTRB(

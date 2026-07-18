@@ -323,6 +323,7 @@ class _HomeExplodingPhotoWidgetState extends State<HomeExplodingPhotoWidget>
                       : CachedNetworkImage(
                           imageUrl: widget.photo.url,
                           fit: BoxFit.cover,
+                          memCacheWidth: 300,
                           useOldImageOnUrlChange: true,
                           fadeInDuration: Duration.zero,
                           errorWidget: (_, __, ___) => Container(
@@ -756,16 +757,20 @@ class _MainHomeHeroCountdownCircleState
                         ),
                       ),
                     ),
-                    if (_cachedPhotoUrls.isNotEmpty)
-                      SnowGlobePhotoLayer(
-                        photoUrls: _cachedPhotoUrls.take(3).toList(),
-                        circleSize: widget.circleSize,
-                        enableMotion: widget.enableMotion,
+                    if (_cachedPhotoUrls.isNotEmpty && widget.countdownStyleKey == 'floating_hearts')
+                      RepaintBoundary(
+                        child: SnowGlobePhotoLayer(
+                          photoUrls: _cachedPhotoUrls.take(3).toList(),
+                          circleSize: widget.circleSize,
+                          enableMotion: widget.enableMotion,
+                        ),
                       ),
                     if (widget.countdownStyleKey == 'floating_hearts')
-                      FloatingHeartsRingOverlay(
-                        size: widget.circleSize,
-                        enableMotion: widget.enableMotion,
+                      RepaintBoundary(
+                        child: FloatingHeartsRingOverlay(
+                          size: widget.circleSize,
+                          enableMotion: widget.enableMotion,
+                        ),
                       ),
                     Column(
                       mainAxisSize: MainAxisSize.min,

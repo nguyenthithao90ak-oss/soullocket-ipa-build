@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -114,241 +113,6 @@ class _UtilitiesHubDragFeedback extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Palette — all colors derived once from the two seed colors and cached.
-// ---------------------------------------------------------------------------
-
-class _TilePalette {
-  const _TilePalette({
-    required this.shellStart,
-    required this.shellEnd,
-    required this.shellBorder,
-    required this.innerBorder,
-    required this.shellGlow,
-    required this.shellOverlayStart,
-    required this.innerOverlayStart,
-    required this.labelColor,
-  });
-
-  final Color shellStart;
-  final Color shellEnd;
-  final Color shellBorder;
-  final Color innerBorder;
-  final Color shellGlow;
-  final Color shellOverlayStart;
-  final Color innerOverlayStart;
-  final Color labelColor;
-}
-
-/// FIX #2: Use an unambiguous String key to avoid XOR hash collisions.
-/// Format: firstArgb_lastArgb — unique for every color pair.
-final Map<String, _TilePalette> _paletteCache = {};
-
-_TilePalette _getTilePalette(List<Color> colors) {
-  // Stable key: two ARGB ints joined — no collision risk.
-  final key = '${colors.first.toARGB32()}_${colors.last.toARGB32()}';
-  return _paletteCache.putIfAbsent(key, () {
-    final shellStart =
-        Color.lerp(colors.first, colors.last, 0.16) ?? colors.first;
-    final shellEnd = Color.lerp(colors.last, colors.first, 0.10) ?? colors.last;
-    final shellBorder =
-        Color.lerp(colors.last, SLColors.textPrimary, 0.10) ?? colors.last;
-    final innerBorder =
-        Color.lerp(colors.first, colors.last, 0.32) ?? colors.first;
-    final shellGlow =
-        Color.lerp(colors.first, Colors.transparent, 0.46) ?? colors.first;
-    final shellOverlayStart =
-        Color.lerp(colors.first, colors.last, 0.14) ?? colors.first;
-    final innerOverlayStart =
-        Color.lerp(colors.first, colors.last, 0.22) ?? colors.first;
-    final labelColor = Color.lerp(colors.last, SLColors.textPrimary, 0.72) ??
-        SLColors.textPrimary;
-    return _TilePalette(
-      shellStart: shellStart,
-      shellEnd: shellEnd,
-      shellBorder: shellBorder,
-      innerBorder: innerBorder,
-      shellGlow: shellGlow,
-      shellOverlayStart: shellOverlayStart,
-      innerOverlayStart: innerOverlayStart,
-      labelColor: labelColor,
-    );
-  });
-}
-
-// ---------------------------------------------------------------------------
-// CustomPainter — draws the entire icon shell in ONE GPU pass.
-// ---------------------------------------------------------------------------
-
-class _TileIconPainter extends CustomPainter {
-  _TileIconPainter({
-    required this.palette,
-    required this.innerColors,
-    required this.isTarget,
-  });
-
-  final _TilePalette palette;
-  final List<Color> innerColors;
-  final bool isTarget;
-
-  static const double _shellRadius = 26.0;
-  static const double _innerSize = 52.0;
-  static const double _innerRadius = 20.0;
-  static const double _glossHeight = 18.0;
-  static const double _glossMarginH = 10.0;
-  static const double _glossTop = 9.0;
-  static const double _shadowHeight = 9.0;
-  static const double _shadowMarginH = 9.0;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final shellA1 = isTarget ? 0.98 : 0.94;
-    final shellA2 = isTarget ? 0.98 : 0.88;
-    final borderA = isTarget ? 0.96 : 0.88;
-    final borderW = isTarget ? 1.5 : 1.15;
-    final glowA = isTarget ? 0.34 : 0.22;
-
-    final fullRect = Offset.zero & size;
-    final shellRRect = RRect.fromRectAndRadius(
-      fullRect,
-      const Radius.circular(_shellRadius),
-    );
-
-    // 1. Shell background.
-    canvas.drawRRect(
-      shellRRect,
-      Paint()
-        ..shader = LinearGradient(
-          colors: [
-            palette.shellStart.withValues(alpha: shellA1),
-            palette.shellEnd.withValues(alpha: shellA2),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(fullRect),
-    );
-
-    // 2. Shell outer glow.
-    canvas.drawRRect(
-      shellRRect.inflate(6),
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
-            palette.shellGlow.withValues(alpha: glowA * 0.28),
-            Colors.transparent,
-          ],
-          radius: 0.85,
-        ).createShader(fullRect)
-        ..blendMode = BlendMode.srcOver,
-    );
-
-    // 3. Shell border.
-    canvas.drawRRect(
-      shellRRect,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..color = palette.shellBorder.withValues(alpha: borderA)
-        ..strokeWidth = borderW,
-    );
-
-    // 4. Top gloss highlight.
-    final glossRect = Rect.fromLTWH(
-      _glossMarginH,
-      _glossTop,
-      size.width - _glossMarginH * 2,
-      _glossHeight,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(glossRect, const Radius.circular(18)),
-      Paint()
-        ..shader = LinearGradient(
-          colors: [
-            palette.shellOverlayStart.withValues(alpha: 0.34),
-            palette.shellOverlayStart.withValues(alpha: 0.08),
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ).createShader(glossRect),
-    );
-
-    // 5. Inner rounded rect (icon background).
-    final innerDx = (size.width - _innerSize) / 2;
-    final innerDy = (size.height - _innerSize) / 2;
-    final innerRect = Rect.fromLTWH(innerDx, innerDy, _innerSize, _innerSize);
-    final innerRRect = RRect.fromRectAndRadius(
-      innerRect,
-      const Radius.circular(_innerRadius),
-    );
-
-    canvas.drawRRect(
-      innerRRect,
-      Paint()
-        ..shader = LinearGradient(
-          colors: innerColors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(innerRect),
-    );
-
-    // 6. Inner border.
-    canvas.drawRRect(
-      innerRRect,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..color = palette.innerBorder.withValues(alpha: 0.58)
-        ..strokeWidth = 1.0,
-    );
-
-    // 7. Inner overlay shimmer.
-    canvas.drawRRect(
-      innerRRect,
-      Paint()
-        ..shader = LinearGradient(
-          colors: [
-            palette.innerOverlayStart.withValues(alpha: 0.22),
-            palette.innerOverlayStart.withValues(alpha: 0.06),
-            Colors.transparent,
-          ],
-          stops: const [0.0, 0.28, 1.0],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(innerRect),
-    );
-
-    // 8. Bottom inner shadow.
-    final shadowRect = Rect.fromLTWH(
-      innerDx + _shadowMarginH,
-      innerDy + _innerSize - _shadowHeight * 2,
-      _innerSize - _shadowMarginH * 2,
-      _shadowHeight,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(shadowRect, const Radius.circular(12)),
-      Paint()
-        ..shader = LinearGradient(
-          colors: [
-            const Color(0xFF000000).withValues(alpha: 0.14),
-            Colors.transparent,
-          ],
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-        ).createShader(shadowRect),
-    );
-  }
-
-  /// FIX #1: appConfig['colors'] is a non-const List — reference equality
-  /// always returns false for different instances with the same values.
-  /// Use `listEquals()` for correct value-based comparison.
-  @override
-  bool shouldRepaint(_TileIconPainter old) {
-    if (old.isTarget != isTarget) return true;
-    if (old.palette != palette) return true;
-    // listEquals does O(n) element comparison — n=2 here, effectively O(1).
-    if (!listEquals(old.innerColors, innerColors)) return true;
-    return false;
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Tile content widget.
 // ---------------------------------------------------------------------------
 
@@ -373,20 +137,16 @@ class _UtilitiesHubTileContent extends StatelessWidget {
         };
     final List<Color> colors = List<Color>.from(config['colors'] as List);
     final IconData iconData = config['icon'] as IconData;
-    final Color iconColor =
-        (config['iconColor'] as Color?) ?? SLColors.textInverse;
 
-    final palette = _getTilePalette(colors);
-
-    /// FIX #3: Read devicePixelRatio once in the parent build() and pass it
-    /// directly to buildUtilityStickerIcon, eliminating the Builder widget
-    /// that was created for each of the 19 tiles solely to access MediaQuery.
+    final Color startColor = colors.first;
+    final Color endColor = colors.last;
     final dpr = MediaQuery.devicePixelRatioOf(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(24),
         onTap: onTap,
         child: SizedBox(
           width: double.infinity,
@@ -394,56 +154,81 @@ class _UtilitiesHubTileContent extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               AnimatedSlide(
-                duration: const Duration(milliseconds: 160),
+                duration: const Duration(milliseconds: 250),
                 curve: Curves.easeOutCubic,
-                offset: isTarget ? const Offset(0, -0.04) : Offset.zero,
-                child: SizedBox(
-                  width: 68,
-                  height: 68,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      // All background drawing in a single GPU paint call.
-                      CustomPaint(
-                        painter: _TileIconPainter(
-                          palette: palette,
-                          innerColors: colors,
-                          isTarget: isTarget,
-                        ),
+                offset: isTarget ? const Offset(0, -0.06) : Offset.zero,
+                child: AnimatedScale(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutCubic,
+                  scale: isTarget ? 1.08 : 1.0,
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(36),
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.white.withValues(alpha: 0.6),
+                      gradient: LinearGradient(
+                        colors: [
+                          startColor.withValues(alpha: 0.35),
+                          endColor.withValues(alpha: 0.15),
+                          Colors.white.withValues(alpha: isDark ? 0.05 : 0.4),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        stops: const [0.0, 0.7, 1.0],
                       ),
-                      // Icon on top — Builder removed.
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Center(
-                          child: buildUtilityStickerIcon(
-                            utilityId: app.id,
-                            fallbackIcon: iconData,
-                            fallbackColor: iconColor,
-                            fallbackSize: 27,
-                            padding: const EdgeInsets.all(2),
-                            devicePixelRatio: dpr,
+                      boxShadow: [
+                        BoxShadow(
+                          color: startColor.withValues(alpha: 0.4),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                        if (!isDark)
+                          BoxShadow(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            blurRadius: 12,
+                            offset: const Offset(-4, -4),
                           ),
-                        ),
+                      ],
+                      border: Border.all(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.2)
+                            : Colors.white.withValues(alpha: 0.85),
+                        width: 1.2,
                       ),
-                    ],
+                    ),
+                    child: Center(
+                      child: buildUtilityStickerIcon(
+                        utilityId: app.id,
+                        fallbackIcon: iconData,
+                        fallbackColor: endColor,
+                        fallbackSize: 34,
+                        padding: const EdgeInsets.all(4),
+                        devicePixelRatio: dpr,
+                      ),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               SizedBox(
-                height: 28,
+                height: 34,
                 child: Center(
                   child: Text(
-                    app.localizedTitle.toUpperCase(),
+                    app.localizedTitle,
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w900,
-                      color: palette.labelColor,
-                      letterSpacing: 0.35,
-                      height: 1.08,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w800,
+                      color: isDark
+                          ? Colors.white
+                          : SLColors.textPrimary.withValues(alpha: 0.85),
+                      letterSpacing: 0.3,
+                      height: 1.15,
                     ),
                   ),
                 ),
@@ -455,3 +240,4 @@ class _UtilitiesHubTileContent extends StatelessWidget {
     );
   }
 }
+

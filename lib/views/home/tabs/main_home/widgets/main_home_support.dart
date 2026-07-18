@@ -175,38 +175,40 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
           child: Container(
             width: p.size,
             height: p.size,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white, width: 3),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.22),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(9),
-            child: CachedNetworkImage(
-              imageUrl: widget.imageUrl!,
-              fit: BoxFit.cover,
-              fadeInDuration: const Duration(milliseconds: 150),
-              placeholder: (_, __) => Container(
-                color: const Color(0xFFFFD6E7),
-                child: const Center(
-                  child: Text('📷', style: TextStyle(fontSize: 24)),
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.22),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
                 ),
-              ),
-              errorWidget: (_, __, ___) => Container(
-                color: const Color(0xFFFFD6E7),
-                child: const Center(
-                  child: Text('🖼️', style: TextStyle(fontSize: 24)),
+              ],
+            ),
+            child: CustomPaint(
+              painter: _HeartBorderPainter(),
+              child: ClipPath(
+                clipper: _HeartClipper(),
+                child: CachedNetworkImage(
+                  imageUrl: widget.imageUrl!,
+                  fit: BoxFit.cover,
+                  fadeInDuration: const Duration(milliseconds: 150),
+                  placeholder: (_, __) => Container(
+                    color: const Color(0xFFFFD6E7),
+                    child: const Center(
+                      child: Text('📷', style: TextStyle(fontSize: 24)),
+                    ),
+                  ),
+                  errorWidget: (_, __, ___) => Container(
+                    color: const Color(0xFFFFD6E7),
+                    child: const Center(
+                      child: Text('🖼️', style: TextStyle(fontSize: 24)),
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-        ));
+        );
       }
 
       // Hạt tim thông thường
@@ -496,7 +498,7 @@ class FallingEffect extends StatefulWidget {
 }
 
 class _FallingEffectState extends State<FallingEffect>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _controller;
   final List<_FallingItem> _items = [];
   final Random _random = Random();
@@ -505,11 +507,21 @@ class _FallingEffectState extends State<FallingEffect>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _type = widget.type;
     _controller =
         AnimationController(vsync: this, duration: const Duration(seconds: 10))
           ..repeat();
     _initItems();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (!_controller.isAnimating) _controller.repeat();
+    } else {
+      if (_controller.isAnimating) _controller.stop();
+    }
   }
 
   @override
@@ -572,8 +584,10 @@ class _FallingEffectState extends State<FallingEffect>
     }
   }
 
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
   }
@@ -602,6 +616,45 @@ class _FallingEffectState extends State<FallingEffect>
       ),
     );
   }
+}
+
+class _HeartClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final double width = size.width;
+    final double height = size.height;
+    final Path path = Path();
+    path.moveTo(0.5 * width, height * 0.35);
+    path.cubicTo(0.2 * width, height * 0.1, -0.25 * width, height * 0.6, 0.5 * width, height);
+    path.moveTo(0.5 * width, height * 0.35);
+    path.cubicTo(0.8 * width, height * 0.1, 1.25 * width, height * 0.6, 0.5 * width, height);
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+class _HeartBorderPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double width = size.width;
+    final double height = size.height;
+    final Path path = Path();
+    path.moveTo(0.5 * width, height * 0.35);
+    path.cubicTo(0.2 * width, height * 0.1, -0.25 * width, height * 0.6, 0.5 * width, height);
+    path.moveTo(0.5 * width, height * 0.35);
+    path.cubicTo(0.8 * width, height * 0.1, 1.25 * width, height * 0.6, 0.5 * width, height);
+
+    final Paint paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0;
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
 
 class _FallingItem {

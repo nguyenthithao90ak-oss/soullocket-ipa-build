@@ -582,17 +582,19 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       try {
         aiReply = await AiCounselorService()
             .callTextGeneration(
-              'Người dùng vừa gửi tin nhắn hỗ trợ Admin: $userText\n${context.tr('util_hytrlinhtr_e42d19')}',
+              'Người dùng vừa gửi tin nhắn hỗ trợ: $userText\n${context.tr('util_hytrlinhtr_e42d19')}',
               context.tr('util_bnltrlailp_9d5e23'),
             )
-            .timeout(const Duration(seconds: 6));
+            .timeout(const Duration(seconds: 25)); // Tăng timeout lên 25s
       } catch (_) {}
 
-      await _saveBotReply(
-        aiReply == null || aiReply.trim().isEmpty
-            ? localReply
-            : '$localReply\n\nGợi ý nhanh từ Trợ lý:\n${aiReply.trim()}',
-      );
+      if (aiReply != null && aiReply.trim().isNotEmpty) {
+        // AI làm trợ lý trả lời chính
+        await _saveBotReply('🤖 Trợ lý AI:\n${aiReply.trim()}');
+      } else {
+        // Nếu AI lỗi mới dùng lại câu tự động
+        await _saveBotReply(localReply);
+      }
       return;
     }
 
@@ -602,7 +604,8 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       final category = _getCategoryName(commandId ?? '0');
       final aiPrompt = 'Người dùng vừa chọn chủ đề hỗ trợ: $category. '
           '${context.tr('util_hyngvaitrl_c96abd')}'
-          'hoặc hướng dẫn cơ bản nhất liên quan đến $category (dưới 4 câu). '
+          'và giải quyết vấn đề liên quan đến $category. '
+          'Nếu cần cung cấp ảnh chụp màn hình, hãy nhắc người dùng. '
           'Cuối thư nhắc: ${context.tr('util_muinchitit_37f190')}.';
 
       final aiReply = await AiCounselorService()
@@ -610,12 +613,11 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
             aiPrompt,
             context.tr('util_bnltrlailp_6890a8'),
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 25)); // Tăng timeout lên 25s
 
       if (aiReply != null && aiReply.trim().isNotEmpty) {
-        await _saveBotReply(
-          '$localReply\n\n💡 Gợi ý nhanh từ Trợ lý:\n${aiReply.trim()}',
-        );
+        // AI làm trợ lý trả lời chính
+        await _saveBotReply('🤖 Trợ lý AI:\n${aiReply.trim()}');
         return;
       }
     } catch (_) {}

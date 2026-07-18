@@ -1118,8 +1118,7 @@ class _CountdownModeGlowOrb extends StatelessWidget {
   }
 }
 
-/// Overlay trái tim hồng bay bổng, xoay lật 3D đa chiều như giọt nước.
-/// Hiệu ứng nâng cấp: Bong bóng trái tim bay lên, mờ ảo, đa dạng icon.
+/// Overlay trái tim bay bổng, xoay lật 3D đa chiều cực kỳ cute và nổi bật.
 class FloatingHeartsRingOverlay extends StatefulWidget {
   const FloatingHeartsRingOverlay({super.key, required this.size, this.enableMotion = true});
   final double size;
@@ -1132,7 +1131,7 @@ class FloatingHeartsRingOverlay extends StatefulWidget {
 
 class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  static const int _kCount = 50; // Tăng số lượng hạt lên 50 cho dày hơn nhưng không quá lag
+  static const int _kCount = 75; // Tăng số lượng để nổi bật hơn
 
   late final List<_HeartParticle> _particles;
   late final AnimationController _animController;
@@ -1146,7 +1145,7 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
     _initParticles();
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 15), // Chu kỳ dài để mượt mà
+      duration: const Duration(seconds: 18), // Chu kỳ dài để chuyển động mượt
     )..addListener(_onTick);
     
     _updateAnimationState();
@@ -1197,27 +1196,39 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
       Icons.favorite_rounded,
       Icons.favorite_border_rounded,
       Icons.star_rounded,
-      Icons.favorite,
+      Icons.auto_awesome, // Sparkles lấp lánh cực cute
+      Icons.volunteer_activism, // Trái tim có tay 
     ];
 
     _particles = List.generate(_kCount, (i) {
       final jitter1 = ((rng ^ (i * 2654435761)) & 0xFFFF) / 0xFFFF;
       final jitter2 = ((rng ^ (i * 1234567)) & 0xFFFF) / 0xFFFF;
       final jitter3 = ((rng ^ (i * 9876543)) & 0xFFFF) / 0xFFFF;
+      final zIndex = ((rng ^ (i * 13579)) & 0xFFFF) / 0xFFFF;
       
+      // Tính toán base size tuỳ theo độ sâu (zIndex) để tạo hiệu ứng 3D
+      // Gần camera (zIndex cao) -> bự hơn, mờ đi chút
+      // Xa camera (zIndex thấp) -> nhỏ, rõ
+      final baseSize = 8.0 + (jitter3 * 18.0) + (zIndex * 24.0);
+
       return _HeartParticle(
-        startX: 0.05 + (jitter1 * 0.9), // Phân bố rộng hơn từ 5% đến 95% vì đã có ClipOval
-        speed: 0.3 + jitter2 * 0.7,
-        size: 10.0 + (jitter3 * 28.0), // Size đa dạng hơn
-        wobbleAmplitude: 10.0 + (jitter1 * 30.0),
-        wobbleSpeed: 1.5 + (jitter2 * 4.5),
+        startX: 0.05 + (jitter1 * 0.9),
+        speed: 0.2 + (jitter2 * 0.5) + (zIndex * 0.6), // Hạt ở gần bay nhanh hơn
+        size: baseSize,
+        wobbleAmplitude: 8.0 + (jitter1 * 25.0) + (zIndex * 15.0),
+        wobbleSpeed: 1.5 + (jitter2 * 4.0),
         phase: jitter1,
-        rotationSpeed: (jitter2 - 0.5) * 5.0, // Xoay nhanh hơn chút
+        rotationSpeed: (jitter2 - 0.5) * 6.0,
         colorIndex: (jitter3 * _kHeartColors.length).toInt() % _kHeartColors.length,
         icon: iconChoices[(jitter1 * iconChoices.length).toInt() % iconChoices.length],
-        isGlow: jitter2 > 0.8, // Giảm tỷ lệ glow xuống 20% để đỡ lag khi tăng số lượng
+        isGlow: jitter2 > 0.6, // Tăng tỷ lệ phát sáng lên 40%
+        zIndex: zIndex,
+        pulseSpeed: 3.0 + (jitter1 * 4.0), // Tốc độ nhịp đập tim
       );
     });
+
+    // Sắp xếp hạt để các hạt có zIndex thấp (xa) vẽ trước, zIndex cao (gần) vẽ sau
+    _particles.sort((a, b) => a.zIndex.compareTo(b.zIndex));
   }
 
   void _onTick() {
@@ -1259,10 +1270,46 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
                     } else if (localProgress > 0.85) {
                       opacity = (1.0 - localProgress) / 0.15;
                     }
+
+                    // Thêm nhịp đập nhè nhẹ cho tim (Pulsing)
+                    final double pulse = 1.0 + 0.15 * math.sin(progress * math.pi * 2 * p.pulseSpeed);
                     
-                    final double scale = localProgress < 0.1 ? (localProgress / 0.1) : 1.0;
+                    final double entryScale = localProgress < 0.1 ? (localProgress / 0.1) : 1.0;
+                    final double scale = entryScale * pulse;
                     final double angle = localProgress * p.rotationSpeed * math.pi;
                     final Color baseColor = _kHeartColors[p.colorIndex];
+
+                    Widget heartWidget = Icon(
+                      p.icon,
+                      size: p.size,
+                      color: baseColor.withValues(alpha: 0.95),
+                    );
+
+                    if (p.isGlow) {
+                      heartWidget = Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: baseColor.withValues(alpha: 0.65),
+                              blurRadius: 15, // Glow mạnh hơn xíu
+                              spreadRadius: 2,
+                            ),
+                          ]
+                        ),
+                        child: heartWidget,
+                      );
+                    }
+
+                    // Nếu hạt ở rất gần camera, tạo blur để có độ sâu trường ảnh (Depth of Field 3D)
+                    if (p.zIndex > 0.88) {
+                      heartWidget = ClipRect(
+                        child: BackdropFilter(
+                          filter: ui.ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
+                          child: heartWidget,
+                        ),
+                      );
+                    }
 
                     return Positioned(
                       left: cx - p.size / 2,
@@ -1275,29 +1322,7 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
                             angle: angle,
                             child: Transform.scale(
                               scale: scale,
-                              child: p.isGlow 
-                                ? Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: baseColor.withValues(alpha: 0.5),
-                                          blurRadius: 10,
-                                          spreadRadius: 1,
-                                        ),
-                                      ]
-                                    ),
-                                    child: Icon(
-                                      p.icon,
-                                      size: p.size,
-                                      color: baseColor,
-                                    ),
-                                  )
-                                : Icon(
-                                    p.icon,
-                                    size: p.size,
-                                    color: baseColor.withValues(alpha: 0.9),
-                                  ),
+                              child: heartWidget,
                             ),
                           ),
                         ),
@@ -1314,15 +1339,16 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
   }
 
   static const List<Color> _kHeartColors = [
-    Color(0xFFFF85C0),
-    Color(0xFFFF4D94),
-    Color(0xFF8C52FF), // Sắc tím ảo diệu
-    Color(0xFFFF6BAD),
-    Color(0xFF5CE1E6), // Xanh nước biển lấp lánh
-    Color(0xFFE8367E),
-    Color(0xFFFFD6EC),
-    Color(0xFFFF8DC7),
+    Color(0xFFFF85C0), // Pink
+    Color(0xFFFF4D94), // Rose
+    Color(0xFF8C52FF), // Tím ảo diệu
+    Color(0xFFFF6BAD), // Hot pink
+    Color(0xFF5CE1E6), // Xanh nước biển lấp lánh (Ice blue)
+    Color(0xFFE8367E), // Deep rose
+    Color(0xFFFFD6EC), // Light pink pastel
+    Color(0xFFFF8DC7), // Soft pink
     Color(0xFFFFFFFF), // Trắng pha lê
+    Color(0xFFFFD700), // Vàng kim lấp lánh cho icon stars/sparkles
   ];
 }
 
@@ -1338,6 +1364,8 @@ class _HeartParticle {
     required this.colorIndex,
     required this.icon,
     required this.isGlow,
+    required this.zIndex,
+    required this.pulseSpeed,
   });
   final double startX;
   final double speed;
@@ -1349,4 +1377,6 @@ class _HeartParticle {
   final int colorIndex;
   final IconData icon;
   final bool isGlow;
+  final double zIndex;
+  final double pulseSpeed;
 }

@@ -219,9 +219,6 @@ struct AvatarView: View {
                 .frame(width: size, height: size)
             }
         }
-        .overlay(
-            Circle().stroke(Color.white.opacity(0.88), lineWidth: max(1.2, size * 0.04))
-        )
         .shadow(color: Color.black.opacity(0.12), radius: size * 0.10, y: size * 0.08)
     }
 }

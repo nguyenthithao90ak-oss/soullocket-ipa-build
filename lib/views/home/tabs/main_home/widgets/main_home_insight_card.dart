@@ -39,11 +39,11 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
     return _buildHomeCardFirstTapWrapper(
       showHint: _showInsightCardFirstTapHint,
       onTap: _handleInsightCardTap,
-      child: Container(
-        width: double.infinity,
-        padding: SLSpacing.all16,
-        decoration: _homeCardDecoration(),
-        child: Column(
+      child: _buildGlassHomeCard(
+        child: Container(
+          width: double.infinity,
+          padding: SLSpacing.all16,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -129,6 +129,7 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
             ],
           ],
         ),
+      ),
       ),
     );
   }

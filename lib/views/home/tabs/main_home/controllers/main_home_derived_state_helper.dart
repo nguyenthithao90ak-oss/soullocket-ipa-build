@@ -143,7 +143,9 @@ extension _MainHomeDerivedStateHelper on _MainHomeTabState {
       // hours/minutes/seconds row and must never hide or repurpose the circle.
       showDayCounter: !isSingle,
       showLoveTimeDetail: !isSingle && savedHomeShowTimer,
-      countdownStyleKey: uiPrefs.countdownStyleKey,
+      countdownStyleKey: (_MainHomeTabState._kCountdownQuickPremiumStyleKeys.contains(uiPrefs.countdownStyleKey) && !_isVip && !_unlockedCountdownStyles.contains(uiPrefs.countdownStyleKey))
+          ? 'default'
+          : uiPrefs.countdownStyleKey,
     );
   }
 }

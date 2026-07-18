@@ -844,10 +844,22 @@ class AuthSignInService {
 
       return userCredential;
     } on firebase_auth.FirebaseAuthException catch (error) {
-      debugPrint(
-        'Google FirebaseAuthException: ${error.code} ${error.message}',
-      );
-      throw handleFirebaseAuthError(error);
+      switch (error.code) {
+        case 'account-exists-with-different-credential':
+        case 'email-already-in-use':
+        case 'credential-already-in-use':
+          throw 'Email Google này đã gắn với phương thức đăng nhập khác (ví dụ: Email/Mật khẩu hoặc Apple/Facebook). Hãy đăng nhập bằng phương thức cũ trước rồi vào Cài đặt để liên kết Google.';
+        case 'popup-closed-by-user':
+        case 'cancelled-popup-request':
+          return null;
+        case 'popup-blocked':
+          throw 'Popup đăng nhập Google đang bị chặn. Hãy cho phép popup rồi thử lại.';
+        case 'network-request-failed':
+          throw 'Mạng đang lỗi hoặc bị chặn, chưa thể đăng nhập Google lúc này.';
+        default:
+          debugPrint('Google FirebaseAuthException: ${error.code} ${error.message}');
+          throw handleFirebaseAuthError(error);
+      }
     } catch (error) {
       final errStr = error.toString().toLowerCase();
       bool isRealCancel = true;

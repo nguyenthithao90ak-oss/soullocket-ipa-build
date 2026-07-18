@@ -837,60 +837,86 @@ class _LoginScreenState extends State<LoginScreen> {
 
         return SensitiveContentGuard(
           child: Scaffold(
+            resizeToAvoidBottomInset: false,
             backgroundColor: baseBg,
             body: GestureDetector(
               behavior: HitTestBehavior.translucent,
               onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
               child: Stack(
                 children: [
-                  // --- Ambient Blobs ---
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 600),
-                    curve: Curves.easeOutCubic,
-                    top: _isLoginTab ? -100 : -50,
-                    left: _isLoginTab ? -50 : -100,
-                    child: Container(
-                      width: 350,
-                      height: 350,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFFFFD1E3).withValues(alpha: 0.5),
-                      ),
-                    ),
-                  ),
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 600),
-                    curve: Curves.easeOutCubic,
-                    bottom: _isLoginTab ? -150 : -100,
-                    right: _isLoginTab ? -100 : -150,
-                    child: Container(
-                      width: 450,
-                      height: 450,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFFE5CCFF).withValues(alpha: 0.45),
-                      ),
-                    ),
-                  ),
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 600),
-                    curve: Curves.easeOutCubic,
-                    top: _isLoginTab ? 200 : 100,
-                    right: _isLoginTab ? -50 : -80,
-                    child: Container(
-                      width: 250,
-                      height: 250,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFFFFDFD1).withValues(alpha: 0.35),
-                      ),
-                    ),
-                  ),
+                  // --- Premium Ambient Blobs ---
                   Positioned.fill(
-                    child: FastBackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                      fallbackColor: Colors.white.withValues(alpha: 0.85),
-                      child: Container(color: Colors.transparent),
+                    child: RepaintBoundary(
+                      child: Stack(
+                        children: [
+                          AnimatedPositioned(
+                            duration: const Duration(milliseconds: 1200),
+                            curve: Curves.easeInOutSine,
+                            top: _isLoginTab ? -150 : -80,
+                            left: _isLoginTab ? -100 : -180,
+                            child: Container(
+                              width: 500,
+                              height: 500,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    const Color(0xFFFF6FA3).withValues(alpha: 0.45),
+                                    const Color(0xFFFF6FA3).withValues(alpha: 0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          AnimatedPositioned(
+                            duration: const Duration(milliseconds: 1400),
+                            curve: Curves.easeInOutSine,
+                            bottom: _isLoginTab ? -200 : -100,
+                            right: _isLoginTab ? -100 : -250,
+                            child: Container(
+                              width: 600,
+                              height: 600,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    const Color(0xFF9030C0).withValues(alpha: 0.35),
+                                    const Color(0xFF9030C0).withValues(alpha: 0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          AnimatedPositioned(
+                            duration: const Duration(milliseconds: 1000),
+                            curve: Curves.easeInOutSine,
+                            top: _isLoginTab ? 300 : 150,
+                            right: _isLoginTab ? -50 : 50,
+                            child: Container(
+                              width: 400,
+                              height: 400,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    const Color(0xFFFFB26F).withValues(alpha: 0.3),
+                                    const Color(0xFFFFB26F).withValues(alpha: 0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: FastBackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60), // Mờ mạnh hơn để tạo glow effect
+                              fallbackColor: Colors.white.withValues(alpha: 0.6),
+                              child: Container(
+                                color: Colors.white.withValues(alpha: 0.2), // Giảm sương trắng để thấy rõ màu sắc phía sau
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   LayoutBuilder(
@@ -923,9 +949,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             keyboardDismissBehavior:
                                 ScrollViewKeyboardDismissBehavior.onDrag,
                             physics: const BouncingScrollPhysics(),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: horizontalPadding,
-                              vertical: 10,
+                            padding: EdgeInsets.only(
+                              left: horizontalPadding,
+                              right: horizontalPadding,
+                              top: 10,
+                              bottom: 10 + MediaQuery.of(context).viewInsets.bottom,
                             ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,

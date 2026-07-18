@@ -365,6 +365,7 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       );
       await WidgetService.syncCycleWidgetData(houseId: houseId);
       await WidgetService.syncCalendarWidgetData(houseId: houseId);
+      await SoulMergeService().syncSoulMergeWidgetNow();
       _lastLoveWidgetSignature = widgetSignature;
     } catch (_) {}
   }

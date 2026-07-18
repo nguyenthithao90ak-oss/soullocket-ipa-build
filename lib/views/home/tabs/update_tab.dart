@@ -1,5 +1,6 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -400,37 +401,83 @@ class _UpdateTabState extends State<UpdateTab> {
     L10nScope.of(context); // Listen to locale changes
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle(context),
-            Expanded(
-              child: ListView(
-                physics: const BouncingScrollPhysics(),
-                padding: SLSpacing.fromLTRB(6, 16, 6, 120),
-                children: [
-                  _buildHeroBoard(context),
-                  SLSpacing.h16,
-                  _buildUpcomingEventsBoard(context),
-                  SLSpacing.h16,
-                  _buildQuickActions(context),
-                  SLSpacing.h16,
-                  _buildRoadmapBoard(context),
-                  SLSpacing.h16,
-                  _buildGuideBoard(context),
-                  SLSpacing.h16,
-                  _buildSupportBoard(context, isAdmin: _isAdmin),
-                  SLSpacing.h16,
-                  _buildFeedbackPanel(context),
-                  SLSpacing.h24,
-                  _buildFooter(),
-                ],
+      body: Stack(
+        children: [
+          Positioned(
+            top: -100,
+            left: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF818CF8).withValues(alpha: 0.15),
               ),
             ),
-          ],
-        ),
+          ),
+          Positioned(
+            top: 200,
+            right: -150,
+            child: Container(
+              width: 350,
+              height: 350,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFF472B6).withValues(alpha: 0.1),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -50,
+            left: 50,
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF38BDF8).withValues(alpha: 0.15),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+              child: const SizedBox(),
+            ),
+          ),
+          SafeArea(
+            bottom: false,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionTitle(context),
+                Expanded(
+                  child: ListView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: SLSpacing.fromLTRB(6, 16, 6, 120),
+                    children: [
+                      _buildHeroBoard(context),
+                      SLSpacing.h16,
+                      _buildUpcomingEventsBoard(context),
+                      SLSpacing.h16,
+                      _buildQuickActions(context),
+                      SLSpacing.h16,
+                      _buildRoadmapBoard(context),
+                      SLSpacing.h16,
+                      _buildGuideBoard(context),
+                      SLSpacing.h16,
+                      _buildSupportBoard(context, isAdmin: _isAdmin),
+                      SLSpacing.h16,
+                      _buildFeedbackPanel(context),
+                      SLSpacing.h24,
+                      _buildFooter(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -511,18 +558,19 @@ class _UpdateTabState extends State<UpdateTab> {
     return Container(
       padding: SLSpacing.all20,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Colors.white, Color(0xFFFFF1F2)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFFE4E6)),
+        color: Colors.white.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFE11D48).withValues(alpha: 0.03),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: const Color(0xFFE11D48).withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: Colors.white.withValues(alpha: 0.5),
+            blurRadius: 10,
+            offset: const Offset(-2, -2),
           ),
         ],
       ),
@@ -1078,14 +1126,14 @@ class _UpdateTabState extends State<UpdateTab> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.97),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        color: Colors.white.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -1203,49 +1251,60 @@ class _UpdateTabState extends State<UpdateTab> {
     Color textColor,
     VoidCallback onTap,
   ) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Ink(
-          padding: SLSpacing.symmetric(horizontal: 12, vertical: 12),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: border),
-            boxShadow: [
-              BoxShadow(
-                color: bg.withValues(alpha: 0.16),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
+    return _UpdateScaleOnPress(
+      onTap: onTap,
+      child: Container(
+        padding: SLSpacing.symmetric(horizontal: 12, vertical: 12),
+        clipBehavior: Clip.hardEdge,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: bg.withValues(alpha: 0.15),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -10,
+              bottom: -10,
+              child: Icon(
+                icon,
+                size: 48,
+                color: bg.withValues(alpha: 0.2),
               ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: textColor, size: 20),
-              SLSpacing.w8,
-              Expanded(
-                child: Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: _labelStyle(
-                    color: textColor,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w800,
+            ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: bg.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: bg, size: 18),
+                ),
+                SLSpacing.w8,
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: _labelStyle(
+                      color: const Color(0xFF1E293B),
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
-              ),
-              SLSpacing.w4,
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: textColor.withValues(alpha: 0.6),
-                size: 11,
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -1674,5 +1733,61 @@ class _UpdateTabState extends State<UpdateTab> {
         setState(() => _isSendingFeedback = false);
       }
     }
+  }
+}
+
+class _UpdateScaleOnPress extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+
+  const _UpdateScaleOnPress({
+    required this.child,
+    required this.onTap,
+  });
+
+  @override
+  State<_UpdateScaleOnPress> createState() => _UpdateScaleOnPressState();
+}
+
+class _UpdateScaleOnPressState extends State<_UpdateScaleOnPress> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      lowerBound: 0.0,
+      upperBound: 0.05,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) {
+        _controller.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _controller.reverse(),
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: 1 - _controller.value,
+            child: child,
+          );
+        },
+        child: widget.child,
+      ),
+    );
   }
 }

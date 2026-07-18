@@ -414,39 +414,38 @@ extension _SettingsTabShell on _SettingsTabState {
     final isDark = uiState.themeKey == 'theme-night' ||
         uiState.themeKey == 'theme-dark' ||
         uiState.themeKey == 'theme-true-black';
-    final headerBgColor =
-        (isDark ? Colors.black : _kSettingsHeaderBg).withValues(alpha: 0.65);
+    
+    // Optimize: Remove BackdropFilter to prevent lag during scroll.
+    final headerBgColor = isDark 
+        ? Colors.black.withValues(alpha: 0.98) 
+        : const Color(0xFFF2F2F7).withValues(alpha: 0.98);
 
     return RepaintBoundary(
-      child: ClipRect(
-        child: FastBackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          fallbackColor: isDark ? Colors.black87 : _kSettingsHeaderBg,
-          child: Container(
-            width: double.infinity,
-            padding: EdgeInsets.fromLTRB(
-              14,
-              MediaQuery.paddingOf(context).top + 4,
-              14,
-              8,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.fromLTRB(
+          14,
+          MediaQuery.paddingOf(context).top + 4,
+          14,
+          8,
+        ),
+        decoration: BoxDecoration(
+          color: headerBgColor,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
-            decoration: BoxDecoration(
-              color: headerBgColor,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.06),
-                  blurRadius: 14,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-              border: Border(
-                bottom: BorderSide(
-                  color: _kSettingsHeaderBorder.withValues(alpha: 0.45),
-                  width: 1.0,
-                ),
-              ),
+          ],
+          border: Border(
+            bottom: BorderSide(
+              color: Colors.grey.withValues(alpha: isDark ? 0.2 : 0.3),
+              width: 0.5,
             ),
-            child: Row(
+          ),
+        ),
+        child: Row(
               children: [
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
@@ -503,8 +502,6 @@ extension _SettingsTabShell on _SettingsTabState {
               ],
             ),
           ),
-        ),
-      ),
     );
   }
 
@@ -531,6 +528,7 @@ extension _SettingsTabShell on _SettingsTabState {
   Widget _buildiOSRow({
     required IconData icon,
     required Color iconBgColor,
+    Gradient? iconGradient,
     required String title,
     required VoidCallback onTap,
     String? subtitle,
@@ -554,7 +552,8 @@ extension _SettingsTabShell on _SettingsTabState {
                 width: 30,
                 height: 30,
                 decoration: BoxDecoration(
-                  color: isDestructive ? const Color(0xFFFFEBEE) : iconBgColor,
+                  color: isDestructive ? const Color(0xFFFFEBEE) : (iconGradient == null ? iconBgColor : null),
+                  gradient: isDestructive ? null : iconGradient,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -618,9 +617,16 @@ extension _SettingsTabShell on _SettingsTabState {
     return [
         _buildiOSSectionCard([
           _buildiOSRow(
-            icon: Icons.manage_accounts_rounded,
+            icon: _isVipActive ? Icons.workspace_premium_rounded : Icons.manage_accounts_rounded,
             iconBgColor: const Color(0xFFF6CB63),
-            title: context.tr('settings_account_label'),
+            iconGradient: _isVipActive 
+                ? const LinearGradient(
+                    colors: [Color(0xFFFFD700), Color(0xFFFF9800)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+            title: context.tr('settings_account_label') + (_isVipActive ? ' (PRO)' : ''),
             subtitle: context.tr('settings_account_desc'),
             isDark: isDark,
             onTap: () => _togglePanel('account'),

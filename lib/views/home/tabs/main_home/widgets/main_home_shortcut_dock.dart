@@ -3,11 +3,13 @@ part of '../../main_home_tab.dart';
 extension _MainHomeShortcutDockExt on _MainHomeTabState {
   // ignore: unused_element
   Widget _buildShortcutDock(List<UtilityApp> visiblePinnedApps) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 18),
-      padding: const EdgeInsets.all(10),
-      decoration: _homeCardDecoration(radius: 20),
-      child: visiblePinnedApps.isEmpty
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: _buildGlassHomeCard(
+        radius: 20,
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          child: visiblePinnedApps.isEmpty
           ? CustomPaint(
               painter: _DashedBorderPainter(),
               child: Padding(
@@ -62,6 +64,8 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
                 );
               },
             ),
+        ),
+      ),
     );
   }
 

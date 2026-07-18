@@ -154,7 +154,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
               ),
             ),
             Positioned(
-              top: 12, // Moved down to be inside the rounded block
+              top: 0, // Move up slightly so it doesn't overlap the icon
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(

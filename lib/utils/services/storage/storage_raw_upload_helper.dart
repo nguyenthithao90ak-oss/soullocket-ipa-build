@@ -75,8 +75,11 @@ class StorageRawUploadHelper {
           await tempFile.writeAsBytes(dataToUpload);
         }
 
-        final r2Url = await CloudflareR2Service.instance
-            .uploadFile(tempFile, folderPath: 'media');
+        final r2Url = await CloudflareR2Service.instance.uploadFile(
+          tempFile,
+          folderPath: p.dirname(storagePath).replaceAll('\\', '/'),
+          storagePathOverride: storagePath,
+        );
         if (r2Url == null || r2Url.isEmpty) {
           throw Exception(
               'Máy chủ ảnh (R2) không phản hồi. Vui lòng thử lại sau.');
@@ -218,8 +221,11 @@ class StorageRawUploadHelper {
           await tempFile.writeAsBytes(fileBytes);
         }
 
-        final r2Url = await CloudflareR2Service.instance
-            .uploadFile(tempFile, folderPath: 'media');
+        final r2Url = await CloudflareR2Service.instance.uploadFile(
+          tempFile,
+          folderPath: p.dirname(storagePath).replaceAll('\\', '/'),
+          storagePathOverride: storagePath,
+        );
         if (r2Url == null || r2Url.isEmpty) {
           throw Exception('R2 upload failed.');
         }
@@ -324,8 +330,11 @@ class StorageRawUploadHelper {
             : fileBytes;
         await tempFile.writeAsBytes(dataToUpload);
 
-        final r2Url = await CloudflareR2Service.instance
-            .uploadFile(tempFile, folderPath: 'media');
+        final r2Url = await CloudflareR2Service.instance.uploadFile(
+          tempFile,
+          folderPath: p.dirname(storagePath).replaceAll('\\', '/'),
+          storagePathOverride: storagePath,
+        );
         if (r2Url == null || r2Url.isEmpty) {
           throw Exception('R2 upload failed.');
         }

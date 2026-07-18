@@ -36,27 +36,40 @@ class UtilitiesHubHeader extends StatelessWidget {
                   children: [
                     ShaderMask(
                       shaderCallback: (bounds) => const LinearGradient(
-                        colors: [SLColors.primary, SLColors.accentPink],
+                        colors: [Color(0xFF00C6FF), Color(0xFF9D50BB)],
                       ).createShader(bounds),
                       child: Text(
                         'UTILITIES HUB',
                         style: SLTheme.quicksand(
-                          fontSize: 22,
+                          fontSize: 26,
                           fontWeight: FontWeight.w900,
-                          color: SLColors.textInverse,
-                          letterSpacing: 1.5,
+                          color: Colors.white,
+                          letterSpacing: 2.0,
+                          shadows: [
+                            Shadow(
+                              color: SLColors.primary.withValues(alpha: 0.3),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    SLSpacing.h4,
+                    const SizedBox(height: 6),
                     Container(
-                      width: 100,
-                      height: 3,
+                      width: 80,
+                      height: 4,
                       decoration: BoxDecoration(
                         borderRadius: SLRadius.pillAll,
                         gradient: const LinearGradient(
-                          colors: [SLColors.primary, SLColors.accentPink],
+                          colors: [Color(0xFF00C6FF), Color(0xFF9D50BB)],
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF00C6FF).withValues(alpha: 0.4),
+                            blurRadius: 8,
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -77,14 +90,25 @@ class UtilitiesHubHeader extends StatelessWidget {
               ),
             ],
           ),
-          SLSpacing.h16,
+          SLSpacing.h20,
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Container(
-              padding: SLSpacing.all4,
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: SLColors.bgElevated.withValues(alpha: 0.55),
-                borderRadius: SLRadius.mdAll,
+                color: Colors.white.withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  width: 1.5,
+                ),
               ),
               child: Row(
                 children: [
@@ -166,22 +190,34 @@ class _UtilitiesHubSegmentButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: active
-              ? SLColors.bgElevated
-              : SLColors.bgElevated.withValues(alpha: 0),
-          borderRadius: SLRadius.smAll,
-          boxShadow: active ? SLShadow.subtle : null,
+              ? Colors.white
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF9D50BB).withValues(alpha: 0.15),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : null,
         ),
         alignment: Alignment.center,
         child: Text(
           label,
           style: SLTheme.quicksand(
-            fontWeight: FontWeight.w800,
-            fontSize: 14,
-            color: active ? SLColors.primary : SLColors.textSecondary,
+            fontWeight: active ? FontWeight.w900 : FontWeight.w700,
+            fontSize: 14.5,
+            color: active ? SLColors.primary : SLColors.textPrimary.withValues(alpha: 0.55),
+            letterSpacing: 0.3,
           ),
         ),
       ),

@@ -265,11 +265,12 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
   Widget _buildEmbeddedHomeToolSurface(UtilityApp app) {
     final tool = _buildEmbeddedHomeTool(app.id);
     if (tool == null) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-        decoration: _homeCardDecoration(radius: 28),
-        child: Text(
+      return _buildGlassHomeCard(
+        radius: 28,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+          child: Text(
           context.tr('home_tinchnycnd_0ff769'),
           style: SLTheme.quicksand(
             fontSize: 12,
@@ -277,6 +278,7 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
             color: const Color(0xFF6B7280),
             height: 1.45,
           ),
+        ),
         ),
       );
     }

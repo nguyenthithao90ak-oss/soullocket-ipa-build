@@ -178,15 +178,19 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                     label,
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                       color: isSelected ? Colors.white : const Color(0xFF8A5B76),
                     ),
                   ),
                   selected: isSelected,
                   selectedColor: const Color(0xFFD81B60),
-                  backgroundColor: const Color(0xFFF8F8F8),
+                  backgroundColor: Colors.white.withValues(alpha: 0.7),
+                  elevation: isSelected ? 4 : 0,
+                  shadowColor: const Color(0xFFD81B60).withValues(alpha: 0.3),
+                  side: isSelected ? BorderSide.none : BorderSide(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(24),
                   ),
                   onSelected: (_) {
                     setState(() {
@@ -712,14 +716,19 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
       margin: const EdgeInsets.only(top: 24, bottom: 12, left: 16, right: 16),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.90)),
+        color: Colors.white.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.95), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF7C8BFF).withValues(alpha: 0.12),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            color: const Color(0xFF7C8BFF).withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.white.withValues(alpha: 0.4),
+            blurRadius: 10,
+            offset: const Offset(-2, -2),
           ),
         ],
       ),
@@ -1063,7 +1072,7 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
               style: SLTheme.quicksand(
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF94A3B8),
+                color: Color(0xFF94A3B8),
               ),
             ),
           ],
@@ -1076,23 +1085,24 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
       child: RepaintBoundary(
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
             boxShadow: isStickerOrPng ? [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
               ),
             ] : [
               BoxShadow(
-                color: const Color(0xFF5C71D8).withValues(alpha: 0.08),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
+                color: const Color(0xFF5C71D8).withValues(alpha: 0.12),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(24),
             child: Hero(
               tag: 'memory_image_${photo['id']}',
             child: CachedNetworkImage(
@@ -1144,7 +1154,7 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
     builder: (context, _, imageChild) {
       final isSelected = widget.selectedMemories.containsKey(photoId);
 
-        return GestureDetector(
+        return _DiaryMemoryScaleOnPress(
           onLongPress: () => widget.onToggleSelection(photo),
           onTap: () async {
             if (widget.isSelectionMode) {
@@ -1163,11 +1173,11 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
               Positioned.fill(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(24),
                     gradient: LinearGradient(
                       colors: [
                         Colors.transparent,
-                        Colors.black.withValues(alpha: 0.18),
+                        Colors.black.withValues(alpha: 0.25),
                       ],
                       begin: Alignment.center,
                       end: Alignment.bottomCenter,
@@ -1177,19 +1187,33 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
               ),
               if (widget.isSelectionMode)
                 Positioned.fill(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 140),
-                    curve: Curves.easeOut,
-                    color: isSelected
-                        ? Colors.black.withValues(alpha: 0.5)
-                        : Colors.white.withValues(alpha: 0.2),
-                    child: isSelected
-                        ? const Icon(
-                            Icons.check_circle,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: isSelected ? 1.0 : 0.0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        color: Colors.black.withValues(alpha: 0.4),
+                      ),
+                      alignment: Alignment.center,
+                      child: AnimatedScale(
+                        duration: const Duration(milliseconds: 300),
+                        scale: isSelected ? 1.0 : 0.5,
+                        curve: Curves.elasticOut,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFFD81B60),
+                          ),
+                          child: const Icon(
+                            Icons.check_rounded,
                             color: Colors.white,
-                            size: 32,
-                          )
-                        : null,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
             ],
@@ -1351,27 +1375,19 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withValues(alpha: 0.96),
-            const Color(0xFFFFF0F7).withValues(alpha: 0.94),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(28),
-        border:
-            Border.all(color: Colors.white.withValues(alpha: 0.86), width: 1.4),
+        color: Colors.white.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.95), width: 1.8),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF7FB2).withValues(alpha: 0.16),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
+            color: const Color(0xFFFF7FB2).withValues(alpha: 0.2),
+            blurRadius: 30,
+            offset: const Offset(0, 16),
           ),
           BoxShadow(
-            color: const Color(0xFF62C7B5).withValues(alpha: 0.10),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: Colors.white.withValues(alpha: 0.6),
+            blurRadius: 12,
+            offset: const Offset(-4, -4),
           ),
         ],
       ),
@@ -1734,6 +1750,68 @@ class _DiaryMemoryInlineLoading extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DiaryMemoryScaleOnPress extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  const _DiaryMemoryScaleOnPress({
+    required this.child,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  @override
+  State<_DiaryMemoryScaleOnPress> createState() => _DiaryMemoryScaleOnPressState();
+}
+
+class _DiaryMemoryScaleOnPressState extends State<_DiaryMemoryScaleOnPress> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      lowerBound: 0.0,
+      upperBound: 0.05,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) {
+        _controller.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _controller.reverse(),
+      onLongPress: () {
+        _controller.reverse();
+        widget.onLongPress();
+      },
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: 1 - _controller.value,
+            child: child,
+          );
+        },
+        child: widget.child,
       ),
     );
   }

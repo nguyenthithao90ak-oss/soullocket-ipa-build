@@ -97,6 +97,7 @@ import 'dart:ui' as ui;
 
 import 'package:soullocket_app/views/home/widgets/main_home/hero/snow_globe_photo_layer.dart';
 import '../../../widgets/lottie_async_loader.dart';
+import '../../../widgets/sl_bouncing_button.dart';
 import '../../../core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/views/home/tabs/main_home/widgets/main_home_header_button.dart';
@@ -189,24 +190,25 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
 
   BoxDecoration _homeCardDecoration({double radius = 24}) {
     final tone = UiPrefs.notifier.value.homeBlockToneKey;
+    final isDark = UiPrefs.notifier.value.themeKey == 'theme-night' || UiPrefs.notifier.value.themeKey == 'theme-dark' || UiPrefs.notifier.value.themeKey == 'theme-true-black';
+    
     final color = switch (tone) {
-      'mist' => const Color(0xFFEEF4FF).withValues(alpha: 0.72),
-      'rose' => const Color(0xFFFFE1EC).withValues(alpha: 0.68),
-      'glass' => Colors.white.withValues(alpha: 0.14),
-      _ => Colors.white.withValues(alpha: 0.82),
+      'mist' => isDark ? const Color(0xFF1E293B).withValues(alpha: 0.45) : const Color(0xFFF8FAFC).withValues(alpha: 0.55),
+      'rose' => isDark ? const Color(0xFF3B1E29).withValues(alpha: 0.45) : const Color(0xFFFFF1F2).withValues(alpha: 0.55),
+      'glass' => isDark ? Colors.black.withValues(alpha: 0.25) : Colors.white.withValues(alpha: 0.25),
+      _ => isDark ? const Color(0xFF1E293B).withValues(alpha: 0.45) : Colors.white.withValues(alpha: 0.55),
     };
+    
     final borderColor = switch (tone) {
-      'mist' => const Color(0xFFB8D4FF).withValues(alpha: 0.70),
-      'rose' => const Color(0xFFFFA8C8).withValues(alpha: 0.65),
-      'glass' => Colors.white.withValues(alpha: 0.28),
-      _ => const Color(0xFFFFCEE0).withValues(alpha: 0.80),
+      'mist' => isDark ? const Color(0xFF334155).withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.8),
+      'rose' => isDark ? const Color(0xFF9F1239).withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.8),
+      'glass' => isDark ? Colors.white.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.4),
+      _ => isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.7),
     };
-    final shadowColor = switch (tone) {
-      'mist' => const Color(0xFF64B5F6).withValues(alpha: 0.12),
-      'rose' => SLColors.primary.withValues(alpha: 0.14),
-      'glass' => Colors.black.withValues(alpha: 0.18),
-      _ => const Color(0xFFFF6DA0).withValues(alpha: 0.10),
-    };
+    
+    final shadowColor = isDark 
+        ? Colors.black.withValues(alpha: 0.3) 
+        : const Color(0xFF94A3B8).withValues(alpha: 0.15);
 
     return BoxDecoration(
       color: color,
@@ -215,16 +217,24 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         BoxShadow(
           color: shadowColor,
           blurRadius: 24,
-          offset: const Offset(0, 8),
-        ),
-        BoxShadow(
-          color: Colors.white.withValues(alpha: 0.60),
-          blurRadius: 0,
-          offset: const Offset(0, 0),
-          spreadRadius: 0,
+          offset: const Offset(0, 10),
         ),
       ],
-      border: Border.all(color: borderColor, width: 1.0),
+      border: Border.all(color: borderColor, width: 1.2),
+    );
+  }
+
+  Widget _buildGlassHomeCard({required Widget child, double radius = 24}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: FastBackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        fallbackColor: Colors.transparent,
+        child: Container(
+          decoration: _homeCardDecoration(radius: radius),
+          child: child,
+        ),
+      ),
     );
   }
 
@@ -290,6 +300,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   bool _isLoading = true;
   bool _showStatus = true;
   bool _showWeather = true;
+  bool _isVip = false;
+  Set<String> _unlockedCountdownStyles = const {};
   String? _houseId;
   String _currentRole = 'user1';
   List<UtilityApp> _pinnedApps = const [];
@@ -309,6 +321,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   final ValueNotifier<Map<String, dynamic>?> _homeMyBatteryNotifier =
       ValueNotifier<Map<String, dynamic>?>(null);
   final ValueNotifier<bool> _isScrollingNotifier = ValueNotifier<bool>(false);
+  StreamSubscription? _missInteractionSubscription;
+  StreamSubscription? _vipSub;
+
+  final ValueNotifier<bool> _isShowingMissYouNotifier = ValueNotifier(false);
   int _wishIndex = -1;
   int _tipIndex = -1;
   bool _hideSettingsButtonUntilRestart = false;
@@ -327,7 +343,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   StreamSubscription? _settingsSubscription;
   StreamSubscription? _presenceSubscription;
   final List<StreamSubscription> _presenceSubList = [];
-  StreamSubscription? _missInteractionSubscription;
   StreamSubscription<DatabaseEvent>? _alertSubscription;
   StreamSubscription<DatabaseEvent>? _newDeviceNotificationSubscription;
   StreamSubscription<DatabaseEvent>? _partnerInboxSubscription;
@@ -496,6 +511,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     unawaited(_promptPendingAvatarRetryIfNeeded());
     unawaited(PurchaseService().getVipAccessInfo().catchError((_) =>
         const VipAccessInfo(isVip: false, planId: '', expiresAtMs: null)));
+    _initVipAndAdUnlocks();
   }
 
   void _onActiveChanged() {
@@ -556,6 +572,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _homeMapAlertNotifier.dispose();
     _homePartnerBatteryNotifier.dispose();
     _fallingEffectTypeNotifier.dispose();
+    _weatherRefreshTimer?.cancel();
+    _vipSub?.cancel();
     _isScrollingNotifier.dispose();
     super.dispose();
   }
@@ -700,6 +718,19 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   Future<void> _handleMapCardTap() async {
     await _markHomeCardFirstTapSeen(isMapCard: true);
     await _openMapScreen();
+  }
+
+  void _initVipAndAdUnlocks() {
+    _vipSub = PurchaseService().vipStatusStream().listen((isVip) {
+      if (mounted) {
+        setState(() => _isVip = isVip);
+      }
+    });
+    _getUnlockedCountdownStyles().then((val) {
+      if (mounted) {
+        setState(() => _unlockedCountdownStyles = val);
+      }
+    });
   }
 
   Future<void> _handleInsightCardTap() async {
@@ -2014,12 +2045,15 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
 
   void triggerShootingHeartState({String? emoji, String? fromRole}) {
     final now = DateTime.now().millisecondsSinceEpoch;
+    final senderRole = fromRole ?? _currentRole;
+    final avatar = senderRole == 'user1' ? (_houseSettings?['avtUser1']) : (_houseSettings?['avtUser2']);
     _showReactionFlight(
       _HomeReactionFlight(
         id: 'local-$now-${_random.nextInt(999999)}',
-        fromRole: fromRole ?? _currentRole,
-        toRole: (fromRole ?? _currentRole) == 'user1' ? 'user2' : 'user1',
+        fromRole: senderRole,
+        toRole: senderRole == 'user1' ? 'user2' : 'user1',
         emoji: emoji ?? _emojiForInteractionType('miss'),
+        imageUrl: avatar?.toString(),
         sentAtMs: now,
       ),
     );
@@ -2158,12 +2192,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
             ),
             _buildMainContent(
               customBackgroundUrl: uiState.customBackgroundUrl,
-            ),
-            Positioned.fill(
-              child: MainHomeShootingGame(
-                user1Avatar: (_houseSettings?['avtUser1'] ?? '').toString(),
-                user2Avatar: (_houseSettings?['avtUser2'] ?? '').toString(),
-              ),
             ),
           ],
         ),

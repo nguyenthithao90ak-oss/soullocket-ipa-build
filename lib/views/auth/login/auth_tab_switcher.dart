@@ -28,23 +28,17 @@ class AuthTabSwitcher extends StatelessWidget {
           height: compact ? 50 : 54,
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: isLoginTab
-                ? const Color(0xFFFFF0F5).withValues(alpha: 0.6)
-                : const Color(0xFFFCF0FF).withValues(alpha: 0.6),
+            color: Colors.black.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(26),
             border: Border.all(
-              color: isLoginTab
-                  ? const Color(0xFFFFB6D3).withValues(alpha: 0.5)
-                  : const Color(0xFFD4AAFF).withValues(alpha: 0.5),
+              color: Colors.white.withValues(alpha: 0.6),
               width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: isLoginTab
-                    ? const Color(0xFFFF85B3).withValues(alpha: 0.08)
-                    : const Color(0xFFB080FF).withValues(alpha: 0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -62,22 +56,18 @@ class AuthTabSwitcher extends StatelessWidget {
                     child: Container(
                       width: indicatorWidth,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: isLoginTab
-                              ? const [Color(0xFFFF5293), Color(0xFFFF8FB8)]
-                              : const [Color(0xFF8A3BFF), Color(0xFFC49CFF)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
-                            color: (isLoginTab
-                                    ? const Color(0xFFFF5293)
-                                    : const Color(0xFF8A3BFF))
-                                .withValues(alpha: 0.35),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 12,
+                            offset: const Offset(0, 3),
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
                           ),
                         ],
                       ),
@@ -155,9 +145,9 @@ class _AuthTabButton extends StatelessWidget {
                   curve: Curves.easeOutCubic,
                   style: SLTheme.quicksand(
                     color: active
-                        ? Colors.white
-                        : SLTheme.authChipText.withValues(alpha: 0.92),
-                    fontWeight: FontWeight.w900,
+                        ? const Color(0xFFC2185B) // Hồng đậm tinh tế cho chữ đang chọn
+                        : const Color(0xFF757575), // Xám nhạt cho chữ không chọn
+                    fontWeight: active ? FontWeight.w900 : FontWeight.w700,
                     fontSize: fontSize,
                     letterSpacing: letterSpacing,
                   ),

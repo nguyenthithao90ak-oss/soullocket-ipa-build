@@ -65,16 +65,16 @@ class _SocialAuthButton extends StatelessWidget {
         width: double.infinity,
         height: 52,
         decoration: BoxDecoration(
-          color: const Color(0xFFEEF0F5).withValues(alpha: 0.72),
-          borderRadius: BorderRadius.circular(22),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(26), // Bo góc nhiều hơn cho hợp với các ô input mới
           border: Border.all(
-            color: const Color(0xFFFFFFFF).withValues(alpha: 0.65),
-            width: 1.2,
+            color: const Color(0xFFE0E0E0),
+            width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 12,
               offset: const Offset(0, 4),
             ),
           ],
@@ -97,9 +97,9 @@ class _SocialAuthButton extends StatelessWidget {
                     child: Text(
                       buttonText,
                       style: SLTheme.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF534C5E),
+                        fontSize: 14.5, // Chữ to hơn một chút
+                        fontWeight: FontWeight.w900, // Đậm hơn
+                        color: const Color(0xFF202124), // Màu đen chuẩn Google
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

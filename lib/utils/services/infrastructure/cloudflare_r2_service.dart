@@ -79,7 +79,7 @@ class CloudflareR2Service {
   }
 
   /// Upload File lên R2 và trả về public link
-  Future<String?> uploadFile(File file, {required String folderPath}) async {
+  Future<String?> uploadFile(File file, {required String folderPath, String? storagePathOverride}) async {
     try {
       final fileName = path.basename(file.path);
       final contentType = _getMimeType(file.path);
@@ -91,6 +91,7 @@ class CloudflareR2Service {
         'fileName': fileName,
         'contentType': contentType,
         'folderPath': folderPath,
+        if (storagePathOverride != null) 'exactPath': storagePathOverride,
       });
 
       final resData = result.data as Map;

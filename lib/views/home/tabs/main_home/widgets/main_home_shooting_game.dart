@@ -265,16 +265,14 @@ class _MainHomeShootingGameState extends State<MainHomeShootingGame>
         height: 55,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: LinearGradient(
-            colors: isUser1 
-              ? [const Color(0xFFFF85A1), const Color(0xFFF15BB5)]
-              : [const Color(0xFF7C4DFF), const Color(0xFF448AFF)],
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFF85A1), Color(0xFFF15BB5)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           boxShadow: [
             BoxShadow(
-              color: isUser1 ? const Color(0xFFFF4F93).withValues(alpha: 0.38) : const Color(0xFF7C4DFF).withValues(alpha: 0.38),
+              color: const Color(0xFFFF4F93).withValues(alpha: 0.38),
               blurRadius: 14,
               spreadRadius: 2.5,
               offset: const Offset(0, 5),

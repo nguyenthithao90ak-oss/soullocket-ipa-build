@@ -141,6 +141,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   late final Stream<ChatRoomMeta> _roomMetaStream;
   StreamSubscription<ChatMessage>? _liveMessageSub;
   final List<ChatMessage> _messages = [];
+  late final ValueNotifier<List<ChatMessage>> _messagesNotifier = ValueNotifier(_messages);
+
+  void _notifyMessagesChanged() {
+    _messagesNotifier.value = List.from(_messages);
+  }
+
   final Set<String> _messageIds = <String>{};
   int? _oldestMessageTs;
   int? _newestMessageTs;
@@ -241,6 +247,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     _msgController.dispose();
     _messagesScrollController.dispose();
     _liveMessageSub?.cancel();
+    _messagesNotifier.dispose();
     super.dispose();
   }
 

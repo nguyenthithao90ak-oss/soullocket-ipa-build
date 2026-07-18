@@ -147,8 +147,8 @@ class UiPrefsState {
     avatarSizePx: 90,
     countdownSizePx: 400,
     avatarFrameKey: 'off',
-    // Default countdown visual: default (Cân bằng)
-    countdownStyleKey: 'default',
+    // Default countdown visual: floating_hearts (Tim bay)
+    countdownStyleKey: 'floating_hearts',
     countdownTopLabel: '',
     countdownBottomLabel: '',
     countdownTextColor: '',
