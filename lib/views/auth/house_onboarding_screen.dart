@@ -512,7 +512,11 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
               useRootNavigator: true,
               barrierDismissible: false,
               builder: (dialogContext) => RelationshipModeDialog(
-                onSelected: (mode) => Navigator.of(dialogContext).pop(mode),
+                onSelected: (mode) {
+                  if (dialogContext.mounted && Navigator.of(dialogContext).canPop()) {
+                    Navigator.of(dialogContext).pop(mode);
+                  }
+                },
               ),
             ),
           ),
@@ -535,7 +539,11 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
               useRootNavigator: true,
               barrierDismissible: false,
               builder: (dialogContext) => GenderSelectionDialog(
-                onSelected: (role) => Navigator.of(dialogContext).pop(role),
+                onSelected: (role) {
+                  if (dialogContext.mounted && Navigator.of(dialogContext).canPop()) {
+                    Navigator.of(dialogContext).pop(role);
+                  }
+                },
               ),
             ),
           ),

@@ -40,7 +40,9 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog> with Sing
   void _handleSelect(String gender) {
     if (_isSelecting) return;
     _isSelecting = true;
-    widget.onSelected(gender);
+    if (mounted) {
+      widget.onSelected(gender);
+    }
   }
 
   @override

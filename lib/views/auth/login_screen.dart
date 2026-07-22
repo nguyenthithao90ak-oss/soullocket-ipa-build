@@ -165,7 +165,11 @@ class _LoginScreenState extends State<LoginScreen> {
         context: context,
         barrierDismissible: false,
         builder: (dialogContext) => RelationshipModeDialog(
-          onSelected: (value) => Navigator.of(dialogContext).pop(value),
+          onSelected: (value) {
+            if (dialogContext.mounted && Navigator.of(dialogContext).canPop()) {
+              Navigator.of(dialogContext).pop(value);
+            }
+          },
         ),
       ),
     );
@@ -224,7 +228,11 @@ class _LoginScreenState extends State<LoginScreen> {
       useRootNavigator: true,
       barrierDismissible: false,
       builder: (dialogContext) => GenderSelectionDialog(
-        onSelected: (value) => Navigator.of(dialogContext).pop(value),
+        onSelected: (value) {
+          if (dialogContext.mounted && Navigator.of(dialogContext).canPop()) {
+            Navigator.of(dialogContext).pop(value);
+          }
+        },
       ),
     );
 
