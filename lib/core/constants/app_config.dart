@@ -94,7 +94,7 @@ class AppConfig {
   );
   static const String r2PublicDomain = String.fromEnvironment(
     'R2_PUBLIC_DOMAIN',
-    defaultValue: 'https://images.weserv.nl/?url=pub-e3f21ed5012d4c02ba42d23dd6d01dfa.r2.dev',
+    defaultValue: 'https://pub-e3f21ed5012d4c02ba42d23dd6d01dfa.r2.dev',
   );
   static const String maintenanceModePath = 'sys_settings/is_maintenance';
   static const String legacyMaintenanceModePath =
