@@ -23,7 +23,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
           isWeb: kIsWeb,
         );
         final showDecorGlow = !effectProfile.performanceMode;
-        final decorGlowEnabled = DateTime.now().millisecondsSinceEpoch < 0;
+        final decorGlowEnabled = showDecorGlow;
 
         return Padding(
           padding: EdgeInsets.fromLTRB(
@@ -76,6 +76,15 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                   ),
                 ),
               ],
+              if (!isSingle)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: HeartbeatThreadWidget(
+                      isOnline: _presenceStatusText('user1').toLowerCase().contains('online') ||
+                          _presenceStatusText('user2').toLowerCase().contains('online'),
+                    ),
+                  ),
+                ),
               Row(
                 mainAxisAlignment: compactMetaLayout
                     ? MainAxisAlignment.spaceEvenly
@@ -198,36 +207,58 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
       final match = RegExp(r'\d+').firstMatch(ageLabel);
       displayAge = match?.group(0) ?? '';
     }
+
+    final data = _presenceForRole(role);
+    final isSleeping = PresenceService.isSleeping(data);
+
+    Widget avatarWidget = isGreyedOut
+        ? _buildAvatar(
+            name,
+            avatarUrl,
+            isUser1: isUser1,
+            onTap: customOnTap,
+            onLongPress: customOnLongPress,
+            isUploading: _uploadingAvatarRole == role,
+            uploadProgressNotifier:
+                _uploadingAvatarRole == role ? _avatarUploadProgressNotifier : null,
+            size: avatarSize,
+            isSinglePlaceholder: true,
+          )
+        : _buildAvatar(
+            name,
+            avatarUrl,
+            isUser1: isUser1,
+            onTap: customOnTap,
+            onLongPress: customOnLongPress,
+            isUploading: _uploadingAvatarRole == role,
+            uploadProgressNotifier:
+                _uploadingAvatarRole == role ? _avatarUploadProgressNotifier : null,
+            size: avatarSize,
+          );
+
+    if (isSleeping) {
+      avatarWidget = Stack(
+        alignment: Alignment.center,
+        children: [
+          avatarWidget,
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6366F1).withValues(alpha: 0.8),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.nights_stay_rounded, color: Colors.white, size: 24),
+          ),
+        ],
+      );
+    }
+
     return Column(
       children: [
         Stack(
           clipBehavior: Clip.none,
           children: [
-            if (isGreyedOut)
-              _buildAvatar(
-                name,
-                avatarUrl,
-                isUser1: isUser1,
-                onTap: customOnTap,
-                onLongPress: customOnLongPress,
-                isUploading: _uploadingAvatarRole == role,
-                uploadProgress:
-                    _uploadingAvatarRole == role ? _avatarUploadProgress : null,
-                size: avatarSize,
-                isSinglePlaceholder: true,
-              )
-            else
-              _buildAvatar(
-                name,
-                avatarUrl,
-                isUser1: isUser1,
-                onTap: customOnTap,
-                onLongPress: customOnLongPress,
-                isUploading: _uploadingAvatarRole == role,
-                uploadProgress:
-                    _uploadingAvatarRole == role ? _avatarUploadProgress : null,
-                size: avatarSize,
-              ),
+            avatarWidget,
             if (!hideMeta && _showWeather && weatherText.isNotEmpty)
               Positioned(
                 bottom: 0,

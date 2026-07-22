@@ -285,6 +285,40 @@ class DrawingStudioService {
     });
   }
 
+  Stream<Map<String, DrawingStudioStroke>> streamActiveStrokes(String houseId) {
+    return _studioRef(houseId).child('active_strokes').onValue.map((event) {
+      final value = event.snapshot.value;
+      if (value is! Map) return const <String, DrawingStudioStroke>{};
+      final strokes = <String, DrawingStudioStroke>{};
+      for (final entry in value.entries) {
+        final stroke = DrawingStudioStroke.fromMap(
+          entry.key.toString(),
+          entry.value is Map ? entry.value as Map : null,
+        );
+        if (stroke.points.isNotEmpty) {
+          strokes[entry.key.toString()] = stroke;
+        }
+      }
+      return strokes;
+    });
+  }
+
+  Future<void> updateActiveStroke(String houseId, String uid, DrawingStudioStroke stroke) async {
+    try {
+      await _studioRef(houseId).child('active_strokes/$uid').set(stroke.toMap());
+    } catch (e) {
+      debugPrint('[DrawingStudioService] updateActiveStroke error: $e');
+    }
+  }
+
+  Future<void> clearActiveStroke(String houseId, String uid) async {
+    try {
+      await _studioRef(houseId).child('active_strokes/$uid').remove();
+    } catch (e) {
+      debugPrint('[DrawingStudioService] clearActiveStroke error: $e');
+    }
+  }
+
   Stream<List<DrawingStudioPresence>> streamPresence(String houseId) {
     return _studioRef(houseId).child('presence').onValue.map((event) {
       final value = event.snapshot.value;

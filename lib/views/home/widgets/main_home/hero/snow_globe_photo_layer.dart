@@ -199,10 +199,19 @@ class _SnowGlobePhotoLayerState extends State<SnowGlobePhotoLayer>
         _stopPhysics();
       }
     }
+    
+    bool sizeChanged = widget.circleSize != oldWidget.circleSize;
+    if (sizeChanged) {
+      final newItemRadius = widget.circleSize * 0.12;
+      for (var item in _items) {
+        item.radius = newItemRadius;
+      }
+    }
+
     if (widget.photoUrls.length != oldWidget.photoUrls.length) {
       _initItems();
     } else {
-      bool changed = false;
+      bool changed = sizeChanged;
       for (int i = 0; i < widget.photoUrls.length; i++) {
         if (_items.length > i && _items[i].url != widget.photoUrls[i]) {
           _items[i].url = widget.photoUrls[i];

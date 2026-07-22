@@ -245,6 +245,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     }
     if (confirm == true) {
       debugPrint('[LOGOUT] confirm == true. Starting signOut...');
+      if (!mounted) return;
       
       final navigator = Navigator.of(context, rootNavigator: true);
       
@@ -261,7 +262,10 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         await Future.delayed(const Duration(milliseconds: 500));
         await _authService.signOut();
         debugPrint('[LOGOUT] signOut success');
-        
+        // Reset App Check cooldown & signature cache để tài khoản mới không bị chặn
+        StorageAppCheckHelper.resetCooldown();
+        AppCheckHttpHeaders.invalidateSignatureCache();
+
         // Đóng loading dialog
         if (navigator.canPop()) {
           navigator.pop();

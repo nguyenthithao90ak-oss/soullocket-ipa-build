@@ -134,4 +134,11 @@ class StorageAppCheckHelper {
         message.contains('app attestation failed') ||
         message.contains('code: 403');
   }
+
+  /// Xoá cooldown App Check — gọi khi user đăng xuất hoặc đăng nhập tài khoản mới
+  /// để session mới không bị chặn bởi cooldown của session cũ.
+  static void resetCooldown() {
+    _warmUpRetryAfter = null;
+    _warmUpCooldownLogged = false;
+  }
 }

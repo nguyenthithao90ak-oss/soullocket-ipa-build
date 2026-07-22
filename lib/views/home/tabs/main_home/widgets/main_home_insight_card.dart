@@ -36,101 +36,135 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
               ),
           ];
 
-    return _buildHomeCardFirstTapWrapper(
-      showHint: _showInsightCardFirstTapHint,
-      onTap: _handleInsightCardTap,
-      child: _buildGlassHomeCard(
-        child: Container(
-          width: double.infinity,
-          padding: SLSpacing.all16,
-          child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(
-                  Icons.auto_awesome,
-                  color: Color(0xFFD81B60),
-                  size: 18,
-                ),
-                SLSpacing.w8,
-                Flexible(
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 480),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 18 * (1 - value)),
+          child: Opacity(opacity: value, child: child),
+        );
+      },
+      child: _buildHomeCardFirstTapWrapper(
+        showHint: _showInsightCardFirstTapHintNotifier.value,
+        onTap: _handleInsightCardTap,
+        child: SLTheme.glassCard(
+          child: Container(
+            width: double.infinity,
+            padding: SLSpacing.all16,
+            child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.auto_awesome,
+                    color: Color(0xFFD81B60),
+                    size: 18,
+                  ),
+                  SLSpacing.w8,
+                  Flexible(
+                    child: Text(
+                      isSingle
+                          ? L10nService().translate('home_thngkcnhn_e82ba1')
+                          : L10nService().translate('home_chshnhphc_243d83'),
+                      maxLines: 1,
+                      overflow: TextOverflow.visible,
+                      style: SLTheme.quicksand(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: const Color(0xFFD81B60),
+                      ),
+                    ),
+                  ),
+                  SLSpacing.w8,
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 14,
+                    color: Color(0xFFD81B60),
+                  ),
+                ],
+              ),
+              SLSpacing.h16,
+              if (insight == null)
+                _buildInsightLoadingShimmer()
+              else ...[
+                _buildInsightBubbleWrap(metrics, compact: true),
+                SLSpacing.h16,
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 13),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFFFFF0F6),
+                        Color(0xFFF8F0FF),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: SLRadius.lgAll,
+                    border: Border.all(color: const Color(0xFFF9D8E5)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFF6FA5).withValues(alpha: 0.08),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
                   child: Text(
-                    isSingle
-                        ? L10nService().translate('home_thngkcnhn_e82ba1')
-                        : L10nService().translate('home_chshnhphc_243d83'),
-                    maxLines: 1,
-                    overflow: TextOverflow.visible,
+                    insight.suggestion,
                     style: SLTheme.quicksand(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                      color: const Color(0xFFD81B60),
+                      fontSize: 13,
+                      color: const Color(0xFF4A3060),
+                      height: 1.5,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-                SLSpacing.w8,
-                const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 14,
-                  color: Color(0xFFD81B60),
-                ),
               ],
-            ),
-            SLSpacing.h16,
-            if (insight == null)
-              Container(
-                width: double.infinity,
-                padding: SLSpacing.all12,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF5FA),
-                  borderRadius: SLRadius.lgAll,
-                  border: Border.all(color: const Color(0xFFF8BBD0)),
-                ),
-                child: Text(
-                  isSingle
-                      ? L10nService().translate('home_thngkshink_2cfa0a')
-                      : L10nService().translate('home_chsshinkhi_2113ba'),
-                  style: SLTheme.quicksand(
-                    fontSize: 13,
-                    color: const Color(0xFFD81B60),
-                    height: 1.5,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              )
-            else ...[
-              _buildInsightBubbleWrap(metrics, compact: true),
-              SLSpacing.h16,
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 13),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.white.withValues(alpha: 0.92),
-                      const Color(0xFFFFF3F8).withValues(alpha: 0.95),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: SLRadius.lgAll,
-                  border: Border.all(color: const Color(0xFFF9D8E5)),
-                ),
-                child: Text(
-                  insight.suggestion,
-                  style: SLTheme.quicksand(
-                    fontSize: 13,
-                    color: const Color(0xFF555555),
-                    height: 1.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
             ],
-          ],
+          ),
         ),
-      ),
+        ),
       ),
     );
   }
+
+  Widget _buildInsightLoadingShimmer() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.4, end: 1.0),
+      duration: const Duration(milliseconds: 900),
+      curve: Curves.easeInOut,
+      onEnd: () => setState(() {}),
+      builder: (context, value, _) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 14,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFD6E7).withValues(alpha: value),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              height: 14,
+              width: 200,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFD6E7).withValues(alpha: value * 0.7),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
 }

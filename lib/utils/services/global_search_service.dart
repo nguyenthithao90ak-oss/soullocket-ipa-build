@@ -72,7 +72,7 @@ class GlobalSearchService {
     'tarot': ['bói bài'],
     'collage': ['ghép ảnh'],
     'store': ['cửa hàng', 'shop'],
-    'age_zodiac': ['cung hoàng đạo', 'tuổi', 'zodiac'],
+
     'love_card': ['thẻ tình yêu', 'card'],
     'creative_diary': ['nhật ký', 'diary', 'sổ tay'],
   };

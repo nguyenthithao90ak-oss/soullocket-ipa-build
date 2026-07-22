@@ -55,6 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoginTab = false;
   bool _obscurePassword = false;
   bool _isLoading = false;
+  bool _isSuccessTransition = false;
   bool _rememberMe = true;
   bool _acceptTerms = false;
   bool _showSecurityQuestion = false;
@@ -377,7 +378,20 @@ class _LoginScreenState extends State<LoginScreen> {
         await _authService.signInWithEmailPassword(email, password);
         didAutoLogin = true;
         setState(() => _isLoginTab = true);
-      } catch (_) {}
+      } catch (e) {
+        final errorString = e.toString().toLowerCase();
+        if (!errorString.contains('wrong_password') &&
+            !errorString.contains('wrong-password') &&
+            !errorString.contains('user-not-found') &&
+            !errorString.contains('account_not_found') &&
+            !errorString.contains('invalid-credential') &&
+            !errorString.contains('mật khẩu không chính xác') &&
+            !errorString.contains('sai mật khẩu') &&
+            !errorString.contains('tài khoản không tồn tại')) {
+          if (mounted) setState(() => _isLoading = false);
+          rethrow;
+        }
+      }
       if (mounted) setState(() => _isLoading = false);
 
       if (!didAutoLogin) {
@@ -491,8 +505,11 @@ class _LoginScreenState extends State<LoginScreen> {
         _failedAuthAttempts = 0; // Reset on success
         debugPrint('[Auth][LoginScreen] login success -> navigate AppEntry');
         handedOffToAppEntry = true;
-        setState(() => _isLoading = false);
-        await Future<void>.delayed(const Duration(milliseconds: 120));
+        setState(() {
+          _isLoading = false;
+          _isSuccessTransition = true;
+        });
+        await Future<void>.delayed(const Duration(milliseconds: 600)); // wait for transition
         if (!mounted) return;
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const AppEntry()),
@@ -516,8 +533,11 @@ class _LoginScreenState extends State<LoginScreen> {
         _failedAuthAttempts = 0; // Reset on success
         debugPrint('[Auth][LoginScreen] register success -> navigate AppEntry');
         handedOffToAppEntry = true;
-        setState(() => _isLoading = false);
-        await Future<void>.delayed(const Duration(milliseconds: 120));
+        setState(() {
+          _isLoading = false;
+          _isSuccessTransition = true;
+        });
+        await Future<void>.delayed(const Duration(milliseconds: 600)); // wait for transition
         if (!mounted) return;
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const AppEntry()),
@@ -1032,10 +1052,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                   padding: EdgeInsets.only(
                                     top: _isLoginTab ? 0 : 4,
                                   ),
-                                  child: ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                        maxWidth: contentMaxWidth),
-                                    child: Center(
+                                  child: AnimatedOpacity(
+                                    duration: const Duration(milliseconds: 500),
+                                    curve: Curves.easeOutCubic,
+                                    opacity: _isSuccessTransition ? 0.0 : 1.0,
+                                    child: AnimatedScale(
+                                      duration: const Duration(milliseconds: 500),
+                                      curve: Curves.easeOutCubic,
+                                      scale: _isSuccessTransition ? 1.1 : 1.0,
+                                      child: ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                            maxWidth: contentMaxWidth),
+                                        child: Center(
                                       child: SizedBox(
                                         width: authPanelWidth,
                                         child: AuthPanelShell(
@@ -1127,6 +1155,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                     ),
                                   ),
+                                ),
+                                ),
                                 ),
                               ],
                             ),
@@ -1341,4 +1371,5 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
 

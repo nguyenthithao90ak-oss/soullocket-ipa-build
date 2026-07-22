@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../../utils/flexible_date_input.dart';
+import '../login/glass_text_field.dart';
 import '../login/social_auth_buttons.dart';
 
 final RegExp _registerEmailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
@@ -91,7 +92,7 @@ class RegisterForm extends StatelessWidget {
             title: l10n.translate('auth_login_email_label'),
           ),
           const SizedBox(height: 8),
-          TextField(
+          GlassTextField(
             controller: emailController,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
@@ -100,21 +101,18 @@ class RegisterForm extends StatelessWidget {
               AutofillHints.email,
             ],
             onSubmitted: (_) => FocusScope.of(context).nextFocus(),
-            style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 16),
-            decoration: SLTheme.authInputDecoration(
-              hintText: l10n.translate('auth_email_example'),
-              focusColor: accentRose,
-              prefixIcon: Icon(
-                Icons.mail_outline_rounded,
-                color: accentRose.withValues(alpha: 0.65),
-                size: 20,
-              ),
+            hintText: l10n.translate('auth_email_example'),
+            accentColor: accentRose,
+            prefixIcon: Icon(
+              Icons.mail_outline_rounded,
+              color: accentRose.withValues(alpha: 0.65),
+              size: 20,
             ),
           ),
           const SizedBox(height: 10),
           SLTheme.sectionHeader(title: passwordLabel),
           const SizedBox(height: 8),
-          TextField(
+          GlassTextField(
             controller: passwordController,
             obscureText: obscurePassword,
             textInputAction: TextInputAction.done,
@@ -124,23 +122,20 @@ class RegisterForm extends StatelessWidget {
             onSubmitted: (_) {
               if (!isLoading) onRegister();
             },
-            style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 16),
-            decoration: SLTheme.authInputDecoration(
-              hintText: passwordHint,
-              focusColor: accentRose,
-              prefixIcon: Icon(
-                Icons.lock_outline_rounded,
-                color: accentRose.withValues(alpha: 0.65),
+            hintText: passwordHint,
+            accentColor: accentRose,
+            prefixIcon: Icon(
+              Icons.lock_outline_rounded,
+              color: accentRose.withValues(alpha: 0.65),
+              size: 20,
+            ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                obscurePassword ? Icons.visibility : Icons.visibility_off,
+                color: SLTheme.authMutedTextColor,
                 size: 20,
               ),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  obscurePassword ? Icons.visibility : Icons.visibility_off,
-                  color: SLTheme.authMutedTextColor,
-                  size: 20,
-                ),
-                onPressed: onToggleObscure,
-              ),
+              onPressed: onToggleObscure,
             ),
           ),
           const SizedBox(height: 12),

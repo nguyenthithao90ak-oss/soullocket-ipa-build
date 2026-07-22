@@ -158,4 +158,5 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
           : preset.emoji,
     );
   }
+
 }

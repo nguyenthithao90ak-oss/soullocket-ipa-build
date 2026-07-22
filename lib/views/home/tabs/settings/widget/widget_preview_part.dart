@@ -1505,7 +1505,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
               radius: radius - 1.5,
               backgroundColor: Colors.white.withValues(alpha: 0.85),
               backgroundImage:
-                  avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                  avatarUrl.isNotEmpty ? CachedNetworkImageProvider(avatarUrl) : null,
               child: avatarUrl.isEmpty
                   ? Icon(
                       Icons.person,

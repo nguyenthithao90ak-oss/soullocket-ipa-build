@@ -218,7 +218,7 @@ class HouseService {
   Future<HttpsCallableResult<dynamic>> _callCreateHouseSecureWithRetry(
     Map<String, dynamic> payload,
   ) async {
-    await _refreshCallableSecurityContext(force: true);
+    await _refreshCallableSecurityContext(force: false);
     try {
       return await CloudFunctionsHelper.callSecure<dynamic>(
         'createHouseSecure',

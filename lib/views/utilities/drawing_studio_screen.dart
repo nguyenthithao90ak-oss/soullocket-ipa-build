@@ -44,8 +44,10 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   final DrawingStudioService _drawingService = DrawingStudioService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final Map<String, _DrawStroke> _realtimeStrokes = {};
+  final Map<String, _DrawStroke> _partnerActiveStrokes = {};
   final Set<String> _localPendingStrokeIds = {};
   StreamSubscription<List<DrawingStudioStroke>>? _strokesSub;
+  StreamSubscription<Map<String, DrawingStudioStroke>>? _activeStrokesSub;
   StreamSubscription<DrawingStudioBackground>? _backgroundSub;
   StreamSubscription<List<DrawingStudioPresence>>? _presenceSub;
 
@@ -53,6 +55,8 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   bool _presenceIsDrawing = false;
 
   String _mode = 'frame';
+
+  DateTime? _lastActiveStrokeSentAt;
   String _backgroundId = 'paper_grid';
   String _aspectRatioId = '4_5';
   Color _currentColor = const Color(0xFFFF3B4D);
@@ -97,6 +101,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   void dispose() {
     _presenceTimer?.cancel();
     _strokesSub?.cancel();
+    _activeStrokesSub?.cancel();
     _backgroundSub?.cancel();
     _presenceSub?.cancel();
     final myRole = RoleUtils.currentRoleSync();
@@ -130,6 +135,20 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
             ),
           );
         _localPendingStrokeIds.removeWhere(_realtimeStrokes.containsKey);
+      });
+    });
+
+    _activeStrokesSub =
+        _drawingService.streamActiveStrokes(widget.houseId).listen((activeStrokesMap) {
+      if (!mounted) return;
+      setState(() {
+        _partnerActiveStrokes.clear();
+        final myUid = _auth.currentUser?.uid ?? '';
+        for (final entry in activeStrokesMap.entries) {
+          if (entry.key != myUid) {
+            _partnerActiveStrokes[entry.key] = _strokeFromRealtime(entry.value);
+          }
+        }
       });
     });
 
@@ -176,6 +195,16 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     );
   }
 
+  List<_DrawStroke> get _allVisibleStrokes {
+    final allStrokes = _realtimeStrokes.values.toList()
+      ..addAll(
+          _strokes.where((s) => _localPendingStrokeIds.contains(s.id)))
+      ..addAll(_partnerActiveStrokes.values);
+
+    allStrokes.sort((a, b) => a.id.compareTo(b.id));
+    return allStrokes;
+  }
+
   bool get _hasAnyStroke => _allVisibleStrokes.isNotEmpty;
 
   bool get _hasOwnStroke {
@@ -184,12 +213,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     return _allVisibleStrokes.any((stroke) => stroke.authorUid == uid);
   }
 
-  List<_DrawStroke> get _allVisibleStrokes => [
-        ..._realtimeStrokes.values,
-        ..._strokes.where(
-          (stroke) => _localPendingStrokeIds.contains(stroke.id),
-        ),
-      ];
+
 
   _CanvasRatioPreset get _selectedRatio => _ratioPresets.firstWhere(
         (preset) => preset.id == _aspectRatioId,
@@ -311,6 +335,56 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
 
     lastStroke.points.add(finalPoint);
     _canvasRepaintNotifier.repaint();
+    _pushActiveStroke(lastStroke);
+  }
+
+  void _pushActiveStroke(_DrawStroke stroke) {
+    final uid = _auth.currentUser?.uid ?? '';
+    if (uid.isEmpty || stroke.points.isEmpty) return;
+    
+    final now = DateTime.now();
+    if (_lastActiveStrokeSentAt != null && now.difference(_lastActiveStrokeSentAt!).inMilliseconds < 100) {
+      return; // throttle 100ms
+    }
+    _lastActiveStrokeSentAt = now;
+    
+    final canvasSize = _canvasKey.currentContext?.size;
+    if (canvasSize == null || canvasSize.width <= 0 || canvasSize.height <= 0) return;
+
+    final simplifiedPoints = <Offset>[];
+    if (stroke.points.isNotEmpty) {
+      simplifiedPoints.add(stroke.points.first);
+      for (int i = 1; i < stroke.points.length - 1; i++) {
+        final lastSaved = simplifiedPoints.last;
+        final current = stroke.points[i];
+        if ((current - lastSaved).distance >= 4.0) {
+          simplifiedPoints.add(current);
+        }
+      }
+      if (stroke.points.length > 1) {
+        simplifiedPoints.add(stroke.points.last);
+      }
+    }
+
+    final normalizedPoints = simplifiedPoints
+        .map(
+          (point) => <double>[
+            (point.dx / canvasSize.width).clamp(0.0, 1.0).toDouble(),
+            (point.dy / canvasSize.height).clamp(0.0, 1.0).toDouble(),
+          ],
+        )
+        .toList(growable: false);
+
+    final payload = DrawingStudioStroke(
+      id: stroke.id,
+      authorUid: uid,
+      authorName: widget.myName,
+      colorValue: stroke.color.value,
+      width: stroke.width,
+      points: normalizedPoints,
+      createdAt: DateTime.now().millisecondsSinceEpoch,
+    );
+    unawaited(_drawingService.updateActiveStroke(widget.houseId, uid, payload));
   }
 
   void _endStroke([DragEndDetails? _]) {
@@ -320,6 +394,10 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     final stroke = _strokes.isNotEmpty ? _strokes.last : null;
     setState(() => _isDrawing = false);
     unawaited(_setPresenceDrawingState(false));
+    final uid = _auth.currentUser?.uid ?? '';
+    if (uid.isNotEmpty) {
+      unawaited(_drawingService.clearActiveStroke(widget.houseId, uid));
+    }
     if (stroke != null) {
       unawaited(_pushCompletedStroke(stroke));
     }

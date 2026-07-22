@@ -638,6 +638,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                                           cacheManager:
                                               AppCacheManager.instance,
                                           maxWidthDiskCache: 2400,
+                                          memCacheWidth: 1800, // RAM optimization
                                           imageUrl: _mediaUrl,
                                           fit: BoxFit.contain,
                                           alignment: Alignment.center,
@@ -698,7 +699,7 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                 radius: 18,
                 backgroundColor: const Color(0xFFE91E8C),
                 backgroundImage: _avatar.isNotEmpty
-                    ? CachedNetworkImageProvider(_avatar)
+                    ? CachedNetworkImageProvider(_avatar, maxWidth: 128, maxHeight: 128)
                     : null,
                 child: _avatar.isEmpty
                     ? const Icon(Icons.home, size: 18, color: Colors.white)

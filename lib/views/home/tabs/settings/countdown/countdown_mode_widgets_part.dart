@@ -1304,7 +1304,7 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
                     // Nếu hạt ở rất gần camera, tạo blur để có độ sâu trường ảnh (Depth of Field 3D)
                     if (p.zIndex > 0.88) {
                       heartWidget = ClipRect(
-                        child: BackdropFilter(
+                        child: FastBackdropFilter(
                           filter: ui.ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
                           child: heartWidget,
                         ),

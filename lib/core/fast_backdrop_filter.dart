@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../views/ui_prefs.dart';
+import 'package:soullocket_app/views/ui_prefs.dart';
 
 class FastBackdropFilter extends StatelessWidget {
   final ImageFilter filter;

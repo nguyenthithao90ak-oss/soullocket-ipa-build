@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import '../../../../../core/sl_theme.dart';
-import '../diary_tab_btn.dart';
 
 class DiaryAccessLockedView extends StatelessWidget {
   final VoidCallback onUnlock;
@@ -101,65 +100,107 @@ class DiaryTabSectionSwitcher extends StatelessWidget {
     required this.onTabChanged,
   });
 
-  List<Color> _paletteForSection(String id) {
-    switch (id) {
-      case 'memory':
-        return const [Color(0xFF7C8BFF), Color(0xFF62C7B5)];
-      case 'diary':
-      default:
-        return const [Color(0xFFFF6A9F), Color(0xFFD81B60)];
-    }
-  }
 
-  Color _sectionAccent(String id) {
-    switch (id) {
-      case 'memory':
-        return const Color(0xFF5C71D8);
-      case 'diary':
-      default:
-        return const Color(0xFFD81B60);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    return SLTheme.glassCard(
-      margin: EdgeInsets.zero,
-      padding: SLSpacing.all4,
-      radius: 20,
-      child: Row(
-        children: [
-          Expanded(
-            child: DiaryTabBtn(
-              id: 'memory',
-              label: context.tr('home_knim_262759'),
-              icon: Icons.photo_library_rounded,
-              active: currentTab == 'memory',
-              palette: _paletteForSection('memory'),
-              accent: _sectionAccent('memory'),
-              onTap: () {
-                if (currentTab != 'memory') {
-                  onTabChanged('memory');
-                }
-              },
-            ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.35),
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            )
+          ],
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.6),
+            width: 1.5,
           ),
-          Expanded(
-            child: DiaryTabBtn(
-              id: 'diary',
-              label: context.tr('home_tms_f029b6'),
-              icon: Icons.auto_awesome_rounded,
-              active: currentTab == 'diary',
-              palette: _paletteForSection('diary'),
-              accent: _sectionAccent('diary'),
-              onTap: () {
-                if (currentTab != 'diary') {
-                  onTabChanged('diary');
-                }
-              },
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: _DiarySegmentBtn(
+                label: context.tr('home_knim_262759'),
+                active: currentTab == 'memory',
+                activeColor: const Color(0xFF5C71D8),
+                activeShadowColor: const Color(0xFF7C8BFF),
+                onTap: () {
+                  if (currentTab != 'memory') onTabChanged('memory');
+                },
+              ),
             ),
+            Expanded(
+              child: _DiarySegmentBtn(
+                label: context.tr('home_tms_f029b6'),
+                active: currentTab == 'diary',
+                activeColor: const Color(0xFFD81B60),
+                activeShadowColor: const Color(0xFFFF6A9F),
+                onTap: () {
+                  if (currentTab != 'diary') onTabChanged('diary');
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DiarySegmentBtn extends StatelessWidget {
+  final String label;
+  final bool active;
+  final Color activeColor;
+  final Color activeShadowColor;
+  final VoidCallback onTap;
+
+  const _DiarySegmentBtn({
+    required this.label,
+    required this.active,
+    required this.activeColor,
+    required this.activeShadowColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: active ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: activeShadowColor.withValues(alpha: 0.18),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: SLTheme.quicksand(
+            fontWeight: active ? FontWeight.w900 : FontWeight.w700,
+            fontSize: 14.5,
+            color: active ? activeColor : SLColors.textPrimary.withValues(alpha: 0.55),
+            letterSpacing: 0.3,
           ),
-        ],
+        ),
       ),
     );
   }

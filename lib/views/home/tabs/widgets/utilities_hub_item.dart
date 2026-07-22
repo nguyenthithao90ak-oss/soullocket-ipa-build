@@ -182,20 +182,12 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                       boxShadow: [
                         BoxShadow(
                           color: startColor.withValues(alpha: 0.4),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
+                          blurRadius: 10,
+                          offset: const Offset(0, 6),
                         ),
-                        if (!isDark)
-                          BoxShadow(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            blurRadius: 12,
-                            offset: const Offset(-4, -4),
-                          ),
                       ],
                       border: Border.all(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.2)
-                            : Colors.white.withValues(alpha: 0.85),
+                        color: Colors.white.withValues(alpha: 0.25),
                         width: 1.2,
                       ),
                     ),
@@ -224,11 +216,17 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                     style: SLTheme.quicksand(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w800,
-                      color: isDark
-                          ? Colors.white
-                          : SLColors.textPrimary.withValues(alpha: 0.85),
+                      color: Colors.white, // Always white text
                       letterSpacing: 0.3,
                       height: 1.15,
+                    ).copyWith(
+                      shadows: const [
+                        Shadow(
+                          color: Colors.black54, // Soft dark shadow for contrast on bright backgrounds
+                          blurRadius: 4,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
                     ),
                   ),
                 ),

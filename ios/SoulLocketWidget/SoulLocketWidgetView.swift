@@ -931,18 +931,18 @@ struct LockScreenWidgetView: View {
             VStack(spacing: 3) {
                 HStack(spacing: 6) {
                     Text(data.name1)
-                        .font(.system(size: 18, weight: .black))
+                        .font(.system(size: 34, weight: .black))
                         .lineLimit(1)
-                        .minimumScaleFactor(0.5)
+                        .minimumScaleFactor(0.4)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                     
                     Image(systemName: "heart.fill")
                         .font(.system(size: 16))
                     
                     Text(data.name2)
-                        .font(.system(size: 18, weight: .black))
+                        .font(.system(size: 34, weight: .black))
                         .lineLimit(1)
-                        .minimumScaleFactor(0.5)
+                        .minimumScaleFactor(0.4)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 

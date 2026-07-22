@@ -151,7 +151,6 @@ extension _SettingsTabShell on _SettingsTabState {
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
     final ids = <String>{
       'store',
-      'calculator',
     };
 
     if (houseId.isEmpty) {
@@ -177,7 +176,7 @@ extension _SettingsTabShell on _SettingsTabState {
       'diary_export',
       'tarot',
       'collage',
-      'age_zodiac',
+
       'creative_diary',
     });
 
@@ -211,9 +210,6 @@ extension _SettingsTabShell on _SettingsTabState {
     switch (utilityId) {
       case 'store':
         screen = const RewardStoreScreen();
-        break;
-      case 'calculator':
-        screen = const CalculatorScreen();
         break;
       case 'bucket':
         screen = houseId.isEmpty
@@ -309,9 +305,7 @@ extension _SettingsTabShell on _SettingsTabState {
       case 'collage':
         screen = houseId.isEmpty ? null : CollageMakerScreen(houseId: houseId);
         break;
-      case 'age_zodiac':
-        screen = houseId.isEmpty ? null : AgeZodiacScreen(houseId: houseId);
-        break;
+
       case 'love_card':
         screen = houseId.isEmpty || currentUid == null || currentUid.isEmpty
             ? null
@@ -747,6 +741,31 @@ extension _SettingsTabShell on _SettingsTabState {
               _showToast('Tính năng đang phát triển nhé', success: true);
             },
           ),
+          _buildDivider(isDark),
+          _buildiOSRow(
+            icon: Icons.history_rounded,
+            iconBgColor: const Color(0xFF90CAF9),
+            title: 'Lịch sử hoạt động',
+            isDark: isDark,
+            onTap: () {
+              final houseId = _houseId?.trim() ?? '';
+              if (houseId.isNotEmpty) {
+                slPush(context, HistoryScreen(houseId: houseId));
+              }
+            },
+          ),
+
+          if (kDebugMode) _buildDivider(isDark),
+          if (kDebugMode)
+            _buildiOSRow(
+              icon: Icons.emoji_emotions_rounded,
+              iconBgColor: const Color(0xFFFF8FB7),
+              title: 'Quản lý Kho Sticker',
+              isDark: isDark,
+              onTap: () {
+                slPush(context, const StickerLibraryScreen());
+              },
+            ),
         ], isDark),
 
         _buildiOSSectionCard([

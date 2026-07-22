@@ -144,6 +144,7 @@ class _BucketListScreenState extends State<BucketListScreen>
     if (currentSnap.exists && currentSnap.value is Map) {
       final currentMap = currentSnap.value as Map;
       if (currentMap.length >= 50) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(
               'Danh sách mong muốn đã đạt giới hạn (tối đa 50 mục). Vui lòng xoá bớt trước khi thêm mới.'),
@@ -153,6 +154,7 @@ class _BucketListScreenState extends State<BucketListScreen>
       }
     }
 
+    if (!mounted) return;
     final now = DateTime.now();
     final labelAction = context.tr('util_thm1mcvobu_fc5d40');
     await _dbRef.child('houses/${widget.houseId}/bucket').push().set({

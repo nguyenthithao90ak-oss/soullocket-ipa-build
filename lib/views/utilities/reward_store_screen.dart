@@ -556,15 +556,6 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
         if (mounted && navigator.canPop()) {
           navigator.pop();
         }
-
-        // Fallback for real ad if it fails to play (no fill)
-        if (!worked) {
-          debugPrint(
-              'AdMobService: Real ad failed to load/play. Falling back to simulated web ad dialog.');
-          if (mounted) {
-            worked = await _showWebRewardDialog();
-          }
-        }
       }
 
       if (worked) {

@@ -55,9 +55,6 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
   }
 
   String? _ignoredPresenceUidForRole(String role) {
-    if (role != _currentRole) {
-      return _auth.currentUser?.uid;
-    }
     return null;
   }
 
@@ -136,6 +133,9 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
   String _presenceStatusText(String role) {
     if (!_showStatus) return '';
     final data = _presenceForRole(role);
+    if (PresenceService.isSleeping(data)) {
+      return 'Đang ngủ 💤';
+    }
     if (_isCurrentForegroundRole(role)) {
       return context.tr('home_anghotng_cfaecd');
     }
@@ -152,6 +152,9 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
 
   Color _presenceStatusColor(String role) {
     final data = _presenceForRole(role);
+    if (PresenceService.isSleeping(data)) {
+      return const Color(0xFF6366F1);
+    }
     if (_isCurrentForegroundRole(role)) {
       return const Color(0xFF00C853);
     }
@@ -571,6 +574,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
         '&timezone=auto',
       );
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
+      if (!mounted) return null;
       if (response.statusCode != 200) return null;
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       final current = body['current'];
@@ -896,6 +900,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
           _homeMyBatteryNotifier.value = null;
         }
 
+        if (!mounted) return;
         var nextDistance = context.tr('home_angnhv_ea3669');
         String? nextAlert = isSingle
             ? context.tr('home_btvtrbnhin_5f5891')
@@ -934,20 +939,22 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
           nextAlert = context.tr('home_cpnhtvtran_6aea3c');
         }
 
-        if (!mounted) return;
         _updateHomeMapPreview(
           distanceText: nextDistance,
           alertText: nextAlert,
         );
       },
       onError: (Object error) {
+        if (!mounted) {
+          debugPrint('Home GPS preview listener failed (unmounted)');
+          return;
+        }
         debugPrint(
           'Home GPS preview listener failed: ${AppErrorMapper.resolve(
             error,
             fallbackMessage: context.tr('home_khngthtidl_d524ab'),
           ).message}',
         );
-        if (!mounted) return;
         _updateHomeMapPreview(
           distanceText: context.tr('home_angnhv_ea3669'),
           alertText: context.tr('home_khngthtidl_d524ab'),
@@ -965,6 +972,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
       return;
     }
 
+    if (!mounted) return;
     final navigator = Navigator.of(context);
     final houseId = _houseId ?? await _houseService.getCurrentHouseId();
     if (!mounted || houseId == null) return;

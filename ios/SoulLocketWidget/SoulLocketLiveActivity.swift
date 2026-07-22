@@ -7,15 +7,12 @@ import SwiftUI
 @available(iOS 16.1, *)
 public struct LiveActivitiesAppAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
-        public var endTime: Date
-        public var label: String
+        public var avatar1: String
+        public var avatar2: String
+        public var days: Int
+        public var title: String
     }
-
-    public var title: String
-
-    public init(title: String) {
-        self.title = title
-    }
+    public init() {}
 }
 
 @available(iOS 16.1, *)
@@ -23,27 +20,31 @@ struct SoulLocketLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: LiveActivitiesAppAttributes.self) { context in
             // Giao diện hiển thị trên Màn hình khóa (Lock Screen) và Thông báo (Banner)
-            VStack(spacing: 8) {
-                HStack {
-                    Text("💞 SoulLocket")
-                        .font(.system(.headline, design: .rounded))
-                        .foregroundColor(Color(hexStr: "FF4D73"))
-                    Spacer()
-                    Text(context.attributes.title)
-                        .font(.system(.subheadline, design: .rounded))
-                        .foregroundColor(.gray)
+            HStack(spacing: 16) {
+                if let url = URL(string: context.state.avatar1), let imageData = try? Data(contentsOf: url), let image = UIImage(data: imageData) {
+                    Image(uiImage: image).resizable().frame(width: 50, height: 50).clipShape(Circle())
+                } else {
+                    Circle().fill(Color(hexStr: "FF4D73")).frame(width: 50, height: 50)
                 }
                 
-                HStack {
-                    Text(context.state.label)
-                        .font(.system(.body, design: .rounded))
-                        .bold()
-                    Spacer()
-                    Text(timerInterval: Date()...context.state.endTime, countsDown: true)
-                        .font(.system(.title3, design: .rounded))
-                        .bold()
-                        .foregroundColor(Color(hexStr: "FF4D73"))
-                        .monospacedDigit()
+                VStack {
+                    Text(context.state.title)
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundColor(.gray)
+                    HStack {
+                        Text("💞").font(.system(size: 16))
+                        Text("\(context.state.days) Days")
+                            .font(.system(.title3, design: .rounded))
+                            .bold()
+                            .foregroundColor(Color(hexStr: "FF4D73"))
+                        Text("💞").font(.system(size: 16))
+                    }
+                }
+                
+                if let url = URL(string: context.state.avatar2), let imageData = try? Data(contentsOf: url), let image = UIImage(data: imageData) {
+                    Image(uiImage: image).resizable().frame(width: 50, height: 50).clipShape(Circle())
+                } else {
+                    Circle().fill(Color(hexStr: "FF8FB1")).frame(width: 50, height: 50)
                 }
             }
             .padding()
@@ -53,37 +54,33 @@ struct SoulLocketLiveActivity: Widget {
             DynamicIsland {
                 // Giao diện mở rộng khi giữ ngón tay trên Dynamic Island
                 DynamicIslandExpandedRegion(.leading) {
-                    HStack(spacing: 4) {
-                        Text("💞")
-                        Text("SoulLocket")
-                            .font(.system(.body, design: .rounded))
-                            .bold()
-                            .foregroundColor(Color(hexStr: "FF8FB1"))
+                    if let url = URL(string: context.state.avatar1), let imageData = try? Data(contentsOf: url), let image = UIImage(data: imageData) {
+                        Image(uiImage: image).resizable().frame(width: 40, height: 40).clipShape(Circle())
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text(timerInterval: Date()...context.state.endTime, countsDown: true)
-                        .font(.system(.body, design: .rounded))
-                        .bold()
-                        .foregroundColor(Color(hexStr: "FF4D73"))
-                        .monospacedDigit()
+                    if let url = URL(string: context.state.avatar2), let imageData = try? Data(contentsOf: url), let image = UIImage(data: imageData) {
+                        Image(uiImage: image).resizable().frame(width: 40, height: 40).clipShape(Circle())
+                    }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text(context.state.label)
-                        .font(.system(.subheadline, design: .rounded))
-                        .foregroundColor(.gray)
+                    HStack {
+                        Text("💞").font(.system(size: 14))
+                        Text("\(context.state.days) Days")
+                            .font(.system(.headline, design: .rounded))
+                            .foregroundColor(Color(hexStr: "FF4D73"))
+                        Text("💞").font(.system(size: 14))
+                    }
                 }
             } compactLeading: {
-                Text("💞")
+                Text("💞").foregroundColor(Color(hexStr: "FF4D73"))
             } compactTrailing: {
-                // Đếm ngược thời gian thực trên thanh trạng thái Dynamic Island
-                Text(timerInterval: Date()...context.state.endTime, countsDown: true)
+                Text("\(context.state.days)d")
                     .font(.system(.caption2, design: .rounded))
                     .bold()
                     .foregroundColor(Color(hexStr: "FF4D73"))
-                    .monospacedDigit()
             } minimal: {
-                Text("💞")
+                Text("💞").foregroundColor(Color(hexStr: "FF4D73"))
             }
         }
     }

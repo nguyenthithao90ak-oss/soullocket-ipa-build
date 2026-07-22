@@ -1,3 +1,4 @@
+import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
@@ -335,7 +336,7 @@ class _CinemaScreenState extends State<CinemaScreen> {
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(color: Colors.black),
                           ),
-                    BackdropFilter(
+                    FastBackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                       child: Container(color: Colors.black.withValues(alpha: 0.6)),
                     ),

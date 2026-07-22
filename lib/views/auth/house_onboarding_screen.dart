@@ -14,11 +14,13 @@ import '../../utils/app_error_mapper.dart';
 import '../../utils/services/offline_cache_service.dart';
 import '../../utils/flexible_date_input.dart';
 import '../app_entry.dart';
+import 'dart:ui';
 import '../app_entry/widgets/loading_scaffold.dart';
 import 'widgets/gender_selection_dialog.dart';
 import 'widgets/relationship_mode_dialog.dart';
 import 'login_screen.dart';
 import '../../core/sl_theme.dart';
+import '../../core/fast_backdrop_filter.dart';
 
 class HouseOnboardingScreen extends StatefulWidget {
   final String? initialMode;
@@ -1173,7 +1175,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
   Widget build(BuildContext context) {
     if (_showCustomIdScreen) {
       return Scaffold(
-        backgroundColor: const Color(0xFFFFF7FB),
+        backgroundColor: const Color(0xFFFDF7FA),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -1204,24 +1206,92 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
               ),
           ],
         ),
-        body: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 28,
-                      offset: const Offset(0, 16),
+        body: Stack(
+          children: [
+            // --- Premium Ambient Blobs ---
+            Positioned.fill(
+              child: RepaintBoundary(
+                child: Stack(
+                  children: [
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 1200),
+                      curve: Curves.easeInOutSine,
+                      top: -100,
+                      left: -150,
+                      child: Container(
+                        width: 500,
+                        height: 500,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              const Color(0xFFFF6FA3).withValues(alpha: 0.45),
+                              const Color(0xFFFF6FA3).withValues(alpha: 0.0),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 1400),
+                      curve: Curves.easeInOutSine,
+                      bottom: -150,
+                      right: -200,
+                      child: Container(
+                        width: 600,
+                        height: 600,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              const Color(0xFF9030C0).withValues(alpha: 0.35),
+                              const Color(0xFF9030C0).withValues(alpha: 0.0),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: FastBackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+                        fallbackColor: Colors.white.withValues(alpha: 0.6),
+                        child: Container(
+                          color: Colors.white.withValues(alpha: 0.2),
+                        ),
+                      ),
                     ),
                   ],
                 ),
+              ),
+            ),
+            Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(36),
+                    child: FastBackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                      fallbackColor: Colors.white.withValues(alpha: 0.85),
+                      child: Container(
+                        padding: const EdgeInsets.all(28),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(36),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF6A1B9A).withValues(alpha: 0.08),
+                              blurRadius: 40,
+                              spreadRadius: 8,
+                              offset: const Offset(0, 16),
+                            ),
+                          ],
+                        ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1421,7 +1491,11 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                 ),
               ),
             ),
+            ),
+            ),
           ),
+        ),
+        ],
         ),
       );
     }
@@ -1432,27 +1506,95 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       }
 
       return Scaffold(
-        backgroundColor: const Color(0xFFFFF7FB),
-        body: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 28,
-                        offset: const Offset(0, 16),
+        backgroundColor: const Color(0xFFFDF7FA),
+        body: Stack(
+          children: [
+            // --- Premium Ambient Blobs ---
+            Positioned.fill(
+              child: RepaintBoundary(
+                child: Stack(
+                  children: [
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 1200),
+                      curve: Curves.easeInOutSine,
+                      top: -100,
+                      left: -150,
+                      child: Container(
+                        width: 500,
+                        height: 500,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              const Color(0xFFFF6FA3).withValues(alpha: 0.45),
+                              const Color(0xFFFF6FA3).withValues(alpha: 0.0),
+                            ],
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
-                  child: Column(
+                    ),
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 1400),
+                      curve: Curves.easeInOutSine,
+                      bottom: -150,
+                      right: -200,
+                      child: Container(
+                        width: 600,
+                        height: 600,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              const Color(0xFF9030C0).withValues(alpha: 0.35),
+                              const Color(0xFF9030C0).withValues(alpha: 0.0),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: FastBackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+                        fallbackColor: Colors.white.withValues(alpha: 0.6),
+                        child: Container(
+                          color: Colors.white.withValues(alpha: 0.2),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(36),
+                      child: FastBackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                        fallbackColor: Colors.white.withValues(alpha: 0.85),
+                        child: Container(
+                          padding: const EdgeInsets.all(28),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(36),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.4),
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF6A1B9A).withValues(alpha: 0.08),
+                                blurRadius: 40,
+                                spreadRadius: 8,
+                                offset: const Offset(0, 16),
+                              ),
+                            ],
+                          ),
+                          child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -1555,7 +1697,11 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                 ),
               ),
             ),
+            ),
+            ),
           ),
+        ),
+        ],
         ),
       );
     }

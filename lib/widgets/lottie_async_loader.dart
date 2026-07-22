@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/storage/storage_download_cache_helper.dart';
 import 'package:lottie/lottie.dart';
 
-import '../views/ui_prefs.dart';
+import 'package:soullocket_app/views/ui_prefs.dart';
 
 /// Lazy-loads and caches Lottie animations.
 /// Resolves and caches network requests on disk for instant subsequent loading and offline playback.

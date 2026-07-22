@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../views/utilities/utilities_config.dart';
+
 import 'l10n_service.dart';
 import 'offline_cache_service.dart';
 
@@ -31,12 +31,10 @@ class UtilityService {
   static const String _recentAppsPrefKey = 'il_recent_utility_ids';
   static const int _maxRecentApps = 6;
   static final List<String> _defaultOrder = [
-    ...utilitiesHubDefaultOrder,
     ...allApps.map((UtilityApp app) => app.id),
   ];
   static const Set<String> _coupleOnlyIds = {
     'voice',
-    'wish',
     'finance',
     'capsule',
     'calendar',
@@ -44,7 +42,6 @@ class UtilityService {
     'surprise_maker',
   };
   static const Set<String> _debugOnlyIds = {
-    'sticker_library',
     'friendly_chat',
   };
   static final Set<String> _allAppIds =
@@ -120,12 +117,7 @@ class UtilityService {
       colors: [const Color(0xFF00B4DB), const Color(0xFF0083B0)],
       isTool: true,
     ),
-    UtilityApp(
-      id: 'bucket',
-      title: 'utility_title_bucket',
-      icon: Icons.auto_awesome_motion_rounded,
-      colors: [const Color(0xFFF7971E), const Color(0xFFFFD200)],
-    ),
+
     UtilityApp(
       id: 'note',
       title: 'utility_title_note',
@@ -139,19 +131,7 @@ class UtilityService {
       colors: [const Color(0xFFD81B60), const Color(0xFFFF8FB7)],
       isTool: false,
     ),
-    UtilityApp(
-      id: 'history',
-      title: 'utility_title_history',
-      icon: Icons.history_rounded,
-      colors: [const Color(0xFF11998E), const Color(0xFF38EF7D)],
-      isTool: true,
-    ),
-    UtilityApp(
-      id: 'wish',
-      title: 'utility_title_wish',
-      icon: Icons.auto_awesome_rounded,
-      colors: [const Color(0xFFFF5F6D), const Color(0xFFFFC371)],
-    ),
+
     UtilityApp(
       id: 'capsule',
       title: 'utility_title_capsule',
@@ -176,13 +156,7 @@ class UtilityService {
       icon: Icons.brush_rounded,
       colors: [const Color(0xFFFF7AAE), const Color(0xFFD81B60)],
     ),
-    UtilityApp(
-      id: 'sticker_library',
-      title: 'Kho sticker',
-      icon: Icons.emoji_emotions_rounded,
-      colors: [const Color(0xFFFF8FB7), const Color(0xFF8E7BFF)],
-      isTool: true,
-    ),
+
     UtilityApp(
       id: 'wheel',
       title: 'utility_title_wheel',
@@ -220,13 +194,7 @@ class UtilityService {
       icon: Icons.calendar_today_rounded,
       colors: [const Color(0xFF3A1C71), const Color(0xFFD76D77)],
     ),
-    UtilityApp(
-      id: 'calculator',
-      title: 'utility_title_calculator',
-      icon: Icons.calculate_rounded,
-      colors: [const Color(0xFF5C6BC0), const Color(0xFF8E99F3)],
-      isTool: true,
-    ),
+
     UtilityApp(
       id: 'tarot',
       title: 'utility_title_tarot',
@@ -245,12 +213,7 @@ class UtilityService {
       icon: Icons.shopping_bag_rounded,
       colors: [const Color(0xFFFFC107), const Color(0xFFFF9800)],
     ),
-    UtilityApp(
-      id: 'age_zodiac',
-      title: 'utility_title_age_zodiac',
-      icon: Icons.brightness_3_rounded,
-      colors: [const Color(0xFFCE93D8), const Color(0xFFAB47BC)],
-    ),
+
 
     UtilityApp(
       id: 'creative_diary',
@@ -263,6 +226,12 @@ class UtilityService {
       title: 'health',
       icon: Icons.health_and_safety_rounded,
       colors: [const Color(0xFFFF80AB), const Color(0xFFF06292)],
+    ),
+    UtilityApp(
+      id: 'sleep_tracker',
+      title: 'Giấc ngủ',
+      icon: Icons.bedtime_rounded,
+      colors: [const Color(0xFF5E35B1), const Color(0xFF3949AB)],
     ),
     UtilityApp(
       id: 'couple_connect',

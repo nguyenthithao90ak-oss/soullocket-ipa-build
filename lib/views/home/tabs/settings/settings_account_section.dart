@@ -1038,7 +1038,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 _buildInput(
                   _loveUnitCtrl,
                   context.tr('unit_hint'),
-                  maxLength: 30,
+                  maxLength: 14,
                   accentColor: const Color(0xFFCE93D8),
                 ),
               ],
@@ -1328,7 +1328,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               try {
                 final success = await _houseService.changeHouseId(customId);
                 if (success) {
-                  if (mounted) {
+                  if (mounted && dialogContext.mounted) {
                     this.setState(() {
                       _houseId = customId;
                       _houseIdChanged = true;
@@ -1336,6 +1336,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     Navigator.of(dialogContext).pop();
                     _showToast('Đổi mã nhà thành công! Hệ thống đang tải lại...', success: true);
                     Future.delayed(const Duration(seconds: 1), () {
+                      if (!context.mounted) return;
                       Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
                         MaterialPageRoute(builder: (_) => const AppEntry()),
                         (route) => false,

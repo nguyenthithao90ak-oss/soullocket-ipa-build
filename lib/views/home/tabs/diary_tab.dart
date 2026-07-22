@@ -1,10 +1,5 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'dart:async';
-import 'dart:io';
-import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
-import 'package:flutter/services.dart';
-import 'package:image_cropper/image_cropper.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -38,7 +33,6 @@ import 'diary_item.dart';
 import 'diary_list.dart';
 import 'diary/widgets/diary_memory_section.dart';
 import 'diary/widgets/diary_tab_shell_sections.dart';
-import 'diary/widgets/memory_viewer_page.dart';
 
 part 'diary/sections/diary_composer_launcher_section.dart';
 part 'diary/sections/diary_tab_shell.dart';
@@ -273,6 +267,7 @@ class _DiaryTabState extends State<DiaryTab>
     final maxItems = isProUser
         ? memoryLimits.shareProMaxItems
         : memoryLimits.shareFreeMaxItems;
+    if (!mounted) return;
     if (photos.length > maxItems) {
       _showDiarySnackBar(
         'Mỗi liên kết chỉ hỗ trợ tối đa $maxItems ảnh đối với tài khoản ${isProUser ? 'PRO' : 'thường'}. Hãy bỏ chọn bớt ảnh nhé.',
@@ -305,6 +300,7 @@ class _DiaryTabState extends State<DiaryTab>
       }
     }
 
+    if (!mounted) return;
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -402,7 +398,7 @@ class _DiaryTabState extends State<DiaryTab>
       confirmText: 'Đi tới Cài đặt',
       cancelText: 'Đóng',
     ).then((confirmed) {
-      if (confirmed == true && mounted && houseId.isNotEmpty) {
+      if (confirmed == true && mounted) {
         Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (_) => SettingsLinksManagerScreen(houseId: houseId),
@@ -683,6 +679,8 @@ class _DiaryTabState extends State<DiaryTab>
       ),
     );
 
+    if (action == null || !mounted || !dialogContext.mounted) return;
+
     switch (action) {
       case 'save':
         await _downloadSingleImage(item['url']);
@@ -710,209 +708,6 @@ class _DiaryTabState extends State<DiaryTab>
       guardController: _guardController,
       showSnackBar: _showDiarySnackBar,
     );
-  }
-
-  Future<void> _setAsWallpaper(String? url) async {
-    final trimmed = url?.trim() ?? '';
-    if (trimmed.isEmpty) return;
-
-    if (!kIsWeb && Platform.isIOS) {
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (dialogCtx) => AlertDialog(
-          backgroundColor: const Color(0xFF160B1F),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: Color(0x33FF4F93), width: 1.0),
-          ),
-          title: Text(
-            'Cài đặt hình nền iOS',
-            style: SLTheme.quicksand(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-              fontSize: 18,
-            ),
-          ),
-          content: Text(
-            'Hệ điều hành iOS (iPhone) không cho phép ứng dụng bên thứ ba tự động đổi hình nền hệ thống do chính sách bảo mật.\n\nBạn vui lòng tải ảnh này về thiết bị, sau đó vào ứng dụng "Ảnh" -> chọn ảnh -> chọn "Dùng làm hình nền".\n\nBạn có muốn tải ảnh này về máy ngay không?',
-            style: SLTheme.quicksand(
-              color: Colors.white70,
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogCtx, false),
-              child: Text(
-                'Hủy',
-                style: SLTheme.quicksand(color: Colors.white54, fontWeight: FontWeight.w700),
-              ),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF4F93),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: () => Navigator.pop(dialogCtx, true),
-              child: const Text('Tải ảnh'),
-            ),
-          ],
-        ),
-      );
-
-      if (confirm == true) {
-        await _downloadSingleImage(url);
-      }
-      return;
-    }
-
-    _showDiarySnackBar('Đang tải ảnh để thiết lập...');
-
-    try {
-      final response = await http.get(Uri.parse(trimmed));
-      if (response.statusCode != 200) {
-        throw Exception('Tải ảnh thất bại: ${response.statusCode}');
-      }
-
-      final tempDir = await getTemporaryDirectory();
-      final tempFile = File('${tempDir.path}/wallpaper_temp.jpg');
-      await tempFile.writeAsBytes(response.bodyBytes);
-
-      final size = MediaQuery.sizeOf(context);
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: tempFile.path,
-        aspectRatio: CropAspectRatio(
-          ratioX: size.width,
-          ratioY: size.height,
-        ),
-        compressFormat: ImageCompressFormat.jpg,
-        compressQuality: 90,
-        maxWidth: 1440,
-        maxHeight: 2560,
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Cắt ảnh hình nền',
-            toolbarColor: const Color(0xFF160B1F),
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.original,
-            lockAspectRatio: true,
-          ),
-          IOSUiSettings(
-            title: 'Cắt ảnh hình nền',
-            aspectRatioLockEnabled: true,
-            aspectRatioPickerButtonHidden: true,
-            resetAspectRatioEnabled: false,
-          ),
-        ],
-      );
-
-      if (croppedFile == null) {
-        _showDiarySnackBar('Đã hủy thiết lập hình nền.');
-        return;
-      }
-
-      if (!mounted) return;
-
-      final int? choice = await showDialog<int>(
-        context: context,
-        builder: (dialogCtx) => AlertDialog(
-          backgroundColor: const Color(0xFF160B1F),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: Color(0x33FF4F93), width: 1.0),
-          ),
-          title: Text(
-            'Cài đặt hình nền',
-            style: SLTheme.quicksand(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-              fontSize: 18,
-            ),
-          ),
-          content: Text(
-            'Bạn muốn cài đặt hình nền này cho màn hình nào?',
-            style: SLTheme.quicksand(
-              color: Colors.white70,
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
-            ),
-          ),
-          actionsAlignment: MainAxisAlignment.spaceEvenly,
-          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          actions: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF261435),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () => Navigator.pop(dialogCtx, 1),
-                  child: const Text('Màn hình chính'),
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF261435),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () => Navigator.pop(dialogCtx, 2),
-                  child: const Text('Màn hình khóa'),
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF4F93),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () => Navigator.pop(dialogCtx, 3),
-                  child: const Text('Cả hai màn hình'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-
-      if (choice == null) {
-        _showDiarySnackBar('Đã hủy thiết lập hình nền.');
-        return;
-      }
-
-      _showDiarySnackBar('Đang áp dụng hình nền...');
-
-      const channel = MethodChannel('soul_locket/app_control');
-      final result = await channel.invokeMethod<bool>(
-        'setWallpaper',
-        {
-          'filePath': croppedFile.path,
-          'location': choice,
-        },
-      );
-
-      if (result == true) {
-        _showDiarySnackBar('Đã cài đặt hình nền điện thoại thành công! 🎉');
-      } else {
-        _showDiarySnackBar('Cài đặt hình nền thất bại.');
-      }
-    } catch (e) {
-      _showDiarySnackBar('Lỗi: ${e.toString()}');
-    }
   }
 
   Future<void> _retryPendingMemoryUpload() async {
@@ -1050,11 +845,6 @@ class _DiaryTabState extends State<DiaryTab>
     _isTabActive = widget.isActiveListenable.value;
     if (_isTabActive) {
       _startDiaryActiveTimer();
-      if (_deferMemoryLoad) {
-        Future.delayed(const Duration(milliseconds: 400), () {
-          if (mounted) setState(() => _deferMemoryLoad = false);
-        });
-      }
     }
     widget.isActiveListenable.addListener(_onActiveChanged);
     _feedController.addListener(_handleFeedControllerChange);
@@ -1352,10 +1142,12 @@ class _DiaryTabState extends State<DiaryTab>
 
     try {
       await _feedController.deleteDiaryPost(post);
+      if (!mounted) return;
       _handleFeedControllerChange();
       _showDiarySnackBar(
           L10nService().translate(context.tr('home_xatms_0872c5')));
     } catch (error) {
+      if (!mounted) return;
       _showDiarySnackBar(
         AppErrorMapper.resolve(
           error,
@@ -1435,7 +1227,7 @@ class _DiaryTabState extends State<DiaryTab>
                       );
                     },
                   ),
-                  MemoryZoomDraggableWrapper(
+                  _MemoryZoomDraggableWrapper(
                     onDismiss: () => Navigator.pop(dialogContext),
                     bgOpacityNotifier: bgOpacityNotifier,
                     isZoomedInNotifier: isZoomedInNotifier,
@@ -1463,7 +1255,7 @@ class _DiaryTabState extends State<DiaryTab>
                                 _warmMemoryViewerAroundIndex(allPhotos, index);
                               },
                               itemBuilder: (context, index) {
-                                return MemoryViewerPage(
+                                return _MemoryViewerPage(
                                   item: allPhotos[index],
                                   dragOffsetNotifier: dragOffsetNotifier,
                                   dragScaleNotifier: dragScaleNotifier,
@@ -1476,7 +1268,7 @@ class _DiaryTabState extends State<DiaryTab>
                             )
                           else
                             Builder(
-                              builder: (context) => MemoryViewerPage(
+                              builder: (context) => _MemoryViewerPage(
                                 item: initialItem,
                                 dragOffsetNotifier: dragOffsetNotifier,
                                 dragScaleNotifier: dragScaleNotifier,
@@ -1748,30 +1540,6 @@ class _DiaryTabState extends State<DiaryTab>
                                                       ],
                                                     ),
                                                   ),
-                                                  if (kIsWeb || !Platform.isIOS)
-                                                    PopupMenuItem<String>(
-                                                      value: 'wallpaper',
-                                                      child: Row(
-                                                        children: [
-                                                          const Icon(
-                                                            Icons.wallpaper_rounded,
-                                                            color: Colors.white,
-                                                            size: 19,
-                                                          ),
-                                                          const SizedBox(
-                                                              width: 12),
-                                                          Text(
-                                                            'Đặt làm hình nền',
-                                                            style:
-                                                                SLTheme.quicksand(
-                                                              color: Colors.white,
-                                                              fontWeight:
-                                                                  FontWeight.w800,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
                                                   PopupMenuItem<String>(
                                                     value: 'delete',
                                                     child: Row(
@@ -1816,12 +1584,6 @@ class _DiaryTabState extends State<DiaryTab>
                                                       await _showMemoryInfoSheet(
                                                           dialogContext,
                                                           currentItem);
-                                                      break;
-                                                    case 'wallpaper':
-                                                      Navigator.pop(
-                                                          dialogContext);
-                                                      await _setAsWallpaper(
-                                                          currentItem['url']);
                                                       break;
                                                     case 'delete':
                                                       Navigator.pop(
@@ -1949,14 +1711,14 @@ class _DiaryTabState extends State<DiaryTab>
     final mediaQuery = MediaQuery.of(context);
     return ((mediaQuery.size.width / 3) * mediaQuery.devicePixelRatio * 1.18)
         .round()
-        .clamp(320, 800);
+        .clamp(480, 1440);
   }
 
   int _postImageCacheWidth(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     return (mediaQuery.size.width * mediaQuery.devicePixelRatio)
         .round()
-        .clamp(540, 1200);
+        .clamp(720, 1600);
   }
 
   ImageProvider<Object> _memoryImageProvider(String url, {int? maxWidth}) {
@@ -2008,5 +1770,205 @@ class _DiaryTabState extends State<DiaryTab>
   Widget build(BuildContext context) {
     super.build(context);
     return _DiaryTabShell(state: this);
+  }
+}
+
+class _MemoryZoomDraggableWrapper extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onDismiss;
+  final ValueNotifier<double> bgOpacityNotifier;
+  final ValueNotifier<bool> isZoomedInNotifier;
+  final ValueNotifier<Offset> dragOffsetNotifier;
+  final ValueNotifier<double> dragScaleNotifier;
+
+  const _MemoryZoomDraggableWrapper({
+    required this.child,
+    required this.onDismiss,
+    required this.bgOpacityNotifier,
+    required this.isZoomedInNotifier,
+    required this.dragOffsetNotifier,
+    required this.dragScaleNotifier,
+  });
+
+  @override
+  State<_MemoryZoomDraggableWrapper> createState() =>
+      _MemoryZoomDraggableWrapperState();
+}
+
+class _MemoryZoomDraggableWrapperState
+    extends State<_MemoryZoomDraggableWrapper>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  double _dragY = 0.0;
+  double _dragStartAnimY = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 280));
+    _controller.addListener(() {
+      setState(() {
+        final double curveValue = CurvedAnimation(
+          parent: _controller,
+          curve: Curves.easeOutCubic,
+        ).value;
+        _dragY = _dragStartAnimY * (1.0 - curveValue);
+        _updateOpacity();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _updateOpacity() {
+    widget.bgOpacityNotifier.value = (1.0 - (_dragY / 320.0)).clamp(0.0, 1.0);
+    widget.dragOffsetNotifier.value = Offset(0, _dragY);
+    widget.dragScaleNotifier.value = (1.0 - (_dragY / 380.0)).clamp(0.35, 1.0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onVerticalDragStart: (details) {
+        if (widget.isZoomedInNotifier.value) return;
+        _controller.stop();
+        _dragStartAnimY = _dragY;
+      },
+      onVerticalDragUpdate: (details) {
+        if (widget.isZoomedInNotifier.value) return;
+        setState(() {
+          _dragY += details.delta.dy;
+          if (_dragY < 0.0) _dragY = 0.0;
+          _updateOpacity();
+        });
+      },
+      onVerticalDragEnd: (details) {
+        if (widget.isZoomedInNotifier.value) return;
+        final velocity = details.primaryVelocity ?? 0;
+        if (_dragY > 140 || velocity > 250) {
+          widget.onDismiss();
+        } else {
+          _dragStartAnimY = _dragY;
+          _controller.forward(from: 0.0);
+        }
+      },
+      child: widget.child,
+    );
+  }
+}
+
+class _MemoryViewerPage extends StatefulWidget {
+  final Map<String, dynamic> item;
+  final ValueNotifier<Offset> dragOffsetNotifier;
+  final ValueNotifier<double> dragScaleNotifier;
+  final ValueNotifier<bool> isZoomedInNotifier;
+  final VoidCallback onLongPress;
+  final ImageProvider<Object> Function(String, {int? maxWidth})
+      imageProviderBuilder;
+
+  const _MemoryViewerPage({
+    required this.item,
+    required this.dragOffsetNotifier,
+    required this.dragScaleNotifier,
+    required this.isZoomedInNotifier,
+    required this.onLongPress,
+    required this.imageProviderBuilder,
+  });
+
+  @override
+  State<_MemoryViewerPage> createState() => _MemoryViewerPageState();
+}
+
+class _MemoryViewerPageState extends State<_MemoryViewerPage> {
+  late final ImageProvider<Object> _imageProvider;
+  late final TransformationController _transformationController;
+  late final ValueNotifier<bool> _panEnabledVN;
+
+  @override
+  void initState() {
+    super.initState();
+    _imageProvider = widget.imageProviderBuilder(
+      widget.item['url']?.toString() ?? '',
+      maxWidth: 2200,
+    );
+    _transformationController = TransformationController();
+    _panEnabledVN = ValueNotifier<bool>(false);
+
+    _transformationController.addListener(_handleTransformChanged);
+  }
+
+  void _handleTransformChanged() {
+    final matrix = _transformationController.value;
+    final scale = matrix.getMaxScaleOnAxis();
+    final shouldEnablePan = scale > 1.02;
+    if (_panEnabledVN.value != shouldEnablePan) {
+      _panEnabledVN.value = shouldEnablePan;
+      widget.isZoomedInNotifier.value = shouldEnablePan;
+    }
+  }
+
+  @override
+  void dispose() {
+    _transformationController.removeListener(_handleTransformChanged);
+    _transformationController.dispose();
+    _panEnabledVN.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onLongPress: widget.onLongPress,
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _panEnabledVN,
+        builder: (context, panEnabled, _) {
+          return AnimatedBuilder(
+            animation: Listenable.merge(
+                [widget.dragOffsetNotifier, widget.dragScaleNotifier]),
+            builder: (context, child) {
+              return Transform.translate(
+                offset: widget.dragOffsetNotifier.value,
+                child: Transform.scale(
+                  scale: widget.dragScaleNotifier.value,
+                  child: InteractiveViewer(
+                    transformationController: _transformationController,
+                    panEnabled: panEnabled,
+                    minScale: 1.0,
+                    maxScale: 4.5,
+                    boundaryMargin:
+                        panEnabled ? const EdgeInsets.all(24) : EdgeInsets.zero,
+                    clipBehavior: Clip.none,
+                    interactionEndFrictionCoefficient: 0.00008,
+                    child: Hero(
+                      tag: 'memory_image_${widget.item['id']}',
+                      child: Image(
+                        image: _imageProvider,
+                        fit: BoxFit.contain,
+                        width: double.infinity,
+                        height: double.infinity,
+                        filterQuality: FilterQuality.medium,
+                        gaplessPlayback: true,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(
+                          Icons.broken_image,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
   }
 }

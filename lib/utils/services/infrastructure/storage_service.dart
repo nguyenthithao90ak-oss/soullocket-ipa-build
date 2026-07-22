@@ -139,6 +139,10 @@ class StorageService {
     );
   }
 
+  Future<void> purgeStaleCache({Duration staleThreshold = const Duration(days: 3)}) {
+    return _downloadCacheHelper.purgeStaleCache(staleThreshold: staleThreshold);
+  }
+
   Future<XFile?> snapPhoto() => _pickerService.snapPhoto();
 
   String detectContentType(
@@ -864,7 +868,12 @@ class StorageService {
       await cleanupExpiredMemoryImagesTrash(houseId: normalizedHouseId);
     } catch (e) {
       final errorText = AppErrorMapper.cleanMessage(e).toLowerCase();
-      if (errorText.contains('unauthenticated')) {
+      // Bỏ qua lỗi mạng / App Check / session — bình thường khi offline hoặc debug token chưa đăng ký
+      if (errorText.contains('unauthenticated') ||
+          errorText.contains('internal') ||
+          errorText.contains('app check') ||
+          errorText.contains('too many attempts') ||
+          errorText.contains('unavailable')) {
         return;
       }
       debugPrint('Cleanup expired memory trash failed: ${AppErrorMapper.resolve(

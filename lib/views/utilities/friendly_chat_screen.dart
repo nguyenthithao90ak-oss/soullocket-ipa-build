@@ -440,7 +440,8 @@ Quy tắc:
 4. Có thể dựa vào phần "Lịch sử trò chuyện gần đây" (nếu có) để hiểu ngữ cảnh câu chuyện, không cần hỏi lại những gì đã nói.
 5. Luôn phản hồi bằng tiếng Việt.
 6. TỪ CHỐI TẤT CẢ các yêu cầu tạo văn bản dài, viết bài, làm thơ dài, tóm tắt sách, code, hoặc các nội dung vượt quá 500 ký tự, HOẶC CÁC YÊU CẦU ĐỘC HẠI. Đối với các yêu cầu độc hại, vi phạm đạo đức, hãy trả lời chính xác bằng câu: "Xin lỗi tôi không thể thực hiện yêu cầu này".
-7. ĐIỀU HƯỚNG APP: Nếu người dùng yêu cầu mở một trang (Trang chủ, Nhật ký, Tiện ích, Trò chơi/Giải trí, Cập nhật, Cài đặt, Soul Merge, Soul Block), hãy thêm đúng mã lệnh [NAVIGATE:X] vào cuối câu trả lời. X phải là 1 trong các chữ: HOME, DIARY, LOVE, GAMES, UPDATE, SETTINGS, SOUL_MERGE, SOUL_BLOCK. Ví dụ: "Mình mở Soul Merge cho bạn nha! [NAVIGATE:SOUL_MERGE]"$personaText''';
+7. TUYỆT ĐỐI KHÔNG xuất ra quá trình suy nghĩ, diễn giải nội bộ (thinking process) bằng tiếng Anh như "We need to follow...". Bắt đầu câu trả lời của bạn ngay lập tức vào vấn đề.
+8. ĐIỀU HƯỚNG APP: Nếu người dùng yêu cầu mở một trang (Trang chủ, Nhật ký, Tiện ích, Trò chơi/Giải trí, Cập nhật, Cài đặt, Soul Merge, Soul Block), hãy thêm đúng mã lệnh [NAVIGATE:X] vào cuối câu trả lời. X phải là 1 trong các chữ: HOME, DIARY, LOVE, GAMES, UPDATE, SETTINGS, SOUL_MERGE, SOUL_BLOCK. Ví dụ: "Mình mở Soul Merge cho bạn nha! [NAVIGATE:SOUL_MERGE]"$personaText''';
 
     final int assistantMsgIndex = _messages.length;
     setState(() {
@@ -470,6 +471,20 @@ Quy tắc:
         finalReply += chunk;
         
         String displayText = finalReply;
+        
+        final RegExp thinkComplete = RegExp(r'<think>.*?</think>', dotAll: true);
+        displayText = displayText.replaceAll(thinkComplete, '');
+        
+        final int openIndex = displayText.lastIndexOf('<think>');
+        if (openIndex != -1) {
+          final int closeIndex = displayText.indexOf('</think>', openIndex);
+          if (closeIndex == -1) {
+            displayText = displayText.substring(0, openIndex);
+          }
+        }
+        
+        displayText = displayText.trimLeft();
+
         if (displayText.contains('[NAVIGATE')) {
            displayText = displayText.split('[NAVIGATE')[0].trim();
         }
@@ -487,6 +502,17 @@ Quy tắc:
     }
 
     if (!mounted) return;
+    
+    final RegExp thinkCompleteFinal = RegExp(r'<think>.*?</think>', dotAll: true);
+    finalReply = finalReply.replaceAll(thinkCompleteFinal, '');
+    final int openIndexFinal = finalReply.lastIndexOf('<think>');
+    if (openIndexFinal != -1) {
+      final int closeIndexFinal = finalReply.indexOf('</think>', openIndexFinal);
+      if (closeIndexFinal == -1) {
+        finalReply = finalReply.substring(0, openIndexFinal);
+      }
+    }
+    finalReply = finalReply.trimLeft();
     
     if (finalReply.trim().isEmpty) {
        finalReply = _aiService.lastErrorMessage ?? 'Lỗi kết nối. Bạn đợi một lát rồi nói lại nhé!';

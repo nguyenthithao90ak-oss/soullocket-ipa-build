@@ -124,12 +124,12 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF3F8),
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text('Sự Kiện & Kỷ Niệm',
             style: SLTypography.titleLarge.copyWith(
                 color: SLColors.primary, fontWeight: FontWeight.w900)),
-        backgroundColor: const Color(0xFFFFF3F8),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new,
@@ -144,7 +144,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
             onPressed: () async {
               try {
                 await WidgetService.requestPinSoulEventWidget();
-                if (!mounted) return;
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content:
@@ -153,7 +153,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
                   ),
                 );
               } catch (e) {
-                if (!mounted) return;
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Lỗi: ${e.toString()}'),
@@ -170,17 +170,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
           ),
         ],
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFFF3F8),
-              Color(0xFFFFE4ED),
-            ],
-          ),
-        ),
+      body: SLTheme.background(
         child: StreamBuilder<List<SoulEvent>>(
           stream: SoulEventService().streamEvents(_houseId!),
           builder: (context, snapshot) {

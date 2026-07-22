@@ -75,6 +75,7 @@ class R2NetworkImage extends StatelessWidget {
             fit: fit,
             width: width,
             height: height,
+            cacheWidth: width != null ? (width! * 2).toInt() : 800,
           );
         }
 
@@ -84,6 +85,7 @@ class R2NetworkImage extends StatelessWidget {
           fit: fit,
           width: width,
           height: height,
+          memCacheWidth: width != null ? (width! * 2).toInt() : 800,
           placeholder: (context, url) => placeholder ?? _buildPlaceholder(),
           errorWidget: (context, url, error) => _buildErrorWidget(),
         );

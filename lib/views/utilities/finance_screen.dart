@@ -1,11 +1,13 @@
 import 'dart:async';
 
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/sl_theme.dart';
+import '../../widgets/skeleton_container.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../utils/app_error_mapper.dart';
 
@@ -211,6 +213,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     if (currentSnap.exists && currentSnap.value is Map) {
       final currentMap = currentSnap.value as Map;
       if (currentMap.length >= 100) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(
               'Nhật ký thu chi đã đạt giới hạn (tối đa 100 mục). Vui lòng xoá bớt trước khi thêm mới.'),
@@ -232,6 +235,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     });
     _amountController.clear();
     _noteController.clear();
+    if (!mounted) return;
     FocusScope.of(context).unfocus();
     HapticFeedback.mediumImpact();
   }
@@ -1233,9 +1237,17 @@ class _FinanceScreenState extends State<FinanceScreen> {
       stream: _budgetStream,
       builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SliverToBoxAdapter(
-              child: Center(
-                  child: CircularProgressIndicator(color: Color(0xFFD81B60))));
+          return SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: SkeletonContainer.rounded(width: double.infinity, height: 75),
+                );
+              },
+              childCount: 5,
+            ),
+          );
         }
         if (snapshot.hasError) {
           return SliverToBoxAdapter(

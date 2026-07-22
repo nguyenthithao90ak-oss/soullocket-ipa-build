@@ -121,6 +121,7 @@ class R2StickerImage extends StatelessWidget {
               fit: fit,
               width: width,
               height: height,
+              cacheWidth: width != null ? (width! * 2).toInt() : 400,
             );
           }
 
@@ -129,6 +130,7 @@ class R2StickerImage extends StatelessWidget {
             fit: fit,
             width: width,
             height: height,
+            memCacheWidth: width != null ? (width! * 2).toInt() : 400,
             placeholder: (context, url) => Container(
               width: width,
               height: height,

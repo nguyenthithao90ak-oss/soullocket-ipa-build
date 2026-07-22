@@ -438,7 +438,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                               child: Center(
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(42),
-                                  child: BackdropFilter(
+                                  child: FastBackdropFilter(
                                     filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
@@ -1061,7 +1061,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
   Widget _metricCard({required String label, required String value}) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
+      child: FastBackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

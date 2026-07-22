@@ -73,7 +73,7 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
         return;
       }
       if (_selectedHomeToolId == null) return;
-      _safeSetState(() => _selectedHomeToolId = null);
+      _selectedHomeToolId = null;
       return;
     }
 
@@ -89,7 +89,7 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
     if (_selectedHomeToolId == stored) {
       return;
     }
-    _safeSetState(() => _selectedHomeToolId = stored);
+    _selectedHomeToolId = stored;
   }
 
   Future<void> _persistHomeToolSelection(String? toolId) async {
@@ -111,7 +111,7 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
     final normalized = _normalizeHomeToolId(toolId);
     if (_selectedHomeToolId != normalized) {
       if (mounted) {
-        _safeSetState(() => _selectedHomeToolId = normalized);
+        _selectedHomeToolId = normalized;
       } else {
         _selectedHomeToolId = normalized;
       }
@@ -180,8 +180,6 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
     switch (toolId) {
       case 'store':
         return const RewardStoreScreen();
-      case 'calculator':
-        return const CalculatorScreen();
     }
 
     if (houseId.isEmpty) {
@@ -249,8 +247,7 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
         );
       case 'collage':
         return CollageMakerScreen(houseId: houseId);
-      case 'age_zodiac':
-        return AgeZodiacScreen(houseId: houseId);
+
       case 'creative_diary':
         return CreativeDiaryScreen(houseId: houseId);
       default:
@@ -265,7 +262,7 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
   Widget _buildEmbeddedHomeToolSurface(UtilityApp app) {
     final tool = _buildEmbeddedHomeTool(app.id);
     if (tool == null) {
-      return _buildGlassHomeCard(
+      return SLTheme.glassCard(
         radius: 28,
         child: Container(
           width: double.infinity,
@@ -902,3 +899,4 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
     );
   }
 }
+

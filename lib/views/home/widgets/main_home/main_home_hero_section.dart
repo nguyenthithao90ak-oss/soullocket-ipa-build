@@ -119,54 +119,48 @@ class _ModernHomeBody extends StatelessWidget {
             Widget buildCountdown(bool isSwiping) {
               final int currentDays = int.tryParse(circleValue) ?? 0;
               final bool isMilestone = currentDays > 0 && (currentDays % 100 == 0 || currentDays % 30 == 0 || currentDays % 365 == 0);
+              final bool enableMotionBase = effectProfile.animationEnabled &&
+                  !state._deferHeavyHomeMotion &&
+                  !isSwiping;
               
-              return ValueListenableBuilder<bool>(
-                valueListenable: state._isScrollingNotifier,
-                builder: (context, isScrolling, _) {
-                  return _MainHomeHeroCountdownSection(
-                    state: state,
-                    isSingle: isSingle,
-                    houseName: houseName,
-                    smartGreeting: smartGreeting,
-                    circleValue: circleValue,
-                    circleTopLabel: circleTopLabel,
-                    circleBottomLabel: circleBottomLabel,
-                    startDate: startDate,
-                    circleSize: circleSize,
-                    homeShowHouseName: homeShowHouseName,
-                    showDayCounter: showDayCounter,
-                    showLoveTimeDetail: showLoveTimeDetail,
-                    countdownStyleKey: countdownStyleKey,
-                    isMilestone: isMilestone,
-                    enableMotion: effectProfile.animationEnabled &&
-                        !state._deferHeavyHomeMotion &&
-                        !isSwiping &&
-                        !isScrolling,
-                    onEditStartDate: onEditStartDate,
-                    onEditTopLabel: onEditTopLabel,
-                    onEditBottomLabel: onEditBottomLabel,
-                    firstGuideHeroKey: state.widget.firstGuideHeroKey,
-                  );
-                },
+              return RepaintBoundary(
+                child: _MainHomeHeroCountdownSection(
+                  state: state,
+                  isSingle: isSingle,
+                  houseName: houseName,
+                  smartGreeting: smartGreeting,
+                  circleValue: circleValue,
+                  circleTopLabel: circleTopLabel,
+                  circleBottomLabel: circleBottomLabel,
+                  startDate: startDate,
+                  circleSize: circleSize,
+                  homeShowHouseName: homeShowHouseName,
+                  showDayCounter: showDayCounter,
+                  showLoveTimeDetail: showLoveTimeDetail,
+                  countdownStyleKey: countdownStyleKey,
+                  isMilestone: isMilestone,
+                  enableMotionBase: enableMotionBase,
+                  isScrollingNotifier: state._isScrollingNotifier,
+                  onEditStartDate: onEditStartDate,
+                  onEditTopLabel: onEditTopLabel,
+                  onEditBottomLabel: onEditBottomLabel,
+                  firstGuideHeroKey: state.widget.firstGuideHeroKey,
+                ),
               );
             }
 
             Widget buildInsight(bool isSwiping) {
-              return ValueListenableBuilder<bool>(
-                valueListenable: state._isScrollingNotifier,
-                builder: (context, isScrolling, _) {
-                  return RepaintBoundary(
-                    child: state._buildModernInsightCard(
-                      isSingle: isSingle,
-                      nameU1: nameU1,
-                      nameU2: nameU2,
-                      enableMotion: effectProfile.animationEnabled &&
-                          !state._deferHeavyHomeMotion &&
-                          !isSwiping &&
-                          !isScrolling,
-                    ),
-                  );
-                },
+              final bool enableMotionBase = effectProfile.animationEnabled &&
+                  !state._deferHeavyHomeMotion &&
+                  !isSwiping;
+
+              return RepaintBoundary(
+                child: state._buildModernInsightCard(
+                  isSingle: isSingle,
+                  nameU1: nameU1,
+                  nameU2: nameU2,
+                  enableMotion: enableMotionBase,
+                ),
               );
             }
 
@@ -199,14 +193,19 @@ class _ModernHomeBody extends StatelessWidget {
                                     buildCountdown(isSwiping),
                               ),
                         SLSpacing.h8,
-                        state._buildModernAvatarSection(
-                          isSingle: isSingle,
-                          nameU1: nameU1,
-                          nameU2: nameU2,
-                          avtUser1: avtUser1,
-                          avtUser2: avtUser2,
+                        RepaintBoundary(
+                          child: state._buildModernAvatarSection(
+                            isSingle: isSingle,
+                            nameU1: nameU1,
+                            nameU2: nameU2,
+                            avtUser1: avtUser1,
+                            avtUser2: avtUser2,
+                          ),
                         ),
-                        SLSpacing.h20,
+                        SLSpacing.h12,
+                        // Removed manual sleep mode button
+                        // state._buildSleepModeButton(),
+                        // SLSpacing.h12,
                         RepaintBoundary(
                           child: _ChatReminderBanner(
                               state: state, isSingle: isSingle),

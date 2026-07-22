@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element_parameter
 part of '../../main_home_tab.dart';
 
 class _PartnerInteractionPreset {
@@ -32,6 +33,7 @@ class _CountdownQuickOption {
   final IconData icon;
   final Color accent;
   final bool isPremium;
+  final bool isVipOnly;
 
   const _CountdownQuickOption({
     required this.label,
@@ -39,6 +41,7 @@ class _CountdownQuickOption {
     required this.icon,
     required this.accent,
     this.isPremium = false,
+    this.isVipOnly = false,
   });
 }
 
@@ -48,7 +51,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: L10nService().translate('home_nh_dbe2a3'),
     emoji: '\u{1F496}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_343.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
     weight: 42,
     gradient: [const Color(0xFFFFD8E6), const Color(0xFFFFF3F7)],
     accent: const Color(0xFFD94C86),
@@ -70,7 +73,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: L10nService().translate('home_gin_6a4c8c'),
     emoji: '\u{1F63E}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_339.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_154.png',
     weight: 12,
     gradient: [const Color(0xFFFFE6DC), const Color(0xFFFFF6F2)],
     accent: const Color(0xFFE26A3A),
@@ -92,7 +95,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: L10nService().translate('home_tc_b95b66'),
     emoji: '\u{1F621}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_291.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_049.png',
     weight: 7,
     showInSmartSuggestion: false,
     gradient: [const Color(0xFFFFD7DC), const Color(0xFFFFF1F3)],
@@ -115,7 +118,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: L10nService().translate('home_hn_fac010'),
     emoji: '\u{1F48B}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_228.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_047.png',
     weight: 18,
     gradient: [const Color(0xFFFFE1EC), const Color(0xFFFFF7FA)],
     accent: const Color(0xFFE14A8B),
@@ -137,7 +140,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: L10nService().translate('home_tru_d66cdf'),
     emoji: '\u{1F921}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_276.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_070.png',
     weight: 9,
     showInSmartSuggestion: false,
     gradient: [const Color(0xFFE8E1FF), const Color(0xFFF8F5FF)],
@@ -160,7 +163,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: L10nService().translate('home_m_07a3b7'),
     emoji: '\u{1F428}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_270.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_082.png',
     weight: 17,
     gradient: [const Color(0xFFDDF3FF), const Color(0xFFF5FBFF)],
     accent: const Color(0xFF2D8FE3),
@@ -182,7 +185,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: L10nService().translate('home_khc_92394f'),
     emoji: '\u{1F62D}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_165.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_089.png',
     weight: 8,
     showInSmartSuggestion: false,
     gradient: [const Color(0xFFDDEBFF), const Color(0xFFF4F8FF)],
@@ -205,7 +208,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     label: 'Troll',
     emoji: '\u{1F4A9}',
     assetPath:
-        'assets/images/interaction_stickers/custom/numbered/sticker_173.png',
+        'assets/images/interaction_stickers/custom/numbered/sticker_071.png',
     weight: 6,
     showInSmartSuggestion: false,
     gradient: [const Color(0xFFFFE1B9), const Color(0xFFFFF4E6)],
@@ -260,11 +263,22 @@ Widget _buildInteractionVisual({
       : (visual is String && visual.startsWith('assets/') ? visual : null);
 
   if (preferAsset && resolvedAssetPath != null) {
-    return R2StickerImage(
+    return Image.asset(
       resolvedAssetPath,
       width: size,
       height: size,
       fit: fit,
+      isAntiAlias: true,
+      filterQuality: FilterQuality.medium,
+      errorBuilder: (_, __, ___) => _buildInteractionVisual(
+        visual: visual,
+        size: size,
+        emojiSize: emojiSize,
+        iconColor: iconColor,
+        fit: fit,
+        emojiShadows: emojiShadows,
+        preferAsset: false,
+      ),
     );
   }
 

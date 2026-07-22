@@ -408,10 +408,11 @@ class PresenceService {
     }
 
     try {
-      final snap = await _dbRef
+      final safeGet = _dbRef
           .child('houses/$houseId/presence/$role/sessions')
-          .get()
-          .timeout(const Duration(seconds: 3));
+          .get();
+      safeGet.ignore();
+      final snap = await safeGet.timeout(const Duration(seconds: 3));
       final raw = snap.value;
       if (raw is! Map) return;
 
@@ -471,8 +472,9 @@ class PresenceService {
     required int nowMs,
   }) async {
     try {
-      final snap =
-          await ref.child('sessions').get().timeout(const Duration(seconds: 3));
+      final safeGet = ref.child('sessions').get();
+      safeGet.ignore();
+      final snap = await safeGet.timeout(const Duration(seconds: 3));
       final raw = snap.value;
       if (raw is! Map) {
         return;
@@ -515,7 +517,9 @@ class PresenceService {
     String? preferredDevice,
   }) async {
     try {
-      final snap = await ref.get().timeout(const Duration(seconds: 3));
+      final safeGet = ref.get();
+      safeGet.ignore();
+      final snap = await safeGet.timeout(const Duration(seconds: 3));
       final raw = snap.value;
       final data = raw is Map
           ? Map<dynamic, dynamic>.from(raw)
@@ -542,7 +546,7 @@ class PresenceService {
       final shouldMarkOffline = freshSessionCount == 0 &&
           (resolvedLastSeen == 0 ||
               nowMs - resolvedLastSeen > const Duration(minutes: 3).inMilliseconds);
-      await ref.update({
+      final safeUpdate = ref.update({
         'status': freshSessionCount > 0
             ? 'online'
             : (shouldMarkOffline ? 'offline' : 'online'),
@@ -552,7 +556,9 @@ class PresenceService {
         'activeSessionCount': freshSessionCount,
         if (resolvedDevice != null && resolvedDevice.isNotEmpty)
           'device': resolvedDevice,
-      }).timeout(const Duration(seconds: 3));
+      });
+      safeUpdate.ignore();
+      await safeUpdate.timeout(const Duration(seconds: 3));
       debugPrint(
         '[Presence] aggregate role=${ref.key} status=${freshSessionCount > 0 ? 'online' : 'offline'} sessions=$freshSessionCount lastSeen=$resolvedLastSeen device=${resolvedDevice ?? '-'}',
       );
@@ -815,5 +821,43 @@ class PresenceService {
     _connectedSub?.cancel();
     _heartbeatTimer?.cancel();
     _shouldBeOnline = false;
+  }
+  Future<void> setSleepMode(bool isSleeping) async {
+    final houseId = _activeHouseId;
+    final role = _activeRole;
+    if (houseId == null || role == null) return;
+    
+    final updates = <String, dynamic>{
+      'sleep_mode': isSleeping,
+    };
+    if (isSleeping) {
+      updates['sleep_start_time'] = ServerValue.timestamp;
+    }
+    
+    try {
+      await _presenceRoleRef(houseId, role).update(updates);
+    } catch (e) {
+      debugPrint('[Presence] Error setting sleep mode: $e');
+    }
+  }
+
+  static bool isSleeping(Map<dynamic, dynamic>? data) {
+    if (data == null) return false;
+    
+    final sleepMode = data['sleep_mode'];
+    if (sleepMode is bool && sleepMode) return true;
+    
+    final lastSeen = lastSeenMs(data) ?? latestSessionTimestamp(data);
+    if (lastSeen != null) {
+      final now = DateTime.now();
+      final lastSeenDate = DateTime.fromMillisecondsSinceEpoch(lastSeen);
+      final diffHours = now.difference(lastSeenDate).inHours;
+      
+      if (diffHours >= 1 && (now.hour >= 23 || now.hour <= 6)) {
+        return true;
+      }
+    }
+    
+    return false;
   }
 }

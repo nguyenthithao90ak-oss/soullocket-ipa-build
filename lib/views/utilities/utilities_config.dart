@@ -3,17 +3,15 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 const List<String> utilitiesHubDefaultOrder = <String>[
   'local_album',
-  'bucket',
   'note',
   'friendly_chat',
-  'wish',
   'voice',
   'calendar',
   'finance',
   'habit',
   'health',
+  'sleep_tracker',
   'capsule',
-  'history',
   'gift',
   'love_card',
   'collage',
@@ -23,9 +21,6 @@ const List<String> utilitiesHubDefaultOrder = <String>[
   'cinema',
   'wheel',
   'tarot',
-  'age_zodiac',
-  'sticker_library',
-  'calculator',
   'diary_export',
   'store',
   'giftcode',
@@ -46,26 +41,17 @@ final Map<String, Map<String, dynamic>> appConfig = {
     'colors': [const Color(0xFF26A69A), const Color(0xFF00897B)],
     'title': L10nService().translate('util_ghim_b8035c'),
   },
-  'bucket': {
-    'icon': Icons.checklist_rounded,
-    'colors': [const Color(0xFF66BB6A), const Color(0xFF43A047)],
-    'title': 'Bucket 100',
-  },
   'note': {
-    'icon': Icons.edit_note_rounded,
+    'icon': Icons.menu_book_rounded,
     'colors': [const Color(0xFFFFB74D), const Color(0xFFFF9800)],
-    'title': L10nService().translate('util_ghich_b2a40d'),
+    'title': 'Sổ tay chung',
   },
   'friendly_chat': {
     'icon': Icons.smart_toy_rounded,
     'colors': [const Color(0xFFD81B60), const Color(0xFFFF8FB7)],
     'title': L10nService().translate('util_chatthnthi_c39699'),
   },
-  'wish': {
-    'icon': Icons.star_rounded,
-    'colors': [const Color(0xFF48C774), const Color(0xFF24B35B)],
-    'title': 'Wish List',
-  },
+
   'capsule': {
     'icon': Icons.mark_email_unread_rounded,
     'colors': [const Color(0xFFEC407A), const Color(0xFFD81B60)],
@@ -87,6 +73,11 @@ final Map<String, Map<String, dynamic>> appConfig = {
     'colors': [const Color(0xFFFF80AB), const Color(0xFFF06292)],
     'title': L10nService().translate('health'),
   },
+  'sleep_tracker': {
+    'icon': Icons.bedtime_rounded,
+    'colors': [const Color(0xFF5E35B1), const Color(0xFF3949AB)],
+    'title': 'Giấc ngủ',
+  },
   'wheel': {
     'icon': Icons.pie_chart_rounded,
     'colors': [const Color(0xFFFF6FA3), const Color(0xFFFF5C93)],
@@ -107,21 +98,13 @@ final Map<String, Map<String, dynamic>> appConfig = {
     'colors': [const Color(0xFF5A6BDA), const Color(0xFF4056C8)],
     'title': L10nService().translate('util_lchchung_801c40'),
   },
-  'calculator': {
-    'icon': Icons.calculate_rounded,
-    'colors': [const Color(0xFF6C7AE0), const Color(0xFF8A98F4)],
-    'title': L10nService().translate('util_mytnh_a98ede'),
-  },
+
   'gift': {
     'icon': Icons.redeem_rounded,
     'colors': [const Color(0xFFF48FB1), const Color(0xFFF06292)],
     'title': L10nService().translate('util_lmqu_940cc1'),
   },
-  'history': {
-    'icon': Icons.history_rounded,
-    'colors': [const Color(0xFF90CAF9), const Color(0xFF64B5F6)],
-    'title': L10nService().translate('util_lchs_f8ec3e'),
-  },
+
   'tarot': {
     'icon': Icons.auto_awesome_rounded,
     'colors': [const Color(0xFFB388FF), const Color(0xFF8E5CFF)],
@@ -137,21 +120,7 @@ final Map<String, Map<String, dynamic>> appConfig = {
     'colors': [const Color(0xFF4DD0E1), const Color(0xFFF06292)],
     'title': L10nService().translate('util_cahng_c7fe00'),
   },
-  'age_zodiac': {
-    'icon': Icons.stars_rounded,
-    'colors': [const Color(0xFFD8A9F5), const Color(0xFFB96BDF)],
-    'title': L10nService().translate('util_hongo_67356c'),
-  },
-  'drawing': {
-    'icon': Icons.brush_rounded,
-    'colors': [const Color(0xFFFF78AE), const Color(0xFFE63A7A)],
-    'title': L10nService().translate('util_xngv_5f1f18'),
-  },
-  'sticker_library': {
-    'icon': Icons.emoji_emotions_rounded,
-    'colors': [const Color(0xFFFF8FB7), const Color(0xFF8E7BFF)],
-    'title': 'Kho sticker',
-  },
+
   'diary_export': {
     'icon': Icons.language_rounded,
     'colors': [const Color(0xFF69B7FF), const Color(0xFF7B61FF)],

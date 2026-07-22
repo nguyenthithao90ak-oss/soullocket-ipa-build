@@ -672,6 +672,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                                             imageUrl: imageUrl,
                                             fit: BoxFit.cover,
                                             width: 200,
+                                            memCacheWidth: 200, // RAM optimization
                                             errorWidget: (context, url, error) => Container(
                                               width: 200, height: 150, color: Colors.white12,
                                               child: const Icon(Icons.broken_image, color: Colors.white54),

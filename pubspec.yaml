@@ -63,7 +63,7 @@ dependencies:
   qr_flutter: ^4.1.0
   mobile_scanner: ^7.3.0
   firebase_messaging: ^16.2.0
-  flutter_local_notifications: ^22.0.1
+  flutter_local_notifications: ^22.1.0
   in_app_purchase: ^3.2.3
   in_app_purchase_android: ^0.5.1
   in_app_purchase_storekit: ^0.4.10
@@ -76,8 +76,7 @@ dependencies:
   connectivity_plus: ^7.2.0
   local_auth: ^3.0.1
   audioplayers: ^6.5.1
-  file_picker: ^12.0.0-beta.7
-  device_info_plus: ^13.2.0
+  file_picker: 12.0.0-beta.7
   package_info_plus: ^10.2.0
   video_player: ^2.10.1
   cached_network_image: ^3.4.1
@@ -117,13 +116,17 @@ dependencies:
   app_tracking_transparency: ^2.0.7
   sensors_plus: ^7.1.0
   cloud_firestore: ^6.5.0
-  tiktok_business_sdk:
-    path: packages/tiktok_business_sdk
   go_router: ^17.3.0
   get_it: ^9.2.1
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   flutter_map: ^8.3.1
+  live_activities: ^2.5.1
+  flutter_background_service: ^5.1.0
+  workmanager: ^0.9.0+3
+  health: ^13.3.1
+  device_info_plus: ^13.2.0
+  screen_state: ^5.0.1
 
 
 dev_dependencies:
@@ -137,9 +140,9 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
-  build_runner: ^2.15.0
+  build_runner: ^2.15.1
   very_good_analysis: ^10.2.0
-  mockito: ^5.6.4
+  mockito: ^5.7.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -224,3 +227,6 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+dependency_overrides:
+  device_info_plus: ^13.2.0

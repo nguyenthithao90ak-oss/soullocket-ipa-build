@@ -5,7 +5,7 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
   Widget _buildShortcutDock(List<UtilityApp> visiblePinnedApps) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
-      child: _buildGlassHomeCard(
+      child: SLTheme.glassCard(
         radius: 20,
         child: Container(
           padding: const EdgeInsets.all(10),
@@ -60,7 +60,7 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
                     childAspectRatio: crossAxisCount == 2 ? 0.98 : 0.94,
                   ),
                   itemBuilder: (context, index) =>
-                      _buildShortcutItem(visiblePinnedApps[index]),
+                      _buildAnimatedShortcutItem(visiblePinnedApps[index], index),
                 );
               },
             ),
@@ -68,6 +68,25 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
       ),
     );
   }
+
+  Widget _buildAnimatedShortcutItem(UtilityApp app, int index) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 300 + 60 * index),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: 0.7 + 0.3 * value,
+          child: Opacity(opacity: value, child: child),
+        );
+      },
+      child: SLBouncingButton(
+        scaleFactor: 0.92,
+        child: _buildShortcutItem(app),
+      ),
+    );
+  }
+
 
   Widget _buildShortcutItem(UtilityApp app) {
     return Container(
@@ -175,4 +194,5 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
       ),
     );
   }
+
 }

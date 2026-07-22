@@ -109,15 +109,29 @@ class SoulMergeService {
         'timestamp': ServerValue.timestamp,
       });
 
-      // Gửi thông báo Push đến người yêu
+      // Body của thông báo push
       final body = trimmed.isNotEmpty
           ? trimmed
           : (imageUrl != null ? 'Đã gửi một ảnh' : 'Đã thì thầm với bạn trong Soul Merge 💕');
-      
-      final myName = user.displayName?.trim().isNotEmpty == true 
-          ? user.displayName!.trim() 
-          : 'Người ấy';
-          
+
+      // Lấy tên đúng từ house settings theo role của người gửi
+      String myName = 'Người ấy';
+      try {
+        final settingsSnap = await _db.ref('houses/$houseId/settings').get();
+        if (settingsSnap.exists && settingsSnap.value is Map) {
+          final settings = settingsSnap.value as Map<dynamic, dynamic>;
+          final nameKey = role == 'user2' ? 'nameU2' : 'nameU1';
+          final nameFromSettings = (settings[nameKey] as String?)?.trim();
+          if (nameFromSettings != null && nameFromSettings.isNotEmpty) {
+            myName = nameFromSettings;
+          } else {
+            // fallback: displayName của Firebase Auth
+            final dn = _auth.currentUser?.displayName?.trim();
+            if (dn != null && dn.isNotEmpty) myName = dn;
+          }
+        }
+      } catch (_) {}
+
       NotificationService().sendPartnerNotification(
         houseId: houseId,
         title: 'Soul Merge',
@@ -308,7 +322,18 @@ class SoulMergeService {
         if (partnerName.isEmpty) partnerName = 'Người ấy';
       }
 
-      // 2. Get Latest Message
+      // 2. Get house settings for names
+      final settingsData = houseData['settings'] as Map<dynamic, dynamic>?;
+      final nameU1 = (settingsData?['nameU1'] as String?)?.trim();
+      final nameU2 = (settingsData?['nameU2'] as String?)?.trim();
+
+      // Helper lấy tên theo role
+      String nameForRole(String r) {
+        if (r == 'user2') return (nameU2 != null && nameU2.isNotEmpty) ? nameU2 : 'Người ấy';
+        return (nameU1 != null && nameU1.isNotEmpty) ? nameU1 : 'Người ấy';
+      }
+
+      // 3. Get Latest Message
       final chatSnap = await _db
           .ref('houses/$houseId/soul_merge/chat')
           .orderByChild('timestamp')
@@ -316,12 +341,16 @@ class SoulMergeService {
           .get();
 
       String message = 'Hãy vào nhà để trò chuyện...';
+      String senderName = nameForRole(partnerRole); // default: partner
       if (chatSnap.exists && chatSnap.value is Map) {
         final chatData = chatSnap.value as Map<dynamic, dynamic>;
         if (chatData.isNotEmpty) {
           final msgData = chatData.values.first as Map<dynamic, dynamic>;
           final text = msgData['text'] as String?;
           final imageUrl = msgData['imageUrl'] as String?;
+          final sender = (msgData['sender'] as String?)?.trim() ?? partnerRole;
+          // Lấy tên đúng của người gửi tin nhắn đó
+          senderName = nameForRole(sender);
           if (text != null && text.trim().isNotEmpty) {
             message = text.trim();
           } else if (imageUrl != null && imageUrl.isNotEmpty) {
@@ -330,10 +359,10 @@ class SoulMergeService {
         }
       }
 
-      // 3. Sync to Widget
+      // 4. Sync to Widget
       await WidgetService.syncSoulMergeWidgetData(
         message: message,
-        senderName: partnerName,
+        senderName: senderName,
       );
     } catch (e) {
       debugPrint('[SoulMergeService] syncSoulMergeWidgetNow error: $e');

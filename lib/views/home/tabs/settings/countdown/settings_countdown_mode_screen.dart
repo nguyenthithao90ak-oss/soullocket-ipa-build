@@ -234,6 +234,7 @@ class _CountdownModeIndependentScreenState
             event['customData']?['emoji']?.toString() ??
             '❤️';
 
+        if (!mounted) return;
         if (type == 'photo_shot') {
           final size = MediaQuery.sizeOf(context);
           _heartsKey.currentState?.spawnLocalExplosion(

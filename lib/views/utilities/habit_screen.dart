@@ -6,6 +6,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'dart:ui' as ui;
 import '../../core/sl_theme.dart';
 import '../../core/fast_backdrop_filter.dart';
+import '../../widgets/skeleton_container.dart';
+
 import '../../utils/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/services/activity_history_service.dart';
@@ -72,6 +74,7 @@ class _HabitScreenState extends State<HabitScreen> {
     if (habitSnap.exists && habitSnap.value is Map) {
       final habitMap = habitSnap.value as Map;
       if (habitMap.length >= 25) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(
               'Danh sách thói quen đã đạt giới hạn (tối đa 25 mục). Vui lòng xoá bớt trước khi thêm mới.'),
@@ -502,6 +505,25 @@ class _HabitScreenState extends State<HabitScreen> {
     return StreamBuilder(
       stream: _habitsStream,
       builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: 4,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return const Padding(
+                  padding: EdgeInsets.only(bottom: 16),
+                  child: SkeletonContainer.rounded(width: double.infinity, height: 130),
+                );
+              }
+              return const Padding(
+                padding: EdgeInsets.only(bottom: 20),
+                child: SkeletonContainer.rounded(width: double.infinity, height: 160),
+              );
+            },
+          );
+        }
+
         if (snapshot.hasError) {
           return Center(
             child: Text(

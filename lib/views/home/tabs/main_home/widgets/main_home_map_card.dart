@@ -37,6 +37,8 @@ extension _MainHomeMapCardExt on _MainHomeTabState {
                     fit: BoxFit.cover,
                     maxWidthDiskCache: 64,
                     maxHeightDiskCache: 64,
+                    memCacheWidth: 128,
+                    memCacheHeight: 128,
                     errorWidget: (context, url, error) =>
                         Text(emoji, style: const TextStyle(fontSize: 12)),
                   )

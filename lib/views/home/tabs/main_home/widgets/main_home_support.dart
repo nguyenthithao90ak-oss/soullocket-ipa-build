@@ -191,6 +191,8 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
                 child: CachedNetworkImage(
                   imageUrl: widget.imageUrl!,
                   fit: BoxFit.cover,
+                  memCacheWidth: 300,
+                  memCacheHeight: 300,
                   fadeInDuration: const Duration(milliseconds: 150),
                   placeholder: (_, __) => Container(
                     color: const Color(0xFFFFD6E7),

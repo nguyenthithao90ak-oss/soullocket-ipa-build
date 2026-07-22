@@ -92,15 +92,13 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
 
     // 1. Kỷ niệm ngày yêu
     int totalDays = 0;
-    bool isMilestone = false;
     if (startDate != null && startDate.isNotEmpty) {
       try {
         final startDt = DateTime.parse(startDate);
         final startDtMidnight =
             DateTime(startDt.year, startDt.month, startDt.day);
-        final daysToday = todayMidnight.difference(startDtMidnight).inDays;
+        final daysToday = todayMidnight.difference(startDtMidnight).inDays + 1;
         totalDays = daysToday;
-        isMilestone = totalDays > 0 && (totalDays % 100 == 0 || totalDays % 30 == 0 || totalDays % 365 == 0);
 
         int? nextMilestone;
         for (final m in [
@@ -276,9 +274,11 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       partnerNameSetting = context.tr('female_role_default');
     }
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: _openMilestonesDetail,
+    return _buildHomeCardFirstTapWrapper(
+      showHint: _showHighlightCardFirstTapHintNotifier.value,
+      onTap: () async {
+        _openMilestonesDetail();
+      },
       child: SLTheme.glassCard(
         margin: EdgeInsets.zero,
         padding: SLSpacing.all20,
@@ -373,7 +373,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
               ),
               child: Column(
                 children: [
-                  // Hàng 1: Số ngày
+                  // Hàng 1: Số ngày + Số album ảnh
                   Row(
                     children: [
                       _buildJourneyStat(
@@ -381,8 +381,14 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                         value: totalDays > 0 ? '$totalDays' : '--',
                         label: context.tr('home_love_days'),
                         flex: 1,
-                        glow: isMilestone,
                       ),
+                      if (totalDays > 0)
+                        _buildJourneyStat(
+                          emoji: '📸',
+                          value: '${_albumHighlights.length}',
+                          label: context.tr('home_anniversary_memories'),
+                          flex: 1,
+                        ),
                     ],
                   ),
                   if (totalDays > 0) const SizedBox(height: 12),
@@ -437,15 +443,6 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
                     letterSpacing: 0.5,
-                  ).copyWith(
-                    shadows: isMilestone
-                        ? [
-                            const Shadow(
-                              color: Colors.white,
-                              blurRadius: 8,
-                            ),
-                          ]
-                        : null,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -463,7 +460,6 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     required String label,
     int flex = 1,
     bool isSmall = false,
-    bool glow = false,
   }) {
     return Expanded(
       flex: flex,
@@ -480,15 +476,6 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   fontSize: isSmall ? 13 : 16,
                   fontWeight: FontWeight.w900,
                   color: const Color(0xFF263242),
-                ).copyWith(
-                  shadows: glow
-                      ? [
-                          Shadow(
-                            color: const Color(0xFFFF6D97).withValues(alpha: 0.6),
-                            blurRadius: 8,
-                          ),
-                        ]
-                      : null,
                 ),
               ),
             ],
@@ -544,7 +531,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: R2StickerImage('assets/images/interaction_stickers/custom/numbered/sticker_162.png'),
+                    child: Image.asset('assets/images/interaction_stickers/custom/numbered/sticker_162.png'),
                   ),
                 ),
                 SLSpacing.w12,
@@ -728,7 +715,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 SizedBox(
                   width: 24,
                   height: 24,
-                  child: R2StickerImage('assets/images/interaction_stickers/custom/numbered/sticker_160.png'),
+                  child: Image.asset('assets/images/interaction_stickers/custom/numbered/sticker_160.png'),
                 ),
                 SLSpacing.w8,
                 Flexible(

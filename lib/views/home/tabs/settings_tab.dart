@@ -4,8 +4,9 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import '../../../core/fast_backdrop_filter.dart';
 import 'package:flutter/services.dart';
-
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../screens/document_viewer_screen.dart';
 import '../screens/global_search_screen.dart';
@@ -23,8 +24,6 @@ import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart'
 import 'package:image_cropper/image_cropper.dart';
 
 import 'dart:io';
-import 'package:flutter/foundation.dart'
-    show kIsWeb, defaultTargetPlatform, TargetPlatform, kDebugMode;
 import '../../../utils/services/notification_service.dart';
 import '../../../utils/services/push_notification_helper.dart';
 import '../../../utils/services/core/presence_service.dart';
@@ -40,6 +39,8 @@ import '../../../utils/services/purchase_service.dart';
 import '../../../utils/services/schedule_notif_service.dart';
 import '../../../utils/services/settings_sync_service.dart';
 import '../../../utils/services/storage/storage_service.dart';
+import '../../../utils/services/storage/storage_app_check_helper.dart';
+import '../../../utils/services/app_check_http_headers.dart';
 import '../../../utils/services/cloudflare_r2_service.dart';
 import '../../../utils/services/soul_merge_service.dart';
 import '../../../utils/services/countdown_space_service.dart';
@@ -49,9 +50,8 @@ import '../../../utils/services/friends_service.dart';
 import '../../relationship/couple_connect_screen.dart';
 import '../../ui_prefs.dart';
 import '../../premium/premium_store_screen.dart';
-import '../../utilities/age_zodiac_screen.dart';
+
 import '../../utilities/bucket_list_screen.dart';
-import '../../utilities/calculator_screen.dart';
 import '../../utilities/calendar_screen.dart';
 import '../../utilities/capsule_screen.dart';
 import '../../utilities/cinema_screen.dart';
@@ -63,6 +63,7 @@ import '../../utilities/friendly_chat_screen.dart';
 import '../../utilities/habit_screen.dart';
 import '../../utilities/giftcode_screen.dart';
 import '../../utilities/history_screen.dart';
+import '../../utilities/sticker_library_screen.dart';
 import '../../utilities/love_card_screen.dart';
 import '../../utilities/reward_store_screen.dart';
 import '../../utilities/secret_vault_screen.dart';
@@ -142,6 +143,14 @@ part 'settings/countdown/countdown_mode_state_handlers.dart';
 part 'settings/countdown/countdown_mode_view_section.dart';
 part 'settings/countdown/countdown_mode_models_part.dart';
 part 'settings/countdown/countdown_mode_snapshot_codec_part.dart';
+part 'settings/countdown/widgets/countdown_editor_header.dart';
+part 'settings/countdown/widgets/countdown_editor_preview.dart';
+part 'settings/countdown/widgets/countdown_editor_labels.dart';
+part 'settings/countdown/widgets/countdown_editor_date.dart';
+part 'settings/countdown/widgets/countdown_editor_styles.dart';
+part 'settings/countdown/widgets/countdown_editor_background.dart';
+part 'settings/countdown/widgets/countdown_editor_delete.dart';
+part 'settings/countdown/widgets/countdown_editor_avatars.dart';
 part 'settings/countdown/countdown_mode_editor_part.dart';
 part 'settings/countdown/countdown_mode_editor_helpers_part.dart';
 part 'settings/countdown/countdown_mode_dialogs_part.dart';
@@ -149,6 +158,12 @@ part 'settings/countdown/countdown_mode_shell_part.dart';
 part 'settings/countdown/countdown_mode_widgets_part.dart';
 part 'settings/countdown/countdown_mode_theme_part.dart';
 part 'settings/countdown/countdown_mode_layout_section.dart';
+part 'settings/countdown/widgets/countdown_surface_container.dart';
+part 'settings/countdown/widgets/countdown_pulse_card.dart';
+part 'settings/countdown/widgets/countdown_action_button.dart';
+part 'settings/countdown/widgets/countdown_hero_card.dart';
+part 'settings/countdown/widgets/countdown_love_time_panel.dart';
+part 'settings/countdown/widgets/countdown_spaces_grid.dart';
 part 'settings/settings_notifications_section.dart';
 part 'settings/settings_relationship_section.dart';
 part 'settings/settings_support_legal_section.dart';
@@ -158,8 +173,7 @@ part 'settings/settings_shell.dart';
 const Color _kSettingsBgTop = Color(0xFFEAF0F6);
 const Color _kSettingsBgMid = Color(0xFFDCE4EE);
 const Color _kSettingsBgBottom = Color(0xFFCDD8E6);
-// ignore: unused_element
-const Color _kSettingsHeaderBg = Color(0xFFE7EDF4);
+
 const Color _kSettingsHeaderSurface = Color(0xFFF9FBFD);
 const Color _kSettingsHeaderBorder = Color(0xFFBEC9D7);
 const Color _kSettingsActionTileText = Color(0xFF243041);
@@ -450,8 +464,6 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   bool _hasPendingEmailVerification = false;
   int _emailVerifyWaitSeconds = 0;
   Timer? _emailVerifyTimer;
-  Timer? _countdownTimer;
-
   bool _didShowGuideOnOpen = false;
   final GlobalKey _accountGuideKey = GlobalKey();
   final GlobalKey _securityGuideKey = GlobalKey();

@@ -16,7 +16,7 @@ import '../../../../../widgets/skeleton_container.dart';
 import '../controllers/diary_memory_controller.dart';
 import 'diary_tab_shell_sections.dart';
 
-const Color _diaryMemoryAccentColor = Color(0xFFD81B60);
+const Color _diaryMemoryAccentColor = Color(0xFFFF4D79);
 
 typedef DiaryPrepareMemoryFeedCallback = PreparedDiaryMemoryFeed Function({
   required Object? liveSource,

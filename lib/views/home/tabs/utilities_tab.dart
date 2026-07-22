@@ -21,11 +21,9 @@ import '../../../utils/services/military_lock_service.dart';
 import '../../../utils/services/utility_service.dart';
 import '../../../utils/services/offline_cache_service.dart';
 import '../../../core/sl_theme.dart';
-import '../../utilities/bucket_list_screen.dart';
-import '../../utilities/shared_notes_screen.dart';
+import '../../utilities/notebook_hub_screen.dart';
 import '../../utilities/finance_screen.dart';
 import '../../utilities/friendly_chat_screen.dart';
-import '../../utilities/wishlist_screen.dart';
 import '../../utilities/habit_screen.dart';
 import '../../utilities/voice_screen.dart';
 import '../../utilities/calendar_screen.dart';
@@ -35,19 +33,16 @@ import '../../../views/utilities/wheel/wheel_screen.dart';
 import '../../utilities/secret_vault_screen.dart';
 
 import '../../utilities/giftcode_screen.dart';
-import '../../utilities/history_screen.dart';
 import '../../utilities/drawing_studio_screen.dart';
 import '../../utilities/diary_export_screen.dart';
 import '../../utilities/reward_store_screen.dart';
 import '../../../views/utilities/tarot/tarot_screen.dart';
 import '../../utilities/collage_maker_screen.dart';
-import '../../utilities/age_zodiac_screen.dart';
 
-import '../../utilities/calculator_screen.dart';
 import '../../utilities/creative_diary_screen.dart';
-import '../../utilities/sticker_library_screen.dart';
 import '../../utilities/utility_sticker_icon.dart';
 import '../../utilities/health_screen.dart';
+import '../../utilities/sleep_tracker_screen.dart';
 import '../../utilities/local_album_screen.dart';
 import '../../utilities/soul_events/soul_events_screen.dart';
 import 'package:soullocket_app/core/sl_route.dart';
@@ -538,11 +533,8 @@ class _UtilitiesTabState extends State<UtilitiesTab>
 
     Widget? screen;
     switch (id) {
-      case 'bucket':
-        screen = BucketListScreen(houseId: houseId, myName: _myName);
-        break;
       case 'note':
-        screen = SharedNotesScreen(houseId: houseId, myName: _myName);
+        screen = NotebookHubScreen(houseId: houseId, myName: _myName);
         break;
       case 'friendly_chat':
         screen = FriendlyChatScreen(houseId: houseId, myName: _myName);
@@ -550,26 +542,17 @@ class _UtilitiesTabState extends State<UtilitiesTab>
       case 'finance':
         screen = FinanceScreen(houseId: houseId, myName: _myName);
         break;
-      case 'wish':
-        screen = WishlistScreen(houseId: houseId, myName: _myName);
-        break;
       case 'habit':
         screen = HabitScreen(houseId: houseId, myName: _myName);
         break;
       case 'drawing':
         screen = DrawingStudioScreen(houseId: houseId, myName: _myName);
         break;
-      case 'sticker_library':
-        screen = const StickerLibraryScreen();
-        break;
       case 'voice':
         screen = VoiceScreen(houseId: houseId, myName: _myName);
         break;
       case 'calendar':
         screen = CalendarScreen(houseId: houseId, myName: _myName);
-        break;
-      case 'calculator':
-        screen = const CalculatorScreen();
         break;
       case 'capsule':
         screen = CapsuleScreen(houseId: houseId, myName: _myName);
@@ -609,9 +592,6 @@ class _UtilitiesTabState extends State<UtilitiesTab>
             ? null
             : GiftcodeScreen(houseId: houseId, myName: _myName);
         break;
-      case 'history':
-        screen = HistoryScreen(houseId: houseId);
-        break;
       case 'diary_export':
         screen = DiaryExportScreen(houseId: houseId);
         break;
@@ -628,9 +608,6 @@ class _UtilitiesTabState extends State<UtilitiesTab>
       case 'store':
         screen = const RewardStoreScreen();
         break;
-      case 'age_zodiac':
-        screen = AgeZodiacScreen(houseId: houseId);
-        break;
       case 'creative_diary':
         screen = CreativeDiaryScreen(houseId: houseId);
         break;
@@ -639,6 +616,9 @@ class _UtilitiesTabState extends State<UtilitiesTab>
         break;
       case 'health':
         screen = HealthScreen(houseId: houseId);
+        break;
+      case 'sleep_tracker':
+        screen = SleepTrackerScreen(houseId: houseId, myName: _myName);
         break;
       case 'soul_events':
         screen = const SoulEventsScreen();

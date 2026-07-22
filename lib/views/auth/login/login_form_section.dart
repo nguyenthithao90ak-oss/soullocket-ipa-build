@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
+import 'glass_text_field.dart';
 import 'social_auth_buttons.dart';
 
 final RegExp _loginEmailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
@@ -64,26 +65,24 @@ class LoginForm extends StatelessWidget {
         children: [
           SLTheme.sectionHeader(title: emailLabel),
           const SizedBox(height: 8),
-          TextField(
+          GlassTextField(
             controller: emailController,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.username, AutofillHints.email],
-            style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 16),
             onSubmitted: (_) => FocusScope.of(context).nextFocus(),
-            decoration: SLTheme.authInputDecoration(
-              hintText: emailLabel,
-              prefixIcon: Icon(
-                Icons.mail_outline_rounded,
-                color: accentRose.withValues(alpha: 0.65),
-                size: 20,
-              ),
+            hintText: emailLabel,
+            accentColor: accentRose,
+            prefixIcon: Icon(
+              Icons.mail_outline_rounded,
+              color: accentRose.withValues(alpha: 0.65),
+              size: 20,
             ),
           ),
           const SizedBox(height: 10),
           SLTheme.sectionHeader(title: passwordLabel),
           const SizedBox(height: 8),
-          TextField(
+          GlassTextField(
             controller: passwordController,
             obscureText: obscurePassword,
             textInputAction: TextInputAction.done,
@@ -99,22 +98,20 @@ class LoginForm extends StatelessWidget {
                 onLogin();
               }
             },
-            style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 16),
-            decoration: SLTheme.authInputDecoration(
-              hintText: passwordLabel,
-              prefixIcon: Icon(
-                Icons.lock_outline_rounded,
-                color: accentRose.withValues(alpha: 0.65),
+            hintText: passwordLabel,
+            accentColor: accentRose,
+            prefixIcon: Icon(
+              Icons.lock_outline_rounded,
+              color: accentRose.withValues(alpha: 0.65),
+              size: 20,
+            ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                obscurePassword ? Icons.visibility : Icons.visibility_off,
+                color: SLTheme.authMutedTextColor,
                 size: 20,
               ),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  obscurePassword ? Icons.visibility : Icons.visibility_off,
-                  color: SLTheme.authMutedTextColor,
-                  size: 20,
-                ),
-                onPressed: onToggleObscure,
-              ),
+              onPressed: onToggleObscure,
             ),
           ),
           const SizedBox(height: 10),

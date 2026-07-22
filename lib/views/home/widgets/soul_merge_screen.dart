@@ -62,7 +62,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   bool _partnerHasBumped = false;
   final GlobalKey<TapHeartsOverlayState> _heartsOverlayKey =
       GlobalKey<TapHeartsOverlayState>();
-  double _interactiveScale = 1.0;
+  final ValueNotifier<double> _interactiveScaleNotifier = ValueNotifier(1.0);
   Timer? _continuousHeartsTimer;
   Offset _lastTapPosition = Offset.zero;
   Offset? _lastSpawnedPosition;
@@ -361,9 +361,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   }
 
   void _onTapDown(Offset globalPosition) {
-    setState(() {
-      _interactiveScale = 0.9;
-    });
+    _interactiveScaleNotifier.value = 0.9;
     _lastTapPosition = globalPosition;
     _lastSpawnedPosition = globalPosition;
     _heartsOverlayKey.currentState?.spawnExplosion(globalPosition);
@@ -419,9 +417,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   void _onTapUp() {
     _continuousHeartsTimer?.cancel();
     _continuousHeartsTimer = null;
-    setState(() {
-      _interactiveScale = 1.0;
-    });
+    _interactiveScaleNotifier.value = 1.0;
     // Reset heart beating pulse to normal speed
     _pulseController.duration = const Duration(milliseconds: 1500);
     _pulseController.repeat(reverse: true);
@@ -430,9 +426,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   void _onTapCancel() {
     _continuousHeartsTimer?.cancel();
     _continuousHeartsTimer = null;
-    setState(() {
-      _interactiveScale = 1.0;
-    });
+    _interactiveScaleNotifier.value = 1.0;
     // Reset heart beating pulse to normal speed
     _pulseController.duration = const Duration(milliseconds: 1500);
     _pulseController.repeat(reverse: true);
@@ -742,20 +736,20 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background Gradient — premium deep velvet night
+          // Background Gradient — super cute pastel pink
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFF200F3A), // Deep dark violet
-                  Color(0xFF45133E), // Rich plum
-                  Color(0xFF6B184F), // Velvet magenta
-                  Color(0xFF91275E), // Warm rose magenta
-                  Color(0xFF380825), // Elegant dark bottom
+                  Color(0xFFFFF0F5), // Lavender blush
+                  Color(0xFFFFE4E1), // Misty rose
+                  Color(0xFFFFD1DC), // Pastel pink
+                  Color(0xFFFFC0CB), // Pink
+                  Color(0xFFFFB6C1), // Light pink
                 ],
-                stops: [0.0, 0.3, 0.55, 0.8, 1.0],
+                stops: [0.0, 0.25, 0.5, 0.75, 1.0],
               ),
             ),
           ),
@@ -889,10 +883,16 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                       _onTapCancel();
                     },
                     child: RepaintBoundary(
-                      child: AnimatedScale(
-                        scale: _interactiveScale,
-                        duration: const Duration(milliseconds: 100),
-                        curve: Curves.easeOut,
+                      child: ValueListenableBuilder<double>(
+                        valueListenable: _interactiveScaleNotifier,
+                        builder: (context, scale, child) {
+                          return AnimatedScale(
+                            scale: scale,
+                            duration: const Duration(milliseconds: 100),
+                            curve: Curves.easeOut,
+                            child: child,
+                          );
+                        },
                         child: ScaleTransition(
                           scale: _pulseAnim,
                           child: Container(
@@ -916,31 +916,47 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: const Color(0xFFFF4F93).withValues(
-                                              alpha: (0.6 * (1.0 - normalized)).clamp(0.0, 1.0),
+                                            color: const Color(0xFFFF9A9E).withValues(
+                                              alpha: (0.8 * (1.0 - normalized)).clamp(0.0, 1.0),
                                             ),
-                                            width: 1.5,
+                                            width: 2.5,
                                           ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFFFF9A9E).withValues(
+                                                alpha: (0.3 * (1.0 - normalized)).clamp(0.0, 1.0),
+                                              ),
+                                              blurRadius: 16,
+                                              spreadRadius: 4,
+                                            )
+                                          ]
                                         ),
                                       );
                                     },
                                   ),
-                                  // Đĩa kính mờ phát sáng trung tâm (Glowing glassmorphic core)
+                                  // Bong bóng xà phòng trung tâm (Soap bubble glass core)
                                   Container(
                                     width: 110,
                                     height: 110,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: Colors.white.withValues(alpha: 0.12),
+                                      color: Colors.white.withValues(alpha: 0.35), // Frosted white
                                       border: Border.all(
-                                        color: Colors.white.withValues(alpha: 0.35),
-                                        width: 1.5,
+                                        color: Colors.white.withValues(alpha: 0.8),
+                                        width: 2.0,
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: const Color(0xFFFF4F93).withValues(alpha: 0.45),
-                                          blurRadius: 24,
-                                          spreadRadius: 2,
+                                          color: const Color(0xFFFFB6C1).withValues(alpha: 0.5), // Soft pink glow
+                                          blurRadius: 20,
+                                          spreadRadius: 4,
+                                        ),
+                                        // Highlight shadow for bubble effect
+                                        BoxShadow(
+                                          color: Colors.white.withValues(alpha: 0.5),
+                                          blurRadius: 10,
+                                          spreadRadius: -2,
+                                          offset: const Offset(-2, -2),
                                         ),
                                       ],
                                     ),
@@ -1534,28 +1550,35 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                   ? const EdgeInsets.all(6)
                                   : const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
                               decoration: BoxDecoration(
-                                color: isSelf 
-                                  ? const Color(0xFFFF4F93) 
-                                  : Colors.white.withValues(alpha: 0.22),
+                                gradient: isSelf
+                                    ? const LinearGradient(
+                                        colors: [Color(0xFFFF9A9E), Color(0xFFFECFEF)],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      )
+                                    : null,
+                                color: isSelf
+                                    ? null
+                                    : Colors.white.withValues(alpha: 0.75),
                                 borderRadius: BorderRadius.only(
-                                  topLeft: const Radius.circular(20),
-                                  topRight: const Radius.circular(20),
-                                  bottomLeft: Radius.circular(isSelf ? 20 : 4),
-                                  bottomRight: Radius.circular(isSelf ? 4 : 20),
+                                  topLeft: const Radius.circular(24),
+                                  topRight: const Radius.circular(24),
+                                  bottomLeft: Radius.circular(isSelf ? 24 : 6),
+                                  bottomRight: Radius.circular(isSelf ? 6 : 24),
                                 ),
                                 border: Border.all(
                                   color: isSelf
-                                      ? Colors.white.withValues(alpha: 0.15)
-                                      : Colors.white.withValues(alpha: 0.25),
-                                  width: 1.0,
+                                      ? Colors.white.withValues(alpha: 0.6)
+                                      : Colors.white.withValues(alpha: 0.9),
+                                  width: 1.2,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: isSelf
-                                        ? const Color(0xFFFF4F93).withValues(alpha: 0.25)
-                                        : Colors.black.withValues(alpha: 0.08),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
+                                        ? const Color(0xFFFF9A9E).withValues(alpha: 0.4)
+                                        : Colors.black.withValues(alpha: 0.06),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
@@ -1592,10 +1615,20 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                       child: Text(
                                         text,
                                         style: SLTheme.quicksand(
-                                          color: Colors.white,
+                                          color: isSelf ? Colors.white : const Color(0xFF6B5B6D),
                                           fontSize: 15,
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w700,
                                           height: 1.3,
+                                        ).copyWith(
+                                          shadows: isSelf
+                                              ? const [
+                                                  Shadow(
+                                                    color: Colors.black26,
+                                                    blurRadius: 2,
+                                                    offset: Offset(0, 1),
+                                                  )
+                                                ]
+                                              : null,
                                         ),
                                       ),
                                     ),
@@ -1611,14 +1644,16 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                           Text(
                                             timeStr,
                                             style: SLTheme.quicksand(
-                                              color: Colors.white.withValues(alpha: 0.6),
+                                              color: isSelf
+                                                  ? Colors.white.withValues(alpha: 0.8)
+                                                  : const Color(0xFF9E8B9F),
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                           if (isSelf) ...[
                                             const SizedBox(width: 4),
-                                            Icon(Icons.check_circle, size: 10, color: Colors.white.withValues(alpha: 0.6)),
+                                            Icon(Icons.check_circle, size: 10, color: Colors.white.withValues(alpha: 0.8)),
                                           ],
                                         ],
                                       ),
@@ -1685,15 +1720,15 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
+              color: Colors.white.withValues(alpha: 0.45),
               borderRadius: BorderRadius.circular(28),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.25),
-                width: 1.2,
+                color: Colors.white.withValues(alpha: 0.8),
+                width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
+                  color: const Color(0xFFFFB6C1).withValues(alpha: 0.2),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -1708,16 +1743,16 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: Colors.white.withValues(alpha: 0.6),
                     ),
                     child: _isUploadingPhoto
                         ? const SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Color(0xFFFF4F93)))
+                                strokeWidth: 2, color: Color(0xFFFF9A9E)))
                         : const Icon(Icons.add_photo_alternate_rounded,
-                            color: Colors.white, size: 22),
+                            color: Color(0xFF6B5B6D), size: 22),
                   ),
                 ),
                 Expanded(
@@ -1726,15 +1761,16 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                     child: TextField(
                       controller: _customMsgController,
                       style: SLTheme.quicksand(
-                        color: Colors.white,
+                        color: const Color(0xFF5A4A5E),
                         fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                       decoration: InputDecoration(
                         hintText: 'Nhập tin nhắn tâm hồn...',
                         hintStyle: SLTheme.quicksand(
-                          color: Colors.white60,
+                          color: const Color(0xFF9E8B9F),
                           fontSize: 14,
+                          fontWeight: FontWeight.w600,
                         ),
                         filled: false,
                         border: InputBorder.none,
@@ -1756,13 +1792,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: const LinearGradient(
-                        colors: [Color(0xFFFF4F93), Color(0xFFFF758F)],
+                        colors: [Color(0xFFFF9A9E), Color(0xFFFECFEF)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFF4F93).withValues(alpha: 0.4),
+                          color: const Color(0xFFFF9A9E).withValues(alpha: 0.4),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),

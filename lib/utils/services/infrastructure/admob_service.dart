@@ -15,7 +15,6 @@ import 'package:soullocket_app/utils/services/app_check_http_headers.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/app_lifecycle_presence_guard.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
-
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
 import 'package:soullocket_app/utils/services/revenue_security_telemetry_service.dart';
@@ -114,7 +113,7 @@ class AdMobService {
   ];
   final HouseService _houseService = HouseService();
   final Random _random = Random();
-  static final bool _isRewardEndpointDisabled = false;
+  static bool _isRewardEndpointDisabled = false;
 
   static String? _androidRewardedMainId;
   static String? _androidRewardedCheckinId;
@@ -414,22 +413,18 @@ class AdMobService {
     }
   }
 
-  void _loadRewardedAd({int retryCount = 0, bool useTestFallback = false}) {
+  void _loadRewardedAd({int retryCount = 0}) {
     if (kIsWeb) return;
     if (!_sdkInitialized) return;
     if (_isRewardedAdLoading) return;
     _isRewardedAdLoading = true;
 
-    final targetAdUnitId = useTestFallback
-        ? (Platform.isIOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917')
-        : rewardedMainId;
-
     RewardedAd.load(
-      adUnitId: targetAdUnitId,
+      adUnitId: rewardedMainId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
-          debugPrint('AdMobService: rewarded main loaded (useTestFallback=$useTestFallback).');
+          debugPrint('AdMobService: rewarded main loaded.');
           _rewardedAd = ad;
           _isRewardedAdLoading = false;
         },
@@ -439,42 +434,32 @@ class AdMobService {
             fallbackMessage: 'Quảng cáo thưởng chính chưa tải được.',
           );
           debugPrint(
-              'AdMobService: rewarded main failed to load (useTestFallback=$useTestFallback): ${errorInfo.message}');
+              'AdMobService: rewarded main failed to load: ${errorInfo.message}');
           _rewardedAd = null;
           _isRewardedAdLoading = false;
-
-          if (!useTestFallback) {
-            // Nếu dùng ID thật bị lỗi, tự động nạp lại bằng Google Test ID làm fallback
-            _loadRewardedAd(retryCount: retryCount, useTestFallback: true);
-          } else {
-            // Nếu cả Test ID cũng lỗi, thực hiện retry sau 10s
-            if (retryCount < 2) {
-              Future.delayed(const Duration(seconds: 10), () {
-                _loadRewardedAd(retryCount: retryCount + 1, useTestFallback: false);
-              });
-            }
+          // Retry 2 lần, mỗi lần cách 10s
+          if (retryCount < 2) {
+            Future.delayed(const Duration(seconds: 10), () {
+              _loadRewardedAd(retryCount: retryCount + 1);
+            });
           }
         },
       ),
     );
   }
 
-  void _loadSoulGameRewardedAd({bool useTestFallback = false}) {
+  void _loadSoulGameRewardedAd() {
     if (kIsWeb) return;
     if (!_sdkInitialized) return;
     if (_isSoulGameRewardedAdLoading) return;
     _isSoulGameRewardedAdLoading = true;
 
-    final targetAdUnitId = useTestFallback
-        ? (Platform.isIOS ? 'ca-app-pub-3940256099942544/1712485313' : 'ca-app-pub-3940256099942544/5224354917')
-        : rewardedSoulGameId;
-
     RewardedAd.load(
-      adUnitId: targetAdUnitId,
+      adUnitId: rewardedSoulGameId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
-          debugPrint('AdMobService: rewarded soul game loaded (useTestFallback=$useTestFallback).');
+          debugPrint('AdMobService: rewarded soul game loaded.');
           _soulGameRewardedAd = ad;
           _isSoulGameRewardedAdLoading = false;
         },
@@ -484,13 +469,9 @@ class AdMobService {
             fallbackMessage: 'Quảng cáo thưởng Soul Game chưa tải được.',
           );
           debugPrint(
-              'AdMobService: rewarded soul game failed to load (useTestFallback=$useTestFallback): ${errorInfo.message}');
+              'AdMobService: rewarded soul game failed to load: ${errorInfo.message}');
           _soulGameRewardedAd = null;
           _isSoulGameRewardedAdLoading = false;
-
-          if (!useTestFallback) {
-            _loadSoulGameRewardedAd(useTestFallback: true);
-          }
         },
       ),
     );
@@ -550,7 +531,7 @@ class AdMobService {
 
   Future<bool> showAppOpenAdIfEligible() async {
     if (kIsWeb) return false;
-    // if (kDebugMode) return false; // Tạm tắt để test hiển thị Open Ad
+    if (kDebugMode) return false;
     if (AdSuppressionGuard.instance.isSuppressed) {
       debugPrint('AdMobService: App Open ad suppressed by AdSuppressionGuard.');
       return false;
@@ -740,7 +721,6 @@ class AdMobService {
   Future<bool> showRewardedAd({
     bool ignoreCooldown = false,
     Duration loadTimeout = const Duration(seconds: 5),
-    BuildContext? context,
   }) async {
     if (kIsWeb) return false;
     if (kDebugMode) {
@@ -764,76 +744,19 @@ class AdMobService {
           'AdMobService: rewarded skipped because SDK is not initialized.');
       return false;
     }
-
-    BuildContext? loadingContext;
-    if (_rewardedAd == null && context != null && context.mounted) {
-      unawaited(
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (dialogCtx) {
-            loadingContext = dialogCtx;
-            return PopScope(
-              canPop: false,
-              child: AlertDialog(
-                backgroundColor: const Color(0xFF160B1F),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: const BorderSide(color: Color(0x33FF4F93), width: 1.0),
-                ),
-                content: Row(
-                  children: [
-                    const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF4F93)),
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Text(
-                        'Đang chuẩn bị quảng cáo...',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          fontFamily: 'Quicksand',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-      );
-    }
-
-    try {
-      if (_rewardedAd == null) {
-        _loadRewardedAd();
-        final maxWaitMs = loadTimeout.inMilliseconds.clamp(0, 15000);
-        final attempts = (maxWaitMs / 250).ceil().clamp(1, 60);
-        debugPrint(
-            'AdMobService: waiting for rewarded ad, timeout=${maxWaitMs}ms.');
-        for (var i = 0; i < attempts && _rewardedAd == null; i++) {
-          await Future<void>.delayed(const Duration(milliseconds: 250));
-        }
-      }
-    } finally {
-      if (loadingContext != null) {
-        try {
-          Navigator.of(loadingContext!).pop();
-        } catch (_) {}
-      }
-    }
-
     if (_rewardedAd == null) {
-      debugPrint('AdMobService: rewarded skipped because ad is not loaded.');
-      return false;
+      _loadRewardedAd();
+      final maxWaitMs = loadTimeout.inMilliseconds.clamp(0, 15000);
+      final attempts = (maxWaitMs / 250).ceil().clamp(1, 60);
+      debugPrint(
+          'AdMobService: waiting for rewarded ad, timeout=${maxWaitMs}ms.');
+      for (var i = 0; i < attempts && _rewardedAd == null; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+      }
+      if (_rewardedAd == null) {
+        debugPrint('AdMobService: rewarded skipped because ad is not loaded.');
+        return false;
+      }
     }
 
     final completer = Completer<bool>();
@@ -877,6 +800,9 @@ class AdMobService {
         onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
           debugPrint('AdMobService: rewarded earned.');
           didEarnReward = true;
+          if (!completer.isCompleted) {
+            completer.complete(true);
+          }
         },
       );
     } catch (error) {
@@ -934,7 +860,7 @@ class AdMobService {
     _soulGameRewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
         _lastSoulGameRewardedShownMs = DateTime.now().millisecondsSinceEpoch;
-        _lastFullscreenAdShownMs = _lastSoulGameRewardedShownMs;
+        _lastFullscreenAdShownMs = _lastRewardedShownMs;
         _sendAdImpressionPing('rewarded', rewardedSoulGameId);
       },
       onAdDismissedFullScreenContent: (ad) async {
@@ -1089,7 +1015,7 @@ class AdMobService {
 
     // -- BẢO VỆ "TUYẾN PHÒNG THỦ" (CHỐNG HIỂN THỊ BẤT NGỜ / CLICK TẶC) --
     final context = NotificationService.navigatorKey.currentContext;
-    if (context != null) {
+    if (context != null && context.mounted) {
       try {
         final viewInsets = MediaQuery.of(context).viewInsets;
         if (viewInsets.bottom > 0) {
@@ -1522,13 +1448,12 @@ class AdMobService {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final error =
           decodedMap?['error']?.toString() ?? _rewardHttpError(response);
-      
-      if (response.statusCode != 404) {
-        debugPrint(
-          'Reward server rejected request: ${response.statusCode} $error',
-        );
+      debugPrint(
+        'Reward server rejected request: ${response.statusCode} $error',
+      );
+      if (response.statusCode == 404) {
+        _isRewardEndpointDisabled = true;
       }
-
       if (_isRevenueSecurityError(error)) {
         await RevenueSecurityTelemetryService.instance.logEvent(
           type: 'reward_server_rejected',
@@ -1540,10 +1465,6 @@ class AdMobService {
             'statusCode': response.statusCode,
           },
         );
-      }
-      // Log the exact endpoint that failed
-      if (response.statusCode != 404) {
-        debugPrint('REWARD_ERR: HTTP ${response.statusCode} - $error (url: $endpoint)');
       }
       return {
         'ok': false,
@@ -1593,14 +1514,12 @@ class AdMobService {
       'clientIssuedAtMs': DateTime.now().millisecondsSinceEpoch,
       if (questId != null && questId.trim().isNotEmpty)
         'questId': questId.trim(),
-      if (source == 'debug_ad')
-        'debug_secret': 'SoulLocketTest2026',
     };
 
     final res = await _postAuthenticatedJson(
       AppConfig.rewardGrantUrl,
       payload,
-      requireAppCheck: source != 'daily_checkin' && source != 'debug_ad',
+      requireAppCheck: source != 'daily_checkin',
     );
 
     return res;
@@ -1628,8 +1547,7 @@ class AdMobService {
       );
     }
 
-    final source = kDebugMode ? 'debug_ad' : 'rewarded_ad';
-    final response = await _claimRewardFromServer(source: source);
+    final response = await _claimRewardFromServer(source: 'rewarded_ad');
     final result = RewardClaimResult.fromResponse(response);
     if (result.ok) {
       // Chỉ tăng counter nếu claim thành công

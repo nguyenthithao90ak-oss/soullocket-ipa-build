@@ -922,7 +922,7 @@ abstract final class _L10nStaticData {
     'utility_title_tarot': 'Bói Tarot',
     'utility_title_collage': 'Ghép Ảnh',
     'utility_title_store': 'Kho Phần Thưởng',
-    'utility_title_age_zodiac': 'Tuổi & Hoàng Đạo',
+
     'utility_title_love_card': 'Thẻ Tình Yêu',
     'utility_title_creative_diary': 'Nhật Ký Sáng Tạo',
     'love_insight_suggest_single_slow_rhythm':
@@ -2414,7 +2414,7 @@ abstract final class _L10nStaticData {
     'utility_title_tarot': 'Tarot Cards',
     'utility_title_collage': 'Photo Collage',
     'utility_title_store': 'Rewards Hub',
-    'utility_title_age_zodiac': 'Age & Zodiac',
+
     'utility_title_love_card': 'Love Card',
     'utility_title_creative_diary': 'Creative Journal',
     'love_insight_suggest_single_slow_rhythm':

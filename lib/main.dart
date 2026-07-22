@@ -3,6 +3,7 @@ import 'package:soullocket_app/app.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/build_signature_service.dart';
 import 'package:soullocket_app/core/service_locator.dart';
+import 'package:soullocket_app/utils/services/core/background_tracking_service.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -12,11 +13,11 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:tiktok_business_sdk/tiktok_business_sdk.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/secure_storage_service.dart';
+import 'package:soullocket_app/utils/services/infrastructure/storage_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -398,6 +399,13 @@ void main() {
       if (!kIsWeb) {
         FirebaseMessaging.onBackgroundMessage(
             _firebaseMessagingBackgroundHandler);
+        
+        // Khởi tạo Background Sleep Tracking Service
+        try {
+          await BackgroundTrackingService.initialize();
+        } catch (e) {
+          debugPrint('Error initializing background tracking: $e');
+        }
       }
 
       await PerformanceProfileService.instance.initialize();
@@ -501,6 +509,15 @@ Future<void> _initializeFirebaseBootstrap() async {
 
   if (Firebase.apps.isEmpty) {
     throw StateError(L10nService().translate('core_err_firebase_not_init'));
+  }
+
+  try {
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+      appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.deviceCheck,
+    );
+  } catch (e) {
+    debugPrint('Firebase AppCheck init error: $e');
   }
 
   if (!kIsWeb) {
@@ -684,6 +701,7 @@ Future<void> _initializeFirebaseAppCheck() async {
           .timeout(const Duration(seconds: 3));
       return;
     }
+    
     if (kDebugMode) {
       try {
         const debugToken = '8a3fcdfe-ea37-49f1-baf9-279463826649';
@@ -693,12 +711,14 @@ Future<void> _initializeFirebaseAppCheck() async {
         await SharedPreferences.getInstance().then((prefs) => prefs.setString(
             'com.google.firebase.appcheck.debug.DebugAppCheckProvider.SECRET_KEY',
             debugToken));
+        debugPrint('Firebase App Check: injected debug token for emulator testing.');
       } catch (_) {}
     }
+    
     await FirebaseAppCheck.instance
         .activate(
-          providerAndroid: kDebugMode
-              ? const AndroidDebugProvider()
+          providerAndroid: kDebugMode 
+              ? const AndroidDebugProvider() 
               : const AndroidPlayIntegrityProvider(),
           providerApple: const AppleAppAttestWithDeviceCheckFallbackProvider(),
         )
@@ -726,43 +746,6 @@ Future<void> _requestIosTrackingAuthorization() async {
   }
 }
 
-Future<void> _initializeTikTokSdk() async {
-  if (kIsWeb) {
-    return;
-  }
-
-  final bool isIos = defaultTargetPlatform == TargetPlatform.iOS ||
-      defaultTargetPlatform == TargetPlatform.macOS;
-
-  final appId =
-      (isIos ? AppConfig.tiktokIosAppId : AppConfig.tiktokAndroidAppId).trim();
-  final accessToken = (isIos
-          ? AppConfig.tiktokIosAccessToken
-          : AppConfig.tiktokAndroidAccessToken)
-      .trim();
-  final ttAppId =
-      (isIos ? AppConfig.tiktokIosTtAppId : AppConfig.tiktokAndroidTtAppId)
-          .trim();
-
-  if (appId.isEmpty || accessToken.isEmpty || ttAppId.isEmpty) {
-    debugPrint('TikTok Business SDK skipped: missing credentials in config');
-    return;
-  }
-
-  try {
-    await TiktokBusinessSdk().initTiktokBusinessSdk(
-      accessToken: accessToken,
-      appId: appId,
-      ttAppId: ttAppId,
-      openDebug: kDebugMode,
-      enableAutoIapTrack: true,
-    );
-    debugPrint(
-        'TikTok Business SDK initialized successfully [${isIos ? "iOS" : "Android"}]');
-  } catch (e) {
-    debugPrint('TikTok Business SDK init error: $e');
-  }
-}
 
 Future<void> _initializeGoogleMobileAds() async {
   if (kIsWeb) {
@@ -809,11 +792,15 @@ void _scheduleDeferredBootstrap() {
           _warmUpOfflineCache(),
           _warmUpLocalDatabase(),
           _warmUpWidgetService(),
+          StorageService.instance.purgeStaleCache(),
         ]);
         unawaited(_warmUpBackgroundServices());
-        unawaited(_initializeGoogleMobileAds());
-        unawaited(_requestIosTrackingAuthorization());
-        unawaited(_initializeTikTokSdk());
+        
+        // Delay heavy SDK initializations to ensure smooth first frames
+        unawaited(Future.delayed(const Duration(seconds: 3), () {
+          unawaited(_initializeGoogleMobileAds());
+          unawaited(_requestIosTrackingAuthorization());
+        }));
       } catch (error, stackTrace) {
         debugPrint('Deferred bootstrap error: ${AppErrorMapper.resolve(
           error,
@@ -913,17 +900,17 @@ Future<void> _runBackgroundWarmUpTask(
 void _configureRenderingDefaults() {
   final imageCache = PaintingBinding.instance.imageCache;
   if (kIsWeb) {
-    imageCache.maximumSize = 180;
-    imageCache.maximumSizeBytes = 120 << 20; // 120 MB
+    imageCache.maximumSize = 100;
+    imageCache.maximumSizeBytes = 80 << 20; // 80 MB
   } else if (defaultTargetPlatform == TargetPlatform.iOS ||
       defaultTargetPlatform == TargetPlatform.macOS) {
-    // iOS: giới hạn thấp hơn để tránh bị hệ thống kill vì dùng quá nhiều RAM
-    // (iPhone cũ chỉ có 3-4GB RAM, jetsam rất hung hăng)
-    imageCache.maximumSize = 200;
-    imageCache.maximumSizeBytes = 150 << 20; // 150 MB
+    // iOS: giới hạn thấp để tránh bị hệ thống kill vì dùng quá nhiều RAM (tránh OOM Crash)
+    imageCache.maximumSize = 100;
+    imageCache.maximumSizeBytes = 50 << 20; // Giảm từ 150MB xuống 50MB
   } else {
-    imageCache.maximumSize = 400;
-    imageCache.maximumSizeBytes = 256 << 20; // 256 MB
+    // Android: Giảm từ 256MB xuống 80MB để tránh tràn RAM khi lướt nhiều ảnh
+    imageCache.maximumSize = 150;
+    imageCache.maximumSizeBytes = 80 << 20; // 80 MB
   }
   SchedulerBinding.instance.scheduleWarmUpFrame();
 }

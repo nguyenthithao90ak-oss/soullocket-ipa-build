@@ -1,5 +1,18 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
+import 'package:soullocket_app/widgets/r2_sticker_image.dart';
+import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
+import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:soullocket_app/views/home/tabs/main_home/providers/home_data_controller.dart';
+import 'package:soullocket_app/views/home/tabs/main_home/providers/home_presence_controller.dart';
+import 'package:soullocket_app/views/home/tabs/main_home/providers/home_interaction_controller.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/map_tilt_card.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/hero/heartbeat_thread_painter.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/widgets/sl_bouncing_button.dart';
+import 'package:soullocket_app/views/home/widgets/anniversary_sparkle_painter.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/hero/snow_globe_photo_layer.dart';
+import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_dashboard_screen.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:soullocket_app/utils/helpers/sensor_helper.dart';
 import 'package:flutter/services.dart';
@@ -26,18 +39,13 @@ import 'package:soullocket_app/views/single_match/single_match_hub_screen.dart';
 import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart';
 import 'package:soullocket_app/views/home/screens/interaction_sticker_editor_screen.dart';
 import 'package:soullocket_app/widgets/animated_rabbit_sticker.dart';
-import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/utils/services/soul_merge_service.dart';
-import 'package:soullocket_app/views/home/tabs/settings/pairing/pairing_dashboard_screen.dart';
-import 'package:soullocket_app/views/home/tabs/main_home/widgets/main_home_shooting_game.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:soullocket_app/utils/services/offline_cache_service.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 import 'package:soullocket_app/utils/services/home_startup_media_cache.dart';
-import 'package:soullocket_app/views/home/widgets/anniversary_sparkle_painter.dart';
-import 'package:soullocket_app/views/home/widgets/anniversary_celebration_dialog.dart';
 import 'package:soullocket_app/utils/services/love_insight_service.dart';
 import 'package:soullocket_app/utils/services/location_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -45,17 +53,19 @@ import 'package:soullocket_app/utils/services/military_lock_service.dart';
 import 'package:soullocket_app/utils/services/presence_service.dart';
 import 'package:soullocket_app/utils/services/utility_service.dart';
 import 'package:soullocket_app/utils/services/house_settings_service.dart';
+// import 'package:soullocket_app/utils/services/album_service.dart';
 import 'package:soullocket_app/utils/services/notification_service.dart';
 import 'package:soullocket_app/utils/services/storage/storage_service.dart';
 import 'package:soullocket_app/utils/services/utilities/note_service.dart';
 import 'package:soullocket_app/utils/services/pending_upload_service.dart';
 import 'package:soullocket_app/utils/sl_notice.dart';
+// import 'package:soullocket_app/models/album_item.dart';
 import 'package:soullocket_app/models/house_settings.dart';
 import 'package:soullocket_app/models/utilities/shared_note.dart';
 import 'package:soullocket_app/views/home/tabs/settings_tab.dart'
     show SettingsTab, FloatingHeartsRingOverlay;
 import 'package:soullocket_app/views/ui_prefs.dart';
-import 'package:soullocket_app/views/utilities/age_zodiac_screen.dart';
+// import 'package:soullocket_app/views/utilities/age_zodiac_screen.dart';
 import 'package:soullocket_app/views/utilities/bucket_list_screen.dart';
 import 'package:soullocket_app/views/utilities/calendar_screen.dart';
 import 'package:soullocket_app/views/utilities/capsule_screen.dart';
@@ -65,21 +75,21 @@ import 'package:soullocket_app/views/utilities/creative_diary_screen.dart';
 import 'package:soullocket_app/views/utilities/drawing_studio_screen.dart';
 import 'package:soullocket_app/views/utilities/finance_screen.dart';
 import 'package:soullocket_app/views/utilities/friendly_chat_screen.dart';
-
+// import 'package:soullocket_app/views/utilities/gift_maker_screen.dart';
 import 'package:soullocket_app/views/utilities/giftcode_screen.dart';
 import 'package:soullocket_app/views/utilities/habit_screen.dart';
 import 'package:soullocket_app/views/utilities/love_card_screen.dart';
 import 'package:soullocket_app/views/utilities/reward_store_screen.dart';
 import 'package:soullocket_app/views/utilities/secret_vault_screen.dart';
 import 'package:soullocket_app/views/utilities/shared_notes_screen.dart';
-import 'package:soullocket_app/views/utilities/calculator_screen.dart';
+// import 'package:soullocket_app/views/utilities/calculator_screen.dart';
 import 'package:soullocket_app/views/utilities/diary_export_screen.dart';
 import 'package:soullocket_app/views/utilities/history_screen.dart';
-import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
+// import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/utility_sticker_icon.dart';
 import 'package:soullocket_app/views/utilities/utilities_config.dart';
 import 'package:soullocket_app/views/utilities/voice_screen.dart';
-import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
+// import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
 import 'package:soullocket_app/views/utilities/wishlist_screen.dart';
 import 'package:soullocket_app/utils/zodiac_utils.dart';
 import 'package:soullocket_app/utils/services/widget_service.dart';
@@ -95,14 +105,14 @@ import 'package:soullocket_app/views/home/love_insights_screen.dart';
 import 'package:soullocket_app/views/home/milestones_screen.dart';
 import 'dart:ui' as ui;
 
-import 'package:soullocket_app/views/home/widgets/main_home/hero/snow_globe_photo_layer.dart';
 import '../../../widgets/lottie_async_loader.dart';
-import '../../../widgets/sl_bouncing_button.dart';
 import '../../../core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/views/home/tabs/main_home/widgets/main_home_header_button.dart';
 
 part 'main_home/widgets/main_home_dialogs.dart';
+part 'main_home/widgets/main_home_soul_merge_sticker.dart';
+part 'main_home/widgets/main_home_countdown_quick_customize_sheet.dart';
 part '../widgets/main_home/main_home_hero_section.dart';
 part 'main_home/widgets/main_home_quick_actions.dart';
 part 'main_home/widgets/main_home_presence_section.dart';
@@ -133,9 +143,6 @@ part '../widgets/main_home/hero/main_home_hero_countdown.dart';
 part '../widgets/main_home/hero/main_home_hero_counters.dart';
 part '../widgets/main_home/hero/main_home_hero_header.dart';
 part 'main_home/models/main_home_models.dart';
-part 'main_home/widgets/main_home_countdown_quick_customize_sheet.dart';
-part 'main_home/widgets/main_home_soul_merge_sticker.dart';
-part 'main_home/models/main_home_upcoming_event.dart';
 
 class MainHomeTab extends StatefulWidget {
   final ValueNotifier<bool> isActiveListenable;
@@ -158,6 +165,10 @@ class MainHomeTab extends StatefulWidget {
 }
 
 class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
+
+  final ValueNotifier<bool> _showHighlightCardFirstTapHintNotifier = ValueNotifier(false);
+  final ValueNotifier<bool> _showInsightCardFirstTapHintNotifier = ValueNotifier(false);
+  final ValueNotifier<double> _avatarUploadProgressNotifier = ValueNotifier(-1.0);
   static const String _pendingAvatarUploadKeyPrefix = 'main_home_avatar_';
   static const String _mapCardFirstTapSeenPrefsKey =
       'il_home_map_card_first_tap_seen_v1';
@@ -190,25 +201,24 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
 
   BoxDecoration _homeCardDecoration({double radius = 24}) {
     final tone = UiPrefs.notifier.value.homeBlockToneKey;
-    final isDark = UiPrefs.notifier.value.themeKey == 'theme-night' || UiPrefs.notifier.value.themeKey == 'theme-dark' || UiPrefs.notifier.value.themeKey == 'theme-true-black';
-    
     final color = switch (tone) {
-      'mist' => isDark ? const Color(0xFF1E293B).withValues(alpha: 0.45) : const Color(0xFFF8FAFC).withValues(alpha: 0.55),
-      'rose' => isDark ? const Color(0xFF3B1E29).withValues(alpha: 0.45) : const Color(0xFFFFF1F2).withValues(alpha: 0.55),
-      'glass' => isDark ? Colors.black.withValues(alpha: 0.25) : Colors.white.withValues(alpha: 0.25),
-      _ => isDark ? const Color(0xFF1E293B).withValues(alpha: 0.45) : Colors.white.withValues(alpha: 0.55),
+      'mist' => const Color(0xFFEEF4FF).withValues(alpha: 0.72),
+      'rose' => const Color(0xFFFFE1EC).withValues(alpha: 0.68),
+      'glass' => Colors.white.withValues(alpha: 0.14),
+      _ => Colors.white.withValues(alpha: 0.82),
     };
-    
     final borderColor = switch (tone) {
-      'mist' => isDark ? const Color(0xFF334155).withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.8),
-      'rose' => isDark ? const Color(0xFF9F1239).withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.8),
-      'glass' => isDark ? Colors.white.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.4),
-      _ => isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.7),
+      'mist' => const Color(0xFFB8D4FF).withValues(alpha: 0.70),
+      'rose' => const Color(0xFFFFA8C8).withValues(alpha: 0.65),
+      'glass' => Colors.white.withValues(alpha: 0.28),
+      _ => const Color(0xFFFFCEE0).withValues(alpha: 0.80),
     };
-    
-    final shadowColor = isDark 
-        ? Colors.black.withValues(alpha: 0.3) 
-        : const Color(0xFF94A3B8).withValues(alpha: 0.15);
+    final shadowColor = switch (tone) {
+      'mist' => const Color(0xFF64B5F6).withValues(alpha: 0.12),
+      'rose' => SLColors.primary.withValues(alpha: 0.14),
+      'glass' => Colors.black.withValues(alpha: 0.18),
+      _ => const Color(0xFFFF6DA0).withValues(alpha: 0.10),
+    };
 
     return BoxDecoration(
       color: color,
@@ -217,24 +227,16 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         BoxShadow(
           color: shadowColor,
           blurRadius: 24,
-          offset: const Offset(0, 10),
+          offset: const Offset(0, 8),
+        ),
+        BoxShadow(
+          color: Colors.white.withValues(alpha: 0.60),
+          blurRadius: 0,
+          offset: const Offset(0, 0),
+          spreadRadius: 0,
         ),
       ],
-      border: Border.all(color: borderColor, width: 1.2),
-    );
-  }
-
-  Widget _buildGlassHomeCard({required Widget child, double radius = 24}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(radius),
-      child: FastBackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        fallbackColor: Colors.transparent,
-        child: Container(
-          decoration: _homeCardDecoration(radius: radius),
-          child: child,
-        ),
-      ),
+      border: Border.all(color: borderColor, width: 1.0),
     );
   }
 
@@ -282,6 +284,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   final LoveInsightService _insightService = LoveInsightService();
   final UtilityService _utilityService = UtilityService();
   final HouseSettingsService _houseSettingsService = HouseSettingsService();
+  // final AlbumService _albumService = AlbumService();
   final NoteService _noteService = NoteService();
   final StorageService _storageService = StorageService();
   final NotificationService _notificationService = NotificationService();
@@ -300,8 +303,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   bool _isLoading = true;
   bool _showStatus = true;
   bool _showWeather = true;
-  bool _isVip = false;
-  Set<String> _unlockedCountdownStyles = const {};
   String? _houseId;
   String _currentRole = 'user1';
   List<UtilityApp> _pinnedApps = const [];
@@ -310,7 +311,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     (_) => DateTime.now(),
   ).asBroadcastStream();
   String? _uploadingAvatarRole;
-  double? _avatarUploadProgress;
   bool _didPromptPendingAvatarRetry = false;
   final ValueNotifier<String> _homeDistanceTextNotifier =
       ValueNotifier<String>('Đang định vị...');
@@ -321,10 +321,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   final ValueNotifier<Map<String, dynamic>?> _homeMyBatteryNotifier =
       ValueNotifier<Map<String, dynamic>?>(null);
   final ValueNotifier<bool> _isScrollingNotifier = ValueNotifier<bool>(false);
-  StreamSubscription? _missInteractionSubscription;
-  StreamSubscription? _vipSub;
-
-  final ValueNotifier<bool> _isShowingMissYouNotifier = ValueNotifier(false);
   int _wishIndex = -1;
   int _tipIndex = -1;
   bool _hideSettingsButtonUntilRestart = false;
@@ -343,15 +339,19 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   StreamSubscription? _settingsSubscription;
   StreamSubscription? _presenceSubscription;
   final List<StreamSubscription> _presenceSubList = [];
+  StreamSubscription? _missInteractionSubscription;
   StreamSubscription<DatabaseEvent>? _alertSubscription;
   StreamSubscription<DatabaseEvent>? _newDeviceNotificationSubscription;
   StreamSubscription<DatabaseEvent>? _partnerInboxSubscription;
+  StreamSubscription? _albumSubscription;
   StreamSubscription? _noteSubscription;
   StreamSubscription<DatabaseEvent>? _chatSignalSubscription;
   StreamSubscription<DatabaseEvent>? _reactionFlightSubscription;
   StreamSubscription? _gpsSubscription;
 
   LoveInsightData? _insightData;
+  // ignore: prefer_final_fields
+  final List<dynamic> _albumHighlights = [];
   List<SharedNote> _noteHighlights = [];
   StreamSubscription<DatabaseEvent>? _homeCalendarSubscription;
   StreamSubscription<DatabaseEvent>? _healthCycleSyncSubscription;
@@ -495,6 +495,18 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         ]);
       } catch (_) {}
     }());
+    // Pre-cache sticker assets deferred and chunked to avoid startup stutter
+    Timer(const Duration(seconds: 4), () async {
+      if (!mounted) return;
+      for (var i = 0; i < _kHomeStickerAssets.length; i++) {
+        if (!mounted) break;
+        precacheImage(AssetImage(_kHomeStickerAssets[i]), context);
+        // Chia nhỏ mỗi đợt 10 ảnh, nghỉ 50ms để không block UI thread
+        if (i % 10 == 9) {
+          await Future.delayed(const Duration(milliseconds: 50));
+        }
+      }
+    });
     unawaited(_syncHomeCardFirstTapHintState());
     _restoreWarmHomeCache();
     _warmHomeMedia(
@@ -511,7 +523,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     unawaited(_promptPendingAvatarRetryIfNeeded());
     unawaited(PurchaseService().getVipAccessInfo().catchError((_) =>
         const VipAccessInfo(isVip: false, planId: '', expiresAtMs: null)));
-    _initVipAndAdUnlocks();
   }
 
   void _onActiveChanged() {
@@ -554,6 +565,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _alertSubscription?.cancel();
     _newDeviceNotificationSubscription?.cancel();
     _partnerInboxSubscription?.cancel();
+    _albumSubscription?.cancel();
     _noteSubscription?.cancel();
     _homeCalendarSubscription?.cancel();
     _healthCycleSyncSubscription?.cancel();
@@ -572,8 +584,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _homeMapAlertNotifier.dispose();
     _homePartnerBatteryNotifier.dispose();
     _fallingEffectTypeNotifier.dispose();
-    _weatherRefreshTimer?.cancel();
-    _vipSub?.cancel();
     _isScrollingNotifier.dispose();
     super.dispose();
   }
@@ -616,45 +626,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     // automatically adapt based on _isTabActive inside their respective timers/listeners.
     _fetchHouseDataDebounceTimer?.cancel();
     _invalidateLiveWorkSession();
-  }
-
-  Future<void> _checkAnniversaryMilestone() async {
-    if (_houseSettings == null || _houseId == null || !mounted) return;
-    
-    final days = _calculateDays();
-    final shouldShow = await shouldShowAnniversaryDialog(days);
-    
-    if (shouldShow && mounted && _isTabActive) {
-      final nameU1 = _houseSettings?['nameU1']?.toString() ?? 'Bạn';
-      final nameU2 = _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
-      final isCouple = _houseSettings?['relationshipMode'] == 'couple';
-      
-      String coupleLabel = '';
-      if (isCouple && nameU1.isNotEmpty && nameU2.isNotEmpty) {
-        coupleLabel = '$_partnerRoleName & $_myRoleName';
-      }
-      
-      String dayUnit = _houseSettings?['dayUnit']?.toString() ?? 'ngày yêu';
-      if (dayUnit.trim().isEmpty) dayUnit = 'ngày yêu';
-
-      await showAnniversaryCelebrationDialog(
-        context,
-        days: days,
-        coupleLabel: coupleLabel,
-        dayUnit: dayUnit,
-      );
-    }
-  }
-
-  String get _partnerRoleName {
-    final role = _partnerRole;
-    if (role == 'user1') return _houseSettings?['nameU1']?.toString() ?? 'Người ấy';
-    return _houseSettings?['nameU2']?.toString() ?? 'Người ấy';
-  }
-
-  String get _myRoleName {
-    if (_currentRole == 'user1') return _houseSettings?['nameU1']?.toString() ?? 'Bạn';
-    return _houseSettings?['nameU2']?.toString() ?? 'Bạn';
   }
 
   /// Bọc setup listener trong try-catch để tránh crash dây chuyền nếu 1 listener fail
@@ -718,19 +689,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   Future<void> _handleMapCardTap() async {
     await _markHomeCardFirstTapSeen(isMapCard: true);
     await _openMapScreen();
-  }
-
-  void _initVipAndAdUnlocks() {
-    _vipSub = PurchaseService().vipStatusStream().listen((isVip) {
-      if (mounted) {
-        setState(() => _isVip = isVip);
-      }
-    });
-    _getUnlockedCountdownStyles().then((val) {
-      if (mounted) {
-        setState(() => _unlockedCountdownStyles = val);
-      }
-    });
   }
 
   Future<void> _handleInsightCardTap() async {
@@ -903,7 +861,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _activeFetchFuture = future;
     return future.then((_) {
       _activeFetchFuture = null;
-      _checkAnniversaryMilestone();
     }, onError: (_) {
       _activeFetchFuture = null;
     });
@@ -1139,6 +1096,24 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     return true;
   }
 
+  bool _sameAlbumHighlights(List<dynamic> left, List<dynamic> right) {
+    if (identical(left, right)) return true;
+    if (left.length != right.length) return false;
+    for (var index = 0; index < left.length; index++) {
+      final l = left[index];
+      final r = right[index];
+      if (l.id != r.id ||
+          l.timestamp != r.timestamp ||
+          l.thumbUrl != r.thumbUrl ||
+          l.url != r.url ||
+          l.caption != r.caption ||
+          l.authorName != r.authorName) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   bool _sameNoteHighlights(List<SharedNote> left, List<SharedNote> right) {
     if (identical(left, right)) return true;
     if (left.length != right.length) return false;
@@ -1341,8 +1316,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     final pendingKey = _pendingAvatarUploadKeyForHouse(houseId);
     setState(() {
       _uploadingAvatarRole = role;
-      _avatarUploadProgress = 0.0;
     });
+    _avatarUploadProgressNotifier.value = 0.0;
 
     try {
       if (presetFile == null) {
@@ -1365,7 +1340,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         minHeight: 512,
         onProgress: (p) {
           if (mounted) {
-            setState(() => _avatarUploadProgress = p);
+            _avatarUploadProgressNotifier.value = p;
           }
         },
       );
@@ -1397,8 +1372,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         setState(() {
           _houseSettings ??= {};
           _houseSettings![field] = url;
-          _avatarUploadProgress = 1.0;
         });
+        _avatarUploadProgressNotifier.value = 1.0;
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1425,8 +1400,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       if (mounted) {
         setState(() {
           _uploadingAvatarRole = null;
-          _avatarUploadProgress = null;
         });
+        _avatarUploadProgressNotifier.value = -1.0;
       }
     }
   }
@@ -1715,7 +1690,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     String? avatarFrameKey,
     String? customBackgroundUrl,
     String? countdownTextColor,
-    String? homeBlockToneKey,
     Set<String>? prevalidatedUnlockedStyles,
     bool? isVip,
   }) async {
@@ -1808,8 +1782,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         customBackgroundUrl ?? current.customBackgroundUrl;
     final normalizedCountdownTextColor =
         countdownTextColor ?? current.countdownTextColor;
-    final normalizedHomeBlockToneKey =
-        homeBlockToneKey ?? current.homeBlockToneKey;
 
     // Auto turn off transparentMode if user explicitly changes countdown style
     final newTransparentMode =
@@ -1822,7 +1794,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         normalizedAvatarFrameKey == current.avatarFrameKey &&
         normalizedCustomBackgroundUrl == current.customBackgroundUrl &&
         normalizedCountdownTextColor == current.countdownTextColor &&
-        normalizedHomeBlockToneKey == current.homeBlockToneKey &&
         newTransparentMode == current.transparentMode) {
       return;
     }
@@ -1835,7 +1806,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       avatarFrameKey: normalizedAvatarFrameKey,
       customBackgroundUrl: normalizedCustomBackgroundUrl,
       countdownTextColor: normalizedCountdownTextColor,
-      homeBlockToneKey: normalizedHomeBlockToneKey,
       transparentMode: newTransparentMode,
     );
 
@@ -1867,9 +1837,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       }
       if (normalizedCountdownTextColor != current.countdownTextColor) {
         updates['countdownTextColor'] = normalizedCountdownTextColor;
-      }
-      if (normalizedHomeBlockToneKey != current.homeBlockToneKey) {
-        updates['homeBlockTone'] = normalizedHomeBlockToneKey;
       }
       if (newTransparentMode != current.transparentMode) {
         updates['transparentMode'] = newTransparentMode;
@@ -2045,15 +2012,12 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
 
   void triggerShootingHeartState({String? emoji, String? fromRole}) {
     final now = DateTime.now().millisecondsSinceEpoch;
-    final senderRole = fromRole ?? _currentRole;
-    final avatar = senderRole == 'user1' ? (_houseSettings?['avtUser1']) : (_houseSettings?['avtUser2']);
     _showReactionFlight(
       _HomeReactionFlight(
         id: 'local-$now-${_random.nextInt(999999)}',
-        fromRole: senderRole,
-        toRole: senderRole == 'user1' ? 'user2' : 'user1',
+        fromRole: fromRole ?? _currentRole,
+        toRole: (fromRole ?? _currentRole) == 'user1' ? 'user2' : 'user1',
         emoji: emoji ?? _emojiForInteractionType('miss'),
-        imageUrl: avatar?.toString(),
         sentAtMs: now,
       ),
     );
@@ -2165,10 +2129,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       final DateTime start = DateTime.parse(dateStr.toString());
       final DateTime now = DateTime.now();
       final DateTime current = DateTime(now.year, now.month, now.day);
-      final int diff = current
-          .difference(DateTime(start.year, start.month, start.day))
-          .inDays;
-      return diff < 0 ? 0 : diff;
+      final int diff = current.difference(start).inDays;
+      return diff < 0 ? 0 : diff + 1;
     } catch (e) {
       return 0;
     }
@@ -2176,24 +2138,32 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return _MainHomeStateView(
-      isLoading: _isLoading,
-      hasVisibleContent: _houseSettings != null,
-      child: ValueListenableBuilder<UiPrefsState>(
-        valueListenable: UiPrefs.notifier,
-        builder: (context, uiState, __) => Stack(
-          children: [
-            ValueListenableBuilder<bool>(
-              valueListenable: widget.isActiveListenable,
-              builder: (context, isActive, _) {
-                if (!isActive) return const SizedBox.shrink();
-                return const SizedBox.shrink();
-              },
-            ),
-            _buildMainContent(
-              customBackgroundUrl: uiState.customBackgroundUrl,
-            ),
-          ],
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => HomeDataController()),
+        ChangeNotifierProvider(create: (_) => HomePresenceController()),
+        ChangeNotifierProvider(create: (_) => HomeInteractionController()),
+      ],
+      child: _MainHomeStateView(
+        isLoading: _isLoading,
+        hasVisibleContent: _houseSettings != null,
+        child: ValueListenableBuilder<UiPrefsState>(
+          valueListenable: UiPrefs.notifier,
+          builder: (context, uiState, __) => Stack(
+            children: [
+              ValueListenableBuilder<bool>(
+                valueListenable: widget.isActiveListenable,
+                builder: (context, isActive, _) {
+                  if (!isActive) return const SizedBox.shrink();
+                  return const SizedBox.shrink();
+                },
+              ),
+              _buildMainContent(
+                customBackgroundUrl: uiState.customBackgroundUrl,
+              ),
+              const SizedBox.shrink(),
+            ],
+          ),
         ),
       ),
     );
@@ -2261,3 +2231,24 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   }
 }
 
+class _ThemeBackgroundAspectRatioPreset implements CropAspectRatioPresetData {
+  const _ThemeBackgroundAspectRatioPreset();
+
+  @override
+  String get name => 'house_background_9x16';
+
+  @override
+  (int ratioX, int ratioY)? get data => (9, 16);
+}
+
+class HomeUpcomingEvent {
+  final String title;
+  final DateTime date;
+  final String type; // 'calendar' | 'anniversary' | 'birthday' | 'holiday'
+
+  HomeUpcomingEvent({
+    required this.title,
+    required this.date,
+    required this.type,
+  });
+}

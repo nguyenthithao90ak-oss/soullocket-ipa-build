@@ -221,11 +221,21 @@ class BreakupService {
       return BreakupRequestData.fromMap(map);
     } catch (e, stackTrace) {
       debugPrint('[BreakupService] Error getting breakup request for $houseId: $e');
-      unawaited(ErrorLoggerService.instance.logError(
-        e,
-        stackTrace,
-        reason: 'Failed to get breakup request for house: $houseId',
-      ));
+      // Timeout và lỗi mạng là bình thường khi mạng yếu — không ghi lên Crashlytics
+      final msg = e.toString().toLowerCase();
+      final isExpected = e is TimeoutException ||
+          msg.contains('timeout') ||
+          msg.contains('network') ||
+          msg.contains('permission-denied') ||
+          msg.contains('unavailable') ||
+          msg.contains('cancelled');
+      if (!isExpected) {
+        unawaited(ErrorLoggerService.instance.logError(
+          e,
+          stackTrace,
+          reason: 'Failed to get breakup request for house: $houseId',
+        ));
+      }
       return null;
     }
   }

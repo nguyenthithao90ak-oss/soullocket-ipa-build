@@ -14,7 +14,8 @@ class _MainHomeHeroCountdownSection extends StatelessWidget {
   final bool showDayCounter;
   final bool showLoveTimeDetail;
   final String countdownStyleKey;
-  final bool enableMotion;
+  final bool enableMotionBase;
+  final ValueListenable<bool>? isScrollingNotifier;
   final bool isMilestone;
   final VoidCallback? onEditStartDate;
   final VoidCallback? onEditTopLabel;
@@ -35,7 +36,8 @@ class _MainHomeHeroCountdownSection extends StatelessWidget {
     required this.showDayCounter,
     required this.showLoveTimeDetail,
     required this.countdownStyleKey,
-    required this.enableMotion,
+    required this.enableMotionBase,
+    this.isScrollingNotifier,
     this.isMilestone = false,
     this.onEditStartDate,
     this.onEditTopLabel,
@@ -59,7 +61,8 @@ class _MainHomeHeroCountdownSection extends StatelessWidget {
             circleBottomLabel: circleBottomLabel,
             circleSize: circleSize,
             countdownStyleKey: countdownStyleKey,
-            enableMotion: enableMotion,
+            enableMotionBase: enableMotionBase,
+            isScrollingNotifier: isScrollingNotifier,
             isMilestone: isMilestone,
             onEditStartDate: onEditStartDate,
             onEditTopLabel: onEditTopLabel,
@@ -356,7 +359,8 @@ class _MainHomeHeroCountdownCircle extends StatefulWidget {
   final String circleBottomLabel;
   final double circleSize;
   final String countdownStyleKey;
-  final bool enableMotion;
+  final bool enableMotionBase;
+  final ValueListenable<bool>? isScrollingNotifier;
   final bool isMilestone;
   final VoidCallback? onEditStartDate;
   final VoidCallback? onEditTopLabel;
@@ -372,7 +376,8 @@ class _MainHomeHeroCountdownCircle extends StatefulWidget {
     required this.circleBottomLabel,
     required this.circleSize,
     required this.countdownStyleKey,
-    required this.enableMotion,
+    required this.enableMotionBase,
+    this.isScrollingNotifier,
     this.isMilestone = false,
     this.onEditStartDate,
     this.onEditTopLabel,
@@ -394,6 +399,7 @@ class _MainHomeHeroCountdownCircleState
 
   bool _isProUser = false;
   int _dailyExplosionCount = 0;
+  bool _showFirstTimeHint = false;
 
   late AnimationController _countController;
   late Animation<double> _countAnimation;
@@ -422,6 +428,22 @@ class _MainHomeHeroCountdownCircleState
       if (mounted) setState(() => _isProUser = isVip);
     });
     _loadExplosionLimit();
+
+    SharedPreferences.getInstance().then((prefs) {
+      if (prefs.getBool('seen_countdown_long_press_hint') != true) {
+        if (mounted) setState(() => _showFirstTimeHint = true);
+      }
+    });
+  }
+
+  void _handleLongPressHint() {
+    if (_showFirstTimeHint) {
+      setState(() => _showFirstTimeHint = false);
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setBool('seen_countdown_long_press_hint', true);
+      });
+    }
+    widget.state._showCountdownQuickCustomizeSheet();
   }
 
   Future<void> _loadExplosionLimit() async {
@@ -695,7 +717,7 @@ class _MainHomeHeroCountdownCircleState
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: null,
-              onLongPress: widget.state._showCountdownQuickCustomizeSheet,
+              onLongPress: _handleLongPressHint,
               child: Container(
                 width: widget.circleSize,
                 height: widget.circleSize,
@@ -731,49 +753,71 @@ class _MainHomeHeroCountdownCircleState
                   clipBehavior: Clip.none,
                   children: [
                     Positioned.fill(
-                      child: Padding(
-                        padding: (countdownVisual.outerColor != null ||
-                                countdownVisual.outerGradient != null ||
-                                countdownVisual.outerBorder != null)
-                            ? SLSpacing.all12
-                            : EdgeInsets.zero,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: countdownVisual.innerColor,
-                            gradient: countdownVisual.innerGradient,
-                            border: countdownVisual.innerBorder,
-                          ),
-                          child: RepaintBoundary(
-                            child: AnimatedWaveBackground(
-                              styleKey: (transparentMode ||
-                                      UiPrefs.notifier.value.liteMode)
-                                  ? 'plain'
-                                  : widget.countdownStyleKey,
-                              enableMotion: widget.enableMotion,
-                              transparentMode: transparentMode,
-                            ),
-                          ),
-                        ),
-                      ),
+                      child: Builder(
+                        builder: (context) {
+                        Widget buildBackground(bool enableMotion) {
+                          return Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Positioned.fill(
+                                child: Padding(
+                                  padding: (countdownVisual.outerColor != null ||
+                                          countdownVisual.outerGradient != null ||
+                                          countdownVisual.outerBorder != null)
+                                      ? SLSpacing.all12
+                                      : EdgeInsets.zero,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: countdownVisual.innerColor,
+                                      gradient: countdownVisual.innerGradient,
+                                      border: countdownVisual.innerBorder,
+                                    ),
+                                    child: RepaintBoundary(
+                                      child: AnimatedWaveBackground(
+                                        styleKey: (transparentMode ||
+                                                UiPrefs.notifier.value.liteMode)
+                                            ? 'plain'
+                                            : widget.countdownStyleKey,
+                                        enableMotion: enableMotion,
+                                        transparentMode: transparentMode,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              if (_cachedPhotoUrls.isNotEmpty && widget.countdownStyleKey == 'floating_hearts')
+                                RepaintBoundary(
+                                  child: SnowGlobePhotoLayer(
+                                    photoUrls: _cachedPhotoUrls.take(3).toList(),
+                                    circleSize: widget.circleSize,
+                                    enableMotion: enableMotion,
+                                  ),
+                                ),
+                              if (widget.countdownStyleKey == 'floating_hearts')
+                                RepaintBoundary(
+                                  child: FloatingHeartsRingOverlay(
+                                    size: widget.circleSize,
+                                    enableMotion: enableMotion,
+                                  ),
+                                ),
+                            ],
+                          );
+                        }
+                        
+                        if (widget.isScrollingNotifier == null) {
+                          return buildBackground(widget.enableMotionBase);
+                        }
+                        
+                        return ValueListenableBuilder<bool>(
+                          valueListenable: widget.isScrollingNotifier!,
+                          builder: (context, isScrolling, _) => buildBackground(widget.enableMotionBase && !isScrolling),
+                        );
+                      },
                     ),
-                    if (_cachedPhotoUrls.isNotEmpty && widget.countdownStyleKey == 'floating_hearts')
-                      RepaintBoundary(
-                        child: SnowGlobePhotoLayer(
-                          photoUrls: _cachedPhotoUrls.take(3).toList(),
-                          circleSize: widget.circleSize,
-                          enableMotion: widget.enableMotion,
-                        ),
-                      ),
-                    if (widget.countdownStyleKey == 'floating_hearts')
-                      RepaintBoundary(
-                        child: FloatingHeartsRingOverlay(
-                          size: widget.circleSize,
-                          enableMotion: widget.enableMotion,
-                        ),
-                      ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Padding(
@@ -783,8 +827,7 @@ class _MainHomeHeroCountdownCircleState
                             circleSize: widget.circleSize,
                             onTap:
                                 widget.isSingle ? null : widget.onEditTopLabel,
-                            onLongPress:
-                                widget.state._showCountdownQuickCustomizeSheet,
+                            onLongPress: _handleLongPressHint,
                             constraints: BoxConstraints(
                               minWidth: topLabelWidth,
                               maxWidth: topLabelWidth,
@@ -841,8 +884,7 @@ class _MainHomeHeroCountdownCircleState
                           circleSize: widget.circleSize,
                           onTap:
                               widget.isSingle ? null : widget.onEditStartDate,
-                          onLongPress:
-                              widget.state._showCountdownQuickCustomizeSheet,
+                          onLongPress: _handleLongPressHint,
                           constraints: BoxConstraints(
                             minWidth: numberWidth,
                             maxWidth: numberWidth,
@@ -899,8 +941,7 @@ class _MainHomeHeroCountdownCircleState
                             onTap: widget.isSingle
                                 ? null
                                 : widget.onEditBottomLabel,
-                            onLongPress:
-                                widget.state._showCountdownQuickCustomizeSheet,
+                            onLongPress: _handleLongPressHint,
                             constraints: BoxConstraints(
                               minWidth: bottomLabelWidth,
                               maxWidth: bottomLabelWidth,
@@ -950,6 +991,15 @@ class _MainHomeHeroCountdownCircleState
                                     ),
                                   ),
                             ),
+                          ),
+                        ),
+                        SizedBox(height: widget.circleSize * 0.04),
+                        Text(
+                          'Nhấn giữ để sửa',
+                          style: SLTheme.quicksand(
+                            fontSize: (widget.circleSize * 0.04).clamp(10.0, 14.0),
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
@@ -1005,6 +1055,44 @@ class _MainHomeHeroCountdownCircleState
             // 3. Active exploding photos (drawn on top, not clipped)
             for (final photo in _activeExplosions)
               HomeExplodingPhotoWidget(key: photo.id, photo: photo),
+
+            // 4. First time hint
+            if (_showFirstTimeHint)
+              Center(
+                child: IgnorePointer(
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.touch_app, color: Colors.white, size: 16),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Nhấn giữ để chỉnh sửa',
+                            style: widget.state._uiTextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

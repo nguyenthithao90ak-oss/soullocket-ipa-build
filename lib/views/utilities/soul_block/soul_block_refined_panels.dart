@@ -661,12 +661,26 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                               if (safeBoardExtent > 0)
                                 SizedBox.square(
                                   dimension: safeBoardExtent,
-                                  child: _buildBoardPanel(),
+                                  child: RepaintBoundary(
+                                    child: ValueListenableBuilder<int>(
+                                      valueListenable: _dragVisualTick,
+                                      builder: (BuildContext context, int _, Widget? __) {
+                                        return _buildBoardPanel();
+                                      },
+                                    ),
+                                  ),
                                 ),
                               SizedBox(height: stageGap),
                               SizedBox(
                                 height: trayHeight,
-                                child: _buildTrayPanel(compact: trayCompact),
+                                child: RepaintBoundary(
+                                  child: ValueListenableBuilder<int>(
+                                    valueListenable: _trayVisualTick,
+                                    builder: (BuildContext context, int _, Widget? __) {
+                                      return _buildTrayPanel(compact: trayCompact);
+                                    },
+                                  ),
+                                ),
                               ),
                             ],
                           ),

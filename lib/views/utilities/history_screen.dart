@@ -265,57 +265,104 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Widget _buildStatsHeader() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      margin: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(24),
         child: FastBackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF111827).withValues(alpha: 0.86),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFF2D3748)),
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF1E293B).withValues(alpha: 0.7),
+                  const Color(0xFF0F172A).withValues(alpha: 0.8),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
                   children: [
-                    Text(
-                      context.tr('util_tngshotng_1d889d'),
-                      style: SLTheme.quicksand(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: SLColors.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.history_rounded,
+                        color: SLColors.primary,
+                        size: 28,
                       ),
                     ),
-                    Text(
-                      '${_history.length}',
-                      style: SLTheme.quicksand(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 24,
-                      ),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.tr('util_tngshotng_1d889d').toUpperCase(),
+                          style: SLTheme.quicksand(
+                            color: Colors.white60,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${_history.length}',
+                          style: SLTheme.quicksand(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 28,
+                            height: 1.0,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF20283A),
-                    borderRadius: SLRadius.mdAll,
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.05)),
                   ),
-                  child: Text(
-                    L10nService().format('util_history_limit',
-                        {'count': ActivityHistoryService.maxItems}),
-                    style: SLTheme.quicksand(
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 10,
-                    ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.sd_storage_rounded,
+                          size: 14, color: Colors.white54),
+                      const SizedBox(width: 6),
+                      Text(
+                        L10nService().format('util_history_limit',
+                            {'count': ActivityHistoryService.maxItems}),
+                        style: SLTheme.quicksand(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -329,12 +376,49 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget _buildHistoryList() {
     if (_history.isEmpty) {
       return Center(
-        child: Text(
-          context.tr('util_chaclchsho_b9320d'),
-          style: SLTheme.quicksand(
-            color: Colors.white70,
-            fontWeight: FontWeight.w600,
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.03),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.05),
+                ),
+                child: const Icon(
+                  Icons.history_toggle_off_rounded,
+                  size: 64,
+                  color: Colors.white30,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              context.tr('util_chaclchsho_b9320d'),
+              style: SLTheme.quicksand(
+                color: Colors.white70,
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Lịch sử tương tác của hai bạn sẽ xuất hiện ở đây',
+              style: SLTheme.quicksand(
+                color: Colors.white38,
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 60), // Offset slightly upwards
+          ],
         ),
       );
     }

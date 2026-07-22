@@ -83,14 +83,8 @@ extension _MainHomeFormatters on _MainHomeTabState {
     if (hour >= 5 && hour < 11) {
       return L10nService().translate('home_chobuisngn_6aa536');
     }
-    if (hour >= 11 && hour < 14) {
+    if (hour >= 11 && hour < 23) {
       return L10nService().translate('home_buitrarinh_cf8692');
-    }
-    if (hour >= 14 && hour < 18) {
-      return L10nService().translate('home_chiunaycng_bf77ba');
-    }
-    if (hour >= 18 && hour < 23) {
-      return L10nService().translate('home_buitirimnh_fae36e');
     }
     return L10nService().translate('home_khuyaringn_0cca53');
   }

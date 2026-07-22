@@ -109,7 +109,7 @@ class _CountdownQuickCustomizeSheetContentState
                 });
                 try {
                   final adMob = AdMobService();
-                  final adSuccess = await adMob.showRewardedAd(context: context);
+                  final adSuccess = await adMob.showRewardedAd();
                   if (!mounted) return;
                   if (adSuccess) {
                     final prefs = await SharedPreferences.getInstance();
@@ -186,6 +186,52 @@ class _CountdownQuickCustomizeSheetContentState
                 ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+  Widget buildLockedVipButton({
+    required _CountdownQuickOption option,
+  }) {
+    final accent = option.accent;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        widget.homeState._showLatestSnackBar('Chỉ tài khoản Pro mới có thể dùng hiệu ứng này.');
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: accent.withValues(alpha: 0.45), width: 1.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              option.icon,
+              size: 20,
+              color: accent,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              option.label,
+              style: SLTheme.quicksand(
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+                color: accent,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.diamond_rounded,
+              size: 22,
+              color: accent,
+            ),
+          ],
         ),
       ),
     );
@@ -507,10 +553,13 @@ class _CountdownQuickCustomizeSheetContentState
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: options.map((option) {
-                            final isLocked = option.isPremium && !_unlockedStyles.contains(option.value);
+                            final isVipLocked = option.isVipOnly && !widget.isVip;
+                            final isAdLocked = option.isPremium && !_unlockedStyles.contains(option.value);
                             
                             Widget button;
-                            if (isLocked) {
+                            if (isVipLocked) {
+                              button = buildLockedVipButton(option: option);
+                            } else if (isAdLocked) {
                               button = buildLockedAdButton(
                                 option: option,
                                 onUnlocked: (opt) async {
@@ -849,39 +898,48 @@ class _CountdownQuickCustomizeSheetContentState
                       : const Color(0xFF8E6F7E),
                 ),
               ),
-              if (hasChanges)
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
                     borderRadius: BorderRadius.circular(12),
-                    onTap: onSave,
-                    child: Container(
+                    onTap: hasChanges ? onSave : null,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF2F7),
+                        color: hasChanges
+                            ? const Color(0xFFFFF2F7)
+                            : const Color(0xFFF5F5F5),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFF4D7E2)),
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                const Color(0xFFD81B60).withValues(alpha: 0.08),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                        border: Border.all(
+                            color: hasChanges
+                                ? const Color(0xFFF4D7E2)
+                                : const Color(0xFFE0E0E0)),
+                        boxShadow: hasChanges
+                            ? [
+                                BoxShadow(
+                                  color: const Color(0xFFD81B60)
+                                      .withValues(alpha: 0.08),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
                       ),
                       child: Text(
                         'Lưu',
                         style: SLTheme.quicksand(
                           fontSize: 12,
                           fontWeight: FontWeight.w900,
-                          color: const Color(0xFFD81B60),
+                          color: hasChanges
+                              ? const Color(0xFFD81B60)
+                              : const Color(0xFFBDBDBD),
                         ),
                       ),
                     ),
                   ),
-                ),
+              ),
             ],
           ),
           const Padding(
@@ -1098,10 +1156,10 @@ class _CountdownQuickCustomizeSheetContentState
 
       if (shouldShowAd) {
         final adMob = AdMobService();
+        if (!context.mounted) return;
         final adSuccess = await adMob.showRewardedAd(
           ignoreCooldown: true,
           loadTimeout: const Duration(seconds: 12),
-          context: context,
         );
         if (!mounted) return;
         if (!adSuccess) {
@@ -1730,7 +1788,11 @@ class _CountdownQuickCustomizeSheetContentState
                         spacing: 10,
                         runSpacing: 10,
                         children: [
-                          if (currentStyleIsLocked)
+                          if (selectedStyle.isVipOnly && !widget.isVip)
+                            buildLockedVipButton(
+                              option: selectedStyle,
+                            )
+                          else if (currentStyleIsLocked)
                             buildLockedAdButton(
                               option: selectedStyle,
                               onUnlocked: (opt) async {
@@ -1804,6 +1866,7 @@ class _CountdownQuickCustomizeSheetContentState
                   onSave: () async {
                     if (_tempCountdownSize != null) {
                       final sizeToSave = _tempCountdownSize!;
+                      
                       await widget.homeState._saveCountdownQuickUiPrefs(
                         countdownSizePx: sizeToSave,
                         isVip: widget.isVip,
@@ -1811,6 +1874,7 @@ class _CountdownQuickCustomizeSheetContentState
                       HapticFeedback.mediumImpact();
                       if (mounted) {
                         setState(() => _tempCountdownSize = null);
+                        widget.homeState._showLatestSnackBar('Đã lưu kích thước!');
                       }
                     }
                   },

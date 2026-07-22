@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:soullocket_app/widgets/skeleton_container.dart';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:ui' as ui;
 import 'dart:io';
@@ -453,12 +455,10 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                           memCacheWidth: 600,
                                           filterQuality: FilterQuality.medium,
                                           placeholder: (_, __) =>
-                                              const SizedBox(
+                                              const SkeletonContainer.rounded(
+                                            width: double.infinity,
                                             height: 220,
-                                            child: Center(
-                                              child: CircularProgressIndicator(
-                                                  strokeWidth: 2),
-                                            ),
+                                            borderRadius: BorderRadius.zero,
                                           ),
                                           errorWidget: (_, __, ___) =>
                                               const SizedBox(
@@ -766,14 +766,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                     ),
                     onPressed: _isUploading ? null : _addCapsule,
                     icon: _isUploading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
+                        ? const SkeletonContainer.square(
+                            size: 20,
                           )
                         : const Icon(Icons.lock_clock_rounded),
                     label: Text(
@@ -1181,19 +1175,10 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                         child: CachedNetworkImage(
                                           imageUrl: capsule['image_url'],
                                           fit: BoxFit.cover,
-                                          placeholder: (context, url) =>
-                                              Container(
-                                            color: Colors.white
-                                                .withValues(alpha: 0.1),
-                                            child: const Center(
-                                                child: SizedBox(
-                                                    width: 24,
-                                                    height: 24,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                            strokeWidth: 2,
-                                                            color: Colors
-                                                                .white70))),
+                                          placeholder: (_, __) =>
+                                              const SkeletonContainer.rounded(
+                                            width: double.infinity,
+                                            height: 140,
                                           ),
                                           errorWidget: (context, url, error) =>
                                               Container(

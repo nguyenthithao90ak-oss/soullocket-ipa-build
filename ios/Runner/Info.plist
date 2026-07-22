@@ -391,13 +391,22 @@
 	</array>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSHealthShareUsageDescription</key>
+	<string>SoulLocket needs access to your sleep data to automatically detect when you are sleeping and update your status for your partner.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>SoulLocket needs access to your health data to synchronize your sleep schedule.</string>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>Dữ liệu của bạn được ẩn danh và dùng để cải thiện trải nghiệm ứng dụng, hiển thị quảng cáo phù hợp mà không bán cho bên thứ ba.</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>workmanager.background.task</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
+		<string>processing</string>
 		<string>remote-notification</string>
 		<string>location</string>
 	</array>
