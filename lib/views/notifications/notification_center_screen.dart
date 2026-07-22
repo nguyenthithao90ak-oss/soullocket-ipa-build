@@ -405,6 +405,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
       ),
     );
     if (confirmed == true) {
+      if (!mounted) return;
       final updates = <String, dynamic>{};
       for (final n in deletable) {
         updates['notifications/$_houseId/${n.id}'] = null;
@@ -412,7 +413,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
       if (updates.isNotEmpty) {
         await _db.ref().update(updates);
       }
-      _updateBadge();
+      if (mounted) _updateBadge();
     }
   }
 

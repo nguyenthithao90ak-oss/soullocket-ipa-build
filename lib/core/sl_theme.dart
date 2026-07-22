@@ -778,7 +778,18 @@ class SLTheme {
                 imageUrl: customBackgroundUrl,
                 fit: BoxFit.cover,
                 filterQuality: FilterQuality.medium,
-                errorWidget: (context, url, error) => const SizedBox.shrink(),
+                errorWidget: (context, url, error) => Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        const Color(0xFF1A1035),
+                        const Color(0xFF0D0B1A),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

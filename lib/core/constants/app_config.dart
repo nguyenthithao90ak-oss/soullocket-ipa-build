@@ -233,33 +233,6 @@ class AppConfig {
   static const String cookiePolicyUrl =
       'https://soullocketwitget.web.app/cookie-policy.html';
 
-  // ── TIKTOK ADS CONFIG (iOS) ─────────────────────────────────────────
-  static const String tiktokIosAppId = String.fromEnvironment(
-    'TIKTOK_IOS_APP_ID',
-    defaultValue: '6764673408',
-  );
-  static const String tiktokIosAccessToken = String.fromEnvironment(
-    'TIKTOK_IOS_ACCESS_TOKEN',
-    defaultValue: '',
-  );
-  static const String tiktokIosTtAppId = String.fromEnvironment(
-    'TIKTOK_IOS_TT_APP_ID',
-    defaultValue: '7649979452251734034',
-  );
-
-  // ── TIKTOK ADS CONFIG (Android) ───────────────────────────────────
-  static const String tiktokAndroidAppId = String.fromEnvironment(
-    'TIKTOK_ANDROID_APP_ID',
-    defaultValue: 'com.soullocket.app',
-  );
-  static const String tiktokAndroidAccessToken = String.fromEnvironment(
-    'TIKTOK_ANDROID_ACCESS_TOKEN',
-    defaultValue: '',
-  );
-  static const String tiktokAndroidTtAppId = String.fromEnvironment(
-    'TIKTOK_ANDROID_TT_APP_ID',
-    defaultValue: '7649997394146230290',
-  );
 
   // ── TELEGRAM ALERTS ──────────────────────────────────────────────────
   static Uri webUri(
@@ -283,16 +256,16 @@ class AppConfig {
     return (uri?.host ?? trimmed).trim().toLowerCase();
   }
 
-  static String get webHost => normalizeHost(webBaseUrl);
-  static String get authActionHost => normalizeHost(authActionBaseUrl);
+  static final String webHost = normalizeHost(webBaseUrl);
+  static final String authActionHost = normalizeHost(authActionBaseUrl);
 
-  static String get firebaseAuthLinkHost {
+  static final String firebaseAuthLinkHost = () {
     final configuredHost = normalizeHost(firebaseAuthDomain);
     if (configuredHost.isNotEmpty) {
       return configuredHost;
     }
     return _defaultFirebaseAuthLinkHost;
-  }
+  }();
 
   static bool isTrustedWebUri(Uri uri) {
     return uri.scheme.toLowerCase() == 'https' &&

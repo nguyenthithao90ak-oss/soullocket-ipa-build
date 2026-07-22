@@ -273,6 +273,13 @@ void overlayMain() async {
 void main() {
   runZonedGuarded(() async {
     final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+
+    // Tắt toàn bộ debugPrint trong bản Release để tránh rò rỉ log
+    // và giảm overhead trên main thread.
+    if (!kDebugMode) {
+      debugPrint = (String? message, {int? wrapWidth}) {};
+    }
+
     await Hive.initFlutter();
     unawaited(OfflineSyncQueue.instance.startListening());
     setupLocator();
@@ -334,7 +341,7 @@ void main() {
               ),
               const SizedBox(height: 12),
               Text(
-                'Có lỗi nhỏ xảy ra: ${details.exceptionAsString()}', // TEMPORARY DEBUGGING
+                'Có lỗi nhỏ xảy ra, vui lòng thử lại 💕',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.quicksand(
                   fontSize: 12,
@@ -392,25 +399,30 @@ void main() {
       await UiPrefs.ensureLoaded();
       await L10nService().init();
 
-      await BuildSignatureService.verifyOfficialBuildSignature();
+      // Firebase khởi tạo trước vì nhiều service cần nó
       await _initializeFirebaseBootstrap();
-      await _clearStaleIosAuthAfterFreshInstall();
 
       if (!kIsWeb) {
         FirebaseMessaging.onBackgroundMessage(
             _firebaseMessagingBackgroundHandler);
-        
-        // Khởi tạo Background Sleep Tracking Service
-        try {
-          await BackgroundTrackingService.initialize();
-        } catch (e) {
-          debugPrint('Error initializing background tracking: $e');
-        }
       }
 
-      await PerformanceProfileService.instance.initialize();
       runApp(const MyApp());
       _scheduleDeferredBootstrap();
+
+      // Các tác vụ không cần chặn UI — chạy sau khi đã hiển thị app
+      unawaited(Future<void>.delayed(const Duration(milliseconds: 500), () async {
+        await BuildSignatureService.verifyOfficialBuildSignature();
+        await _clearStaleIosAuthAfterFreshInstall();
+        if (!kIsWeb) {
+          try {
+            await BackgroundTrackingService.initialize();
+          } catch (e) {
+            debugPrint('Error initializing background tracking: $e');
+          }
+        }
+        await PerformanceProfileService.instance.initialize();
+      }));
     } on _MissingBootstrapConfig {
       if (!kIsWeb) {
         FlutterNativeSplash.remove();
