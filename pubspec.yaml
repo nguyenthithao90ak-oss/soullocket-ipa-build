@@ -80,7 +80,7 @@ dependencies:
   package_info_plus: ^10.2.0
   video_player: ^2.10.1
   cached_network_image: ^3.4.1
-  flutter_cache_manager: ^3.4.1
+  flutter_cache_manager: ^3.4.2
   flutter_secure_storage: ^10.3.0
   flutter_native_splash: ^2.4.7
   web: ^1.1.1
@@ -90,8 +90,8 @@ dependencies:
   path_provider: ^2.1.5
   share_plus: ^13.2.0
   vision_gallery_saver: ^3.1.1
-  google_mobile_ads: ^8.0.0
-  gma_mediation_unity: ^1.8.0
+  google_mobile_ads: ^9.0.0
+  gma_mediation_unity: ^1.9.0
   image_cropper: ^12.2.1
   local_auth_android: ^2.0.8
   local_auth_darwin: ^2.0.3
@@ -126,7 +126,7 @@ dependencies:
   workmanager: ^0.9.0+3
   health: ^13.3.1
   device_info_plus: ^13.2.0
-  screen_state: ^5.0.1
+  screen_state: ^5.0.2
 
 
 dev_dependencies:
