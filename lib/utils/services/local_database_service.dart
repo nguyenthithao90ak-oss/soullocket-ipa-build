@@ -45,7 +45,7 @@ class LocalDatabaseService {
   LocalDatabaseService._internal();
 
   static const _databaseName = 'soullocket_offline.db';
-  static const _databaseVersion = 3; // nâng lên v3 để thêm cache_entries
+  static const _databaseVersion = 4; // nâng lên v4 để tạo indexes cho SQLite
   static const _queueStatusPending = 'pending';
   static const _queueStatusSyncing = 'syncing';
   static const _queueStatusFailed = 'failed';
@@ -109,6 +109,9 @@ class LocalDatabaseService {
         if (oldVersion < 3) {
           await _upgradeToV3(db);
         }
+        if (oldVersion < 4) {
+          await _upgradeToV4(db);
+        }
       },
     );
 
@@ -162,6 +165,24 @@ class LocalDatabaseService {
         expires_at INTEGER NOT NULL DEFAULT 0
       )
     ''');
+
+    await _createIndexes(db);
+  }
+
+  Future<void> _createIndexes(Database db) async {
+    final indexes = <String>[
+      'CREATE INDEX IF NOT EXISTS idx_messages_house_time ON messages (houseId, timestamp DESC);',
+      'CREATE INDEX IF NOT EXISTS idx_diaries_house_time ON diaries (houseId, timestamp DESC);',
+      'CREATE INDEX IF NOT EXISTS idx_sync_queue_status ON sync_queue (status, createdAt);',
+      'CREATE INDEX IF NOT EXISTS idx_cache_entries_expires ON cache_entries (expires_at);',
+    ];
+    for (final statement in indexes) {
+      try {
+        await db.execute(statement);
+      } catch (e) {
+        debugPrint('[LocalDatabaseService] Index creation info: $e');
+      }
+    }
   }
 
   Future<void> _upgradeToV2(Database db) async {
@@ -212,6 +233,10 @@ class LocalDatabaseService {
         await db.execute(statement);
       } catch (_) {}
     }
+  }
+
+  Future<void> _upgradeToV4(Database db) async {
+    await _createIndexes(db);
   }
 
   // ───────────────────────────────────────────────────────────
