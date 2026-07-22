@@ -792,6 +792,7 @@ void _scheduleDeferredBootstrap() {
           _warmUpOfflineCache(),
           _warmUpLocalDatabase(),
           _warmUpWidgetService(),
+          _warmUpGoogleFonts(),
           StorageService.instance.purgeStaleCache(),
         ]);
         unawaited(_warmUpBackgroundServices());
@@ -830,6 +831,19 @@ Future<void> _purgeDeprecatedSecretsDeferred() async {
       e,
       fallbackMessage: L10nService().translate('core_err_clean_secrets_failed'),
     ).message}');
+  }
+}
+
+Future<void> _warmUpGoogleFonts() async {
+  try {
+    await GoogleFonts.pendingFonts([
+      GoogleFonts.quicksand(),
+      GoogleFonts.dancingScript(),
+      GoogleFonts.caveat(),
+      GoogleFonts.nunito(),
+    ]);
+  } catch (e) {
+    debugPrint('GoogleFonts pre-warm info: $e');
   }
 }
 
