@@ -400,6 +400,7 @@ class _MainHomeHeroCountdownCircleState
   bool _isProUser = false;
   int _dailyExplosionCount = 0;
   bool _showFirstTimeHint = false;
+  Timer? _hintDismissTimer;
 
   late AnimationController _countController;
   late Animation<double> _countAnimation;
@@ -431,7 +432,15 @@ class _MainHomeHeroCountdownCircleState
 
     SharedPreferences.getInstance().then((prefs) {
       if (prefs.getBool('seen_countdown_long_press_hint') != true) {
-        if (mounted) setState(() => _showFirstTimeHint = true);
+        if (mounted) {
+          setState(() => _showFirstTimeHint = true);
+          // Tự động ẩn sau 1 phút
+          _hintDismissTimer = Timer(const Duration(minutes: 1), () {
+            if (mounted && _showFirstTimeHint) {
+              setState(() => _showFirstTimeHint = false);
+            }
+          });
+        }
       }
     });
   }
@@ -439,6 +448,7 @@ class _MainHomeHeroCountdownCircleState
   void _handleLongPressHint() {
     if (_showFirstTimeHint) {
       setState(() => _showFirstTimeHint = false);
+      _hintDismissTimer?.cancel();
       SharedPreferences.getInstance().then((prefs) {
         prefs.setBool('seen_countdown_long_press_hint', true);
       });
@@ -482,6 +492,7 @@ class _MainHomeHeroCountdownCircleState
 
   @override
   void dispose() {
+    _hintDismissTimer?.cancel();
     _countController.dispose();
     super.dispose();
   }
