@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/fast_backdrop_filter.dart';
 class SleepTrackerScreen extends StatefulWidget {
   final String houseId;
   final String myName;
@@ -169,7 +170,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(36),
-      child: BackdropFilter(
+      child: FastBackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           padding: const EdgeInsets.all(20),
@@ -313,7 +314,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(36),
-      child: BackdropFilter(
+      child: FastBackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -507,7 +508,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(36),
-                    child: BackdropFilter(
+                    child: FastBackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                       child: Container(
                         padding: const EdgeInsets.all(20),

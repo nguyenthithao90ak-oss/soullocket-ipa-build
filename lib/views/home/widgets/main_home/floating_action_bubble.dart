@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 
 class FloatingActionBubble extends StatefulWidget {
   final Function(String type, String emoji)? onSelectInteraction;
@@ -151,7 +152,7 @@ class _FloatingActionBubbleState extends State<FloatingActionBubble>
         GestureDetector(
           onTap: _toggle,
           child: ClipOval(
-            child: BackdropFilter(
+            child: FastBackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),

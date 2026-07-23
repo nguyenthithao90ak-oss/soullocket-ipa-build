@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../core/sl_theme.dart';
+import '../../../core/fast_backdrop_filter.dart';
 import '../../../utils/services/l10n_service.dart';
 
 class GenderSelectionDialog extends StatefulWidget {
@@ -67,7 +68,7 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog> with Sing
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(40),
-              child: BackdropFilter(
+              child: FastBackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                 child: Container(
                   width: double.infinity,

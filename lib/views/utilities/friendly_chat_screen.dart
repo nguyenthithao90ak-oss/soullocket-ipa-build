@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/sl_theme.dart';
+import '../../core/fast_backdrop_filter.dart';
 import '../../utils/services/ai_counselor_service.dart';
 import '../ui_prefs.dart';
 import '../../widgets/r2_sticker_image.dart';
@@ -804,7 +805,7 @@ Quy tắc:
       appBar: AppBar(
         backgroundColor: Colors.white.withValues(alpha: 0.7),
         flexibleSpace: ClipRect(
-          child: BackdropFilter(
+          child: FastBackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: const SizedBox.expand(),
           ),
@@ -883,7 +884,7 @@ Quy tắc:
 
   Widget _buildInputBar() {
     return ClipRect(
-      child: BackdropFilter(
+      child: FastBackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
           padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
@@ -1019,7 +1020,7 @@ class _FriendlyChatBubble extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(18),
-            child: BackdropFilter(
+            child: FastBackdropFilter(
               filter: ImageFilter.blur(sigmaX: isUser ? 0.001 : 12, sigmaY: isUser ? 0.001 : 12),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
@@ -1111,7 +1112,7 @@ class _AiDisclosureCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 14),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: BackdropFilter(
+        child: FastBackdropFilter(
           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: Container(
             padding: const EdgeInsets.all(12),
@@ -1206,7 +1207,7 @@ class _TypingBubbleState extends State<_TypingBubble>
             margin: const EdgeInsets.only(bottom: 10),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(18),
-              child: BackdropFilter(
+              child: FastBackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
