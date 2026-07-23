@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/fast_backdrop_filter.dart';
+import '../../utils/services/widget_service.dart';
+
 class SleepTrackerScreen extends StatefulWidget {
   final String houseId;
   final String myName;
@@ -33,12 +35,11 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
   StreamSubscription? _historySub;
   StreamSubscription? _settingsSub;
   
-  String _myRole = 'husband'; // safe default, updated in _initData()
+  String _myRole = 'husband';
 
   String _husbandName = 'Bạn Nam';
   String _wifeName = 'Người ấy';
 
-  // Animations
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -79,6 +80,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
           _husbandName = settings['nameU1'] ?? 'Bạn Nam';
           _wifeName = settings['nameU2'] ?? 'Người ấy';
         });
+        _syncWidgetData();
       }
     });
 
@@ -87,6 +89,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
         setState(() {
           _presenceData = Map<String, dynamic>.from(event.snapshot.value as Map);
         });
+        _syncWidgetData();
       }
     });
 
@@ -128,163 +131,299 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
     return DateFormat('HH:mm').format(dt);
   }
 
+  String _formatDuration(int ms) {
+    if (ms <= 0) return '';
+    final minutes = (ms / (1000 * 60)).round();
+    final hours = minutes ~/ 60;
+    final remMins = minutes % 60;
+    if (hours > 0) {
+      return '${hours}h ${remMins}m';
+    }
+    return '${remMins}m';
+  }
+
+  void _syncWidgetData() {
+    final husbandData = _presenceData['husband'] ?? {};
+    final wifeData = _presenceData['wife'] ?? {};
+
+    final isHusbandSleeping = husbandData['sleep_mode'] == true;
+    final isWifeSleeping = wifeData['sleep_mode'] == true;
+
+    final husbandStatusText = isHusbandSleeping ? '🌙 Đang ngủ' : '☀️ Đang thức';
+    final wifeStatusText = isWifeSleeping ? '🌙 Đang ngủ' : '☀️ Đang thức';
+
+    final husbandStartTime = (husbandData['sleep_start_time'] as num?)?.toInt() ?? 0;
+    final wifeStartTime = (wifeData['sleep_start_time'] as num?)?.toInt() ?? 0;
+
+    final husbandWake = (husbandData['last_screen_on'] as num?)?.toInt() ?? (husbandData['last_wake_time'] as num?)?.toInt() ?? 0;
+    final wifeWake = (wifeData['last_screen_on'] as num?)?.toInt() ?? (wifeData['last_wake_time'] as num?)?.toInt() ?? 0;
+
+    final husbandTimeStr = isHusbandSleeping
+        ? (husbandStartTime > 0 ? 'Ngủ từ ${_formatTime(husbandStartTime)}' : 'Đang ngủ')
+        : (husbandWake > 0 ? 'Thức dậy ${_formatTime(husbandWake)}' : 'Đang hoạt động');
+
+    final wifeTimeStr = isWifeSleeping
+        ? (wifeStartTime > 0 ? 'Ngủ từ ${_formatTime(wifeStartTime)}' : 'Đang ngủ')
+        : (wifeWake > 0 ? 'Thức dậy ${_formatTime(wifeWake)}' : 'Đang hoạt động');
+
+    String summaryText;
+    if (isHusbandSleeping && isWifeSleeping) {
+      summaryText = 'Cả 2 cùng ngủ 😴';
+    } else if (!isHusbandSleeping && !isWifeSleeping) {
+      summaryText = 'Cả 2 cùng thức ☀️';
+    } else {
+      summaryText = 'Một người đang ngủ 🌙';
+    }
+
+    WidgetService.updateSleepWidgetData(
+      myName: _husbandName,
+      partnerName: _wifeName,
+      myStatus: husbandStatusText,
+      partnerStatus: wifeStatusText,
+      myTime: husbandTimeStr,
+      partnerTime: wifeTimeStr,
+      summary: summaryText,
+    );
+  }
+
   Widget _buildStatusCard(String role, String label, bool isMe) {
     final data = _presenceData[role] ?? {};
     final isSleeping = data['sleep_mode'] == true;
     final sleepStatus = data['sleep_status'] ?? (isSleeping ? 'sleeping' : 'awake');
-    final sleepStartTime = data['sleep_start_time'] ?? 0;
+    final int sleepStartTime = (data['sleep_start_time'] as num?)?.toInt() ?? 0;
+    final int lastScreenOn = (data['last_screen_on'] as num?)?.toInt() ?? (data['last_wake_time'] as num?)?.toInt() ?? 0;
 
-    // Xác định trạng thái hiển thị
+    final history = _sleepHistory[role] ?? [];
+    final lastSession = history.isNotEmpty ? history.first : null;
+
     final bool isNoonNap = sleepStatus == 'noon_nap';
     final bool isInactive = sleepStatus == 'inactive';
     final bool isActuallySleeping = isSleeping && (sleepStatus == 'sleeping' || isNoonNap);
 
-    // Cấu hình theo trạng thái
+    int wakeUpTimeMs = lastScreenOn;
+    if (wakeUpTimeMs <= 0 && lastSession != null) {
+      wakeUpTimeMs = (lastSession['end_time'] as num?)?.toInt() ?? 0;
+    }
+
+    int lastSleepDurationMs = 0;
+    if (lastSession != null) {
+      final start = (lastSession['start_time'] as num?)?.toInt() ?? 0;
+      final end = (lastSession['end_time'] as num?)?.toInt() ?? 0;
+      lastSleepDurationMs = (lastSession['duration_ms'] as num?)?.toInt() ?? (end > start ? end - start : 0);
+    }
+
     final String emoji = isActuallySleeping
         ? (isNoonNap ? '😴' : '🌛')
         : isInactive
             ? '🌫️'
             : '☀️';
+
     final String statusText = isActuallySleeping
-        ? (isNoonNap ? 'Đang ngủ trưa 💤' : 'Khò khò 💤')
+        ? (isNoonNap ? 'Đang ngủ trưa' : 'Đang ngủ')
         : isInactive
-            ? 'Không hoạt động'
-            : 'Đang thức ó ✨';
+            ? 'Offline'
+            : 'Đang thức';
+
     final Color glowColor = isActuallySleeping
-        ? (isNoonNap ? const Color(0xFF80DEEA) : const Color(0xFF9575CD))
+        ? (isNoonNap ? const Color(0xFF4DD0E1) : const Color(0xFF7E57C2))
         : isInactive
-            ? const Color(0xFF90A4AE)
-            : const Color(0xFFFFAB91);
+            ? const Color(0xFF78909C)
+            : const Color(0xFFFF7043);
+
     final Color bgCircleColor = isActuallySleeping
         ? (isNoonNap
-            ? const Color(0xFFB2EBF2).withOpacity(0.7)
-            : const Color(0xFFE1BEE7).withOpacity(0.6))
+            ? const Color(0xFFB2EBF2)
+            : const Color(0xFFD1C4E9))
         : isInactive
-            ? const Color(0xFFCFD8DC).withOpacity(0.4)
-            : const Color(0xFFFFF59D).withOpacity(0.9);
+            ? const Color(0xFFECEFF1)
+            : const Color(0xFFFFF176);
+
     final Color textColor = isActuallySleeping
-        ? (isNoonNap ? const Color(0xFF00838F) : const Color(0xFF512DA8))
+        ? (isNoonNap ? const Color(0xFF006064) : const Color(0xFF4A148C))
         : isInactive
-            ? const Color(0xFF546E7A)
-            : const Color(0xFF3E2723);
+            ? const Color(0xFF37474F)
+            : const Color(0xFF4E342E);
+
+    final String displayName = isMe ? '$label (Bạn)' : label;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(36),
+      borderRadius: BorderRadius.circular(32),
       child: FastBackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(14, 18, 14, 18),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(isActuallySleeping ? 0.35 : isInactive ? 0.4 : 0.65),
-            borderRadius: BorderRadius.circular(36),
-            border: Border.all(color: Colors.white.withOpacity(0.6), width: 1.5),
+            color: Colors.white.withValues(alpha: isActuallySleeping ? 0.45 : 0.7),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: glowColor.withOpacity(0.25),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: glowColor.withValues(alpha: 0.2),
+                blurRadius: 22,
+                spreadRadius: 1,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // Circular Avatar Badge
               if (isActuallySleeping)
                 ScaleTransition(
                   scale: _pulseAnimation,
                   child: Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: bgCircleColor,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: bgCircleColor.withOpacity(0.5),
-                          blurRadius: 15,
+                          color: glowColor.withValues(alpha: 0.4),
+                          blurRadius: 16,
                           spreadRadius: 2,
                         )
                       ],
                     ),
-                    child: Text(emoji, style: const TextStyle(fontSize: 32)),
+                    child: Text(emoji, style: const TextStyle(fontSize: 34)),
                   ),
                 )
               else
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: bgCircleColor,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: bgCircleColor.withOpacity(0.6),
-                        blurRadius: 15,
-                        spreadRadius: 2,
+                        color: bgCircleColor.withValues(alpha: 0.8),
+                        blurRadius: 14,
+                        spreadRadius: 1,
                       )
                     ],
                   ),
-                  child: Text(emoji, style: const TextStyle(fontSize: 32)),
+                  child: Text(emoji, style: const TextStyle(fontSize: 34)),
                 ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+
+              // User Name
               Text(
-                label,
+                displayName,
                 style: GoogleFonts.quicksand(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.w900,
-                  color: const Color(0xFF5D4037),
+                  color: const Color(0xFF3E2723),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 6),
-              Text(
-                statusText,
-                style: GoogleFonts.quicksand(
-                  fontSize: isInactive ? 14 : 18,
-                  fontWeight: FontWeight.w900,
-                  color: textColor,
+
+              // Status Tag Pill
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: glowColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: glowColor.withValues(alpha: 0.3), width: 1),
                 ),
-                textAlign: TextAlign.center,
+                child: Text(
+                  statusText,
+                  style: GoogleFonts.quicksand(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    color: textColor,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
-              // Badge cho "Không hoạt động"
-              if (isInactive)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF546E7A).withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Offline / Tắt máy',
-                      style: GoogleFonts.quicksand(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF78909C),
+              const SizedBox(height: 12),
+
+              // Time badges: Sleep & Wake Time
+              if (isActuallySleeping && sleepStartTime > 0) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.bedtime_rounded, size: 13, color: Color(0xFF5E35B1)),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Ngủ lúc ${_formatTime(sleepStartTime)}',
+                            style: GoogleFonts.quicksand(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFF4A148C),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Đã ngủ ${_formatDuration(DateTime.now().millisecondsSinceEpoch - sleepStartTime)}',
+                        style: GoogleFonts.quicksand(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF6A1B9A),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              if (isActuallySleeping && sleepStartTime > 0)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'Từ ${_formatTime(sleepStartTime)}',
-                      style: GoogleFonts.quicksand(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: textColor,
+              ] else ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            isInactive ? Icons.cloud_off_rounded : Icons.wb_sunny_rounded,
+                            size: 13,
+                            color: isInactive ? const Color(0xFF607D8B) : const Color(0xFFE65100),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            wakeUpTimeMs > 0
+                                ? 'Thức dậy ${_formatTime(wakeUpTimeMs)}'
+                                : (isInactive ? 'Đang Offline' : 'Đang hoạt động'),
+                            style: GoogleFonts.quicksand(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              color: isInactive ? const Color(0xFF455A64) : const Color(0xFFBF360C),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                      if (lastSleepDurationMs > 0) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          'Giấc trước: ${_formatDuration(lastSleepDurationMs)}',
+                          style: GoogleFonts.quicksand(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF5D4037),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
+              ],
             ],
           ),
         ),
@@ -292,39 +431,50 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
     );
   }
 
-
-  Widget _buildWeeklyChart(String uid, String label) {
-    final history = _sleepHistory[uid] ?? [];
+  Widget _buildWeeklyChart(String roleOrUid, String label) {
+    final history = _sleepHistory[roleOrUid] ?? _sleepHistory[_auth.currentUser?.uid] ?? [];
     final now = DateTime.now();
     final Map<int, double> dailyHours = {};
     for (int i = 0; i < 7; i++) {
       dailyHours[i] = 0.0;
     }
     
+    double totalHoursWeek = 0.0;
+    int activeDays = 0;
+
     for (var session in history) {
-      final start = session['start_time'] ?? 0;
-      final durationMs = session['duration_ms'] ?? 0;
+      final start = (session['start_time'] as num?)?.toInt() ?? 0;
+      final durationMs = (session['duration_ms'] as num?)?.toInt() ?? 0;
       if (start == 0) continue;
       final dt = DateTime.fromMillisecondsSinceEpoch(start);
       final daysAgo = now.difference(dt).inDays;
       if (daysAgo >= 0 && daysAgo < 7) {
-        dailyHours[daysAgo] = (dailyHours[daysAgo] ?? 0) + (durationMs / (1000 * 60 * 60));
+        final hrs = durationMs / (1000 * 60 * 60);
+        dailyHours[daysAgo] = (dailyHours[daysAgo] ?? 0) + hrs;
       }
     }
 
+    for (int i = 0; i < 7; i++) {
+      if ((dailyHours[i] ?? 0) > 0) {
+        totalHoursWeek += dailyHours[i]!;
+        activeDays++;
+      }
+    }
+    final avgHours = activeDays > 0 ? (totalHoursWeek / activeDays) : 0.0;
+
     return ClipRRect(
-      borderRadius: BorderRadius.circular(36),
+      borderRadius: BorderRadius.circular(32),
       child: FastBackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.55),
-            borderRadius: BorderRadius.circular(36),
-            border: Border.all(color: Colors.white.withOpacity(0.7), width: 1.5),
+            color: Colors.white.withValues(alpha: 0.65),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFFFCDD2).withOpacity(0.25),
+                color: const Color(0xFFFFCDD2).withValues(alpha: 0.25),
                 blurRadius: 25,
                 offset: const Offset(0, 12),
               )
@@ -333,6 +483,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -340,7 +491,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                     child: Text(
                       '7 Ngày Của $label 🌈',
                       style: GoogleFonts.quicksand(
-                        color: const Color(0xFF4E342E),
+                        color: const Color(0xFF3E2723),
                         fontSize: 17,
                         fontWeight: FontWeight.w900,
                       ),
@@ -348,10 +499,26 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const Text('✨', style: TextStyle(fontSize: 22)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8BBD0).withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      avgHours > 0 ? 'Tb: ${avgHours.toStringAsFixed(1)}h/ngày' : '✨ Mục tiêu 8h',
+                      style: GoogleFonts.quicksand(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFFC2185B),
+                      ),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
+
+              // Bar Chart
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -360,82 +527,95 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                   final hours = dailyHours[daysAgo] ?? 0.0;
                   final date = now.subtract(Duration(days: daysAgo));
                   final dayStr = DateFormat('E', 'vi').format(date);
+                  final isToday = daysAgo == 0;
                   const target = 8.0; 
                   final percentage = min(hours / target, 1.0);
                   
-                  Color barColor;
+                  List<Color> gradientColors;
                   String emoji;
                   if (hours == 0) {
-                    barColor = Colors.white.withOpacity(0.6);
+                    gradientColors = [Colors.white.withValues(alpha: 0.5), Colors.white.withValues(alpha: 0.8)];
                     emoji = '😶';
                   } else if (hours < 4) {
-                    barColor = const Color(0xFFFF8A65); 
+                    gradientColors = [const Color(0xFFFFAB91), const Color(0xFFFF5722)];
                     emoji = '😭';
                   } else if (hours < 6) {
-                    barColor = const Color(0xFFFFCA28); 
+                    gradientColors = [const Color(0xFFFFE082), const Color(0xFFFFB300)];
                     emoji = '🥱';
                   } else if (hours <= 8) {
-                    barColor = const Color(0xFF66BB6A); 
+                    gradientColors = [const Color(0xFFA5D6A7), const Color(0xFF43A047)];
                     emoji = '😴';
                   } else {
-                    barColor = const Color(0xFFEC407A); 
+                    gradientColors = [const Color(0xFFF48FB1), const Color(0xFFD81B60)];
                     emoji = '🐷';
                   }
                       
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Text(emoji, style: const TextStyle(fontSize: 24)),
-                      const SizedBox(height: 6),
-                      if (hours > 0)
-                        Text(
-                          hours.toStringAsFixed(1),
-                          style: GoogleFonts.quicksand(
-                            color: const Color(0xFF5D4037),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w900,
-                          ),
+                      Text(emoji, style: const TextStyle(fontSize: 22)),
+                      const SizedBox(height: 4),
+                      Text(
+                        hours > 0 ? hours.toStringAsFixed(1) : '-',
+                        style: GoogleFonts.quicksand(
+                          color: hours > 0 ? const Color(0xFF3E2723) : const Color(0xFFB0BEC5),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
                         ),
+                      ),
                       const SizedBox(height: 6),
+
+                      // Column Pillar Container
                       Container(
                         width: 32,
                         height: 110,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isToday ? const Color(0xFFEC407A) : Colors.white.withValues(alpha: 0.6),
+                            width: isToday ? 1.5 : 1.0,
+                          ),
                         ),
                         alignment: Alignment.bottomCenter,
                         child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 1200),
-                          curve: Curves.elasticOut,
+                          duration: const Duration(milliseconds: 1000),
+                          curve: Curves.easeOutCubic,
                           width: 32,
-                          height: 110 * percentage,
+                          height: max(110 * percentage, hours > 0 ? 16.0 : 0.0),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: hours > 0 
-                                  ? [barColor.withOpacity(0.6), barColor] 
-                                  : [Colors.transparent, Colors.transparent],
+                              colors: hours > 0 ? gradientColors : [Colors.transparent, Colors.transparent],
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
                             ),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(14),
                             boxShadow: hours > 0 ? [
                               BoxShadow(
-                                color: barColor.withOpacity(0.5),
-                                blurRadius: 10,
+                                color: gradientColors.last.withValues(alpha: 0.4),
+                                blurRadius: 8,
                                 offset: const Offset(0, 3),
                               )
                             ] : null,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 14),
-                      Text(
-                        dayStr,
-                        style: GoogleFonts.quicksand(
-                          color: const Color(0xFF4E342E),
-                          fontSize: 14,
-                          fontWeight: daysAgo == 0 ? FontWeight.w900 : FontWeight.w700,
+                      const SizedBox(height: 10),
+
+                      // Day Label Pill
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: isToday ? const Color(0xFFE91E63) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          dayStr,
+                          style: GoogleFonts.quicksand(
+                            color: isToday ? Colors.white : const Color(0xFF4E342E),
+                            fontSize: 13,
+                            fontWeight: isToday ? FontWeight.w900 : FontWeight.w700,
+                          ),
                         ),
                       ),
                     ],
@@ -457,19 +637,14 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
 
     final List<Color> bgColors;
     if (mySleepStatus == 'noon_nap') {
-      // Nghỉ trưa: xanh cyan mát mẻ
       bgColors = [const Color(0xFFB2EBF2), const Color(0xFFE0F7FA), const Color(0xFFB2DFDB)];
     } else if (amISleeping) {
-      // Ngủ đêm: tím mộng mơ
       bgColors = [const Color(0xFFD1C4E9), const Color(0xFFB2EBF2), const Color(0xFFC5CAE9)];
     } else if (mySleepStatus == 'inactive') {
-      // Không hoạt động / offline: xám tro
       bgColors = [const Color(0xFFECEFF1), const Color(0xFFCFD8DC), const Color(0xFFB0BEC5)];
     } else {
-      // Đang thức: cam ấm
       bgColors = [const Color(0xFFFFE0B2), const Color(0xFFFFCDD2), const Color(0xFFFFF9C4)];
     }
-
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -479,13 +654,13 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
           style: GoogleFonts.quicksand(
             fontWeight: FontWeight.w900,
             fontSize: 22,
-            color: const Color(0xFF4E342E),
+            color: const Color(0xFF3E2723),
           ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF4E342E)),
+        iconTheme: const IconThemeData(color: Color(0xFF3E2723)),
       ),
       body: AnimatedContainer(
         duration: const Duration(seconds: 1),
@@ -506,28 +681,42 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Header Switch Card
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(36),
+                    borderRadius: BorderRadius.circular(32),
                     child: FastBackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                       child: Container(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.65),
-                          borderRadius: BorderRadius.circular(36),
-                          border: Border.all(color: Colors.white.withOpacity(0.8), width: 1.5),
+                          color: Colors.white.withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(32),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 15,
+                              offset: const Offset(0, 6),
+                            )
+                          ],
                         ),
                         child: Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(14),
+                              padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFAED581).withOpacity(0.4),
+                                color: const Color(0xFFAED581).withValues(alpha: 0.4),
                                 shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFAED581).withValues(alpha: 0.3),
+                                    blurRadius: 10,
+                                  )
+                                ],
                               ),
-                              child: const Text('🪄', style: TextStyle(fontSize: 28)),
+                              child: const Text('🪄', style: TextStyle(fontSize: 26)),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 14),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -536,15 +725,15 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                                     'Phép thuật cảm biến',
                                     style: GoogleFonts.quicksand(
                                       fontWeight: FontWeight.w900,
-                                      fontSize: 17,
+                                      fontSize: 16,
                                       color: const Color(0xFF3E2723),
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: 3),
                                   Text(
                                     'Tự động ghi nhận giấc ngủ',
                                     style: GoogleFonts.quicksand(
-                                      fontSize: 13,
+                                      fontSize: 12,
                                       color: const Color(0xFF5D4037),
                                       fontWeight: FontWeight.w700,
                                     ),
@@ -554,8 +743,8 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                             ),
                             Switch(
                               value: _isTrackingEnabled,
-                              activeColor: const Color(0xFF81C784),
-                              activeTrackColor: const Color(0xFFC8E6C9),
+                              activeColor: const Color(0xFF4CAF50),
+                              activeTrackColor: const Color(0xFFA5D6A7),
                               inactiveThumbColor: Colors.white,
                               inactiveTrackColor: Colors.black12,
                               onChanged: _toggleTracking,
@@ -566,20 +755,22 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                     ),
                   ),
                   
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
+                  // Status Cards for Husband & Wife
                   Row(
                     children: [
                       Expanded(child: _buildStatusCard('husband', _husbandName, _myRole == 'husband')),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 14),
                       Expanded(child: _buildStatusCard('wife', _wifeName, _myRole == 'wife')),
                     ],
                   ),
                   
-                  const SizedBox(height: 32),
-                  _buildWeeklyChart(_myRole == 'husband' ? _auth.currentUser!.uid : 'husband', _husbandName), // Normally partner UID is unknown, using role as fallback if not me
+                  const SizedBox(height: 28),
+                  // 7-Day Analytics Charts
+                  _buildWeeklyChart('husband', _husbandName),
                   
-                  const SizedBox(height: 24),
-                  _buildWeeklyChart(_myRole == 'wife' ? _auth.currentUser!.uid : 'wife', _wifeName),
+                  const SizedBox(height: 20),
+                  _buildWeeklyChart('wife', _wifeName),
                   
                   const SizedBox(height: 40),
                 ],

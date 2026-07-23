@@ -36,6 +36,9 @@ class WidgetService {
   static const String androidWidgetSoulEventName = 'WidgetSoulEventProvider';
   static const String qualifiedAndroidWidgetSoulEventName =
       'com.soullocket.app.WidgetSoulEventProvider';
+  static const String androidWidgetSleepName = 'WidgetSleepProvider';
+  static const String qualifiedAndroidWidgetSleepName =
+      'com.soullocket.app.WidgetSleepProvider';
   static const String defaultWidgetStyleKey = 'classic';
   static const String defaultHeartStyleKey = '❤️';
   static const Set<String> _supportedHeartStyleKeys = <String>{
@@ -1407,6 +1410,38 @@ class WidgetService {
       }
     } catch (e) {
       debugPrint('Error syncing soul merge widget: ${AppErrorMapper.resolve(e).message}');
+    }
+  }
+
+  static Future<void> updateSleepWidgetData({
+    required String myName,
+    required String partnerName,
+    required String myStatus,
+    required String partnerStatus,
+    required String myTime,
+    required String partnerTime,
+    required String summary,
+  }) async {
+    if (kIsWeb) return;
+    try {
+      await ensureInitialized();
+      await _saveWidgetDataIfChanged<String>('sleep_my_name', myName);
+      await _saveWidgetDataIfChanged<String>('sleep_partner_name', partnerName);
+      await _saveWidgetDataIfChanged<String>('sleep_my_status', myStatus);
+      await _saveWidgetDataIfChanged<String>('sleep_partner_status', partnerStatus);
+      await _saveWidgetDataIfChanged<String>('sleep_my_time', myTime);
+      await _saveWidgetDataIfChanged<String>('sleep_partner_time', partnerTime);
+      await _saveWidgetDataIfChanged<String>('sleep_summary', summary);
+
+      if (Platform.isAndroid) {
+        await HomeWidget.updateWidget(
+          name: androidWidgetSleepName,
+          androidName: androidWidgetSleepName,
+          qualifiedAndroidName: qualifiedAndroidWidgetSleepName,
+        );
+      }
+    } catch (e) {
+      debugPrint('[WidgetService] updateSleepWidgetData error: $e');
     }
   }
 }
