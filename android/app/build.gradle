@@ -1,8 +1,6 @@
 plugins {
     id "com.android.application"
-    id "kotlin-android"
     id "com.google.gms.google-services" apply false
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
 }
 
@@ -49,7 +47,10 @@ def mergeDefinesFromJsonFile = { File file ->
 mergeDefinesFromJsonFile(rootProject.file("../.env.local.json"))
 mergeDefinesFromJsonFile(rootProject.file("../assets/env.local.json"))
 
-def isReleaseBuild = gradle.startParameter.taskNames.any { it.toLowerCase().contains("release") }
+def isReleaseBuild = gradle.startParameter.taskNames.any {
+    it.toLowerCase().contains("release")
+} || (project.hasProperty("flutter.build.mode") &&
+    project.property("flutter.build.mode")?.toString()?.toLowerCase() == "release")
 def hasGoogleServicesFile = file("google-services.json").exists()
 if (hasGoogleServicesFile) {
     apply plugin: "com.google.gms.google-services"
@@ -112,16 +113,16 @@ if (isReleaseBuild && expectedSigningSha256.isEmpty()) {
 android {
     namespace = "com.soullocket.app"
     compileSdk = 36
-    ndkVersion = "26.1.10909125"
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         coreLibraryDesugaringEnabled true
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
 
     buildFeatures {
@@ -132,13 +133,13 @@ android {
         multiDexEnabled true
         applicationId = "com.soullocket.app"
         manifestPlaceholders += [applicationName: "android.app.Application"]
-        manifestPlaceholders += [ADMOB_APP_ID: "ca-app-pub-6165771694697009~7810334800"]
+        manifestPlaceholders += [ADMOB_APP_ID: (buildConfigValues["ADMOB_APP_ID"] ?: "ca-app-pub-6165771694697009~7810334800").trim()]
         manifestPlaceholders += [FACEBOOK_LOGIN_PROTOCOL_SCHEME: facebookLoginProtocolScheme]
         resValue "string", "facebook_app_id", facebookAppId
         resValue "string", "facebook_client_token", facebookClientToken
         resValue "string", "facebook_login_protocol_scheme", facebookLoginProtocolScheme
         resValue "string", "facebook_display_name", facebookDisplayName
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -170,5 +171,12 @@ flutter {
 
 dependencies {
     implementation 'androidx.activity:activity-ktx:1.10.1'
+    implementation 'com.google.android.play:integrity:1.4.0'
+    implementation 'com.google.android.play:age-signals:0.0.3'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+    // Ép phiên bản installreferrer mới — fix crash Unity Ads gọi
+    // getInstallBeginTimestampServerSeconds() không tồn tại ở bản cũ.
+    implementation 'com.android.installreferrer:installreferrer:2.2'
+    // home_widget plugin is integrated via Flutter plugins; no local gradle project needed.
+    // implementation project(':home_widget')
 }
