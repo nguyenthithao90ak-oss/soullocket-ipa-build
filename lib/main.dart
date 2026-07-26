@@ -716,14 +716,16 @@ Future<void> _initializeFirebaseAppCheck() async {
     
     if (kDebugMode) {
       try {
-        const debugToken = '8a3fcdfe-ea37-49f1-baf9-279463826649';
-        await SecureStorageService.instance
-            .write('appcheck_debug_token', debugToken);
-        // Also write to SharedPreferences for AppCheck native plugin
-        await SharedPreferences.getInstance().then((prefs) => prefs.setString(
-            'com.google.firebase.appcheck.debug.DebugAppCheckProvider.SECRET_KEY',
-            debugToken));
-        debugPrint('Firebase App Check: injected debug token for emulator testing.');
+        const debugToken = String.fromEnvironment('APPCHECK_DEBUG_TOKEN', defaultValue: '');
+        if (debugToken.isNotEmpty) {
+          await SecureStorageService.instance
+              .write('appcheck_debug_token', debugToken);
+          // Also write to SharedPreferences for AppCheck native plugin
+          await SharedPreferences.getInstance().then((prefs) => prefs.setString(
+              'com.google.firebase.appcheck.debug.DebugAppCheckProvider.SECRET_KEY',
+              debugToken));
+          debugPrint('Firebase App Check: injected debug token for emulator testing.');
+        }
       } catch (_) {}
     }
     

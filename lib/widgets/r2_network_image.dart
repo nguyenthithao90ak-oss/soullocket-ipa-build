@@ -22,7 +22,21 @@ class R2NetworkImage extends StatefulWidget {
   });
 
   // RAM cache tĩnh để tránh chớp nháy tuyệt đối khi bất kỳ widget nào rebuild
+  // Giới hạn tối đa 100 phần tử theo cơ chế LRU eviction
+  static const int _maxCacheSize = 100;
   static final Map<String, File> _resolvedNetworkFiles = {};
+
+  /// Thêm entry vào cache với LRU eviction khi đầy
+  static void _cacheFile(String key, File file) {
+    if (_resolvedNetworkFiles.containsKey(key)) {
+      // Di chuyển entry lên đầu (most recently used)
+      _resolvedNetworkFiles.remove(key);
+    } else if (_resolvedNetworkFiles.length >= _maxCacheSize) {
+      // Xóa phần tử cũ nhất (đầu Map)
+      _resolvedNetworkFiles.remove(_resolvedNetworkFiles.keys.first);
+    }
+    _resolvedNetworkFiles[key] = file;
+  }
 
   @override
   State<R2NetworkImage> createState() => _R2NetworkImageState();
@@ -106,7 +120,7 @@ class _R2NetworkImageState extends State<R2NetworkImage> {
 
         final file = snapshot.data;
         if (file != null && file.existsSync()) {
-          R2NetworkImage._resolvedNetworkFiles[cleanUrl] = file;
+          R2NetworkImage._cacheFile(cleanUrl, file);
           return Image.file(
             file,
             fit: widget.fit,

@@ -56,6 +56,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
 
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
       _isTrackingEnabled = prefs.getBool('is_sleep_tracking_enabled') ?? false;
     });
@@ -64,6 +65,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
   Future<void> _toggleTracking(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_sleep_tracking_enabled', value);
+    if (!mounted) return;
     setState(() {
       _isTrackingEnabled = value;
     });
@@ -71,9 +73,16 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
 
   Future<void> _initData() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     _myRole = prefs.getString('il_rel_role') ?? 'husband';
 
+    // Hủy stream cũ trước khi tạo mới (tránh rò rỉ nếu _initData bị gọi lại)
+    await _settingsSub?.cancel();
+    await _presenceSub?.cancel();
+    await _historySub?.cancel();
+
     _settingsSub = _dbRef.child('houses/${widget.houseId}/settings').onValue.listen((event) {
+      if (!mounted) return;
       if (event.snapshot.value != null) {
         final settings = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
         setState(() {
@@ -85,6 +94,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
     });
 
     _presenceSub = _dbRef.child('houses/${widget.houseId}/presence').onValue.listen((event) {
+      if (!mounted) return;
       if (event.snapshot.value != null) {
         setState(() {
           _presenceData = Map<String, dynamic>.from(event.snapshot.value as Map);
@@ -94,6 +104,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
     });
 
     _historySub = _dbRef.child('houses/${widget.houseId}/sleep_history').onValue.listen((event) {
+      if (!mounted) return;
       if (event.snapshot.value != null) {
         final data = Map<String, dynamic>.from(event.snapshot.value as Map);
         final history = <String, List<Map<String, dynamic>>>{};
@@ -149,8 +160,8 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
     final isHusbandSleeping = husbandData['sleep_mode'] == true;
     final isWifeSleeping = wifeData['sleep_mode'] == true;
 
-    final husbandStatusText = isHusbandSleeping ? '🌙 Đang ngủ' : '☀️ Đang thức';
-    final wifeStatusText = isWifeSleeping ? '🌙 Đang ngủ' : '☀️ Đang thức';
+    final husbandStatusText = isHusbandSleeping ? '🌙 Đang ngủ 💤' : '☀️ Đang thức';
+    final wifeStatusText = isWifeSleeping ? '🌙 Đang ngủ 💤' : '☀️ Đang thức';
 
     final husbandStartTime = (husbandData['sleep_start_time'] as num?)?.toInt() ?? 0;
     final wifeStartTime = (wifeData['sleep_start_time'] as num?)?.toInt() ?? 0;
@@ -176,8 +187,8 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
     }
 
     WidgetService.updateSleepWidgetData(
-      myName: _husbandName,
-      partnerName: _wifeName,
+      myName: '$_husbandName 🧸',
+      partnerName: '$_wifeName 🐰',
       myStatus: husbandStatusText,
       partnerStatus: wifeStatusText,
       myTime: husbandTimeStr,
@@ -216,33 +227,33 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
         ? (isNoonNap ? '😴' : '🌛')
         : isInactive
             ? '🌫️'
-            : '☀️';
+            : (role == 'husband' ? '🧸' : '🐰');
 
     final String statusText = isActuallySleeping
-        ? (isNoonNap ? 'Đang ngủ trưa' : 'Đang ngủ')
+        ? (isNoonNap ? 'Đang ngủ trưa 💤' : 'Đang khò khò 💤')
         : isInactive
-            ? 'Offline'
-            : 'Đang thức';
+            ? 'Đang Offline 🌫️'
+            : 'Đang thức ó ✨';
 
     final Color glowColor = isActuallySleeping
-        ? (isNoonNap ? const Color(0xFF4DD0E1) : const Color(0xFF7E57C2))
+        ? (isNoonNap ? const Color(0xFF4DD0E1) : const Color(0xFF9C27B0))
         : isInactive
             ? const Color(0xFF78909C)
-            : const Color(0xFFFF7043);
+            : const Color(0xFFFF4081);
 
     final Color bgCircleColor = isActuallySleeping
         ? (isNoonNap
-            ? const Color(0xFFB2EBF2)
-            : const Color(0xFFD1C4E9))
+            ? const Color(0xFFE0F7FA)
+            : const Color(0xFFF3E5F5))
         : isInactive
             ? const Color(0xFFECEFF1)
-            : const Color(0xFFFFF176);
+            : const Color(0xFFFFF8E1);
 
     final Color textColor = isActuallySleeping
         ? (isNoonNap ? const Color(0xFF006064) : const Color(0xFF4A148C))
         : isInactive
             ? const Color(0xFF37474F)
-            : const Color(0xFF4E342E);
+            : const Color(0xFF880E4F);
 
     final String displayName = isMe ? '$label (Bạn)' : label;
 
@@ -253,12 +264,12 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
         child: Container(
           padding: const EdgeInsets.fromLTRB(14, 18, 14, 18),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: isActuallySleeping ? 0.45 : 0.7),
+            color: Colors.white.withValues(alpha: isActuallySleeping ? 0.55 : 0.75),
             borderRadius: BorderRadius.circular(32),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.8),
             boxShadow: [
               BoxShadow(
-                color: glowColor.withValues(alpha: 0.2),
+                color: glowColor.withValues(alpha: 0.22),
                 blurRadius: 22,
                 spreadRadius: 1,
                 offset: const Offset(0, 8),
@@ -279,13 +290,13 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: glowColor.withValues(alpha: 0.4),
-                          blurRadius: 16,
+                          color: glowColor.withValues(alpha: 0.35),
+                          blurRadius: 18,
                           spreadRadius: 2,
                         )
                       ],
                     ),
-                    child: Text(emoji, style: const TextStyle(fontSize: 34)),
+                    child: Text(emoji, style: const TextStyle(fontSize: 36)),
                   ),
                 )
               else
@@ -296,13 +307,13 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: bgCircleColor.withValues(alpha: 0.8),
+                        color: glowColor.withValues(alpha: 0.25),
                         blurRadius: 14,
                         spreadRadius: 1,
                       )
                     ],
                   ),
-                  child: Text(emoji, style: const TextStyle(fontSize: 34)),
+                  child: Text(emoji, style: const TextStyle(fontSize: 36)),
                 ),
               const SizedBox(height: 12),
 
@@ -324,7 +335,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: glowColor.withValues(alpha: 0.15),
+                  color: glowColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: glowColor.withValues(alpha: 0.3), width: 1),
                 ),
@@ -346,7 +357,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: Colors.white.withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -354,7 +365,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.bedtime_rounded, size: 13, color: Color(0xFF5E35B1)),
+                          const Icon(Icons.bedtime_rounded, size: 13, color: Color(0xFF7B1FA2)),
                           const SizedBox(width: 4),
                           Text(
                             'Ngủ lúc ${_formatTime(sleepStartTime)}',
@@ -383,7 +394,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: Colors.white.withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -394,7 +405,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                           Icon(
                             isInactive ? Icons.cloud_off_rounded : Icons.wb_sunny_rounded,
                             size: 13,
-                            color: isInactive ? const Color(0xFF607D8B) : const Color(0xFFE65100),
+                            color: isInactive ? const Color(0xFF607D8B) : const Color(0xFFE91E63),
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -404,7 +415,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                             style: GoogleFonts.quicksand(
                               fontSize: 11,
                               fontWeight: FontWeight.w900,
-                              color: isInactive ? const Color(0xFF455A64) : const Color(0xFFBF360C),
+                              color: isInactive ? const Color(0xFF455A64) : const Color(0xFFC2185B),
                             ),
                           ),
                         ],
@@ -469,12 +480,12 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.65),
+            color: Colors.white.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(32),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.8),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFFFCDD2).withValues(alpha: 0.25),
+                color: const Color(0xFFF8BBD0).withValues(alpha: 0.3),
                 blurRadius: 25,
                 offset: const Offset(0, 12),
               )
@@ -489,7 +500,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                 children: [
                   Expanded(
                     child: Text(
-                      '7 Ngày Của $label 🌈',
+                      '7 Ngày Của $label 🌈✨',
                       style: GoogleFonts.quicksand(
                         color: const Color(0xFF3E2723),
                         fontSize: 17,
@@ -502,8 +513,9 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8BBD0).withValues(alpha: 0.4),
+                      color: const Color(0xFFF8BBD0).withValues(alpha: 0.45),
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFF48FB1).withValues(alpha: 0.5)),
                     ),
                     child: Text(
                       avgHours > 0 ? 'Tb: ${avgHours.toStringAsFixed(1)}h/ngày' : '✨ Mục tiêu 8h',
@@ -547,7 +559,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                     emoji = '😴';
                   } else {
                     gradientColors = [const Color(0xFFF48FB1), const Color(0xFFD81B60)];
-                    emoji = '🐷';
+                    emoji = '🥰';
                   }
                       
                   return Column(
@@ -574,7 +586,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: isToday ? const Color(0xFFEC407A) : Colors.white.withValues(alpha: 0.6),
-                            width: isToday ? 1.5 : 1.0,
+                            width: isToday ? 1.8 : 1.0,
                           ),
                         ),
                         alignment: Alignment.bottomCenter,
@@ -639,18 +651,19 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
     if (mySleepStatus == 'noon_nap') {
       bgColors = [const Color(0xFFB2EBF2), const Color(0xFFE0F7FA), const Color(0xFFB2DFDB)];
     } else if (amISleeping) {
-      bgColors = [const Color(0xFFD1C4E9), const Color(0xFFB2EBF2), const Color(0xFFC5CAE9)];
+      bgColors = [const Color(0xFFD1C4E9), const Color(0xFFF3E5F5), const Color(0xFFC5CAE9)];
     } else if (mySleepStatus == 'inactive') {
       bgColors = [const Color(0xFFECEFF1), const Color(0xFFCFD8DC), const Color(0xFFB0BEC5)];
     } else {
-      bgColors = [const Color(0xFFFFE0B2), const Color(0xFFFFCDD2), const Color(0xFFFFF9C4)];
+      // Đang thức: Tone Pastel Sunset siêu dễ thương (Hồng Phấn - Cam Nhạt - Vàng Kem)
+      bgColors = [const Color(0xFFFFD1DC), const Color(0xFFFFE4E1), const Color(0xFFFFF9C4)];
     }
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          'Giấc Ngủ ☁️💤',
+          'Giấc Ngủ Đôi ☁️✨',
           style: GoogleFonts.quicksand(
             fontWeight: FontWeight.w900,
             fontSize: 22,
@@ -689,13 +702,13 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.7),
+                          color: Colors.white.withValues(alpha: 0.75),
                           borderRadius: BorderRadius.circular(32),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.8),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 15,
+                              color: const Color(0xFFF8BBD0).withValues(alpha: 0.25),
+                              blurRadius: 16,
                               offset: const Offset(0, 6),
                             )
                           ],
@@ -705,11 +718,11 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFAED581).withValues(alpha: 0.4),
+                                color: const Color(0xFFC8E6C9).withValues(alpha: 0.6),
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFFAED581).withValues(alpha: 0.3),
+                                    color: const Color(0xFFAED581).withValues(alpha: 0.4),
                                     blurRadius: 10,
                                   )
                                 ],
@@ -722,7 +735,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Phép thuật cảm biến',
+                                    'Phép thuật cảm biến 🪄✨',
                                     style: GoogleFonts.quicksand(
                                       fontWeight: FontWeight.w900,
                                       fontSize: 16,
@@ -731,7 +744,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                                   ),
                                   const SizedBox(height: 3),
                                   Text(
-                                    'Tự động ghi nhận giấc ngủ',
+                                    'Tự động ghi nhận giấc ngủ đôi nè ☁️',
                                     style: GoogleFonts.quicksand(
                                       fontSize: 12,
                                       color: const Color(0xFF5D4037),
@@ -743,8 +756,8 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen> with TickerProv
                             ),
                             Switch(
                               value: _isTrackingEnabled,
-                              activeColor: const Color(0xFF4CAF50),
-                              activeTrackColor: const Color(0xFFA5D6A7),
+                              activeColor: const Color(0xFFE91E63),
+                              activeTrackColor: const Color(0xFFF8BBD0),
                               inactiveThumbColor: Colors.white,
                               inactiveTrackColor: Colors.black12,
                               onChanged: _toggleTracking,

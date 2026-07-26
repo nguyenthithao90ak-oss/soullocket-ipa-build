@@ -3,10 +3,10 @@
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/widget_bg_purple"
-    android:padding="8dp">
+    android:background="@drawable/widget_bg_sleep_cute"
+    android:padding="9dp">
 
-    <!-- Active State: Layout Giấc Ngủ 2 Người -->
+    <!-- Active State: Layout Giấc Ngủ Dễ Thương 2 Người -->
     <LinearLayout
         android:id="@+id/layout_active_state"
         android:layout_width="match_parent"
@@ -25,19 +25,19 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="GIẤC NGỦ ĐÔI ☁️💤"
-                android:textColor="#FFFFFF"
+                android:text="GIẤC NGỦ ĐÔI ☁️✨"
+                android:textColor="#4A148C"
                 android:textSize="12sp"
                 android:textStyle="bold" />
             <TextView
                 android:id="@+id/tv_sleep_summary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/widget_chip_bg"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="2dp"
+                android:background="@drawable/widget_chip_cute"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="3dp"
                 android:text="Cả 2 cùng thức ☀️"
-                android:textColor="#4A148C"
+                android:textColor="#AD1457"
                 android:textSize="10sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -55,8 +55,8 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginRight="3dp"
-                android:background="@drawable/widget_chip_bg"
+                android:layout_marginRight="4dp"
+                android:background="@drawable/widget_chip_cute"
                 android:gravity="center"
                 android:orientation="vertical"
                 android:padding="6dp">
@@ -65,7 +65,7 @@
                     android:id="@+id/tv_my_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Bạn Nam"
+                    android:text="Bạn Nam 🧸"
                     android:textColor="#3E2723"
                     android:textSize="12sp"
                     android:textStyle="bold"
@@ -76,9 +76,9 @@
                     android:id="@+id/tv_my_status"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="3dp"
                     android:text="☀️ Đang thức"
-                    android:textColor="#E65100"
+                    android:textColor="#D81B60"
                     android:textSize="11sp"
                     android:textStyle="bold" />
 
@@ -97,8 +97,8 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginLeft="3dp"
-                android:background="@drawable/widget_chip_bg"
+                android:layout_marginLeft="4dp"
+                android:background="@drawable/widget_chip_cute"
                 android:gravity="center"
                 android:orientation="vertical"
                 android:padding="6dp">
@@ -107,7 +107,7 @@
                     android:id="@+id/tv_partner_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Người ấy"
+                    android:text="Người ấy 🐰"
                     android:textColor="#3E2723"
                     android:textSize="12sp"
                     android:textStyle="bold"
@@ -118,9 +118,9 @@
                     android:id="@+id/tv_partner_status"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="3dp"
                     android:text="☀️ Đang thức"
-                    android:textColor="#E65100"
+                    android:textColor="#D81B60"
                     android:textSize="11sp"
                     android:textStyle="bold" />
 

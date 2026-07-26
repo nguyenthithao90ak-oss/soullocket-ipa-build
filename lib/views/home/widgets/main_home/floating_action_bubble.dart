@@ -71,14 +71,14 @@ class _FloatingActionBubbleState extends State<FloatingActionBubble>
 
   void _toggle() {
     HapticFeedback.mediumImpact();
-    setState(() {
-      _isExpanded = !_isExpanded;
-      if (_isExpanded) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
-      }
-    });
+    if (_isExpanded) {
+      _controller.reverse().then((_) {
+        if (mounted) setState(() => _isExpanded = false);
+      });
+    } else {
+      setState(() => _isExpanded = true);
+      _controller.forward();
+    }
   }
 
   @override
@@ -87,7 +87,7 @@ class _FloatingActionBubbleState extends State<FloatingActionBubble>
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        if (_isExpanded)
+        if (_isExpanded || _controller.isAnimating)
           ScaleTransition(
             scale: _expandAnimation,
             alignment: Alignment.bottomRight,
