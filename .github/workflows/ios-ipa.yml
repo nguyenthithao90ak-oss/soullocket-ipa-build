@@ -58,6 +58,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
 
       - name: Set up Xcode
         uses: maxim-lobanov/setup-xcode@v1
@@ -70,6 +72,16 @@ jobs:
           flutter-version: "3.44.3"
           channel: stable
           cache: true
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            ios/Pods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
 
       - name: Prepare CI build settings
         shell: bash
@@ -361,7 +373,7 @@ jobs:
             build_args+=(--build-number="$BUILD_NUMBER")
           fi
 
-          flutter build ipa --release "${build_args[@]}" --export-options-plist="$EXPORT_PLIST_PATH"
+          flutter build ipa --release --no-pub "${build_args[@]}" --export-options-plist="$EXPORT_PLIST_PATH"
 
       - name: Verify IPA output
         shell: bash
