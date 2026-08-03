@@ -224,6 +224,22 @@ class AppEntryAccessResolver {
       if (sameHouseId && state.blockReason == null && !state.isMaintenance) {
         return;
       }
+
+      // Guard: Nếu cache đang có nhà hợp lệ nhưng state mới trả về null house
+      // (do mạng chậm / Firebase timeout) mà không có block/maintenance reason,
+      // thì KHÔNG override — tránh app tự nhảy về HouseChoiceScreen.
+      final cachedIsValid = (cachedHouseId ?? '').isNotEmpty;
+      final newHouseEmpty = (state.houseId ?? '').isEmpty;
+      final isNetworkFallback =
+          cachedIsValid && newHouseEmpty && state.blockReason == null && !state.isMaintenance;
+      if (isNetworkFallback) {
+        debugPrint(
+          '[AppEntry] Background refresh returned empty houseId for cached house '
+          '$cachedHouseId — likely network issue, skipping override.',
+        );
+        return;
+      }
+
       onResolved(
         state,
         userId: userId,
