@@ -219,8 +219,29 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       if (_houseNameCtrl.text.trim().isEmpty) {
         _houseNameCtrl.text = _defaultHouseName();
       }
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted || _isLoading) return;
+        try {
+          final existingHouseId =
+              await _houseService.getCurrentHouseId(preferFresh: true);
+          if (existingHouseId != null && existingHouseId.isNotEmpty) {
+            debugPrint(
+              '[HouseOnboarding] autoCreateOnly found existing house: $existingHouseId',
+            );
+            if (widget.onHouseCreated != null) {
+              await widget.onHouseCreated!.call();
+              return;
+            }
+            if (mounted) {
+              Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const AppEntry()),
+                (route) => false,
+              );
+            }
+            return;
+          }
+        } catch (_) {}
+
         debugPrint('[HouseOnboarding] autoCreateOnly -> _createHouse queued');
         _createHouse();
       });
@@ -494,6 +515,14 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     if (_isPromptingCreationSetup) {
       return _creationPrerequisiteErrorMessage() == null;
     }
+
+    try {
+      final existingHouseId =
+          await _houseService.getCurrentHouseId(preferFresh: true);
+      if (existingHouseId != null && existingHouseId.isNotEmpty) {
+        return true;
+      }
+    } catch (_) {}
 
     final needsMode = _resolvedRelationshipModeOrNull() == null;
     final needsRole = _resolvedRoleOrNull() == null;
