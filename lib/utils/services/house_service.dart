@@ -767,6 +767,29 @@ class HouseService {
         _syncHouseIdToFirestore(uid, legacyValue).catchError((_) => null);
         return legacyValue;
       }
+
+      try {
+        final ownerQuerySnap = await _dbRef
+            .child('houses')
+            .orderByChild('owner_uid')
+            .equalTo(uid)
+            .limitToFirst(1)
+            .get()
+            .timeout(const Duration(seconds: 4));
+        if (ownerQuerySnap.exists && ownerQuerySnap.children.isNotEmpty) {
+          final foundHouseId = ownerQuerySnap.children.first.key?.trim() ?? '';
+          if (foundHouseId.isNotEmpty) {
+            await _dbRef.child('users/$uid').update({'houseId': foundHouseId});
+            await SecureStorageService.instance
+                .write(SecureStorageService.keyHouseId, foundHouseId);
+            await SecureStorageService.instance
+                .write(SecureStorageService.keyAuthUid, uid);
+            await prefs.remove('il_house_id');
+            await prefs.remove(_authUidPrefsKey);
+            return foundHouseId;
+          }
+        }
+      } catch (_) {}
     } on TimeoutException {
       // Fallback cache below handles slow network without spamming logs.
     } catch (e) {

@@ -1110,7 +1110,39 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
               houseCreationOtp: houseCreationOtp, customHouseId: customHouseId);
         }
       }
-      _transientCreateRetryCount = 0;
+      final isAlreadyExistsError = normalizedError.contains('đã có nhà') ||
+          normalizedError.contains('đã tồn tại') ||
+          normalizedError.contains('already exists') ||
+          normalizedError.contains('already_exists') ||
+          normalizedError.contains('tồn tại');
+      if (isAlreadyExistsError) {
+        try {
+          final existingHouseId =
+              await _houseService.getCurrentHouseId(preferFresh: true);
+          if (existingHouseId != null && existingHouseId.isNotEmpty) {
+            debugPrint(
+              '[HouseOnboarding] Existing house recovered after creation collision: $existingHouseId',
+            );
+            _authSyncRetryCount = 0;
+            _transientCreateRetryCount = 0;
+            if (!mounted) return;
+            if (widget.onHouseCreated != null) {
+              handedOffToParent = true;
+              await widget.onHouseCreated!.call();
+              return;
+            }
+            Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const AppEntry()),
+              (route) => false,
+            );
+            return;
+          }
+        } catch (recoverErr) {
+          debugPrint(
+            '[HouseOnboarding] Failed to recover existing house: $recoverErr',
+          );
+        }
+      }
 
       if (widget.autoCreateOnly) {
         _setAutoCreateFailureMessage(message, error: e);
