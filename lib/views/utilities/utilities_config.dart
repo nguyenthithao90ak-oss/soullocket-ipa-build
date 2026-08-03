@@ -51,7 +51,6 @@ final Map<String, Map<String, dynamic>> appConfig = {
     'colors': [const Color(0xFFD81B60), const Color(0xFFFF8FB7)],
     'title': L10nService().translate('util_chatthnthi_c39699'),
   },
-
   'capsule': {
     'icon': Icons.mark_email_unread_rounded,
     'colors': [const Color(0xFFEC407A), const Color(0xFFD81B60)],
@@ -98,13 +97,11 @@ final Map<String, Map<String, dynamic>> appConfig = {
     'colors': [const Color(0xFF5A6BDA), const Color(0xFF4056C8)],
     'title': L10nService().translate('util_lchchung_801c40'),
   },
-
   'gift': {
     'icon': Icons.redeem_rounded,
     'colors': [const Color(0xFFF48FB1), const Color(0xFFF06292)],
     'title': L10nService().translate('util_lmqu_940cc1'),
   },
-
   'tarot': {
     'icon': Icons.auto_awesome_rounded,
     'colors': [const Color(0xFFB388FF), const Color(0xFF8E5CFF)],
@@ -120,7 +117,6 @@ final Map<String, Map<String, dynamic>> appConfig = {
     'colors': [const Color(0xFF4DD0E1), const Color(0xFFF06292)],
     'title': L10nService().translate('util_cahng_c7fe00'),
   },
-
   'diary_export': {
     'icon': Icons.language_rounded,
     'colors': [const Color(0xFF69B7FF), const Color(0xFF7B61FF)],

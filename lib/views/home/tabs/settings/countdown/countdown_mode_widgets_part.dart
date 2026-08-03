@@ -1120,7 +1120,8 @@ class _CountdownModeGlowOrb extends StatelessWidget {
 
 /// Overlay trái tim bay bổng, xoay lật 3D đa chiều cực kỳ cute và nổi bật.
 class FloatingHeartsRingOverlay extends StatefulWidget {
-  const FloatingHeartsRingOverlay({super.key, required this.size, this.enableMotion = true});
+  const FloatingHeartsRingOverlay(
+      {super.key, required this.size, this.enableMotion = true});
   final double size;
   final bool enableMotion;
 
@@ -1147,7 +1148,7 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
       vsync: this,
       duration: const Duration(seconds: 18), // Chu kỳ dài để chuyển động mượt
     )..addListener(_onTick);
-    
+
     _updateAnimationState();
   }
 
@@ -1197,7 +1198,7 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
       Icons.favorite_border_rounded,
       Icons.star_rounded,
       Icons.auto_awesome, // Sparkles lấp lánh cực cute
-      Icons.volunteer_activism, // Trái tim có tay 
+      Icons.volunteer_activism, // Trái tim có tay
     ];
 
     _particles = List.generate(_kCount, (i) {
@@ -1205,7 +1206,7 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
       final jitter2 = ((rng ^ (i * 1234567)) & 0xFFFF) / 0xFFFF;
       final jitter3 = ((rng ^ (i * 9876543)) & 0xFFFF) / 0xFFFF;
       final zIndex = ((rng ^ (i * 13579)) & 0xFFFF) / 0xFFFF;
-      
+
       // Tính toán base size tuỳ theo độ sâu (zIndex) để tạo hiệu ứng 3D
       // Gần camera (zIndex cao) -> bự hơn, mờ đi chút
       // Xa camera (zIndex thấp) -> nhỏ, rõ
@@ -1213,14 +1214,17 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
 
       return _HeartParticle(
         startX: 0.05 + (jitter1 * 0.9),
-        speed: 0.2 + (jitter2 * 0.5) + (zIndex * 0.6), // Hạt ở gần bay nhanh hơn
+        speed:
+            0.2 + (jitter2 * 0.5) + (zIndex * 0.6), // Hạt ở gần bay nhanh hơn
         size: baseSize,
         wobbleAmplitude: 8.0 + (jitter1 * 25.0) + (zIndex * 15.0),
         wobbleSpeed: 1.5 + (jitter2 * 4.0),
         phase: jitter1,
         rotationSpeed: (jitter2 - 0.5) * 6.0,
-        colorIndex: (jitter3 * _kHeartColors.length).toInt() % _kHeartColors.length,
-        icon: iconChoices[(jitter1 * iconChoices.length).toInt() % iconChoices.length],
+        colorIndex:
+            (jitter3 * _kHeartColors.length).toInt() % _kHeartColors.length,
+        icon: iconChoices[
+            (jitter1 * iconChoices.length).toInt() % iconChoices.length],
         isGlow: jitter2 > 0.6, // Tăng tỷ lệ phát sáng lên 40%
         zIndex: zIndex,
         pulseSpeed: 3.0 + (jitter1 * 4.0), // Tốc độ nhịp đập tim
@@ -1254,15 +1258,19 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
                   clipBehavior: Clip.hardEdge,
                   children: List.generate(_kCount, (i) {
                     final p = _particles[i];
-                    
-                    final double localProgress = (progress * p.speed + p.phase) % 1.0;
-                    
+
+                    final double localProgress =
+                        (progress * p.speed + p.phase) % 1.0;
+
                     // Bay từ dưới lên trên: y = 1.1 -> -0.1
                     final double cy = widget.size * (1.1 - localProgress * 1.2);
-                    
+
                     // Lắc lư ngang theo hình sin
-                    final double t = math.sin(localProgress * p.wobbleSpeed * 2 * math.pi);
-                    final double cx = (widget.size * p.startX) + (t * p.wobbleAmplitude) + _autoTiltX;
+                    final double t =
+                        math.sin(localProgress * p.wobbleSpeed * 2 * math.pi);
+                    final double cx = (widget.size * p.startX) +
+                        (t * p.wobbleAmplitude) +
+                        _autoTiltX;
 
                     double opacity = 1.0;
                     if (localProgress < 0.1) {
@@ -1272,11 +1280,14 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
                     }
 
                     // Thêm nhịp đập nhè nhẹ cho tim (Pulsing)
-                    final double pulse = 1.0 + 0.15 * math.sin(progress * math.pi * 2 * p.pulseSpeed);
-                    
-                    final double entryScale = localProgress < 0.1 ? (localProgress / 0.1) : 1.0;
+                    final double pulse = 1.0 +
+                        0.15 * math.sin(progress * math.pi * 2 * p.pulseSpeed);
+
+                    final double entryScale =
+                        localProgress < 0.1 ? (localProgress / 0.1) : 1.0;
                     final double scale = entryScale * pulse;
-                    final double angle = localProgress * p.rotationSpeed * math.pi;
+                    final double angle =
+                        localProgress * p.rotationSpeed * math.pi;
                     final Color baseColor = _kHeartColors[p.colorIndex];
 
                     Widget heartWidget = Icon(
@@ -1287,16 +1298,14 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
 
                     if (p.isGlow) {
                       heartWidget = Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: baseColor.withValues(alpha: 0.65),
-                              blurRadius: 15, // Glow mạnh hơn xíu
-                              spreadRadius: 2,
-                            ),
-                          ]
-                        ),
+                        decoration:
+                            BoxDecoration(shape: BoxShape.circle, boxShadow: [
+                          BoxShadow(
+                            color: baseColor.withValues(alpha: 0.65),
+                            blurRadius: 15, // Glow mạnh hơn xíu
+                            spreadRadius: 2,
+                          ),
+                        ]),
                         child: heartWidget,
                       );
                     }

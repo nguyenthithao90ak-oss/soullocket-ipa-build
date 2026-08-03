@@ -75,7 +75,6 @@ class AppEntryController {
         _interactionMetricsService =
             interactionMetricsService ?? InteractionMetricsService();
 
-
   static const Duration _deviceRegistrationCooldown = Duration(seconds: 15);
 
   final HouseService _houseService;
@@ -476,8 +475,8 @@ class AppEntryController {
 
   Future<void> requestStartupPermissionsIfNeeded(BuildContext context) async {
     if (kIsWeb || !context.mounted) return;
-    
-    // Luôn gọi requestPermissionAndInit. 
+
+    // Luôn gọi requestPermissionAndInit.
     // Hệ điều hành (OS) sẽ tự quyết định có hiện hộp thoại không (nếu user đã từ chối vĩnh viễn thì OS sẽ bỏ qua).
     await NotificationService().requestPermissionAndInit();
   }

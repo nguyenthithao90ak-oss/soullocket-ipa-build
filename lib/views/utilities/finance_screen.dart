@@ -1,6 +1,5 @@
 import 'dart:async';
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -1242,7 +1241,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
               (context, index) {
                 return const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  child: SkeletonContainer.rounded(width: double.infinity, height: 75),
+                  child: SkeletonContainer.rounded(
+                      width: double.infinity, height: 75),
                 );
               },
               childCount: 5,

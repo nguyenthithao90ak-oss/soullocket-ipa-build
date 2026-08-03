@@ -1153,18 +1153,20 @@ class _RewardStoreScreenState extends State<RewardStoreScreen> {
                               height: 1.4)),
                     ]),
               ),
-              SLBouncingButton(child: SLTheme.primaryButton(
-                  label: isPro
-                      ? 'PRO'
-                      : isLimitReached
-                          ? L10nService().translate('util_hmnayri_46d3f2')
-                          : _isWatchingAd
-                              ? L10nService().translate('util_angm_112640')
-                              : 'Xem ngay',
-                  onPressed: isPro || _isWatchingAd || isLimitReached
-                      ? () {}
-                      : () => _watchAd(proUntil),
-                  width: 112),)
+              SLBouncingButton(
+                child: SLTheme.primaryButton(
+                    label: isPro
+                        ? 'PRO'
+                        : isLimitReached
+                            ? L10nService().translate('util_hmnayri_46d3f2')
+                            : _isWatchingAd
+                                ? L10nService().translate('util_angm_112640')
+                                : 'Xem ngay',
+                    onPressed: isPro || _isWatchingAd || isLimitReached
+                        ? () {}
+                        : () => _watchAd(proUntil),
+                    width: 112),
+              )
             ],
           ),
           if (!isPro && !isLimitReached)

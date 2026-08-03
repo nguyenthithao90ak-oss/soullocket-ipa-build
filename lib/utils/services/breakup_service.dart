@@ -212,15 +212,15 @@ class BreakupService {
 
   Future<BreakupRequestData?> getBreakupRequest(String houseId) async {
     try {
-      final snap = await _requestRef(houseId)
-          .get()
-          .timeout(const Duration(seconds: 3));
+      final snap =
+          await _requestRef(houseId).get().timeout(const Duration(seconds: 3));
       if (!snap.exists || snap.value == null) return null;
       final map = _toMap(snap.value);
       if (map.isEmpty) return null;
       return BreakupRequestData.fromMap(map);
     } catch (e, stackTrace) {
-      debugPrint('[BreakupService] Error getting breakup request for $houseId: $e');
+      debugPrint(
+          '[BreakupService] Error getting breakup request for $houseId: $e');
       // Timeout và lỗi mạng là bình thường khi mạng yếu — không ghi lên Crashlytics
       final msg = e.toString().toLowerCase();
       final isExpected = e is TimeoutException ||

@@ -6,7 +6,8 @@ class TouchEffectOverlay extends StatefulWidget {
   final Widget child;
   final bool isEnabled;
 
-  const TouchEffectOverlay({super.key, required this.child, this.isEnabled = true});
+  const TouchEffectOverlay(
+      {super.key, required this.child, this.isEnabled = true});
 
   @override
   State<TouchEffectOverlay> createState() => _TouchEffectOverlayState();
@@ -265,7 +266,8 @@ class _TouchEffectPainter extends CustomPainter {
         _drawHeart(canvas, paint, currentSize, useGlow);
       } else if (p.type == 2) {
         if (useGlow) {
-          paint.maskFilter = MaskFilter.blur(BlurStyle.normal, currentSize * 0.4);
+          paint.maskFilter =
+              MaskFilter.blur(BlurStyle.normal, currentSize * 0.4);
           canvas.drawCircle(Offset.zero, currentSize * 0.4, paint);
         }
         paint.maskFilter = null;

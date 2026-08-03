@@ -381,7 +381,6 @@ class _SoulExplosionPainter extends CustomPainter {
           (particle.isShard ? particle.size * 1.7 : particle.size * 1.12) *
               scale;
 
-
       canvas.save();
       canvas.translate(
         particle.startOffset.dx + (deltaX * travel),
@@ -407,7 +406,7 @@ class _SoulExplosionPainter extends CustomPainter {
             } else {
               path.lineTo(px, py);
             }
-            
+
             final double a2 = a + pi / 5;
             final double px2 = cos(a2) * innerR;
             final double py2 = sin(a2) * innerR;

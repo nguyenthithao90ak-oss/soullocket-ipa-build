@@ -144,4 +144,3 @@ class _FloatingMessageWidgetState extends State<FloatingMessageWidget>
     );
   }
 }
-

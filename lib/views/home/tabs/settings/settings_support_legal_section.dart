@@ -246,9 +246,9 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     if (confirm == true) {
       debugPrint('[LOGOUT] confirm == true. Starting signOut...');
       if (!mounted) return;
-      
+
       final navigator = Navigator.of(context, rootNavigator: true);
-      
+
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -270,7 +270,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         if (navigator.canPop()) {
           navigator.pop();
         }
-        
+
         // Đóng toàn bộ các màn hình được push (như SettingsTab) để quay về Home/Login
         while (navigator.canPop()) {
           navigator.pop();
@@ -536,7 +536,9 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           }
           SLNotice.showSuccess(
             context,
-            context.tr('settings_delete_account_success_with_days').replaceAll('{days}', days.toString()),
+            context
+                .tr('settings_delete_account_success_with_days')
+                .replaceAll('{days}', days.toString()),
           );
 
           try {

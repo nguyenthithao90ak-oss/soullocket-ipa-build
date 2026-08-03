@@ -324,7 +324,6 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
     );
   }
 
-
   Future<void> _showMessageActions(int index) async {
     if (index < 0 || index >= _messages.length) {
       return;
@@ -415,7 +414,7 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
       isUser: true,
       createdAt: DateTime.now().millisecondsSinceEpoch,
     );
-    
+
     // Ước tính thời gian dựa vào độ dài câu hỏi (cơ bản 8s + 1s mỗi 20 ký tự)
     int estimatedSeconds = 8 + (text.length ~/ 20);
     if (estimatedSeconds > 35) estimatedSeconds = 35;
@@ -431,8 +430,11 @@ class _FriendlyChatScreenState extends State<FriendlyChatScreen> {
 
     final prompt = _buildPrompt(text);
     final persona = UiPrefs.notifier.value.friendlyChatPersona;
-    final personaText = persona.isNotEmpty ? '\nTHÔNG TIN NGƯỜI DÙNG TỰ GIỚI THIỆU: "$persona". HÃY GIAO TIẾP VÀ XƯNG HÔ DỰA THEO ĐÚNG THÔNG TIN NÀY.' : '';
-    final systemInstruction = '''Bạn là "Chat Thân Thiện", một người bạn đồng hành AI vô cùng dễ thương, thấu hiểu và hài hước của ứng dụng SoulLocket.
+    final personaText = persona.isNotEmpty
+        ? '\nTHÔNG TIN NGƯỜI DÙNG TỰ GIỚI THIỆU: "$persona". HÃY GIAO TIẾP VÀ XƯNG HÔ DỰA THEO ĐÚNG THÔNG TIN NÀY.'
+        : '';
+    final systemInstruction =
+        '''Bạn là "Chat Thân Thiện", một người bạn đồng hành AI vô cùng dễ thương, thấu hiểu và hài hước của ứng dụng SoulLocket.
 Mục tiêu của bạn là lắng nghe, tâm sự và mang lại niềm vui, sự thoải mái cho người dùng.
 Quy tắc:
 1. Xưng hô tự nhiên, ưu tiên dựa theo phần THÔNG TIN NGƯỜI DÙNG TỰ GIỚI THIỆU nếu có, nếu không thì xưng "mình" và gọi "bạn".
@@ -448,14 +450,14 @@ Quy tắc:
     setState(() {
       _messages.add(
         _FriendlyChatMessage(
-          text: '', 
+          text: '',
           isUser: false,
           createdAt: DateTime.now().millisecondsSinceEpoch,
         ),
       );
     });
     _scrollToBottom();
-    
+
     String finalReply = '';
 
     try {
@@ -470,12 +472,13 @@ Quy tắc:
       await for (final chunk in stream) {
         if (!mounted) break;
         finalReply += chunk;
-        
+
         String displayText = finalReply;
-        
-        final RegExp thinkComplete = RegExp(r'<think>.*?</think>', dotAll: true);
+
+        final RegExp thinkComplete =
+            RegExp(r'<think>.*?</think>', dotAll: true);
         displayText = displayText.replaceAll(thinkComplete, '');
-        
+
         final int openIndex = displayText.lastIndexOf('<think>');
         if (openIndex != -1) {
           final int closeIndex = displayText.indexOf('</think>', openIndex);
@@ -483,42 +486,47 @@ Quy tắc:
             displayText = displayText.substring(0, openIndex);
           }
         }
-        
+
         displayText = displayText.trimLeft();
 
         if (displayText.contains('[NAVIGATE')) {
-           displayText = displayText.split('[NAVIGATE')[0].trim();
+          displayText = displayText.split('[NAVIGATE')[0].trim();
         }
-        
+
         setState(() {
-          _messages[assistantMsgIndex] = _messages[assistantMsgIndex].copyWith(text: displayText);
+          _messages[assistantMsgIndex] =
+              _messages[assistantMsgIndex].copyWith(text: displayText);
         });
         _scrollToBottom();
       }
     } catch (e) {
       if (!mounted) return;
       if (finalReply.isEmpty) {
-        finalReply = _aiService.lastErrorMessage ?? 'Mình đang gặp chút sự cố kết nối. Bạn đợi một lát rồi nói lại nhé!';
+        finalReply = _aiService.lastErrorMessage ??
+            'Mình đang gặp chút sự cố kết nối. Bạn đợi một lát rồi nói lại nhé!';
       }
     }
 
     if (!mounted) return;
-    
-    final RegExp thinkCompleteFinal = RegExp(r'<think>.*?</think>', dotAll: true);
+
+    final RegExp thinkCompleteFinal =
+        RegExp(r'<think>.*?</think>', dotAll: true);
     finalReply = finalReply.replaceAll(thinkCompleteFinal, '');
     final int openIndexFinal = finalReply.lastIndexOf('<think>');
     if (openIndexFinal != -1) {
-      final int closeIndexFinal = finalReply.indexOf('</think>', openIndexFinal);
+      final int closeIndexFinal =
+          finalReply.indexOf('</think>', openIndexFinal);
       if (closeIndexFinal == -1) {
         finalReply = finalReply.substring(0, openIndexFinal);
       }
     }
     finalReply = finalReply.trimLeft();
-    
+
     if (finalReply.trim().isEmpty) {
-       finalReply = _aiService.lastErrorMessage ?? 'Lỗi kết nối. Bạn đợi một lát rồi nói lại nhé!';
+      finalReply = _aiService.lastErrorMessage ??
+          'Lỗi kết nối. Bạn đợi một lát rồi nói lại nhé!';
     }
-    
+
     int? navTarget;
     if (finalReply.contains('[NAVIGATE:')) {
       final regex = RegExp(r'\[NAVIGATE:([A-Z_]+)\]');
@@ -556,15 +564,13 @@ Quy tắc:
     if (navTarget != null) {
       Future.delayed(const Duration(milliseconds: 1500), () {
         if (!mounted) return;
-        
+
         if (navTarget == 101) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const SoulMergeScreen())
-          );
+              MaterialPageRoute(builder: (_) => const SoulMergeScreen()));
         } else if (navTarget == 102) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => SoulBlockGame())
-          );
+              MaterialPageRoute(builder: (_) => SoulBlockGame()));
         } else {
           Navigator.of(context).pop();
           Future.delayed(const Duration(milliseconds: 100), () {
@@ -576,7 +582,8 @@ Quy tắc:
 
     setState(() {
       _isSending = false;
-      _messages[assistantMsgIndex] = _messages[assistantMsgIndex].copyWith(text: finalReply.trim());
+      _messages[assistantMsgIndex] =
+          _messages[assistantMsgIndex].copyWith(text: finalReply.trim());
     });
     _saveCachedHistory();
     _scrollToBottom();
@@ -584,19 +591,23 @@ Quy tắc:
 
   String _buildPrompt(String text) {
     final name = widget.myName?.trim();
-    
+
     final historyContext = StringBuffer();
     // Bỏ qua tin nhắn chào mừng đầu tiên (index 0) và tin nhắn người dùng vừa gửi (cuối cùng)
-    final recentMessages = _messages.length > 2 
-        ? _messages.sublist(1, _messages.length - 1) 
+    final recentMessages = _messages.length > 2
+        ? _messages.sublist(1, _messages.length - 1)
         : <_FriendlyChatMessage>[];
-        
-    final last12 = recentMessages.length > 12 ? recentMessages.sublist(recentMessages.length - 12) : recentMessages;
-    
+
+    final last12 = recentMessages.length > 12
+        ? recentMessages.sublist(recentMessages.length - 12)
+        : recentMessages;
+
     if (last12.isNotEmpty) {
       historyContext.writeln("--- Lịch sử trò chuyện gần đây ---");
       for (final msg in last12) {
-        final role = msg.isUser ? (name != null && name.isNotEmpty ? name : "Người dùng") : "Chat Thân Thiện";
+        final role = msg.isUser
+            ? (name != null && name.isNotEmpty ? name : "Người dùng")
+            : "Chat Thân Thiện";
         historyContext.writeln("$role: ${msg.text}");
       }
       historyContext.writeln("-----------------------------------");
@@ -627,11 +638,16 @@ Quy tắc:
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Hủy', style: SLTheme.quicksand(color: Colors.grey, fontWeight: FontWeight.bold)),
+            child: Text('Hủy',
+                style: SLTheme.quicksand(
+                    color: Colors.grey, fontWeight: FontWeight.bold)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Làm mới', style: SLTheme.quicksand(color: const Color(0xFFD81B60), fontWeight: FontWeight.bold)),
+            child: Text('Làm mới',
+                style: SLTheme.quicksand(
+                    color: const Color(0xFFD81B60),
+                    fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -648,13 +664,14 @@ Quy tắc:
         ),
       );
     });
-    
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_cacheKey);
   }
 
   void _showPersonaConfigSheet() {
-    final controller = TextEditingController(text: UiPrefs.notifier.value.friendlyChatPersona);
+    final controller =
+        TextEditingController(text: UiPrefs.notifier.value.friendlyChatPersona);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -704,7 +721,8 @@ Quy tắc:
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w700,
@@ -828,7 +846,8 @@ Quy tắc:
         ),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.psychology_alt_rounded, color: Color(0xFFD81B60)),
+            icon: const Icon(Icons.psychology_alt_rounded,
+                color: Color(0xFFD81B60)),
             tooltip: 'Chọn Tính Cách AI',
             initialValue: _persona,
             onSelected: (value) {
@@ -837,7 +856,8 @@ Quy tắc:
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Đã chuyển sang tính cách: ${value == 'funny' ? 'Hài hước 😆' : value == 'advice' ? 'Tư vấn 🧠' : 'Mặc định 💖'}'),
+                  content: Text(
+                      'Đã chuyển sang tính cách: ${value == 'funny' ? 'Hài hước 😆' : value == 'advice' ? 'Tư vấn 🧠' : 'Mặc định 💖'}'),
                   duration: const Duration(seconds: 2),
                 ),
               );
@@ -890,7 +910,8 @@ Quy tắc:
           padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.6),
-            border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.8))),
+            border: Border(
+                top: BorderSide(color: Colors.white.withValues(alpha: 0.8))),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -916,15 +937,18 @@ Quy tắc:
                     fillColor: Colors.white.withValues(alpha: 0.7),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(18),
-                      borderSide: const BorderSide(color: Colors.white, width: 1.5),
+                      borderSide:
+                          const BorderSide(color: Colors.white, width: 1.5),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(18),
-                      borderSide: const BorderSide(color: Colors.white, width: 1.5),
+                      borderSide:
+                          const BorderSide(color: Colors.white, width: 1.5),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(18),
-                      borderSide: const BorderSide(color: Color(0xFFD81B60), width: 1.5),
+                      borderSide: const BorderSide(
+                          color: Color(0xFFD81B60), width: 1.5),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 14,
@@ -962,7 +986,9 @@ Quy tắc:
                       child: Icon(
                         Icons.send_rounded,
                         size: 22,
-                        color: _isSending ? Colors.white.withValues(alpha: 0.5) : Colors.white,
+                        color: _isSending
+                            ? Colors.white.withValues(alpha: 0.5)
+                            : Colors.white,
                       ),
                     ),
                   ),
@@ -1021,9 +1047,11 @@ class _FriendlyChatBubble extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(18),
             child: FastBackdropFilter(
-              filter: ImageFilter.blur(sigmaX: isUser ? 0.001 : 12, sigmaY: isUser ? 0.001 : 12),
+              filter: ImageFilter.blur(
+                  sigmaX: isUser ? 0.001 : 12, sigmaY: isUser ? 0.001 : 12),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                 decoration: BoxDecoration(
                   gradient: isUser
                       ? const LinearGradient(
@@ -1034,7 +1062,11 @@ class _FriendlyChatBubble extends StatelessWidget {
                       : null,
                   color: isUser ? null : Colors.white.withValues(alpha: 0.65),
                   borderRadius: BorderRadius.circular(18),
-                  border: isUser ? null : Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
+                  border: isUser
+                      ? null
+                      : Border.all(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          width: 1.2),
                 ),
                 child: Text(
                   message.text,
@@ -1073,7 +1105,8 @@ class _FriendlyChatBubble extends StatelessWidget {
                   child: SizedBox(
                     width: 14,
                     height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFD81B60)),
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Color(0xFFD81B60)),
                   ),
                 )
               else
@@ -1081,9 +1114,13 @@ class _FriendlyChatBubble extends StatelessWidget {
                   color: Colors.transparent,
                   child: IconButton(
                     icon: Icon(
-                      message.reported ? Icons.check_circle_rounded : Icons.outlined_flag_rounded,
+                      message.reported
+                          ? Icons.check_circle_rounded
+                          : Icons.outlined_flag_rounded,
                       size: 20,
-                      color: message.reported ? const Color(0xFF16A34A) : const Color(0xFF9AA4B2),
+                      color: message.reported
+                          ? const Color(0xFF16A34A)
+                          : const Color(0xFF9AA4B2),
                     ),
                     tooltip: 'Báo cáo',
                     splashRadius: 20,
@@ -1210,11 +1247,13 @@ class _TypingBubbleState extends State<_TypingBubble>
               child: FastBackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.65),
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.9), width: 1.2),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1305,7 +1344,8 @@ class _BotStickerAvatar extends StatelessWidget {
       ),
       child: Padding(
         padding: EdgeInsets.all(size * 0.12),
-        child: const R2StickerImage('assets/images/interaction_stickers/custom/numbered/sticker_330.png'),
+        child: const R2StickerImage(
+            'assets/images/interaction_stickers/custom/numbered/sticker_330.png'),
       ),
     );
   }

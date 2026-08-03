@@ -79,7 +79,7 @@ class OfflineCacheService {
     final task = () async {
       _cachedPrefs = await SharedPreferences.getInstance();
       _hiveBox = await Hive.openBox('offline_cache');
-      
+
       // MIGRATION: Copy các dữ liệu đệm nặng (offline_cache_) từ SharedPreferences sang Hive
       final prefs = _cachedPrefs!;
       const migrationKey = 'hive_migration_done';
@@ -97,13 +97,14 @@ class OfflineCacheService {
             await prefs.remove(k);
           }
           await prefs.setBool(migrationKey, true);
-          debugPrint('OfflineCacheService: Migrated ${keysToMigrate.length} items to Hive.');
+          debugPrint(
+              'OfflineCacheService: Migrated ${keysToMigrate.length} items to Hive.');
         } catch (e) {
           debugPrint('OfflineCacheService: Migration error: $e');
         }
       }
     }();
-    
+
     _initializingPrefs = task;
     try {
       await task;
@@ -241,7 +242,8 @@ class OfflineSyncQueue {
         .listen((List<ConnectivityResult> results) {
       final hasConnection = results.any((r) => r != ConnectivityResult.none);
       if (hasConnection) {
-        debugPrint('[SyncQueue] Phát hiện có mạng — bắt đầu đồng bộ hàng đợi...');
+        debugPrint(
+            '[SyncQueue] Phát hiện có mạng — bắt đầu đồng bộ hàng đợi...');
         _trySyncNow();
       }
     });
@@ -264,7 +266,8 @@ class OfflineSyncQueue {
         debugPrint('[SyncQueue] Ghi online thành công: $path');
         return;
       } catch (e) {
-        debugPrint('[SyncQueue] Ghi online thất bại ($path), đẩy vào hàng đợi: $e');
+        debugPrint(
+            '[SyncQueue] Ghi online thất bại ($path), đẩy vào hàng đợi: $e');
       }
     }
     await _enqueue(_SyncTask(
@@ -289,7 +292,8 @@ class OfflineSyncQueue {
 
     current.add(task.toJson());
     await _box!.put(_queueKey, jsonEncode(current));
-    debugPrint('[SyncQueue] Đã thêm vào hàng đợi: ${task.path} (tổng: ${current.length})');
+    debugPrint(
+        '[SyncQueue] Đã thêm vào hàng đợi: ${task.path} (tổng: ${current.length})');
   }
 
   /// Lấy số lượng task đang chờ trong hàng đợi.
@@ -317,7 +321,8 @@ class OfflineSyncQueue {
       final List<dynamic> failed = [];
 
       for (final taskJson in tasks) {
-        final task = _SyncTask.fromJson(Map<String, dynamic>.from(taskJson as Map));
+        final task =
+            _SyncTask.fromJson(Map<String, dynamic>.from(taskJson as Map));
         try {
           if (task.isDelete) {
             await FirebaseDatabase.instance.ref(task.path).remove();
@@ -337,7 +342,8 @@ class OfflineSyncQueue {
         debugPrint('[SyncQueue] Hoàn tất — hàng đợi đã trống.');
       } else {
         await _box!.put(_queueKey, jsonEncode(failed));
-        debugPrint('[SyncQueue] Còn ${failed.length} task(s) thất bại, sẽ thử lại sau.');
+        debugPrint(
+            '[SyncQueue] Còn ${failed.length} task(s) thất bại, sẽ thử lại sau.');
       }
     } catch (e) {
       debugPrint('[SyncQueue] Lỗi khi đồng bộ hàng đợi: $e');

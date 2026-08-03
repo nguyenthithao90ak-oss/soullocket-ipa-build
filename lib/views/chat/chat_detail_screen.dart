@@ -141,7 +141,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   late final Stream<ChatRoomMeta> _roomMetaStream;
   StreamSubscription<ChatMessage>? _liveMessageSub;
   final List<ChatMessage> _messages = [];
-  late final ValueNotifier<List<ChatMessage>> _messagesNotifier = ValueNotifier(_messages);
+  late final ValueNotifier<List<ChatMessage>> _messagesNotifier =
+      ValueNotifier(_messages);
 
   void _notifyMessagesChanged() {
     _messagesNotifier.value = List.from(_messages);

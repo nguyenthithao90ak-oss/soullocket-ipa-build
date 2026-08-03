@@ -80,8 +80,12 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                 Positioned.fill(
                   child: IgnorePointer(
                     child: HeartbeatThreadWidget(
-                      isOnline: _presenceStatusText('user1').toLowerCase().contains('online') ||
-                          _presenceStatusText('user2').toLowerCase().contains('online'),
+                      isOnline: _presenceStatusText('user1')
+                              .toLowerCase()
+                              .contains('online') ||
+                          _presenceStatusText('user2')
+                              .toLowerCase()
+                              .contains('online'),
                     ),
                   ),
                 ),
@@ -219,8 +223,9 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             onTap: customOnTap,
             onLongPress: customOnLongPress,
             isUploading: _uploadingAvatarRole == role,
-            uploadProgressNotifier:
-                _uploadingAvatarRole == role ? _avatarUploadProgressNotifier : null,
+            uploadProgressNotifier: _uploadingAvatarRole == role
+                ? _avatarUploadProgressNotifier
+                : null,
             size: avatarSize,
             isSinglePlaceholder: true,
           )
@@ -231,8 +236,9 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             onTap: customOnTap,
             onLongPress: customOnLongPress,
             isUploading: _uploadingAvatarRole == role,
-            uploadProgressNotifier:
-                _uploadingAvatarRole == role ? _avatarUploadProgressNotifier : null,
+            uploadProgressNotifier: _uploadingAvatarRole == role
+                ? _avatarUploadProgressNotifier
+                : null,
             size: avatarSize,
           );
 
@@ -247,7 +253,8 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
               color: const Color(0xFF6366F1).withValues(alpha: 0.8),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.nights_stay_rounded, color: Colors.white, size: 24),
+            child: const Icon(Icons.nights_stay_rounded,
+                color: Colors.white, size: 24),
           ),
         ],
       );
@@ -325,8 +332,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if ((zodiacEmoji.isNotEmpty) ||
-                  (hasAge && displayAge.isNotEmpty))
+              if ((zodiacEmoji.isNotEmpty) || (hasAge && displayAge.isNotEmpty))
                 _buildModernBirthZodiacPill(
                   zodiacEmoji: zodiacEmoji,
                   zodiacName: zodiacName,

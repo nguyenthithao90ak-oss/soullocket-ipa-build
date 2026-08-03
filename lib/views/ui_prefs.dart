@@ -436,7 +436,9 @@ class UiPrefs {
             UiPrefsState.defaults.homeShowTimer,
         showAvatarFrameIcon: prefs.getBool(_kShowAvatarFrameIconKey) ??
             UiPrefsState.defaults.showAvatarFrameIcon,
-        friendlyChatPersona: (prefs.getString(_kFriendlyChatPersonaKey) ?? UiPrefsState.defaults.friendlyChatPersona).trim(),
+        friendlyChatPersona: (prefs.getString(_kFriendlyChatPersonaKey) ??
+                UiPrefsState.defaults.friendlyChatPersona)
+            .trim(),
       ),
     );
   }
@@ -584,6 +586,7 @@ class UiPrefs {
 
   static Future<void> setFriendlyChatPersona(String persona) async {
     await ensureLoaded();
-    await saveState(notifier.value.copyWith(friendlyChatPersona: persona.trim()));
+    await saveState(
+        notifier.value.copyWith(friendlyChatPersona: persona.trim()));
   }
 }

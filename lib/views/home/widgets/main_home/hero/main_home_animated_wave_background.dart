@@ -17,8 +17,7 @@ class AnimatedWaveBackground extends StatefulWidget {
   }
 
   @override
-  State<AnimatedWaveBackground> createState() =>
-      _AnimatedWaveBackgroundState();
+  State<AnimatedWaveBackground> createState() => _AnimatedWaveBackgroundState();
 }
 
 class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
@@ -68,7 +67,8 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
 
           // Check if sensor is sending changing values (to detect static/emulated sensors)
           if (lastRawX != null && lastRawY != null) {
-            if ((event.x - lastRawX!).abs() < 0.0001 && (event.y - lastRawY!).abs() < 0.0001) {
+            if ((event.x - lastRawX!).abs() < 0.0001 &&
+                (event.y - lastRawY!).abs() < 0.0001) {
               staticCount++;
               if (staticCount > 10) {
                 isSensorActive = false;
@@ -106,14 +106,16 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
           _lastY = event.y;
           _lastZ = event.z;
 
-          final force = sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
+          final force =
+              sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
           // Threshold of 3.5 m/s^2 represents a sudden shake
           if (force > 3.5) {
             _shakeIntensity = (_shakeIntensity + 0.45).clamp(0.0, 1.5);
 
             final now = DateTime.now();
             if (_tapEffects.isEmpty ||
-                now.difference(_tapEffects.last.startTime).inMilliseconds > 250) {
+                now.difference(_tapEffects.last.startTime).inMilliseconds >
+                    250) {
               if (_tapEffects.length >= 3) {
                 _tapEffects.removeAt(0);
               }
@@ -192,7 +194,9 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
     if (!AnimatedWaveBackground.hasMotion(widget.styleKey)) {
       return const SizedBox.expand();
     }
-    final isBasicStyle = widget.styleKey == 'default' || widget.styleKey == 'plain' || widget.styleKey.isEmpty;
+    final isBasicStyle = widget.styleKey == 'default' ||
+        widget.styleKey == 'plain' ||
+        widget.styleKey.isEmpty;
     if (widget.transparentMode && isBasicStyle) {
       return const SizedBox.expand();
     }
@@ -264,7 +268,8 @@ class _AnimatedWaveBackgroundState extends State<AnimatedWaveBackground>
               final centerX = size.width / 2;
               final centerY = size.height / 2;
               if (centerX > 0.0 && centerY > 0.0) {
-                final offset = Offset(localPos.dx - centerX, localPos.dy - centerY);
+                final offset =
+                    Offset(localPos.dx - centerX, localPos.dy - centerY);
                 _shakeIntensity = (_shakeIntensity + 0.45).clamp(0.0, 1.5);
                 if (_tapEffects.length >= 4) {
                   _tapEffects.removeAt(0);
@@ -305,7 +310,6 @@ class _WavePainter extends CustomPainter {
     this.tapEffects = const [],
   });
 
-  
   MaskFilter? _getBlur(double sigma) {
     if (quality != 'high') return null;
     return MaskFilter.blur(BlurStyle.normal, sigma);
@@ -418,8 +422,13 @@ class _WavePainter extends CustomPainter {
       final size = 12.0 + (i * 5 % 12);
 
       final progress = (animationValue * speed + (i * 0.17)) % 1.0;
-      final y = height + size - progress * (height + size * 2) + tiltY * (0.6 + i * 0.1);
-      final x = startX + sin((animationValue * pi * 4) + i) * 15 + tiltX * (0.6 + i * 0.1);
+      final y = height +
+          size -
+          progress * (height + size * 2) +
+          tiltY * (0.6 + i * 0.1);
+      final x = startX +
+          sin((animationValue * pi * 4) + i) * 15 +
+          tiltX * (0.6 + i * 0.1);
       final opacity = sin(progress * pi);
 
       _drawHeartPath(canvas, x, y, size, opacity * 0.8);
@@ -439,8 +448,13 @@ class _WavePainter extends CustomPainter {
       final size = 6.0 + (i * 7 % 14);
 
       final progress = (animationValue * speed + (i * 0.23)) % 1.0;
-      final y = height + size - progress * (height + size * 2) + tiltY * (0.5 + i * 0.1);
-      final x = startX + cos((animationValue * pi * 3) + i * 2) * 12 + tiltX * (0.5 + i * 0.1);
+      final y = height +
+          size -
+          progress * (height + size * 2) +
+          tiltY * (0.5 + i * 0.1);
+      final x = startX +
+          cos((animationValue * pi * 3) + i * 2) * 12 +
+          tiltX * (0.5 + i * 0.1);
       final opacity = sin(progress * pi);
 
       bubblePaint.color = Colors.white.withValues(alpha: 0.15 * opacity);
@@ -470,13 +484,14 @@ class _WavePainter extends CustomPainter {
     if (quality != 'low') {
       // Premium pulsing ring with gradient
       final ringAlphaFactor = quality == 'balanced' ? 0.72 : 1.0;
-      
+
       final ringPaint1 = Paint()
         ..shader = ui.Gradient.radial(
           center,
           radius,
           [
-            const Color(0xFFFFC6DA).withValues(alpha: 0.2 * (1 - animationValue) * ringAlphaFactor),
+            const Color(0xFFFFC6DA).withValues(
+                alpha: 0.2 * (1 - animationValue) * ringAlphaFactor),
             const Color(0xFFFF9EBB).withValues(alpha: 0.0),
           ],
         )
@@ -493,7 +508,8 @@ class _WavePainter extends CustomPainter {
           center,
           radius,
           [
-            const Color(0xFFFF9EBB).withValues(alpha: 0.15 * (1 - phase2) * ringAlphaFactor),
+            const Color(0xFFFF9EBB)
+                .withValues(alpha: 0.15 * (1 - phase2) * ringAlphaFactor),
             const Color(0xFFFF4D94).withValues(alpha: 0.0),
           ],
         )
@@ -523,7 +539,7 @@ class _WavePainter extends CustomPainter {
           colors,
         )
         ..style = PaintingStyle.fill;
-        
+
       if (useBlur && quality == 'high') {
         paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 8.0);
       }
@@ -533,11 +549,11 @@ class _WavePainter extends CustomPainter {
       for (double i = 0; i <= width; i += step) {
         final relX = i / width;
         final wave = sin(
-                  (relX * frequency * pi * 2) +
-                      (animationValue * pi * 2) +
-                      phaseShift,
-                ) *
-                amplitude;
+              (relX * frequency * pi * 2) +
+                  (animationValue * pi * 2) +
+                  phaseShift,
+            ) *
+            amplitude;
         final tilt = (relX - 0.5) * tiltAmount * 2.0;
         final y = yBase + wave + tilt;
         if (i == 0) {
@@ -554,7 +570,7 @@ class _WavePainter extends CustomPainter {
     }
 
     final double shakeAmpMultiplier = 1.0 + shakeIntensity * 1.5;
-    
+
     // Nâng cấp: Dùng Gradient dọc tạo chiều sâu (Premium Gradient Waves)
     final wave1Colors = [
       const Color(0xFFFFC6DA).withValues(alpha: 0.35),
@@ -570,16 +586,58 @@ class _WavePainter extends CustomPainter {
     ];
 
     if (quality == 'low') {
-      drawPremiumWave(colors: wave1Colors, amplitude: 18 * shakeAmpMultiplier, frequency: 1.0, phaseShift: 0, verticalOffset: 0.55);
-      drawPremiumWave(colors: wave3Colors, amplitude: 10 * shakeAmpMultiplier, frequency: 1.5, phaseShift: pi, verticalOffset: 0.65);
+      drawPremiumWave(
+          colors: wave1Colors,
+          amplitude: 18 * shakeAmpMultiplier,
+          frequency: 1.0,
+          phaseShift: 0,
+          verticalOffset: 0.55);
+      drawPremiumWave(
+          colors: wave3Colors,
+          amplitude: 10 * shakeAmpMultiplier,
+          frequency: 1.5,
+          phaseShift: pi,
+          verticalOffset: 0.65);
     } else if (quality == 'balanced') {
-      drawPremiumWave(colors: wave1Colors, amplitude: 18 * shakeAmpMultiplier, frequency: 1.0, phaseShift: 0, verticalOffset: 0.55);
-      drawPremiumWave(colors: wave2Colors, amplitude: 14 * shakeAmpMultiplier, frequency: 1.2, phaseShift: pi / 2, verticalOffset: 0.60);
-      drawPremiumWave(colors: wave3Colors, amplitude: 10 * shakeAmpMultiplier, frequency: 1.5, phaseShift: pi, verticalOffset: 0.65);
+      drawPremiumWave(
+          colors: wave1Colors,
+          amplitude: 18 * shakeAmpMultiplier,
+          frequency: 1.0,
+          phaseShift: 0,
+          verticalOffset: 0.55);
+      drawPremiumWave(
+          colors: wave2Colors,
+          amplitude: 14 * shakeAmpMultiplier,
+          frequency: 1.2,
+          phaseShift: pi / 2,
+          verticalOffset: 0.60);
+      drawPremiumWave(
+          colors: wave3Colors,
+          amplitude: 10 * shakeAmpMultiplier,
+          frequency: 1.5,
+          phaseShift: pi,
+          verticalOffset: 0.65);
     } else {
-      drawPremiumWave(colors: wave1Colors, amplitude: 18 * shakeAmpMultiplier, frequency: 1.0, phaseShift: 0, verticalOffset: 0.55, useBlur: true);
-      drawPremiumWave(colors: wave2Colors, amplitude: 14 * shakeAmpMultiplier, frequency: 1.2, phaseShift: pi / 2, verticalOffset: 0.60, useBlur: true);
-      drawPremiumWave(colors: wave3Colors, amplitude: 10 * shakeAmpMultiplier, frequency: 1.5, phaseShift: pi, verticalOffset: 0.65);
+      drawPremiumWave(
+          colors: wave1Colors,
+          amplitude: 18 * shakeAmpMultiplier,
+          frequency: 1.0,
+          phaseShift: 0,
+          verticalOffset: 0.55,
+          useBlur: true);
+      drawPremiumWave(
+          colors: wave2Colors,
+          amplitude: 14 * shakeAmpMultiplier,
+          frequency: 1.2,
+          phaseShift: pi / 2,
+          verticalOffset: 0.60,
+          useBlur: true);
+      drawPremiumWave(
+          colors: wave3Colors,
+          amplitude: 10 * shakeAmpMultiplier,
+          frequency: 1.5,
+          phaseShift: pi,
+          verticalOffset: 0.65);
     }
   }
 
@@ -617,7 +675,7 @@ class _WavePainter extends CustomPainter {
           startAngle: angle,
           endAngle: angle + pi * 2,
         ).createShader(Rect.fromCircle(center: center, radius: radius * 0.7));
-      
+
       if (quality == 'high') {
         swirl1.maskFilter = _getBlur(12);
       } else {
@@ -786,7 +844,7 @@ class _WavePainter extends CustomPainter {
       path
         ..lineTo(width, height)
         ..close();
-      
+
       final paint = Paint()
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
@@ -796,16 +854,15 @@ class _WavePainter extends CustomPainter {
             bandColor.withValues(alpha: bandColor.a * 0.3),
           ],
         ).createShader(Rect.fromLTWH(0, yBase - amp * 2, width, amp * 4));
-      
+
       if (quality == 'high') {
         paint.maskFilter = _getBlur(8);
       } else if (quality == 'balanced') {
         paint.maskFilter = _getBlur(3);
       }
-      
+
       canvas.drawPath(path, paint);
     }
-
   }
 
   void _drawCrystal(
@@ -863,7 +920,7 @@ class _WavePainter extends CustomPainter {
           center.dy + sin(facetAngle2) * radius * (0.25 + pulse * 0.08),
         )
         ..close();
-      
+
       final paint = Paint()
         ..color = facetColors[i]
             .withValues(alpha: facetOpacities[i] * (0.6 + pulse * 0.4));
@@ -971,7 +1028,7 @@ class _WavePainter extends CustomPainter {
     } else if (quality == 'balanced') {
       stripePaint.maskFilter = _getBlur(1);
     }
-    
+
     final stripeColors = [
       const Color(0xFFFF6FB7),
       const Color(0xFF53D8FF),
@@ -1071,7 +1128,7 @@ class _WavePainter extends CustomPainter {
         paint.maskFilter = _getBlur(1.5 + pulse * 1.5);
       }
       canvas.drawCircle(p, 2.8 + pulse * 3.2, paint);
-      
+
       if (quality == 'high' && i % 3 == 0) {
         canvas.drawLine(
           center,
@@ -1091,7 +1148,8 @@ class _WavePainter extends CustomPainter {
       final paint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.8 + (1 - burst) * 2.8
-        ..color = colors[i % colors.length].withValues(alpha: (1 - burst) * 0.42);
+        ..color =
+            colors[i % colors.length].withValues(alpha: (1 - burst) * 0.42);
       if (quality == 'high') {
         paint.maskFilter = _getBlur(4);
       } else if (quality == 'balanced') {
@@ -1167,7 +1225,8 @@ class _WavePainter extends CustomPainter {
       }
     }
 
-    final particleCount = quality == 'low' ? 8 : (quality == 'balanced' ? 14 : 24);
+    final particleCount =
+        quality == 'low' ? 8 : (quality == 'balanced' ? 14 : 24);
     for (var b = 0; b < anchors.length; b++) {
       final progress = (animationValue + b * 0.29) % 1.0;
       if (progress >= 0.2) {
@@ -1203,7 +1262,10 @@ class _WavePainter extends CustomPainter {
           }
           canvas.drawLine(start, end, paint);
 
-          if (quality != 'low' && isLong && burstProgress > 0.4 && burstProgress < 0.9) {
+          if (quality != 'low' &&
+              isLong &&
+              burstProgress > 0.4 &&
+              burstProgress < 0.9) {
             final paintDot = Paint()
               ..color = Colors.white.withValues(alpha: 1 - burstProgress);
             if (quality == 'high') {
@@ -1320,7 +1382,8 @@ class _WavePainter extends CustomPainter {
     }
 
     final waveCount = quality == 'low' ? 2 : (quality == 'balanced' ? 3 : 5);
-    final waveStep = quality == 'low' ? 16.0 : (quality == 'balanced' ? 12.0 : 8.0);
+    final waveStep =
+        quality == 'low' ? 16.0 : (quality == 'balanced' ? 12.0 : 8.0);
     for (var i = 0; i < waveCount; i++) {
       final phase = (animationValue * (1.2 + i * 0.1) + i * 0.2) % 1.0;
       final y = height * (0.50 + i * 0.1);
@@ -1348,7 +1411,7 @@ class _WavePainter extends CustomPainter {
             const Color(0xFF3E0000).withValues(alpha: 0.8),
           ],
         ).createShader(Rect.fromLTWH(0, y - 50, width, height - y + 50));
-      
+
       if (quality == 'high') {
         paint.maskFilter = _getBlur(3);
       } else if (quality == 'balanced') {
@@ -1364,7 +1427,8 @@ class _WavePainter extends CustomPainter {
       final sx = width * ((i * 0.37) % 1.0) + sin(p * pi * 6 + i) * 20;
       final sy = height - p * height;
       final paint = Paint()
-        ..color = lavaColors[i % lavaColors.length].withValues(alpha: (1 - p) * 0.8);
+        ..color =
+            lavaColors[i % lavaColors.length].withValues(alpha: (1 - p) * 0.8);
       if (quality == 'high') {
         paint.maskFilter = _getBlur(2);
       }
@@ -1372,7 +1436,8 @@ class _WavePainter extends CustomPainter {
     }
   }
 
-  void _drawCherryBlossom(Canvas canvas, double width, double height, Offset center, double radius) {
+  void _drawCherryBlossom(Canvas canvas, double width, double height,
+      Offset center, double radius) {
     // Nền gradient hồng pastel mềm mại
     final bgPaint = Paint()
       ..shader = RadialGradient(
@@ -1415,14 +1480,17 @@ class _WavePainter extends CustomPainter {
 
       final progress = (animationValue * speed + (i * 0.11)) % 1.0;
       final swayAmount = 25.0 + (i % 4) * 8;
-      final y = -size * 2 + progress * (height + size * 4) + tiltY * (0.3 + i * 0.08);
-      final x = startX + sin((animationValue * pi * 2.5) + i * 1.3) * swayAmount
-          + cos((animationValue * pi * 1.7) + i * 0.7) * swayAmount * 0.4
-          + tiltX * (0.3 + i * 0.08);
+      final y =
+          -size * 2 + progress * (height + size * 4) + tiltY * (0.3 + i * 0.08);
+      final x = startX +
+          sin((animationValue * pi * 2.5) + i * 1.3) * swayAmount +
+          cos((animationValue * pi * 1.7) + i * 0.7) * swayAmount * 0.4 +
+          tiltX * (0.3 + i * 0.08);
       final opacity = sin(progress * pi) * (0.6 + (i % 3) * 0.15);
 
       final colorIdx = i % petalColors.length;
-      paint.color = petalColors[colorIdx].withValues(alpha: opacity.clamp(0.0, 1.0));
+      paint.color =
+          petalColors[colorIdx].withValues(alpha: opacity.clamp(0.0, 1.0));
 
       if (quality == 'high' && size > 7) {
         paint.maskFilter = _getBlur(size * 0.12);
@@ -1446,13 +1514,17 @@ class _WavePainter extends CustomPainter {
         canvas.restore();
       }
       // Nhụy hoa nhỏ ở giữa
-      canvas.drawCircle(Offset.zero, size * 0.15,
-        Paint()..color = const Color(0xFFFFEB3B).withValues(alpha: opacity * 0.9));
+      canvas.drawCircle(
+          Offset.zero,
+          size * 0.15,
+          Paint()
+            ..color = const Color(0xFFFFEB3B).withValues(alpha: opacity * 0.9));
       canvas.restore();
     }
   }
 
-  void _drawMeteorShower(Canvas canvas, double width, double height, Offset center, double radius) {
+  void _drawMeteorShower(Canvas canvas, double width, double height,
+      Offset center, double radius) {
     // Nền trời đêm gradient sâu
     final bgPaint = Paint()
       ..shader = RadialGradient(
@@ -1473,10 +1545,13 @@ class _WavePainter extends CustomPainter {
         ..maskFilter = _getBlur(50);
       final milkyPath = Path();
       milkyPath.moveTo(0, height * 0.2);
-      milkyPath.quadraticBezierTo(width * 0.3, height * 0.4, width * 0.6, height * 0.15);
-      milkyPath.quadraticBezierTo(width * 0.8, height * 0.05, width, height * 0.3);
+      milkyPath.quadraticBezierTo(
+          width * 0.3, height * 0.4, width * 0.6, height * 0.15);
+      milkyPath.quadraticBezierTo(
+          width * 0.8, height * 0.05, width, height * 0.3);
       milkyPath.lineTo(width, height * 0.4);
-      milkyPath.quadraticBezierTo(width * 0.7, height * 0.15, width * 0.4, height * 0.35);
+      milkyPath.quadraticBezierTo(
+          width * 0.7, height * 0.15, width * 0.4, height * 0.35);
       milkyPath.quadraticBezierTo(width * 0.15, height * 0.5, 0, height * 0.35);
       milkyPath.close();
       canvas.drawPath(milkyPath, milkyPaint);
@@ -1489,19 +1564,23 @@ class _WavePainter extends CustomPainter {
       final x = width * ((i * 0.137 + 0.03) % 1.0);
       final y = height * ((i * 0.193 + 0.02) % 1.0);
       final twinkleSpeed = 3.0 + (i % 5) * 1.5;
-      final twinkle = (sin(animationValue * pi * twinkleSpeed + i * 1.7) + 1) * 0.5;
+      final twinkle =
+          (sin(animationValue * pi * twinkleSpeed + i * 1.7) + 1) * 0.5;
       final starSize = 0.5 + (i % 4) * 0.5;
       final starColor = i % 7 == 0
           ? const Color(0xFFBBDEFB)
           : (i % 5 == 0 ? const Color(0xFFFFCDD2) : Colors.white);
-      starPaint.color = starColor.withValues(alpha: (0.2 + 0.8 * twinkle).clamp(0.0, 1.0));
+      starPaint.color =
+          starColor.withValues(alpha: (0.2 + 0.8 * twinkle).clamp(0.0, 1.0));
       canvas.drawCircle(Offset(x, y), starSize, starPaint);
 
       // Tia sáng cho sao lớn
       if (quality != 'low' && starSize > 1.2 && twinkle > 0.7) {
         starPaint.color = starColor.withValues(alpha: twinkle * 0.3);
-        canvas.drawLine(Offset(x - starSize * 2, y), Offset(x + starSize * 2, y), starPaint..strokeWidth = 0.5);
-        canvas.drawLine(Offset(x, y - starSize * 2), Offset(x, y + starSize * 2), starPaint);
+        canvas.drawLine(Offset(x - starSize * 2, y),
+            Offset(x + starSize * 2, y), starPaint..strokeWidth = 0.5);
+        canvas.drawLine(Offset(x, y - starSize * 2),
+            Offset(x, y + starSize * 2), starPaint);
         starPaint.strokeWidth = 0.0;
       }
     }
@@ -1545,15 +1624,18 @@ class _WavePainter extends CustomPainter {
             Colors.transparent,
           ],
           stops: const [0.0, 0.3, 1.0],
-        ).createShader(Rect.fromPoints(Offset(headX, headY), Offset(tailX, tailY)));
+        ).createShader(
+            Rect.fromPoints(Offset(headX, headY), Offset(tailX, tailY)));
       canvas.drawLine(Offset(headX, headY), Offset(tailX, tailY), meteorPaint);
 
       // Đầu sao băng sáng
-      canvas.drawCircle(Offset(headX, headY), 2.0, Paint()..color = Colors.white);
+      canvas.drawCircle(
+          Offset(headX, headY), 2.0, Paint()..color = Colors.white);
     }
   }
 
-  void _drawDeepOcean(Canvas canvas, double width, double height, Offset center, double radius) {
+  void _drawDeepOcean(Canvas canvas, double width, double height, Offset center,
+      double radius) {
     // Nền gradient đại dương xanh sâu
     final bgPaint = Paint()
       ..shader = RadialGradient(
@@ -1570,12 +1652,18 @@ class _WavePainter extends CustomPainter {
     // Ánh sáng caustic từ trên mặt nước chiếu xuống
     if (quality != 'low') {
       for (var i = 0; i < 4; i++) {
-        final cx = center.dx + sin(animationValue * pi * 2 + i * 1.5) * radius * 0.3;
-        final cy = center.dy - radius * 0.4 + cos(animationValue * pi * 1.5 + i) * 15;
+        final cx =
+            center.dx + sin(animationValue * pi * 2 + i * 1.5) * radius * 0.3;
+        final cy =
+            center.dy - radius * 0.4 + cos(animationValue * pi * 1.5 + i) * 15;
         canvas.drawOval(
-          Rect.fromCenter(center: Offset(cx, cy), width: radius * 0.5, height: radius * 0.15),
+          Rect.fromCenter(
+              center: Offset(cx, cy),
+              width: radius * 0.5,
+              height: radius * 0.15),
           Paint()
-            ..color = const Color(0xFF90E0EF).withValues(alpha: 0.08 + sin(animationValue * pi * 3 + i) * 0.04)
+            ..color = const Color(0xFF90E0EF).withValues(
+                alpha: 0.08 + sin(animationValue * pi * 3 + i) * 0.04)
             ..maskFilter = _getBlur(25),
         );
       }
@@ -1589,8 +1677,12 @@ class _WavePainter extends CustomPainter {
       final size = 2.0 + (i * 4.3 % 12);
 
       final progress = (animationValue * speed + (i * 0.17)) % 1.0;
-      final wobble = sin((animationValue * pi * 4) + i * 2.3) * (8 + size * 0.5);
-      final y = height + size - progress * (height + size * 3) + tiltY * (0.2 + i * 0.06);
+      final wobble =
+          sin((animationValue * pi * 4) + i * 2.3) * (8 + size * 0.5);
+      final y = height +
+          size -
+          progress * (height + size * 3) +
+          tiltY * (0.2 + i * 0.06);
       final x = startX + wobble + tiltX * (0.2 + i * 0.06);
       final opacity = sin(progress * pi);
 
@@ -1635,15 +1727,18 @@ class _WavePainter extends CustomPainter {
         final path = Path();
         path.moveTo(baseX, baseY);
         path.quadraticBezierTo(
-          baseX + sway, baseY - height * 0.12,
-          baseX + sway * 0.6, baseY - height * 0.22,
+          baseX + sway,
+          baseY - height * 0.12,
+          baseX + sway * 0.6,
+          baseY - height * 0.22,
         );
         canvas.drawPath(path, seaweedPaint);
       }
     }
   }
 
-  void _drawGoldenSunset(Canvas canvas, double width, double height, Offset center, double radius) {
+  void _drawGoldenSunset(Canvas canvas, double width, double height,
+      Offset center, double radius) {
     // Nền gradient hoàng hôn nhiều lớp
     final sunBob = sin(animationValue * pi * 1.5);
     final sunCenter = Offset(center.dx, center.dy + sunBob * 8);
@@ -1701,7 +1796,8 @@ class _WavePainter extends CustomPainter {
       final rayPaint = Paint()..strokeCap = StrokeCap.round;
       for (var i = 0; i < rayCount; i++) {
         final angle = (i * 2 * pi / rayCount) + animationValue * pi * 0.3;
-        final rayLen = sunRadius * 1.5 + sin(animationValue * pi * 4 + i * 2) * sunRadius * 0.5;
+        final rayLen = sunRadius * 1.5 +
+            sin(animationValue * pi * 4 + i * 2) * sunRadius * 0.5;
         final startR = sunRadius * 1.1;
         final sx = sunCenter.dx + cos(angle) * startR;
         final sy = sunCenter.dy + sin(angle) * startR;
@@ -1736,14 +1832,17 @@ class _WavePainter extends CustomPainter {
       final moveY = y + cos(progress * pi * 2 + i * 1.1) * 18;
       final opacity = sin(progress * pi) * (0.4 + (i % 3) * 0.15);
       final dotSize = 1.0 + (i % 4) * 0.8;
-      dustPaint.color = dustColors[i % dustColors.length].withValues(alpha: opacity.clamp(0.0, 1.0));
+      dustPaint.color = dustColors[i % dustColors.length]
+          .withValues(alpha: opacity.clamp(0.0, 1.0));
       canvas.drawCircle(Offset(moveX, moveY), dotSize, dustPaint);
     }
   }
 
-  void _drawNeonPulse(Canvas canvas, double width, double height, Offset center, double radius) {
+  void _drawNeonPulse(Canvas canvas, double width, double height, Offset center,
+      double radius) {
     // Nền đen sâu
-    canvas.drawCircle(center, radius, Paint()..color = const Color(0xFF030308).withValues(alpha: 0.92));
+    canvas.drawCircle(center, radius,
+        Paint()..color = const Color(0xFF030308).withValues(alpha: 0.92));
 
     final pulse = sin(animationValue * pi * 6);
     final pulse2 = sin(animationValue * pi * 4 + pi / 3);
@@ -1781,27 +1880,34 @@ class _WavePainter extends CustomPainter {
       final rayPaint = Paint()
         ..strokeWidth = 1.5 + rayPulse * 0.5
         ..strokeCap = StrokeCap.round
-        ..color = neonColors[colorIdx].withValues(alpha: (0.3 + rayPulse * 0.3).clamp(0.0, 1.0));
+        ..color = neonColors[colorIdx]
+            .withValues(alpha: (0.3 + rayPulse * 0.3).clamp(0.0, 1.0));
       if (quality == 'high') {
         rayPaint.maskFilter = _getBlur(3 + rayPulse * 2);
       }
       canvas.drawLine(
-        Offset(center.dx + cos(angle) * innerR, center.dy + sin(angle) * innerR),
-        Offset(center.dx + cos(angle) * outerR, center.dy + sin(angle) * outerR),
+        Offset(
+            center.dx + cos(angle) * innerR, center.dy + sin(angle) * innerR),
+        Offset(
+            center.dx + cos(angle) * outerR, center.dy + sin(angle) * outerR),
         rayPaint,
       );
     }
 
     // Hạt neon bay lơ lửng
-    final particleCount = quality == 'low' ? 6 : (quality == 'balanced' ? 12 : 20);
+    final particleCount =
+        quality == 'low' ? 6 : (quality == 'balanced' ? 12 : 20);
     for (var i = 0; i < particleCount; i++) {
-      final angle = animationValue * pi * (0.5 + i * 0.15) + i * 2 * pi / particleCount;
-      final dist = radius * (0.3 + (i % 4) * 0.1) + sin(animationValue * pi * 3 + i) * 10;
+      final angle =
+          animationValue * pi * (0.5 + i * 0.15) + i * 2 * pi / particleCount;
+      final dist = radius * (0.3 + (i % 4) * 0.1) +
+          sin(animationValue * pi * 3 + i) * 10;
       final px = center.dx + cos(angle) * dist;
       final py = center.dy + sin(angle) * dist;
       final pSize = 1.5 + (i % 3);
       final pColor = neonColors[i % neonColors.length];
-      final pOpacity = (0.4 + sin(animationValue * pi * 5 + i * 1.3) * 0.4).clamp(0.0, 1.0);
+      final pOpacity =
+          (0.4 + sin(animationValue * pi * 5 + i * 1.3) * 0.4).clamp(0.0, 1.0);
       canvas.drawCircle(
         Offset(px, py),
         pSize,
@@ -1824,7 +1930,8 @@ class _WavePainter extends CustomPainter {
         center,
         radius * 0.12 + pulse2 * 5,
         Paint()
-          ..color = const Color(0xFFFF003C).withValues(alpha: 0.15 + pulse * 0.1)
+          ..color =
+              const Color(0xFFFF003C).withValues(alpha: 0.15 + pulse * 0.1)
           ..maskFilter = _getBlur(15 + pulse * 8),
       );
     }
@@ -1840,73 +1947,97 @@ class _WavePainter extends CustomPainter {
 
       // Easing curve (easeOutCubic) to make explosion pop fast then slow down
       final progress = 1.0 - pow(1.0 - rawProgress, 3);
-      final origin = Offset(center.dx + effect.centerOffset.dx, center.dy + effect.centerOffset.dy);
+      final origin = Offset(center.dx + effect.centerOffset.dx,
+          center.dy + effect.centerOffset.dy);
       final rng = Random(effect.seed);
       final fadeOpacity = (1.0 - rawProgress);
 
-      if (styleKey == 'fireworks' || styleKey == 'meteor_shower' || styleKey == 'galaxy') {
+      if (styleKey == 'fireworks' ||
+          styleKey == 'meteor_shower' ||
+          styleKey == 'galaxy') {
         // --- Starburst / Fireworks ---
-        final particleCount = quality == 'low' ? 8 : (quality == 'balanced' ? 14 : 20);
+        final particleCount =
+            quality == 'low' ? 8 : (quality == 'balanced' ? 14 : 20);
         final paint = Paint()
           ..strokeCap = StrokeCap.round
           ..blendMode = BlendMode.plus;
-          
+
         for (int i = 0; i < particleCount; i++) {
           final angle = rng.nextDouble() * pi * 2;
           final speed = 40.0 + rng.nextDouble() * 100.0;
           final pDist = progress * speed;
-          
+
           final px = origin.dx + cos(angle) * pDist;
-          final py = origin.dy + sin(angle) * pDist + (progress * progress * 20.0); // Slight gravity
-          
+          final py = origin.dy +
+              sin(angle) * pDist +
+              (progress * progress * 20.0); // Slight gravity
+
           final trailLength = (speed * 0.15 * fadeOpacity).clamp(2.0, 15.0);
           final size = 1.5 + rng.nextDouble() * 2.5;
-          
-          paint.color = (rng.nextBool() ? const Color(0xFFFFD54F) : const Color(0xFF00F5FF))
+
+          paint.color = (rng.nextBool()
+                  ? const Color(0xFFFFD54F)
+                  : const Color(0xFF00F5FF))
               .withValues(alpha: fadeOpacity * (0.6 + rng.nextDouble() * 0.4));
           paint.strokeWidth = size * fadeOpacity;
-          
+
           canvas.drawLine(
-            Offset(px - cos(angle) * trailLength, py - sin(angle) * trailLength),
+            Offset(
+                px - cos(angle) * trailLength, py - sin(angle) * trailLength),
             Offset(px, py),
             paint,
           );
         }
       } else if (styleKey == 'candy' || styleKey == 'hyper') {
         // --- Confetti ---
-        final colors = [const Color(0xFFFF6FB7), const Color(0xFF53D8FF), const Color(0xFFFFD54F), const Color(0xFFB388FF), const Color(0xFF69F0AE)];
-        final particleCount = quality == 'low' ? 6 : (quality == 'balanced' ? 10 : 15);
+        final colors = [
+          const Color(0xFFFF6FB7),
+          const Color(0xFF53D8FF),
+          const Color(0xFFFFD54F),
+          const Color(0xFFB388FF),
+          const Color(0xFF69F0AE)
+        ];
+        final particleCount =
+            quality == 'low' ? 6 : (quality == 'balanced' ? 10 : 15);
         final paint = Paint()..style = PaintingStyle.fill;
         for (int i = 0; i < particleCount; i++) {
           final angle = rng.nextDouble() * pi * 2;
           final speed = 30.0 + rng.nextDouble() * 60.0;
           final pDist = progress * speed;
-          final gravity = progress * progress * 50.0; 
-          
+          final gravity = progress * progress * 50.0;
+
           final px = origin.dx + cos(angle) * pDist;
           final py = origin.dy + sin(angle) * pDist + gravity;
-          
+
           final size = 3.0 + rng.nextDouble() * 5.0;
-          paint.color = colors[rng.nextInt(colors.length)].withValues(alpha: fadeOpacity);
+          paint.color =
+              colors[rng.nextInt(colors.length)].withValues(alpha: fadeOpacity);
           canvas.drawCircle(Offset(px, py), size * fadeOpacity, paint);
         }
       } else if (styleKey == 'cherry_blossom') {
         // --- Petal Burst ---
-        final colors = [const Color(0xFFFFB7C5), const Color(0xFFF8A4B8), const Color(0xFFFFCDD2), const Color(0xFFFFF0F5)];
-        final particleCount = quality == 'low' ? 4 : (quality == 'balanced' ? 6 : 9);
+        final colors = [
+          const Color(0xFFFFB7C5),
+          const Color(0xFFF8A4B8),
+          const Color(0xFFFFCDD2),
+          const Color(0xFFFFF0F5)
+        ];
+        final particleCount =
+            quality == 'low' ? 4 : (quality == 'balanced' ? 6 : 9);
         final paint = Paint()..style = PaintingStyle.fill;
         for (int i = 0; i < particleCount; i++) {
           final angle = rng.nextDouble() * pi * 2;
           final speed = 30.0 + rng.nextDouble() * 50.0;
           final pDist = progress * speed;
-          
+
           final drift = sin(progress * pi * 3 + i) * 15.0; // Swaying motion
           final px = origin.dx + cos(angle) * pDist + drift;
           final py = origin.dy + sin(angle) * pDist + progress * 25.0;
-          
+
           final size = 4.0 + rng.nextDouble() * 4.0;
-          paint.color = colors[rng.nextInt(colors.length)].withValues(alpha: fadeOpacity);
-          
+          paint.color =
+              colors[rng.nextInt(colors.length)].withValues(alpha: fadeOpacity);
+
           canvas.save();
           canvas.translate(px, py);
           canvas.rotate(progress * pi * 5 * (rng.nextBool() ? 1 : -1) + angle);
@@ -1919,7 +2050,8 @@ class _WavePainter extends CustomPainter {
         }
       } else if (styleKey == 'floating_hearts' || styleKey == 'glow') {
         // --- Heart / Glow Burst ---
-        final particleCount = quality == 'low' ? 4 : (quality == 'balanced' ? 6 : 10);
+        final particleCount =
+            quality == 'low' ? 4 : (quality == 'balanced' ? 6 : 10);
         final paint = Paint()..style = PaintingStyle.fill;
         if (styleKey == 'glow') {
           paint.blendMode = BlendMode.plus;
@@ -1928,23 +2060,32 @@ class _WavePainter extends CustomPainter {
           final angle = rng.nextDouble() * pi * 2;
           final speed = 20.0 + rng.nextDouble() * 40.0;
           final pDist = progress * speed;
-          
+
           final px = origin.dx + cos(angle) * pDist;
-          final py = origin.dy + sin(angle) * pDist - progress * 30.0; // Float up
-          
+          final py =
+              origin.dy + sin(angle) * pDist - progress * 30.0; // Float up
+
           final size = 3.0 + rng.nextDouble() * 6.0;
-          paint.color = const Color(0xFFFF4F93).withValues(alpha: fadeOpacity * 0.85);
-          
+          paint.color =
+              const Color(0xFFFF4F93).withValues(alpha: fadeOpacity * 0.85);
+
           final path = Path();
           path.moveTo(px, py + size / 4);
-          path.cubicTo(px - size, py - size * 0.7, px - size * 0.5, py - size, px, py - size / 4);
-          path.cubicTo(px + size * 0.5, py - size, px + size, py - size * 0.7, px, py + size / 4);
+          path.cubicTo(px - size, py - size * 0.7, px - size * 0.5, py - size,
+              px, py - size / 4);
+          path.cubicTo(px + size * 0.5, py - size, px + size, py - size * 0.7,
+              px, py + size / 4);
           canvas.drawPath(path, paint);
         }
       } else if (styleKey == 'lava') {
         // --- Lava Bubbles ---
-        final colors = [const Color(0xFFFF1744), const Color(0xFFFF9100), const Color(0xFFFFEA00)];
-        final particleCount = quality == 'low' ? 4 : (quality == 'balanced' ? 6 : 10);
+        final colors = [
+          const Color(0xFFFF1744),
+          const Color(0xFFFF9100),
+          const Color(0xFFFFEA00)
+        ];
+        final particleCount =
+            quality == 'low' ? 4 : (quality == 'balanced' ? 6 : 10);
         final paint = Paint()
           ..style = PaintingStyle.fill
           ..blendMode = BlendMode.screen;
@@ -1952,42 +2093,51 @@ class _WavePainter extends CustomPainter {
           final angle = rng.nextDouble() * pi * 2;
           final speed = 15.0 + rng.nextDouble() * 35.0;
           final pDist = progress * speed;
-          
+
           final px = origin.dx + cos(angle) * pDist;
           final py = origin.dy + sin(angle) * pDist - progress * 15.0;
-          
+
           final size = 4.0 + rng.nextDouble() * 7.0;
-          paint.color = colors[rng.nextInt(colors.length)].withValues(alpha: fadeOpacity);
+          paint.color =
+              colors[rng.nextInt(colors.length)].withValues(alpha: fadeOpacity);
           canvas.drawCircle(Offset(px, py), size * fadeOpacity, paint);
         }
-      } else if (styleKey == 'neon' || styleKey == 'neon_pulse' || styleKey == 'aurora') {
+      } else if (styleKey == 'neon' ||
+          styleKey == 'neon_pulse' ||
+          styleKey == 'aurora') {
         // --- Neon Pulse ---
-        final ringColor = styleKey == 'aurora' ? const Color(0xFF00FFEA) : const Color(0xFFFF003C);
+        final ringColor = styleKey == 'aurora'
+            ? const Color(0xFF00FFEA)
+            : const Color(0xFFFF003C);
         final paint = Paint()
           ..color = ringColor.withValues(alpha: fadeOpacity * 0.8)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 3.0 * fadeOpacity
           ..blendMode = BlendMode.plus;
-          
+
         canvas.drawCircle(origin, progress * 55.0, paint);
-        
+
         final particleCount = quality == 'low' ? 4 : 8;
         for (int i = 0; i < particleCount; i++) {
           final angle = rng.nextDouble() * pi * 2;
           final px = origin.dx + cos(angle) * progress * 65.0;
           final py = origin.dy + sin(angle) * progress * 65.0;
           canvas.drawCircle(
-            Offset(px, py), 
-            2.5 * fadeOpacity, 
-            Paint()..color = Colors.white.withValues(alpha: fadeOpacity)..blendMode = BlendMode.plus
-          );
+              Offset(px, py),
+              2.5 * fadeOpacity,
+              Paint()
+                ..color = Colors.white.withValues(alpha: fadeOpacity)
+                ..blendMode = BlendMode.plus);
         }
       } else {
         // --- Default Ripple (Plain/Glass/Deep Ocean/Golden Sunset) ---
         final maxR = radius * 0.6;
         final currentRadius = maxR * progress;
-        final baseColor = (styleKey == 'deep_ocean') ? const Color(0xFF90E0EF) :
-                          (styleKey == 'golden_sunset') ? const Color(0xFFFFD54F) : const Color(0xFFFFEBF2);
+        final baseColor = (styleKey == 'deep_ocean')
+            ? const Color(0xFF90E0EF)
+            : (styleKey == 'golden_sunset')
+                ? const Color(0xFFFFD54F)
+                : const Color(0xFFFFEBF2);
 
         final ripplePaint = Paint()
           ..color = baseColor.withValues(alpha: fadeOpacity * 0.6)

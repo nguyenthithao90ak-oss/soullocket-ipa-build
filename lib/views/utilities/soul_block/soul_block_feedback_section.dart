@@ -569,7 +569,8 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     final bool simpleParticles = true;
     final int particleCount = subtle
         ? min((6 + (clearedCount * 2)).clamp(6, 12), profile.subtleParticleCap)
-        : min((10 + (clearedCount * 3)).clamp(12, 20), profile.strongParticleCap);
+        : min(
+            (10 + (clearedCount * 3)).clamp(12, 20), profile.strongParticleCap);
     final double maxDistance = subtle
         ? ((60 + (clearedCount * 12)).clamp(70, 140).toDouble() *
             profile.subtleDistanceScale)

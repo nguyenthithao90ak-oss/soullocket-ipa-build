@@ -177,7 +177,8 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
         FirstSetupSpotlightStep(
           targetKey: _firstGuideEntertainmentTabKey,
           title: 'Giải trí & Trò chơi',
-          description: 'Khám phá các trò chơi cặp đôi, bói bài Tarot cùng nhiều tiện ích thú vị khác giúp hai bạn gắn kết hơn.',
+          description:
+              'Khám phá các trò chơi cặp đôi, bói bài Tarot cùng nhiều tiện ích thú vị khác giúp hai bạn gắn kết hơn.',
           icon: Icons.sports_esports_rounded,
           color: const Color(0xFF00B0FF),
         ),
@@ -608,7 +609,8 @@ class _InactivityCountdownDialogState
               context.tr('home_khonghd_inactivity') != 'home_khonghd_inactivity'
                   ? context.tr('home_khonghd_inactivity')
                   : 'Không có hoạt động',
-              style: SLTheme.quicksand(fontSize: 16, fontWeight: FontWeight.w700),
+              style:
+                  SLTheme.quicksand(fontSize: 16, fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -845,8 +847,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
               Navigator.push(
                 context,
                 SLRoute<void>(
-                  builder: (_) =>
-                      SettingsLinksManagerScreen(houseId: houseId),
+                  builder: (_) => SettingsLinksManagerScreen(houseId: houseId),
                 ),
               );
             },

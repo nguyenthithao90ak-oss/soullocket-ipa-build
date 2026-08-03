@@ -1431,10 +1431,10 @@ class _DiaryTabState extends State<DiaryTab>
                                                 16,
                                             left: 12,
                                             child: IconButton(
-                                              tooltip: context
-                                                  .tr('home_ng_f63d1e'),
-                                              onPressed: () => Navigator.pop(
-                                                  dialogContext),
+                                              tooltip:
+                                                  context.tr('home_ng_f63d1e'),
+                                              onPressed: () =>
+                                                  Navigator.pop(dialogContext),
                                               icon: const Icon(
                                                 Icons.close_rounded,
                                                 color: Colors.white,
@@ -1449,151 +1449,145 @@ class _DiaryTabState extends State<DiaryTab>
                                                 16,
                                             right: 12,
                                             child: PopupMenuButton<String>(
-                                                tooltip: context
-                                                    .tr('home_tychnnh_5e18e0'),
-                                                padding:
-                                                    const EdgeInsets.all(11),
-                                                icon: const Icon(
-                                                  Icons.more_vert_rounded,
-                                                  color: Colors.white,
-                                                  size: 23,
-                                                ),
-                                                color: const Color(0xFF171A21),
-                                                surfaceTintColor:
-                                                    const Color(0xFF171A21),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                ),
-                                                itemBuilder: (menuContext) => [
-                                                  PopupMenuItem<String>(
-                                                    value: 'save',
-                                                    child: Row(
-                                                      children: [
-                                                        const Icon(
-                                                          Icons
-                                                              .download_rounded,
-                                                          color: Colors.white,
-                                                          size: 19,
-                                                        ),
-                                                        const SizedBox(
-                                                            width: 12),
-                                                        Text(
-                                                          context.tr(
-                                                              'home_lunh_9088ba'),
-                                                          style:
-                                                              SLTheme.quicksand(
-                                                            color: Colors.white,
-                                                            fontWeight:
-                                                                FontWeight.w800,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  PopupMenuItem<String>(
-                                                    value: 'share',
-                                                    child: Row(
-                                                      children: [
-                                                        const Icon(
-                                                          Icons.link_rounded,
-                                                          color: Colors.white,
-                                                          size: 19,
-                                                        ),
-                                                        const SizedBox(
-                                                            width: 12),
-                                                        Text(
-                                                          context.tr(
-                                                              'home_chiasnh_003604'),
-                                                          style:
-                                                              SLTheme.quicksand(
-                                                            color: Colors.white,
-                                                            fontWeight:
-                                                                FontWeight.w800,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  PopupMenuItem<String>(
-                                                    value: 'info',
-                                                    child: Row(
-                                                      children: [
-                                                        const Icon(
-                                                          Icons
-                                                              .info_outline_rounded,
-                                                          color: Colors.white,
-                                                          size: 19,
-                                                        ),
-                                                        const SizedBox(
-                                                            width: 12),
-                                                        Text(
-                                                          context.tr(
-                                                              'home_chititnh_958bbd'),
-                                                          style:
-                                                              SLTheme.quicksand(
-                                                            color: Colors.white,
-                                                            fontWeight:
-                                                                FontWeight.w800,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  PopupMenuItem<String>(
-                                                    value: 'delete',
-                                                    child: Row(
-                                                      children: [
-                                                        const Icon(
-                                                          Icons
-                                                              .delete_outline_rounded,
-                                                          color:
-                                                              Color(0xFFFF6B6B),
-                                                          size: 19,
-                                                        ),
-                                                        const SizedBox(
-                                                            width: 12),
-                                                        Text(
-                                                          context.tr(
-                                                              'home_xanh_0b98d1'),
-                                                          style:
-                                                              SLTheme.quicksand(
-                                                            color: const Color(
-                                                                0xFFFF6B6B),
-                                                            fontWeight:
-                                                                FontWeight.w800,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ],
-                                                onSelected: (value) async {
-                                                  switch (value) {
-                                                    case 'save':
-                                                      await _downloadSingleImage(
-                                                          currentItem['url']);
-                                                      break;
-                                                    case 'share':
-                                                      Navigator.pop(
-                                                          dialogContext);
-                                                      await _shareSingleMemory(
-                                                          currentItem);
-                                                      break;
-                                                    case 'info':
-                                                      await _showMemoryInfoSheet(
-                                                          dialogContext,
-                                                          currentItem);
-                                                      break;
-                                                    case 'delete':
-                                                      Navigator.pop(
-                                                          dialogContext);
-                                                      await _deleteMemory(
-                                                          currentItem);
-                                                      break;
-                                                  }
-                                                },
+                                              tooltip: context
+                                                  .tr('home_tychnnh_5e18e0'),
+                                              padding: const EdgeInsets.all(11),
+                                              icon: const Icon(
+                                                Icons.more_vert_rounded,
+                                                color: Colors.white,
+                                                size: 23,
                                               ),
+                                              color: const Color(0xFF171A21),
+                                              surfaceTintColor:
+                                                  const Color(0xFF171A21),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              itemBuilder: (menuContext) => [
+                                                PopupMenuItem<String>(
+                                                  value: 'save',
+                                                  child: Row(
+                                                    children: [
+                                                      const Icon(
+                                                        Icons.download_rounded,
+                                                        color: Colors.white,
+                                                        size: 19,
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Text(
+                                                        context.tr(
+                                                            'home_lunh_9088ba'),
+                                                        style:
+                                                            SLTheme.quicksand(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.w800,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                PopupMenuItem<String>(
+                                                  value: 'share',
+                                                  child: Row(
+                                                    children: [
+                                                      const Icon(
+                                                        Icons.link_rounded,
+                                                        color: Colors.white,
+                                                        size: 19,
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Text(
+                                                        context.tr(
+                                                            'home_chiasnh_003604'),
+                                                        style:
+                                                            SLTheme.quicksand(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.w800,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                PopupMenuItem<String>(
+                                                  value: 'info',
+                                                  child: Row(
+                                                    children: [
+                                                      const Icon(
+                                                        Icons
+                                                            .info_outline_rounded,
+                                                        color: Colors.white,
+                                                        size: 19,
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Text(
+                                                        context.tr(
+                                                            'home_chititnh_958bbd'),
+                                                        style:
+                                                            SLTheme.quicksand(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.w800,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                PopupMenuItem<String>(
+                                                  value: 'delete',
+                                                  child: Row(
+                                                    children: [
+                                                      const Icon(
+                                                        Icons
+                                                            .delete_outline_rounded,
+                                                        color:
+                                                            Color(0xFFFF6B6B),
+                                                        size: 19,
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Text(
+                                                        context.tr(
+                                                            'home_xanh_0b98d1'),
+                                                        style:
+                                                            SLTheme.quicksand(
+                                                          color: const Color(
+                                                              0xFFFF6B6B),
+                                                          fontWeight:
+                                                              FontWeight.w800,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                              onSelected: (value) async {
+                                                switch (value) {
+                                                  case 'save':
+                                                    await _downloadSingleImage(
+                                                        currentItem['url']);
+                                                    break;
+                                                  case 'share':
+                                                    Navigator.pop(
+                                                        dialogContext);
+                                                    await _shareSingleMemory(
+                                                        currentItem);
+                                                    break;
+                                                  case 'info':
+                                                    await _showMemoryInfoSheet(
+                                                        dialogContext,
+                                                        currentItem);
+                                                    break;
+                                                  case 'delete':
+                                                    Navigator.pop(
+                                                        dialogContext);
+                                                    await _deleteMemory(
+                                                        currentItem);
+                                                    break;
+                                                }
+                                              },
+                                            ),
                                           ),
                                         ],
                                       ),

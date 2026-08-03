@@ -150,7 +150,7 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
 
     final hasMappings = _mappings.isNotEmpty;
     final isEmptyState = _mappings.isEmpty && !_isCreating;
-    
+
     int itemCount = 1;
     if (hasMappings) itemCount += 3 + _mappings.length;
     if (isEmptyState) itemCount += 2;
@@ -217,7 +217,7 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
             ),
           );
         }
-        
+
         int offset = 1;
         if (hasMappings) {
           if (index == offset) return const SizedBox(height: 18);
@@ -243,14 +243,14 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
             );
           }
           if (index == offset + 2) return const SizedBox(height: 12);
-          
+
           final mappingIndex = index - (offset + 3);
           if (mappingIndex < _mappings.length) {
             return _buildChatItem(_mappings[mappingIndex]);
           }
           offset += 3 + _mappings.length;
         }
-        
+
         if (isEmptyState) {
           if (index == offset) return const SizedBox(height: 24);
           if (index == offset + 1) {
@@ -288,7 +288,7 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
             );
           }
         }
-        
+
         return const SizedBox.shrink();
       },
     );
@@ -317,8 +317,9 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
             CircleAvatar(
               radius: 24,
               backgroundColor: const Color(0xFFFFDCE7),
-              backgroundImage:
-                  peerAvatar.isNotEmpty ? CachedNetworkImageProvider(peerAvatar) : null,
+              backgroundImage: peerAvatar.isNotEmpty
+                  ? CachedNetworkImageProvider(peerAvatar)
+                  : null,
               child: peerAvatar.isEmpty
                   ? Text(peerName.isNotEmpty ? peerName[0].toUpperCase() : '?')
                   : null,

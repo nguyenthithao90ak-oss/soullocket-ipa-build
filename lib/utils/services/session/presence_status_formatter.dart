@@ -21,8 +21,7 @@ class PresenceStatusFormatter {
     );
 
     if (diff.inSeconds < 60) {
-      return L10nService()
-          .format('core_presence_minutes_ago', {'count': 1});
+      return L10nService().format('core_presence_minutes_ago', {'count': 1});
     }
     if (diff.inMinutes < 60) {
       return L10nService()

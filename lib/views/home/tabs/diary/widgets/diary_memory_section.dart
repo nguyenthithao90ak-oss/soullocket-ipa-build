@@ -12,7 +12,6 @@ import '../../../../../utils/app_error_mapper.dart';
 import '../../../../../utils/services/l10n_service.dart';
 import '../../../../../widgets/skeleton_container.dart';
 
-
 import '../controllers/diary_memory_controller.dart';
 import 'diary_tab_shell_sections.dart';
 
@@ -100,7 +99,9 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
   List<DateTime> _availableMonths = [];
 
   // Scroll indicator state
-  final ValueNotifier<({bool isVisible, String label, double fraction})> _scrollIndicatorNotifier = ValueNotifier((isVisible: false, label: '', fraction: 0.0));
+  final ValueNotifier<({bool isVisible, String label, double fraction})>
+      _scrollIndicatorNotifier =
+      ValueNotifier((isVisible: false, label: '', fraction: 0.0));
   Timer? _hideIndicatorTimer;
 
   @override
@@ -179,7 +180,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: isSelected ? Colors.white : const Color(0xFF8A5B76),
+                      color:
+                          isSelected ? Colors.white : const Color(0xFF8A5B76),
                     ),
                   ),
                   selected: isSelected,
@@ -187,8 +189,13 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                   backgroundColor: Colors.white.withValues(alpha: 0.7),
                   elevation: isSelected ? 4 : 0,
                   shadowColor: const Color(0xFFD81B60).withValues(alpha: 0.3),
-                  side: isSelected ? BorderSide.none : BorderSide(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                  side: isSelected
+                      ? BorderSide.none
+                      : BorderSide(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          width: 1.2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
                   ),
@@ -210,14 +217,16 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
     List<DiaryMemoryFlattenedItem> items,
   ) {
     if (_selectedMonth == null || _availableMonths.length <= 1) return items;
-    
+
     final filtered = <DiaryMemoryFlattenedItem>[];
     bool includeCurrentGroup = false;
-    
+
     for (final item in items) {
       if (item.isHeader) {
         final d = item.date;
-        if (d != null && d.year == _selectedMonth!.year && d.month == _selectedMonth!.month) {
+        if (d != null &&
+            d.year == _selectedMonth!.year &&
+            d.month == _selectedMonth!.month) {
           includeCurrentGroup = true;
           filtered.add(item);
         } else {
@@ -374,8 +383,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                               snapshot.hasData &&
                               snapshot.data?.snapshot.value != null &&
                               snapshot.data!.snapshot.value is Map;
-                          final canReuseLastFeed = waitingForLive &&
-                              _lastPreparedFeed != null;
+                          final canReuseLastFeed =
+                              waitingForLive && _lastPreparedFeed != null;
                           final preparedFeed = canReuseLastFeed
                               ? _lastPreparedFeed!
                               : widget.prepareMemoryFeed(
@@ -450,32 +459,46 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                       );
                                     }
                                   } else {
-                                    final rowPhotos = item.photosRow ?? const [];
+                                    final rowPhotos =
+                                        item.photosRow ?? const [];
                                     if (rowPhotos.isEmpty) {
                                       return const SizedBox.shrink();
                                     }
 
                                     return Padding(
-                                      padding: const EdgeInsets.only(bottom: 8, left: 10, right: 10),
+                                      padding: const EdgeInsets.only(
+                                          bottom: 8, left: 10, right: 10),
                                       child: Row(
                                         children: [
-                                          for (int i = 0; i < rowPhotos.length; i++) ...[
+                                          for (int i = 0;
+                                              i < rowPhotos.length;
+                                              i++) ...[
                                             if (i > 0) const SizedBox(width: 8),
                                             Expanded(
                                               child: AspectRatio(
-                                                aspectRatio: 1.0, // Cố định tỷ lệ vuông cho mỗi ảnh trong hàng
+                                                aspectRatio:
+                                                    1.0, // Cố định tỷ lệ vuông cho mỗi ảnh trong hàng
                                                 child: _DiaryMemoryPhotoCell(
-                                                  key: ValueKey(rowPhotos[i]['id'] ?? 'photo_${index * 10 + i}'),
+                                                  key: ValueKey(rowPhotos[i]
+                                                          ['id'] ??
+                                                      'photo_${index * 10 + i}'),
                                                   photo: rowPhotos[i],
                                                   index: index * 10 + i,
-                                                  thumbnailCacheWidth: widget.thumbnailCacheWidth,
-                                                  selectionListenable: widget.selectionListenable,
-                                                  selectedMemories: widget.selectedMemories,
-                                                  isSelectionMode: widget.isSelectionMode,
-                                                  onToggleSelection: widget.onToggleSelection,
-                                                  onOpenMemory: widget.onOpenMemory,
+                                                  thumbnailCacheWidth: widget
+                                                      .thumbnailCacheWidth,
+                                                  selectionListenable: widget
+                                                      .selectionListenable,
+                                                  selectedMemories:
+                                                      widget.selectedMemories,
+                                                  isSelectionMode:
+                                                      widget.isSelectionMode,
+                                                  onToggleSelection:
+                                                      widget.onToggleSelection,
+                                                  onOpenMemory:
+                                                      widget.onOpenMemory,
                                                   allPhotos: filteredPhotos,
-                                                  onEnsurePhotoUrl: widget.onEnsurePhotoUrl,
+                                                  onEnsurePhotoUrl:
+                                                      widget.onEnsurePhotoUrl,
                                                 ),
                                               ),
                                             ),
@@ -491,7 +514,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                             bodySlivers.add(
                               SliverToBoxAdapter(
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 40),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 40),
                                   child: Center(
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
@@ -551,30 +575,48 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                           NotificationListener<ScrollNotification>(
                             onNotification: (notification) {
                               if (filteredItems.isEmpty) return false;
-                              if (notification is ScrollUpdateNotification || notification is ScrollStartNotification) {
-                                final maxExt = notification.metrics.maxScrollExtent;
+                              if (notification is ScrollUpdateNotification ||
+                                  notification is ScrollStartNotification) {
+                                final maxExt =
+                                    notification.metrics.maxScrollExtent;
                                 if (maxExt <= 0) return false;
-                                
-                                double fraction = notification.metrics.pixels / maxExt;
+
+                                double fraction =
+                                    notification.metrics.pixels / maxExt;
                                 fraction = fraction.clamp(0.0, 1.0);
-                                
-                                final index = (fraction * (filteredItems.length - 1)).round();
+
+                                final index =
+                                    (fraction * (filteredItems.length - 1))
+                                        .round();
                                 final item = filteredItems[index];
                                 final d = item.date;
-                                final label = d != null ? DateFormat('dd/MM/yyyy').format(d) : '';
-                                
-                                _scrollIndicatorNotifier.value = (isVisible: true, label: label, fraction: fraction);
-                                
+                                final label = d != null
+                                    ? DateFormat('dd/MM/yyyy').format(d)
+                                    : '';
+
+                                _scrollIndicatorNotifier.value = (
+                                  isVisible: true,
+                                  label: label,
+                                  fraction: fraction
+                                );
+
                                 _hideIndicatorTimer?.cancel();
-                                _hideIndicatorTimer = Timer(const Duration(milliseconds: 1200), () {
-                                  _scrollIndicatorNotifier.value = (isVisible: false, label: _scrollIndicatorNotifier.value.label, fraction: _scrollIndicatorNotifier.value.fraction);
+                                _hideIndicatorTimer = Timer(
+                                    const Duration(milliseconds: 1200), () {
+                                  _scrollIndicatorNotifier.value = (
+                                    isVisible: false,
+                                    label: _scrollIndicatorNotifier.value.label,
+                                    fraction:
+                                        _scrollIndicatorNotifier.value.fraction
+                                  );
                                 });
                               }
                               return false;
                             },
                             child: RawScrollbar(
                               controller: _scrollController,
-                              thumbColor: const Color(0xFFD81B60).withValues(alpha: 0.6),
+                              thumbColor: const Color(0xFFD81B60)
+                                  .withValues(alpha: 0.6),
                               radius: const Radius.circular(8),
                               thickness: 6,
                               interactive: true,
@@ -588,7 +630,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                   if (widget.header != null)
                                     SliverSafeArea(
                                       bottom: false,
-                                      sliver: SliverToBoxAdapter(child: widget.header!),
+                                      sliver: SliverToBoxAdapter(
+                                          child: widget.header!),
                                     ),
                                   SliverToBoxAdapter(
                                     child: _DiaryMemoryHeroCard(
@@ -596,9 +639,12 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                       isOffline: isOffline,
                                       showingCache: showingCache,
                                       onAdd: _handleAddMemory,
-                                      hasPendingUploadRetry: widget.hasPendingUploadRetry,
-                                      pendingUploadMessage: widget.pendingUploadMessage,
-                                      onRetryPendingUpload: _handleRetryPendingUpload,
+                                      hasPendingUploadRetry:
+                                          widget.hasPendingUploadRetry,
+                                      pendingUploadMessage:
+                                          widget.pendingUploadMessage,
+                                      onRetryPendingUpload:
+                                          _handleRetryPendingUpload,
                                       isUploading: _isUploadingMemory,
                                     ),
                                   ),
@@ -610,15 +656,26 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                               ),
                             ),
                           ),
-                          ValueListenableBuilder<({bool isVisible, String label, double fraction})>(
+                          ValueListenableBuilder<
+                              ({
+                                bool isVisible,
+                                String label,
+                                double fraction
+                              })>(
                             valueListenable: _scrollIndicatorNotifier,
                             builder: (context, state, _) {
-                              if (state.label.isEmpty) return const SizedBox.shrink();
+                              if (state.label.isEmpty) {
+                                return const SizedBox.shrink();
+                              }
                               final topMargin = 80.0;
                               final bottomMargin = 120.0;
-                              final availableHeight = MediaQuery.of(context).size.height - topMargin - bottomMargin;
-                              final topPos = topMargin + state.fraction * availableHeight;
-                              
+                              final availableHeight =
+                                  MediaQuery.of(context).size.height -
+                                      topMargin -
+                                      bottomMargin;
+                              final topPos =
+                                  topMargin + state.fraction * availableHeight;
+
                               return Positioned(
                                 right: 16,
                                 top: topPos,
@@ -627,13 +684,15 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                     duration: const Duration(milliseconds: 200),
                                     opacity: state.isVisible ? 1.0 : 0.0,
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 6),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFD81B60),
                                         borderRadius: BorderRadius.circular(20),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: const Color(0xFFD81B60).withValues(alpha: 0.4),
+                                            color: const Color(0xFFD81B60)
+                                                .withValues(alpha: 0.4),
                                             blurRadius: 8,
                                             offset: const Offset(0, 2),
                                           ),
@@ -651,7 +710,10 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                             ),
                                           ),
                                           const SizedBox(width: 4),
-                                          const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 14),
+                                          const Icon(
+                                              Icons.calendar_month_rounded,
+                                              color: Colors.white,
+                                              size: 14),
                                         ],
                                       ),
                                     ),
@@ -718,7 +780,8 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.95), width: 1.5),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.95), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF7C8BFF).withValues(alpha: 0.08),
@@ -733,73 +796,73 @@ class _DiaryMemoryDateHeader extends StatelessWidget {
         ],
       ),
       child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFFEEF7), Color(0xFFEAFBFF)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(14),
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFFEEF7), Color(0xFFEAFBFF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              child: const Icon(
-                Icons.collections_bookmark_rounded,
-                size: 18,
-                color: Color(0xFFD81B60),
-              ),
+              borderRadius: BorderRadius.circular(14),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.tr('home_albumngy_7e474f'),
-                    style: SLTheme.quicksand(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF7C6D83),
-                      letterSpacing: 0.4,
-                    ),
+            child: const Icon(
+              Icons.collections_bookmark_rounded,
+              size: 18,
+              color: Color(0xFFD81B60),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.tr('home_albumngy_7e474f'),
+                  style: SLTheme.quicksand(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF7C6D83),
+                    letterSpacing: 0.4,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    dateString,
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF2E2740),
-                      fontSize: 13,
-                    ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  dateString,
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF2E2740),
+                    fontSize: 13,
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF4EEFF),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: const Color(0xFFE9D7FF)),
+            ),
+            child: Text(
+              L10nService().format(
+                'diary_photos_count',
+                {'count': totalPhotos},
+              ),
+              style: SLTheme.quicksand(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF7C5CE6),
+                letterSpacing: 0.2,
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF4EEFF),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: const Color(0xFFE9D7FF)),
-              ),
-              child: Text(
-                L10nService().format(
-                  'diary_photos_count',
-                  {'count': totalPhotos},
-                ),
-                style: SLTheme.quicksand(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF7C5CE6),
-                  letterSpacing: 0.2,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1040,8 +1103,10 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
     final photo = widget.photo;
     final photoUrl = _resolvePhotoUrl(photo);
     final photoId = photo['id']?.toString() ?? 'unknown_${widget.index}';
-    
-    final isStickerOrPng = photoUrl.toLowerCase().contains('.png') || photo['isSticker'] == true || photo['isCutout'] == true;
+
+    final isStickerOrPng = photoUrl.toLowerCase().contains('.png') ||
+        photo['isSticker'] == true ||
+        photo['isCutout'] == true;
 
     if (photoUrl.isEmpty) {
       if (_retryCount < 1) {
@@ -1086,73 +1151,78 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
-            boxShadow: isStickerOrPng ? [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ] : [
-              BoxShadow(
-                color: const Color(0xFF5C71D8).withValues(alpha: 0.12),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            border: Border.all(
+                color: Colors.white.withValues(alpha: 0.4), width: 1.5),
+            boxShadow: isStickerOrPng
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: const Color(0xFF5C71D8).withValues(alpha: 0.12),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
             child: Hero(
               tag: 'memory_image_${photo['id']}',
-            child: CachedNetworkImage(
-              imageUrl: photoUrl,
-              memCacheWidth: widget.thumbnailCacheWidth,
-              fit: isStickerOrPng ? BoxFit.contain : BoxFit.cover,
-              filterQuality: FilterQuality.low,
-              placeholder: (context, url) => Container(
-                color: isStickerOrPng ? Colors.transparent : const Color(0xFFF1F5F9),
-              ),
-              errorWidget: (context, url, error) {
-                if (_retryCount < 2) {
-                  _retryCount++;
-                  WidgetsBinding.instance.addPostFrameCallback((_) async {
-                    if (!mounted) return;
-                    try {
-                      if (_retryCount > 1) {
+              child: CachedNetworkImage(
+                imageUrl: photoUrl,
+                memCacheWidth: widget.thumbnailCacheWidth,
+                fit: isStickerOrPng ? BoxFit.contain : BoxFit.cover,
+                filterQuality: FilterQuality.low,
+                placeholder: (context, url) => Container(
+                  color: isStickerOrPng
+                      ? Colors.transparent
+                      : const Color(0xFFF1F5F9),
+                ),
+                errorWidget: (context, url, error) {
+                  if (_retryCount < 2) {
+                    _retryCount++;
+                    WidgetsBinding.instance.addPostFrameCallback((_) async {
+                      if (!mounted) return;
+                      try {
+                        if (_retryCount > 1) {
+                          photo['broken'] = true;
+                        } else {
+                          await _refreshStalePhotoUrl(photo);
+                        }
+                      } catch (_) {
                         photo['broken'] = true;
-                      } else {
-                        await _refreshStalePhotoUrl(photo);
                       }
-                    } catch (_) {
-                      photo['broken'] = true;
-                    }
-                  });
-                }
-                if (_retryCount >= 2 || photo['broken'] == true) {
-                  return const SizedBox.shrink();
-                }
-                return Container(
-                  color: const Color(0xFFF8FAFC),
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.refresh_rounded,
-                        color: Color(0xFF94A3B8),
-                        size: 24,
-                      ),
-                    ],
-                  ),
-                );
-              },
+                    });
+                  }
+                  if (_retryCount >= 2 || photo['broken'] == true) {
+                    return const SizedBox.shrink();
+                  }
+                  return Container(
+                    color: const Color(0xFFF8FAFC),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.refresh_rounded,
+                          color: Color(0xFF94A3B8),
+                          size: 24,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ),
       ),
-    ),
-    builder: (context, _, imageChild) {
-      final isSelected = widget.selectedMemories.containsKey(photoId);
+      builder: (context, _, imageChild) {
+        final isSelected = widget.selectedMemories.containsKey(photoId);
 
         return _DiaryMemoryScaleOnPress(
           onLongPress: () => widget.onToggleSelection(photo),
@@ -1377,7 +1447,8 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.95), width: 1.8),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.95), width: 1.8),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFFF7FB2).withValues(alpha: 0.2),
@@ -1459,7 +1530,6 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                             height: 1.4,
                           ),
                         ),
-
                       ],
                     ),
                   ),
@@ -1719,7 +1789,6 @@ class _DiaryMemoryAddButton extends StatelessWidget {
   }
 }
 
-
 class _DiaryMemoryInlineLoading extends StatelessWidget {
   const _DiaryMemoryInlineLoading();
 
@@ -1767,10 +1836,12 @@ class _DiaryMemoryScaleOnPress extends StatefulWidget {
   });
 
   @override
-  State<_DiaryMemoryScaleOnPress> createState() => _DiaryMemoryScaleOnPressState();
+  State<_DiaryMemoryScaleOnPress> createState() =>
+      _DiaryMemoryScaleOnPressState();
 }
 
-class _DiaryMemoryScaleOnPressState extends State<_DiaryMemoryScaleOnPress> with SingleTickerProviderStateMixin {
+class _DiaryMemoryScaleOnPressState extends State<_DiaryMemoryScaleOnPress>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override

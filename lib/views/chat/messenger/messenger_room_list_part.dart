@@ -413,20 +413,23 @@ extension _MessengerRoomListPart on _MessengerScreenState {
     return ListView.builder(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.only(bottom: 10),
-      itemCount: 1 + (hasInternalPartner ? 1 : 0) + filteredFriends.length + filteredGroups.length,
+      itemCount: 1 +
+          (hasInternalPartner ? 1 : 0) +
+          filteredFriends.length +
+          filteredGroups.length,
       itemBuilder: (context, index) {
         if (index == 0) return _buildQuickAvatarRow(filteredFriends);
-        
+
         int offset = 1;
         if (hasInternalPartner) {
           if (index == offset) return _buildInternalConversationTile();
           offset++;
         }
-        
+
         if (index - offset < filteredFriends.length) {
           return _buildConversationTile(filteredFriends[index - offset]);
         }
-        
+
         offset += filteredFriends.length;
         return _buildGroupTile(filteredGroups[index - offset]);
       },

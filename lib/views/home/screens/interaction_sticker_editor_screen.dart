@@ -184,7 +184,8 @@ class _InteractionStickerEditorScreenState
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lưu thay đổi thất bại, vui lòng thử lại.')),
+        const SnackBar(
+            content: Text('Lưu thay đổi thất bại, vui lòng thử lại.')),
       );
     } finally {
       if (mounted) {
@@ -261,8 +262,8 @@ class _InteractionStickerEditorScreenState
 
               // Active Slots Header
               Padding(
-                padding:
-                    const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 8),
+                padding: const EdgeInsets.only(
+                    left: 20, right: 20, top: 12, bottom: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -340,7 +341,8 @@ class _InteractionStickerEditorScreenState
                                     ]
                                   : [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.03),
+                                        color: Colors.black
+                                            .withValues(alpha: 0.03),
                                         blurRadius: 4,
                                         offset: const Offset(0, 2),
                                       ),

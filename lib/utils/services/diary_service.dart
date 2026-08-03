@@ -170,8 +170,9 @@ class DiaryService {
     int limit = 10,
     DocumentSnapshot<Map<String, dynamic>>? startAfter,
   }) async {
-    Query<Map<String, dynamic>> query =
-        _diariesRef(houseId).orderBy('timestamp', descending: true).limit(limit);
+    Query<Map<String, dynamic>> query = _diariesRef(houseId)
+        .orderBy('timestamp', descending: true)
+        .limit(limit);
 
     if (startAfter != null) {
       query = query.startAfterDocument(startAfter);

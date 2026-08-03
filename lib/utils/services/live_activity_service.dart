@@ -35,7 +35,8 @@ class LiveActivityService {
       };
 
       if (_activityId == null) {
-        _activityId = await _liveActivities.createActivity('couple_activity', data);
+        _activityId =
+            await _liveActivities.createActivity('couple_activity', data);
         debugPrint('[LiveActivityService] Started Activity: $_activityId');
       } else {
         await _liveActivities.updateActivity(_activityId!, data);

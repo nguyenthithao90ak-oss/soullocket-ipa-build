@@ -422,7 +422,7 @@ class _MainHomeHeroCountdownCircleState
       curve: Curves.easeOutCubic,
     ));
     _countController.forward();
-    
+
     unawaited(_ensurePhotosLoaded());
 
     PurchaseService().isVip().then((isVip) {
@@ -512,12 +512,12 @@ class _MainHomeHeroCountdownCircleState
         if (data is String) {
           final s = data.trim();
           // Lấy tất cả mọi link http không phải âm thanh/video và không chứa khoảng trắng
-          if (s.startsWith('http') && 
+          if (s.startsWith('http') &&
               !s.contains(' ') &&
-              !s.contains('.m4a') && 
-              !s.contains('.mp4') && 
-              !s.contains('.mp3') && 
-              !s.contains('.wav') && 
+              !s.contains('.m4a') &&
+              !s.contains('.mp4') &&
+              !s.contains('.mp3') &&
+              !s.contains('.wav') &&
               seen.add(s)) {
             urls.add(s);
           }
@@ -577,9 +577,17 @@ class _MainHomeHeroCountdownCircleState
 
       // 4. RTDB Fallback (diary & creative_diary & album & memory)
       try {
-        final rtdbRefs = ['diary', 'creative_diary', 'album', 'memory', 'memories'];
+        final rtdbRefs = [
+          'diary',
+          'creative_diary',
+          'album',
+          'memory',
+          'memories'
+        ];
         for (final refName in rtdbRefs) {
-          final snap = await FirebaseDatabase.instance.ref('houses/$houseId/$refName').get();
+          final snap = await FirebaseDatabase.instance
+              .ref('houses/$houseId/$refName')
+              .get();
           if (snap.exists && snap.value != null) {
             extractUrls(snap.value);
           }
@@ -608,9 +616,9 @@ class _MainHomeHeroCountdownCircleState
       _dailyExplosionCount = 0;
       await prefs.setString('explosion_date', today);
     }
-    
+
     if (_dailyExplosionCount >= 50) return;
-    
+
     _dailyExplosionCount++;
     await prefs.setInt('explosion_count', _dailyExplosionCount);
 
@@ -752,7 +760,8 @@ class _MainHomeHeroCountdownCircleState
                   boxShadow: widget.isMilestone
                       ? [
                           BoxShadow(
-                            color: const Color(0xFFFFD700).withValues(alpha: 0.55),
+                            color:
+                                const Color(0xFFFFD700).withValues(alpha: 0.55),
                             blurRadius: 28,
                             spreadRadius: 4,
                           ),
@@ -766,69 +775,78 @@ class _MainHomeHeroCountdownCircleState
                     Positioned.fill(
                       child: Builder(
                         builder: (context) {
-                        Widget buildBackground(bool enableMotion) {
-                          return Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Positioned.fill(
-                                child: Padding(
-                                  padding: (countdownVisual.outerColor != null ||
-                                          countdownVisual.outerGradient != null ||
-                                          countdownVisual.outerBorder != null)
-                                      ? SLSpacing.all12
-                                      : EdgeInsets.zero,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: countdownVisual.innerColor,
-                                      gradient: countdownVisual.innerGradient,
-                                      border: countdownVisual.innerBorder,
-                                    ),
-                                    child: RepaintBoundary(
-                                      child: AnimatedWaveBackground(
-                                        styleKey: (transparentMode ||
-                                                UiPrefs.notifier.value.liteMode)
-                                            ? 'plain'
-                                            : widget.countdownStyleKey,
-                                        enableMotion: enableMotion,
-                                        transparentMode: transparentMode,
+                          Widget buildBackground(bool enableMotion) {
+                            return Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Positioned.fill(
+                                  child: Padding(
+                                    padding: (countdownVisual.outerColor !=
+                                                null ||
+                                            countdownVisual.outerGradient !=
+                                                null ||
+                                            countdownVisual.outerBorder != null)
+                                        ? SLSpacing.all12
+                                        : EdgeInsets.zero,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: countdownVisual.innerColor,
+                                        gradient: countdownVisual.innerGradient,
+                                        border: countdownVisual.innerBorder,
+                                      ),
+                                      child: RepaintBoundary(
+                                        child: AnimatedWaveBackground(
+                                          styleKey: (transparentMode ||
+                                                  UiPrefs
+                                                      .notifier.value.liteMode)
+                                              ? 'plain'
+                                              : widget.countdownStyleKey,
+                                          enableMotion: enableMotion,
+                                          transparentMode: transparentMode,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              if (_cachedPhotoUrls.isNotEmpty && widget.countdownStyleKey == 'floating_hearts')
-                                RepaintBoundary(
-                                  child: SnowGlobePhotoLayer(
-                                    photoUrls: _cachedPhotoUrls.take(3).toList(),
-                                    circleSize: widget.circleSize,
-                                    enableMotion: enableMotion,
+                                if (_cachedPhotoUrls.isNotEmpty &&
+                                    widget.countdownStyleKey ==
+                                        'floating_hearts')
+                                  RepaintBoundary(
+                                    child: SnowGlobePhotoLayer(
+                                      photoUrls:
+                                          _cachedPhotoUrls.take(3).toList(),
+                                      circleSize: widget.circleSize,
+                                      enableMotion: enableMotion,
+                                    ),
                                   ),
-                                ),
-                              if (widget.countdownStyleKey == 'floating_hearts')
-                                RepaintBoundary(
-                                  child: FloatingHeartsRingOverlay(
-                                    size: widget.circleSize,
-                                    enableMotion: enableMotion,
+                                if (widget.countdownStyleKey ==
+                                    'floating_hearts')
+                                  RepaintBoundary(
+                                    child: FloatingHeartsRingOverlay(
+                                      size: widget.circleSize,
+                                      enableMotion: enableMotion,
+                                    ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            );
+                          }
+
+                          if (widget.isScrollingNotifier == null) {
+                            return buildBackground(widget.enableMotionBase);
+                          }
+
+                          return ValueListenableBuilder<bool>(
+                            valueListenable: widget.isScrollingNotifier!,
+                            builder: (context, isScrolling, _) =>
+                                buildBackground(
+                                    widget.enableMotionBase && !isScrolling),
                           );
-                        }
-                        
-                        if (widget.isScrollingNotifier == null) {
-                          return buildBackground(widget.enableMotionBase);
-                        }
-                        
-                        return ValueListenableBuilder<bool>(
-                          valueListenable: widget.isScrollingNotifier!,
-                          builder: (context, isScrolling, _) => buildBackground(widget.enableMotionBase && !isScrolling),
-                        );
-                      },
+                        },
+                      ),
                     ),
-                  ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Padding(
@@ -847,15 +865,40 @@ class _MainHomeHeroCountdownCircleState
                             ),
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
-                              child: isMultiColor 
-                                ? ShaderMask(
-                                    shaderCallback: (bounds) => LinearGradient(
-                                      colors: multiColorGradient,
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ).createShader(bounds),
-                                    blendMode: BlendMode.srcIn,
-                                    child: Text(
+                              child: isMultiColor
+                                  ? ShaderMask(
+                                      shaderCallback: (bounds) =>
+                                          LinearGradient(
+                                        colors: multiColorGradient,
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ).createShader(bounds),
+                                      blendMode: BlendMode.srcIn,
+                                      child: Text(
+                                        widget.circleTopLabel,
+                                        maxLines: 1,
+                                        textAlign: TextAlign.center,
+                                        style: SLTheme.textStyleForKey(
+                                          labelFont,
+                                          fontSize: (widget.circleSize * 0.11)
+                                              .clamp(18.0, 42.0),
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 0.5,
+                                          color: Colors.white,
+                                        ).copyWith(
+                                          shadows: widget.isMilestone
+                                              ? [
+                                                  Shadow(
+                                                      color: Colors.white
+                                                          .withValues(
+                                                              alpha: 0.6),
+                                                      blurRadius: 12)
+                                                ]
+                                              : null,
+                                        ),
+                                      ),
+                                    )
+                                  : Text(
                                       widget.circleTopLabel,
                                       maxLines: 1,
                                       textAlign: TextAlign.center,
@@ -865,28 +908,19 @@ class _MainHomeHeroCountdownCircleState
                                             .clamp(18.0, 42.0),
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: 0.5,
-                                        color: Colors.white,
+                                        color: customTextColor ??
+                                            countdownVisual.topLabelColor,
                                       ).copyWith(
-                                        shadows: widget.isMilestone ? [Shadow(color: Colors.white.withValues(alpha: 0.6), blurRadius: 12)] : null,
+                                        shadows: widget.isMilestone
+                                            ? [
+                                                Shadow(
+                                                    color: Colors.white
+                                                        .withValues(alpha: 0.6),
+                                                    blurRadius: 12)
+                                              ]
+                                            : null,
                                       ),
                                     ),
-                                  )
-                                : Text(
-                                    widget.circleTopLabel,
-                                    maxLines: 1,
-                                    textAlign: TextAlign.center,
-                                    style: SLTheme.textStyleForKey(
-                                      labelFont,
-                                      fontSize: (widget.circleSize * 0.11)
-                                          .clamp(18.0, 42.0),
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 0.5,
-                                      color: customTextColor ??
-                                          countdownVisual.topLabelColor,
-                                    ).copyWith(
-                                      shadows: widget.isMilestone ? [Shadow(color: Colors.white.withValues(alpha: 0.6), blurRadius: 12)] : null,
-                                    ),
-                                  ),
                             ),
                           ),
                         ),
@@ -918,10 +952,13 @@ class _MainHomeHeroCountdownCircleState
                               child: AnimatedBuilder(
                                 animation: _countAnimation,
                                 builder: (context, child) {
-                                  final parsed = int.tryParse(widget.circleValue);
+                                  final parsed =
+                                      int.tryParse(widget.circleValue);
                                   final displayVal = parsed == null
                                       ? widget.circleValue
-                                      : _countAnimation.value.round().toString();
+                                      : _countAnimation.value
+                                          .round()
+                                          .toString();
                                   return Text(
                                     displayVal,
                                     maxLines: 1,
@@ -934,8 +971,17 @@ class _MainHomeHeroCountdownCircleState
                                           color: Colors.white,
                                           height: 0.96,
                                           letterSpacing: 4.0,
-                                        ).copyWith(
-                                          shadows: widget.isMilestone ? [Shadow(color: Colors.white.withValues(alpha: 0.7), blurRadius: 16)] : null,
+                                        )
+                                        .copyWith(
+                                          shadows: widget.isMilestone
+                                              ? [
+                                                  Shadow(
+                                                      color: Colors.white
+                                                          .withValues(
+                                                              alpha: 0.7),
+                                                      blurRadius: 16)
+                                                ]
+                                              : null,
                                         ),
                                   );
                                 },
@@ -962,14 +1008,39 @@ class _MainHomeHeroCountdownCircleState
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
                               child: isMultiColor
-                                ? ShaderMask(
-                                    shaderCallback: (bounds) => LinearGradient(
-                                      colors: multiColorGradient,
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ).createShader(bounds),
-                                    blendMode: BlendMode.srcIn,
-                                    child: Text(
+                                  ? ShaderMask(
+                                      shaderCallback: (bounds) =>
+                                          LinearGradient(
+                                        colors: multiColorGradient,
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ).createShader(bounds),
+                                      blendMode: BlendMode.srcIn,
+                                      child: Text(
+                                        widget.circleBottomLabel,
+                                        maxLines: 1,
+                                        textAlign: TextAlign.center,
+                                        style: SLTheme.textStyleForKey(
+                                          labelFont,
+                                          fontSize: (widget.circleSize * 0.12)
+                                              .clamp(20.0, 46.0),
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 0.5,
+                                          color: Colors.white,
+                                        ).copyWith(
+                                          shadows: widget.isMilestone
+                                              ? [
+                                                  Shadow(
+                                                      color: Colors.white
+                                                          .withValues(
+                                                              alpha: 0.6),
+                                                      blurRadius: 12)
+                                                ]
+                                              : null,
+                                        ),
+                                      ),
+                                    )
+                                  : Text(
                                       widget.circleBottomLabel,
                                       maxLines: 1,
                                       textAlign: TextAlign.center,
@@ -979,28 +1050,19 @@ class _MainHomeHeroCountdownCircleState
                                             .clamp(20.0, 46.0),
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: 0.5,
-                                        color: Colors.white,
+                                        color: customTextColor ??
+                                            countdownVisual.bottomLabelColor,
                                       ).copyWith(
-                                        shadows: widget.isMilestone ? [Shadow(color: Colors.white.withValues(alpha: 0.6), blurRadius: 12)] : null,
+                                        shadows: widget.isMilestone
+                                            ? [
+                                                Shadow(
+                                                    color: Colors.white
+                                                        .withValues(alpha: 0.6),
+                                                    blurRadius: 12)
+                                              ]
+                                            : null,
                                       ),
                                     ),
-                                  )
-                                : Text(
-                                    widget.circleBottomLabel,
-                                    maxLines: 1,
-                                    textAlign: TextAlign.center,
-                                    style: SLTheme.textStyleForKey(
-                                      labelFont,
-                                      fontSize: (widget.circleSize * 0.12)
-                                          .clamp(20.0, 46.0),
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 0.5,
-                                      color: customTextColor ??
-                                          countdownVisual.bottomLabelColor,
-                                    ).copyWith(
-                                      shadows: widget.isMilestone ? [Shadow(color: Colors.white.withValues(alpha: 0.6), blurRadius: 12)] : null,
-                                    ),
-                                  ),
                             ),
                           ),
                         ),
@@ -1008,7 +1070,8 @@ class _MainHomeHeroCountdownCircleState
                         Text(
                           'Nhấn giữ để sửa',
                           style: SLTheme.quicksand(
-                            fontSize: (widget.circleSize * 0.04).clamp(10.0, 14.0),
+                            fontSize:
+                                (widget.circleSize * 0.04).clamp(10.0, 14.0),
                             fontWeight: FontWeight.w600,
                             color: Colors.white.withValues(alpha: 0.6),
                           ),
@@ -1044,11 +1107,13 @@ class _MainHomeHeroCountdownCircleState
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
                     if (!_isProUser) {
-                      SLNotice.showInfo(context, 'Hiệu ứng bắn tim chỉ dành cho tài khoản Pro!');
+                      SLNotice.showInfo(context,
+                          'Hiệu ứng bắn tim chỉ dành cho tài khoản Pro!');
                       return;
                     }
                     if (_dailyExplosionCount >= 50) {
-                      SLNotice.showInfo(context, 'Hôm nay bạn đã hết lượt thả tim rồi nhé!');
+                      SLNotice.showInfo(
+                          context, 'Hôm nay bạn đã hết lượt thả tim rồi nhé!');
                       return;
                     }
                     _triggerExplosion(Offset(
@@ -1073,7 +1138,8 @@ class _MainHomeHeroCountdownCircleState
                 child: IgnorePointer(
                   child: Center(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.65),
                         borderRadius: BorderRadius.circular(20),
@@ -1088,7 +1154,8 @@ class _MainHomeHeroCountdownCircleState
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.touch_app, color: Colors.white, size: 16),
+                          const Icon(Icons.touch_app,
+                              color: Colors.white, size: 16),
                           const SizedBox(width: 6),
                           Text(
                             'Nhấn giữ để chỉnh sửa',

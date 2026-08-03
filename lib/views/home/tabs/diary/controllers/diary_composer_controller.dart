@@ -112,12 +112,14 @@ class DiaryComposerController {
       } else {
         showSnackBar(L10nService()
             .translate(L10nService().translate('home_ngtmsmi_f60808')));
-        ActivityHistoryService.instance.add(
-          L10nService().translate('home_vitmtnhtkm_2ae1bc'),
-          houseId: houseId,
-          role: authorRole,
-          isPrivate: false,
-        ).catchError((_) => null);
+        ActivityHistoryService.instance
+            .add(
+              L10nService().translate('home_vitmtnhtkm_2ae1bc'),
+              houseId: houseId,
+              role: authorRole,
+              isPrivate: false,
+            )
+            .catchError((_) => null);
         // Gửi push notification tới người bên kia kèm nội dung nhật ký
         final mood = selectedMoodVN.value;
         final preview =

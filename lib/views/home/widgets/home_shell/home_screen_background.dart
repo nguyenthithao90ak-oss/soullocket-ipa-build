@@ -167,7 +167,7 @@ extension _HomeScreenShellBackground on _HomeScreenState {
           ? const [Color(0xFF00251A), Color(0xFF004D40), Color(0xFF00695C)]
           : const [Color(0xFFE8F5E9), Color(0xFFC8E6C9), Color(0xFFA5D6A7)];
     }
-    
+
     return _resolveShellGradient(themeKey, isDark);
   }
 

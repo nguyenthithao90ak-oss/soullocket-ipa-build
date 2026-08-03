@@ -29,7 +29,8 @@ class PairingRequest {
     if (rawTs is num) {
       timestampVal = rawTs.toInt();
     } else if (rawTs is String) {
-      timestampVal = double.tryParse(rawTs)?.toInt() ?? int.tryParse(rawTs) ?? 0;
+      timestampVal =
+          double.tryParse(rawTs)?.toInt() ?? int.tryParse(rawTs) ?? 0;
     }
     return PairingRequest(
       requestId: id,
@@ -98,7 +99,9 @@ class PairingService {
     }
 
     final houseId = data['houseId']?.toString();
-    if (houseId == null) throw Exception('Mã ghép nối bị lỗi (không tìm thấy houseId).');
+    if (houseId == null) {
+      throw Exception('Mã ghép nối bị lỗi (không tìm thấy houseId).');
+    }
 
     final myHouseId = await HouseService().getCurrentHouseId();
     if (myHouseId != null && houseId == myHouseId) {
@@ -119,7 +122,6 @@ class PairingService {
       'timestamp': ServerValue.timestamp,
       'status': 'pending',
     });
-
   }
 
   /// Listens to the status of a request sent by the current user.
@@ -173,19 +175,23 @@ class PairingService {
     if (houseId == null) return;
 
     await HouseService().joinHouseWithCoupleCode(houseId);
-    
+
     // Bắt buộc phải refresh token để Cloud Functions cấp quyền ghi vào houseId mới trước khi đánh cờ isPaired
     await user.getIdToken(true);
 
     await _dbRef.child('houses/$houseId/settings/isPaired').set(true);
-    await _dbRef.child('houses/$houseId/settings/relationshipMode').set('couple');
-    
+    await _dbRef
+        .child('houses/$houseId/settings/relationshipMode')
+        .set('couple');
+
     // Tắt tính năng Single Match cho nhà mới vì đã ghép đôi
     try {
       await _dbRef.child('single_match_active_pool/$houseId').remove();
-      await _dbRef.child('houses/$houseId/settings/singleMatch/enabled').set(false);
+      await _dbRef
+          .child('houses/$houseId/settings/singleMatch/enabled')
+          .set(false);
     } catch (_) {}
-    
+
     // Xoá dữ liệu rác sau khi ghép nối thành công
     await _dbRef.child('pairing_requests/${user.uid}').remove();
     if (code != null) {

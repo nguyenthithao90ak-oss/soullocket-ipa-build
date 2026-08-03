@@ -18,7 +18,6 @@ class AppEntryDeeplinkHandler {
 
   bool _didInitializeDeeplink = false;
 
-
   Future<void> initialize({
     required BuildContext context,
     required AppEntrySnackBarCallback showSnackBar,
@@ -53,7 +52,6 @@ class AppEntryDeeplinkHandler {
       },
     );
   }
-
 
   Future<bool> openLoveCardFromUri({
     required BuildContext context,

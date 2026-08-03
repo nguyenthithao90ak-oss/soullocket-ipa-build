@@ -600,13 +600,13 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
         final locStatus = await app_permission.Permission.location.status;
         if (locStatus.isPermanentlyDenied || locStatus.isRestricted) {
           if (!settingsLockedPermissions.contains('GPS')) {
-             settingsLockedPermissions.add('GPS');
+            settingsLockedPermissions.add('GPS');
           }
         }
         final notifStatus = await app_permission.Permission.notification.status;
         if (notifStatus.isPermanentlyDenied || notifStatus.isRestricted) {
           if (!settingsLockedPermissions.contains(notifLabel)) {
-             settingsLockedPermissions.add(notifLabel);
+            settingsLockedPermissions.add(notifLabel);
           }
         }
       }
@@ -698,7 +698,6 @@ extension _SettingsTabSecurityActionFlowsPart on _SettingsTabState {
     _recoveryAnswerCtrl.selection =
         TextSelection.collapsed(offset: normalized.length);
   }
-
 
   Future<void> _linkGoogleAccount() async {
     if (_isLinkingGoogle) return;

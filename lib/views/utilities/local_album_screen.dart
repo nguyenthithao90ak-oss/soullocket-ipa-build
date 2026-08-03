@@ -748,129 +748,132 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
             padding: const EdgeInsets.all(8),
             child: CustomScrollView(
               slivers: [
-              for (int index = 0; index < _groupedByDate.length; index++) ...[
-                Builder(
-                  builder: (context) {
-                    final group = _groupedByDate[index];
-                    final dateStr = group['date'] as String;
-                    return SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 4, vertical: 8),
-                        child: Text(
-                          dateStr,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.grey[800],
+                for (int index = 0; index < _groupedByDate.length; index++) ...[
+                  Builder(
+                    builder: (context) {
+                      final group = _groupedByDate[index];
+                      final dateStr = group['date'] as String;
+                      return SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 8),
+                          child: Text(
+                            dateStr,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.grey[800],
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-                Builder(
-                  builder: (context) {
-                    final group = _groupedByDate[index];
-                    final items = group['items'] as List<LocalAlbumItem>;
-                    return SliverGrid(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        mainAxisSpacing: 4,
-                        crossAxisSpacing: 4,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, i) {
-                          final item = items[i];
-                          final selected = _selectedIds.contains(item.id);
-                          return GestureDetector(
-                            onTap: () {
-                              if (_isSelectionMode) {
-                                setState(() {
-                                  if (selected) {
-                                    _selectedIds.remove(item.id);
-                                  } else {
-                                    _selectedIds.add(item.id);
-                                  }
-                                });
-                              } else {
-                                _viewItem(item);
-                              }
-                            },
-                            onLongPress: _isSelectionMode
-                                ? null
-                                : () {
-                                    setState(() {
-                                      _isSelectionMode = true;
+                      );
+                    },
+                  ),
+                  Builder(
+                    builder: (context) {
+                      final group = _groupedByDate[index];
+                      final items = group['items'] as List<LocalAlbumItem>;
+                      return SliverGrid(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          mainAxisSpacing: 4,
+                          crossAxisSpacing: 4,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i) {
+                            final item = items[i];
+                            final selected = _selectedIds.contains(item.id);
+                            return GestureDetector(
+                              onTap: () {
+                                if (_isSelectionMode) {
+                                  setState(() {
+                                    if (selected) {
+                                      _selectedIds.remove(item.id);
+                                    } else {
                                       _selectedIds.add(item.id);
-                                    });
-                                  },
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                if (item.type == 'video')
-                                  Container(
-                                    color: Colors.grey[900],
-                                    child: const Center(
-                                        child: Icon(Icons.play_circle_fill_rounded,
-                                            color: Colors.white70, size: 40)),
-                                  )
-                                else
-                                  Image.file(
-                                    File(_filePath(item)),
-                                    fit: BoxFit.cover,
-                                    filterQuality: FilterQuality.low,
-                                    errorBuilder: (_, __, ___) => Container(
-                                        color: Colors.grey[200],
-                                        child: const Icon(
-                                            Icons.broken_image_rounded,
-                                            color: Colors.grey)),
-                                  ),
-                                if (_isSelectionMode)
-                                  Container(
-                                    color: selected
-                                        ? Colors.black.withValues(alpha: 0.3)
-                                        : Colors.transparent,
-                                    child: Center(
-                                        child: Icon(
-                                            selected
-                                                ? Icons.check_circle_rounded
-                                                : Icons.circle_outlined,
-                                            color: selected
-                                                ? Colors.white
-                                                : Colors.white54,
-                                            size: 28)),
-                                  ),
-                                if (item.type == 'video' && !_isSelectionMode)
-                                  Positioned(
-                                      top: 2,
-                                      left: 2,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 4, vertical: 2),
-                                        decoration: BoxDecoration(
-                                            color: Colors.redAccent,
-                                            borderRadius: BorderRadius.circular(4)),
-                                        child: const Text('VIDEO',
-                                            style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 8,
-                                                fontWeight: FontWeight.w700)),
-                                      )),
-                              ],
-                            ),
-                          );
-                        },
-                        childCount: items.length,
-                      ),
-                    );
-                  },
-                ),
+                                    }
+                                  });
+                                } else {
+                                  _viewItem(item);
+                                }
+                              },
+                              onLongPress: _isSelectionMode
+                                  ? null
+                                  : () {
+                                      setState(() {
+                                        _isSelectionMode = true;
+                                        _selectedIds.add(item.id);
+                                      });
+                                    },
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  if (item.type == 'video')
+                                    Container(
+                                      color: Colors.grey[900],
+                                      child: const Center(
+                                          child: Icon(
+                                              Icons.play_circle_fill_rounded,
+                                              color: Colors.white70,
+                                              size: 40)),
+                                    )
+                                  else
+                                    Image.file(
+                                      File(_filePath(item)),
+                                      fit: BoxFit.cover,
+                                      filterQuality: FilterQuality.low,
+                                      errorBuilder: (_, __, ___) => Container(
+                                          color: Colors.grey[200],
+                                          child: const Icon(
+                                              Icons.broken_image_rounded,
+                                              color: Colors.grey)),
+                                    ),
+                                  if (_isSelectionMode)
+                                    Container(
+                                      color: selected
+                                          ? Colors.black.withValues(alpha: 0.3)
+                                          : Colors.transparent,
+                                      child: Center(
+                                          child: Icon(
+                                              selected
+                                                  ? Icons.check_circle_rounded
+                                                  : Icons.circle_outlined,
+                                              color: selected
+                                                  ? Colors.white
+                                                  : Colors.white54,
+                                              size: 28)),
+                                    ),
+                                  if (item.type == 'video' && !_isSelectionMode)
+                                    Positioned(
+                                        top: 2,
+                                        left: 2,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 4, vertical: 2),
+                                          decoration: BoxDecoration(
+                                              color: Colors.redAccent,
+                                              borderRadius:
+                                                  BorderRadius.circular(4)),
+                                          child: const Text('VIDEO',
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 8,
+                                                  fontWeight: FontWeight.w700)),
+                                        )),
+                                ],
+                              ),
+                            );
+                          },
+                          childCount: items.length,
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
-      ),
       ],
     );
   }

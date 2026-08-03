@@ -120,8 +120,7 @@ class _SettingsLinksManagerScreenState
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: items.length,
-            separatorBuilder: (context, index) =>
-                const SizedBox(height: 12),
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               return _buildMemoryItem(items[index]);
             },
@@ -181,8 +180,8 @@ class _SettingsLinksManagerScreenState
                   borderRadius: BorderRadius.circular(12),
                 ),
                 alignment: Alignment.center,
-                child:
-                    const Icon(Icons.photo_library_rounded, color: Color(0xFF1E88E5)),
+                child: const Icon(Icons.photo_library_rounded,
+                    color: Color(0xFF1E88E5)),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -239,7 +238,8 @@ class _SettingsLinksManagerScreenState
                     await Clipboard.setData(
                         ClipboardData(text: _getMemoryDisplayUrl(link.token)));
                     if (!mounted) return;
-                    SLNotice.showInfo(context, context.tr('home_copylinkme_7f75af'));
+                    SLNotice.showInfo(
+                        context, context.tr('home_copylinkme_7f75af'));
                   },
                   child: Icon(Icons.copy_rounded,
                       size: 20, color: Colors.grey[400]),
@@ -272,7 +272,8 @@ class _SettingsLinksManagerScreenState
   }
 
   String _getMemoryDisplayUrl(String token) {
-    return AppConfig.webUri('/album', queryParameters: {'token': token}).toString();
+    return AppConfig.webUri('/album', queryParameters: {'token': token})
+        .toString();
   }
 }
 

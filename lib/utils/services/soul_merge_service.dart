@@ -112,7 +112,9 @@ class SoulMergeService {
       // Body của thông báo push
       final body = trimmed.isNotEmpty
           ? trimmed
-          : (imageUrl != null ? 'Đã gửi một ảnh' : 'Đã thì thầm với bạn trong Soul Merge 💕');
+          : (imageUrl != null
+              ? 'Đã gửi một ảnh'
+              : 'Đã thì thầm với bạn trong Soul Merge 💕');
 
       // Lấy tên đúng từ house settings theo role của người gửi
       String myName = 'Người ấy';
@@ -329,7 +331,9 @@ class SoulMergeService {
 
       // Helper lấy tên theo role
       String nameForRole(String r) {
-        if (r == 'user2') return (nameU2 != null && nameU2.isNotEmpty) ? nameU2 : 'Người ấy';
+        if (r == 'user2') {
+          return (nameU2 != null && nameU2.isNotEmpty) ? nameU2 : 'Người ấy';
+        }
         return (nameU1 != null && nameU1.isNotEmpty) ? nameU1 : 'Người ấy';
       }
 

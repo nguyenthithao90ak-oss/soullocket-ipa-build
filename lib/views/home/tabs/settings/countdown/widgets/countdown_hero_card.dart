@@ -148,6 +148,4 @@ extension CountdownHeroCardExt on _CountdownModeIndependentScreenState {
       ],
     );
   }
-
-  
 }

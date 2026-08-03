@@ -833,7 +833,6 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                         );
                       }).toList(),
                     ),
-
                   ],
                 ),
               ),
@@ -912,8 +911,8 @@ class _ThemeSectionCardState extends State<_ThemeSectionCard>
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        widget.themeColor, 
-                        widget.themeColor.withValues(alpha: 0.65), 
+                        widget.themeColor,
+                        widget.themeColor.withValues(alpha: 0.65),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,

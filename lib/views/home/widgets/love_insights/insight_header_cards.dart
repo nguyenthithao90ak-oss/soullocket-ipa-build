@@ -63,7 +63,8 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         TweenAnimationBuilder<double>(
-                          tween: Tween<double>(begin: 0, end: insight.loveScore.toDouble()),
+                          tween: Tween<double>(
+                              begin: 0, end: insight.loveScore.toDouble()),
                           duration: const Duration(milliseconds: 1500),
                           curve: Curves.easeOutCubic,
                           builder: (context, value, child) {
@@ -100,8 +101,14 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                           ),
                         ),
                       ],
-                    ).animate(onPlay: (controller) => controller.repeat(reverse: true))
-                     .scaleXY(end: 1.02, duration: 1000.ms, curve: Curves.easeInOutSine),
+                    )
+                        .animate(
+                            onPlay: (controller) =>
+                                controller.repeat(reverse: true))
+                        .scaleXY(
+                            end: 1.02,
+                            duration: 1000.ms,
+                            curve: Curves.easeInOutSine),
                     SLSpacing.h12,
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -321,17 +328,20 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
     }
 
     Widget emojiWidget = Text(tipEmoji, style: const TextStyle(fontSize: 24));
-    
+
     // Áp dụng animation tuỳ theo emoji
     if (insight.loveScore >= 85) {
-      emojiWidget = emojiWidget.animate(onPlay: (controller) => controller.repeat(reverse: true))
+      emojiWidget = emojiWidget
+          .animate(onPlay: (controller) => controller.repeat(reverse: true))
           .scaleXY(end: 1.15, duration: 600.ms, curve: Curves.easeInOut)
           .tint(color: Colors.orange.withValues(alpha: 0.2));
     } else if (insight.loveScore >= 70) {
-      emojiWidget = emojiWidget.animate(onPlay: (controller) => controller.repeat(reverse: true))
+      emojiWidget = emojiWidget
+          .animate(onPlay: (controller) => controller.repeat(reverse: true))
           .shake(hz: 3, curve: Curves.easeInOut, duration: 1.seconds);
     } else {
-      emojiWidget = emojiWidget.animate(onPlay: (controller) => controller.repeat(reverse: true))
+      emojiWidget = emojiWidget
+          .animate(onPlay: (controller) => controller.repeat(reverse: true))
           .slideY(end: -0.15, duration: 800.ms, curve: Curves.easeInOut);
     }
 
@@ -410,7 +420,7 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
           ),
         ],
       ),
-    ).animate(onPlay: (controller) => controller.repeat(reverse: true))
-     .shimmer(duration: 4.seconds, color: Colors.white.withValues(alpha: 0.6));
+    ).animate(onPlay: (controller) => controller.repeat(reverse: true)).shimmer(
+        duration: 4.seconds, color: Colors.white.withValues(alpha: 0.6));
   }
 }

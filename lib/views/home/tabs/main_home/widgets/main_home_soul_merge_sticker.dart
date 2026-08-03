@@ -194,8 +194,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
   void _showFloatingMessage(String text) {
     if (!mounted) return;
     if (!_showHeartNotif) return;
-    
-    // [Fix] Chỉ hiển thị thông báo bong bóng khi ở màn hình chính (tab 0) 
+
+    // [Fix] Chỉ hiển thị thông báo bong bóng khi ở màn hình chính (tab 0)
     // theo yêu cầu của người dùng, tránh đè lên các tính năng ở tab khác.
     if (widget.activeIndex != 0) return;
 
@@ -272,7 +272,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                             color: Colors.white.withValues(alpha: 0.95),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: const Color(0xFFFFC0D3).withValues(alpha: 0.65),
+                              color: const Color(0xFFFFC0D3)
+                                  .withValues(alpha: 0.65),
                               width: 1.2,
                             ),
                             boxShadow: [
@@ -387,7 +388,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        final isDark = UiPrefs.notifier.value.themeKey.contains('dark') || 
+        final isDark = UiPrefs.notifier.value.themeKey.contains('dark') ||
             UiPrefs.notifier.value.themeKey.contains('night');
         final bgColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
         final textColor = isDark ? Colors.white : const Color(0xFF243041);
@@ -408,7 +409,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                   color: Color(0xFFFCE4EC),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.favorite_rounded, color: Color(0xFFF06292), size: 24),
+                child: const Icon(Icons.favorite_rounded,
+                    color: Color(0xFFF06292), size: 24),
               ),
               const SizedBox(height: 16),
               Text(
@@ -432,7 +434,10 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const PairingDashboardScreen()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const PairingDashboardScreen()));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF15BB5),

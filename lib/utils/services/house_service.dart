@@ -98,7 +98,8 @@ class HouseService {
         return;
       }
     } catch (error) {
-      debugPrint('[HouseService] Fast getIdToken failed: $error. Falling back to retry loop.');
+      debugPrint(
+          '[HouseService] Fast getIdToken failed: $error. Falling back to retry loop.');
     }
 
     // Slow retry path (nếu gặp lỗi mạng hoặc token trống)
@@ -341,6 +342,7 @@ class HouseService {
       }
       return createdHouseId;
     }
+
     try {
       final response = await _callCreateHouseSecureWithRetry(<String, dynamic>{
         'email': normalizedEmail,
@@ -499,30 +501,59 @@ class HouseService {
       if (code.isEmpty) {
         throw Exception('Vui lòng nhập mã ghép nối.');
       }
-      
+
       await _refreshCallableSecurityContext(force: false);
-      
+
       final prefs = await SharedPreferences.getInstance();
       final oldHouseId = prefs.getString('il_house_id');
 
       // Kiểm tra tính hợp lệ của mã trước khi dọn dẹp dữ liệu tránh xoá nhầm
       bool isCodeOrHouseValid = false;
       if (code.length == 12 && int.tryParse(code) != null) {
-        isCodeOrHouseValid = await FirebaseDatabase.instance.ref('pairing_codes/$code').get().then((snap) => snap.exists);
+        isCodeOrHouseValid = await FirebaseDatabase.instance
+            .ref('pairing_codes/$code')
+            .get()
+            .then((snap) => snap.exists);
       } else {
-        isCodeOrHouseValid = await FirebaseDatabase.instance.ref('houses/$code/settings').get().then((snap) => snap.exists);
+        isCodeOrHouseValid = await FirebaseDatabase.instance
+            .ref('houses/$code/settings')
+            .get()
+            .then((snap) => snap.exists);
       }
 
-      if (isCodeOrHouseValid && oldHouseId != null && oldHouseId.isNotEmpty && oldHouseId != code) {
+      if (isCodeOrHouseValid &&
+          oldHouseId != null &&
+          oldHouseId.isNotEmpty &&
+          oldHouseId != code) {
         // Chỉ dọn dẹp khi người dùng cũ ở chế độ độc thân (chỉ có tối đa 1 thành viên)
         try {
-          final oldMembersSnap = await FirebaseDatabase.instance.ref('houses/$oldHouseId/members').get();
-          if (!oldMembersSnap.exists || (oldMembersSnap.value is Map && (oldMembersSnap.value as Map).length <= 1)) {
+          final oldMembersSnap = await FirebaseDatabase.instance
+              .ref('houses/$oldHouseId/members')
+              .get();
+          if (!oldMembersSnap.exists ||
+              (oldMembersSnap.value is Map &&
+                  (oldMembersSnap.value as Map).length <= 1)) {
             // Thực hiện xoá vật lý dữ liệu Firestore trước khi cập nhật quyền (houseId) mới
-            final diariesSnap = await FirebaseFirestore.instance.collection('houses').doc(oldHouseId).collection('diaries').get();
-            final albumSnap = await FirebaseFirestore.instance.collection('houses').doc(oldHouseId).collection('album').get();
-            final trashSnap = await FirebaseFirestore.instance.collection('houses').doc(oldHouseId).collection('album_trash').get();
-            final chatSnap = await FirebaseFirestore.instance.collection('houses').doc(oldHouseId).collection('chat_room_messages').get();
+            final diariesSnap = await FirebaseFirestore.instance
+                .collection('houses')
+                .doc(oldHouseId)
+                .collection('diaries')
+                .get();
+            final albumSnap = await FirebaseFirestore.instance
+                .collection('houses')
+                .doc(oldHouseId)
+                .collection('album')
+                .get();
+            final trashSnap = await FirebaseFirestore.instance
+                .collection('houses')
+                .doc(oldHouseId)
+                .collection('album_trash')
+                .get();
+            final chatSnap = await FirebaseFirestore.instance
+                .collection('houses')
+                .doc(oldHouseId)
+                .collection('chat_room_messages')
+                .get();
 
             final batch = FirebaseFirestore.instance.batch();
             for (var doc in diariesSnap.docs) {
@@ -538,10 +569,12 @@ class HouseService {
               batch.delete(doc.reference);
             }
             await batch.commit();
-            debugPrint('[HouseService] Old house Firestore data deleted: $oldHouseId');
+            debugPrint(
+                '[HouseService] Old house Firestore data deleted: $oldHouseId');
           }
         } catch (e) {
-          debugPrint('[HouseService] Failed to delete old house Firestore data: $e');
+          debugPrint(
+              '[HouseService] Failed to delete old house Firestore data: $e');
         }
       }
 
@@ -551,23 +584,33 @@ class HouseService {
           'houseId': code,
         },
       );
-      
+
       final map = _asStringDynamicMap(response.data);
       if (map != null && map['houseId'] != null) {
         // Success
         final newHouseId = map['houseId'].toString();
-        
+
         // Dọn dẹp nhà cũ (nhà độc thân) trước khi nhận token mới
-        if (oldHouseId != null && oldHouseId.isNotEmpty && oldHouseId != newHouseId) {
+        if (oldHouseId != null &&
+            oldHouseId.isNotEmpty &&
+            oldHouseId != newHouseId) {
           try {
-            final oldMembersSnap = await FirebaseDatabase.instance.ref('houses/$oldHouseId/members').get();
-            if (!oldMembersSnap.exists || (oldMembersSnap.value is Map && (oldMembersSnap.value as Map).length <= 1)) {
-              await FirebaseDatabase.instance.ref('houses/$oldHouseId').remove();
-              await FirebaseDatabase.instance.ref('houses_public/$oldHouseId').remove();
+            final oldMembersSnap = await FirebaseDatabase.instance
+                .ref('houses/$oldHouseId/members')
+                .get();
+            if (!oldMembersSnap.exists ||
+                (oldMembersSnap.value is Map &&
+                    (oldMembersSnap.value as Map).length <= 1)) {
+              await FirebaseDatabase.instance
+                  .ref('houses/$oldHouseId')
+                  .remove();
+              await FirebaseDatabase.instance
+                  .ref('houses_public/$oldHouseId')
+                  .remove();
             }
           } catch (_) {}
         }
-        
+
         await prefs.setString('il_house_id', newHouseId);
         if (map['assignedRole'] != null) {
           await prefs.setString('il_role', map['assignedRole'].toString());
@@ -577,7 +620,9 @@ class HouseService {
       throw Exception('Không thể ghép nối mã nhà lúc này.');
     } catch (e) {
       debugPrint('[HouseService] joinHouse error: $e');
-      throw Exception(AppErrorMapper.resolve(e, fallbackMessage: 'Mã ghép nối không hợp lệ hoặc đã hết hạn.').message);
+      throw Exception(AppErrorMapper.resolve(e,
+              fallbackMessage: 'Mã ghép nối không hợp lệ hoặc đã hết hạn.')
+          .message);
     }
   }
 

@@ -4,7 +4,8 @@ part of '../settings_tab.dart';
 const Color _settingsAccountAccentColor = Color(0xFFD81B60);
 const Color _settingsAccountPurpleTextColor = Color(0xFF7A6A86);
 
-const List<({String code, String badge, String title})> _settingsLanguageOptions = [
+const List<({String code, String badge, String title})>
+    _settingsLanguageOptions = [
   (code: 'vi', badge: 'VN', title: 'Tiếng Việt'),
   (code: 'en', badge: 'US', title: 'English'),
   (code: 'zh', badge: 'CN', title: '中文 (简体)'),
@@ -119,9 +120,12 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               }
               if (normalized.isBefore(minDate) || normalized.isAfter(maxDate)) {
                 setDialogState(() {
-                  errorText = context.tr('settings_date_range_error')
-                      .replaceAll('{min}', DateInputUtils.formatDisplayDate(minDate))
-                      .replaceAll('{max}', DateInputUtils.formatDisplayDate(maxDate));
+                  errorText = context
+                      .tr('settings_date_range_error')
+                      .replaceAll(
+                          '{min}', DateInputUtils.formatDisplayDate(minDate))
+                      .replaceAll(
+                          '{max}', DateInputUtils.formatDisplayDate(maxDate));
                 });
                 return;
               }
@@ -326,8 +330,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
       _showToast(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              msgSaveFailed,
+          fallbackMessage: msgSaveFailed,
         ).message,
         success: false,
       );
@@ -442,8 +445,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
   Future<void> _changePrimaryEmailV2() async {
     final user = _auth.currentUser;
     if (user != null && user.emailVerified) {
-      _showToast(context.tr('home_emailcxcmi_a00309'),
-          success: false);
+      _showToast(context.tr('home_emailcxcmi_a00309'), success: false);
       return;
     }
 
@@ -468,7 +470,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
 
     if (!_isSupportedSettingsEmail(normalized)) {
       _showToast(
-        context.tr('settings_supported_emails_only')
+        context
+            .tr('settings_supported_emails_only')
             .replaceAll('{domains}', _settingsSupportedEmailDomainsLabel()),
         success: false,
       );
@@ -514,8 +517,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
       _showToast(
         AppErrorMapper.resolve(
           e,
-          fallbackMessage:
-              context.tr('home_chathcpnht_e7d7c3'),
+          fallbackMessage: context.tr('home_chathcpnht_e7d7c3'),
         ).message,
         success: false,
       );
@@ -530,11 +532,15 @@ extension _SettingsTabAccountSection on _SettingsTabState {
 
   String _accountTierTitle() {
     if (!AppConfig.isPurchaseEnabled) return context.tr('home_tikhon_864cc3');
-    return _isVipActive ? context.tr('home_tikhonutin_c3c8b9') : context.tr('home_tikhonbasi_28d4a1');
+    return _isVipActive
+        ? context.tr('home_tikhonutin_c3c8b9')
+        : context.tr('home_tikhonbasi_28d4a1');
   }
 
   String _accountTierSubtitle() {
-    if (!AppConfig.isPurchaseEnabled) return context.tr('home_thngtinhs_ee5e18');
+    if (!AppConfig.isPurchaseEnabled) {
+      return context.tr('home_thngtinhs_ee5e18');
+    }
     if (!_isVipActive) return context.tr('home_gicbn_1a2d12');
     if (_isLifetimeVip) return context.tr('vip_lifetime');
     return _vipPlanLabel;
@@ -548,28 +554,34 @@ extension _SettingsTabAccountSection on _SettingsTabState {
   }
 
   String _accountMemoryLimitLabel() {
-    if (!AppConfig.isPurchaseEnabled) return context.tr('home_khoknimcnh_0f4166');
+    if (!AppConfig.isPurchaseEnabled) {
+      return context.tr('home_khoknimcnh_0f4166');
+    }
     if (_isVipActive) {
-      return _isLifetimeVip ? context.tr('home_1000nhknim_df7663') : context.tr('home_500nhknim_a4e0af');
+      return _isLifetimeVip
+          ? context.tr('home_1000nhknim_df7663')
+          : context.tr('home_500nhknim_a4e0af');
     }
     return context.tr('home_365nhknim_57d20f');
   }
 
-  
   Widget _buildVipPanel({bool hideBackButton = false}) {
     final isPremium = _isVipActive;
-    
+
     return _buildPanel(
       hideBackButton: hideBackButton,
       id: 'vip',
-      title: AppConfig.isPurchaseEnabled ? context.tr('account_vip_plan') : context.tr('home_thngtintik_f57634'),
+      title: AppConfig.isPurchaseEnabled
+          ? context.tr('account_vip_plan')
+          : context.tr('home_thngtintik_f57634'),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isPremium ? const Color(0xFFFFF9C4) : const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isPremium ? const Color(0xFFFFD54F) : const Color(0xFFE2E8F0),
+            color:
+                isPremium ? const Color(0xFFFFD54F) : const Color(0xFFE2E8F0),
             width: 1,
           ),
         ),
@@ -582,12 +594,18 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isPremium ? const Color(0xFFFFE082) : const Color(0xFFE2E8F0),
+                    color: isPremium
+                        ? const Color(0xFFFFE082)
+                        : const Color(0xFFE2E8F0),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    isPremium ? Icons.workspace_premium_rounded : Icons.account_circle_outlined,
-                    color: isPremium ? const Color(0xFFF57F17) : const Color(0xFF64748B),
+                    isPremium
+                        ? Icons.workspace_premium_rounded
+                        : Icons.account_circle_outlined,
+                    color: isPremium
+                        ? const Color(0xFFF57F17)
+                        : const Color(0xFF64748B),
                     size: 28,
                   ),
                 ),
@@ -601,7 +619,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                         style: SLTextStyles.quicksand(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          color: isPremium ? const Color(0xFF7A5200) : const Color(0xFF1E293B),
+                          color: isPremium
+                              ? const Color(0xFF7A5200)
+                              : const Color(0xFF1E293B),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -610,14 +630,17 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                         style: SLTextStyles.quicksand(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: isPremium ? const Color(0xFFF57F17) : const Color(0xFF64748B),
+                          color: isPremium
+                              ? const Color(0xFFF57F17)
+                              : const Color(0xFF64748B),
                         ),
                       ),
                     ],
                   ),
                 ),
                 if (isPremium)
-                  const Icon(Icons.star_rounded, color: Color(0xFFFBC02D), size: 24),
+                  const Icon(Icons.star_rounded,
+                      color: Color(0xFFFBC02D), size: 24),
               ],
             ),
             const SizedBox(height: 20),
@@ -654,7 +677,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       ],
                     ),
                   ),
-                  Container(width: 1, height: 30, color: const Color(0xFFCBD5E1)),
+                  Container(
+                      width: 1, height: 30, color: const Color(0xFFCBD5E1)),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
@@ -702,12 +726,16 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: isPremium ? const Color(0xFFF57F17) : const Color(0xFF0F172A),
+                          color: isPremium
+                              ? const Color(0xFFF57F17)
+                              : const Color(0xFF0F172A),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Center(
                           child: Text(
-                            isPremium ? context.tr('Xem quyền lợi') : context.tr('Nâng cấp VIP'),
+                            isPremium
+                                ? context.tr('Xem quyền lợi')
+                                : context.tr('Nâng cấp VIP'),
                             style: SLTextStyles.quicksand(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
@@ -732,7 +760,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                         ),
                         child: Center(
                           child: Text(
-                            _isRestoringVip ? context.tr('home_angkhiphc_944cf4') : context.tr('home_khiphc_efda66'),
+                            _isRestoringVip
+                                ? context.tr('home_angkhiphc_944cf4')
+                                : context.tr('home_khiphc_efda66'),
                             style: SLTextStyles.quicksand(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -764,6 +794,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
       ),
     );
   }
+
   Widget _buildIdentityPanel({bool hideBackButton = false}) {
     final panelState = _buildIdentityPanelState();
     final panelActions = _buildIdentityPanelActions();
@@ -779,7 +810,6 @@ extension _SettingsTabAccountSection on _SettingsTabState {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSubCard(
-            
             children: [
               _buildLabel(isSingle
                   ? context.tr('birth_year_or_start')
@@ -788,7 +818,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 onTap: panelActions.onPickLoveDate,
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
@@ -812,7 +843,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                   ),
                 ),
               ),
-              _buildLabel('${context.tr('house_name')} (${context.tr('home_khngbtbuc_0a1fee')})'),
+              _buildLabel(
+                  '${context.tr('house_name')} (${context.tr('home_khngbtbuc_0a1fee')})'),
               _buildInput(
                 _houseNameCtrl,
                 context.tr('house_name_hint'),
@@ -822,7 +854,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               _buildLabel('Mã nhà (House ID)'),
               Container(
                 margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
@@ -830,7 +863,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.home_rounded, color: Color(0xFFD81B60), size: 20),
+                    const Icon(Icons.home_rounded,
+                        color: Color(0xFFD81B60), size: 20),
                     SLSpacing.w8,
                     Expanded(
                       child: Column(
@@ -913,7 +947,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               // ),
               Container(
                 margin: const EdgeInsets.only(bottom: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
@@ -940,7 +975,6 @@ extension _SettingsTabAccountSection on _SettingsTabState {
             ],
           ),
           _buildSubCard(
-            
             children: [
               _buildLabel(isSingle
                   ? context.tr('your_nickname')
@@ -957,7 +991,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 onTap: panelActions.onPickDobU1,
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 4),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
@@ -965,7 +1000,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.cake, color: Color(0xFF1976D2), size: 20),
+                      const Icon(Icons.cake,
+                          color: Color(0xFF1976D2), size: 20),
                       SLSpacing.w8,
                       Expanded(
                         child: Text(
@@ -984,7 +1020,6 @@ extension _SettingsTabAccountSection on _SettingsTabState {
           ),
           if (panelState.showPartnerFields) ...[
             _buildSubCard(
-              
               children: [
                 _buildLabel(context.tr('female_nickname')),
                 _buildInput(
@@ -998,8 +1033,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                   onTap: panelActions.onPickDobU2,
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 4),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
@@ -1007,7 +1042,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.cake, color: Color(0xFFD81B60), size: 20),
+                        const Icon(Icons.cake,
+                            color: Color(0xFFD81B60), size: 20),
                         SLSpacing.w8,
                         Expanded(
                           child: Text(
@@ -1025,7 +1061,6 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               ],
             ),
             _buildSubCard(
-              
               children: [
                 _buildLabel(context.tr('greeting_quote')),
                 _buildInput(
@@ -1093,90 +1128,102 @@ extension _SettingsTabAccountSection on _SettingsTabState {
             ),
             const SizedBox(height: 14),
             Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: const Color(0xFFD9C4F2).withValues(alpha: 0.6),
-                width: 1.2,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: const Color(0xFFD9C4F2).withValues(alpha: 0.6),
+                  width: 1.2,
+                ),
               ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: AnimatedSize(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-                alignment: Alignment.topCenter,
-                child: Column(
-                  children: [
-                    if (!_isLanguageListExpanded)
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            setState(() {
-                              _isLanguageListExpanded = true;
-                            });
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 38,
-                                  height: 30,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: const Color(0xFFB79AD9)),
-                                  ),
-                                  child: Text(
-                                    _settingsLanguageOptions.firstWhere((o) => o.code == lang, orElse: () => _settingsLanguageOptions.first).badge,
-                                    style: SLTheme.quicksand(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w900,
-                                      color: const Color(0xFF5C4A78),
-                                      letterSpacing: 0.4,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: AnimatedSize(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.topCenter,
+                  child: Column(
+                    children: [
+                      if (!_isLanguageListExpanded)
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _isLanguageListExpanded = true;
+                              });
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 16),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 38,
+                                    height: 30,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                          color: const Color(0xFFB79AD9)),
+                                    ),
+                                    child: Text(
+                                      _settingsLanguageOptions
+                                          .firstWhere((o) => o.code == lang,
+                                              orElse: () =>
+                                                  _settingsLanguageOptions
+                                                      .first)
+                                          .badge,
+                                      style: SLTheme.quicksand(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w900,
+                                        color: const Color(0xFF5C4A78),
+                                        letterSpacing: 0.4,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    _settingsLanguageOptions.firstWhere((o) => o.code == lang, orElse: () => _settingsLanguageOptions.first).title,
-                                    style: SLTheme.quicksand(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w800,
-                                      color: const Color(0xFF2B2238),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      _settingsLanguageOptions
+                                          .firstWhere((o) => o.code == lang,
+                                              orElse: () =>
+                                                  _settingsLanguageOptions
+                                                      .first)
+                                          .title,
+                                      style: SLTheme.quicksand(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
+                                        color: const Color(0xFF2B2238),
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                  color: Color(0xFF5C4A78),
-                                  size: 24,
-                                ),
-                              ],
+                                  const Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    color: Color(0xFF5C4A78),
+                                    size: 24,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      )
-                    else
-                      for (final option in _settingsLanguageOptions) ...[
-                        _buildLanguageOption(
-                          code: option.code,
-                          badge: option.badge,
-                          title: option.title,
-                        ),
-                        if (option.code != _settingsLanguageOptions.last.code)
-                          const Divider(height: 1),
-                      ],
-                  ],
+                        )
+                      else
+                        for (final option in _settingsLanguageOptions) ...[
+                          _buildLanguageOption(
+                            code: option.code,
+                            badge: option.badge,
+                            title: option.title,
+                          ),
+                          if (option.code != _settingsLanguageOptions.last.code)
+                            const Divider(height: 1),
+                        ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
           ],
         ),
       ),
@@ -1281,7 +1328,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
 
               if (!RegExp(r'^[a-z0-9_]{3,20}$').hasMatch(clean)) {
                 setState(() {
-                  errorReason = 'Mã chỉ gồm chữ thường, số, dấu gạch dưới (3-20 ký tự).';
+                  errorReason =
+                      'Mã chỉ gồm chữ thường, số, dấu gạch dưới (3-20 ký tự).';
                 });
                 return;
               }
@@ -1290,16 +1338,19 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 isChecking = true;
               });
 
-              debounceTimer = Timer(const Duration(milliseconds: 500), () async {
+              debounceTimer =
+                  Timer(const Duration(milliseconds: 500), () async {
                 try {
-                  final res = await _houseService.checkHouseIdAvailability(clean);
+                  final res =
+                      await _houseService.checkHouseIdAvailability(clean);
                   if (customId != clean) return;
 
                   setState(() {
                     isChecking = false;
                     isAvailable = res['available'] == true;
                     if (!isAvailable) {
-                      errorReason = res['reason'] ?? 'Mã nhà đã tồn tại, vui lòng chọn mã khác.';
+                      errorReason = res['reason'] ??
+                          'Mã nhà đã tồn tại, vui lòng chọn mã khác.';
                       final suggs = res['suggestions'];
                       if (suggs is List) {
                         suggestions = suggs.map((e) => e.toString()).toList();
@@ -1334,10 +1385,13 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       _houseIdChanged = true;
                     });
                     Navigator.of(dialogContext).pop();
-                    _showToast('Đổi mã nhà thành công! Hệ thống đang tải lại...', success: true);
+                    _showToast(
+                        'Đổi mã nhà thành công! Hệ thống đang tải lại...',
+                        success: true);
                     Future.delayed(const Duration(seconds: 1), () {
                       if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                      Navigator.of(context, rootNavigator: true)
+                          .pushAndRemoveUntil(
                         MaterialPageRoute(builder: (_) => const AppEntry()),
                         (route) => false,
                       );
@@ -1364,10 +1418,12 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                   return AlertDialog(
                     backgroundColor: Colors.white,
                     surfaceTintColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
                     title: Row(
                       children: [
-                        const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+                        const Icon(Icons.warning_amber_rounded,
+                            color: Colors.orange, size: 28),
                         const SizedBox(width: 8),
                         Text(
                           'Xác nhận đổi',
@@ -1407,11 +1463,13 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFD81B60),
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
                         ),
                         child: Text(
                           'Đổi mã ngay',
-                          style: SLTextStyles.quicksand(fontWeight: FontWeight.w900),
+                          style: SLTextStyles.quicksand(
+                              fontWeight: FontWeight.w900),
                         ),
                       ),
                     ],
@@ -1424,7 +1482,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
               backgroundColor: Colors.white,
               surfaceTintColor: Colors.transparent,
               insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28)),
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
@@ -1439,7 +1498,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                             color: const Color(0xFFFFF0F5),
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: const Icon(Icons.maps_home_work_rounded, color: Color(0xFFD81B60), size: 32),
+                          child: const Icon(Icons.maps_home_work_rounded,
+                              color: Color(0xFFD81B60), size: 32),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -1479,7 +1539,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     ),
                     const SizedBox(height: 20),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 4),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFAFAFA),
                         borderRadius: BorderRadius.circular(20),
@@ -1487,7 +1548,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                           width: 2,
                           color: errorReason != null
                               ? Colors.red.shade300
-                              : (isAvailable ? Colors.green.shade400 : const Color(0xFFEEEEEE)),
+                              : (isAvailable
+                                  ? Colors.green.shade400
+                                  : const Color(0xFFEEEEEE)),
                         ),
                         boxShadow: [
                           if (isAvailable)
@@ -1538,9 +1601,11 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                                   ),
                                 )
                               : (isAvailable
-                                  ? const Icon(Icons.check_circle_rounded, color: Colors.green, size: 26)
+                                  ? const Icon(Icons.check_circle_rounded,
+                                      color: Colors.green, size: 26)
                                   : (errorReason != null
-                                      ? const Icon(Icons.cancel_rounded, color: Colors.red, size: 26)
+                                      ? const Icon(Icons.cancel_rounded,
+                                          color: Colors.red, size: 26)
                                       : null)),
                         ),
                         onChanged: onIdChanged,
@@ -1550,7 +1615,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          const Icon(Icons.verified_rounded, color: Colors.green, size: 16),
+                          const Icon(Icons.verified_rounded,
+                              color: Colors.green, size: 16),
                           const SizedBox(width: 4),
                           Text(
                             'Mã nhà khả dụng và hợp lệ!',
@@ -1568,7 +1634,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.error_outline_rounded, color: Colors.red.shade600, size: 16),
+                          Icon(Icons.error_outline_rounded,
+                              color: Colors.red.shade600, size: 16),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
@@ -1609,11 +1676,13 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                               ),
                             ),
                             backgroundColor: const Color(0xFFFFF0F5),
-                            side: const BorderSide(color: Color(0xFFFFD3E4), width: 1.5),
+                            side: const BorderSide(
+                                color: Color(0xFFFFD3E4), width: 1.5),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 8),
                             onPressed: () => selectSuggestion(sugg),
                           );
                         }).toList(),
@@ -1624,10 +1693,13 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       children: [
                         Expanded(
                           child: TextButton(
-                            onPressed: isSaving ? null : () => Navigator.of(dialogContext).pop(),
+                            onPressed: isSaving
+                                ? null
+                                : () => Navigator.of(dialogContext).pop(),
                             style: TextButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16)),
                             ),
                             child: Text(
                               'Huỷ',
@@ -1643,7 +1715,9 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                         Expanded(
                           flex: 2,
                           child: ElevatedButton(
-                            onPressed: (isAvailable && !isSaving && !isChecking) ? confirmSubmitChange : null,
+                            onPressed: (isAvailable && !isSaving && !isChecking)
+                                ? confirmSubmitChange
+                                : null,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFD81B60),
                               foregroundColor: Colors.white,
@@ -1651,7 +1725,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                               disabledForegroundColor: const Color(0xFFAAAAAA),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               elevation: 0,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16)),
                             ),
                             child: isSaving
                                 ? const SizedBox(
@@ -1683,4 +1758,3 @@ extension _SettingsTabAccountSection on _SettingsTabState {
     );
   }
 }
-

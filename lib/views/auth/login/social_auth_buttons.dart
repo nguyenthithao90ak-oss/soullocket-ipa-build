@@ -66,7 +66,8 @@ class _SocialAuthButton extends StatelessWidget {
         height: 52,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(26), // Bo góc nhiều hơn cho hợp với các ô input mới
+          borderRadius: BorderRadius.circular(
+              26), // Bo góc nhiều hơn cho hợp với các ô input mới
           border: Border.all(
             color: const Color(0xFFE0E0E0),
             width: 1.0,

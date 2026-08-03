@@ -157,7 +157,9 @@ extension _MainHomeInteractions on _MainHomeTabState {
         '${_currentRole}_${user.uid}_${nowMs}_${_random.nextInt(999999)}';
     final preset = _maybePresetForInteractionType(type);
 
-    final randomImageUrl = _currentRole == 'user1' ? (_houseSettings?['avtUser1']) : (_houseSettings?['avtUser2']);
+    final randomImageUrl = _currentRole == 'user1'
+        ? (_houseSettings?['avtUser1'])
+        : (_houseSettings?['avtUser2']);
 
     final flight = _HomeReactionFlight(
       id: eventId,
@@ -364,7 +366,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
         final prefs = await OfflineCacheService.getPrefs();
         final lastFCM = prefs.getInt('il_last_sent_fcm_push_v2') ?? 0;
         final nowMs = DateTime.now().millisecondsSinceEpoch;
-        
+
         if (nowMs - lastFCM >= 3600000) {
           await prefs.setInt('il_last_sent_fcm_push_v2', nowMs);
           await _notificationService.sendPartnerNotification(

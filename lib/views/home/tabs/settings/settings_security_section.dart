@@ -106,7 +106,6 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                       ),
                     ),
                   ),
-
                 ],
               ),
             ),
@@ -135,7 +134,10 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PairingDashboardScreen())),
+                      onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const PairingDashboardScreen())),
                       icon: const Icon(Icons.link_rounded, size: 18),
                       label: Text(
                         'Ghép nối ngay',
@@ -781,7 +783,6 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 ),
               ),
             ),
-
             SLSpacing.h20,
             Text(
               context.tr('lock_scopes'),

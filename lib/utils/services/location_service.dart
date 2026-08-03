@@ -57,7 +57,8 @@ class LocationService {
         onTimeout: () => LocationPermission.denied,
       );
 
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
         if (context == null || !context.mounted) {
           return false;
         }
@@ -269,7 +270,8 @@ class LocationService {
             'Location stop write blocked (permission-denied). Silently failing.');
       } else {
         ErrorLoggerService.instance.logError(
-          e, st,
+          e,
+          st,
           reason: 'LocationService.stopTracking database update failed',
           fatal: false,
         );

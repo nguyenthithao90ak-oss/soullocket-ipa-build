@@ -72,7 +72,8 @@ class CreativeDiaryController extends ChangeNotifier {
   }
 
   Future<void> _init() async {
-    final resolvedHouseId = initialHouseId ?? await _houseService.getCurrentHouseId();
+    final resolvedHouseId =
+        initialHouseId ?? await _houseService.getCurrentHouseId();
 
     if (resolvedHouseId == null || resolvedHouseId.isEmpty) {
       _houseId = null;
@@ -83,8 +84,9 @@ class CreativeDiaryController extends ChangeNotifier {
 
     _houseId = resolvedHouseId;
     await _pagesSubscription?.cancel();
-    
-    _pagesSubscription = _creativeDiaryService.listenToDiaryPages(resolvedHouseId).listen(
+
+    _pagesSubscription =
+        _creativeDiaryService.listenToDiaryPages(resolvedHouseId).listen(
       (rawPages) {
         final nextPages = <DiaryPageData>[];
         for (var index = 0; index < rawPages.length; index++) {
@@ -93,13 +95,13 @@ class CreativeDiaryController extends ChangeNotifier {
 
         final hasExistingPages = _pages.isNotEmpty;
         _pages = nextPages;
-        
+
         if (_pages.isEmpty) {
           _currentIndex = 0;
         } else if (_currentIndex >= _pages.length) {
           _currentIndex = _pages.length - 1;
         }
-        
+
         _isLoading = false;
         _isRefreshing = hasExistingPages;
         notifyListeners();

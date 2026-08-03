@@ -139,7 +139,8 @@ class StorageService {
     );
   }
 
-  Future<void> purgeStaleCache({Duration staleThreshold = const Duration(days: 3)}) {
+  Future<void> purgeStaleCache(
+      {Duration staleThreshold = const Duration(days: 3)}) {
     return _downloadCacheHelper.purgeStaleCache(staleThreshold: staleThreshold);
   }
 

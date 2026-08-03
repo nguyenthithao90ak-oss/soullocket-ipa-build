@@ -233,7 +233,6 @@ class AppConfig {
   static const String cookiePolicyUrl =
       'https://soullocketwitget.web.app/cookie-policy.html';
 
-
   // ── TELEGRAM ALERTS ──────────────────────────────────────────────────
   static Uri webUri(
     String path, {

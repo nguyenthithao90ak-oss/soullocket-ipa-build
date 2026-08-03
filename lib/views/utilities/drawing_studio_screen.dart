@@ -138,8 +138,9 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       });
     });
 
-    _activeStrokesSub =
-        _drawingService.streamActiveStrokes(widget.houseId).listen((activeStrokesMap) {
+    _activeStrokesSub = _drawingService
+        .streamActiveStrokes(widget.houseId)
+        .listen((activeStrokesMap) {
       if (!mounted) return;
       setState(() {
         _partnerActiveStrokes.clear();
@@ -197,8 +198,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
 
   List<_DrawStroke> get _allVisibleStrokes {
     final allStrokes = _realtimeStrokes.values.toList()
-      ..addAll(
-          _strokes.where((s) => _localPendingStrokeIds.contains(s.id)))
+      ..addAll(_strokes.where((s) => _localPendingStrokeIds.contains(s.id)))
       ..addAll(_partnerActiveStrokes.values);
 
     allStrokes.sort((a, b) => a.id.compareTo(b.id));
@@ -212,8 +212,6 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     if (uid.isEmpty) return false;
     return _allVisibleStrokes.any((stroke) => stroke.authorUid == uid);
   }
-
-
 
   _CanvasRatioPreset get _selectedRatio => _ratioPresets.firstWhere(
         (preset) => preset.id == _aspectRatioId,
@@ -341,15 +339,18 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   void _pushActiveStroke(_DrawStroke stroke) {
     final uid = _auth.currentUser?.uid ?? '';
     if (uid.isEmpty || stroke.points.isEmpty) return;
-    
+
     final now = DateTime.now();
-    if (_lastActiveStrokeSentAt != null && now.difference(_lastActiveStrokeSentAt!).inMilliseconds < 100) {
+    if (_lastActiveStrokeSentAt != null &&
+        now.difference(_lastActiveStrokeSentAt!).inMilliseconds < 100) {
       return; // throttle 100ms
     }
     _lastActiveStrokeSentAt = now;
-    
+
     final canvasSize = _canvasKey.currentContext?.size;
-    if (canvasSize == null || canvasSize.width <= 0 || canvasSize.height <= 0) return;
+    if (canvasSize == null || canvasSize.width <= 0 || canvasSize.height <= 0) {
+      return;
+    }
 
     final simplifiedPoints = <Offset>[];
     if (stroke.points.isNotEmpty) {
@@ -482,9 +483,8 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     final uid = _auth.currentUser?.uid ?? '';
     if (uid.isEmpty) return;
 
-    final ownStrokes = _allVisibleStrokes
-        .where((stroke) => stroke.authorUid == uid)
-        .toList();
+    final ownStrokes =
+        _allVisibleStrokes.where((stroke) => stroke.authorUid == uid).toList();
     if (ownStrokes.isEmpty) return;
 
     final latest = ownStrokes.last;
@@ -653,36 +653,38 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                 Flexible(
                   child: GridView.count(
                     crossAxisCount: 2,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  shrinkWrap: true,
-                  childAspectRatio: 1.55,
-                  children: [
-                    _BackgroundChoice(
-                        id: 'paper_grid',
-                        label: context.tr('util_giycaro_021a05')),
-                    _BackgroundChoice(
-                        id: 'blank_paper',
-                        label: context.tr('util_giytrng_049d6d')),
-                    _BackgroundChoice(
-                        id: 'hearts', label: context.tr('util_timhng_60d58d')),
-                    _BackgroundChoice(
-                        id: 'night_stars',
-                        label: context.tr('util_msao_38b356')),
-                    _BackgroundChoice(
-                        id: 'blackboard',
-                        label: context.tr('util_bngphn_6961e0')),
-                    _BackgroundChoice(
-                        id: 'notebook', label: context.tr('util_vkdng_be72f0')),
-                    _BackgroundChoice(
-                        id: 'photo_frame',
-                        label: context.tr('util_khungnh_b0bdfe')),
-                    const _BackgroundChoice(
-                        id: 'pastel_dots', label: 'Pastel dots'),
-                    const _BackgroundChoice(
-                        id: 'sticker_sheet', label: 'Sticker'),
-                  ],
-                ),
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    shrinkWrap: true,
+                    childAspectRatio: 1.55,
+                    children: [
+                      _BackgroundChoice(
+                          id: 'paper_grid',
+                          label: context.tr('util_giycaro_021a05')),
+                      _BackgroundChoice(
+                          id: 'blank_paper',
+                          label: context.tr('util_giytrng_049d6d')),
+                      _BackgroundChoice(
+                          id: 'hearts',
+                          label: context.tr('util_timhng_60d58d')),
+                      _BackgroundChoice(
+                          id: 'night_stars',
+                          label: context.tr('util_msao_38b356')),
+                      _BackgroundChoice(
+                          id: 'blackboard',
+                          label: context.tr('util_bngphn_6961e0')),
+                      _BackgroundChoice(
+                          id: 'notebook',
+                          label: context.tr('util_vkdng_be72f0')),
+                      _BackgroundChoice(
+                          id: 'photo_frame',
+                          label: context.tr('util_khungnh_b0bdfe')),
+                      const _BackgroundChoice(
+                          id: 'pastel_dots', label: 'Pastel dots'),
+                      const _BackgroundChoice(
+                          id: 'sticker_sheet', label: 'Sticker'),
+                    ],
+                  ),
                 ),
               ],
             ),

@@ -85,7 +85,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
           height: 42,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: roleColor.withValues(alpha: 0.34), width: 1.5),
+            border: Border.all(
+                color: roleColor.withValues(alpha: 0.34), width: 1.5),
             image: avatarUrl.trim().isEmpty
                 ? null
                 : DecorationImage(
@@ -246,12 +247,16 @@ extension _MapPanelSectionsExt on _MapScreenState {
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [const Color(0xFF1E293B).withValues(alpha: 0.95), const Color(0xFF0F172A).withValues(alpha: 0.95)],
+                colors: [
+                  const Color(0xFF1E293B).withValues(alpha: 0.95),
+                  const Color(0xFF0F172A).withValues(alpha: 0.95)
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.06), width: 0.8),
+              border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.06), width: 0.8),
               boxShadow: [
                 BoxShadow(
                   color: _kMapPinkDeep.withValues(alpha: 0.08),
@@ -281,7 +286,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
                         ),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(Icons.explore_rounded, color: Colors.white),
+                      child: const Icon(Icons.explore_rounded,
+                          color: Colors.white),
                     ),
                     SLSpacing.w12,
                     Expanded(
@@ -295,11 +301,11 @@ extension _MapPanelSectionsExt on _MapScreenState {
                                   _isSingleRelationship
                                       ? context.tr('map_tngquanvtr_d8954d')
                                       : context.tr('map_tngquandic_6b8ec0'),
-                                    style: SLTheme.quicksand(
-                                      fontSize: 15.5,
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.white,
-                                    ),
+                                  style: SLTheme.quicksand(
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                               _buildLiveStateBadge(uiSnap),
@@ -367,8 +373,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
                   SLSpacing.h12,
                   Container(
                     width: double.infinity,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 13, vertical: 12),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFFFFF8E1), Color(0xFFFFF1C7)],
@@ -425,7 +431,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
                             onPressed: _isBootstrappingLocation
                                 ? null
                                 : () => _bootstrapLocationTracking(),
-                            icon: const Icon(Icons.my_location_rounded, size: 16),
+                            icon:
+                                const Icon(Icons.my_location_rounded, size: 16),
                             label: Text(context.tr('map_btgpscabn_122e9b')),
                           ),
                         ],
@@ -437,7 +444,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
                   SLSpacing.h12,
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 14),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
@@ -448,7 +456,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: SLRadius.lgAll,
-                      border: Border.all(color: const Color(0xFF34D399).withValues(alpha: 0.34)),
+                      border: Border.all(
+                          color:
+                              const Color(0xFF34D399).withValues(alpha: 0.34)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -509,14 +519,19 @@ extension _MapPanelSectionsExt on _MapScreenState {
                                     backgroundColor: const Color(0xFF10B981),
                                     foregroundColor: Colors.white,
                                     elevation: 0,
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: SLRadius.mdAll),
                                   ),
                                   onPressed: () => _bootstrapLocationTracking(),
-                                  icon: const Icon(Icons.gps_fixed_rounded, size: 18),
+                                  icon: const Icon(Icons.gps_fixed_rounded,
+                                      size: 18),
                                   label: Text(
                                     context.tr('map_btcpnhtgps_66414d'),
-                                    style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 13),
+                                    style: SLTheme.quicksand(
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 13),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -530,14 +545,20 @@ extension _MapPanelSectionsExt on _MapScreenState {
                                       backgroundColor: const Color(0xFF334155),
                                       foregroundColor: Colors.white,
                                       elevation: 0,
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
-                                      shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius: SLRadius.mdAll),
                                     ),
-                                    onPressed: () => app_permission.openAppSettings(),
-                                    icon: const Icon(Icons.settings_rounded, size: 18),
+                                    onPressed: () =>
+                                        app_permission.openAppSettings(),
+                                    icon: const Icon(Icons.settings_rounded,
+                                        size: 18),
                                     label: Text(
                                       'Cài đặt quyền',
-                                      style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 13),
+                                      style: SLTheme.quicksand(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 13),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -698,7 +719,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: roleColor.withValues(alpha: 0.45), width: 0.8),
+        border:
+            Border.all(color: roleColor.withValues(alpha: 0.45), width: 0.8),
         boxShadow: [
           BoxShadow(
             color: roleColor.withValues(alpha: 0.15),
@@ -742,11 +764,13 @@ extension _MapPanelSectionsExt on _MapScreenState {
                     ),
                     SLSpacing.h4,
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.22),
                         borderRadius: SLRadius.pillAll,
-                        border: Border.all(color: statusColor.withValues(alpha: 0.40)),
+                        border: Border.all(
+                            color: statusColor.withValues(alpha: 0.40)),
                       ),
                       child: Text(
                         statusText,
@@ -807,7 +831,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
               decoration: BoxDecoration(
                 color: accuracyUi.color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: accuracyUi.color.withValues(alpha: 0.20)),
+                border:
+                    Border.all(color: accuracyUi.color.withValues(alpha: 0.20)),
               ),
               child: Row(
                 children: [
@@ -866,7 +891,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
                 icon: const Icon(Icons.gps_fixed_rounded, size: 14),
                 label: Text(
                   context.tr('map_btgpscabn_122e9b'),
-                  style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 11),
+                  style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w900, fontSize: 11),
                 ),
               ),
             ),
@@ -889,7 +915,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
           end: Alignment.bottomRight,
         ),
         borderRadius: SLRadius.xlAll,
-        border: Border.all(color: _kMapBlue.withValues(alpha: 0.45), width: 0.8),
+        border:
+            Border.all(color: _kMapBlue.withValues(alpha: 0.45), width: 0.8),
         boxShadow: [
           BoxShadow(
             color: _kMapBlue.withValues(alpha: 0.08),
@@ -995,7 +1022,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
           end: Alignment.bottomRight,
         ),
         borderRadius: SLRadius.xlAll,
-        border: Border.all(color: _kMapPinkDeep.withValues(alpha: 0.20), width: 0.8),
+        border: Border.all(
+            color: _kMapPinkDeep.withValues(alpha: 0.20), width: 0.8),
         boxShadow: [
           BoxShadow(
             color: _kMapPinkDeep.withValues(alpha: 0.08),
@@ -1089,8 +1117,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
               icon: Icons.add_location_alt_rounded,
               accent: _kMapPinkDeep,
               title: context.tr('map_chacaimno_bc9233'),
-              subtitle:
-                  context.tr('map_tocheckinu_d971fe'),
+              subtitle: context.tr('map_tocheckinu_d971fe'),
               actionLabel: context.tr('map_tocheckin_6fcea2'),
               onTap: _showCheckinSheetDialog,
             ),

@@ -23,30 +23,10 @@ class _FloatingActionBubbleState extends State<FloatingActionBubble>
 
   final List<({String type, String emoji, String label, Color color})>
       _actions = [
-    (
-      type: 'kiss',
-      emoji: '💋',
-      label: 'Hôn',
-      color: const Color(0xFFFF4D79)
-    ),
-    (
-      type: 'hug',
-      emoji: '🫂',
-      label: 'Ôm',
-      color: const Color(0xFFFF8FB1)
-    ),
-    (
-      type: 'miss',
-      emoji: '💖',
-      label: 'Nhớ',
-      color: const Color(0xFF9D50BB)
-    ),
-    (
-      type: 'heart',
-      emoji: '💓',
-      label: 'Yêu',
-      color: const Color(0xFF00C6FF)
-    ),
+    (type: 'kiss', emoji: '💋', label: 'Hôn', color: const Color(0xFFFF4D79)),
+    (type: 'hug', emoji: '🫂', label: 'Ôm', color: const Color(0xFFFF8FB1)),
+    (type: 'miss', emoji: '💖', label: 'Nhớ', color: const Color(0xFF9D50BB)),
+    (type: 'heart', emoji: '💓', label: 'Yêu', color: const Color(0xFF00C6FF)),
   ];
 
   @override

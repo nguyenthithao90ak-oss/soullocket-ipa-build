@@ -213,16 +213,23 @@ extension _SettingsDataHealthSection on _SettingsTabState {
               Expanded(
                 child: _buildCompactActionBtn(
                   icon: Icons.refresh_rounded,
-                  label: _isCheckingBackupStatus ? context.tr('settings_checking_short') : context.tr('settings_check_now'),
-                  onTap: _isCheckingBackupStatus ? () {} : () => _refreshSettingsBackupStatus(showFeedback: true),
+                  label: _isCheckingBackupStatus
+                      ? context.tr('settings_checking_short')
+                      : context.tr('settings_check_now'),
+                  onTap: _isCheckingBackupStatus
+                      ? () {}
+                      : () => _refreshSettingsBackupStatus(showFeedback: true),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _buildCompactActionBtn(
                   icon: Icons.cloud_sync_rounded,
-                  label: _isManualBackupSyncing ? context.tr('settings_syncing_short') : context.tr('settings_sync_now'),
-                  onTap: _isManualBackupSyncing ? () {} : _syncSettingsBackupNow,
+                  label: _isManualBackupSyncing
+                      ? context.tr('settings_syncing_short')
+                      : context.tr('settings_sync_now'),
+                  onTap:
+                      _isManualBackupSyncing ? () {} : _syncSettingsBackupNow,
                 ),
               ),
             ],
@@ -230,9 +237,13 @@ extension _SettingsDataHealthSection on _SettingsTabState {
           const SizedBox(height: 8),
           _buildCompactActionBtn(
             icon: Icons.restore_rounded,
-            label: _isRestoringSettingsBackup ? context.tr('settings_restoring_short') : context.tr('settings_restore_from_cloud'),
+            label: _isRestoringSettingsBackup
+                ? context.tr('settings_restoring_short')
+                : context.tr('settings_restore_from_cloud'),
             isPrimary: true,
-            onTap: _isRestoringSettingsBackup ? () {} : _restoreSettingsBackupFromCloud,
+            onTap: _isRestoringSettingsBackup
+                ? () {}
+                : _restoreSettingsBackupFromCloud,
           ),
         ],
       ),
@@ -453,7 +464,6 @@ extension _SettingsDataHealthSection on _SettingsTabState {
     final deviceStatus = _isDevicePending
         ? context.tr('settings_device_pending')
         : context.tr('settings_device_trusted');
-
 
     return _buildCompactCard(
       child: Column(
@@ -710,8 +720,10 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                         const SizedBox(height: 4),
                         Text(
                           isPerformanceMode
-                              ? context.tr('settings_performance_mode_desc_smooth')
-                              : context.tr('settings_performance_mode_desc_balanced'),
+                              ? context
+                                  .tr('settings_performance_mode_desc_smooth')
+                              : context.tr(
+                                  'settings_performance_mode_desc_balanced'),
                           style: SLTheme.quicksand(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -1433,7 +1445,9 @@ extension _SettingsDataHealthSection on _SettingsTabState {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: isPrimary ? Colors.white : const Color(0xFF334155)),
+            Icon(icon,
+                size: 16,
+                color: isPrimary ? Colors.white : const Color(0xFF334155)),
             const SizedBox(width: 6),
             Flexible(
               child: Text(

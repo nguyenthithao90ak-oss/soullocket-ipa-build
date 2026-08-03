@@ -281,8 +281,7 @@ class _ShortVideoFeedScreenState extends State<ShortVideoFeedScreen> {
                 size: 64, color: Colors.white24),
             SLSpacing.h16,
             Text(
-              L10nService()
-                  .translate('diary_msg_no_posts_yet'),
+              L10nService().translate('diary_msg_no_posts_yet'),
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white38, fontSize: 15),
             ),

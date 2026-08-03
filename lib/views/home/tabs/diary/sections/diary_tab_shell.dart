@@ -114,16 +114,15 @@ class _DiaryTabShell extends StatelessWidget {
                       builder: (context, posts, child) {
                         return DiaryList(
                           header: header,
-                          showDiaryPrivacyNotice:
-                              state._showDiaryPrivacyNotice,
+                          showDiaryPrivacyNotice: state._showDiaryPrivacyNotice,
                           buildDiaryPrivacyNotice: () =>
                               const SizedBox.shrink(),
                           buildDiaryComposerCard: () =>
                               _DiaryComposerLauncherSection(
                             state: state,
                           ),
-                          isLoading: state._isLoading &&
-                              !state._isAnimatingTabSwitch,
+                          isLoading:
+                              state._isLoading && !state._isAnimatingTabSwitch,
                           houseId: state._houseId,
                           buildHouseSetupState: ({
                             required String title,
@@ -146,8 +145,7 @@ class _DiaryTabShell extends StatelessWidget {
                                 state._resolvedPostAuthorName(post),
                             postImageCacheWidth:
                                 state._postImageCacheWidth(context),
-                            onConfirmDelete:
-                                state._confirmDeleteDiaryPost,
+                            onConfirmDelete: state._confirmDeleteDiaryPost,
                           ),
                         );
                       },

@@ -145,8 +145,10 @@ class _AuthTabButton extends StatelessWidget {
                   curve: Curves.easeOutCubic,
                   style: SLTheme.quicksand(
                     color: active
-                        ? const Color(0xFFC2185B) // Hồng đậm tinh tế cho chữ đang chọn
-                        : const Color(0xFF757575), // Xám nhạt cho chữ không chọn
+                        ? const Color(
+                            0xFFC2185B) // Hồng đậm tinh tế cho chữ đang chọn
+                        : const Color(
+                            0xFF757575), // Xám nhạt cho chữ không chọn
                     fontWeight: active ? FontWeight.w900 : FontWeight.w700,
                     fontSize: fontSize,
                     letterSpacing: letterSpacing,

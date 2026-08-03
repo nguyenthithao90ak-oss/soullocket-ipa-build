@@ -268,14 +268,14 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
           child: Text(
-          context.tr('home_tinchnycnd_0ff769'),
-          style: SLTheme.quicksand(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF6B7280),
-            height: 1.45,
+            context.tr('home_tinchnycnd_0ff769'),
+            style: SLTheme.quicksand(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF6B7280),
+              height: 1.45,
+            ),
           ),
-        ),
         ),
       );
     }
@@ -899,4 +899,3 @@ class _HomeEmbeddedVaultGateState extends State<_HomeEmbeddedVaultGate> {
     );
   }
 }
-

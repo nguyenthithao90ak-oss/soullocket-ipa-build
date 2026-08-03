@@ -178,7 +178,8 @@ class CreativeDiaryService {
   }
 
   Stream<List<Map<dynamic, dynamic>>> listenToDiaryPages(String houseId) {
-    return _db.ref('houses/$houseId/creative_diary')
+    return _db
+        .ref('houses/$houseId/creative_diary')
         .orderByChild('timestamp')
         .limitToLast(20)
         .onValue

@@ -478,7 +478,8 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   String _securityEmail = '';
   String _secondaryEmail = '';
   String _securityQuestion = '';
-  String _activeRoleKey = RoleUtils.roleNotifier.value ?? RoleUtils.currentRoleSync();
+  String _activeRoleKey =
+      RoleUtils.roleNotifier.value ?? RoleUtils.currentRoleSync();
   String _selectedSecurityQuestion =
       L10nService().translate('home_ngysinhcab_82062b');
   String _housePin = '';

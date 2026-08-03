@@ -106,5 +106,4 @@ extension _CountdownModeIndependentScreenViewPart
       child: child,
     );
   }
-
-  }
+}

@@ -1,7 +1,5 @@
 part of '../../main_home_tab.dart';
 
-
-
 class _CountdownQuickCustomizeSheetContent extends StatefulWidget {
   final List<_CountdownQuickOption> styleOptions;
   final Set<String> unlockedStyles;
@@ -190,6 +188,7 @@ class _CountdownQuickCustomizeSheetContentState
       ),
     );
   }
+
   Widget buildLockedVipButton({
     required _CountdownQuickOption option,
   }) {
@@ -199,7 +198,8 @@ class _CountdownQuickCustomizeSheetContentState
       borderRadius: BorderRadius.circular(18),
       onTap: () {
         HapticFeedback.mediumImpact();
-        widget.homeState._showLatestSnackBar('Chỉ tài khoản Pro mới có thể dùng hiệu ứng này.');
+        widget.homeState._showLatestSnackBar(
+            'Chỉ tài khoản Pro mới có thể dùng hiệu ứng này.');
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
@@ -444,7 +444,8 @@ class _CountdownQuickCustomizeSheetContentState
                 _showOptionsDialog(title, options, selectedValue, onSelect);
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(16),
@@ -527,7 +528,8 @@ class _CountdownQuickCustomizeSheetContentState
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Container(
-              margin: EdgeInsets.fromLTRB(12, 0, 12, max(MediaQuery.of(context).padding.bottom, 12.0)),
+              margin: EdgeInsets.fromLTRB(
+                  12, 0, 12, max(MediaQuery.of(context).padding.bottom, 12.0)),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -553,9 +555,11 @@ class _CountdownQuickCustomizeSheetContentState
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: options.map((option) {
-                            final isVipLocked = option.isVipOnly && !widget.isVip;
-                            final isAdLocked = option.isPremium && !_unlockedStyles.contains(option.value);
-                            
+                            final isVipLocked =
+                                option.isVipOnly && !widget.isVip;
+                            final isAdLocked = option.isPremium &&
+                                !_unlockedStyles.contains(option.value);
+
                             Widget button;
                             if (isVipLocked) {
                               button = buildLockedVipButton(option: option);
@@ -565,7 +569,9 @@ class _CountdownQuickCustomizeSheetContentState
                                 onUnlocked: (opt) async {
                                   HapticFeedback.selectionClick();
                                   await onSelect(opt);
-                                  setModalState(() { selectedValue = opt.value; });
+                                  setModalState(() {
+                                    selectedValue = opt.value;
+                                  });
                                   setState(() {});
                                 },
                               );
@@ -576,7 +582,9 @@ class _CountdownQuickCustomizeSheetContentState
                                 onTap: () async {
                                   HapticFeedback.selectionClick();
                                   await onSelect(option);
-                                  setModalState(() { selectedValue = option.value; });
+                                  setModalState(() {
+                                    selectedValue = option.value;
+                                  });
                                   setState(() {});
                                 },
                               );
@@ -725,9 +733,16 @@ class _CountdownQuickCustomizeSheetContentState
                     decoration: BoxDecoration(
                       color: color,
                       shape: BoxShape.circle,
-                      gradient: isMulti ? const SweepGradient(
-                        colors: [Color(0xFF00C6FF), Color(0xFF9D50BB), Color(0xFFF44336), Color(0xFF00C6FF)],
-                      ) : null,
+                      gradient: isMulti
+                          ? const SweepGradient(
+                              colors: [
+                                Color(0xFF00C6FF),
+                                Color(0xFF9D50BB),
+                                Color(0xFFF44336),
+                                Color(0xFF00C6FF)
+                              ],
+                            )
+                          : null,
                       border: Border.all(
                         color: isSelected
                             ? const Color(0xFFD81B60)
@@ -741,11 +756,10 @@ class _CountdownQuickCustomizeSheetContentState
                             color: isSelected
                                 ? const Color(0xFFD81B60)
                                 : const Color(0xFF8E6F7E))
-                        : (isMulti 
+                        : (isMulti
                             ? (isSelected
                                 ? const Icon(Icons.check_rounded,
-                                    size: 20,
-                                    color: Colors.white)
+                                    size: 20, color: Colors.white)
                                 : null)
                             : (isSelected
                                 ? Icon(Icons.check_rounded,
@@ -901,44 +915,44 @@ class _CountdownQuickCustomizeSheetContentState
               Material(
                 color: Colors.transparent,
                 child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: hasChanges ? onSave : null,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: hasChanges
-                            ? const Color(0xFFFFF2F7)
-                            : const Color(0xFFF5F5F5),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color: hasChanges
-                                ? const Color(0xFFF4D7E2)
-                                : const Color(0xFFE0E0E0)),
-                        boxShadow: hasChanges
-                            ? [
-                                BoxShadow(
-                                  color: const Color(0xFFD81B60)
-                                      .withValues(alpha: 0.08),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Text(
-                        'Lưu',
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: hasChanges ? onSave : null,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: hasChanges
+                          ? const Color(0xFFFFF2F7)
+                          : const Color(0xFFF5F5F5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
                           color: hasChanges
-                              ? const Color(0xFFD81B60)
-                              : const Color(0xFFBDBDBD),
-                        ),
+                              ? const Color(0xFFF4D7E2)
+                              : const Color(0xFFE0E0E0)),
+                      boxShadow: hasChanges
+                          ? [
+                              BoxShadow(
+                                color: const Color(0xFFD81B60)
+                                    .withValues(alpha: 0.08),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Text(
+                      'Lưu',
+                      style: SLTheme.quicksand(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: hasChanges
+                            ? const Color(0xFFD81B60)
+                            : const Color(0xFFBDBDBD),
                       ),
                     ),
                   ),
+                ),
               ),
             ],
           ),
@@ -1163,10 +1177,12 @@ class _CountdownQuickCustomizeSheetContentState
         );
         if (!mounted) return;
         if (!adSuccess) {
-          homeState._showLatestSnackBar('Cần xem hết quảng cáo để thay đổi ảnh nền.');
+          homeState._showLatestSnackBar(
+              'Cần xem hết quảng cáo để thay đổi ảnh nền.');
           return;
         }
-        await prefs.setString('last_bg_ad_time', DateTime.now().toIso8601String());
+        await prefs.setString(
+            'last_bg_ad_time', DateTime.now().toIso8601String());
       }
     }
 
@@ -1299,7 +1315,11 @@ class _CountdownQuickCustomizeSheetContentState
                 height: 38,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF8A2387), Color(0xFFE94057), Color(0xFFF27121)],
+                    colors: [
+                      Color(0xFF8A2387),
+                      Color(0xFFE94057),
+                      Color(0xFFF27121)
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -1866,7 +1886,7 @@ class _CountdownQuickCustomizeSheetContentState
                   onSave: () async {
                     if (_tempCountdownSize != null) {
                       final sizeToSave = _tempCountdownSize!;
-                      
+
                       await widget.homeState._saveCountdownQuickUiPrefs(
                         countdownSizePx: sizeToSave,
                         isVip: widget.isVip,
@@ -1874,7 +1894,8 @@ class _CountdownQuickCustomizeSheetContentState
                       HapticFeedback.mediumImpact();
                       if (mounted) {
                         setState(() => _tempCountdownSize = null);
-                        widget.homeState._showLatestSnackBar('Đã lưu kích thước!');
+                        widget.homeState
+                            ._showLatestSnackBar('Đã lưu kích thước!');
                       }
                     }
                   },
@@ -1930,7 +1951,9 @@ class _CountdownQuickCustomizeSheetContentState
                       accent: const Color(0xFF06B6D4),
                     ),
                   ],
-                  selectedValue: uiState.avatarFrameKey.isEmpty ? 'off' : uiState.avatarFrameKey,
+                  selectedValue: uiState.avatarFrameKey.isEmpty
+                      ? 'off'
+                      : uiState.avatarFrameKey,
                   onSelect: (option) =>
                       widget.homeState._saveCountdownQuickUiPrefs(
                     avatarFrameKey: option.value,
@@ -1949,7 +1972,8 @@ class _CountdownQuickCustomizeSheetContentState
                 // --- Chất lượng đồ họa ---
                 buildCollapsedSection(
                   title: 'Chất lượng đồ họa',
-                  description: 'Tùy chỉnh chất lượng đồ họa và hiệu ứng hiển thị.',
+                  description:
+                      'Tùy chỉnh chất lượng đồ họa và hiệu ứng hiển thị.',
                   icon: Icons.high_quality_rounded,
                   options: [
                     _CountdownQuickOption(
@@ -1977,10 +2001,13 @@ class _CountdownQuickCustomizeSheetContentState
                       accent: const Color(0xFF059669),
                     ),
                   ],
-                  selectedValue: uiState.graphicsQualityKey.isEmpty ? 'auto' : uiState.graphicsQualityKey,
+                  selectedValue: uiState.graphicsQualityKey.isEmpty
+                      ? 'auto'
+                      : uiState.graphicsQualityKey,
                   onSelect: (option) async {
                     HapticFeedback.selectionClick();
-                    await UiPrefs.saveState(uiState.copyWith(graphicsQualityKey: option.value));
+                    await UiPrefs.saveState(
+                        uiState.copyWith(graphicsQualityKey: option.value));
                   },
                 ),
                 const SizedBox(height: 12),
@@ -1990,16 +2017,56 @@ class _CountdownQuickCustomizeSheetContentState
                   description: 'Đổi ngôn ngữ hiển thị của ứng dụng.',
                   icon: Icons.language_rounded,
                   options: [
-                    _CountdownQuickOption(label: 'Tiếng Việt', value: 'vi', icon: Icons.flag_rounded, accent: const Color(0xFFD81B60)),
-                    _CountdownQuickOption(label: 'English', value: 'en', icon: Icons.flag_rounded, accent: const Color(0xFF2563EB)),
-                    _CountdownQuickOption(label: '中文 (简体)', value: 'zh', icon: Icons.flag_rounded, accent: const Color(0xFFDC2626)),
-                    _CountdownQuickOption(label: '中文 (繁體)', value: 'zh-TW', icon: Icons.flag_rounded, accent: const Color(0xFF7C3AED)),
-                    _CountdownQuickOption(label: '日本語', value: 'ja', icon: Icons.flag_rounded, accent: const Color(0xFFEA580C)),
-                    _CountdownQuickOption(label: '한국어', value: 'ko', icon: Icons.flag_rounded, accent: const Color(0xFF0891B2)),
-                    _CountdownQuickOption(label: 'ภาษาไทย', value: 'th', icon: Icons.flag_rounded, accent: const Color(0xFF059669)),
-                    _CountdownQuickOption(label: 'Bahasa Indonesia', value: 'id', icon: Icons.flag_rounded, accent: const Color(0xFFD97706)),
-                    _CountdownQuickOption(label: 'Español', value: 'es', icon: Icons.flag_rounded, accent: const Color(0xFFB91C1C)),
-                    _CountdownQuickOption(label: 'Français', value: 'fr', icon: Icons.flag_rounded, accent: const Color(0xFF1D4ED8)),
+                    _CountdownQuickOption(
+                        label: 'Tiếng Việt',
+                        value: 'vi',
+                        icon: Icons.flag_rounded,
+                        accent: const Color(0xFFD81B60)),
+                    _CountdownQuickOption(
+                        label: 'English',
+                        value: 'en',
+                        icon: Icons.flag_rounded,
+                        accent: const Color(0xFF2563EB)),
+                    _CountdownQuickOption(
+                        label: '中文 (简体)',
+                        value: 'zh',
+                        icon: Icons.flag_rounded,
+                        accent: const Color(0xFFDC2626)),
+                    _CountdownQuickOption(
+                        label: '中文 (繁體)',
+                        value: 'zh-TW',
+                        icon: Icons.flag_rounded,
+                        accent: const Color(0xFF7C3AED)),
+                    _CountdownQuickOption(
+                        label: '日本語',
+                        value: 'ja',
+                        icon: Icons.flag_rounded,
+                        accent: const Color(0xFFEA580C)),
+                    _CountdownQuickOption(
+                        label: '한국어',
+                        value: 'ko',
+                        icon: Icons.flag_rounded,
+                        accent: const Color(0xFF0891B2)),
+                    _CountdownQuickOption(
+                        label: 'ภาษาไทย',
+                        value: 'th',
+                        icon: Icons.flag_rounded,
+                        accent: const Color(0xFF059669)),
+                    _CountdownQuickOption(
+                        label: 'Bahasa Indonesia',
+                        value: 'id',
+                        icon: Icons.flag_rounded,
+                        accent: const Color(0xFFD97706)),
+                    _CountdownQuickOption(
+                        label: 'Español',
+                        value: 'es',
+                        icon: Icons.flag_rounded,
+                        accent: const Color(0xFFB91C1C)),
+                    _CountdownQuickOption(
+                        label: 'Français',
+                        value: 'fr',
+                        icon: Icons.flag_rounded,
+                        accent: const Color(0xFF1D4ED8)),
                   ],
                   selectedValue: L10nService().localeCode,
                   onSelect: (option) async {
@@ -2039,4 +2106,3 @@ class _CountdownQuickCustomizeSheetContentState
     );
   }
 }
-

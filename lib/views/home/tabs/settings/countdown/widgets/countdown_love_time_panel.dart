@@ -45,7 +45,6 @@ extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
     };
   }
 
-  
   Widget _buildLoveTimeCell({
     required String value,
     required String label,
@@ -652,6 +651,4 @@ extension CountdownLoveTimePanelExt on _CountdownModeIndependentScreenState {
     }
     return context.tr('home_chmchnhrin_b3ba3e');
   }
-
-  
 }

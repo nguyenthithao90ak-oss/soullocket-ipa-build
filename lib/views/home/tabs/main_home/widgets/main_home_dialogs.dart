@@ -274,12 +274,12 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
   void _handleInteractionLongPressEnd(LongPressEndDetails details) {
     final selectedType = _interactionDragHoveredType;
     _hideInteractionDragOverlay();
-    
+
     if (selectedType == 'edit_stickers') {
       _openStickerCustomization();
       return;
     }
-    
+
     final preset = selectedType == null
         ? null
         : _maybePresetForInteractionType(selectedType);
@@ -290,11 +290,13 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
   }
 
   void _openStickerCustomization() {
-    Navigator.of(context).push(
+    Navigator.of(context)
+        .push(
       MaterialPageRoute(
         builder: (_) => const InteractionStickerEditorScreen(),
       ),
-    ).then((updated) async {
+    )
+        .then((updated) async {
       if (updated == true && mounted) {
         await _loadCustomStickers();
         setState(() {});
@@ -392,8 +394,10 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                                   children: [
                                     GridView.builder(
                                       shrinkWrap: true,
-                                      physics: const NeverScrollableScrollPhysics(),
-                                      itemCount: _interactionDragMenuOptions.length,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      itemCount:
+                                          _interactionDragMenuOptions.length,
                                       gridDelegate:
                                           const SliverGridDelegateWithFixedCrossAxisCount(
                                         crossAxisCount: 4,
@@ -422,14 +426,20 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                                       },
                                     ),
                                     FutureBuilder<bool>(
-                                      future: kDebugMode ? Future.value(true) : PurchaseService().isVip(),
+                                      future: kDebugMode
+                                          ? Future.value(true)
+                                          : PurchaseService().isVip(),
                                       initialData: kDebugMode,
                                       builder: (context, snapshot) {
-                                        if (snapshot.data != true) return const SizedBox.shrink();
+                                        if (snapshot.data != true) {
+                                          return const SizedBox.shrink();
+                                        }
                                         return ValueListenableBuilder<String?>(
-                                          valueListenable: _interactionDragHoveredNotifier,
+                                          valueListenable:
+                                              _interactionDragHoveredNotifier,
                                           builder: (context, hoveredVal, _) {
-                                            final isHovered = hoveredVal == 'edit_stickers';
+                                            final isHovered =
+                                                hoveredVal == 'edit_stickers';
                                             return GestureDetector(
                                               onTap: () {
                                                 _hideInteractionDragOverlay();
@@ -437,24 +447,38 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                                               },
                                               child: AnimatedScale(
                                                 scale: isHovered ? 1.2 : 1.0,
-                                                duration: const Duration(milliseconds: 200),
+                                                duration: const Duration(
+                                                    milliseconds: 200),
                                                 curve: Curves.easeOutBack,
                                                 child: Container(
-                                                  key: _interactionDragOptionKeys['edit_stickers'],
-                                                  padding: const EdgeInsets.all(6),
+                                                  key:
+                                                      _interactionDragOptionKeys[
+                                                          'edit_stickers'],
+                                                  padding:
+                                                      const EdgeInsets.all(6),
                                                   decoration: BoxDecoration(
-                                                    color: const Color(0xFF4CAF50),
+                                                    color:
+                                                        const Color(0xFF4CAF50),
                                                     shape: BoxShape.circle,
                                                     boxShadow: [
                                                       BoxShadow(
-                                                        color: const Color(0xFF4CAF50).withValues(alpha: 0.4),
+                                                        color: const Color(
+                                                                0xFF4CAF50)
+                                                            .withValues(
+                                                                alpha: 0.4),
                                                         blurRadius: 8,
-                                                        offset: const Offset(0, 2),
+                                                        offset:
+                                                            const Offset(0, 2),
                                                       ),
                                                     ],
-                                                    border: Border.all(color: Colors.white, width: 1.5),
+                                                    border: Border.all(
+                                                        color: Colors.white,
+                                                        width: 1.5),
                                                   ),
-                                                  child: const Icon(Icons.edit_rounded, color: Colors.white, size: 16),
+                                                  child: const Icon(
+                                                      Icons.edit_rounded,
+                                                      color: Colors.white,
+                                                      size: 16),
                                                 ),
                                               ),
                                             );
@@ -730,11 +754,11 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
     final prefs = await OfflineCacheService.getPrefs();
     final lastTimeMs = prefs.getInt('il_last_missyou_time_v2') ?? 0;
     final nowMs = DateTime.now().millisecondsSinceEpoch;
-    
+
     if (nowMs - lastTimeMs < 3600000) {
       return;
     }
-    
+
     await prefs.setInt('il_last_missyou_time_v2', nowMs);
     if (!mounted) return;
 

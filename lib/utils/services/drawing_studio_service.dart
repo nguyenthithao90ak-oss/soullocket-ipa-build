@@ -303,9 +303,12 @@ class DrawingStudioService {
     });
   }
 
-  Future<void> updateActiveStroke(String houseId, String uid, DrawingStudioStroke stroke) async {
+  Future<void> updateActiveStroke(
+      String houseId, String uid, DrawingStudioStroke stroke) async {
     try {
-      await _studioRef(houseId).child('active_strokes/$uid').set(stroke.toMap());
+      await _studioRef(houseId)
+          .child('active_strokes/$uid')
+          .set(stroke.toMap());
     } catch (e) {
       debugPrint('[DrawingStudioService] updateActiveStroke error: $e');
     }

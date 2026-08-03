@@ -41,6 +41,4 @@ extension CountdownActionButtonExt on _CountdownModeIndependentScreenState {
       child: child,
     );
   }
-
-  
 }

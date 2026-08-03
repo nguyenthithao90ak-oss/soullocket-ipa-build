@@ -376,7 +376,7 @@ class AuthHouseContextService {
           } catch (_) {}
           return;
         }
-        
+
         final resolvedRole = (ownerUid == uid) ? 'user1' : 'user2';
         await prefs.setString('il_role', resolvedRole);
         await SecureStorageService.instance

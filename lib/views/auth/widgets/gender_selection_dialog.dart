@@ -13,7 +13,8 @@ class GenderSelectionDialog extends StatefulWidget {
   State<GenderSelectionDialog> createState() => _GenderSelectionDialogState();
 }
 
-class _GenderSelectionDialogState extends State<GenderSelectionDialog> with SingleTickerProviderStateMixin {
+class _GenderSelectionDialogState extends State<GenderSelectionDialog>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   bool _isSelecting = false;
@@ -51,8 +52,11 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog> with Sing
     final mediaQuery = MediaQuery.of(context);
     final screenSize = mediaQuery.size;
     final textScale = mediaQuery.textScaler.scale(1);
-    final isCompactLayout = screenSize.width < 380 || screenSize.height < 760 || textScale > 1.05;
-    final maxDialogHeight = (screenSize.height - mediaQuery.viewInsets.vertical - 48).clamp(260.0, screenSize.height);
+    final isCompactLayout =
+        screenSize.width < 380 || screenSize.height < 760 || textScale > 1.05;
+    final maxDialogHeight =
+        (screenSize.height - mediaQuery.viewInsets.vertical - 48)
+            .clamp(260.0, screenSize.height);
 
     return RepaintBoundary(
       child: ScaleTransition(
@@ -60,7 +64,8 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog> with Sing
         child: Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: 520,
@@ -89,12 +94,15 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog> with Sing
                     physics: const BouncingScrollPhysics(),
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        final optionWidth = isCompactLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2;
+                        final optionWidth = isCompactLayout
+                            ? constraints.maxWidth
+                            : (constraints.maxWidth - 16) / 2;
                         return Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 6),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFFE4E1),
                                 borderRadius: BorderRadius.circular(30),
@@ -122,7 +130,8 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog> with Sing
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              L10nService().translate('Để ứng dụng hiển thị đúng giao diện\nmà không cần lật lại sau nhé!'),
+                              L10nService().translate(
+                                  'Để ứng dụng hiển thị đúng giao diện\nmà không cần lật lại sau nhé!'),
                               textAlign: TextAlign.center,
                               style: SLTheme.quicksand(
                                 fontSize: 14,
@@ -141,7 +150,8 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog> with Sing
                                   child: _buildOption(
                                     assetPath: 'assets/images/avatar_male.jpg',
                                     title: L10nService().translate('Nam'),
-                                    desc: L10nService().translate('Giao diện đằng trai'),
+                                    desc: L10nService()
+                                        .translate('Giao diện đằng trai'),
                                     baseColor: const Color(0xFF81D4FA),
                                     shadowColor: const Color(0xFF03A9F4),
                                     emoji: '👦🏻',
@@ -152,9 +162,11 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog> with Sing
                                 SizedBox(
                                   width: optionWidth,
                                   child: _buildOption(
-                                    assetPath: 'assets/images/avatar_female.jpg',
+                                    assetPath:
+                                        'assets/images/avatar_female.jpg',
                                     title: L10nService().translate('Nữ'),
-                                    desc: L10nService().translate('Giao diện đằng gái'),
+                                    desc: L10nService()
+                                        .translate('Giao diện đằng gái'),
                                     baseColor: const Color(0xFFF48FB1),
                                     shadowColor: const Color(0xFFE91E63),
                                     emoji: '👧🏻',

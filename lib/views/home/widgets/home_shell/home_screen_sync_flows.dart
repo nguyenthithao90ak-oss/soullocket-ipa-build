@@ -100,16 +100,20 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
     FriendsService().initGlobalSync(houseId);
 
     _pairingSub?.cancel();
-    _pairingSub = PairingService.instance.listenToIncomingRequests(houseId).listen((requests) {
+    _pairingSub = PairingService.instance
+        .listenToIncomingRequests(houseId)
+        .listen((requests) {
       if (!mounted) return;
-      final pendingRequests = requests.where((r) => r.status == 'pending').toList();
+      final pendingRequests =
+          requests.where((r) => r.status == 'pending').toList();
       if (pendingRequests.isNotEmpty) {
         // Show a dialog for the first pending request
         final request = pendingRequests.first;
         SLNotice.showConfirmDialog(
           context,
           title: 'Yêu cầu ghép nối',
-          message: 'Có yêu cầu ghép nối từ ${request.guestName}. Bạn có muốn xem không?',
+          message:
+              'Có yêu cầu ghép nối từ ${request.guestName}. Bạn có muốn xem không?',
           confirmText: 'Xem',
           cancelText: 'Đóng',
         ).then((value) {
@@ -184,7 +188,8 @@ extension _HomeScreenShellSyncFlows on _HomeScreenState {
               ? (source['countdownTextColor']?.toString() ?? '').trim()
               : currentUi.countdownTextColor,
           homeShowTimer: source.containsKey('homeShowTimer')
-              ? (source['homeShowTimer'] == true || source['homeShowTimer'] == 'true')
+              ? (source['homeShowTimer'] == true ||
+                  source['homeShowTimer'] == 'true')
               : currentUi.homeShowTimer,
         );
         final shouldSync = nextUi.themeKey != currentUi.themeKey ||

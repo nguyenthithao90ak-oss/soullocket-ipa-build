@@ -868,9 +868,11 @@ class WidgetService {
             quality: 80,
           );
           await file.writeAsBytes(compressedBytes, flush: true);
-          debugPrint('✅ Widget avatar compressed and saved: ${(compressedBytes.length / 1024).toStringAsFixed(2)}KB');
+          debugPrint(
+              '✅ Widget avatar compressed and saved: ${(compressedBytes.length / 1024).toStringAsFixed(2)}KB');
         } catch (compressErr) {
-          debugPrint('⚠️ Error compressing widget avatar, fallback to raw: $compressErr');
+          debugPrint(
+              '⚠️ Error compressing widget avatar, fallback to raw: $compressErr');
           await file.writeAsBytes(bytes, flush: true);
         }
         return file.path;
@@ -1404,12 +1406,13 @@ class WidgetService {
       await ensureInitialized();
       await _saveWidgetDataIfChanged<String>('soulMergeMessage', message);
       await _saveWidgetDataIfChanged<String>('soulMergeSenderName', senderName);
-      
+
       if (Platform.isIOS) {
         await HomeWidget.updateWidget(iOSName: iOSWidgetName);
       }
     } catch (e) {
-      debugPrint('Error syncing soul merge widget: ${AppErrorMapper.resolve(e).message}');
+      debugPrint(
+          'Error syncing soul merge widget: ${AppErrorMapper.resolve(e).message}');
     }
   }
 
@@ -1428,7 +1431,8 @@ class WidgetService {
       await _saveWidgetDataIfChanged<String>('sleep_my_name', myName);
       await _saveWidgetDataIfChanged<String>('sleep_partner_name', partnerName);
       await _saveWidgetDataIfChanged<String>('sleep_my_status', myStatus);
-      await _saveWidgetDataIfChanged<String>('sleep_partner_status', partnerStatus);
+      await _saveWidgetDataIfChanged<String>(
+          'sleep_partner_status', partnerStatus);
       await _saveWidgetDataIfChanged<String>('sleep_my_time', myTime);
       await _saveWidgetDataIfChanged<String>('sleep_partner_time', partnerTime);
       await _saveWidgetDataIfChanged<String>('sleep_summary', summary);

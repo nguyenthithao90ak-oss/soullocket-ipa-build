@@ -1,4 +1,4 @@
-﻿part of '../../main_home_tab.dart';
+part of '../../main_home_tab.dart';
 
 extension _MainHomeLoadController on _MainHomeTabState {
   int _invalidateLiveWorkSessionImpl() => ++_liveWorkSessionId;
@@ -1024,5 +1024,3 @@ extension _MainHomeLoadController on _MainHomeTabState {
     _lastFetchTime = DateTime.now();
   }
 }
-
-

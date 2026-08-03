@@ -214,7 +214,9 @@ class _StableAvatarNetworkImage extends StatelessWidget {
       memCacheWidth: 256,
       memCacheHeight: 256,
       placeholder: (context, url) {
-        if (startupFile != null && startupFile.existsSync() && startupFile.lengthSync() > 0) {
+        if (startupFile != null &&
+            startupFile.existsSync() &&
+            startupFile.lengthSync() > 0) {
           return Image.file(
             startupFile,
             fit: fit,
@@ -378,9 +380,9 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
                                         strokeWidth: 3,
                                         value: uploadProgress,
                                         valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                                Colors.white
-                                                    .withValues(alpha: 0.9)),
+                                            AlwaysStoppedAnimation<Color>(Colors
+                                                .white
+                                                .withValues(alpha: 0.9)),
                                         backgroundColor:
                                             Colors.white.withValues(alpha: 0.2),
                                       ),

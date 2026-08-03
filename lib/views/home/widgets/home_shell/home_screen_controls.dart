@@ -15,59 +15,61 @@ extension _HomeScreenShellControls on _HomeScreenState {
       },
       child: ValueListenableBuilder<bool>(
         valueListenable: _navCollapsedNotifier,
-      builder: (context, navCollapsed, _) {
-        return ValueListenableBuilder<bool>(
-          valueListenable: UiPrefs.captureModeNotifier,
-          builder: (context, captureMode, _) {
-            if (_navHiddenUntilRestart ||
-                _hideNavForDiarySelection ||
-                captureMode) {
-              return const SizedBox.shrink();
-            }
-            return ValueListenableBuilder<bool>(
-              valueListenable: _isUserTabSwipingNotifier,
-              builder: (context, isSwiping, _) {
-                return ValueListenableBuilder<int>(
-                  valueListenable: _backgroundTabIndexNotifier,
-                  builder: (context, currentIndex, _) {
-                    final effectProfile = _resolveHomeEffectProfile(
-                      UiPrefs.notifier.value,
-                      pauseAnimations: isSwiping,
-                    );
-                    final bottomInset = MediaQuery.paddingOf(context).bottom;
-                    final extraBottomPadding = Platform.isIOS 
-                        ? (bottomInset > 0 ? bottomInset / 2.5 : 0.0) // Hạ thấp trên iOS cho gọn
-                        : (bottomInset > 0 ? bottomInset : 0.0);
-                    return Padding(
-                      padding: EdgeInsets.only(bottom: extraBottomPadding),
-                      child: AnimatedSize(
-                        duration: effectProfile.performanceMode || isSwiping
-                            ? Duration.zero
-                            : const Duration(milliseconds: 180),
-                        curve: Curves.easeOutCubic,
-                        alignment: Alignment.bottomCenter,
-                        child: navCollapsed
-                            ? _buildCollapsedNavHandle(
-                                isDark: isDark,
-                                currentIndex: currentIndex,
-                              )
-                            : _buildExpandedBottomNav(
-                                isDark: isDark,
-                                currentIndex: currentIndex,
-                                isSwiping: isSwiping,
-                              ),
-                      ),
-                    );
-                  },
-                );
-              },
-            );
-          },
-        );
-      },
-    ),
-  );
-}
+        builder: (context, navCollapsed, _) {
+          return ValueListenableBuilder<bool>(
+            valueListenable: UiPrefs.captureModeNotifier,
+            builder: (context, captureMode, _) {
+              if (_navHiddenUntilRestart ||
+                  _hideNavForDiarySelection ||
+                  captureMode) {
+                return const SizedBox.shrink();
+              }
+              return ValueListenableBuilder<bool>(
+                valueListenable: _isUserTabSwipingNotifier,
+                builder: (context, isSwiping, _) {
+                  return ValueListenableBuilder<int>(
+                    valueListenable: _backgroundTabIndexNotifier,
+                    builder: (context, currentIndex, _) {
+                      final effectProfile = _resolveHomeEffectProfile(
+                        UiPrefs.notifier.value,
+                        pauseAnimations: isSwiping,
+                      );
+                      final bottomInset = MediaQuery.paddingOf(context).bottom;
+                      final extraBottomPadding = Platform.isIOS
+                          ? (bottomInset > 0
+                              ? bottomInset / 2.5
+                              : 0.0) // Hạ thấp trên iOS cho gọn
+                          : (bottomInset > 0 ? bottomInset : 0.0);
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: extraBottomPadding),
+                        child: AnimatedSize(
+                          duration: effectProfile.performanceMode || isSwiping
+                              ? Duration.zero
+                              : const Duration(milliseconds: 180),
+                          curve: Curves.easeOutCubic,
+                          alignment: Alignment.bottomCenter,
+                          child: navCollapsed
+                              ? _buildCollapsedNavHandle(
+                                  isDark: isDark,
+                                  currentIndex: currentIndex,
+                                )
+                              : _buildExpandedBottomNav(
+                                  isDark: isDark,
+                                  currentIndex: currentIndex,
+                                  isSwiping: isSwiping,
+                                ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
 
   Widget _buildExpandedBottomNav({
     required bool isDark,
@@ -171,7 +173,8 @@ extension _HomeScreenShellControls on _HomeScreenState {
                     child: Center(
                       child: Icon(
                         Icons.keyboard_arrow_down_rounded,
-                        size: 16, // Slightly larger to be visible without background
+                        size:
+                            16, // Slightly larger to be visible without background
                         color: isDark
                             ? Colors.white.withValues(alpha: 0.8)
                             : accent.withValues(alpha: 0.9),
@@ -317,7 +320,14 @@ extension _HomeScreenShellControls on _HomeScreenState {
                   ),
                 ),
               ],
-            ).animate(target: isActive ? 1 : 0).shimmer(duration: 400.ms).scaleXY(begin: 0.95, end: 1.0, duration: 200.ms, curve: Curves.easeOutBack),
+            )
+                .animate(target: isActive ? 1 : 0)
+                .shimmer(duration: 400.ms)
+                .scaleXY(
+                    begin: 0.95,
+                    end: 1.0,
+                    duration: 200.ms,
+                    curve: Curves.easeOutBack),
           ),
         ),
       ),

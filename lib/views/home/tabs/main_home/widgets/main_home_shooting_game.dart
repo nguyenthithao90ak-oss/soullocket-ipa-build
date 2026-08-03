@@ -103,7 +103,10 @@ class _MainHomeShootingGameState extends State<MainHomeShootingGame>
     for (var b in _bullets) {
       b.x += b.dx;
       b.y += b.dy;
-      if (b.x < -100 || b.x > screenSize.width + 100 || b.y < -100 || b.y > screenSize.height + 100) {
+      if (b.x < -100 ||
+          b.x > screenSize.width + 100 ||
+          b.y < -100 ||
+          b.y > screenSize.height + 100) {
         toRemoveBullets.add(b);
       }
     }
@@ -119,7 +122,8 @@ class _MainHomeShootingGameState extends State<MainHomeShootingGame>
         if (b1.isUser1 != b2.isUser1) {
           if (!collidedBullets.contains(b1) && !collidedBullets.contains(b2)) {
             final dist = sqrt(pow(b1.x - b2.x, 2) + pow(b1.y - b2.y, 2));
-            if (dist < 50.0) { // Bán kính va chạm
+            if (dist < 50.0) {
+              // Bán kính va chạm
               collidedBullets.add(b1);
               collidedBullets.add(b2);
               _spawnExplosion((b1.x + b2.x) / 2, (b1.y + b2.y) / 2);
@@ -130,7 +134,8 @@ class _MainHomeShootingGameState extends State<MainHomeShootingGame>
     }
 
     // Xóa đạn va chạm và bay ra ngoài
-    _bullets.removeWhere((b) => toRemoveBullets.contains(b) || collidedBullets.contains(b));
+    _bullets.removeWhere(
+        (b) => toRemoveBullets.contains(b) || collidedBullets.contains(b));
 
     // Cập nhật hiệu ứng nổ
     final List<Explosion> toRemoveExplosions = [];
@@ -173,13 +178,14 @@ class _MainHomeShootingGameState extends State<MainHomeShootingGame>
         lifeSpeed: _random.nextDouble() * 0.02 + 0.015,
       ));
     }
-    _explosions.add(Explosion(id: (++_idCounter).toString(), x: x, y: y, particles: particles));
+    _explosions.add(Explosion(
+        id: (++_idCounter).toString(), x: x, y: y, particles: particles));
   }
 
   void _shoot(bool isUser1) {
     final screenSize = MediaQuery.of(context).size;
     final startY = screenSize.height * 0.45;
-    
+
     // Thêm chút ngẫu nhiên vào đường đạn để đạn bay tự nhiên hơn
     final dy = (_random.nextDouble() - 0.5) * 2.0;
 
@@ -222,8 +228,10 @@ class _MainHomeShootingGameState extends State<MainHomeShootingGame>
                 ? CachedNetworkImage(
                     imageUrl: b.avatarUrl,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(color: Colors.grey[300]),
-                    errorWidget: (context, url, error) => const Icon(Icons.favorite, color: Colors.pinkAccent),
+                    placeholder: (context, url) =>
+                        Container(color: Colors.grey[300]),
+                    errorWidget: (context, url, error) =>
+                        const Icon(Icons.favorite, color: Colors.pinkAccent),
                   )
                 : Container(color: Colors.pinkAccent),
           ),
@@ -299,14 +307,14 @@ class _MainHomeShootingGameState extends State<MainHomeShootingGame>
       children: [
         ..._bullets.map(_buildBullet),
         _buildExplosions(),
-        
+
         // Trái tim trái
         Positioned(
           left: 10,
           top: btnY,
           child: _buildShooterButton(true),
         ),
-        
+
         // Trái tim phải
         Positioned(
           right: 10,

@@ -84,7 +84,7 @@ void downloadFileImpl(String filename, List<int> bytes, String mimeType) {
   final jsArray = [uint8List.toJS].toJS;
   final blob = web.Blob(jsArray, web.BlobPropertyBag(type: mimeType));
   final url = web.URL.createObjectURL(blob);
-  
+
   final anchor = web.document.createElement('a') as web.HTMLAnchorElement;
   anchor.href = url;
   anchor.download = filename;

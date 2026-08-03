@@ -390,120 +390,120 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-        // Preview message tooltip (if active)
-        if (_showPreview && _messagePreview.isNotEmpty)
-          Flexible(
-            child: Container(
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.85),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFFFF4F93).withValues(alpha: 0.3),
-                  width: 1.2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
+          // Preview message tooltip (if active)
+          if (_showPreview && _messagePreview.isNotEmpty)
+            Flexible(
+              child: Container(
+                margin: const EdgeInsets.only(right: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFFFF4F93).withValues(alpha: 0.3),
+                    width: 1.2,
                   ),
-                ],
-              ),
-              child: Text(
-                _messagePreview,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.quicksand(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-
-        // Heart bubble icon
-        GestureDetector(
-          onTapDown: (_) => setState(() => _touchScale = 0.85),
-          onTapUp: (_) => setState(() => _touchScale = 1.0),
-          onTapCancel: () => setState(() => _touchScale = 1.0),
-          onTap: _onTapBubble,
-          onDoubleTap: () {
-            FlutterOverlayWindow.shareData('launch_app');
-            FlutterOverlayWindow.closeOverlay();
-          },
-          child: AnimatedScale(
-            scale: _touchScale,
-            duration: const Duration(milliseconds: 150),
-            curve: Curves.easeOutBack,
-            child: AnimatedBuilder(
-              animation: _breatheAnimation,
-              builder: (context, child) {
-                final scale = _breatheAnimation.value;
-                final normalized = (scale - 1.0) / 0.06;
-                return Stack(
-                  alignment: Alignment.center,
-                  clipBehavior: Clip.none,
-                  children: [
-                    // Outside breathing neon ring
-                    Container(
-                      width: 58 * scale,
-                      height: 58 * scale,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFFFF4F93).withValues(
-                            alpha: (0.6 * (1.0 - normalized)).clamp(0.0, 1.0),
-                          ),
-                          width: 1.2,
-                        ),
-                      ),
-                    ),
-                    // Central glassmorphic core
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.12),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.35),
-                          width: 1.2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFF4F93).withValues(alpha: 0.45),
-                            blurRadius: 12,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(25),
-                          child: R2StickerImage(
-                            'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
-                            width: 38,
-                            height: 38,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
                   ],
-                );
-              },
+                ),
+                child: Text(
+                  _messagePreview,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.quicksand(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+
+          // Heart bubble icon
+          GestureDetector(
+            onTapDown: (_) => setState(() => _touchScale = 0.85),
+            onTapUp: (_) => setState(() => _touchScale = 1.0),
+            onTapCancel: () => setState(() => _touchScale = 1.0),
+            onTap: _onTapBubble,
+            onDoubleTap: () {
+              FlutterOverlayWindow.shareData('launch_app');
+              FlutterOverlayWindow.closeOverlay();
+            },
+            child: AnimatedScale(
+              scale: _touchScale,
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeOutBack,
+              child: AnimatedBuilder(
+                animation: _breatheAnimation,
+                builder: (context, child) {
+                  final scale = _breatheAnimation.value;
+                  final normalized = (scale - 1.0) / 0.06;
+                  return Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.none,
+                    children: [
+                      // Outside breathing neon ring
+                      Container(
+                        width: 58 * scale,
+                        height: 58 * scale,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: const Color(0xFFFF4F93).withValues(
+                              alpha: (0.6 * (1.0 - normalized)).clamp(0.0, 1.0),
+                            ),
+                            width: 1.2,
+                          ),
+                        ),
+                      ),
+                      // Central glassmorphic core
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.12),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.35),
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFF4F93)
+                                  .withValues(alpha: 0.45),
+                              blurRadius: 12,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(25),
+                            child: R2StickerImage(
+                              'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+                              width: 38,
+                              height: 38,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
-        ),
         ],
       ),
     );
   }
-
-
 
   void _shrinkOverlay() {
     setState(() {
@@ -539,290 +539,308 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
             ),
             child: Column(
               children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.06),
-                      width: 1.0,
-                    ),
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(2),
+                // Header
+                Container(
+                  padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        width: 1.0,
                       ),
                     ),
-                    Row(
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.favorite_rounded,
+                            color: Color(0xFFFF4F93),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Thì thầm với $_partnerName',
+                              style: GoogleFonts.quicksand(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          // Maximize / Open Main App
+                          IconButton(
+                            icon: const Icon(Icons.open_in_new_rounded,
+                                color: Colors.white70, size: 18),
+                            onPressed: () {
+                              FlutterOverlayWindow.shareData('launch_app');
+                              FlutterOverlayWindow.closeOverlay();
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close_rounded,
+                                color: Colors.white70, size: 18),
+                            onPressed: _shrinkOverlay,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Messages list
+                Expanded(
+                  child: (_houseId == null || _houseId!.isEmpty)
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Text(
+                              'Đang đồng bộ dữ liệu...\nVui lòng mở lại ứng dụng nếu chờ lâu 💕',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  fontSize: 13,
+                                  height: 1.5),
+                            ),
+                          ),
+                        )
+                      : _chatHistory.isEmpty
+                          ? Center(
+                              child: Text(
+                                'Hãy gửi lời thì thầm tâm hồn... 💕',
+                                style: GoogleFonts.quicksand(
+                                  color: Colors.white.withValues(alpha: 0.4),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              controller: _scrollController,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 10),
+                              itemCount: _chatHistory.length,
+                              itemBuilder: (context, index) {
+                                final msg = _chatHistory[index];
+                                final text = msg['text']?.toString() ?? '';
+                                final sender = msg['sender']?.toString() ?? '';
+                                final isSelf = (sender == _myRole);
+                                final imageUrl =
+                                    msg['imageUrl']?.toString() ?? '';
+
+                                return Align(
+                                  alignment: isSelf
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: Container(
+                                    margin:
+                                        const EdgeInsets.symmetric(vertical: 4),
+                                    padding: EdgeInsets.all(
+                                        imageUrl.isNotEmpty ? 4 : 12),
+                                    constraints:
+                                        const BoxConstraints(maxWidth: 270),
+                                    decoration: BoxDecoration(
+                                      color: isSelf
+                                          ? const Color(0xFFFF4F93)
+                                          : Colors.white
+                                              .withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: const Radius.circular(18),
+                                        topRight: const Radius.circular(18),
+                                        bottomLeft:
+                                            Radius.circular(isSelf ? 18 : 4),
+                                        bottomRight:
+                                            Radius.circular(isSelf ? 4 : 18),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: isSelf
+                                          ? CrossAxisAlignment.end
+                                          : CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (imageUrl.isNotEmpty)
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(14),
+                                            child: CachedNetworkImage(
+                                              imageUrl: imageUrl,
+                                              fit: BoxFit.cover,
+                                              width: 200,
+                                              memCacheWidth:
+                                                  200, // RAM optimization
+                                              errorWidget:
+                                                  (context, url, error) =>
+                                                      Container(
+                                                width: 200,
+                                                height: 150,
+                                                color: Colors.white12,
+                                                child: const Icon(
+                                                    Icons.broken_image,
+                                                    color: Colors.white54),
+                                              ),
+                                            ),
+                                          ),
+                                        if (text.isNotEmpty)
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                                top:
+                                                    imageUrl.isNotEmpty ? 6 : 0,
+                                                left:
+                                                    imageUrl.isNotEmpty ? 4 : 0,
+                                                right: imageUrl.isNotEmpty
+                                                    ? 4
+                                                    : 0),
+                                            child: Text(
+                                              text,
+                                              style: GoogleFonts.quicksand(
+                                                color: Colors.white,
+                                                fontSize: 14.5,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                ),
+
+                if (_spamWarning != null)
+                  Container(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF4F4F).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: const Color(0xFFFF4F4F).withValues(alpha: 0.3),
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Row(
                       children: [
                         const Icon(
-                          Icons.favorite_rounded,
-                          color: Color(0xFFFF4F93),
-                          size: 20,
+                          Icons.warning_amber_rounded,
+                          color: Color(0xFFFF4F4F),
+                          size: 14,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            'Thì thầm với $_partnerName',
+                            _spamWarning!,
                             style: GoogleFonts.quicksand(
-                              color: Colors.white,
-                              fontSize: 14,
+                              color: const Color(0xFFFFD1D1),
+                              fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-                        // Maximize / Open Main App
-                        IconButton(
-                          icon: const Icon(Icons.open_in_new_rounded,
-                              color: Colors.white70, size: 18),
-                          onPressed: () {
-                            FlutterOverlayWindow.shareData('launch_app');
-                            FlutterOverlayWindow.closeOverlay();
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close_rounded,
-                              color: Colors.white70, size: 18),
-                          onPressed: _shrinkOverlay,
-                        ),
                       ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
 
-              // Messages list
-              Expanded(
-                child: (_houseId == null || _houseId!.isEmpty)
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: Text(
-                            'Đang đồng bộ dữ liệu...\nVui lòng mở lại ứng dụng nếu chờ lâu 💕',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.6),
-                                fontSize: 13,
-                                height: 1.5),
-                          ),
-                        ),
-                      )
-                    : _chatHistory.isEmpty
-                        ? Center(
-                            child: Text(
-                              'Hãy gửi lời thì thầm tâm hồn... 💕',
-                              style: GoogleFonts.quicksand(
-                                color: Colors.white.withValues(alpha: 0.4),
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          )
-                        : ListView.builder(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 10),
-                            itemCount: _chatHistory.length,
-                            itemBuilder: (context, index) {
-                              final msg = _chatHistory[index];
-                              final text = msg['text']?.toString() ?? '';
-                              final sender = msg['sender']?.toString() ?? '';
-                              final isSelf = (sender == _myRole);
-                              final imageUrl = msg['imageUrl']?.toString() ?? '';
-
-                              return Align(
-                                alignment: isSelf
-                                    ? Alignment.centerRight
-                                    : Alignment.centerLeft,
-                                child: Container(
-                                  margin: const EdgeInsets.symmetric(vertical: 4),
-                                  padding: EdgeInsets.all(imageUrl.isNotEmpty ? 4 : 12),
-                                  constraints:
-                                      const BoxConstraints(maxWidth: 270),
-                                  decoration: BoxDecoration(
-                                    color: isSelf 
-                                      ? const Color(0xFFFF4F93) 
-                                      : Colors.white.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: const Radius.circular(18),
-                                      topRight: const Radius.circular(18),
-                                      bottomLeft: Radius.circular(isSelf ? 18 : 4),
-                                      bottomRight: Radius.circular(isSelf ? 4 : 18),
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: isSelf
-                                        ? CrossAxisAlignment.end
-                                        : CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (imageUrl.isNotEmpty)
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(14),
-                                          child: CachedNetworkImage(
-                                            imageUrl: imageUrl,
-                                            fit: BoxFit.cover,
-                                            width: 200,
-                                            memCacheWidth: 200, // RAM optimization
-                                            errorWidget: (context, url, error) => Container(
-                                              width: 200, height: 150, color: Colors.white12,
-                                              child: const Icon(Icons.broken_image, color: Colors.white54),
-                                            ),
-                                          ),
-                                        ),
-                                      if (text.isNotEmpty)
-                                        Padding(
-                                          padding: EdgeInsets.only(
-                                              top: imageUrl.isNotEmpty ? 6 : 0,
-                                              left: imageUrl.isNotEmpty ? 4 : 0,
-                                              right: imageUrl.isNotEmpty ? 4 : 0),
-                                          child: Text(
-                                            text,
-                                            style: GoogleFonts.quicksand(
-                                              color: Colors.white,
-                                              fontSize: 14.5,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-              ),
-
-              if (_spamWarning != null)
+                // Footer Text Input
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFF4F4F).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: const Color(0xFFFF4F4F).withValues(alpha: 0.3),
-                      width: 1.0,
+                    border: Border(
+                      top: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        width: 1.0,
+                      ),
+                    ),
+                    color: Colors.white.withValues(alpha: 0.02),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(32),
+                      bottomRight: Radius.circular(32),
                     ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.warning_amber_rounded,
-                        color: Color(0xFFFF4F4F),
-                        size: 14,
-                      ),
-                      const SizedBox(width: 6),
+                      Icon(Icons.add_circle_outline_rounded,
+                          color: Colors.white.withValues(alpha: 0.5), size: 24),
+                      const SizedBox(width: 10),
+                      Icon(Icons.camera_alt_outlined,
+                          color: Colors.white.withValues(alpha: 0.5), size: 24),
+                      const SizedBox(width: 10),
                       Expanded(
-                        child: Text(
-                          _spamWarning!,
-                          style: GoogleFonts.quicksand(
-                            color: const Color(0xFFFFD1D1),
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              width: 1.0,
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 4),
+                          child: TextField(
+                            controller: _textController,
+                            style: GoogleFonts.quicksand(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Nhắn tin...',
+                              hintStyle: GoogleFonts.quicksand(
+                                color: Colors.white.withValues(alpha: 0.4),
+                                fontSize: 14,
+                              ),
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 8),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      GestureDetector(
+                        onTap: _sendMessage,
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFFFF4F93), Color(0xFFE2528F)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.send_rounded,
+                            color: Colors.white,
+                            size: 18,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-
-              // Footer Text Input
-              Container(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.05),
-                      width: 1.0,
-                    ),
-                  ),
-                  color: Colors.white.withValues(alpha: 0.02),
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(32),
-                    bottomRight: Radius.circular(32),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.add_circle_outline_rounded,
-                        color: Colors.white.withValues(alpha: 0.5), size: 24),
-                    const SizedBox(width: 10),
-                    Icon(Icons.camera_alt_outlined,
-                        color: Colors.white.withValues(alpha: 0.5), size: 24),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.1),
-                            width: 1.0,
-                          ),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 4),
-                        child: TextField(
-                          controller: _textController,
-                          style: GoogleFonts.quicksand(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'Nhắn tin...',
-                            hintStyle: GoogleFonts.quicksand(
-                              color: Colors.white.withValues(alpha: 0.4),
-                              fontSize: 14,
-                            ),
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding:
-                                const EdgeInsets.symmetric(vertical: 8),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    GestureDetector(
-                      onTap: _sendMessage,
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Color(0xFFFF4F93), Color(0xFFE2528F)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.send_rounded,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 }
-

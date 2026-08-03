@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../core/sl_theme.dart';
 
 class GlassTextField extends StatefulWidget {
@@ -37,13 +37,15 @@ class GlassTextField extends StatefulWidget {
   State<GlassTextField> createState() => _GlassTextFieldState();
 }
 
-class _GlassTextFieldState extends State<GlassTextField> with SingleTickerProviderStateMixin {
+class _GlassTextFieldState extends State<GlassTextField>
+    with SingleTickerProviderStateMixin {
   late final FocusNode _internalFocusNode = widget.focusNode ?? FocusNode();
   late final AnimationController _animCtrl = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 250),
   );
-  late final Animation<double> _scaleAnim = Tween<double>(begin: 1.0, end: 1.02).animate(
+  late final Animation<double> _scaleAnim =
+      Tween<double>(begin: 1.0, end: 1.02).animate(
     CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutBack),
   );
 

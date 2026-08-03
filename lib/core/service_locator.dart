@@ -1,2 +1,23 @@
-﻿import 'package:get_it/get_it.dart';
-import 'package:soullocket_app/utils/services/house_service.dart'; import 'package:soullocket_app/utils/services/house_settings_service.dart'; import 'package:soullocket_app/utils/services/location_service.dart'; import 'package:soullocket_app/utils/services/love_insight_service.dart'; import 'package:soullocket_app/utils/services/notification_service.dart'; import 'package:soullocket_app/utils/services/presence_service.dart'; import 'package:soullocket_app/utils/services/storage/storage_service.dart'; import 'package:soullocket_app/utils/services/utilities/note_service.dart'; import 'package:soullocket_app/utils/services/utility_service.dart';  final GetIt locator = GetIt.instance;  void setupLocator() {   locator.registerLazySingleton(() => HouseService());   locator.registerLazySingleton(() => HouseSettingsService());   locator.registerLazySingleton(() => PresenceService());   locator.registerLazySingleton(() => StorageService());   locator.registerLazySingleton(() => NotificationService());   locator.registerLazySingleton(() => LocationService());   locator.registerLazySingleton(() => LoveInsightService());   locator.registerLazySingleton(() => UtilityService());   locator.registerLazySingleton(() => NoteService()); }
+import 'package:get_it/get_it.dart';
+import 'package:soullocket_app/utils/services/house_service.dart';
+import 'package:soullocket_app/utils/services/house_settings_service.dart';
+import 'package:soullocket_app/utils/services/location_service.dart';
+import 'package:soullocket_app/utils/services/love_insight_service.dart';
+import 'package:soullocket_app/utils/services/notification_service.dart';
+import 'package:soullocket_app/utils/services/presence_service.dart';
+import 'package:soullocket_app/utils/services/storage/storage_service.dart';
+import 'package:soullocket_app/utils/services/utilities/note_service.dart';
+import 'package:soullocket_app/utils/services/utility_service.dart';
+
+final GetIt locator = GetIt.instance;
+void setupLocator() {
+  locator.registerLazySingleton(() => HouseService());
+  locator.registerLazySingleton(() => HouseSettingsService());
+  locator.registerLazySingleton(() => PresenceService());
+  locator.registerLazySingleton(() => StorageService());
+  locator.registerLazySingleton(() => NotificationService());
+  locator.registerLazySingleton(() => LocationService());
+  locator.registerLazySingleton(() => LoveInsightService());
+  locator.registerLazySingleton(() => UtilityService());
+  locator.registerLazySingleton(() => NoteService());
+}

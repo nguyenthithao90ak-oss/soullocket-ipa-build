@@ -295,18 +295,39 @@ class LoveInsightService {
     final monthStart = DateTime(now.year, now.month, 1);
 
     final firestore = FirebaseFirestore.instance;
-    final cutoff45Days = now.subtract(const Duration(days: 45)).millisecondsSinceEpoch;
+    final cutoff45Days =
+        now.subtract(const Duration(days: 45)).millisecondsSinceEpoch;
 
     try {
       final results = await Future.wait([
-        firestore.collection('houses').doc(houseId).collection('diaries').where('ts', isGreaterThanOrEqualTo: cutoff45Days).get(),
-        firestore.collection('houses').doc(houseId).collection('album').where('ts', isGreaterThanOrEqualTo: cutoff45Days).get(),
+        firestore
+            .collection('houses')
+            .doc(houseId)
+            .collection('diaries')
+            .where('ts', isGreaterThanOrEqualTo: cutoff45Days)
+            .get(),
+        firestore
+            .collection('houses')
+            .doc(houseId)
+            .collection('album')
+            .where('ts', isGreaterThanOrEqualTo: cutoff45Days)
+            .get(),
         _dbRef.child('houses/$houseId/settings').get(),
         _dbRef.child('houses/$houseId/presence').get(),
         _dbRef.child('houses/$houseId/metrics/diary_views').get(),
         _dbRef.child('houses/$houseId/metrics/app_open').get(),
-        firestore.collection('houses').doc(houseId).collection('diaries').count().get(),
-        firestore.collection('houses').doc(houseId).collection('album').count().get(),
+        firestore
+            .collection('houses')
+            .doc(houseId)
+            .collection('diaries')
+            .count()
+            .get(),
+        firestore
+            .collection('houses')
+            .doc(houseId)
+            .collection('album')
+            .count()
+            .get(),
       ]).timeout(const Duration(seconds: 8));
 
       final data = await _processInsightData(
@@ -418,8 +439,10 @@ class LoveInsightService {
     int totalAlbumCount,
   ) async {
     final now = DateTime.now();
-    final diaryList = diaryDocs.map((e) => e.data() as Map<String, dynamic>).toList();
-    final albumList = albumDocs.map((e) => e.data() as Map<String, dynamic>).toList();
+    final diaryList =
+        diaryDocs.map((e) => e.data() as Map<String, dynamic>).toList();
+    final albumList =
+        albumDocs.map((e) => e.data() as Map<String, dynamic>).toList();
     final settings = _asMap(settingsValue);
     final presence = _asMap(presenceValue);
     final diaryViews = _intMap(diaryViewsValue);
@@ -868,7 +891,11 @@ class LoveInsightService {
     DateTime currentDay = DateTime(now.year, now.month, now.day);
     if (sortedDays.isNotEmpty) {
       String todayStr = currentDay.toIso8601String().split('T').first;
-      String yesterdayStr = currentDay.subtract(const Duration(days: 1)).toIso8601String().split('T').first;
+      String yesterdayStr = currentDay
+          .subtract(const Duration(days: 1))
+          .toIso8601String()
+          .split('T')
+          .first;
       if (sortedDays.first == todayStr) {
         // Start from today
       } else if (sortedDays.first == yesterdayStr) {
@@ -1006,7 +1033,7 @@ class LoveInsightService {
         milestoneSuggestion != null) {
       return milestoneSuggestion;
     }
-    
+
     if (currentStreak >= 7) {
       return 'Thật tuyệt vời! Hai bạn đã duy trì tương tác suốt $currentStreak ngày liên tục. Sự đều đặn này chính là chìa khóa của một tình yêu bền vững.';
     }
@@ -1391,8 +1418,6 @@ class LoveInsightService {
     return map.map((key, data) => MapEntry(key, _toInt(data)));
   }
 
-
-
   String _string(dynamic value, {String fallback = ''}) {
     final text = value?.toString().trim() ?? '';
     return text.isEmpty ? fallback : text;
@@ -1515,23 +1540,29 @@ class LoveInsightService {
 
   String _monthMilestoneTitle(int months, {required bool isSingle}) {
     if (isSingle) {
-      return L10nService().format('milestone_months_single', {'months': months.toString()});
+      return L10nService()
+          .format('milestone_months_single', {'months': months.toString()});
     }
-    return L10nService().format('milestone_months_together', {'months': months.toString()});
+    return L10nService()
+        .format('milestone_months_together', {'months': months.toString()});
   }
 
   String _dayMilestoneTitle(int days, {required bool isSingle}) {
     if (isSingle) {
-      return L10nService().format('milestone_days_single', {'days': days.toString()});
+      return L10nService()
+          .format('milestone_days_single', {'days': days.toString()});
     }
-    return L10nService().format('milestone_anniversary_days', {'days': days.toString()});
+    return L10nService()
+        .format('milestone_anniversary_days', {'days': days.toString()});
   }
 
   String _yearMilestoneTitle(int years, {required bool isSingle}) {
     if (isSingle) {
-      return L10nService().format('milestone_years_single', {'years': years.toString()});
+      return L10nService()
+          .format('milestone_years_single', {'years': years.toString()});
     }
-    return L10nService().format('milestone_anniversary_years', {'years': years.toString()});
+    return L10nService()
+        .format('milestone_anniversary_years', {'years': years.toString()});
   }
 
   DateTime? _parseFlexibleDate(String raw) {

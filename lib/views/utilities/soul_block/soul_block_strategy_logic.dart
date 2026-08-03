@@ -428,7 +428,8 @@ mixin _SoulBlockStrategyLogic {
     _pieceSequence += 1;
     final int roll = _random.nextInt(100);
     final bool isGold = roll < 15; // 15% (buffed from 12)
-    final bool isBomb = forceBomb || (!isGold && (roll >= 15 && roll < 25)); // 10% or forced
+    final bool isBomb =
+        forceBomb || (!isGold && (roll >= 15 && roll < 25)); // 10% or forced
     return _SoulPieceOption(
       id: _pieceSequence,
       template: template,

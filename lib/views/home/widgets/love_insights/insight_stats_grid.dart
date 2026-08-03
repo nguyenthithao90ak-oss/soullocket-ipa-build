@@ -50,10 +50,21 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
             final card = cards[index];
             return SizedBox(
               width: itemWidth,
-              child: _buildMetricCard(card).animate()
+              child: _buildMetricCard(card)
+                  .animate()
                   .fade(duration: 600.ms, delay: (150 * index).ms)
-                  .slideY(begin: 0.15, end: 0, duration: 600.ms, delay: (150 * index).ms, curve: Curves.easeOutBack)
-                  .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1), duration: 600.ms, delay: (150 * index).ms, curve: Curves.easeOutBack),
+                  .slideY(
+                      begin: 0.15,
+                      end: 0,
+                      duration: 600.ms,
+                      delay: (150 * index).ms,
+                      curve: Curves.easeOutBack)
+                  .scale(
+                      begin: const Offset(0.9, 0.9),
+                      end: const Offset(1, 1),
+                      duration: 600.ms,
+                      delay: (150 * index).ms,
+                      curve: Curves.easeOutBack),
             );
           }),
         );
@@ -105,7 +116,10 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
                 height: 36,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [card.accent.withValues(alpha: 0.15), card.accent.withValues(alpha: 0.05)],
+                    colors: [
+                      card.accent.withValues(alpha: 0.15),
+                      card.accent.withValues(alpha: 0.05)
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),

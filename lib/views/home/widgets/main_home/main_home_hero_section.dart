@@ -118,11 +118,14 @@ class _ModernHomeBody extends StatelessWidget {
             );
             Widget buildCountdown(bool isSwiping) {
               final int currentDays = int.tryParse(circleValue) ?? 0;
-              final bool isMilestone = currentDays > 0 && (currentDays % 100 == 0 || currentDays % 30 == 0 || currentDays % 365 == 0);
+              final bool isMilestone = currentDays > 0 &&
+                  (currentDays % 100 == 0 ||
+                      currentDays % 30 == 0 ||
+                      currentDays % 365 == 0);
               final bool enableMotionBase = effectProfile.animationEnabled &&
                   !state._deferHeavyHomeMotion &&
                   !isSwiping;
-              
+
               return RepaintBoundary(
                 child: _MainHomeHeroCountdownSection(
                   state: state,

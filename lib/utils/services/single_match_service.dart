@@ -379,7 +379,8 @@ class SingleMatchService {
 
   /// Fetch active pool (cached 15 phút).
   /// Chỉ chứa user đang bật single match — nhỏ hơn nhiều so với profile index.
-  Future<Map<String, Map<dynamic, dynamic>>> _fetchActivePoolWithCache({bool forceFetch = false}) async {
+  Future<Map<String, Map<dynamic, dynamic>>> _fetchActivePoolWithCache(
+      {bool forceFetch = false}) async {
     final now = DateTime.now();
     if (!forceFetch &&
         _activePoolCache != null &&
@@ -784,12 +785,34 @@ class SingleMatchService {
     bool needVideo = false,
   }) async {
     var pool = await _fetchActivePoolWithCache();
-    var scored = _scorePool(pool, currentHouseId, excludeHouseIds, goal, voiceStyle, myTags, myAge, preferredAgeMin, preferredAgeMax, needAudio, needVideo);
+    var scored = _scorePool(
+        pool,
+        currentHouseId,
+        excludeHouseIds,
+        goal,
+        voiceStyle,
+        myTags,
+        myAge,
+        preferredAgeMin,
+        preferredAgeMax,
+        needAudio,
+        needVideo);
 
     if (scored.isEmpty) {
       // Force fetch nếu cache không tìm thấy ai phù hợp
       pool = await _fetchActivePoolWithCache(forceFetch: true);
-      scored = _scorePool(pool, currentHouseId, excludeHouseIds, goal, voiceStyle, myTags, myAge, preferredAgeMin, preferredAgeMax, needAudio, needVideo);
+      scored = _scorePool(
+          pool,
+          currentHouseId,
+          excludeHouseIds,
+          goal,
+          voiceStyle,
+          myTags,
+          myAge,
+          preferredAgeMin,
+          preferredAgeMax,
+          needAudio,
+          needVideo);
     }
 
     if (scored.isEmpty) return null;

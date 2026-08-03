@@ -54,80 +54,81 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
             width: double.infinity,
             padding: SLSpacing.all16,
             child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.auto_awesome,
-                    color: Color(0xFFD81B60),
-                    size: 18,
-                  ),
-                  SLSpacing.w8,
-                  Flexible(
-                    child: Text(
-                      isSingle
-                          ? L10nService().translate('home_thngkcnhn_e82ba1')
-                          : L10nService().translate('home_chshnhphc_243d83'),
-                      maxLines: 1,
-                      overflow: TextOverflow.visible,
-                      style: SLTheme.quicksand(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: const Color(0xFFD81B60),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.auto_awesome,
+                      color: Color(0xFFD81B60),
+                      size: 18,
+                    ),
+                    SLSpacing.w8,
+                    Flexible(
+                      child: Text(
+                        isSingle
+                            ? L10nService().translate('home_thngkcnhn_e82ba1')
+                            : L10nService().translate('home_chshnhphc_243d83'),
+                        maxLines: 1,
+                        overflow: TextOverflow.visible,
+                        style: SLTheme.quicksand(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: const Color(0xFFD81B60),
+                        ),
                       ),
                     ),
-                  ),
-                  SLSpacing.w8,
-                  const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                    color: Color(0xFFD81B60),
+                    SLSpacing.w8,
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: Color(0xFFD81B60),
+                    ),
+                  ],
+                ),
+                SLSpacing.h16,
+                if (insight == null)
+                  _buildInsightLoadingShimmer()
+                else ...[
+                  _buildInsightBubbleWrap(metrics, compact: true),
+                  SLSpacing.h16,
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 13),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFFFFF0F6),
+                          Color(0xFFF8F0FF),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: SLRadius.lgAll,
+                      border: Border.all(color: const Color(0xFFF9D8E5)),
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              const Color(0xFFFF6FA5).withValues(alpha: 0.08),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      insight.suggestion,
+                      style: SLTheme.quicksand(
+                        fontSize: 13,
+                        color: const Color(0xFF4A3060),
+                        height: 1.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ],
-              ),
-              SLSpacing.h16,
-              if (insight == null)
-                _buildInsightLoadingShimmer()
-              else ...[
-                _buildInsightBubbleWrap(metrics, compact: true),
-                SLSpacing.h16,
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 13),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFFFFF0F6),
-                        Color(0xFFF8F0FF),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: SLRadius.lgAll,
-                    border: Border.all(color: const Color(0xFFF9D8E5)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFF6FA5).withValues(alpha: 0.08),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    insight.suggestion,
-                    style: SLTheme.quicksand(
-                      fontSize: 13,
-                      color: const Color(0xFF4A3060),
-                      height: 1.5,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
               ],
-            ],
+            ),
           ),
-        ),
         ),
       ),
     );
@@ -165,6 +166,4 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
       },
     );
   }
-
-
 }

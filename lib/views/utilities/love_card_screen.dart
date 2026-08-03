@@ -991,7 +991,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
     if (widget.isEmbedded) {
       return _buildInnerContent();
     }
-    
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(

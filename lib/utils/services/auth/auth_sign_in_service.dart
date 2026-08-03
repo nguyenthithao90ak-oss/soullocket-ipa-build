@@ -14,7 +14,6 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
-
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/secure_storage_service.dart';
@@ -856,7 +855,8 @@ class AuthSignInService {
         case 'network-request-failed':
           throw 'Mạng đang lỗi hoặc bị chặn, chưa thể đăng nhập Google lúc này.';
         default:
-          debugPrint('Google FirebaseAuthException: ${error.code} ${error.message}');
+          debugPrint(
+              'Google FirebaseAuthException: ${error.code} ${error.message}');
           throw handleFirebaseAuthError(error);
       }
     } catch (error) {
@@ -1203,36 +1203,36 @@ class AuthSignInService {
       final houseId = await HouseService().getCurrentHouseId();
       final role = RoleUtils.currentRoleSync();
       if (houseId != null && houseId.isNotEmpty && role != null) {
-        await PresenceService().goOffline(
-          houseId: houseId,
-          role: role,
-        ).timeout(const Duration(milliseconds: 300)).catchError((_) {});
+        await PresenceService()
+            .goOffline(
+              houseId: houseId,
+              role: role,
+            )
+            .timeout(const Duration(milliseconds: 300))
+            .catchError((_) {});
       }
     } catch (_) {}
 
     // 2. Fire and forget other network/SDK cleanups so we don't block the UI
     final List<Future<void>> asyncCleanups = [];
-    asyncCleanups.add(
-      NotificationService().clearTokenOnSignOut()
-          .timeout(const Duration(seconds: 2))
-          .catchError((_) {})
-    );
+    asyncCleanups.add(NotificationService()
+        .clearTokenOnSignOut()
+        .timeout(const Duration(seconds: 2))
+        .catchError((_) {}));
 
     try {
       if (!kIsWeb && _googleSignIn != null) {
-        asyncCleanups.add(
-          _googleSignIn!.signOut()
-              .timeout(const Duration(seconds: 2))
-              .catchError((_) {})
-        );
+        asyncCleanups.add(_googleSignIn!
+            .signOut()
+            .timeout(const Duration(seconds: 2))
+            .catchError((_) {}));
       }
     } catch (_) {}
 
-    asyncCleanups.add(
-      _facebookAuth.logOut()
-          .timeout(const Duration(seconds: 2))
-          .catchError((_) {})
-    );
+    asyncCleanups.add(_facebookAuth
+        .logOut()
+        .timeout(const Duration(seconds: 2))
+        .catchError((_) {}));
 
     Future.wait(asyncCleanups).catchError((_) => []);
 
@@ -1252,11 +1252,21 @@ class AuthSignInService {
     } catch (_) {}
 
     // 4. Các tác vụ UI/Memory nhẹ chạy đồng bộ lập tức
-    try { EncryptionService().clearCache(); } catch (_) {}
-    try { RoleUtils.roleNotifier.value = null; } catch (_) {}
-    try { RoleUtils.duplicateRoleNotifier.value = false; } catch (_) {}
-    try { PaintingBinding.instance.imageCache.clear(); } catch (_) {}
-    try { PaintingBinding.instance.imageCache.clearLiveImages(); } catch (_) {}
+    try {
+      EncryptionService().clearCache();
+    } catch (_) {}
+    try {
+      RoleUtils.roleNotifier.value = null;
+    } catch (_) {}
+    try {
+      RoleUtils.duplicateRoleNotifier.value = false;
+    } catch (_) {}
+    try {
+      PaintingBinding.instance.imageCache.clear();
+    } catch (_) {}
+    try {
+      PaintingBinding.instance.imageCache.clearLiveImages();
+    } catch (_) {}
   }
 
   Future<Map<String, dynamic>> deleteAccount() async {
@@ -1494,7 +1504,9 @@ class AuthSignInService {
           .write(SecureStorageService.keyAuthUid, user.uid);
       existingRole = prefs.getString('il_role');
       try {
-        await FirebaseDatabase.instance.ref('users/${user.uid}/houseId').set(houseId);
+        await FirebaseDatabase.instance
+            .ref('users/${user.uid}/houseId')
+            .set(houseId);
       } catch (_) {}
     } else {
       await prefs.remove('il_house_id');
@@ -1506,7 +1518,9 @@ class AuthSignInService {
           .delete(SecureStorageService.keyAuthUid);
       await SecureStorageService.instance.delete(SecureStorageService.keyRole);
       try {
-        await FirebaseDatabase.instance.ref('users/${user.uid}/houseId').remove();
+        await FirebaseDatabase.instance
+            .ref('users/${user.uid}/houseId')
+            .remove();
       } catch (_) {}
     }
 

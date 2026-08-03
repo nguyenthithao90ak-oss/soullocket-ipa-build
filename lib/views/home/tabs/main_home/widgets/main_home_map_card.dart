@@ -2,7 +2,6 @@
 part of '../../main_home_tab.dart';
 
 extension _MainHomeMapCardExt on _MainHomeTabState {
-
   Widget _buildMapPreviewMarker(
     String emoji,
     Color color, {

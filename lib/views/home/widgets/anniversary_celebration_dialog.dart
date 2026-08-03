@@ -4,7 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Key used to remember whether the anniversary dialog was already shown today.
-String _anniversaryShownPrefKey(int days) => 'anniv_shown_${days}_${DateTime.now().toIso8601String().split('T')[0]}';
+String _anniversaryShownPrefKey(int days) =>
+    'anniv_shown_${days}_${DateTime.now().toIso8601String().split('T')[0]}';
 
 /// Returns true if it is an anniversary milestone day (multiple of 100, or 30, 200, 300 … days, 1/2/3… years).
 bool isAnniversaryMilestone(int days) {
@@ -37,7 +38,7 @@ Future<bool> shouldShowAnniversaryDialog(int days) async {
 class AnniversaryCelebrationDialog extends StatefulWidget {
   final int days;
   final String coupleLabel; // e.g. "Bạn Nam & Bạn"
-  final String dayUnit;     // e.g. "ngày yêu"
+  final String dayUnit; // e.g. "ngày yêu"
 
   const AnniversaryCelebrationDialog({
     super.key,
@@ -52,8 +53,7 @@ class AnniversaryCelebrationDialog extends StatefulWidget {
 }
 
 class _AnniversaryCelebrationDialogState
-    extends State<AnniversaryCelebrationDialog>
-    with TickerProviderStateMixin {
+    extends State<AnniversaryCelebrationDialog> with TickerProviderStateMixin {
   late final AnimationController _entryCtrl;
   late final AnimationController _particleCtrl;
   late final AnimationController _shimmerCtrl;
@@ -219,8 +219,10 @@ class _AnniversaryCelebrationDialogState
                                 return ShaderMask(
                                   shaderCallback: (bounds) {
                                     return LinearGradient(
-                                      begin: Alignment(-1.5 + _shimmerCtrl.value * 3.5, 0),
-                                      end: Alignment(-0.5 + _shimmerCtrl.value * 3.5, 0),
+                                      begin: Alignment(
+                                          -1.5 + _shimmerCtrl.value * 3.5, 0),
+                                      end: Alignment(
+                                          -0.5 + _shimmerCtrl.value * 3.5, 0),
                                       colors: const [
                                         Colors.white,
                                         Color(0xFFFFE88A),
@@ -256,7 +258,8 @@ class _AnniversaryCelebrationDialogState
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.white.withValues(
-                                            alpha: 0.25 + _pulseCtrl.value * 0.20),
+                                            alpha:
+                                                0.25 + _pulseCtrl.value * 0.20),
                                         blurRadius: 24 + _pulseCtrl.value * 16,
                                         spreadRadius: 2,
                                       ),
@@ -274,7 +277,8 @@ class _AnniversaryCelebrationDialogState
                                         ],
                                       ),
                                       border: Border.all(
-                                        color: Colors.white.withValues(alpha: 0.8),
+                                        color:
+                                            Colors.white.withValues(alpha: 0.8),
                                         width: 3,
                                       ),
                                     ),
@@ -290,7 +294,8 @@ class _AnniversaryCelebrationDialogState
                                               color: Colors.white,
                                               shadows: [
                                                 Shadow(
-                                                  color: Colors.white.withValues(alpha: 0.4),
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.4),
                                                   blurRadius: 12,
                                                 ),
                                               ],
@@ -301,7 +306,8 @@ class _AnniversaryCelebrationDialogState
                                             style: GoogleFonts.comfortaa(
                                               fontSize: 13,
                                               fontWeight: FontWeight.w700,
-                                              color: Colors.white.withValues(alpha: 0.9),
+                                              color: Colors.white
+                                                  .withValues(alpha: 0.9),
                                             ),
                                           ),
                                         ],
@@ -368,8 +374,10 @@ class _AnniversaryCelebrationDialogState
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.white.withValues(
-                                              alpha: 0.3 + _pulseCtrl.value * 0.25),
-                                          blurRadius: 16 + _pulseCtrl.value * 12,
+                                              alpha: 0.3 +
+                                                  _pulseCtrl.value * 0.25),
+                                          blurRadius:
+                                              16 + _pulseCtrl.value * 12,
                                         ),
                                       ],
                                     ),
@@ -379,7 +387,8 @@ class _AnniversaryCelebrationDialogState
                                         fontSize: 16,
                                         fontWeight: FontWeight.w900,
                                         color: const Color(0xFFD81B60),
-                                        fontFamily: GoogleFonts.comfortaa().fontFamily,
+                                        fontFamily:
+                                            GoogleFonts.comfortaa().fontFamily,
                                       ),
                                     ),
                                   );
@@ -435,9 +444,15 @@ class _AnniversaryCelebrationDialogState
       final y = days ~/ 365;
       return 'Thật tuyệt vời! $y năm yêu nhau đã đến 🥂\nMỗi ngày bên nhau là một món quà vô giá. Chúc hai bạn mãi mãi hạnh phúc nhé! 💕';
     }
-    if (days == 100) return 'Tròn 100 ngày yêu thương! 🎊\nHành trình ngọt ngào nhất đang bắt đầu. Hãy tiếp tục viết câu chuyện đẹp cùng nhau nào! 🌹';
-    if (days == 200) return 'Hai trăm ngày bên nhau rồi đấy! 💫\nTình yêu của hai bạn ngày càng thêm đậm đà. Mãi mãi nhé! 🌸';
-    if (days % 100 == 0) return 'Một cột mốc thật đáng nhớ! 🎉\n$days ngày bên nhau – thật tự hào! Tiếp tục yêu thương nhau nhiều hơn nữa nhé! 💖';
+    if (days == 100) {
+      return 'Tròn 100 ngày yêu thương! 🎊\nHành trình ngọt ngào nhất đang bắt đầu. Hãy tiếp tục viết câu chuyện đẹp cùng nhau nào! 🌹';
+    }
+    if (days == 200) {
+      return 'Hai trăm ngày bên nhau rồi đấy! 💫\nTình yêu của hai bạn ngày càng thêm đậm đà. Mãi mãi nhé! 🌸';
+    }
+    if (days % 100 == 0) {
+      return 'Một cột mốc thật đáng nhớ! 🎉\n$days ngày bên nhau – thật tự hào! Tiếp tục yêu thương nhau nhiều hơn nữa nhé! 💖';
+    }
     if (days % 30 == 0) {
       final m = days ~/ 30;
       return 'Tròn $m tháng bên nhau! 🌙\nMỗi khoảnh khắc nhỏ đều trở thành ký ức ngọt ngào. Yêu mãi nha! 💝';
@@ -508,7 +523,8 @@ class _ConfettiPainter extends CustomPainter {
       canvas.translate(x, y);
       canvas.rotate(rotAngle);
       canvas.drawRect(
-        Rect.fromCenter(center: Offset.zero, width: p.size, height: p.size * 0.5),
+        Rect.fromCenter(
+            center: Offset.zero, width: p.size, height: p.size * 0.5),
         paint,
       );
       canvas.restore();

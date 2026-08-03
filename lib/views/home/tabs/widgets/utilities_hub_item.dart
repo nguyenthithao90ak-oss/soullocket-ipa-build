@@ -222,7 +222,8 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                     ).copyWith(
                       shadows: const [
                         Shadow(
-                          color: Colors.black54, // Soft dark shadow for contrast on bright backgrounds
+                          color: Colors
+                              .black54, // Soft dark shadow for contrast on bright backgrounds
                           blurRadius: 4,
                           offset: Offset(0, 1),
                         ),
@@ -238,4 +239,3 @@ class _UtilitiesHubTileContent extends StatelessWidget {
     );
   }
 }
-

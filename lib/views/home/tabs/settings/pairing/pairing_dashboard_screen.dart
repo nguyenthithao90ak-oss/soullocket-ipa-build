@@ -94,7 +94,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     if (mounted) {
       setState(() {
         _myHouseId = houseId;
-        _incomingRequestsStream ??= PairingService.instance.listenToIncomingRequests(houseId);
+        _incomingRequestsStream ??=
+            PairingService.instance.listenToIncomingRequests(houseId);
       });
     }
 
@@ -106,14 +107,21 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
     // Tối ưu hóa: Đọc createdAt một lần duy nhất
     unawaited(() async {
       try {
-        final rawDateSnap = await FirebaseDatabase.instance.ref('houses/$houseId/createdAt').get();
+        final rawDateSnap = await FirebaseDatabase.instance
+            .ref('houses/$houseId/createdAt')
+            .get();
         if (rawDateSnap.exists && rawDateSnap.value != null) {
           final val = rawDateSnap.value;
-          final ms = val is num ? val.toInt() : (double.tryParse(val.toString())?.toInt() ?? int.tryParse(val.toString()) ?? 0);
+          final ms = val is num
+              ? val.toInt()
+              : (double.tryParse(val.toString())?.toInt() ??
+                  int.tryParse(val.toString()) ??
+                  0);
           final startDate = DateTime.fromMillisecondsSinceEpoch(ms);
           if (mounted) {
             setState(() {
-              _startDateStr = '${startDate.day.toString().padLeft(2, '0')}/${startDate.month.toString().padLeft(2, '0')}/${startDate.year}';
+              _startDateStr =
+                  '${startDate.day.toString().padLeft(2, '0')}/${startDate.month.toString().padLeft(2, '0')}/${startDate.year}';
             });
           }
         }
@@ -137,17 +145,27 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       if (!isPaired && !_hasCheckedMembers) {
         _hasCheckedMembers = true;
         try {
-          final membersSnap = await FirebaseDatabase.instance.ref('houses/$houseId/members').get();
+          final membersSnap = await FirebaseDatabase.instance
+              .ref('houses/$houseId/members')
+              .get();
           if (membersSnap.exists && membersSnap.value is Map) {
             final membersMap = membersSnap.value as Map;
             if (membersMap.length >= 2) {
               isPaired = true;
               // Background update
-              unawaited(FirebaseDatabase.instance.ref('houses/$houseId/settings/isPaired').set(true));
-              unawaited(FirebaseDatabase.instance.ref('houses/$houseId/settings/relationshipMode').set('couple'));
+              unawaited(FirebaseDatabase.instance
+                  .ref('houses/$houseId/settings/isPaired')
+                  .set(true));
+              unawaited(FirebaseDatabase.instance
+                  .ref('houses/$houseId/settings/relationshipMode')
+                  .set('couple'));
               try {
-                unawaited(FirebaseDatabase.instance.ref('single_match_active_pool/$houseId').remove());
-                unawaited(FirebaseDatabase.instance.ref('houses/$houseId/settings/singleMatch/enabled').set(false));
+                unawaited(FirebaseDatabase.instance
+                    .ref('single_match_active_pool/$houseId')
+                    .remove());
+                unawaited(FirebaseDatabase.instance
+                    .ref('houses/$houseId/settings/singleMatch/enabled')
+                    .set(false));
               } catch (_) {}
             }
           }
@@ -162,26 +180,34 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
         setState(() {
           _isPaired = isPaired;
           _isLoading = false;
-          _nameU1 = settings['nameU1']?.toString() ?? L10nService().translate('role_male');
-          _nameU2 = settings['nameU2']?.toString() ?? L10nService().translate('role_female');
+          _nameU1 = settings['nameU1']?.toString() ??
+              L10nService().translate('role_male');
+          _nameU2 = settings['nameU2']?.toString() ??
+              L10nService().translate('role_female');
           _avatarU1 = settings['avatarU1']?.toString();
           _avatarU2 = settings['avatarU2']?.toString();
-          
+
           final rawDate = settings['createdAt'];
           if (rawDate != null && _startDateStr == null) {
             try {
-              final ms = rawDate is num ? rawDate.toInt() : (double.tryParse(rawDate.toString())?.toInt() ?? int.tryParse(rawDate.toString()) ?? 0);
+              final ms = rawDate is num
+                  ? rawDate.toInt()
+                  : (double.tryParse(rawDate.toString())?.toInt() ??
+                      int.tryParse(rawDate.toString()) ??
+                      0);
               final startDate = DateTime.fromMillisecondsSinceEpoch(ms);
-              _startDateStr = '${startDate.day.toString().padLeft(2, '0')}/${startDate.month.toString().padLeft(2, '0')}/${startDate.year}';
+              _startDateStr =
+                  '${startDate.day.toString().padLeft(2, '0')}/${startDate.month.toString().padLeft(2, '0')}/${startDate.year}';
             } catch (_) {}
           }
-          
+
           if (_startDateStr == null || _startDateStr!.isEmpty) {
             final startDateVal = settings['startDate']?.toString();
             if (startDateVal != null && startDateVal.isNotEmpty) {
               try {
                 final parsed = DateTime.parse(startDateVal);
-                _startDateStr = '${parsed.day.toString().padLeft(2, '0')}/${parsed.month.toString().padLeft(2, '0')}/${parsed.year}';
+                _startDateStr =
+                    '${parsed.day.toString().padLeft(2, '0')}/${parsed.month.toString().padLeft(2, '0')}/${parsed.year}';
               } catch (_) {}
             }
           }
@@ -199,7 +225,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding:
+            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: PairingCreateCodeSheet(myHouseId: _myHouseId!),
       ),
     );
@@ -258,7 +285,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                       color: const Color(0xFFFFF0F5),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.favorite_rounded, color: Color(0xFFD81B60), size: 64),
+                    child: const Icon(Icons.favorite_rounded,
+                        color: Color(0xFFD81B60), size: 64),
                   ),
                   const SizedBox(height: 24),
                   Text(
@@ -286,13 +314,16 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFD81B60),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24)),
                       elevation: 0,
                     ),
                     child: Text(
                       'Tuyệt vời',
-                      style: SLTheme.quicksand(fontSize: 16, fontWeight: FontWeight.w800),
+                      style: SLTheme.quicksand(
+                          fontSize: 16, fontWeight: FontWeight.w800),
                     ),
                   ),
                 ],
@@ -337,7 +368,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
             const SizedBox(height: 16),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 children: [
                   _buildGuideStep(
                     icon: Icons.person_add_alt_1_rounded,
@@ -390,7 +422,9 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   }
 
   Widget _buildGuideStep(
-      {required IconData icon, required String title, required String content}) {
+      {required IconData icon,
+      required String title,
+      required String content}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Row(
@@ -450,7 +484,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF2C1B22), size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: Color(0xFF2C1B22), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -544,7 +579,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildAvatarWidget(_avatarU1, _nameU1 ?? L10nService().translate('role_male'), 'user1'),
+              _buildAvatarWidget(_avatarU1,
+                  _nameU1 ?? L10nService().translate('role_male'), 'user1'),
               const SizedBox(width: 16),
               SizedBox(
                 width: 72,
@@ -561,23 +597,38 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                         color: Colors.white,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFD81B60).withValues(alpha: 0.2),
+                            color:
+                                const Color(0xFFD81B60).withValues(alpha: 0.2),
                             blurRadius: 15,
                             spreadRadius: 2,
                           ),
                         ],
                       ),
-                      child: const Icon(Icons.favorite_rounded, color: Color(0xFFD81B60), size: 36),
+                      child: const Icon(Icons.favorite_rounded,
+                          color: Color(0xFFD81B60), size: 36),
                     ),
-                    const Positioned(top: -5, left: -5, child: Text('✨', style: TextStyle(fontSize: 20))),
-                    const Positioned(bottom: 5, right: -10, child: Text('🎀', style: TextStyle(fontSize: 18))),
-                    const Positioned(top: 10, right: -15, child: Text('💖', style: TextStyle(fontSize: 16))),
-                    const Positioned(bottom: -5, left: 10, child: Text('🌸', style: TextStyle(fontSize: 18))),
+                    const Positioned(
+                        top: -5,
+                        left: -5,
+                        child: Text('✨', style: TextStyle(fontSize: 20))),
+                    const Positioned(
+                        bottom: 5,
+                        right: -10,
+                        child: Text('🎀', style: TextStyle(fontSize: 18))),
+                    const Positioned(
+                        top: 10,
+                        right: -15,
+                        child: Text('💖', style: TextStyle(fontSize: 16))),
+                    const Positioned(
+                        bottom: -5,
+                        left: 10,
+                        child: Text('🌸', style: TextStyle(fontSize: 18))),
                   ],
                 ),
               ),
               const SizedBox(width: 16),
-              _buildAvatarWidget(_avatarU2, _nameU2 ?? L10nService().translate('role_female'), 'user2'),
+              _buildAvatarWidget(_avatarU2,
+                  _nameU2 ?? L10nService().translate('role_female'), 'user2'),
             ],
           ),
           const SizedBox(height: 40),
@@ -683,8 +734,14 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                           child: CachedNetworkImage(
                             imageUrl: url,
                             fit: BoxFit.cover,
-                            placeholder: (context, url) => const Icon(Icons.person, color: Colors.grey, size: 40),
-                            errorWidget: (context, url, error) => const Icon(Icons.person, color: Colors.grey, size: 40),
+                            placeholder: (context, url) => const Icon(
+                                Icons.person,
+                                color: Colors.grey,
+                                size: 40),
+                            errorWidget: (context, url, error) => const Icon(
+                                Icons.person,
+                                color: Colors.grey,
+                                size: 40),
                           ),
                         ),
                       )
@@ -706,26 +763,27 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.camera_alt_rounded, color: Color(0xFFD81B60), size: 16),
+                  child: const Icon(Icons.camera_alt_rounded,
+                      color: Color(0xFFD81B60), size: 16),
                 ),
               ),
             ],
           ),
-        SLSpacing.h8,
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: SLTheme.quicksand(
-            fontSize: 13,
-            fontWeight: FontWeight.w800,
-            color: const Color(0xFF2C1B22),
+          SLSpacing.h8,
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: SLTheme.quicksand(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF2C1B22),
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
   Widget _buildActionCard({
     required String title,
@@ -808,7 +866,10 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
             child: Text(
               'Lỗi kết nối máy chủ: ${snapshot.error}',
               textAlign: TextAlign.center,
-              style: SLTheme.quicksand(color: const Color(0xFFC62828), fontSize: 13, fontWeight: FontWeight.w700),
+              style: SLTheme.quicksand(
+                  color: const Color(0xFFC62828),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700),
             ),
           );
         }
@@ -816,7 +877,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
           return _buildEmptyRequestsView();
         }
 
-        final requests = snapshot.data!.where((r) => r.status == 'pending').toList();
+        final requests =
+            snapshot.data!.where((r) => r.status == 'pending').toList();
 
         if (requests.isEmpty) {
           return _buildEmptyRequestsView();
@@ -855,7 +917,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
               color: const Color(0xFFF8F9FB),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.mail_outline_rounded, size: 36, color: Colors.grey.shade400),
+            child: Icon(Icons.mail_outline_rounded,
+                size: 36, color: Colors.grey.shade400),
           ),
           const SizedBox(height: 16),
           Text(
@@ -975,7 +1038,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
             children: [
               Expanded(
                 child: InkWell(
-                  onTap: () => PairingService.instance.rejectRequest(request.requestId),
+                  onTap: () =>
+                      PairingService.instance.rejectRequest(request.requestId),
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -998,7 +1062,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: InkWell(
-                  onTap: () => PairingService.instance.acceptRequest(request.requestId),
+                  onTap: () =>
+                      PairingService.instance.acceptRequest(request.requestId),
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 12),

@@ -22,7 +22,7 @@ class _MapTiltCardState extends State<MapTiltCard> {
     final dy = (event.localPosition.dy / size.height) - 0.5;
     setState(() {
       _tiltX = -dy * 0.12; // tilt pitch
-      _tiltY = dx * 0.12;  // tilt roll
+      _tiltY = dx * 0.12; // tilt roll
     });
   }
 

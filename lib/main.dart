@@ -60,13 +60,16 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         screen == 'soul_merge' ||
         type == 'chat' ||
         screen == 'chat') {
-      
       // Đồng bộ iOS Widget cho Soul Merge
       if (type == 'soul_merge' || screen == 'soul_merge') {
         try {
-          final text = message.notification?.body ?? message.data['text'] ?? 'Có tin nhắn mới 💕';
-          final senderName = message.data['senderName']?.toString() ?? 'Người ấy';
-          await WidgetService.syncSoulMergeWidgetData(message: text.toString(), senderName: senderName);
+          final text = message.notification?.body ??
+              message.data['text'] ??
+              'Có tin nhắn mới 💕';
+          final senderName =
+              message.data['senderName']?.toString() ?? 'Người ấy';
+          await WidgetService.syncSoulMergeWidgetData(
+              message: text.toString(), senderName: senderName);
         } catch (_) {}
       }
       try {
@@ -411,7 +414,8 @@ void main() {
       _scheduleDeferredBootstrap();
 
       // Các tác vụ không cần chặn UI — chạy sau khi đã hiển thị app
-      unawaited(Future<void>.delayed(const Duration(milliseconds: 500), () async {
+      unawaited(
+          Future<void>.delayed(const Duration(milliseconds: 500), () async {
         await BuildSignatureService.verifyOfficialBuildSignature();
         await _clearStaleIosAuthAfterFreshInstall();
         if (!kIsWeb) {
@@ -525,8 +529,10 @@ Future<void> _initializeFirebaseBootstrap() async {
 
   try {
     await FirebaseAppCheck.instance.activate(
-      androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
-      appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.deviceCheck,
+      androidProvider:
+          kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+      appleProvider:
+          kDebugMode ? AppleProvider.debug : AppleProvider.deviceCheck,
     );
   } catch (e) {
     debugPrint('Firebase AppCheck init error: $e');
@@ -713,10 +719,11 @@ Future<void> _initializeFirebaseAppCheck() async {
           .timeout(const Duration(seconds: 3));
       return;
     }
-    
+
     if (kDebugMode) {
       try {
-        const debugToken = String.fromEnvironment('APPCHECK_DEBUG_TOKEN', defaultValue: '');
+        const debugToken =
+            String.fromEnvironment('APPCHECK_DEBUG_TOKEN', defaultValue: '');
         if (debugToken.isNotEmpty) {
           await SecureStorageService.instance
               .write('appcheck_debug_token', debugToken);
@@ -724,15 +731,16 @@ Future<void> _initializeFirebaseAppCheck() async {
           await SharedPreferences.getInstance().then((prefs) => prefs.setString(
               'com.google.firebase.appcheck.debug.DebugAppCheckProvider.SECRET_KEY',
               debugToken));
-          debugPrint('Firebase App Check: injected debug token for emulator testing.');
+          debugPrint(
+              'Firebase App Check: injected debug token for emulator testing.');
         }
       } catch (_) {}
     }
-    
+
     await FirebaseAppCheck.instance
         .activate(
-          providerAndroid: kDebugMode 
-              ? const AndroidDebugProvider() 
+          providerAndroid: kDebugMode
+              ? const AndroidDebugProvider()
               : const AndroidPlayIntegrityProvider(),
           providerApple: const AppleAppAttestWithDeviceCheckFallbackProvider(),
         )
@@ -759,7 +767,6 @@ Future<void> _requestIosTrackingAuthorization() async {
     debugPrint('ATT request skipped: $e');
   }
 }
-
 
 Future<void> _initializeGoogleMobileAds() async {
   if (kIsWeb) {
@@ -810,7 +817,7 @@ void _scheduleDeferredBootstrap() {
           StorageService.instance.purgeStaleCache(),
         ]);
         unawaited(_warmUpBackgroundServices());
-        
+
         // Delay heavy SDK initializations to ensure smooth first frames
         unawaited(Future.delayed(const Duration(seconds: 3), () {
           unawaited(_initializeGoogleMobileAds());
@@ -863,7 +870,6 @@ Future<void> _warmUpGoogleFonts() async {
 
 Future<void> _warmUpOfflineCache() async {
   try {
-    
     await OfflineCacheService.initialize();
   } catch (e) {
     debugPrint('Prefs init error: ${AppErrorMapper.resolve(

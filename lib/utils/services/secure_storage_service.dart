@@ -21,7 +21,9 @@ class SecureStorageService {
   static const String keyRelMode = 'il_rel_mode';
   Future<void> write(String key, String value) async {
     try {
-      await _storage.write(key: key, value: value).timeout(const Duration(seconds: 2));
+      await _storage
+          .write(key: key, value: value)
+          .timeout(const Duration(seconds: 2));
     } catch (_) {}
   }
 

@@ -47,7 +47,8 @@ class CloudflareR2Service {
       final bytes = base64Decode(cleanBase64);
 
       // Yêu cầu sinh Presigned URL từ backend
-      final callable = FirebaseFunctions.instance.httpsCallable('getSignedUploadUrlSecure');
+      final callable =
+          FirebaseFunctions.instance.httpsCallable('getSignedUploadUrlSecure');
       final result = await callable.call(<String, dynamic>{
         'fileName': 'image_$extension',
         'contentType': 'image/$extension',
@@ -69,7 +70,8 @@ class CloudflareR2Service {
       if (putResponse.statusCode == 200 || putResponse.statusCode == 201) {
         return publicUrl;
       } else {
-        debugPrint('[CloudflareR2] PUT failed: ${putResponse.statusCode} - ${putResponse.body}');
+        debugPrint(
+            '[CloudflareR2] PUT failed: ${putResponse.statusCode} - ${putResponse.body}');
         return null;
       }
     } catch (e) {
@@ -79,14 +81,16 @@ class CloudflareR2Service {
   }
 
   /// Upload File lên R2 và trả về public link
-  Future<String?> uploadFile(File file, {required String folderPath, String? storagePathOverride}) async {
+  Future<String?> uploadFile(File file,
+      {required String folderPath, String? storagePathOverride}) async {
     try {
       final fileName = path.basename(file.path);
       final contentType = _getMimeType(file.path);
       final bytes = await file.readAsBytes();
 
       // Yêu cầu sinh Presigned URL từ backend
-      final callable = FirebaseFunctions.instance.httpsCallable('getSignedUploadUrlSecure');
+      final callable =
+          FirebaseFunctions.instance.httpsCallable('getSignedUploadUrlSecure');
       final result = await callable.call(<String, dynamic>{
         'fileName': fileName,
         'contentType': contentType,
@@ -109,7 +113,8 @@ class CloudflareR2Service {
       if (putResponse.statusCode == 200 || putResponse.statusCode == 201) {
         return publicUrl;
       } else {
-        debugPrint('[CloudflareR2] PUT failed: ${putResponse.statusCode} - ${putResponse.body}');
+        debugPrint(
+            '[CloudflareR2] PUT failed: ${putResponse.statusCode} - ${putResponse.body}');
         return null;
       }
     } catch (e) {
@@ -126,7 +131,8 @@ class CloudflareR2Service {
   /// Xoá object trên R2 từ public URL
   Future<bool> deleteFile(String url) async {
     try {
-      final callable = FirebaseFunctions.instance.httpsCallable('deleteR2ObjectSecure');
+      final callable =
+          FirebaseFunctions.instance.httpsCallable('deleteR2ObjectSecure');
       final result = await callable.call(<String, dynamic>{
         'objectUrl': url,
       });
@@ -141,7 +147,8 @@ class CloudflareR2Service {
   /// Xoá object trên R2 trực tiếp từ storage path
   Future<bool> deleteByPath(String objectName) async {
     try {
-      final callable = FirebaseFunctions.instance.httpsCallable('deleteR2ObjectSecure');
+      final callable =
+          FirebaseFunctions.instance.httpsCallable('deleteR2ObjectSecure');
       final result = await callable.call(<String, dynamic>{
         'objectPath': objectName,
       });
@@ -153,4 +160,3 @@ class CloudflareR2Service {
     }
   }
 }
-

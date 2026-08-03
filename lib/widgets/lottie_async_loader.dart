@@ -48,7 +48,8 @@ class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
   Future<void> _preloadLottie() async {
     if (kIsWeb) return;
     try {
-      final file = await const StorageDownloadCacheHelper().getCachedNetworkFile(
+      final file =
+          await const StorageDownloadCacheHelper().getCachedNetworkFile(
         widget.url,
         namespace: 'lottie_anims',
         ttl: const Duration(days: 30),

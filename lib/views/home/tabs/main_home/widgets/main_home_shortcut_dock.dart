@@ -10,60 +10,61 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
         child: Container(
           padding: const EdgeInsets.all(10),
           child: visiblePinnedApps.isEmpty
-          ? CustomPaint(
-              painter: _DashedBorderPainter(),
-              child: Padding(
-                padding: SLSpacing.all8,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.push_pin_outlined,
-                      color: Colors.grey[400],
-                      size: 16,
-                    ),
-                    SLSpacing.w8,
-                    Flexible(
-                      child: Text(
-                        context.tr('utilities_pin_hint'),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          color: Colors.grey[500],
-                          fontWeight: FontWeight.w700,
+              ? CustomPaint(
+                  painter: _DashedBorderPainter(),
+                  child: Padding(
+                    padding: SLSpacing.all8,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.push_pin_outlined,
+                          color: Colors.grey[400],
+                          size: 16,
                         ),
-                      ),
+                        SLSpacing.w8,
+                        Flexible(
+                          child: Text(
+                            context.tr('utilities_pin_hint'),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: SLTheme.quicksand(
+                              fontSize: 12,
+                              color: Colors.grey[500],
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-            )
-          : LayoutBuilder(
-              builder: (context, constraints) {
-                final availableWidth = constraints.maxWidth;
-                final crossAxisCount = availableWidth < 280
-                    ? 2
-                    : availableWidth < 420
-                        ? 3
-                        : 4;
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: visiblePinnedApps.length > 8
-                      ? 8
-                      : visiblePinnedApps.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: crossAxisCount == 2 ? 0.98 : 0.94,
                   ),
-                  itemBuilder: (context, index) =>
-                      _buildAnimatedShortcutItem(visiblePinnedApps[index], index),
-                );
-              },
-            ),
+                )
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final availableWidth = constraints.maxWidth;
+                    final crossAxisCount = availableWidth < 280
+                        ? 2
+                        : availableWidth < 420
+                            ? 3
+                            : 4;
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: visiblePinnedApps.length > 8
+                          ? 8
+                          : visiblePinnedApps.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: crossAxisCount == 2 ? 0.98 : 0.94,
+                      ),
+                      itemBuilder: (context, index) =>
+                          _buildAnimatedShortcutItem(
+                              visiblePinnedApps[index], index),
+                    );
+                  },
+                ),
         ),
       ),
     );
@@ -86,7 +87,6 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
       ),
     );
   }
-
 
   Widget _buildShortcutItem(UtilityApp app) {
     return Container(
@@ -194,5 +194,4 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
       ),
     );
   }
-
 }

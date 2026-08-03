@@ -166,19 +166,21 @@ class StorageDownloadCacheHelper {
     }
   }
 
-  Future<void> purgeStaleCache({Duration staleThreshold = const Duration(days: 3)}) async {
+  Future<void> purgeStaleCache(
+      {Duration staleThreshold = const Duration(days: 3)}) async {
     try {
       final tempDir = await getTemporaryDirectory();
       final baseCacheDir = Directory(p.join(tempDir.path, 'soullocket_cache'));
       if (!await baseCacheDir.exists()) {
         return;
       }
-      
+
       final now = DateTime.now();
       int deletedCount = 0;
       int freedBytes = 0;
-      
-      await for (final entity in baseCacheDir.list(recursive: true, followLinks: false)) {
+
+      await for (final entity
+          in baseCacheDir.list(recursive: true, followLinks: false)) {
         if (entity is File) {
           try {
             final stat = await entity.stat();
@@ -190,9 +192,10 @@ class StorageDownloadCacheHelper {
           } catch (_) {}
         }
       }
-      
+
       if (deletedCount > 0) {
-        debugPrint('StorageDownloadCacheHelper: Purged $deletedCount stale files, freed ${(freedBytes / 1024 / 1024).toStringAsFixed(2)} MB');
+        debugPrint(
+            'StorageDownloadCacheHelper: Purged $deletedCount stale files, freed ${(freedBytes / 1024 / 1024).toStringAsFixed(2)} MB');
       }
     } catch (e) {
       debugPrint('StorageDownloadCacheHelper: Failed to purge stale cache: $e');

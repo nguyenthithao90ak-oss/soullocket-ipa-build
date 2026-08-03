@@ -356,7 +356,8 @@ class _LoveCardThemePicker extends StatelessWidget {
                               height: 34,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: themeColors.first.withValues(alpha: 0.15),
+                                color:
+                                    themeColors.first.withValues(alpha: 0.15),
                               ),
                               child: Icon(
                                 data.icon,
@@ -377,7 +378,9 @@ class _LoveCardThemePicker extends StatelessWidget {
                         Text(
                           data.chip,
                           style: SLTheme.quicksand(
-                            color: isSelected ? themeColors.first : SLColors.textPrimary,
+                            color: isSelected
+                                ? themeColors.first
+                                : SLColors.textPrimary,
                             fontSize: 14.5,
                             fontWeight: FontWeight.w900,
                           ),
@@ -534,13 +537,15 @@ class _LoveCardPreviewPanel extends StatelessWidget {
                         color: Color(theme.colors.first).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
-                          color: Color(theme.colors.first).withValues(alpha: 0.15),
+                          color:
+                              Color(theme.colors.first).withValues(alpha: 0.15),
                         ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(theme.icon, color: Color(theme.colors.first), size: 15),
+                          Icon(theme.icon,
+                              color: Color(theme.colors.first), size: 15),
                           const SizedBox(width: 6),
                           Text(
                             theme.chip,
@@ -688,7 +693,8 @@ class _LoveCardEffectPill extends StatelessWidget {
       decoration: BoxDecoration(
         color: Color(theme.colors.first).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Color(theme.colors.first).withValues(alpha: 0.15)),
+        border: Border.all(
+            color: Color(theme.colors.first).withValues(alpha: 0.15)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -801,7 +807,8 @@ class _LoveCardPreviewRibbon extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: SLColors.textPrimary.withValues(alpha: 0.8), size: 14),
+          Icon(icon,
+              color: SLColors.textPrimary.withValues(alpha: 0.8), size: 14),
           const SizedBox(width: 7),
           Text(
             label,
@@ -1279,9 +1286,7 @@ class _LoveCardMetaFieldState extends State<_LoveCardMetaField> {
                     duration: const Duration(milliseconds: 200),
                     child: Icon(
                       widget.icon,
-                      color: _isFocused
-                          ? primaryColor
-                          : SLColors.textSecondary,
+                      color: _isFocused ? primaryColor : SLColors.textSecondary,
                       size: 14,
                     ),
                   ),
@@ -1410,9 +1415,7 @@ class _LoveCardContentEditorState extends State<_LoveCardContentEditor>
             : Colors.white.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: _isFocused
-              ? primary.withValues(alpha: 0.50)
-              : Colors.white,
+          color: _isFocused ? primary.withValues(alpha: 0.50) : Colors.white,
           width: _isFocused ? 1.8 : 1.0,
         ),
         boxShadow: _isFocused
@@ -1443,9 +1446,7 @@ class _LoveCardContentEditorState extends State<_LoveCardContentEditor>
                 duration: const Duration(milliseconds: 200),
                 child: Icon(
                   Icons.chat_bubble_outline_rounded,
-                  color: _isFocused
-                      ? primary
-                      : SLColors.textSecondary,
+                  color: _isFocused ? primary : SLColors.textSecondary,
                   size: 14,
                 ),
               ),
@@ -1651,7 +1652,8 @@ class _LoveCardImageAttachmentPanel extends StatelessWidget {
                       width: 42,
                       height: 42,
                       decoration: BoxDecoration(
-                        color: Color(theme.colors.first).withValues(alpha: 0.15),
+                        color:
+                            Color(theme.colors.first).withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(

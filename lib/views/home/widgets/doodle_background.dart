@@ -48,9 +48,30 @@ class _CuteDoodlePainter extends CustomPainter {
 
   // Danh sách các ký tự/emoji trang trí dễ thương
   static const List<String> _doodles = [
-    '✨', '💖', '🌸', '☁️', '🦋', '🧸', '💌', '🎀',
-    '💫', '🌙', '🌷', '🫧', '🎨', '🎵', '💭', '✏️',
-    '✩', '♡', '✧', '❀', '♪', '✿', '☾', '★',
+    '✨',
+    '💖',
+    '🌸',
+    '☁️',
+    '🦋',
+    '🧸',
+    '💌',
+    '🎀',
+    '💫',
+    '🌙',
+    '🌷',
+    '🫧',
+    '🎨',
+    '🎵',
+    '💭',
+    '✏️',
+    '✩',
+    '♡',
+    '✧',
+    '❀',
+    '♪',
+    '✿',
+    '☾',
+    '★',
   ];
 
   static List<_DoodleItem>? _cachedDoodles;
@@ -79,7 +100,8 @@ class _CuteDoodlePainter extends CustomPainter {
         text: item.text,
         style: defaultStyle.copyWith(
           fontSize: item.size,
-          color: color.withValues(alpha: item.isEmoji ? (opacity * 1.5).clamp(0.0, 1.0) : opacity),
+          color: color.withValues(
+              alpha: item.isEmoji ? (opacity * 1.5).clamp(0.0, 1.0) : opacity),
         ),
       );
 

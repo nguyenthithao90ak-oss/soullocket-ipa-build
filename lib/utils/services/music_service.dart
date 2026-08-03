@@ -109,8 +109,10 @@ class MusicService {
 
     _audioPlayer.setReleaseMode(ReleaseMode.stop);
 
-    _playerStateSub = _audioPlayer.onPlayerStateChanged.listen(_onPlayerStateChanged);
-    _playerCompleteSub = _audioPlayer.onPlayerComplete.listen((_) => _onPlayerComplete());
+    _playerStateSub =
+        _audioPlayer.onPlayerStateChanged.listen(_onPlayerStateChanged);
+    _playerCompleteSub =
+        _audioPlayer.onPlayerComplete.listen((_) => _onPlayerComplete());
 
     UiPrefs.notifier.addListener(_handleUiPrefsChanged);
 
@@ -147,7 +149,8 @@ class MusicService {
   }
 
   Future<void> _applyResolvedMusic() async {
-    final prefs = OfflineCacheService.getPrefsSync() ?? await SharedPreferences.getInstance();
+    final prefs = OfflineCacheService.getPrefsSync() ??
+        await SharedPreferences.getInstance();
     _playlist = _readLocalMusicData(prefs);
     _currentIndex = 0;
     final allowLocalAutoplay = prefs.getBool('il_music_autoplay') ?? false;
@@ -173,7 +176,10 @@ class MusicService {
     if (playlistJson != null && playlistJson.isNotEmpty) {
       try {
         final List<dynamic> decoded = jsonDecode(playlistJson);
-        final list = decoded.map((e) => MusicTrack.fromJson(e)).where((t) => isLocalAudioPath(t.url)).toList();
+        final list = decoded
+            .map((e) => MusicTrack.fromJson(e))
+            .where((t) => isLocalAudioPath(t.url))
+            .toList();
         if (list.isNotEmpty) return list;
       } catch (e) {
         debugPrint('Error decoding playlist: $e');
@@ -236,7 +242,13 @@ class MusicService {
     }
   }
 
-  String get currentType => _playlist.isNotEmpty && _currentIndex < _playlist.length ? _playlist[_currentIndex].type : 'audio';
-  String? get currentUrl => _playlist.isNotEmpty && _currentIndex < _playlist.length ? _playlist[_currentIndex].url : null;
+  String get currentType =>
+      _playlist.isNotEmpty && _currentIndex < _playlist.length
+          ? _playlist[_currentIndex].type
+          : 'audio';
+  String? get currentUrl =>
+      _playlist.isNotEmpty && _currentIndex < _playlist.length
+          ? _playlist[_currentIndex].url
+          : null;
   List<MusicTrack> get playlist => _playlist;
 }

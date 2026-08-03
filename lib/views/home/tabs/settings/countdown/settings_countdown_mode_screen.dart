@@ -73,10 +73,13 @@ class _CountdownModeIndependentScreenState
     MapEntry(L10nService().translate('countdown_crystal'), 'crystal'),
     MapEntry(L10nService().translate('countdown_fireworks'), 'fireworks'),
     MapEntry(L10nService().translate('countdown_lava'), 'lava'),
-    MapEntry(L10nService().translate('countdown_cherry_blossom'), 'cherry_blossom'),
-    MapEntry(L10nService().translate('countdown_meteor_shower'), 'meteor_shower'),
+    MapEntry(
+        L10nService().translate('countdown_cherry_blossom'), 'cherry_blossom'),
+    MapEntry(
+        L10nService().translate('countdown_meteor_shower'), 'meteor_shower'),
     MapEntry(L10nService().translate('countdown_deep_ocean'), 'deep_ocean'),
-    MapEntry(L10nService().translate('countdown_golden_sunset'), 'golden_sunset'),
+    MapEntry(
+        L10nService().translate('countdown_golden_sunset'), 'golden_sunset'),
     MapEntry(L10nService().translate('countdown_neon_pulse'), 'neon_pulse'),
   ];
 

@@ -100,8 +100,6 @@ class DiaryTabSectionSwitcher extends StatelessWidget {
     required this.onTabChanged,
   });
 
-
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -197,7 +195,9 @@ class _DiarySegmentBtn extends StatelessWidget {
           style: SLTheme.quicksand(
             fontWeight: active ? FontWeight.w900 : FontWeight.w700,
             fontSize: 14.5,
-            color: active ? activeColor : SLColors.textPrimary.withValues(alpha: 0.55),
+            color: active
+                ? activeColor
+                : SLColors.textPrimary.withValues(alpha: 0.55),
             letterSpacing: 0.3,
           ),
         ),

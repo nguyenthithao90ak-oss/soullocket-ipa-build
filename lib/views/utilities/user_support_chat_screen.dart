@@ -109,8 +109,10 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         });
       } else {
         try {
-          final houseNameSnap =
-              await _db.ref('houses/$_houseId/settings/houseName').get().timeout(const Duration(seconds: 4));
+          final houseNameSnap = await _db
+              .ref('houses/$_houseId/settings/houseName')
+              .get()
+              .timeout(const Duration(seconds: 4));
           if (houseNameSnap.exists && mounted) {
             final houseName = houseNameSnap.value?.toString().trim() ?? '';
             if (houseName.isNotEmpty) {
@@ -409,8 +411,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       }
       if (wasAlreadyWaiting &&
           !isMenuCommand &&
-          _countWaitingAdminFollowUps(_messages) >=
-              _maxWaitingAdminFollowUps) {
+          _countWaitingAdminFollowUps(_messages) >= _maxWaitingAdminFollowUps) {
         if (mounted) {
           setState(() => _isSending = false);
         }
@@ -458,7 +459,8 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       final hasHouseId =
           (ticketData['house_id']?.toString().trim() ?? '').isNotEmpty;
       final hasName = (ticketData['name']?.toString().trim() ?? '').isNotEmpty;
-      final hasEmail = (ticketData['email']?.toString().trim() ?? '').isNotEmpty;
+      final hasEmail =
+          (ticketData['email']?.toString().trim() ?? '').isNotEmpty;
       final hasReason =
           (ticketData['reason']?.toString().trim() ?? '').isNotEmpty;
       final hasCategory =
@@ -538,7 +540,10 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       }
 
       try {
-        await _db.ref('support_tickets/$_ticketId').update(updates).timeout(const Duration(seconds: 3));
+        await _db
+            .ref('support_tickets/$_ticketId')
+            .update(updates)
+            .timeout(const Duration(seconds: 3));
       } catch (e) {
         debugPrint('Error updating ticket metadata: $e');
       }
@@ -728,11 +733,18 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           '• Gửi thẳng Hình Ảnh màn hình lúc vừa bị lỗi vô đây.\n\n${context.tr('util_hthngangkh_155fb0')}';
     }
 
-    if (_containsAny(text, [context.tr('util_xincho_d79ae2'), context.tr('util_cho_1b0c99'), 'hello', 'hi', 'alo'])) {
+    if (_containsAny(text, [
+      context.tr('util_xincho_d79ae2'),
+      context.tr('util_cho_1b0c99'),
+      'hello',
+      'hi',
+      'alo'
+    ])) {
       return _buildGreetingReply();
     }
 
-    if (_containsAny(text, [context.tr('util_cmn_90b4d0'), 'thank', 'thanks', 'ok', 'oke'])) {
+    if (_containsAny(text,
+        [context.tr('util_cmn_90b4d0'), 'thank', 'thanks', 'ok', 'oke'])) {
       return context.tr('util_khngcgunub_34bcf8');
     }
 
@@ -783,23 +795,41 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       return _buildVipReply(text);
     }
 
-    if (_containsAny(
-        text, ['qr', context.tr('util_ghpi_f175c9'), context.tr('util_ktni_36931a'), context.tr('util_mnh_f293b9'), context.tr('util_thamgianh_fb6185')])) {
+    if (_containsAny(text, [
+      'qr',
+      context.tr('util_ghpi_f175c9'),
+      context.tr('util_ktni_36931a'),
+      context.tr('util_mnh_f293b9'),
+      context.tr('util_thamgianh_fb6185')
+    ])) {
       return _buildConnectionReply();
     }
 
-    if (_containsAny(
-        text, [context.tr('util_bomt_eae571'), context.tr('util_khaapp_9de691'), context.tr('util_sinhtrc_7f36ab'), context.tr('util_vntay_295887'), 'face id'])) {
+    if (_containsAny(text, [
+      context.tr('util_bomt_eae571'),
+      context.tr('util_khaapp_9de691'),
+      context.tr('util_sinhtrc_7f36ab'),
+      context.tr('util_vntay_295887'),
+      'face id'
+    ])) {
       return _buildSecurityReply();
     }
 
-    if (_containsAny(
-        text, [context.tr('util_xatikhon_232744'), context.tr('util_xadliu_d73744'), 'chia tay', context.tr('util_ngtikhon_78f19f')])) {
+    if (_containsAny(text, [
+      context.tr('util_xatikhon_232744'),
+      context.tr('util_xadliu_d73744'),
+      'chia tay',
+      context.tr('util_ngtikhon_78f19f')
+    ])) {
       return _buildDeleteReply();
     }
 
-    if (_containsAny(
-        text, [context.tr('util_gp_a4c3bb'), context.tr('util_xut_5c3170'), context.tr('util_tnhnng_d3cb43'), context.tr('util_thmchcnng_7fc17b')])) {
+    if (_containsAny(text, [
+      context.tr('util_gp_a4c3bb'),
+      context.tr('util_xut_5c3170'),
+      context.tr('util_tnhnng_d3cb43'),
+      context.tr('util_thmchcnng_7fc17b')
+    ])) {
       return _buildFeedbackReply();
     }
 
@@ -864,8 +894,6 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     final count = substantiveMessages.length;
     return count > 0 ? count - 1 : 0;
   }
-
-
 
   int get _waitingAdminFollowUpCount => _countWaitingAdminFollowUps(_messages);
 
@@ -1022,7 +1050,8 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
             ),
           ),
           // Chỉ hiển thị typing indicator khi đang gửi VÀ chat chưa bị khóa
-          if (_isSending && !_isWaitingAdminInputLocked) _buildTypingIndicator(),
+          if (_isSending && !_isWaitingAdminInputLocked)
+            _buildTypingIndicator(),
           _buildInputBar(),
         ],
       ),
@@ -1044,7 +1073,8 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           return GestureDetector(
             onTap: () {
               if (_isSending) return;
-              unawaited(_send(menuId: topic.id, displayMessage: topic.chipLabel));
+              unawaited(
+                  _send(menuId: topic.id, displayMessage: topic.chipLabel));
             },
             child: Container(
               constraints: const BoxConstraints(minHeight: 36),
@@ -1307,7 +1337,9 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                   Padding(
                     padding: const EdgeInsets.only(left: 4, bottom: 3),
                     child: Text(
-                      message.isAdmin ? 'Admin SoulLocket' : context.tr('util_trlai_e23336'),
+                      message.isAdmin
+                          ? 'Admin SoulLocket'
+                          : context.tr('util_trlai_e23336'),
                       style: SLTheme.quicksand(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -1533,7 +1565,11 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                     minLines: 1,
                     maxLines: 8,
                     maxLength: 1000,
-                    buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
+                    buildCounter: (context,
+                            {required currentLength,
+                            required isFocused,
+                            maxLength}) =>
+                        null,
                     textInputAction: TextInputAction.send,
                     onSubmitted: canSend ? (_) => _send() : null,
                     style: SLTheme.quicksand(
@@ -1632,12 +1668,18 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
             ),
             const SizedBox(height: 16),
             ...[
-              (context.tr('util_qunmtkhu_a9a074'), context.tr('util_citbomtimt_83d047')),
+              (
+                context.tr('util_qunmtkhu_a9a074'),
+                context.tr('util_citbomtimt_83d047')
+              ),
               (
                 context.tr('util_appbli_92e3fa'),
                 context.tr('util_thtthonton_f1e6df')
               ),
-              (context.tr('util_kimtraquyn_4de2fd'), context.tr('util_mcittikhon_4429d3')),
+              (
+                context.tr('util_kimtraquyn_4de2fd'),
+                context.tr('util_mcittikhon_4429d3')
+              ),
               (
                 context.tr('util_xatikhon_348215'),
                 context.tr('util_citxatikho_9cdf64')

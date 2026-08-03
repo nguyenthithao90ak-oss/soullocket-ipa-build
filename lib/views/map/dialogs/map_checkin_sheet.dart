@@ -89,15 +89,17 @@ extension _MapCheckinSheetExt on _MapScreenState {
                   child: ElevatedButton.icon(
                     onPressed: () async {
                       try {
-                        final msgLimitFull = context.tr('map_ttia30vtrg_8875b5');
-                        final pinSnapshot =
-                            await _mapPinLimitService.getSnapshot(widget.houseId);
+                        final msgLimitFull =
+                            context.tr('map_ttia30vtrg_8875b5');
+                        final pinSnapshot = await _mapPinLimitService
+                            .getSnapshot(widget.houseId);
                         final isCurrentPlaceAlreadyPinned =
                             pinSnapshot.containsLocation(
                           activePoint.latitude,
                           activePoint.longitude,
                         );
-                        if (pinSnapshot.isFull && !isCurrentPlaceAlreadyPinned) {
+                        if (pinSnapshot.isFull &&
+                            !isCurrentPlaceAlreadyPinned) {
                           if (!ctx.mounted) return;
                           ScaffoldMessenger.of(ctx).showSnackBar(
                             SnackBar(
@@ -118,10 +120,12 @@ extension _MapCheckinSheetExt on _MapScreenState {
                         final note = noteCtrl.text.trim();
 
                         if (name.length > 100) {
-                          throw Exception('Tên check-in không được vượt quá 100 ký tự.');
+                          throw Exception(
+                              'Tên check-in không được vượt quá 100 ký tự.');
                         }
                         if (note.length > 300) {
-                          throw Exception('Ghi chú không được vượt quá 300 ký tự.');
+                          throw Exception(
+                              'Ghi chú không được vượt quá 300 ký tự.');
                         }
 
                         final checkinRef =

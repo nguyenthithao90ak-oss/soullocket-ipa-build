@@ -308,7 +308,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(4.0),
-                    child: const AnimatedRabbitSticker('assets/images/interaction_stickers/custom/numbered/sticker_056.png'),
+                    child: const AnimatedRabbitSticker(
+                        'assets/images/interaction_stickers/custom/numbered/sticker_056.png'),
                   ),
                 ),
                 SLSpacing.w12,
@@ -531,7 +532,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Image.asset('assets/images/interaction_stickers/custom/numbered/sticker_162.png'),
+                    child: Image.asset(
+                        'assets/images/interaction_stickers/custom/numbered/sticker_162.png'),
                   ),
                 ),
                 SLSpacing.w12,
@@ -620,11 +622,13 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                             ),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: const Color(0xFF80DEEA).withValues(alpha: 0.55),
+                              color: const Color(0xFF80DEEA)
+                                  .withValues(alpha: 0.55),
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF26C6DA).withValues(alpha: 0.08),
+                                color: const Color(0xFF26C6DA)
+                                    .withValues(alpha: 0.08),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -715,7 +719,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 SizedBox(
                   width: 24,
                   height: 24,
-                  child: Image.asset('assets/images/interaction_stickers/custom/numbered/sticker_160.png'),
+                  child: Image.asset(
+                      'assets/images/interaction_stickers/custom/numbered/sticker_160.png'),
                 ),
                 SLSpacing.w8,
                 Flexible(

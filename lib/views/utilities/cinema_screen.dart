@@ -329,16 +329,19 @@ class _CinemaScreenState extends State<CinemaScreen> {
                         ? CachedNetworkImage(
                             imageUrl: reel.items.first.imageUrl,
                             fit: BoxFit.cover,
-                            errorWidget: (_, __, ___) => Container(color: Colors.black),
+                            errorWidget: (_, __, ___) =>
+                                Container(color: Colors.black),
                           )
                         : Image.file(
                             File(reel.items.first.imageUrl),
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(color: Colors.black),
+                            errorBuilder: (_, __, ___) =>
+                                Container(color: Colors.black),
                           ),
                     FastBackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                      child: Container(color: Colors.black.withValues(alpha: 0.6)),
+                      child:
+                          Container(color: Colors.black.withValues(alpha: 0.6)),
                     ),
                   ],
                 ),
@@ -362,124 +365,124 @@ class _CinemaScreenState extends State<CinemaScreen> {
             ),
           Positioned.fill(
             child: Stack(
-          children: <Widget>[
-            Positioned(
-              top: -160,
-              right: -110,
-              child: _buildGlow(
-                color: const Color(0x66FF78B8),
-                size: 320,
-              ),
-            ),
-            Positioned(
-              left: -90,
-              top: 210,
-              child: _buildGlow(
-                color: const Color(0x4477D9FF),
-                size: 260,
-              ),
-            ),
-            Positioned(
-              bottom: -150,
-              left: 40,
-              child: _buildGlow(
-                color: const Color(0x33FFD36E),
-                size: 280,
-              ),
-            ),
-            Positioned(
-              bottom: 90,
-              right: -70,
-              child: _buildGlow(
-                color: const Color(0x228F7CFF),
-                size: 220,
-              ),
-            ),
-            SafeArea(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    _buildTopBar(),
-                    const SizedBox(height: 12),
-                    _buildHeroCard(reel),
-                    if (_hasLegacyPayload) ...<Widget>[
-                      const SizedBox(height: 12),
-                      _buildLegacyBanner(),
-                    ],
-                    const SizedBox(height: 14),
-                    if (_isLoading)
-                      _buildStateCard(
-                        icon: Icons.hourglass_top_rounded,
-                        title: context.tr('util_angdngsutc_7c751f'),
-                        message: context.tr('util_soullocket_a4255f'),
-                        child: const Padding(
-                          padding: EdgeInsets.only(top: 18),
-                          child: LinearProgressIndicator(
-                            minHeight: 6,
-                            color: Color(0xFFFF6FA5),
-                            backgroundColor: Color(0x22FFFFFF),
-                          ),
-                        ),
-                      )
-                    else if (_startDate == null)
-                      _buildStateCard(
-                        icon: Icons.event_busy_rounded,
-                        title: context.tr('util_chacngybtu_0f2f9a'),
-                        message: context.tr('util_rpchmckhin_716a2e'),
-                      )
-                    else if (!_isAnniversaryToday)
-                      _buildStateCard(
-                        icon: Icons.lock_clock_rounded,
-                        title: context.tr('util_rpchamhmna_2cca0a'),
-                        message: context.tr('util_rpchmkhich_85285a'),
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 16),
-                          child: _buildLockedShowtimeCard(),
-                        ),
-                      )
-                    else if (_records.isEmpty)
-                      _buildStateCard(
-                        icon: Icons.photo_library_outlined,
-                        title: context.tr('util_chacnhdngv_7555bb'),
-                        message: L10nService().format(
-                            'util_cinema_today_milestone', {
-                          'title': todayMilestone?.title.toLowerCase() ??
-                              context.tr('util_knim_1a2b3c')
-                        }),
-                      )
-                    else if (reel == null || selectedItem == null)
-                      _buildStateCard(
-                        icon: Icons.movie_creation_outlined,
-                        title: context.tr('util_angchtreel_6b815f'),
-                        message: context.tr('util_videoknima_b36e6c'),
-                        child: const Padding(
-                          padding: EdgeInsets.only(top: 18),
-                          child: LinearProgressIndicator(
-                            minHeight: 6,
-                            color: Color(0xFF7FD3FF),
-                            backgroundColor: Color(0x22FFFFFF),
-                          ),
-                        ),
-                      )
-                    else ...<Widget>[
-                      _buildPreviewCard(reel, selectedItem),
-                      const SizedBox(height: 14),
-                      _buildFilmstrip(reel),
-                      const SizedBox(height: 14),
-                      _buildReelInfoCard(reel),
-                    ],
-                  ],
+              children: <Widget>[
+                Positioned(
+                  top: -160,
+                  right: -110,
+                  child: _buildGlow(
+                    color: const Color(0x66FF78B8),
+                    size: 320,
+                  ),
                 ),
-              ),
+                Positioned(
+                  left: -90,
+                  top: 210,
+                  child: _buildGlow(
+                    color: const Color(0x4477D9FF),
+                    size: 260,
+                  ),
+                ),
+                Positioned(
+                  bottom: -150,
+                  left: 40,
+                  child: _buildGlow(
+                    color: const Color(0x33FFD36E),
+                    size: 280,
+                  ),
+                ),
+                Positioned(
+                  bottom: 90,
+                  right: -70,
+                  child: _buildGlow(
+                    color: const Color(0x228F7CFF),
+                    size: 220,
+                  ),
+                ),
+                SafeArea(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        _buildTopBar(),
+                        const SizedBox(height: 12),
+                        _buildHeroCard(reel),
+                        if (_hasLegacyPayload) ...<Widget>[
+                          const SizedBox(height: 12),
+                          _buildLegacyBanner(),
+                        ],
+                        const SizedBox(height: 14),
+                        if (_isLoading)
+                          _buildStateCard(
+                            icon: Icons.hourglass_top_rounded,
+                            title: context.tr('util_angdngsutc_7c751f'),
+                            message: context.tr('util_soullocket_a4255f'),
+                            child: const Padding(
+                              padding: EdgeInsets.only(top: 18),
+                              child: LinearProgressIndicator(
+                                minHeight: 6,
+                                color: Color(0xFFFF6FA5),
+                                backgroundColor: Color(0x22FFFFFF),
+                              ),
+                            ),
+                          )
+                        else if (_startDate == null)
+                          _buildStateCard(
+                            icon: Icons.event_busy_rounded,
+                            title: context.tr('util_chacngybtu_0f2f9a'),
+                            message: context.tr('util_rpchmckhin_716a2e'),
+                          )
+                        else if (!_isAnniversaryToday)
+                          _buildStateCard(
+                            icon: Icons.lock_clock_rounded,
+                            title: context.tr('util_rpchamhmna_2cca0a'),
+                            message: context.tr('util_rpchmkhich_85285a'),
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 16),
+                              child: _buildLockedShowtimeCard(),
+                            ),
+                          )
+                        else if (_records.isEmpty)
+                          _buildStateCard(
+                            icon: Icons.photo_library_outlined,
+                            title: context.tr('util_chacnhdngv_7555bb'),
+                            message: L10nService().format(
+                                'util_cinema_today_milestone', {
+                              'title': todayMilestone?.title.toLowerCase() ??
+                                  context.tr('util_knim_1a2b3c')
+                            }),
+                          )
+                        else if (reel == null || selectedItem == null)
+                          _buildStateCard(
+                            icon: Icons.movie_creation_outlined,
+                            title: context.tr('util_angchtreel_6b815f'),
+                            message: context.tr('util_videoknima_b36e6c'),
+                            child: const Padding(
+                              padding: EdgeInsets.only(top: 18),
+                              child: LinearProgressIndicator(
+                                minHeight: 6,
+                                color: Color(0xFF7FD3FF),
+                                backgroundColor: Color(0x22FFFFFF),
+                              ),
+                            ),
+                          )
+                        else ...<Widget>[
+                          _buildPreviewCard(reel, selectedItem),
+                          const SizedBox(height: 14),
+                          _buildFilmstrip(reel),
+                          const SizedBox(height: 14),
+                          _buildReelInfoCard(reel),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    ],
-  ),
-);
+    );
   }
 }

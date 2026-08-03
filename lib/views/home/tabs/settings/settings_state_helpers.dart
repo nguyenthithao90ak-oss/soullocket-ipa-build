@@ -682,15 +682,19 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
           var storedRole = localPrefs.getString('il_role');
           if (storedRole != 'user1' && storedRole != 'user2') {
             try {
-              final memberSnap = await _dbRef.child('houses/$_houseId/members/${user.uid}').get();
+              final memberSnap = await _dbRef
+                  .child('houses/$_houseId/members/${user.uid}')
+                  .get();
               if (memberSnap.exists && memberSnap.value is Map) {
-                final memberData = Map<String, dynamic>.from(memberSnap.value as Map);
+                final memberData =
+                    Map<String, dynamic>.from(memberSnap.value as Map);
                 final role = memberData['role']?.toString().trim();
                 if (role == 'user1' || role == 'user2') {
                   final cleanRole = role == 'user2' ? 'user2' : 'user1';
                   storedRole = cleanRole;
                   await localPrefs.setString('il_role', cleanRole);
-                  await SecureStorageService.instance.write(SecureStorageService.keyRole, cleanRole);
+                  await SecureStorageService.instance
+                      .write(SecureStorageService.keyRole, cleanRole);
                   RoleUtils.roleNotifier.value = cleanRole;
                 }
               }
@@ -820,7 +824,8 @@ extension _SettingsTabStateHelpers on _SettingsTabState {
               _nameU1Ctrl.text = _nameU1;
               _nameU2Ctrl.text = _nameU2;
               _loveUnitCtrl.text = _loveUnit;
-              _musicLinkCtrl.text = _playlist.isNotEmpty ? _playlist.first.url : '';
+              _musicLinkCtrl.text =
+                  _playlist.isNotEmpty ? _playlist.first.url : '';
             });
           }
           _markSettingsBootstrapComplete();

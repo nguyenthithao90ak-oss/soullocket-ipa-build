@@ -495,7 +495,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
       await PendingUploadService.instance.clear(_pendingHouseAvatarUploadKey);
       final refreshedUrl = _withRefreshToken(url);
       if (!mounted) return;
-      
+
       setState(() => _isUpdatingProfileAppearance = true);
       try {
         await _houseSettingsService.updateHouseAvatarOnly(

@@ -661,11 +661,14 @@ abstract final class _L10nStaticData {
     'home_love_days': 'Ngày yêu',
     'home_anniversary_memories': 'Kỷ niệm',
     'theme_event_date_label': 'Ngày diễn ra: {date}',
-    'theme_event_description_hint': 'Bên dưới đã tách rõ: khối hồng là kỷ niệm bạn thêm ở đây, khối xanh là lịch chung lấy từ mục Lịch.',
+    'theme_event_description_hint':
+        'Bên dưới đã tách rõ: khối hồng là kỷ niệm bạn thêm ở đây, khối xanh là lịch chung lấy từ mục Lịch.',
     'theme_event_anniversary_section_title': 'Kỷ niệm sắp tới',
-    'theme_event_anniversary_section_desc': 'Các mốc riêng được thêm trong phần kỷ niệm',
+    'theme_event_anniversary_section_desc':
+        'Các mốc riêng được thêm trong phần kỷ niệm',
     'theme_event_calendar_section_title': 'Lịch chung sắp tới',
-    'theme_event_calendar_section_desc': 'Các kế hoạch đang lấy từ mục Lịch chung',
+    'theme_event_calendar_section_desc':
+        'Các kế hoạch đang lấy từ mục Lịch chung',
     'theme_frame_size_desc': 'Kích thước vòng đếm, kiểu khung avatar',
     'theme_save_size': 'Lưu kích thước',
     'theme_countdown_label_ad': '• Quảng cáo',
@@ -674,16 +677,19 @@ abstract final class _L10nStaticData {
     'theme_font_lang_desc': 'Điều chỉnh phông chữ hiển thị & ngôn ngữ',
     'theme_bg_effect_title': 'Hình Nền & Hiệu Ứng',
     'theme_bg_effect_desc': 'Hiệu ứng rơi, màu chủ đề và hình nền tùy chỉnh',
-    'theme_bg_in_use': 'Bạn đang sử dụng nền tải lên, không thể sử dụng nền hệ thống',
+    'theme_bg_in_use':
+        'Bạn đang sử dụng nền tải lên, không thể sử dụng nền hệ thống',
     'theme_uploading_pct': 'ĐANG TẢI... {pct}%',
     'theme_perf_title': 'Hiệu Năng & Quyền Hạn',
     'theme_perf_desc': 'Chế độ mượt mà, quyền hệ thống, chế độ trong suốt',
     'theme_applied': 'Đã áp dụng chủ đề',
     'theme_applied_msg': 'Đã tắt ảnh nền tùy chỉnh để áp dụng chủ đề mới.',
     'widget_using_style': 'Đang dùng kiểu: {style}',
-    'widget_ios_guide': 'Để thêm Widget trên iOS:\n1. Nhấn giữ vào màn hình chính\n2. Bấm nút dấu [+] ở góc màn hình\n3. Tìm "SoulLocket" và Thêm tiện ích',
+    'widget_ios_guide':
+        'Để thêm Widget trên iOS:\n1. Nhấn giữ vào màn hình chính\n2. Bấm nút dấu [+] ở góc màn hình\n3. Tìm "SoulLocket" và Thêm tiện ích',
     'account_err_date_range': 'Ngày phải trong khoảng {min} - {max}.',
-    'account_err_email_domain': 'Hệ thống chỉ hỗ trợ đổi sang các loại email: {domains}',
+    'account_err_email_domain':
+        'Hệ thống chỉ hỗ trợ đổi sang các loại email: {domains}',
     'relationship_status_text': 'Trạng thái: {status}',
     'account_success_date': 'Đã cập nhật ngày yêu!',
     'account_err_date': 'Không thể cập nhật ngày yêu',
@@ -946,15 +952,18 @@ abstract final class _L10nStaticData {
     'settings_status_disabled': 'Chưa bật',
     'smart_reminders': 'Nhắc nhở thông minh',
     'smart_reminders_anniversary': 'Nhắc ngày kỷ niệm',
-    'smart_reminders_anniversary_desc': 'Nhắc trước và trong ngày đặc biệt của hai bạn.',
+    'smart_reminders_anniversary_desc':
+        'Nhắc trước và trong ngày đặc biệt của hai bạn.',
     'smart_reminders_diary': 'Nhắc viết nhật ký',
     'smart_reminders_diary_desc': 'Gợi ý ghi lại cảm xúc khi lâu chưa viết.',
     'smart_reminders_capsule': 'Nhắc mở time capsule',
     'smart_reminders_capsule_desc': 'Báo khi hộp thư tương lai đã đến ngày mở.',
     'smart_reminders_love_note': 'Lời yêu thương mỗi ngày',
-    'smart_reminders_love_note_desc': 'Tự động gửi lời chúc sáng/tối ngọt ngào cho đối phương khi bạn mở app.',
+    'smart_reminders_love_note_desc':
+        'Tự động gửi lời chúc sáng/tối ngọt ngào cho đối phương khi bạn mở app.',
     'smart_reminders_sleep': 'Nhắc ngủ ngoan',
-    'smart_reminders_sleep_desc': 'Nhắc nhở người thương đi ngủ đúng giờ vào mỗi tối.',
+    'smart_reminders_sleep_desc':
+        'Nhắc nhở người thương đi ngủ đúng giờ vào mỗi tối.',
     'smart_reminders_morning_time': 'Giờ chúc buổi sáng',
     'smart_reminders_night_time': 'Giờ chúc buổi tối',
     'settings_backup_local': 'Máy này:',
@@ -962,10 +971,14 @@ abstract final class _L10nStaticData {
     'settings_device_trusted': 'Đang tin cậy',
     'settings_cloud_found_short': 'Đã có cloud',
     'settings_cloud_missing_short': 'Chưa thấy cloud',
-    'partner_location_not_enabled_map': '{partnerName} chưa bật vị trí nên bản đồ chưa thể đo khoảng cách của hai bạn.',
-    'partner_gps_not_enabled_map': '{partnerName} chưa bật GPS. Chờ người ấy bật để xem khoảng cách.',
-    'you_location_not_enabled_map': 'Bạn chưa bật vị trí nên bản đồ chưa đủ dữ liệu để đo khoảng cách với {partnerName}.',
-    'home_location_not_enabled_action': 'Bạn chưa bật vị trí. Mở bản đồ và bấm {button} để chia sẻ.',
+    'partner_location_not_enabled_map':
+        '{partnerName} chưa bật vị trí nên bản đồ chưa thể đo khoảng cách của hai bạn.',
+    'partner_gps_not_enabled_map':
+        '{partnerName} chưa bật GPS. Chờ người ấy bật để xem khoảng cách.',
+    'you_location_not_enabled_map':
+        'Bạn chưa bật vị trí nên bản đồ chưa đủ dữ liệu để đo khoảng cách với {partnerName}.',
+    'home_location_not_enabled_action':
+        'Bạn chưa bật vị trí. Mở bản đồ và bấm {button} để chia sẻ.',
     'partner_not_enabled_short': 'Người ấy chưa bật',
     'male_role_default': 'Bạn Nam',
     'female_role_default': 'Bạn Nữ',
@@ -976,12 +989,14 @@ abstract final class _L10nStaticData {
     'settings_perf_mode_enabled': 'Đã bật chế độ mượt hơn.',
     'settings_balanced_mode_enabled': 'Đã về chế độ cân bằng.',
     'settings_performance_mode_title': 'Chế độ hiệu năng',
-    'settings_performance_mode_desc_smooth': 'Đang ưu tiên mượt và tiết kiệm pin.',
+    'settings_performance_mode_desc_smooth':
+        'Đang ưu tiên mượt và tiết kiệm pin.',
     'settings_performance_mode_desc_balanced': 'Đang dùng cấu hình cân bằng.',
     'settings_perf_preset_smoother': 'Mượt hơn',
     'settings_perf_preset_balanced': 'Cân bằng',
     'settings_data_system_label': 'Dữ liệu hệ thống',
-    'settings_data_system_desc': 'Quản lý thông báo, liên kết dữ liệu và các tích hợp hệ thống.',
+    'settings_data_system_desc':
+        'Quản lý thông báo, liên kết dữ liệu và các tích hợp hệ thống.',
     'settings_footer_tagline': 'Lưu giữ từng khoảnh khắc',
     'settings_data_status_checking': 'Đang kiểm tra...',
     'settings_data_status_cloud_found': 'Có bản cloud',
@@ -989,10 +1004,12 @@ abstract final class _L10nStaticData {
     'settings_data_status_linked': 'Đã liên kết',
     'settings_data_status_no_house': 'Chưa có house',
     'settings_restore_title': 'Khôi phục cài đặt',
-    'settings_restore_message': 'App sẽ khôi phục cài đặt đã đồng bộ từ cloud về máy này. Một số giao diện/cài đặt hiện tại trên máy có thể được thay bằng bản cloud.',
+    'settings_restore_message':
+        'App sẽ khôi phục cài đặt đã đồng bộ từ cloud về máy này. Một số giao diện/cài đặt hiện tại trên máy có thể được thay bằng bản cloud.',
     'settings_restore_confirm_btn': 'Khôi phục',
     'settings_restore_groups_title': 'Nhóm dữ liệu có thể khôi phục',
-    'settings_restore_groups_desc': 'App chỉ hiển thị trạng thái từng nhóm, không tự ghi đè dữ liệu cá nhân khi chưa xác nhận.',
+    'settings_restore_groups_desc':
+        'App chỉ hiển thị trạng thái từng nhóm, không tự ghi đè dữ liệu cá nhân khi chưa xác nhận.',
     'settings_restore_groups_details_btn': 'Xem chi tiết restore',
     'settings_restore_details_dialog_title': 'Chi tiết restore dữ liệu',
     'settings_restore_details_dialog_ok': 'Đã hiểu',
@@ -1007,11 +1024,16 @@ abstract final class _L10nStaticData {
     'settings_status_cloud_missing': 'Chưa thấy cloud',
     'settings_status_cloud_not_found': 'Chưa thấy bản cloud',
     'settings_status_missing': 'Chưa có',
-    'settings_group_config_desc': 'Có thể khôi phục theme, hiệu ứng, thông báo, widget và các lựa chọn giao diện đã đồng bộ.',
-    'settings_group_house_desc': 'Dùng house/couple hiện tại để đối chiếu dữ liệu chung. Không tạo house mới trong bước này.',
-    'settings_group_diary_desc': 'Cần bước đối chiếu riêng để tránh ghi đè nhật ký đang có trên máy.',
-    'settings_group_media_desc': 'Media cần kiểm tra link, quyền truy cập và cache trước khi khôi phục hàng loạt.',
-    'settings_group_utilities_desc': 'Sẽ tách thành từng nhóm nhỏ để người dùng chọn khôi phục khi mở rộng.',
+    'settings_group_config_desc':
+        'Có thể khôi phục theme, hiệu ứng, thông báo, widget và các lựa chọn giao diện đã đồng bộ.',
+    'settings_group_house_desc':
+        'Dùng house/couple hiện tại để đối chiếu dữ liệu chung. Không tạo house mới trong bước này.',
+    'settings_group_diary_desc':
+        'Cần bước đối chiếu riêng để tránh ghi đè nhật ký đang có trên máy.',
+    'settings_group_media_desc':
+        'Media cần kiểm tra link, quyền truy cập và cache trước khi khôi phục hàng loạt.',
+    'settings_group_utilities_desc':
+        'Sẽ tách thành từng nhóm nhỏ để người dùng chọn khôi phục khi mở rộng.',
     'settings_back_btn': 'Quay lại',
 
     // === Notifications ===
@@ -1061,7 +1083,8 @@ abstract final class _L10nStaticData {
     'milestone_love_days': '{days} ngày yêu thương 💖',
     'milestone_tab_upcoming': 'Sắp tới ⏳',
     'milestone_tab_past': 'Đã qua 💖',
-    'milestone_empty_upcoming': 'Không có sự kiện sắp tới nào.\nHãy lên kế hoạch hẹn hò mới nhé! ✨',
+    'milestone_empty_upcoming':
+        'Không có sự kiện sắp tới nào.\nHãy lên kế hoạch hẹn hò mới nhé! ✨',
     'milestone_empty_past': 'Chưa có kỷ niệm nào trôi qua.',
     'milestone_plan_now': 'Lên kế hoạch ngay 📅',
     'milestone_today': '📍 Hôm nay',
@@ -1081,58 +1104,80 @@ abstract final class _L10nStaticData {
     'sec_extra_verify': 'Yêu cầu xác minh thêm',
     'sec_allowed': 'Được phép',
     'sec_screen_recording_title': 'Phát hiện ghi/chụp màn hình',
-    'sec_screen_recording_subtitle': 'Để bảo vệ quyền riêng tư, hoạt động ghi hoặc chụp màn hình đã bị hạn chế.',
-    'sec_screen_recording_step1': 'Bước 1: Tắt các ứng dụng quay màn hình đang chạy ngầm.',
-    'sec_screen_recording_step2': 'Bước 2: Dừng cuộc gọi video hoặc chia sẻ màn hình nếu có.',
-    'sec_screen_recording_step3': 'Bước 3: Khởi động lại ứng dụng nếu lỗi vẫn tiếp diễn.',
+    'sec_screen_recording_subtitle':
+        'Để bảo vệ quyền riêng tư, hoạt động ghi hoặc chụp màn hình đã bị hạn chế.',
+    'sec_screen_recording_step1':
+        'Bước 1: Tắt các ứng dụng quay màn hình đang chạy ngầm.',
+    'sec_screen_recording_step2':
+        'Bước 2: Dừng cuộc gọi video hoặc chia sẻ màn hình nếu có.',
+    'sec_screen_recording_step3':
+        'Bước 3: Khởi động lại ứng dụng nếu lỗi vẫn tiếp diễn.',
     'sec_faq_record_q': 'Tại sao không được phép quay màn hình?',
-    'sec_faq_record_a': 'Ứng dụng chứa các thông tin bảo mật, hình ảnh và nhật ký riêng tư của bạn. Việc chặn ghi màn hình giúp ngăn chặn các mã độc tự động đánh cắp dữ liệu.',
+    'sec_faq_record_a':
+        'Ứng dụng chứa các thông tin bảo mật, hình ảnh và nhật ký riêng tư của bạn. Việc chặn ghi màn hình giúp ngăn chặn các mã độc tự động đánh cắp dữ liệu.',
     'sec_faq_block_all_q': 'Có thể tắt tính năng bảo vệ này không?',
-    'sec_faq_block_all_a': 'Đây là tính năng bảo vệ bắt buộc để bảo vệ sự riêng tư và an toàn thông tin của bạn.',
+    'sec_faq_block_all_a':
+        'Đây là tính năng bảo vệ bắt buộc để bảo vệ sự riêng tư và an toàn thông tin của bạn.',
     'sec_primary_action': 'Đã hiểu',
     'sec_secondary_action': 'Hỗ trợ',
     'sec_dismiss': 'Bỏ qua',
     'sec_support_draft': 'Yêu cầu hỗ trợ về lỗi ghi màn hình.',
     'sec_overlay_title': 'Phát hiện lớp phủ màn hình',
-    'sec_overlay_subtitle': 'Một ứng dụng khác đang vẽ đè lên màn hình của bạn. Đây có thể là ứng dụng độc hại cố gắng đánh cắp thông tin.',
-    'sec_overlay_step1': "Bước 1: Tắt quyền 'Hiển thị trên các ứng dụng khác' của các app lạ.",
-    'sec_overlay_step2': 'Bước 2: Đóng các bong bóng chat hoặc bộ lọc ánh sáng xanh.',
+    'sec_overlay_subtitle':
+        'Một ứng dụng khác đang vẽ đè lên màn hình của bạn. Đây có thể là ứng dụng độc hại cố gắng đánh cắp thông tin.',
+    'sec_overlay_step1':
+        "Bước 1: Tắt quyền 'Hiển thị trên các ứng dụng khác' của các app lạ.",
+    'sec_overlay_step2':
+        'Bước 2: Đóng các bong bóng chat hoặc bộ lọc ánh sáng xanh.',
     'sec_overlay_step3': 'Bước 3: Mở lại ứng dụng sau khi đã tắt các lớp phủ.',
     'sec_faq_overlay_q': 'Lớp phủ màn hình là gì?',
-    'sec_faq_overlay_a': 'Lớp phủ là giao diện do ứng dụng khác hiển thị đè lên màn hình (như bong bóng Messenger, app lọc màn hình). Kẻ xấu có thể lợi dụng để đánh lừa bạn chạm vào nút bấm ẩn.',
-    'sec_faq_overlay_false_alarm_q': 'Tại sao tôi bị cảnh báo dù không dùng app độc hại?',
-    'sec_faq_overlay_false_alarm_a': 'Một số ứng dụng an toàn như bộ lọc màn hình ban đêm cũng tạo ra lớp phủ. Bạn chỉ cần tạm thời tắt chúng khi sử dụng app.',
+    'sec_faq_overlay_a':
+        'Lớp phủ là giao diện do ứng dụng khác hiển thị đè lên màn hình (như bong bóng Messenger, app lọc màn hình). Kẻ xấu có thể lợi dụng để đánh lừa bạn chạm vào nút bấm ẩn.',
+    'sec_faq_overlay_false_alarm_q':
+        'Tại sao tôi bị cảnh báo dù không dùng app độc hại?',
+    'sec_faq_overlay_false_alarm_a':
+        'Một số ứng dụng an toàn như bộ lọc màn hình ban đêm cũng tạo ra lớp phủ. Bạn chỉ cần tạm thời tắt chúng khi sử dụng app.',
     'sec_overlay_primary_action': 'Đi tới Cài đặt',
     'sec_support_draft_overlay': 'Yêu cầu hỗ trợ về lỗi lớp phủ màn hình.',
     'sec_unofficial_title': 'Ứng dụng không chính thức',
-    'sec_unofficial_subtitle': 'Bạn đang sử dụng phiên bản ứng dụng không chính thức hoặc đã bị sửa đổi. Phiên bản này không an toàn để sử dụng.',
+    'sec_unofficial_subtitle':
+        'Bạn đang sử dụng phiên bản ứng dụng không chính thức hoặc đã bị sửa đổi. Phiên bản này không an toàn để sử dụng.',
     'sec_unofficial_step1': 'Bước 1: Gỡ bỏ phiên bản hiện tại của ứng dụng.',
-    'sec_unofficial_step2': 'Bước 2: Tải và cài đặt lại ứng dụng chính thức từ CH Play hoặc App Store.',
+    'sec_unofficial_step2':
+        'Bước 2: Tải và cài đặt lại ứng dụng chính thức từ CH Play hoặc App Store.',
     'sec_unofficial_step3': 'Bước 3: Đăng nhập lại tài khoản của bạn.',
     'sec_faq_unofficial_q': 'Ứng dụng không chính thức có nguy hiểm không?',
-    'sec_faq_unofficial_a': 'Có, các phiên bản đã qua chỉnh sửa có thể chứa mã độc đánh cắp tin nhắn, ảnh và mật khẩu của bạn.',
+    'sec_faq_unofficial_a':
+        'Có, các phiên bản đã qua chỉnh sửa có thể chứa mã độc đánh cắp tin nhắn, ảnh và mật khẩu của bạn.',
     'sec_unofficial_primary_action': 'Tải bản chính thức',
-    'sec_unofficial_support_draft': 'Yêu cầu hỗ trợ về lỗi phiên bản không chính thức.',
+    'sec_unofficial_support_draft':
+        'Yêu cầu hỗ trợ về lỗi phiên bản không chính thức.',
     'sec_malware_title': 'Phát hiện phần mềm độc hại',
-    'sec_malware_subtitle': 'Thiết bị của bạn đang chạy một hoặc nhiều phần mềm có dấu hiệu độc hại nguy hiểm.',
+    'sec_malware_subtitle':
+        'Thiết bị của bạn đang chạy một hoặc nhiều phần mềm có dấu hiệu độc hại nguy hiểm.',
     'sec_malware_step1': 'Bước 1: Quét thiết bị bằng Google Play Protect.',
     'sec_malware_step2': 'Bước 2: Gỡ bỏ các ứng dụng không rõ nguồn gốc.',
     'sec_malware_step3': 'Bước 3: Khởi động lại máy để làm sạch bộ nhớ.',
     'sec_faq_malware_q': 'Làm sao để biết app nào độc hại?',
-    'sec_faq_malware_a': 'Play Protect trong ứng dụng CH Play sẽ quét và thông báo cụ thể danh sách phần mềm độc hại trên máy của bạn.',
+    'sec_faq_malware_a':
+        'Play Protect trong ứng dụng CH Play sẽ quét và thông báo cụ thể danh sách phần mềm độc hại trên máy của bạn.',
     'sec_faq_malware_support_q': 'Làm sao để gỡ sạch mã độc?',
-    'sec_faq_malware_support_a': 'Vào Cài đặt của máy -> Ứng dụng -> Chọn ứng dụng nghi ngờ và nhấn Gỡ cài đặt.',
+    'sec_faq_malware_support_a':
+        'Vào Cài đặt của máy -> Ứng dụng -> Chọn ứng dụng nghi ngờ và nhấn Gỡ cài đặt.',
     'sec_malware_primary_action': 'Mở Play Protect',
     'sec_malware_support_draft': 'Yêu cầu hỗ trợ về lỗi phần mềm độc hại.',
     'sec_root_title': 'Thiết bị không an toàn (Root/Jailbreak)',
-    'sec_root_subtitle': 'Thiết bị của bạn đã bị Root hoặc Jailbreak. Hệ thống bảo mật đã bị bẻ khóa, không an toàn để chạy ứng dụng này.',
+    'sec_root_subtitle':
+        'Thiết bị của bạn đã bị Root hoặc Jailbreak. Hệ thống bảo mật đã bị bẻ khóa, không an toàn để chạy ứng dụng này.',
     'sec_root_step1': 'Bước 1: Hạn chế sử dụng ứng dụng trên thiết bị đã root.',
     'sec_root_step2': 'Bước 2: Khôi phục thiết bị về hệ điều hành gốc.',
     'sec_root_step3': 'Bước 3: Sử dụng thiết bị khác an toàn hơn nếu cần.',
     'sec_faq_root_q': 'Tại sao root thiết bị lại nguy hiểm?',
-    'sec_faq_root_a': 'Root làm mất đi lớp bảo vệ bảo mật của hệ điều hành, cho phép bất kỳ ứng dụng nào cũng có thể đọc trộm dữ liệu nhạy cảm.',
+    'sec_faq_root_a':
+        'Root làm mất đi lớp bảo vệ bảo mật của hệ điều hành, cho phép bất kỳ ứng dụng nào cũng có thể đọc trộm dữ liệu nhạy cảm.',
     'sec_faq_root_support_q': 'Tôi có thể ẩn root để dùng app không?',
-    'sec_faq_root_support_a': 'Không, để đảm bảo an toàn tuyệt đối cho nhật ký của bạn, ứng dụng từ chối hoạt động trên mọi thiết bị thiếu tính toàn vẹn.',
+    'sec_faq_root_support_a':
+        'Không, để đảm bảo an toàn tuyệt đối cho nhật ký của bạn, ứng dụng từ chối hoạt động trên mọi thiết bị thiếu tính toàn vẹn.',
     'sec_root_primary_action': 'Tìm hiểu thêm',
     'sec_root_support_draft': 'Yêu cầu hỗ trợ về lỗi thiết bị đã root.',
   };
@@ -2026,11 +2071,14 @@ abstract final class _L10nStaticData {
     'theme_event_calendar_label': 'Shared Calendar',
     'theme_event_anniversary_label': 'Anniversary',
     'theme_event_date_label': 'Date: {date}',
-    'theme_event_description_hint': 'Separated below: Pink blocks are anniversaries added here, Blue blocks are shared plans from Calendar.',
+    'theme_event_description_hint':
+        'Separated below: Pink blocks are anniversaries added here, Blue blocks are shared plans from Calendar.',
     'theme_event_anniversary_section_title': 'Upcoming Anniversaries',
-    'theme_event_anniversary_section_desc': 'Custom dates added in the anniversary section',
+    'theme_event_anniversary_section_desc':
+        'Custom dates added in the anniversary section',
     'theme_event_calendar_section_title': 'Upcoming Shared Plans',
-    'theme_event_calendar_section_desc': 'Plans fetched from the shared Calendar tab',
+    'theme_event_calendar_section_desc':
+        'Plans fetched from the shared Calendar tab',
     'theme_frame_size_desc': 'Countdown ring size, avatar frame style',
     'theme_save_size': 'Save size',
     'theme_countdown_label_ad': '• Ad',
@@ -2038,17 +2086,22 @@ abstract final class _L10nStaticData {
     'theme_memory_desc': 'Add and manage upcoming anniversary dates',
     'theme_font_lang_desc': 'Adjust display font & language',
     'theme_bg_effect_title': 'Background & Effects',
-    'theme_bg_effect_desc': 'Falling effects, color theme and custom background',
-    'theme_bg_in_use': 'You are using a custom uploaded background, cannot use system backgrounds',
+    'theme_bg_effect_desc':
+        'Falling effects, color theme and custom background',
+    'theme_bg_in_use':
+        'You are using a custom uploaded background, cannot use system backgrounds',
     'theme_uploading_pct': 'UPLOADING... {pct}%',
     'theme_perf_title': 'Performance & Permissions',
     'theme_perf_desc': 'Smooth mode, system permissions, transparent mode',
     'theme_applied': 'Theme applied',
-    'theme_applied_msg': 'Custom background was disabled to apply the new theme.',
+    'theme_applied_msg':
+        'Custom background was disabled to apply the new theme.',
     'widget_using_style': 'Using style: {style}',
-    'widget_ios_guide': 'To add a Widget on iOS:\n1. Long press on the home screen\n2. Tap the [+] button in the corner\n3. Search "SoulLocket" and add the widget',
+    'widget_ios_guide':
+        'To add a Widget on iOS:\n1. Long press on the home screen\n2. Tap the [+] button in the corner\n3. Search "SoulLocket" and add the widget',
     'account_err_date_range': 'Date must be between {min} - {max}.',
-    'account_err_email_domain': 'Only the following email types are supported: {domains}',
+    'account_err_email_domain':
+        'Only the following email types are supported: {domains}',
     'relationship_status_text': 'Status: {status}',
     'account_success_date': 'Anniversary updated!',
     'account_err_date': 'Failed to update anniversary',
@@ -2213,10 +2266,13 @@ abstract final class _L10nStaticData {
     'settings_cloud_check_failed': 'Cloud check failed.',
     'settings_sync_to_cloud_success': 'Settings synced to cloud.',
     'settings_sync_to_cloud_failed': 'Failed to sync settings to cloud.',
-    'settings_sign_in_required_to_restore': 'Sign in required to restore settings.',
-    'settings_cloud_backup_not_found_to_restore': 'Cloud backup not found to restore.',
+    'settings_sign_in_required_to_restore':
+        'Sign in required to restore settings.',
+    'settings_cloud_backup_not_found_to_restore':
+        'Cloud backup not found to restore.',
     'settings_restore_from_cloud_success': 'Settings restored from cloud.',
-    'settings_restore_from_cloud_failed': 'Failed to restore settings from cloud.',
+    'settings_restore_from_cloud_failed':
+        'Failed to restore settings from cloud.',
     'settings_time_not_available': 'No timestamp available.',
     'settings_cloud_checking': 'Checking cloud',
     'settings_sync_error_short': 'Sync error',
@@ -2242,7 +2298,8 @@ abstract final class _L10nStaticData {
     'err_save_music': 'Could not save music',
     'err_upload_background': 'Could not upload wallpaper',
     'resend_cooldown_text': 'Please wait before resending',
-    'upload_background_interrupted': 'Previous wallpaper upload was interrupted',
+    'upload_background_interrupted':
+        'Previous wallpaper upload was interrupted',
     'ok': 'OK',
     'select_your_dob': 'Select your Date of Birth',
     'login_app_lock': 'Login, App Lock',
@@ -2443,12 +2500,14 @@ abstract final class _L10nStaticData {
     'settings_perf_mode_enabled': 'Smoother mode enabled.',
     'settings_balanced_mode_enabled': 'Balanced mode restored.',
     'settings_performance_mode_title': 'Performance mode',
-    'settings_performance_mode_desc_smooth': 'Prioritizing smoothness and saving battery.',
+    'settings_performance_mode_desc_smooth':
+        'Prioritizing smoothness and saving battery.',
     'settings_performance_mode_desc_balanced': 'Using balanced configuration.',
     'settings_perf_preset_smoother': 'Smoother',
     'settings_perf_preset_balanced': 'Balanced',
     'settings_data_system_label': 'System Data',
-    'settings_data_system_desc': 'Manage notifications, data links and system integrations.',
+    'settings_data_system_desc':
+        'Manage notifications, data links and system integrations.',
     'settings_footer_tagline': 'Preserving every moment',
     'settings_data_status_checking': 'Checking...',
     'settings_data_status_cloud_found': 'Cloud backup available',
@@ -2456,10 +2515,12 @@ abstract final class _L10nStaticData {
     'settings_data_status_linked': 'Linked',
     'settings_data_status_no_house': 'No house linked',
     'settings_restore_title': 'Restore settings',
-    'settings_restore_message': 'The app will restore synced settings from the cloud to this device. Some current configurations on the device may be replaced by the cloud version.',
+    'settings_restore_message':
+        'The app will restore synced settings from the cloud to this device. Some current configurations on the device may be replaced by the cloud version.',
     'settings_restore_confirm_btn': 'Restore',
     'settings_restore_groups_title': 'Restorable data groups',
-    'settings_restore_groups_desc': 'The app only displays the status of each group, it will not overwrite personal data without your confirmation.',
+    'settings_restore_groups_desc':
+        'The app only displays the status of each group, it will not overwrite personal data without your confirmation.',
     'settings_restore_groups_details_btn': 'View restore details',
     'settings_restore_details_dialog_title': 'Restore details',
     'settings_restore_details_dialog_ok': 'Got it',
@@ -2474,11 +2535,16 @@ abstract final class _L10nStaticData {
     'settings_status_cloud_missing': 'Cloud not found',
     'settings_status_cloud_not_found': 'No cloud backup found',
     'settings_status_missing': 'Not configured',
-    'settings_group_config_desc': 'Can restore themes, effects, notifications, widgets and other synced configurations.',
-    'settings_group_house_desc': 'Uses the current house/couple profile to cross-reference data. Does not create a new house in this step.',
-    'settings_group_diary_desc': 'Requires a separate check to avoid overwriting existing diaries on this device.',
-    'settings_group_media_desc': 'Media needs to check links, access permissions, and cache before bulk restoration.',
-    'settings_group_utilities_desc': 'Will be separated into smaller groups for individual restoration choice in future updates.',
+    'settings_group_config_desc':
+        'Can restore themes, effects, notifications, widgets and other synced configurations.',
+    'settings_group_house_desc':
+        'Uses the current house/couple profile to cross-reference data. Does not create a new house in this step.',
+    'settings_group_diary_desc':
+        'Requires a separate check to avoid overwriting existing diaries on this device.',
+    'settings_group_media_desc':
+        'Media needs to check links, access permissions, and cache before bulk restoration.',
+    'settings_group_utilities_desc':
+        'Will be separated into smaller groups for individual restoration choice in future updates.',
     'settings_back_btn': 'Back',
 
     // === Notifications ===
@@ -2511,58 +2577,81 @@ abstract final class _L10nStaticData {
     'sec_extra_verify': 'Extra verification required',
     'sec_allowed': 'Allowed',
     'sec_screen_recording_title': 'Screen capture detected',
-    'sec_screen_recording_subtitle': 'To protect your privacy, screen recording or capturing has been restricted.',
-    'sec_screen_recording_step1': 'Step 1: Turn off screen recording apps running in the background.',
-    'sec_screen_recording_step2': 'Step 2: Stop video calls or screen sharing if active.',
-    'sec_screen_recording_step3': 'Step 3: Restart the app if the error persists.',
+    'sec_screen_recording_subtitle':
+        'To protect your privacy, screen recording or capturing has been restricted.',
+    'sec_screen_recording_step1':
+        'Step 1: Turn off screen recording apps running in the background.',
+    'sec_screen_recording_step2':
+        'Step 2: Stop video calls or screen sharing if active.',
+    'sec_screen_recording_step3':
+        'Step 3: Restart the app if the error persists.',
     'sec_faq_record_q': 'Why is screen recording not allowed?',
-    'sec_faq_record_a': 'The app contains secure, private photos and diaries. Blocking screen recording prevents malicious software from stealing your data.',
+    'sec_faq_record_a':
+        'The app contains secure, private photos and diaries. Blocking screen recording prevents malicious software from stealing your data.',
     'sec_faq_block_all_q': 'Can this protection be disabled?',
-    'sec_faq_block_all_a': 'This is a mandatory security feature to ensure your privacy and data security.',
+    'sec_faq_block_all_a':
+        'This is a mandatory security feature to ensure your privacy and data security.',
     'sec_primary_action': 'Got it',
     'sec_secondary_action': 'Support',
     'sec_dismiss': 'Dismiss',
     'sec_support_draft': 'Support request regarding screen recording error.',
     'sec_overlay_title': 'Screen overlay detected',
-    'sec_overlay_subtitle': 'Another app is displaying over your screen. This could be a malicious app attempting to steal information.',
-    'sec_overlay_step1': "Step 1: Turn off 'Display over other apps' permission for suspicious apps.",
+    'sec_overlay_subtitle':
+        'Another app is displaying over your screen. This could be a malicious app attempting to steal information.',
+    'sec_overlay_step1':
+        "Step 1: Turn off 'Display over other apps' permission for suspicious apps.",
     'sec_overlay_step2': 'Step 2: Close chat bubbles or blue light filters.',
     'sec_overlay_step3': 'Step 3: Reopen the app after disabling overlays.',
     'sec_faq_overlay_q': 'What is a screen overlay?',
-    'sec_faq_overlay_a': 'An overlay is an interface displayed on top of the screen by another app (like Messenger bubbles, filter apps). Attackers can abuse it to trick you into tapping hidden buttons.',
-    'sec_faq_overlay_false_alarm_q': 'Why am I warned when not using malicious apps?',
-    'sec_faq_overlay_false_alarm_a': 'Some safe apps like night screen filters also create overlays. You just need to temporarily disable them while using the app.',
+    'sec_faq_overlay_a':
+        'An overlay is an interface displayed on top of the screen by another app (like Messenger bubbles, filter apps). Attackers can abuse it to trick you into tapping hidden buttons.',
+    'sec_faq_overlay_false_alarm_q':
+        'Why am I warned when not using malicious apps?',
+    'sec_faq_overlay_false_alarm_a':
+        'Some safe apps like night screen filters also create overlays. You just need to temporarily disable them while using the app.',
     'sec_overlay_primary_action': 'Go to Settings',
-    'sec_support_draft_overlay': 'Support request regarding screen overlay error.',
+    'sec_support_draft_overlay':
+        'Support request regarding screen overlay error.',
     'sec_unofficial_title': 'Unofficial app version',
-    'sec_unofficial_subtitle': 'You are using an unofficial or modified version of the app. This version is unsafe to use.',
+    'sec_unofficial_subtitle':
+        'You are using an unofficial or modified version of the app. This version is unsafe to use.',
     'sec_unofficial_step1': 'Step 1: Uninstall the current version of the app.',
-    'sec_unofficial_step2': 'Step 2: Download and install the official app from Google Play or App Store.',
+    'sec_unofficial_step2':
+        'Step 2: Download and install the official app from Google Play or App Store.',
     'sec_unofficial_step3': 'Step 3: Log back in to your account.',
     'sec_faq_unofficial_q': 'Is an unofficial app dangerous?',
-    'sec_faq_unofficial_a': 'Yes, modified versions can contain malware designed to steal your messages, photos, and passwords.',
+    'sec_faq_unofficial_a':
+        'Yes, modified versions can contain malware designed to steal your messages, photos, and passwords.',
     'sec_unofficial_primary_action': 'Download official version',
-    'sec_unofficial_support_draft': 'Support request regarding unofficial version error.',
+    'sec_unofficial_support_draft':
+        'Support request regarding unofficial version error.',
     'sec_malware_title': 'Malware detected',
-    'sec_malware_subtitle': 'Your device is running one or more apps displaying dangerous malicious behavior.',
+    'sec_malware_subtitle':
+        'Your device is running one or more apps displaying dangerous malicious behavior.',
     'sec_malware_step1': 'Step 1: Scan your device using Google Play Protect.',
     'sec_malware_step2': 'Step 2: Uninstall apps from unknown sources.',
     'sec_malware_step3': 'Step 3: Restart your device to clear memory.',
     'sec_faq_malware_q': 'How do I know which app is malicious?',
-    'sec_faq_malware_a': 'Play Protect inside Google Play app will scan and notify you of the specific malware on your device.',
+    'sec_faq_malware_a':
+        'Play Protect inside Google Play app will scan and notify you of the specific malware on your device.',
     'sec_faq_malware_support_q': 'How do I fully remove malware?',
-    'sec_faq_malware_support_a': 'Go to device Settings -> Apps -> Select suspicious app and tap Uninstall.',
+    'sec_faq_malware_support_a':
+        'Go to device Settings -> Apps -> Select suspicious app and tap Uninstall.',
     'sec_malware_primary_action': 'Open Play Protect',
     'sec_malware_support_draft': 'Support request regarding malware error.',
     'sec_root_title': 'Insecure device (Root/Jailbreak)',
-    'sec_root_subtitle': 'Your device has been Rooted or Jailbroken. The security system has been bypassed, making it unsafe to run this app.',
+    'sec_root_subtitle':
+        'Your device has been Rooted or Jailbroken. The security system has been bypassed, making it unsafe to run this app.',
     'sec_root_step1': 'Step 1: Avoid using the app on rooted devices.',
-    'sec_root_step2': 'Step 2: Restore your device to the stock operating system.',
+    'sec_root_step2':
+        'Step 2: Restore your device to the stock operating system.',
     'sec_root_step3': 'Step 3: Use another secure device if needed.',
     'sec_faq_root_q': 'Why is rooting dangerous?',
-    'sec_faq_root_a': 'Rooting removes the operating system\'s built-in security layers, allowing any app to read your sensitive data.',
+    'sec_faq_root_a':
+        'Rooting removes the operating system\'s built-in security layers, allowing any app to read your sensitive data.',
     'sec_faq_root_support_q': 'Can I hide root to use the app?',
-    'sec_faq_root_support_a': 'No, to ensure absolute security for your diary, the app refuses to run on any device lacking integrity.',
+    'sec_faq_root_support_a':
+        'No, to ensure absolute security for your diary, the app refuses to run on any device lacking integrity.',
     'sec_root_primary_action': 'Learn more',
     'sec_root_support_draft': 'Support request regarding rooted device error.',
   };

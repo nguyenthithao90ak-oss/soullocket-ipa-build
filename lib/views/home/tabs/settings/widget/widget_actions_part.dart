@@ -33,8 +33,6 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
     await _persistAndSyncWidgetAppearance();
   }
 
-
-
   Future<void> _handleWidgetThemeChanged(String value) async {
     _updateThemeDraft(() => _draftWidgetThemeKey = value);
     await _persistAndSyncWidgetAppearance();
@@ -63,5 +61,4 @@ extension _SettingsTabWidgetActionsPart on _SettingsTabState {
       _showDiaryOnWidget = value;
     });
   }
-
 }

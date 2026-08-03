@@ -66,7 +66,8 @@ class UtilitiesHubHeader extends StatelessWidget {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF00C6FF).withValues(alpha: 0.4),
+                            color:
+                                const Color(0xFF00C6FF).withValues(alpha: 0.4),
                             blurRadius: 8,
                           ),
                         ],
@@ -196,9 +197,7 @@ class _UtilitiesHubSegmentButton extends StatelessWidget {
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: active
-              ? Colors.white
-              : Colors.transparent,
+          color: active ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(24),
           boxShadow: active
               ? [
@@ -216,7 +215,9 @@ class _UtilitiesHubSegmentButton extends StatelessWidget {
           style: SLTheme.quicksand(
             fontWeight: active ? FontWeight.w900 : FontWeight.w700,
             fontSize: 14.5,
-            color: active ? SLColors.primary : SLColors.textPrimary.withValues(alpha: 0.55),
+            color: active
+                ? SLColors.primary
+                : SLColors.textPrimary.withValues(alpha: 0.55),
             letterSpacing: 0.3,
           ),
         ),

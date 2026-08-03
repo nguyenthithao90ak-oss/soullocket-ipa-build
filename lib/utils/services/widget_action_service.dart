@@ -60,7 +60,6 @@ class WidgetActionService {
     return action;
   }
 
-
   void triggerAction(WidgetLaunchAction action) {
     if (_controller.hasListener) {
       _controller.add(action);

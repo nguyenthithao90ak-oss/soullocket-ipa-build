@@ -114,8 +114,6 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
         );
       }
 
-  
-
       if (!(kIsWeb && DeeplinkService.isSupportedAuthUri(Uri.base))) {
         unawaited(
           _deeplinkHandler.initialize(
@@ -280,8 +278,12 @@ class _AppEntryState extends State<AppEntry> with WidgetsBindingObserver {
     final cachedHouseId = prefs?.getString('il_house_id');
     if (cachedHouseId != null && cachedHouseId.isNotEmpty) {
       try {
-        FirebaseDatabase.instance.ref('houses/$cachedHouseId/settings').keepSynced(true);
-        FirebaseDatabase.instance.ref('houses/$cachedHouseId/members').keepSynced(true);
+        FirebaseDatabase.instance
+            .ref('houses/$cachedHouseId/settings')
+            .keepSynced(true);
+        FirebaseDatabase.instance
+            .ref('houses/$cachedHouseId/members')
+            .keepSynced(true);
         FirebaseDatabase.instance.ref('users/${user.uid}').keepSynced(true);
       } catch (e) {
         debugPrint('keepSynced error: $e');

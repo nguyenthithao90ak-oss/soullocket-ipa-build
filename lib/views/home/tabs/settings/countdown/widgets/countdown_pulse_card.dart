@@ -1,15 +1,15 @@
 // ignore_for_file: library_private_types_in_public_api
 part of '../../../settings_tab.dart';
 
-
-
-
 extension CountdownPulseCardExt on _CountdownModeIndependentScreenState {
   int _pulseMetric(int seed, int min, int max) {
-    final days = _anchorDate == null ? 0 : DateTime.now().difference(_anchorDate!).inDays;
+    final days = _anchorDate == null
+        ? 0
+        : DateTime.now().difference(_anchorDate!).inDays;
     final spread = max - min;
     if (spread <= 0) return min;
-    final value = (days * 7 + DateTime.now().day * 13 + seed * 17) % (spread + 1);
+    final value =
+        (days * 7 + DateTime.now().day * 13 + seed * 17) % (spread + 1);
     return min + value;
   }
 
@@ -157,6 +157,4 @@ extension CountdownPulseCardExt on _CountdownModeIndependentScreenState {
       ),
     );
   }
-
-  
 }

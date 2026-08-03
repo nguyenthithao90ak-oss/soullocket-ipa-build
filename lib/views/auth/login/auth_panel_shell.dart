@@ -40,7 +40,8 @@ class AuthPanelShell extends StatelessWidget {
           duration: const Duration(milliseconds: 320),
           curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.18), // Kính trong suốt Premium
+            color:
+                Colors.white.withValues(alpha: 0.18), // Kính trong suốt Premium
             borderRadius: BorderRadius.circular(36),
             border: Border.all(
               color: Colors.white.withValues(alpha: 0.4), // Viền kính sáng bóng
@@ -48,13 +49,13 @@ class AuthPanelShell extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6A1B9A).withValues(alpha: 0.08), 
+                color: const Color(0xFF6A1B9A).withValues(alpha: 0.08),
                 blurRadius: 40,
                 spreadRadius: 8,
                 offset: const Offset(0, 16),
               ),
               BoxShadow(
-                color: Colors.white.withValues(alpha: 0.4), 
+                color: Colors.white.withValues(alpha: 0.4),
                 blurRadius: 24,
                 spreadRadius: -4,
                 offset: const Offset(0, -8),
@@ -73,151 +74,151 @@ class AuthPanelShell extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-              // --- brand micro-header ---
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Center(
-                  child: ShaderMask(
-                    shaderCallback: (bounds) => LinearGradient(
-                      colors: isLoginTab
-                          ? const [Color(0xFFE0609A), Color(0xFFA044C0)]
-                          : const [Color(0xFF9030C0), Color(0xFFE060B0)],
-                    ).createShader(bounds),
-                    child: Text(
-                      'SoulLocket',
-                      style: SLTheme.quicksand(
-                        fontSize: compact ? 22 : 26,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 1.2,
+                  // --- brand micro-header ---
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Center(
+                      child: ShaderMask(
+                        shaderCallback: (bounds) => LinearGradient(
+                          colors: isLoginTab
+                              ? const [Color(0xFFE0609A), Color(0xFFA044C0)]
+                              : const [Color(0xFF9030C0), Color(0xFFE060B0)],
+                        ).createShader(bounds),
+                        child: Text(
+                          'SoulLocket',
+                          style: SLTheme.quicksand(
+                            fontSize: compact ? 22 : 26,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-              AuthTabSwitcher(
-                isLoginTab: isLoginTab,
-                onSelectLogin: onSelectLogin,
-                onSelectRegister: onSelectRegister,
-              ),
-              SLSpacing.h16,
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 280),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                layoutBuilder: (currentChild, previousChildren) {
-                  return Stack(
-                    alignment: Alignment.topCenter,
-                    children: [
-                      ...previousChildren,
-                      if (currentChild != null) currentChild,
-                    ],
-                  );
-                },
-                transitionBuilder: (child, animation) {
-                  final fade = CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeOutCubic,
-                  );
-                  final slide = Tween<Offset>(
-                    begin: const Offset(0.0, 0.04),
-                    end: Offset.zero,
-                  ).animate(fade);
-                  return FadeTransition(
-                    opacity: fade,
-                    child: SlideTransition(
-                      position: slide,
-                      child: child,
-                    ),
-                  );
-                },
-                child: RepaintBoundary(child: authSection),
-              ),
-              Container(
-                margin: const EdgeInsets.only(top: 16),
-                padding: EdgeInsets.fromLTRB(
-                  compact ? 12 : 14,
-                  12,
-                  compact ? 12 : 14,
-                  compact ? 10 : 12,
-                ),
-                decoration: const BoxDecoration(
-                  color: Colors.transparent,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.support_agent_rounded,
-                          size: 13,
-                          color: SLColors.primary.withValues(alpha: 0.7),
+                  AuthTabSwitcher(
+                    isLoginTab: isLoginTab,
+                    onSelectLogin: onSelectLogin,
+                    onSelectRegister: onSelectRegister,
+                  ),
+                  SLSpacing.h16,
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 280),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    layoutBuilder: (currentChild, previousChildren) {
+                      return Stack(
+                        alignment: Alignment.topCenter,
+                        children: [
+                          ...previousChildren,
+                          if (currentChild != null) currentChild,
+                        ],
+                      );
+                    },
+                    transitionBuilder: (child, animation) {
+                      final fade = CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      );
+                      final slide = Tween<Offset>(
+                        begin: const Offset(0.0, 0.04),
+                        end: Offset.zero,
+                      ).animate(fade);
+                      return FadeTransition(
+                        opacity: fade,
+                        child: SlideTransition(
+                          position: slide,
+                          child: child,
                         ),
-                        const SizedBox(width: 5),
-                        Text(
-                          l10n.translate('auth_help_center_guide'),
-                          style: SLTheme.quicksand(
-                            fontSize: 12,
-                            color: SLColors.primary.withValues(alpha: 0.8),
-                            fontWeight: FontWeight.w800,
-                          ),
+                      );
+                    },
+                    child: RepaintBoundary(child: authSection),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(top: 16),
+                    padding: EdgeInsets.fromLTRB(
+                      compact ? 12 : 14,
+                      12,
+                      compact ? 12 : 14,
+                      compact ? 10 : 12,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Colors.transparent,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.support_agent_rounded,
+                              size: 13,
+                              color: SLColors.primary.withValues(alpha: 0.7),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              l10n.translate('auth_help_center_guide'),
+                              style: SLTheme.quicksand(
+                                fontSize: 12,
+                                color: SLColors.primary.withValues(alpha: 0.8),
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final stackButtons = compact ||
+                                textScale > 1.25 ||
+                                constraints.maxWidth < 280;
+                            final buttons = [
+                              _AuthHelpButton(
+                                icon: Icons.menu_book_rounded,
+                                label: l10n.translate('auth_guide_short'),
+                                onTap: onOpenGuide,
+                                isGuide: true,
+                                expanded: !stackButtons,
+                                compact: compact,
+                              ),
+                              _AuthHelpButton(
+                                icon: Icons.headset_mic_rounded,
+                                label: l10n.translate('auth_contact_short'),
+                                onTap: onOpenContact,
+                                isGuide: false,
+                                expanded: !stackButtons,
+                                compact: compact,
+                              ),
+                            ];
+
+                            if (stackButtons) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  buttons.first,
+                                  SLSpacing.h8,
+                                  buttons.last,
+                                ],
+                              );
+                            }
+
+                            return Row(
+                              children: [
+                                buttons.first,
+                                SLSpacing.w8,
+                                buttons.last,
+                              ],
+                            );
+                          },
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final stackButtons = compact ||
-                            textScale > 1.25 ||
-                            constraints.maxWidth < 280;
-                        final buttons = [
-                          _AuthHelpButton(
-                            icon: Icons.menu_book_rounded,
-                            label: l10n.translate('auth_guide_short'),
-                            onTap: onOpenGuide,
-                            isGuide: true,
-                            expanded: !stackButtons,
-                            compact: compact,
-                          ),
-                          _AuthHelpButton(
-                            icon: Icons.headset_mic_rounded,
-                            label: l10n.translate('auth_contact_short'),
-                            onTap: onOpenContact,
-                            isGuide: false,
-                            expanded: !stackButtons,
-                            compact: compact,
-                          ),
-                        ];
-
-                        if (stackButtons) {
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              buttons.first,
-                              SLSpacing.h8,
-                              buttons.last,
-                            ],
-                          );
-                        }
-
-                        return Row(
-                          children: [
-                            buttons.first,
-                            SLSpacing.w8,
-                            buttons.last,
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
         ),
       ),
     );

@@ -122,7 +122,8 @@ class AuthSupportDialog {
                             if (description.isEmpty) {
                               AuthFeedbackDialogs.showError(
                                 dialogContext,
-                                L10nService().translate('support_err_empty_desc'),
+                                L10nService()
+                                    .translate('support_err_empty_desc'),
                               );
                               return;
                             }
@@ -131,7 +132,8 @@ class AuthSupportDialog {
                             if (user == null) {
                               AuthFeedbackDialogs.showError(
                                 dialogContext,
-                                L10nService().translate('support_err_need_login'),
+                                L10nService()
+                                    .translate('support_err_need_login'),
                               );
                               return;
                             }
@@ -200,7 +202,8 @@ class AuthSupportDialog {
                               if (!dialogContext.mounted) return;
                               AuthFeedbackDialogs.showError(
                                 dialogContext,
-                                L10nService().translate('support_err_failed_send'),
+                                L10nService()
+                                    .translate('support_err_failed_send'),
                               );
                               return;
                             }

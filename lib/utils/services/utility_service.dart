@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 import 'l10n_service.dart';
 import 'offline_cache_service.dart';
 
@@ -117,7 +116,6 @@ class UtilityService {
       colors: [const Color(0xFF00B4DB), const Color(0xFF0083B0)],
       isTool: true,
     ),
-
     UtilityApp(
       id: 'note',
       title: 'utility_title_note',
@@ -131,7 +129,6 @@ class UtilityService {
       colors: [const Color(0xFFD81B60), const Color(0xFFFF8FB7)],
       isTool: false,
     ),
-
     UtilityApp(
       id: 'capsule',
       title: 'utility_title_capsule',
@@ -156,7 +153,6 @@ class UtilityService {
       icon: Icons.brush_rounded,
       colors: [const Color(0xFFFF7AAE), const Color(0xFFD81B60)],
     ),
-
     UtilityApp(
       id: 'wheel',
       title: 'utility_title_wheel',
@@ -194,7 +190,6 @@ class UtilityService {
       icon: Icons.calendar_today_rounded,
       colors: [const Color(0xFF3A1C71), const Color(0xFFD76D77)],
     ),
-
     UtilityApp(
       id: 'tarot',
       title: 'utility_title_tarot',
@@ -213,8 +208,6 @@ class UtilityService {
       icon: Icons.shopping_bag_rounded,
       colors: [const Color(0xFFFFC107), const Color(0xFFFF9800)],
     ),
-
-
     UtilityApp(
       id: 'creative_diary',
       title: 'utility_title_creative_diary',

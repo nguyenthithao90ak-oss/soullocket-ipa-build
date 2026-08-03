@@ -23,8 +23,7 @@ class MemoryZoomDraggableWrapper extends StatefulWidget {
       _MemoryZoomDraggableWrapperState();
 }
 
-class _MemoryZoomDraggableWrapperState
-    extends State<MemoryZoomDraggableWrapper>
+class _MemoryZoomDraggableWrapperState extends State<MemoryZoomDraggableWrapper>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   double _dragY = 0.0;

@@ -206,7 +206,6 @@ extension CountdownSpacesGridExt on _CountdownModeIndependentScreenState {
     );
   }
 
-  
   Widget _buildSpaceTile({
     required _CountdownModeThemeData themeData,
     required String houseId,
@@ -572,7 +571,6 @@ extension CountdownSpacesGridExt on _CountdownModeIndependentScreenState {
     );
   }
 
-  
   Widget _buildSpacesGrid(BuildContext context) {
     final selfSnapshot = _spaceSnapshotFor(_selfSpaceHouseId);
     final themeData = _CountdownModeThemeData.resolve(
@@ -1143,4 +1141,3 @@ extension CountdownSpacesGridExt on _CountdownModeIndependentScreenState {
     );
   }
 }
-

@@ -39,13 +39,15 @@ class ErrorLoggerService {
       return;
     }
     debugPrint('Logging error: ${AppErrorMapper.resolve(error).message}');
-    
+
     // TEMPORARY: Dump error to file so Antigravity can read it
     try {
-      final file = File('C:\\Users\\PC\\.gemini\\antigravity\\scratch\\crash.txt');
-      file.writeAsStringSync('${DateTime.now()}\\n$error\\n$stack\\n\\n', mode: FileMode.append);
+      final file =
+          File('C:\\Users\\PC\\.gemini\\antigravity\\scratch\\crash.txt');
+      file.writeAsStringSync('${DateTime.now()}\\n$error\\n$stack\\n\\n',
+          mode: FileMode.append);
     } catch (_) {}
-    
+
     await FirebaseCrashlytics.instance.recordError(
       error,
       stack,

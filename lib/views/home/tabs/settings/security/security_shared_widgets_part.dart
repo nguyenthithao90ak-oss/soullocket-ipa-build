@@ -106,7 +106,9 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
               color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFE2E8F0),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : const Color(0xFFE2E8F0),
                 width: 0.5,
               ),
             ),
@@ -194,14 +196,13 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
               if (onSecondaryAction != null)
                 Expanded(
                   child: _buildCompactActionBtn(
-                    label: secondaryActionLabel ??
-                        context.tr('home_thayi_d4d9d8'),
+                    label:
+                        secondaryActionLabel ?? context.tr('home_thayi_d4d9d8'),
                     onTap: onSecondaryAction,
                     isPrimary: false,
                   ),
                 ),
-              if (onSecondaryAction != null &&
-                  (onAction != null || isLoading))
+              if (onSecondaryAction != null && (onAction != null || isLoading))
                 const SizedBox(width: 12),
               if (onAction != null || isLoading)
                 Expanded(
@@ -241,10 +242,14 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: isPrimary ? accentColor.withValues(alpha: 0.1) : Colors.transparent,
+            color: isPrimary
+                ? accentColor.withValues(alpha: 0.1)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: isPrimary ? accentColor.withValues(alpha: 0.2) : const Color(0xFFE2E8F0),
+              color: isPrimary
+                  ? accentColor.withValues(alpha: 0.2)
+                  : const Color(0xFFE2E8F0),
             ),
           ),
           child: Text(

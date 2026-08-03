@@ -62,7 +62,7 @@ class _SnowGlobePhotoLayerState extends State<SnowGlobePhotoLayer>
   void _initItems() {
     _items = [];
     final random = Random();
-    final itemRadius = widget.circleSize * 0.12; 
+    final itemRadius = widget.circleSize * 0.12;
     for (int i = 0; i < widget.photoUrls.length; i++) {
       final angle = random.nextDouble() * 2 * pi;
       final r = random.nextDouble() * (widget.circleSize / 2 * 0.5);
@@ -98,7 +98,7 @@ class _SnowGlobePhotoLayerState extends State<SnowGlobePhotoLayer>
 
   void _onTick(Duration elapsed) {
     if (!mounted || _items.isEmpty) return;
-    
+
     const dt = 1 / 60.0;
     final double gravityMultiplier = 150.0;
 
@@ -199,7 +199,7 @@ class _SnowGlobePhotoLayerState extends State<SnowGlobePhotoLayer>
         _stopPhysics();
       }
     }
-    
+
     bool sizeChanged = widget.circleSize != oldWidget.circleSize;
     if (sizeChanged) {
       final newItemRadius = widget.circleSize * 0.12;
@@ -249,7 +249,8 @@ class _SnowGlobePhotoLayerState extends State<SnowGlobePhotoLayer>
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 2),
+                border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.8), width: 2),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.2),

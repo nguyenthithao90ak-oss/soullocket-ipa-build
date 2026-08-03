@@ -725,6 +725,10 @@ extension _MapLocationLogicExt on _MapScreenState {
 
   void _disposeMemoryPipeline() {
     final state = _memoryPipelineState;
+    state.debounce?.cancel();
+    state.debounce = null;
+    state.houseDebounce?.cancel();
+    state.houseDebounce = null;
     for (final sub in state.subscriptions) {
       unawaited(sub.cancel());
     }
@@ -1627,7 +1631,7 @@ extension _MapLocationLogicExt on _MapScreenState {
               p.longitude <= 180.0 &&
               p.longitude >= -180.0)
           .toList(growable: false);
-      
+
       if (validPoints.length >= 2) {
         livePolylines.add(
           _buildGlowPolyline(

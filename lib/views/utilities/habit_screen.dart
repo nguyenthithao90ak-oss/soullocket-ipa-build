@@ -513,12 +513,14 @@ class _HabitScreenState extends State<HabitScreen> {
               if (index == 0) {
                 return const Padding(
                   padding: EdgeInsets.only(bottom: 16),
-                  child: SkeletonContainer.rounded(width: double.infinity, height: 130),
+                  child: SkeletonContainer.rounded(
+                      width: double.infinity, height: 130),
                 );
               }
               return const Padding(
                 padding: EdgeInsets.only(bottom: 20),
-                child: SkeletonContainer.rounded(width: double.infinity, height: 160),
+                child: SkeletonContainer.rounded(
+                    width: double.infinity, height: 160),
               );
             },
           );

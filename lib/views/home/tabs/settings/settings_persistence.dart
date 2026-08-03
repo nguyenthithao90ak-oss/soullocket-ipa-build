@@ -655,7 +655,8 @@ extension _SettingsTabPersistence on _SettingsTabState {
               .toString()
               .trim();
       final linkedGoogle = await _authService.isGoogleLinkedCurrentUser();
-      final googleLinkedEmail = linkedGoogle ? (_authService.getGoogleLinkedEmail() ?? '') : '';
+      final googleLinkedEmail =
+          linkedGoogle ? (_authService.getGoogleLinkedEmail() ?? '') : '';
       final linkedPassword = await _authService.isPasswordLinkedCurrentUser();
       final settingsMap = settingsSnap.exists && settingsSnap.value is Map
           ? Map<dynamic, dynamic>.from(settingsSnap.value as Map)

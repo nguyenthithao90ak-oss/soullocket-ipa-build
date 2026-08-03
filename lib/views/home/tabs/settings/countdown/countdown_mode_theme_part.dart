@@ -614,7 +614,8 @@ class _CountdownModeStyleData {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 3.5),
+          outerBorder: Border.all(
+              color: Colors.white.withValues(alpha: 0.9), width: 3.5),
           shadows: [
             BoxShadow(
               color: const Color(0xFFFF69B4).withValues(alpha: 0.3),
@@ -630,7 +631,8 @@ class _CountdownModeStyleData {
               Colors.white.withValues(alpha: 0.1),
             ],
           ),
-          innerBorder: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.2),
+          innerBorder: Border.all(
+              color: Colors.white.withValues(alpha: 0.6), width: 1.2),
           numberGradient: const [Color(0xFFE91E63), Color(0xFFFF8DA1)],
           topColor: const Color(0xFFAD1457),
           bottomColor: const Color(0xFFF48FB1),
@@ -653,7 +655,8 @@ class _CountdownModeStyleData {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 2.5),
+          outerBorder: Border.all(
+              color: Colors.white.withValues(alpha: 0.2), width: 2.5),
           shadows: [
             BoxShadow(
               color: const Color(0xFF38BDF8).withValues(alpha: 0.35),
@@ -669,8 +672,13 @@ class _CountdownModeStyleData {
               Colors.black.withValues(alpha: 0.05),
             ],
           ),
-          innerBorder: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1),
-          numberGradient: const [Color(0xFFE0F2FE), Color(0xFF38BDF8), Color(0xFF818CF8)],
+          innerBorder:
+              Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1),
+          numberGradient: const [
+            Color(0xFFE0F2FE),
+            Color(0xFF38BDF8),
+            Color(0xFF818CF8)
+          ],
           topColor: Colors.white,
           bottomColor: const Color(0xFFBAE6FD),
           labelShadows: [
@@ -692,7 +700,8 @@ class _CountdownModeStyleData {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 3),
+          outerBorder:
+              Border.all(color: Colors.white.withValues(alpha: 0.3), width: 3),
           shadows: [
             BoxShadow(
               color: const Color(0xFF0083B0).withValues(alpha: 0.4),
@@ -708,7 +717,8 @@ class _CountdownModeStyleData {
               Colors.white.withValues(alpha: 0.05),
             ],
           ),
-          innerBorder: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1),
+          innerBorder:
+              Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1),
           numberGradient: const [Colors.white, Color(0xFFE0F7FA)],
           topColor: Colors.white,
           bottomColor: const Color(0xFFB2EBF2),
@@ -731,7 +741,8 @@ class _CountdownModeStyleData {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 3.5),
+          outerBorder: Border.all(
+              color: Colors.white.withValues(alpha: 0.4), width: 3.5),
           shadows: [
             BoxShadow(
               color: const Color(0xFFFF7E5F).withValues(alpha: 0.45),
@@ -747,12 +758,15 @@ class _CountdownModeStyleData {
               Colors.white.withValues(alpha: 0.05),
             ],
           ),
-          innerBorder: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 1.5),
+          innerBorder: Border.all(
+              color: Colors.white.withValues(alpha: 0.35), width: 1.5),
           numberGradient: const [Color(0xFFFFF3E0), Color(0xFFFFCC80)],
           topColor: Colors.white,
           bottomColor: const Color(0xFFFFE0B2),
           labelShadows: [
-            Shadow(color: const Color(0xFFD84315).withValues(alpha: 0.5), blurRadius: 10),
+            Shadow(
+                color: const Color(0xFFD84315).withValues(alpha: 0.5),
+                blurRadius: 10),
           ],
           numberShadows: [
             Shadow(
@@ -770,7 +784,8 @@ class _CountdownModeStyleData {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder: Border.all(color: const Color(0xFFFF003C).withValues(alpha: 0.6), width: 4),
+          outerBorder: Border.all(
+              color: const Color(0xFFFF003C).withValues(alpha: 0.6), width: 4),
           shadows: [
             BoxShadow(
               color: const Color(0xFFFF003C).withValues(alpha: 0.55),
@@ -786,7 +801,9 @@ class _CountdownModeStyleData {
               Colors.black.withValues(alpha: 0.1),
             ],
           ),
-          innerBorder: Border.all(color: const Color(0xFFFF003C).withValues(alpha: 0.4), width: 1.5),
+          innerBorder: Border.all(
+              color: const Color(0xFFFF003C).withValues(alpha: 0.4),
+              width: 1.5),
           numberGradient: const [Color(0xFFFF8AA5), Color(0xFFFF003C)],
           topColor: Colors.white,
           bottomColor: const Color(0xFFFFB3C6),

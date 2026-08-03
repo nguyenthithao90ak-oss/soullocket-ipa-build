@@ -1,4 +1,3 @@
-
 part of '../settings_tab.dart';
 
 extension _SettingsTabShell on _SettingsTabState {
@@ -40,7 +39,8 @@ extension _SettingsTabShell on _SettingsTabState {
   Future<void> _togglePanel(String id) async {
     final sectionId = _sectionIdForPanel(id);
     if (_isBootstrappingSettings) {
-      _showToast(L10nService().translate('settings_loading_data'), success: false);
+      _showToast(L10nService().translate('settings_loading_data'),
+          success: false);
       return;
     }
     if (_shouldShowPendingDeviceGate(sectionId)) {
@@ -176,7 +176,6 @@ extension _SettingsTabShell on _SettingsTabState {
       'diary_export',
       'tarot',
       'collage',
-
       'creative_diary',
     });
 
@@ -341,7 +340,8 @@ extension _SettingsTabShell on _SettingsTabState {
 
     final double headerHeight = MediaQuery.paddingOf(context).top + 52;
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF000000) : const Color(0xFFF2F2F7),
+      backgroundColor:
+          isDark ? const Color(0xFF000000) : const Color(0xFFF2F2F7),
       body: SafeArea(
         top: false,
         bottom: false,
@@ -408,10 +408,10 @@ extension _SettingsTabShell on _SettingsTabState {
     final isDark = uiState.themeKey == 'theme-night' ||
         uiState.themeKey == 'theme-dark' ||
         uiState.themeKey == 'theme-true-black';
-    
+
     // Optimize: Remove BackdropFilter to prevent lag during scroll.
-    final headerBgColor = isDark 
-        ? Colors.black.withValues(alpha: 0.98) 
+    final headerBgColor = isDark
+        ? Colors.black.withValues(alpha: 0.98)
         : const Color(0xFFF2F2F7).withValues(alpha: 0.98);
 
     return RepaintBoundary(
@@ -440,62 +440,62 @@ extension _SettingsTabShell on _SettingsTabState {
           ),
         ),
         child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: _kSettingsHeaderSurface,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: _kSettingsHeaderBorder,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back_ios_new,
-                      color: SLColors.primaryActive,
-                      size: 15,
-                    ),
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: _kSettingsHeaderSurface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: _kSettingsHeaderBorder,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: SLTheme.titleGradient(context.tr('settings'),
-                      fontSize: 18),
+                child: const Icon(
+                  Icons.arrow_back_ios_new,
+                  color: SLColors.primaryActive,
+                  size: 15,
                 ),
-                _buildHeaderAction(
-                  icon: Icons.search_rounded,
-                  onTap: () {
-                    final houseId = _houseId?.trim() ?? '';
-                    if (houseId.isEmpty) {
-                      return;
-                    }
-                    slPush(
-                      context,
-                      GlobalSearchScreen(
-                        houseId: houseId,
-                        relationshipMode: _relationshipMode,
-                        allowedUtilityIds: _settingsSearchableUtilityIds(),
-                        onResultSelected: (result) async {
-                          Navigator.of(context).pop();
-                          await _openSearchResultFromSettings(result);
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(width: 10),
+            Expanded(
+              child:
+                  SLTheme.titleGradient(context.tr('settings'), fontSize: 18),
+            ),
+            _buildHeaderAction(
+              icon: Icons.search_rounded,
+              onTap: () {
+                final houseId = _houseId?.trim() ?? '';
+                if (houseId.isEmpty) {
+                  return;
+                }
+                slPush(
+                  context,
+                  GlobalSearchScreen(
+                    houseId: houseId,
+                    relationshipMode: _relationshipMode,
+                    allowedUtilityIds: _settingsSearchableUtilityIds(),
+                    onResultSelected: (result) async {
+                      Navigator.of(context).pop();
+                      await _openSearchResultFromSettings(result);
+                    },
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -529,10 +529,10 @@ extension _SettingsTabShell on _SettingsTabState {
     bool isDark = false,
     bool isDestructive = false,
   }) {
-    final textColor = isDestructive 
-        ? const Color(0xFFD32F2F) 
+    final textColor = isDestructive
+        ? const Color(0xFFD32F2F)
         : (isDark ? Colors.white : const Color(0xFF243041));
-        
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -546,7 +546,9 @@ extension _SettingsTabShell on _SettingsTabState {
                 width: 30,
                 height: 30,
                 decoration: BoxDecoration(
-                  color: isDestructive ? const Color(0xFFFFEBEE) : (iconGradient == null ? iconBgColor : null),
+                  color: isDestructive
+                      ? const Color(0xFFFFEBEE)
+                      : (iconGradient == null ? iconBgColor : null),
                   gradient: isDestructive ? null : iconGradient,
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -576,7 +578,9 @@ extension _SettingsTabShell on _SettingsTabState {
                         style: SLTheme.quicksand(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.grey[500] : const Color(0xFF7B8794),
+                          color: isDark
+                              ? Colors.grey[500]
+                              : const Color(0xFF7B8794),
                         ),
                       ),
                     ],
@@ -600,8 +604,8 @@ extension _SettingsTabShell on _SettingsTabState {
     return Padding(
       padding: const EdgeInsets.only(left: 60),
       child: Divider(
-        height: 0.5, 
-        thickness: 0.5, 
+        height: 0.5,
+        thickness: 0.5,
         color: isDark ? Colors.grey[800] : Colors.grey.shade200,
       ),
     );
@@ -609,184 +613,189 @@ extension _SettingsTabShell on _SettingsTabState {
 
   List<Widget> _buildNewSettingsList(bool isDark) {
     return [
-        _buildiOSSectionCard([
+      _buildiOSSectionCard([
+        _buildiOSRow(
+          icon: _isVipActive
+              ? Icons.workspace_premium_rounded
+              : Icons.manage_accounts_rounded,
+          iconBgColor: const Color(0xFFF6CB63),
+          iconGradient: _isVipActive
+              ? const LinearGradient(
+                  colors: [Color(0xFFFFD700), Color(0xFFFF9800)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          title: context.tr('settings_account_label') +
+              (_isVipActive ? ' (PRO)' : ''),
+          subtitle: context.tr('settings_account_desc'),
+          isDark: isDark,
+          onTap: () => _togglePanel('account'),
+        ),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.link_rounded,
+          iconBgColor: const Color(0xFFD81B60),
+          title: context.tr('settings_partner_connect'),
+          subtitle: context.tr('settings_partner_connect_desc'),
+          isDark: isDark,
+          onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const PairingDashboardScreen())),
+        ),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.palette_rounded,
+          iconBgColor: const Color(0xFF8ABAF5),
+          title: context.tr('theme'),
+          subtitle: context.tr('settings_theme_desc'),
+          isDark: isDark,
+          onTap: () => _togglePanel('theme'),
+        ),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.widgets_rounded,
+          iconBgColor: const Color(0xFF73D5CC),
+          title: context.tr('settings_widget_label'),
+          subtitle: kIsWeb
+              ? context.tr('settings_widget_desc_web')
+              : context.tr('settings_widget_desc_mobile'),
+          isDark: isDark,
+          onTap: () => _togglePanel('widget'),
+        ),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.timelapse_rounded,
+          iconBgColor: const Color(0xFFF1B58E),
+          title: context.tr('settings_countdown_space_label'),
+          subtitle: context.tr('settings_countdown_space_desc'),
+          isDark: isDark,
+          onTap: () => _togglePanel('countdownMode'),
+        ),
+      ], isDark),
+      _buildSectionTitle(context.tr('settings_security_label'), topPadding: 16),
+      _buildiOSSectionCard([
+        _buildiOSRow(
+          icon: Icons.shield_rounded,
+          iconBgColor: const Color(0xFFFFA8BF),
+          title: context.tr('settings_security_label'),
+          subtitle: context.tr('settings_security_desc'),
+          isDark: isDark,
+          onTap: () => _togglePanel('security'),
+        ),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.notifications_active_rounded,
+          iconBgColor: const Color(0xFFA4D7A9),
+          title: context.tr('settings_notifications_interactions'),
+          subtitle: context.tr('settings_notifications_interactions_desc'),
+          isDark: isDark,
+          onTap: () => _togglePanel('notifications'),
+        ),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.hub_rounded,
+          iconBgColor: const Color(0xFF90CAF9),
+          title: context.tr('settings_data_system_label'),
+          subtitle: context.tr('settings_data_system_desc'),
+          isDark: isDark,
+          onTap: () => _togglePanel('dataHealth'),
+        ),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.admin_panel_settings_rounded,
+          iconBgColor: const Color(0xFF9575CD),
+          title: context.tr('theme_permission_center'),
+          subtitle: 'Quản lý cấp quyền hệ thống',
+          isDark: isDark,
+          onTap: _isGrantingPermissions ? () {} : _requestAllPermissions,
+        ),
+      ], isDark),
+      _buildSectionTitle(context.tr('settings_other_features_title'),
+          topPadding: 16),
+      _buildiOSSectionCard([
+        if (_relationshipMode != 'single') ...[
           _buildiOSRow(
-            icon: _isVipActive ? Icons.workspace_premium_rounded : Icons.manage_accounts_rounded,
-            iconBgColor: const Color(0xFFF6CB63),
-            iconGradient: _isVipActive 
-                ? const LinearGradient(
-                    colors: [Color(0xFFFFD700), Color(0xFFFF9800)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
-            title: context.tr('settings_account_label') + (_isVipActive ? ' (PRO)' : ''),
-            subtitle: context.tr('settings_account_desc'),
+            icon: Icons.swap_horiz_rounded,
+            iconBgColor: const Color(0xFF42A5F5),
+            title: _activeRoleKey == 'user1'
+                ? context.tr('settings_swap_role_to_female')
+                : context.tr('settings_swap_role_to_male'),
             isDark: isDark,
-            onTap: () => _togglePanel('account'),
+            onTap: _swapRole,
           ),
           _buildDivider(isDark),
+        ],
+        _buildiOSRow(
+          icon: Icons.support_agent_rounded,
+          iconBgColor: const Color(0xFF4FC3F7),
+          title: context.tr('support_center'),
+          isDark: isDark,
+          onTap: _openSupportContact,
+        ),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.star_rate_rounded,
+          iconBgColor: const Color(0xFFFFD54F),
+          title: context.tr('rate_app'),
+          isDark: isDark,
+          onTap: _rateApp,
+        ),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.display_settings_rounded,
+          iconBgColor: const Color(0xFFBA68C8),
+          title: 'Cài đặt hiển thị',
+          isDark: isDark,
+          onTap: () {
+            _showToast('Tính năng đang phát triển nhé', success: true);
+          },
+        ),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.history_rounded,
+          iconBgColor: const Color(0xFF90CAF9),
+          title: 'Lịch sử hoạt động',
+          isDark: isDark,
+          onTap: () {
+            final houseId = _houseId?.trim() ?? '';
+            if (houseId.isNotEmpty) {
+              slPush(context, HistoryScreen(houseId: houseId));
+            }
+          },
+        ),
+        if (kDebugMode) _buildDivider(isDark),
+        if (kDebugMode)
           _buildiOSRow(
-            icon: Icons.link_rounded,
-            iconBgColor: const Color(0xFFD81B60),
-            title: context.tr('settings_partner_connect'),
-            subtitle: context.tr('settings_partner_connect_desc'),
-            isDark: isDark,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PairingDashboardScreen())),
-          ),
-          _buildDivider(isDark),
-          _buildiOSRow(
-            icon: Icons.palette_rounded,
-            iconBgColor: const Color(0xFF8ABAF5),
-            title: context.tr('theme'),
-            subtitle: context.tr('settings_theme_desc'),
-            isDark: isDark,
-            onTap: () => _togglePanel('theme'),
-          ),
-          _buildDivider(isDark),
-          _buildiOSRow(
-            icon: Icons.widgets_rounded,
-            iconBgColor: const Color(0xFF73D5CC),
-            title: context.tr('settings_widget_label'),
-            subtitle: kIsWeb ? context.tr('settings_widget_desc_web') : context.tr('settings_widget_desc_mobile'),
-            isDark: isDark,
-            onTap: () => _togglePanel('widget'),
-          ),
-          _buildDivider(isDark),
-          _buildiOSRow(
-            icon: Icons.timelapse_rounded,
-            iconBgColor: const Color(0xFFF1B58E),
-            title: context.tr('settings_countdown_space_label'),
-            subtitle: context.tr('settings_countdown_space_desc'),
-            isDark: isDark,
-            onTap: () => _togglePanel('countdownMode'),
-          ),
-        ], isDark),
-
-        _buildSectionTitle(context.tr('settings_security_label'), topPadding: 16),
-        _buildiOSSectionCard([
-          _buildiOSRow(
-            icon: Icons.shield_rounded,
-            iconBgColor: const Color(0xFFFFA8BF),
-            title: context.tr('settings_security_label'),
-            subtitle: context.tr('settings_security_desc'),
-            isDark: isDark,
-            onTap: () => _togglePanel('security'),
-          ),
-          _buildDivider(isDark),
-          _buildiOSRow(
-            icon: Icons.notifications_active_rounded,
-            iconBgColor: const Color(0xFFA4D7A9),
-            title: context.tr('settings_notifications_interactions'),
-            subtitle: context.tr('settings_notifications_interactions_desc'),
-            isDark: isDark,
-            onTap: () => _togglePanel('notifications'),
-          ),
-          _buildDivider(isDark),
-          _buildiOSRow(
-            icon: Icons.hub_rounded,
-            iconBgColor: const Color(0xFF90CAF9),
-            title: context.tr('settings_data_system_label'),
-            subtitle: context.tr('settings_data_system_desc'),
-            isDark: isDark,
-            onTap: () => _togglePanel('dataHealth'),
-          ),
-          _buildDivider(isDark),
-          _buildiOSRow(
-            icon: Icons.admin_panel_settings_rounded,
-            iconBgColor: const Color(0xFF9575CD),
-            title: context.tr('theme_permission_center'),
-            subtitle: 'Quản lý cấp quyền hệ thống',
-            isDark: isDark,
-            onTap: _isGrantingPermissions ? () {} : _requestAllPermissions,
-          ),
-        ], isDark),
-
-        _buildSectionTitle(context.tr('settings_other_features_title'), topPadding: 16),
-        _buildiOSSectionCard([
-          if (_relationshipMode != 'single') ...[
-            _buildiOSRow(
-              icon: Icons.swap_horiz_rounded,
-              iconBgColor: const Color(0xFF42A5F5),
-              title: _activeRoleKey == 'user1'
-                  ? context.tr('settings_swap_role_to_female')
-                  : context.tr('settings_swap_role_to_male'),
-              isDark: isDark,
-              onTap: _swapRole,
-            ),
-            _buildDivider(isDark),
-          ],
-          _buildiOSRow(
-            icon: Icons.support_agent_rounded,
-            iconBgColor: const Color(0xFF4FC3F7),
-            title: context.tr('support_center'),
-            isDark: isDark,
-            onTap: _openSupportContact,
-          ),
-          _buildDivider(isDark),
-          _buildiOSRow(
-            icon: Icons.star_rate_rounded,
-            iconBgColor: const Color(0xFFFFD54F),
-            title: context.tr('rate_app'),
-            isDark: isDark,
-            onTap: _rateApp,
-          ),
-          _buildDivider(isDark),
-          _buildiOSRow(
-            icon: Icons.display_settings_rounded,
-            iconBgColor: const Color(0xFFBA68C8),
-            title: 'Cài đặt hiển thị',
+            icon: Icons.emoji_emotions_rounded,
+            iconBgColor: const Color(0xFFFF8FB7),
+            title: 'Quản lý Kho Sticker',
             isDark: isDark,
             onTap: () {
-              _showToast('Tính năng đang phát triển nhé', success: true);
+              slPush(context, const StickerLibraryScreen());
             },
           ),
-          _buildDivider(isDark),
-          _buildiOSRow(
-            icon: Icons.history_rounded,
-            iconBgColor: const Color(0xFF90CAF9),
-            title: 'Lịch sử hoạt động',
-            isDark: isDark,
-            onTap: () {
-              final houseId = _houseId?.trim() ?? '';
-              if (houseId.isNotEmpty) {
-                slPush(context, HistoryScreen(houseId: houseId));
-              }
-            },
-          ),
-
-          if (kDebugMode) _buildDivider(isDark),
-          if (kDebugMode)
-            _buildiOSRow(
-              icon: Icons.emoji_emotions_rounded,
-              iconBgColor: const Color(0xFFFF8FB7),
-              title: 'Quản lý Kho Sticker',
-              isDark: isDark,
-              onTap: () {
-                slPush(context, const StickerLibraryScreen());
-              },
-            ),
-        ], isDark),
-
-        _buildiOSSectionCard([
-          _buildiOSRow(
-            icon: Icons.logout_rounded,
-            iconBgColor: const Color(0xFFFF8A65),
-            title: context.tr('logout'),
-            isDark: isDark,
-            isDestructive: true,
-            onTap: _logout,
-          ),
-          _buildDivider(isDark),
-          _buildiOSRow(
-            icon: Icons.delete_forever_rounded,
-            iconBgColor: const Color(0xFFB71C1C),
-            title: context.tr('settings_delete_account_data'),
-            isDark: isDark,
-            isDestructive: true,
-            onTap: _deleteAccount,
-          ),
-        ], isDark),
+      ], isDark),
+      _buildiOSSectionCard([
+        _buildiOSRow(
+          icon: Icons.logout_rounded,
+          iconBgColor: const Color(0xFFFF8A65),
+          title: context.tr('logout'),
+          isDark: isDark,
+          isDestructive: true,
+          onTap: _logout,
+        ),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.delete_forever_rounded,
+          iconBgColor: const Color(0xFFB71C1C),
+          title: context.tr('settings_delete_account_data'),
+          isDark: isDark,
+          isDestructive: true,
+          onTap: _deleteAccount,
+        ),
+      ], isDark),
     ];
   }
 
@@ -1060,16 +1069,18 @@ class _DraggableFloatingChatIcon extends StatefulWidget {
   });
 
   @override
-  State<_DraggableFloatingChatIcon> createState() => _DraggableFloatingChatIconState();
+  State<_DraggableFloatingChatIcon> createState() =>
+      _DraggableFloatingChatIconState();
 }
 
-class _DraggableFloatingChatIconState extends State<_DraggableFloatingChatIcon> {
+class _DraggableFloatingChatIconState
+    extends State<_DraggableFloatingChatIcon> {
   Offset _position = const Offset(20, 200); // Default position
   bool _isDragging = false;
-  
+
   Timer? _speechTimer;
   String? _currentSpeech;
-  
+
   final List<String> _randomSpeeches = [
     'Hello bạn, mình là Chat Thân Thiện đây!',
     'Bạn có tâm sự gì không? Kể mình nghe nhé!',
@@ -1094,7 +1105,8 @@ class _DraggableFloatingChatIconState extends State<_DraggableFloatingChatIcon> 
 
   void _scheduleNextSpeech() {
     _speechTimer?.cancel();
-    final randomSeconds = 60 + math.Random().nextInt(240); // 60s to 300s (1 to 5 mins)
+    final randomSeconds =
+        60 + math.Random().nextInt(240); // 60s to 300s (1 to 5 mins)
     _speechTimer = Timer(Duration(seconds: randomSeconds), _showSpeech);
   }
 
@@ -1103,11 +1115,12 @@ class _DraggableFloatingChatIconState extends State<_DraggableFloatingChatIcon> 
       _scheduleNextSpeech();
       return;
     }
-    
+
     setState(() {
-      _currentSpeech = _randomSpeeches[math.Random().nextInt(_randomSpeeches.length)];
+      _currentSpeech =
+          _randomSpeeches[math.Random().nextInt(_randomSpeeches.length)];
     });
-    
+
     // Hide after 5 seconds
     Timer(const Duration(seconds: 5), () {
       if (mounted) {
@@ -1158,10 +1171,11 @@ class _DraggableFloatingChatIconState extends State<_DraggableFloatingChatIcon> 
           if (widget.houseId.isNotEmpty) {
             slPush(
               context,
-              FriendlyChatScreen(houseId: widget.houseId, myName: widget.myName),
+              FriendlyChatScreen(
+                  houseId: widget.houseId, myName: widget.myName),
             );
           } else {
-             // fallback silently if no house ID
+            // fallback silently if no house ID
           }
         },
         child: AnimatedScale(
@@ -1198,7 +1212,8 @@ class _DraggableFloatingChatIconState extends State<_DraggableFloatingChatIcon> 
                   bottom: 64, // Positioned above the icon
                   child: Container(
                     width: 140,
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),

@@ -38,7 +38,8 @@ class GlobalSearchService {
     'calculator',
   ];
 
-  static const Map<String, String> _defaultUtilitySubtitleKeys = <String, String>{
+  static const Map<String, String> _defaultUtilitySubtitleKeys =
+      <String, String>{
     'note': 'search_utility_subtitle_note',
     'friendly_chat': 'search_utility_subtitle_friendly_chat',
     'history': 'search_utility_subtitle_history',
@@ -72,7 +73,6 @@ class GlobalSearchService {
     'tarot': ['bói bài'],
     'collage': ['ghép ảnh'],
     'store': ['cửa hàng', 'shop'],
-
     'love_card': ['thẻ tình yêu', 'card'],
     'creative_diary': ['nhật ký', 'diary', 'sổ tay'],
   };

@@ -236,75 +236,77 @@ class _CinemaReelPlayerScreenState extends State<_CinemaReelPlayerScreen> {
                   Row(
                     children: <Widget>[
                       Expanded(
-                        child: Builder(
-                          builder: (context) {
-                            final count = widget.reel.items.length;
-                            final gap = count > 50 ? 0.0 : (count > 25 ? 1.0 : (count > 10 ? 2.0 : 4.0));
-                            return Row(
-                              children: List<Widget>.generate(
-                                count,
-                                (segmentIndex) {
-                                  final isDone = segmentIndex < _index;
-                                  final isActive = segmentIndex == _index;
-                                  return Expanded(
-                                    child: Padding(
-                                      padding: EdgeInsets.only(
-                                        right: segmentIndex == count - 1 ? 0 : gap,
-                                      ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(999),
-                                    child: SizedBox(
-                                      height: 4,
-                                      child: ColoredBox(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.16),
-                                        child: Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: isActive
-                                              ? TweenAnimationBuilder<double>(
-                                                  key: ValueKey<String>(
-                                                    'player-progress-$segmentIndex-$_index',
+                        child: Builder(builder: (context) {
+                          final count = widget.reel.items.length;
+                          final gap = count > 50
+                              ? 0.0
+                              : (count > 25 ? 1.0 : (count > 10 ? 2.0 : 4.0));
+                          return Row(
+                            children: List<Widget>.generate(
+                              count,
+                              (segmentIndex) {
+                                final isDone = segmentIndex < _index;
+                                final isActive = segmentIndex == _index;
+                                return Expanded(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                      right:
+                                          segmentIndex == count - 1 ? 0 : gap,
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(999),
+                                      child: SizedBox(
+                                        height: 4,
+                                        child: ColoredBox(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.16),
+                                          child: Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: isActive
+                                                ? TweenAnimationBuilder<double>(
+                                                    key: ValueKey<String>(
+                                                      'player-progress-$segmentIndex-$_index',
+                                                    ),
+                                                    tween: Tween<double>(
+                                                      begin: 0,
+                                                      end: 1,
+                                                    ),
+                                                    duration:
+                                                        _kCinemaFrameDuration,
+                                                    builder: (context, value,
+                                                        child) {
+                                                      return FractionallySizedBox(
+                                                        widthFactor: value,
+                                                        child: child,
+                                                      );
+                                                    },
+                                                    child: ColoredBox(
+                                                      color: Colors.white
+                                                          .withValues(
+                                                              alpha: 0.9),
+                                                    ),
+                                                  )
+                                                : FractionallySizedBox(
+                                                    widthFactor: isDone ? 1 : 0,
+                                                    child: ColoredBox(
+                                                      color: Colors.white
+                                                          .withValues(
+                                                              alpha: 0.88),
+                                                    ),
                                                   ),
-                                                  tween: Tween<double>(
-                                                    begin: 0,
-                                                    end: 1,
-                                                  ),
-                                                  duration:
-                                                      _kCinemaFrameDuration,
-                                                  builder:
-                                                      (context, value, child) {
-                                                    return FractionallySizedBox(
-                                                      widthFactor: value,
-                                                      child: child,
-                                                    );
-                                                  },
-                                                  child: ColoredBox(
-                                                    color: Colors.white
-                                                        .withValues(alpha: 0.9),
-                                                  ),
-                                                )
-                                              : FractionallySizedBox(
-                                                  widthFactor: isDone ? 1 : 0,
-                                                  child: ColoredBox(
-                                                    color: Colors.white
-                                                        .withValues(
-                                                            alpha: 0.88),
-                                                  ),
-                                                ),
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      }
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Material(
+                                );
+                              },
+                            ),
+                          );
+                        }),
+                      ),
+                      const SizedBox(width: 12),
+                      Material(
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () => Navigator.of(context).maybePop(),

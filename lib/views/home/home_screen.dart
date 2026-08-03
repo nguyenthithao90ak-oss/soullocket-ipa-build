@@ -1162,10 +1162,10 @@ class _HomeScreenState extends State<HomeScreen>
       if (houseId == null || houseId.isEmpty) return;
       final settings = await _houseSettingsService.fetchSettings(houseId);
       if (settings == null) return;
-      
+
       final days = _calculateWidgetLoveDays(settings.startDate);
       final title = '${settings.nameU1} 💖 ${settings.nameU2}';
-      
+
       await LiveActivityService().startOrUpdateActivity(
         avatar1: settings.avtUser1,
         avatar2: settings.avtUser2,
@@ -1188,7 +1188,7 @@ class _HomeScreenState extends State<HomeScreen>
     if (!throttle.isAllowed && throttle.isSuspiciousBurst) return;
     final nextIndex = index.clamp(0, _navItems.length - 1);
     if (!mounted) return;
-    
+
     // if (_isHouseUnpairedCache && nextIndex != 0) {
     //   _showPairingRequiredDialog();
     //   return;
@@ -1400,7 +1400,6 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
   }
-
 
   Widget _buildShellBody({
     required Widget foregroundChild,

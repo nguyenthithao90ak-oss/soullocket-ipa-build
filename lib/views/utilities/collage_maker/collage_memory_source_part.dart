@@ -215,5 +215,4 @@ extension _CollageMemorySourcePart on _CollageMakerScreenState {
     }
     return 'tháng ${parts[1]}/${parts[0]}';
   }
-
 }

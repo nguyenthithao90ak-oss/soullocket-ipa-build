@@ -126,7 +126,8 @@ class _R2NetworkImageState extends State<R2NetworkImage> {
             fit: widget.fit,
             width: widget.width,
             height: widget.height,
-            cacheWidth: widget.width != null ? (widget.width! * 2).toInt() : 800,
+            cacheWidth:
+                widget.width != null ? (widget.width! * 2).toInt() : 800,
           );
         }
 

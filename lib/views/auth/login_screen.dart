@@ -253,7 +253,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (role == 'user1' || role == 'user2') {
       await prefs.setString('il_role', role!);
-      await SecureStorageService.instance.write(SecureStorageService.keyRole, role);
+      await SecureStorageService.instance
+          .write(SecureStorageService.keyRole, role);
     }
 
     final shouldSaveRecovery = _showSecurityQuestion &&
@@ -289,8 +290,6 @@ class _LoginScreenState extends State<LoginScreen> {
     await prefs.remove(_pendingSignupRecoveryAnswerPrefsKey);
     await prefs.remove(_pendingSignupAutoCreateHousePrefsKey);
   }
-
-
 
   void _setAuthTab(bool isLoginTab) {
     if (_isLoginTab == isLoginTab) return;
@@ -432,7 +431,8 @@ class _LoginScreenState extends State<LoginScreen> {
     if (sessionRole != null) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('il_role', sessionRole);
-      await SecureStorageService.instance.write(SecureStorageService.keyRole, sessionRole);
+      await SecureStorageService.instance
+          .write(SecureStorageService.keyRole, sessionRole);
     }
 
     if (!mounted) return;
@@ -479,20 +479,28 @@ class _LoginScreenState extends State<LoginScreen> {
 
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
-          final cachedAuthUid = (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? prefs.getString('il_auth_uid')?.trim() ?? '';
+          final cachedAuthUid = (await SecureStorageService.instance
+                      .read(SecureStorageService.keyAuthUid))
+                  ?.trim() ??
+              prefs.getString('il_auth_uid')?.trim() ??
+              '';
           if (cachedAuthUid.isNotEmpty && cachedAuthUid != user.uid) {
-            await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
-            await SecureStorageService.instance.delete(SecureStorageService.keyRole);
+            await SecureStorageService.instance
+                .delete(SecureStorageService.keyHouseId);
+            await SecureStorageService.instance
+                .delete(SecureStorageService.keyRole);
             await prefs.remove('il_house_id');
             await prefs.remove('il_role');
           }
           await prefs.setString('il_auth_uid', user.uid);
-          await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, user.uid);
+          await SecureStorageService.instance
+              .write(SecureStorageService.keyAuthUid, user.uid);
         }
 
         if (sessionRole == 'user1' || sessionRole == 'user2') {
           await prefs.setString('il_role', sessionRole!);
-          await SecureStorageService.instance.write(SecureStorageService.keyRole, sessionRole);
+          await SecureStorageService.instance
+              .write(SecureStorageService.keyRole, sessionRole);
         }
 
         if (user != null) {
@@ -502,7 +510,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 .timeout(const Duration(seconds: 15));
             if (houseId != null && houseId.isNotEmpty) {
               await prefs.setString('il_house_id', houseId);
-              await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
+              await SecureStorageService.instance
+                  .write(SecureStorageService.keyHouseId, houseId);
             }
           } catch (e) {
             debugPrint('[Auth][LoginScreen] Error fetching houseId: $e');
@@ -517,7 +526,8 @@ class _LoginScreenState extends State<LoginScreen> {
           _isLoading = false;
           _isSuccessTransition = true;
         });
-        await Future<void>.delayed(const Duration(milliseconds: 600)); // wait for transition
+        await Future<void>.delayed(
+            const Duration(milliseconds: 600)); // wait for transition
         if (!mounted) return;
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const AppEntry()),
@@ -545,7 +555,8 @@ class _LoginScreenState extends State<LoginScreen> {
           _isLoading = false;
           _isSuccessTransition = true;
         });
-        await Future<void>.delayed(const Duration(milliseconds: 600)); // wait for transition
+        await Future<void>.delayed(
+            const Duration(milliseconds: 600)); // wait for transition
         if (!mounted) return;
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const AppEntry()),
@@ -649,8 +660,6 @@ class _LoginScreenState extends State<LoginScreen> {
     AuthFeedbackDialogs.showError(context, message);
   }
 
-
-
   void _handleForgotPasswordAction() {
     unawaited(ForgotPasswordLauncher.launch(context));
   }
@@ -706,7 +715,8 @@ class _LoginScreenState extends State<LoginScreen> {
     // Lưu ngay vai trò vào SharedPreferences và SecureStorage trước khi gọi API đăng nhập
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('il_role', selectedRole);
-    await SecureStorageService.instance.write(SecureStorageService.keyRole, selectedRole);
+    await SecureStorageService.instance
+        .write(SecureStorageService.keyRole, selectedRole);
 
     if (mounted) {
       setState(() => _isLoading = true);
@@ -739,20 +749,28 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       final user = result.user;
       if (user != null) {
-        final cachedAuthUid = (await SecureStorageService.instance.read(SecureStorageService.keyAuthUid))?.trim() ?? prefs.getString('il_auth_uid')?.trim() ?? '';
+        final cachedAuthUid = (await SecureStorageService.instance
+                    .read(SecureStorageService.keyAuthUid))
+                ?.trim() ??
+            prefs.getString('il_auth_uid')?.trim() ??
+            '';
         if (cachedAuthUid.isNotEmpty && cachedAuthUid != user.uid) {
-          await SecureStorageService.instance.delete(SecureStorageService.keyHouseId);
-          await SecureStorageService.instance.delete(SecureStorageService.keyRole);
+          await SecureStorageService.instance
+              .delete(SecureStorageService.keyHouseId);
+          await SecureStorageService.instance
+              .delete(SecureStorageService.keyRole);
           await prefs.remove('il_house_id');
           await prefs.remove('il_role');
         }
         await prefs.setString('il_auth_uid', user.uid);
-        await SecureStorageService.instance.write(SecureStorageService.keyAuthUid, user.uid);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyAuthUid, user.uid);
       }
 
       if (storedRole == 'user1' || storedRole == 'user2') {
         await prefs.setString('il_role', storedRole);
-        await SecureStorageService.instance.write(SecureStorageService.keyRole, storedRole);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyRole, storedRole);
       }
 
       if (user != null) {
@@ -762,7 +780,8 @@ class _LoginScreenState extends State<LoginScreen> {
               .timeout(const Duration(seconds: 15));
           if (houseId != null && houseId.isNotEmpty) {
             await prefs.setString('il_house_id', houseId);
-            await SecureStorageService.instance.write(SecureStorageService.keyHouseId, houseId);
+            await SecureStorageService.instance
+                .write(SecureStorageService.keyHouseId, houseId);
           }
         } catch (e) {
           debugPrint('[Auth][LoginScreen] Error fetching houseId (Social): $e');
@@ -861,7 +880,8 @@ class _LoginScreenState extends State<LoginScreen> {
       listenable: L10nService(),
       builder: (context, _) {
         final l10n = L10nService();
-        final baseBg = _isLoginTab ? const Color(0xFFFDF7FA) : const Color(0xFFFDF8FC);
+        final baseBg =
+            _isLoginTab ? const Color(0xFFFDF7FA) : const Color(0xFFFDF8FC);
 
         return SensitiveContentGuard(
           child: Scaffold(
@@ -889,8 +909,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 shape: BoxShape.circle,
                                 gradient: RadialGradient(
                                   colors: [
-                                    const Color(0xFFFF6FA3).withValues(alpha: 0.45),
-                                    const Color(0xFFFF6FA3).withValues(alpha: 0.0),
+                                    const Color(0xFFFF6FA3)
+                                        .withValues(alpha: 0.45),
+                                    const Color(0xFFFF6FA3)
+                                        .withValues(alpha: 0.0),
                                   ],
                                 ),
                               ),
@@ -908,8 +930,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 shape: BoxShape.circle,
                                 gradient: RadialGradient(
                                   colors: [
-                                    const Color(0xFF9030C0).withValues(alpha: 0.35),
-                                    const Color(0xFF9030C0).withValues(alpha: 0.0),
+                                    const Color(0xFF9030C0)
+                                        .withValues(alpha: 0.35),
+                                    const Color(0xFF9030C0)
+                                        .withValues(alpha: 0.0),
                                   ],
                                 ),
                               ),
@@ -927,8 +951,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 shape: BoxShape.circle,
                                 gradient: RadialGradient(
                                   colors: [
-                                    const Color(0xFFFFB26F).withValues(alpha: 0.3),
-                                    const Color(0xFFFFB26F).withValues(alpha: 0.0),
+                                    const Color(0xFFFFB26F)
+                                        .withValues(alpha: 0.3),
+                                    const Color(0xFFFFB26F)
+                                        .withValues(alpha: 0.0),
                                   ],
                                 ),
                               ),
@@ -936,10 +962,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           Positioned.fill(
                             child: FastBackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60), // Mờ mạnh hơn để tạo glow effect
-                              fallbackColor: Colors.white.withValues(alpha: 0.6),
+                              filter: ImageFilter.blur(
+                                  sigmaX: 60,
+                                  sigmaY: 60), // Mờ mạnh hơn để tạo glow effect
+                              fallbackColor:
+                                  Colors.white.withValues(alpha: 0.6),
                               child: Container(
-                                color: Colors.white.withValues(alpha: 0.2), // Giảm sương trắng để thấy rõ màu sắc phía sau
+                                color: Colors.white.withValues(
+                                    alpha:
+                                        0.2), // Giảm sương trắng để thấy rõ màu sắc phía sau
                               ),
                             ),
                           ),
@@ -948,254 +979,256 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isDesktop = constraints.maxWidth >= 920;
-                        final isTablet = constraints.maxWidth >= 680 &&
-                            constraints.maxWidth < 920;
-                        final isCompact = constraints.maxWidth < 450;
-                        final horizontalPadding =
-                            SLResponsive.horizontalPaddingForWidth(
-                          constraints.maxWidth,
-                          compactPadding: 10,
-                          handsetPadding: 18,
-                          tabletPadding: 24,
-                        );
-                        final contentMaxWidth = isDesktop
-                            ? 1080.0
-                            : isTablet
-                                ? 560.0
-                                : 460.0;
-                        final authPanelWidth = isDesktop
-                            ? 408.0
-                            : min(
-                                520.0,
-                                constraints.maxWidth - (isCompact ? 20 : 32),
-                              );
+                    builder: (context, constraints) {
+                      final isDesktop = constraints.maxWidth >= 920;
+                      final isTablet = constraints.maxWidth >= 680 &&
+                          constraints.maxWidth < 920;
+                      final isCompact = constraints.maxWidth < 450;
+                      final horizontalPadding =
+                          SLResponsive.horizontalPaddingForWidth(
+                        constraints.maxWidth,
+                        compactPadding: 10,
+                        handsetPadding: 18,
+                        tabletPadding: 24,
+                      );
+                      final contentMaxWidth = isDesktop
+                          ? 1080.0
+                          : isTablet
+                              ? 560.0
+                              : 460.0;
+                      final authPanelWidth = isDesktop
+                          ? 408.0
+                          : min(
+                              520.0,
+                              constraints.maxWidth - (isCompact ? 20 : 32),
+                            );
 
-                        return Center(
-                          child: SingleChildScrollView(
-                            keyboardDismissBehavior:
-                                ScrollViewKeyboardDismissBehavior.onDrag,
-                            physics: const BouncingScrollPhysics(),
-                            padding: EdgeInsets.only(
-                              left: horizontalPadding,
-                              right: horizontalPadding,
-                              top: 10,
-                              bottom: 10 + MediaQuery.of(context).viewInsets.bottom,
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                SafeArea(
-                                  bottom: false,
-                                  child: Padding(
-                                    padding: EdgeInsets.only(
-                                      bottom: isCompact ? 12 : 16,
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        GestureDetector(
-                                          onTap: () =>
-                                              _showSyncGuideDialog(context),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 12, vertical: 8),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white
-                                                  .withValues(alpha: 0.6),
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                              border: Border.all(
-                                                color: const Color(0xFFFFB6D3)
-                                                    .withValues(alpha: 0.4),
-                                                width: 1.0,
-                                              ),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                ShaderMask(
-                                                  shaderCallback: (bounds) =>
-                                                      const LinearGradient(
-                                                    colors: [
-                                                      Color(0xFFFF9E00),
-                                                      Color(0xFFFF6B00)
-                                                    ],
-                                                  ).createShader(bounds),
-                                                  child: const Icon(
-                                                    Icons.lightbulb_rounded,
-                                                    size: 16,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 6),
-                                                Text(
-                                                  'Cách đồng bộ',
-                                                  style: SLTheme.quicksand(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w900,
-                                                    color: SLColors.textPrimary,
-                                                  ),
-                                                ),
-                                              ],
+                      return Center(
+                        child: SingleChildScrollView(
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          physics: const BouncingScrollPhysics(),
+                          padding: EdgeInsets.only(
+                            left: horizontalPadding,
+                            right: horizontalPadding,
+                            top: 10,
+                            bottom:
+                                10 + MediaQuery.of(context).viewInsets.bottom,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              SafeArea(
+                                bottom: false,
+                                child: Padding(
+                                  padding: EdgeInsets.only(
+                                    bottom: isCompact ? 12 : 16,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () =>
+                                            _showSyncGuideDialog(context),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white
+                                                .withValues(alpha: 0.6),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            border: Border.all(
+                                              color: const Color(0xFFFFB6D3)
+                                                  .withValues(alpha: 0.4),
+                                              width: 1.0,
                                             ),
                                           ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              ShaderMask(
+                                                shaderCallback: (bounds) =>
+                                                    const LinearGradient(
+                                                  colors: [
+                                                    Color(0xFFFF9E00),
+                                                    Color(0xFFFF6B00)
+                                                  ],
+                                                ).createShader(bounds),
+                                                child: const Icon(
+                                                  Icons.lightbulb_rounded,
+                                                  size: 16,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                'Cách đồng bộ',
+                                                style: SLTheme.quicksand(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w900,
+                                                  color: SLColors.textPrimary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                        AuthLanguageToggle(
-                                          currentLocale: l10n.localeCode,
-                                          onSelect: (code) {
-                                            l10n.setLocale(code);
-                                          },
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                      AuthLanguageToggle(
+                                        currentLocale: l10n.localeCode,
+                                        onSelect: (code) {
+                                          l10n.setLocale(code);
+                                        },
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                AnimatedPadding(
-                                  duration: const Duration(milliseconds: 280),
+                              ),
+                              AnimatedPadding(
+                                duration: const Duration(milliseconds: 280),
+                                curve: Curves.easeOutCubic,
+                                padding: EdgeInsets.only(
+                                  top: _isLoginTab ? 0 : 4,
+                                ),
+                                child: AnimatedOpacity(
+                                  duration: const Duration(milliseconds: 500),
                                   curve: Curves.easeOutCubic,
-                                  padding: EdgeInsets.only(
-                                    top: _isLoginTab ? 0 : 4,
-                                  ),
-                                  child: AnimatedOpacity(
+                                  opacity: _isSuccessTransition ? 0.0 : 1.0,
+                                  child: AnimatedScale(
                                     duration: const Duration(milliseconds: 500),
                                     curve: Curves.easeOutCubic,
-                                    opacity: _isSuccessTransition ? 0.0 : 1.0,
-                                    child: AnimatedScale(
-                                      duration: const Duration(milliseconds: 500),
-                                      curve: Curves.easeOutCubic,
-                                      scale: _isSuccessTransition ? 1.1 : 1.0,
-                                      child: ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                            maxWidth: contentMaxWidth),
-                                        child: Center(
-                                      child: SizedBox(
-                                        width: authPanelWidth,
-                                        child: AuthPanelShell(
-                                          compact: !isDesktop &&
-                                              (isCompact || isTablet),
-                                          isLoginTab: _isLoginTab,
-                                          onSelectLogin: () =>
-                                              _setAuthTab(true),
-                                          onSelectRegister: () =>
-                                              _setAuthTab(false),
-                                          authSection: _isLoginTab
-                                              ? LoginShell(
-                                                  emailController:
-                                                      _emailController,
-                                                  passwordController:
-                                                      _passwordController,
-                                                  obscurePassword:
-                                                      _obscurePassword,
-                                                  isLoading: _isLoading,
-                                                  rememberMe: _rememberMe,
-                                                  onToggleObscure: () =>
+                                    scale: _isSuccessTransition ? 1.1 : 1.0,
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                          maxWidth: contentMaxWidth),
+                                      child: Center(
+                                        child: SizedBox(
+                                          width: authPanelWidth,
+                                          child: AuthPanelShell(
+                                            compact: !isDesktop &&
+                                                (isCompact || isTablet),
+                                            isLoginTab: _isLoginTab,
+                                            onSelectLogin: () =>
+                                                _setAuthTab(true),
+                                            onSelectRegister: () =>
+                                                _setAuthTab(false),
+                                            authSection: _isLoginTab
+                                                ? LoginShell(
+                                                    emailController:
+                                                        _emailController,
+                                                    passwordController:
+                                                        _passwordController,
+                                                    obscurePassword:
+                                                        _obscurePassword,
+                                                    isLoading: _isLoading,
+                                                    rememberMe: _rememberMe,
+                                                    onToggleObscure: () =>
+                                                        setState(
+                                                      () => _obscurePassword =
+                                                          !_obscurePassword,
+                                                    ),
+                                                    onRememberMeChanged:
+                                                        (value) => setState(
+                                                      () => _rememberMe =
+                                                          value ?? true,
+                                                    ),
+                                                    onLogin: _handleAuthAction,
+                                                    onForgotPassword:
+                                                        _handleForgotPasswordAction,
+                                                    onSocialLogin:
+                                                        _handleSocialLogin,
+                                                  )
+                                                : RegisterShell(
+                                                    emailController:
+                                                        _emailController,
+                                                    passwordController:
+                                                        _passwordController,
+                                                    obscurePassword:
+                                                        _obscurePassword,
+                                                    isLoading: _isLoading,
+                                                    acceptTerms: _acceptTerms,
+                                                    showSecurityQuestion:
+                                                        _showSecurityQuestion,
+                                                    selectedSecurityQuestion:
+                                                        _selectedSecurityQuestion,
+                                                    securityQuestions:
+                                                        _cleanSecurityQuestions,
+                                                    securityAnswerController:
+                                                        _securityAnswerController,
+                                                    onToggleObscure: () =>
+                                                        setState(
+                                                      () => _obscurePassword =
+                                                          !_obscurePassword,
+                                                    ),
+                                                    onAcceptTermsChanged:
+                                                        (value) => setState(
+                                                      () => _acceptTerms =
+                                                          value ?? false,
+                                                    ),
+                                                    onToggleSecurityQuestion:
+                                                        () => setState(
+                                                      () => _showSecurityQuestion =
+                                                          !_showSecurityQuestion,
+                                                    ),
+                                                    onSecurityQuestionChanged:
+                                                        (value) {
+                                                      if (value == null) return;
                                                       setState(
-                                                    () => _obscurePassword =
-                                                        !_obscurePassword,
+                                                        () =>
+                                                            _selectedSecurityQuestion =
+                                                                value,
+                                                      );
+                                                    },
+                                                    onRegister:
+                                                        _handleAuthAction,
+                                                    onSocialLogin:
+                                                        _handleSocialLogin,
+                                                    onTermsTap:
+                                                        _openTermsDocument,
+                                                    onPrivacyTap:
+                                                        _openPrivacyDocument,
                                                   ),
-                                                  onRememberMeChanged:
-                                                      (value) => setState(
-                                                    () => _rememberMe =
-                                                        value ?? true,
-                                                  ),
-                                                  onLogin: _handleAuthAction,
-                                                  onForgotPassword:
-                                                      _handleForgotPasswordAction,
-                                                  onSocialLogin:
-                                                      _handleSocialLogin,
-                                                )
-                                              : RegisterShell(
-                                                  emailController:
-                                                      _emailController,
-                                                  passwordController:
-                                                      _passwordController,
-                                                  obscurePassword:
-                                                      _obscurePassword,
-                                                  isLoading: _isLoading,
-                                                  acceptTerms: _acceptTerms,
-                                                  showSecurityQuestion:
-                                                      _showSecurityQuestion,
-                                                  selectedSecurityQuestion:
-                                                      _selectedSecurityQuestion,
-                                                  securityQuestions:
-                                                      _cleanSecurityQuestions,
-                                                  securityAnswerController:
-                                                      _securityAnswerController,
-                                                  onToggleObscure: () =>
-                                                      setState(
-                                                    () => _obscurePassword =
-                                                        !_obscurePassword,
-                                                  ),
-                                                  onAcceptTermsChanged:
-                                                      (value) => setState(
-                                                    () => _acceptTerms =
-                                                        value ?? false,
-                                                  ),
-                                                  onToggleSecurityQuestion:
-                                                      () => setState(
-                                                    () => _showSecurityQuestion =
-                                                        !_showSecurityQuestion,
-                                                  ),
-                                                  onSecurityQuestionChanged:
-                                                      (value) {
-                                                    if (value == null) return;
-                                                    setState(
-                                                      () =>
-                                                          _selectedSecurityQuestion =
-                                                              value,
-                                                    );
-                                                  },
-                                                  onRegister: _handleAuthAction,
-                                                  onSocialLogin:
-                                                      _handleSocialLogin,
-                                                  onTermsTap:
-                                                      _openTermsDocument,
-                                                  onPrivacyTap:
-                                                      _openPrivacyDocument,
-                                                ),
-                                          onOpenGuide: _openGuideDocument,
-                                          onOpenContact: _showContactDialog,
+                                            onOpenGuide: _openGuideDocument,
+                                            onOpenContact: _showContactDialog,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
-                                ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                    ),
-                    // Copyright watermark
-                    SafeArea(
-                      child: Align(
-                        alignment: Alignment.bottomCenter,
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                              bottom: MediaQuery.of(context).padding.bottom > 0
-                                  ? 8
-                                  : 16),
-                          child: Text(
-                            'SoulLocket © ${DateTime.now().year} — Tame Trương Việt Hoàng',
-                            style: SLTheme.quicksand(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white.withValues(alpha: 0.50),
-                            ),
+                        ),
+                      );
+                    },
+                  ),
+                  // Copyright watermark
+                  SafeArea(
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                            bottom: MediaQuery.of(context).padding.bottom > 0
+                                ? 8
+                                : 16),
+                        child: Text(
+                          'SoulLocket © ${DateTime.now().year} — Tame Trương Việt Hoàng',
+                          style: SLTheme.quicksand(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withValues(alpha: 0.50),
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
+          ),
         );
       },
     );
@@ -1303,12 +1336,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 14),
                       _buildSyncStep(
                         number: '1',
-                        text: 'Tạo tài khoản: Cả hai tự tạo tài khoản riêng biệt của mình và đăng nhập vào ứng dụng.',
+                        text:
+                            'Tạo tài khoản: Cả hai tự tạo tài khoản riêng biệt của mình và đăng nhập vào ứng dụng.',
                       ),
                       const SizedBox(height: 12),
                       _buildSyncStep(
                         number: '2',
-                        text: 'Ghép đôi: Vào phần Cài đặt -> Ghép nối dữ liệu. Một người Tạo mã, người kia Nhập mã để tiến hành đồng bộ và liên kết dữ liệu với nhau.',
+                        text:
+                            'Ghép đôi: Vào phần Cài đặt -> Ghép nối dữ liệu. Một người Tạo mã, người kia Nhập mã để tiến hành đồng bộ và liên kết dữ liệu với nhau.',
                       ),
                       const SizedBox(height: 22),
                       SizedBox(
@@ -1379,5 +1414,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
-

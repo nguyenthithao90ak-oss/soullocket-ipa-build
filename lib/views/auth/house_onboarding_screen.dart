@@ -336,7 +336,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     return DateInputUtils.looksLikeBirthQuestion(question);
   }
 
-
   void _normalizeRecoveryBirthAnswer() {
     final normalized = DateInputUtils.normalizeForDisplay(
       _recoveryACtrl.text,
@@ -513,7 +512,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
               barrierDismissible: false,
               builder: (dialogContext) => RelationshipModeDialog(
                 onSelected: (mode) {
-                  if (dialogContext.mounted && Navigator.of(dialogContext).canPop()) {
+                  if (dialogContext.mounted &&
+                      Navigator.of(dialogContext).canPop()) {
                     Navigator.of(dialogContext).pop(mode);
                   }
                 },
@@ -540,7 +540,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
               barrierDismissible: false,
               builder: (dialogContext) => GenderSelectionDialog(
                 onSelected: (role) {
-                  if (dialogContext.mounted && Navigator.of(dialogContext).canPop()) {
+                  if (dialogContext.mounted &&
+                      Navigator.of(dialogContext).canPop()) {
                     Navigator.of(dialogContext).pop(role);
                   }
                 },
@@ -839,7 +840,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       _autoCreateFailureDetail = detail;
     });
   }
-
 
   Future<void> _signOutToLogin() async {
     if (_isLoading) return;
@@ -1274,7 +1274,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
             ),
             Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 420),
                   child: ClipRRect(
@@ -1293,217 +1294,224 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF6A1B9A).withValues(alpha: 0.08),
+                              color: const Color(0xFF6A1B9A)
+                                  .withValues(alpha: 0.08),
                               blurRadius: 40,
                               spreadRadius: 8,
                               offset: const Offset(0, 16),
                             ),
                           ],
                         ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Icon(
-                      Icons.favorite_rounded,
-                      size: 52,
-                      color: Color(0xFFD81B60),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Tạo Tổ Ấm Của Hai Bạn',
-                      textAlign: TextAlign.center,
-                      style: SLTheme.quicksand(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF2C1B22),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Thiết lập một Mã Nhà (ID) duy nhất để đối phương có thể kết nối với bạn nhé.',
-                      textAlign: TextAlign.center,
-                      style: SLTheme.quicksand(
-                        fontSize: 14,
-                        height: 1.45,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF7A6871),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF6FA),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: _idErrorReason != null
-                              ? Colors.red.shade200
-                              : (_isIdAvailable
-                                  ? Colors.green.shade200
-                                  : const Color(0xFFFFD3E4)),
-                        ),
-                      ),
-                      child: TextField(
-                        controller: _customIdCtrl,
-                        maxLength: 20,
-                        autofocus: true,
-                        style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF2C1B22),
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'Mã nhà của bạn (Ví dụ: NHATHUONG_99)',
-                          labelStyle: SLTheme.quicksand(
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF8C7381),
-                          ),
-                          counterText: '',
-                          border: InputBorder.none,
-                          suffixIcon: _isIdChecking
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: Center(
-                                    child: SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        color: Color(0xFFD81B60),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Icon(
+                              Icons.favorite_rounded,
+                              size: 52,
+                              color: Color(0xFFD81B60),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Tạo Tổ Ấm Của Hai Bạn',
+                              textAlign: TextAlign.center,
+                              style: SLTheme.quicksand(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF2C1B22),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Thiết lập một Mã Nhà (ID) duy nhất để đối phương có thể kết nối với bạn nhé.',
+                              textAlign: TextAlign.center,
+                              style: SLTheme.quicksand(
+                                fontSize: 14,
+                                height: 1.45,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF7A6871),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFF6FA),
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: _idErrorReason != null
+                                      ? Colors.red.shade200
+                                      : (_isIdAvailable
+                                          ? Colors.green.shade200
+                                          : const Color(0xFFFFD3E4)),
+                                ),
+                              ),
+                              child: TextField(
+                                controller: _customIdCtrl,
+                                maxLength: 20,
+                                autofocus: true,
+                                style: SLTheme.quicksand(
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF2C1B22),
+                                ),
+                                decoration: InputDecoration(
+                                  labelText:
+                                      'Mã nhà của bạn (Ví dụ: NHATHUONG_99)',
+                                  labelStyle: SLTheme.quicksand(
+                                    fontWeight: FontWeight.w800,
+                                    color: const Color(0xFF8C7381),
+                                  ),
+                                  counterText: '',
+                                  border: InputBorder.none,
+                                  suffixIcon: _isIdChecking
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: Center(
+                                            child: SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2.5,
+                                                color: Color(0xFFD81B60),
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      : (_isIdAvailable
+                                          ? const Icon(
+                                              Icons.check_circle_rounded,
+                                              color: Colors.green)
+                                          : (_idErrorReason != null
+                                              ? const Icon(Icons.cancel_rounded,
+                                                  color: Colors.red)
+                                              : null)),
+                                ),
+                                onChanged: _onIdChanged,
+                              ),
+                            ),
+                            if (_isIdAvailable) ...[
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  const Icon(Icons.check_circle_outline_rounded,
+                                      color: Colors.green, size: 16),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'Mã nhà khả dụng và hợp lệ!',
+                                      style: SLTheme.quicksand(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.green.shade700,
                                       ),
                                     ),
                                   ),
-                                )
-                              : (_isIdAvailable
-                                  ? const Icon(Icons.check_circle_rounded,
-                                      color: Colors.green)
-                                  : (_idErrorReason != null
-                                      ? const Icon(Icons.cancel_rounded,
-                                          color: Colors.red)
-                                      : null)),
+                                ],
+                              ),
+                            ],
+                            if (_idErrorReason != null) ...[
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  const Icon(Icons.error_outline_rounded,
+                                      color: Colors.red, size: 16),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      _idErrorReason!,
+                                      style: SLTheme.quicksand(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.red.shade700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            if (_idSuggestions.isNotEmpty) ...[
+                              const SizedBox(height: 16),
+                              Text(
+                                'Gợi ý mã nhà chưa tồn tại cho bạn:',
+                                style: SLTheme.quicksand(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF7A6871),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: _idSuggestions.map((sugg) {
+                                  return ActionChip(
+                                    label: Text(
+                                      sugg,
+                                      style: SLTheme.quicksand(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w900,
+                                        color: const Color(0xFFD81B60),
+                                      ),
+                                    ),
+                                    backgroundColor: const Color(0xFFFFF0F5),
+                                    side: const BorderSide(
+                                        color: Color(0xFFFFD3E4)),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    onPressed: () => _selectSuggestion(sugg),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                            const SizedBox(height: 28),
+                            ElevatedButton(
+                              onPressed: (_isIdAvailable &&
+                                      !_isLoading &&
+                                      !_isIdChecking)
+                                  ? () => _createHouse(customHouseId: _customId)
+                                  : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFD81B60),
+                                foregroundColor: Colors.white,
+                                disabledBackgroundColor:
+                                    const Color(0xFFF3E5EB),
+                                disabledForegroundColor:
+                                    const Color(0xFFC3AEB9),
+                                minimumSize: const Size.fromHeight(54),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 3,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text(
+                                      'Thiết lập & Tạo nhà',
+                                      style: SLTheme.quicksand(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                            ),
+                          ],
                         ),
-                        onChanged: _onIdChanged,
                       ),
                     ),
-                    if (_isIdAvailable) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(Icons.check_circle_outline_rounded,
-                              color: Colors.green, size: 16),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              'Mã nhà khả dụng và hợp lệ!',
-                              style: SLTheme.quicksand(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.green.shade700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                    if (_idErrorReason != null) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(Icons.error_outline_rounded,
-                              color: Colors.red, size: 16),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              _idErrorReason!,
-                              style: SLTheme.quicksand(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.red.shade700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                    if (_idSuggestions.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      Text(
-                        'Gợi ý mã nhà chưa tồn tại cho bạn:',
-                        style: SLTheme.quicksand(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF7A6871),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _idSuggestions.map((sugg) {
-                          return ActionChip(
-                            label: Text(
-                              sugg,
-                              style: SLTheme.quicksand(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFFD81B60),
-                              ),
-                            ),
-                            backgroundColor: const Color(0xFFFFF0F5),
-                            side: const BorderSide(color: Color(0xFFFFD3E4)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            onPressed: () => _selectSuggestion(sugg),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                    const SizedBox(height: 28),
-                    ElevatedButton(
-                      onPressed:
-                          (_isIdAvailable && !_isLoading && !_isIdChecking)
-                              ? () => _createHouse(customHouseId: _customId)
-                              : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFD81B60),
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: const Color(0xFFF3E5EB),
-                        disabledForegroundColor: const Color(0xFFC3AEB9),
-                        minimumSize: const Size.fromHeight(54),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 3,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(
-                              'Thiết lập & Tạo nhà',
-                              style: SLTheme.quicksand(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
-            ),
-            ),
-          ),
-        ),
-        ],
+          ],
         ),
       );
     }
@@ -1595,7 +1603,8 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF6A1B9A).withValues(alpha: 0.08),
+                                color: const Color(0xFF6A1B9A)
+                                    .withValues(alpha: 0.08),
                                 blurRadius: 40,
                                 spreadRadius: 8,
                                 offset: const Offset(0, 16),
@@ -1603,120 +1612,124 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                             ],
                           ),
                           child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Icon(
-                        Icons.home_work_rounded,
-                        size: 42,
-                        color: Color(0xFFD81B60),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Không thể chuẩn bị ngôi nhà',
-                        textAlign: TextAlign.center,
-                        style: SLTheme.quicksand(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFFD81B60),
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Icon(
+                                Icons.home_work_rounded,
+                                size: 42,
+                                color: Color(0xFFD81B60),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Không thể chuẩn bị ngôi nhà',
+                                textAlign: TextAlign.center,
+                                style: SLTheme.quicksand(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFFD81B60),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                _autoCreateFailureMessage ??
+                                    'Đã có lỗi xảy ra khi chuẩn bị ngôi nhà. Vui lòng thử lại.',
+                                textAlign: TextAlign.center,
+                                style: SLTheme.quicksand(
+                                  height: 1.45,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF6D5C63),
+                                ),
+                              ),
+                              if (kDebugMode &&
+                                  _autoCreateFailureDetail != null) ...[
+                                const SizedBox(height: 10),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFF1F5),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Text(
+                                    'Chi tiết: $_autoCreateFailureDetail',
+                                    textAlign: TextAlign.center,
+                                    style: SLTheme.quicksand(
+                                      height: 1.35,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF9F1239),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(height: 20),
+                              ElevatedButton(
+                                onPressed: _isLoading
+                                    ? null
+                                    : () {
+                                        _authSyncRetryCount = 0;
+                                        _transientCreateRetryCount = 0;
+                                        _createHouse();
+                                      },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFD81B60),
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size.fromHeight(52),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Thử lại',
+                                  style: SLTheme.quicksand(
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ),
+                              if (_needsEmailVerification(
+                                null,
+                                _autoCreateFailureMessage ?? '',
+                              )) ...[
+                                const SizedBox(height: 10),
+                                OutlinedButton.icon(
+                                  onPressed: _isLoading
+                                      ? null
+                                      : _sendGmailVerification,
+                                  icon:
+                                      const Icon(Icons.mark_email_read_rounded),
+                                  label: Text(
+                                    'Xác minh Gmail',
+                                    style: SLTheme.quicksand(
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: const Color(0xFFD81B60),
+                                    side: const BorderSide(
+                                        color: Color(0xFFD81B60)),
+                                    minimumSize: const Size.fromHeight(50),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        _autoCreateFailureMessage ??
-                            'Đã có lỗi xảy ra khi chuẩn bị ngôi nhà. Vui lòng thử lại.',
-                        textAlign: TextAlign.center,
-                        style: SLTheme.quicksand(
-                          height: 1.45,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF6D5C63),
-                        ),
-                      ),
-                      if (kDebugMode && _autoCreateFailureDetail != null) ...[
-                        const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF1F5),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            'Chi tiết: $_autoCreateFailureDetail',
-                            textAlign: TextAlign.center,
-                            style: SLTheme.quicksand(
-                              height: 1.35,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF9F1239),
-                            ),
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () {
-                                _authSyncRetryCount = 0;
-                                _transientCreateRetryCount = 0;
-                                _createHouse();
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFD81B60),
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size.fromHeight(52),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        child: Text(
-                          'Thử lại',
-                          style: SLTheme.quicksand(
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                      if (_needsEmailVerification(
-                        null,
-                        _autoCreateFailureMessage ?? '',
-                      )) ...[
-                        const SizedBox(height: 10),
-                        OutlinedButton.icon(
-                          onPressed: _isLoading ? null : _sendGmailVerification,
-                          icon: const Icon(Icons.mark_email_read_rounded),
-                          label: Text(
-                            'Xác minh Gmail',
-                            style: SLTheme.quicksand(
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFFD81B60),
-                            side: const BorderSide(color: Color(0xFFD81B60)),
-                            minimumSize: const Size.fromHeight(50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
-            ),
-            ),
-          ),
-        ),
-        ],
+          ],
         ),
       );
     }
 
     return const LoadingScaffold();
   }
-
 
   Widget _buildScrollHint() {
     return Center(
@@ -1757,7 +1770,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
-
   Widget _buildBackdropBubble({
     required double size,
     required Color color,
@@ -1771,7 +1783,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       ),
     );
   }
-
 
   Widget _buildHeroChip(IconData icon, String label) {
     return Container(
@@ -1798,7 +1809,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       ),
     );
   }
-
 
   Widget _buildInfoCallout({
     required IconData icon,
@@ -1856,7 +1866,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       ),
     );
   }
-
 
   Widget _buildSectionCard({
     required String title,
@@ -1918,7 +1927,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       ),
     );
   }
-
 
   Widget _buildModeCard({
     required IconData icon,
@@ -1995,7 +2003,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
   }
 
-
   Widget _buildField({
     required String label,
     required TextEditingController controller,
@@ -2031,7 +2038,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       ],
     );
   }
-
 
   Widget _buildQuestionAvatarPlaceholder() {
     return Container(

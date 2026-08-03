@@ -77,7 +77,7 @@ class _SLBouncingButtonState extends State<SLBouncingButton>
       scale: _scaleAnimation,
       child: widget.child,
     );
-    
+
     if (widget.onTap != null || widget.onLongPress != null) {
       return GestureDetector(
         behavior: widget.behavior,

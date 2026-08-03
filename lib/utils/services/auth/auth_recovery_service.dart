@@ -206,8 +206,8 @@ class AuthRecoveryService {
 
   Future<Map<String, dynamic>?> getHouseSecurityData(String houseId) async {
     final now = DateTime.now();
-    if (_cachedSecurityData != null && 
-        _lastSecurityCacheTime != null && 
+    if (_cachedSecurityData != null &&
+        _lastSecurityCacheTime != null &&
         now.difference(_lastSecurityCacheTime!).inSeconds < 5) {
       return _cachedSecurityData;
     }

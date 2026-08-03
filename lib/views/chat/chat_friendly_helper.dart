@@ -1,7 +1,5 @@
 import 'dart:math';
 
-
-
 class ChatFriendlyHelper {
   static List<String> get greetings => [
         'Chào bạn nha! Hôm nay có chuyện gì vui kể mình nghe với?',

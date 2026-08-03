@@ -1369,8 +1369,7 @@ extension _CountdownModeIndependentScreenStatePart
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: FilledButton.styleFrom(
-              ),
+            style: FilledButton.styleFrom(),
             child: Text(context.tr('home_xangay_dc07fa')),
           ),
         ],

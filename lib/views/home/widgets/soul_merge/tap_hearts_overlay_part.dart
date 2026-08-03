@@ -381,4 +381,3 @@ class HeartsPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant HeartsPainter oldDelegate) => true;
 }
-

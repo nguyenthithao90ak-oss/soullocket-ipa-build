@@ -936,8 +936,10 @@ class SLTheme {
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       filled: true,
       fillColor: Colors.white.withValues(alpha: 0.15), // Kính mờ nhẹ
-      enabledBorder: border(Colors.white.withValues(alpha: 0.3), 1.0), // Viền trắng mỏng
-      focusedBorder: border(Colors.white.withValues(alpha: 0.9), 1.5), // Sáng lên khi gõ
+      enabledBorder:
+          border(Colors.white.withValues(alpha: 0.3), 1.0), // Viền trắng mỏng
+      focusedBorder:
+          border(Colors.white.withValues(alpha: 0.9), 1.5), // Sáng lên khi gõ
       errorBorder: border(SLColors.danger, 1.2),
       focusedErrorBorder: border(SLColors.danger, 1.5),
     );
@@ -960,18 +962,22 @@ class SLTheme {
         width: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: isDisabled 
+            colors: isDisabled
                 ? [const Color(0xFFF5D6E0), const Color(0xFFE8C1CD)]
-                : const [Color(0xFFFF6FA3), Color(0xFF9030C0)], // Gradient rực rỡ và sang trọng hơn
+                : const [
+                    Color(0xFFFF6FA3),
+                    Color(0xFF9030C0)
+                  ], // Gradient rực rỡ và sang trọng hơn
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(32),
-          boxShadow: isDisabled 
-              ? [] 
+          boxShadow: isDisabled
+              ? []
               : [
                   BoxShadow(
-                    color: const Color(0xFFFF6FA3).withValues(alpha: 0.4), // Glow shadow
+                    color: const Color(0xFFFF6FA3)
+                        .withValues(alpha: 0.4), // Glow shadow
                     blurRadius: 24,
                     spreadRadius: 2,
                     offset: const Offset(0, 10),
@@ -1781,12 +1787,14 @@ class _HeroPrimaryButton extends StatefulWidget {
   State<_HeroPrimaryButton> createState() => _HeroPrimaryButtonState();
 }
 
-class _HeroPrimaryButtonState extends State<_HeroPrimaryButton> with SingleTickerProviderStateMixin {
+class _HeroPrimaryButtonState extends State<_HeroPrimaryButton>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _animCtrl = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 150),
   );
-  late final Animation<double> _scaleAnim = Tween<double>(begin: 1.0, end: 0.95).animate(
+  late final Animation<double> _scaleAnim =
+      Tween<double>(begin: 1.0, end: 0.95).animate(
     CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic),
   );
 
@@ -1828,7 +1836,8 @@ class _HeroPrimaryButtonState extends State<_HeroPrimaryButton> with SingleTicke
                   ? []
                   : [
                       BoxShadow(
-                        color: widget.colors.first.withValues(alpha: 0.4), // Glow shadow
+                        color: widget.colors.first
+                            .withValues(alpha: 0.4), // Glow shadow
                         blurRadius: 24,
                         spreadRadius: 2,
                         offset: const Offset(0, 10),
@@ -1866,4 +1875,3 @@ class _HeroPrimaryButtonState extends State<_HeroPrimaryButton> with SingleTicke
     );
   }
 }
-

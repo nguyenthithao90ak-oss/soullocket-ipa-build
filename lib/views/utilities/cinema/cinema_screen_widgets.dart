@@ -439,19 +439,24 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(42),
                                   child: FastBackdropFilter(
-                                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                                    filter: ImageFilter.blur(
+                                        sigmaX: 12, sigmaY: 12),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 24, vertical: 14),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.15),
+                                        color: Colors.white
+                                            .withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(42),
                                         border: Border.all(
-                                          color: Colors.white.withValues(alpha: 0.35),
+                                          color: Colors.white
+                                              .withValues(alpha: 0.35),
                                           width: 1.5,
                                         ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.2),
+                                            color: Colors.black
+                                                .withValues(alpha: 0.2),
                                             blurRadius: 10,
                                             spreadRadius: 2,
                                           ),

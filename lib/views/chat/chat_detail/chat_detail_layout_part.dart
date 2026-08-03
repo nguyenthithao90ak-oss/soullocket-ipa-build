@@ -109,7 +109,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
             ),
           );
         }
-        
+
         final itemCount = messages.length + (_isLoadingOlderMessages ? 1 : 0);
         return ListView.builder(
           controller: _messagesScrollController,

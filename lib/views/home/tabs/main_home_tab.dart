@@ -165,10 +165,12 @@ class MainHomeTab extends StatefulWidget {
 }
 
 class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
-
-  final ValueNotifier<bool> _showHighlightCardFirstTapHintNotifier = ValueNotifier(false);
-  final ValueNotifier<bool> _showInsightCardFirstTapHintNotifier = ValueNotifier(false);
-  final ValueNotifier<double> _avatarUploadProgressNotifier = ValueNotifier(-1.0);
+  final ValueNotifier<bool> _showHighlightCardFirstTapHintNotifier =
+      ValueNotifier(false);
+  final ValueNotifier<bool> _showInsightCardFirstTapHintNotifier =
+      ValueNotifier(false);
+  final ValueNotifier<double> _avatarUploadProgressNotifier =
+      ValueNotifier(-1.0);
   static const String _pendingAvatarUploadKeyPrefix = 'main_home_avatar_';
   static const String _mapCardFirstTapSeenPrefsKey =
       'il_home_map_card_first_tap_seen_v1';
@@ -1189,7 +1191,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         maxHeight: 1080,
         uiSettings: [
           AndroidUiSettings(
-            toolbarTitle: isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
+            toolbarTitle:
+                isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
             toolbarColor: const Color(0xFFD81B60),
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.square,
@@ -2099,7 +2102,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     final prefs = await OfflineCacheService.getPrefs();
     final lastLocalMs = prefs.getInt('il_last_local_push_time_v2') ?? 0;
     final nowMs = DateTime.now().millisecondsSinceEpoch;
-    
+
     if (nowMs - lastLocalMs >= 3600000) {
       await prefs.setInt('il_last_local_push_time_v2', nowMs);
       await _notificationService.showLocalNotification(

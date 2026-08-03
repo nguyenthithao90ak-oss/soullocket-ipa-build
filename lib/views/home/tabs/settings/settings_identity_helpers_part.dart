@@ -21,13 +21,17 @@ extension _SettingsTabIdentityHelpers on _SettingsTabState {
       if (playlistJson != null && playlistJson.isNotEmpty) {
         try {
           final List<dynamic> decoded = jsonDecode(playlistJson);
-          _playlist = decoded.map((e) => MusicTrack.fromJson(e)).where((t) => MusicService.isLocalAudioPath(t.url)).toList();
+          _playlist = decoded
+              .map((e) => MusicTrack.fromJson(e))
+              .where((t) => MusicService.isLocalAudioPath(t.url))
+              .toList();
         } catch (_) {}
       }
       if (_playlist.isEmpty) {
         final localUrl = (prefs.getString('il_local_music_url') ?? '').trim();
         if (MusicService.isLocalAudioPath(localUrl)) {
-          final type = (prefs.getString('il_local_music_type') ?? 'audio').trim();
+          final type =
+              (prefs.getString('il_local_music_type') ?? 'audio').trim();
           final title = (prefs.getString('il_local_music_title') ?? '').trim();
           _playlist = [MusicTrack(url: localUrl, title: title, type: type)];
         }

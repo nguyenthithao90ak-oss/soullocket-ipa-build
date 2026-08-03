@@ -54,8 +54,8 @@ String? _getSleepWindow(DateTime now) {
   }
 
   // Khung nghỉ trưa: 11:30 → 13:30
-  final afterNoonStart =
-      (h > kNoonNapStartHour) || (h == kNoonNapStartHour && m >= kNoonNapStartMinute);
+  final afterNoonStart = (h > kNoonNapStartHour) ||
+      (h == kNoonNapStartHour && m >= kNoonNapStartMinute);
   final beforeNoonEnd =
       (h < kNoonNapEndHour) || (h == kNoonNapEndHour && m <= kNoonNapEndMinute);
   if (afterNoonStart && beforeNoonEnd) {
@@ -98,10 +98,7 @@ void callbackDispatcher() {
       final houseId = prefs.getString('il_rel_house_id');
       final role = prefs.getString('il_rel_role');
 
-      if (houseId == null ||
-          role == null ||
-          houseId.isEmpty ||
-          role.isEmpty) {
+      if (houseId == null || role == null || houseId.isEmpty || role.isEmpty) {
         return Future.value(true);
       }
 
@@ -170,8 +167,12 @@ void onStart(ServiceInstance service) async {
   final role = prefs.getString('il_rel_role');
 
   if (service is AndroidServiceInstance) {
-    service.on('setAsForeground').listen((_) => service.setAsForegroundService());
-    service.on('setAsBackground').listen((_) => service.setAsBackgroundService());
+    service
+        .on('setAsForeground')
+        .listen((_) => service.setAsForegroundService());
+    service
+        .on('setAsBackground')
+        .listen((_) => service.setAsBackgroundService());
   }
   service.on('stopService').listen((_) => service.stopSelf());
 
@@ -179,8 +180,7 @@ void onStart(ServiceInstance service) async {
     return;
   }
 
-  final ref =
-      FirebaseDatabase.instance.ref('houses/$houseId/presence/$role');
+  final ref = FirebaseDatabase.instance.ref('houses/$houseId/presence/$role');
 
   // Timer định kỳ kiểm tra trạng thái offline timeout (mỗi 5 phút)
   Timer.periodic(const Duration(minutes: 5), (_) async {
@@ -235,9 +235,8 @@ void onStart(ServiceInstance service) async {
 
       if (sleepWindow == null) {
         // Ngoài khung ngủ hoàn toàn
-        final minutesInactive = lastActive > 0
-            ? (nowMs - lastActive) / 60000
-            : minutesOff;
+        final minutesInactive =
+            lastActive > 0 ? (nowMs - lastActive) / 60000 : minutesOff;
         if (minutesInactive >= kInactiveThresholdMinutes &&
             map['sleep_status'] != kStatusInactive) {
           // Đã offline lâu ngoài giờ ngủ → "Không hoạt động"

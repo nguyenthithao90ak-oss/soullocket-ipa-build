@@ -5,7 +5,6 @@ import 'package:soullocket_app/utils/app_cache_manager.dart';
 
 const double _kUtilityStickerLogicalSize = 64;
 const Set<String> _kUtilityStickerIds = <String>{
-
   'bucket',
   'calculator',
   'calendar',

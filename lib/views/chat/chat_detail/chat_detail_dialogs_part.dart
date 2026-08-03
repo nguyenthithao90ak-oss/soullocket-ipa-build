@@ -1269,10 +1269,22 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       backgroundColor: Colors.transparent,
       builder: (context) {
         final stickerGroups = <String, List<String>>{
-          'Bộ 1': List.generate(40, (i) => 'assets/images/interaction_stickers/custom/numbered/sticker_${(i + 1).toString().padLeft(3, '0')}.png'),
-          'Bộ 2': List.generate(40, (i) => 'assets/images/interaction_stickers/custom/numbered/sticker_${(i + 41).toString().padLeft(3, '0')}.png'),
-          'Bộ 3': List.generate(40, (i) => 'assets/images/interaction_stickers/custom/numbered/sticker_${(i + 81).toString().padLeft(3, '0')}.png'),
-          'Bộ 4': List.generate(44, (i) => 'assets/images/interaction_stickers/custom/numbered/sticker_${(i + 121).toString().padLeft(3, '0')}.png'),
+          'Bộ 1': List.generate(
+              40,
+              (i) =>
+                  'assets/images/interaction_stickers/custom/numbered/sticker_${(i + 1).toString().padLeft(3, '0')}.png'),
+          'Bộ 2': List.generate(
+              40,
+              (i) =>
+                  'assets/images/interaction_stickers/custom/numbered/sticker_${(i + 41).toString().padLeft(3, '0')}.png'),
+          'Bộ 3': List.generate(
+              40,
+              (i) =>
+                  'assets/images/interaction_stickers/custom/numbered/sticker_${(i + 81).toString().padLeft(3, '0')}.png'),
+          'Bộ 4': List.generate(
+              44,
+              (i) =>
+                  'assets/images/interaction_stickers/custom/numbered/sticker_${(i + 121).toString().padLeft(3, '0')}.png'),
         };
         final labels = stickerGroups.keys.toList();
 

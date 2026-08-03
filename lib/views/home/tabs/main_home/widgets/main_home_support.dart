@@ -104,7 +104,7 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
   late AnimationController _controller;
   final List<_ParticleData> _particles = [];
   late final List<Widget> _particleWidgets;
-  
+
   // Tối ưu hóa: Cache tĩnh cho hiệu ứng nổ nhỏ để loại bỏ jank
   late final Widget _expSparkle;
   late final Widget _expAssetOrEmoji;
@@ -134,7 +134,8 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
         size:
             random.nextDouble() * 20 + 45, // Significantly larger size (45-65)
         baseRotation: (random.nextDouble() - 0.5) * 0.72,
-        willCollide: widget.hasCollision && i < 2, // 2 hạt sẽ va chạm giữa chừng
+        willCollide:
+            widget.hasCollision && i < 2, // 2 hạt sẽ va chạm giữa chừng
       ));
     }
 
@@ -150,7 +151,8 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
     }
 
     // Khởi tạo cache tĩnh 1 lần duy nhất thay vì mỗi khung hình
-    _expSparkle = const RepaintBoundary(child: Text('✨', style: TextStyle(fontSize: 14)));
+    _expSparkle =
+        const RepaintBoundary(child: Text('✨', style: TextStyle(fontSize: 14)));
     if (hasAsset) {
       _expAssetOrEmoji = RepaintBoundary(
         child: R2StickerImage(
@@ -217,12 +219,26 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
       final p = _particles[i];
       return RepaintBoundary(
         child: hasAsset
-          ? R2StickerImage(
-              widget.assetPath!,
-              width: p.size,
-              height: p.size,
-              fit: BoxFit.contain,
-              errorWidget: Text(
+            ? R2StickerImage(
+                widget.assetPath!,
+                width: p.size,
+                height: p.size,
+                fit: BoxFit.contain,
+                errorWidget: Text(
+                  widget.emoji,
+                  style: TextStyle(
+                    fontSize: p.size,
+                    height: 1,
+                    shadows: [
+                      Shadow(
+                        color: Colors.pinkAccent.withValues(alpha: 0.3),
+                        blurRadius: 3,
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : Text(
                 widget.emoji,
                 style: TextStyle(
                   fontSize: p.size,
@@ -235,20 +251,6 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
                   ],
                 ),
               ),
-            )
-          : Text(
-              widget.emoji,
-              style: TextStyle(
-                fontSize: p.size,
-                height: 1,
-                shadows: [
-                  Shadow(
-                    color: Colors.pinkAccent.withValues(alpha: 0.3),
-                    blurRadius: 3,
-                  ),
-                ],
-              ),
-            ),
       );
     });
 
@@ -322,7 +324,9 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
             // Calculate pixel translation instead of alignment
             final translateX = currentX * halfWidth;
             // Nếu hạt sẽ va chạm, ép currentY thấp dần về 0 (tâm màn hình) tại điểm va chạm
-            final effectiveY = p.willCollide && t >= 0.45 ? (currentY * (1 - ((t - 0.45) / 0.15).clamp(0.0, 1.0))) : currentY;
+            final effectiveY = p.willCollide && t >= 0.45
+                ? (currentY * (1 - ((t - 0.45) / 0.15).clamp(0.0, 1.0)))
+                : currentY;
             final translateY = (effectiveY - 0.25) * halfHeight;
 
             final mainWidget = Transform.rotate(
@@ -340,7 +344,8 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
               final collideProgress = ((t - 0.45) / 0.15).clamp(0.0, 1.0);
               final ext = collideProgress; // 0.0 -> 1.0
               final expOpacity = (1.0 - ext).clamp(0.0, 1.0);
-              final expScale = 0.6 + (1.0 - ext) * 0.8; // To hơn khi nổ giữa màn hình
+              final expScale =
+                  0.6 + (1.0 - ext) * 0.8; // To hơn khi nổ giữa màn hình
 
               for (int i = 0; i < 8; i++) {
                 final angle = i * (2 * pi / 8) + (p.baseRotation * 3);
@@ -349,7 +354,8 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
                 final dy = sin(angle) * distance;
 
                 final bool isSparkle = i % 2 == 0;
-                final Widget expChild = isSparkle ? _expSparkle : _expAssetOrEmoji;
+                final Widget expChild =
+                    isSparkle ? _expSparkle : _expAssetOrEmoji;
 
                 explosionWidgets.add(
                   Transform.translate(
@@ -376,7 +382,8 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
                 final dy = sin(angle) * distance;
 
                 final bool isSparkle = i % 2 == 0;
-                final Widget expChild = isSparkle ? _expSparkle : _expAssetOrEmoji;
+                final Widget expChild =
+                    isSparkle ? _expSparkle : _expAssetOrEmoji;
 
                 explosionWidgets.add(
                   Transform.translate(
@@ -586,7 +593,6 @@ class _FallingEffectState extends State<FallingEffect>
     }
   }
 
-
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -627,9 +633,11 @@ class _HeartClipper extends CustomClipper<Path> {
     final double height = size.height;
     final Path path = Path();
     path.moveTo(0.5 * width, height * 0.35);
-    path.cubicTo(0.2 * width, height * 0.1, -0.25 * width, height * 0.6, 0.5 * width, height);
+    path.cubicTo(0.2 * width, height * 0.1, -0.25 * width, height * 0.6,
+        0.5 * width, height);
     path.moveTo(0.5 * width, height * 0.35);
-    path.cubicTo(0.8 * width, height * 0.1, 1.25 * width, height * 0.6, 0.5 * width, height);
+    path.cubicTo(0.8 * width, height * 0.1, 1.25 * width, height * 0.6,
+        0.5 * width, height);
     return path;
   }
 
@@ -644,9 +652,11 @@ class _HeartBorderPainter extends CustomPainter {
     final double height = size.height;
     final Path path = Path();
     path.moveTo(0.5 * width, height * 0.35);
-    path.cubicTo(0.2 * width, height * 0.1, -0.25 * width, height * 0.6, 0.5 * width, height);
+    path.cubicTo(0.2 * width, height * 0.1, -0.25 * width, height * 0.6,
+        0.5 * width, height);
     path.moveTo(0.5 * width, height * 0.35);
-    path.cubicTo(0.8 * width, height * 0.1, 1.25 * width, height * 0.6, 0.5 * width, height);
+    path.cubicTo(0.8 * width, height * 0.1, 1.25 * width, height * 0.6,
+        0.5 * width, height);
 
     final Paint paint = Paint()
       ..color = Colors.white

@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/services/storage/storage_download_cache_helper.dart';
+
 class R2StickerImage extends StatelessWidget {
   final String assetPath;
   final BoxFit fit;
@@ -70,13 +71,16 @@ class R2StickerImage extends StatelessWidget {
         fit: fit,
         width: width,
         height: height,
-        errorBuilder: errorWidget != null ? (context, error, stackTrace) => errorWidget! : null,
+        errorBuilder: errorWidget != null
+            ? (context, error, stackTrace) => errorWidget!
+            : null,
       );
     }
 
     if (assetPath.startsWith('assets/images/interaction_stickers/')) {
-      final String r2Url = '${AppConfig.r2PublicDomain}/stickers/${assetPath.substring('assets/images/'.length)}';
-      
+      final String r2Url =
+          '${AppConfig.r2PublicDomain}/stickers/${assetPath.substring('assets/images/'.length)}';
+
       // Nếu file đã được nạp và lưu trong RAM cache, trả về trực tiếp Image.file đồng bộ để không bị nháy
       final cachedFile = _resolvedStickerFiles[r2Url];
 
@@ -174,7 +178,9 @@ class R2StickerImage extends StatelessWidget {
       fit: fit,
       width: width,
       height: height,
-      errorBuilder: errorWidget != null ? (context, error, stackTrace) => errorWidget! : null,
+      errorBuilder: errorWidget != null
+          ? (context, error, stackTrace) => errorWidget!
+          : null,
     );
   }
 }

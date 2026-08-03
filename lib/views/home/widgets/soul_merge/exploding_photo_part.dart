@@ -241,4 +241,3 @@ class _ExplodingPhotoWidgetState extends State<ExplodingPhotoWidget>
     );
   }
 }
-

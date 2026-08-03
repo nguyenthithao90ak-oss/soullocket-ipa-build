@@ -122,7 +122,7 @@ class PresenceService {
 
     final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
     final sessions = data['sessions'];
-    
+
     if (sessions is Map && sessions.isNotEmpty) {
       final freshSessionCount = _countFreshSessions(
         sessions,
@@ -408,9 +408,8 @@ class PresenceService {
     }
 
     try {
-      final safeGet = _dbRef
-          .child('houses/$houseId/presence/$role/sessions')
-          .get();
+      final safeGet =
+          _dbRef.child('houses/$houseId/presence/$role/sessions').get();
       safeGet.ignore();
       final snap = await safeGet.timeout(const Duration(seconds: 3));
       final raw = snap.value;
@@ -545,7 +544,8 @@ class PresenceService {
       // Tránh race condition khi 2 thiết bị heartbeat gần nhau (lệch đồng hồ, mạng chậm)
       final shouldMarkOffline = freshSessionCount == 0 &&
           (resolvedLastSeen == 0 ||
-              nowMs - resolvedLastSeen > const Duration(minutes: 3).inMilliseconds);
+              nowMs - resolvedLastSeen >
+                  const Duration(minutes: 3).inMilliseconds);
       final safeUpdate = ref.update({
         'status': freshSessionCount > 0
             ? 'online'
@@ -647,7 +647,7 @@ class PresenceService {
     final houseId = _activeHouseId;
     final role = _activeRole;
     if (houseId == null || role == null) return;
-    
+
     debugPrint('[Presence] hidePresence start role=$role house=$houseId');
     _heartbeatTimer?.cancel();
     await _cleanupPresence(
@@ -698,10 +698,7 @@ class PresenceService {
     final sessionId = _mySessionId;
     if (sessionId != null) {
       try {
-        await ref
-            .onDisconnect()
-            .cancel()
-            .timeout(const Duration(seconds: 3));
+        await ref.onDisconnect().cancel().timeout(const Duration(seconds: 3));
       } catch (_) {}
       try {
         await ref.child('sessions/$sessionId').remove();
@@ -822,18 +819,19 @@ class PresenceService {
     _heartbeatTimer?.cancel();
     _shouldBeOnline = false;
   }
+
   Future<void> setSleepMode(bool isSleeping) async {
     final houseId = _activeHouseId;
     final role = _activeRole;
     if (houseId == null || role == null) return;
-    
+
     final updates = <String, dynamic>{
       'sleep_mode': isSleeping,
     };
     if (isSleeping) {
       updates['sleep_start_time'] = ServerValue.timestamp;
     }
-    
+
     try {
       await _presenceRoleRef(houseId, role).update(updates);
     } catch (e) {
@@ -843,21 +841,21 @@ class PresenceService {
 
   static bool isSleeping(Map<dynamic, dynamic>? data) {
     if (data == null) return false;
-    
+
     final sleepMode = data['sleep_mode'];
     if (sleepMode is bool && sleepMode) return true;
-    
+
     final lastSeen = lastSeenMs(data) ?? latestSessionTimestamp(data);
     if (lastSeen != null) {
       final now = DateTime.now();
       final lastSeenDate = DateTime.fromMillisecondsSinceEpoch(lastSeen);
       final diffHours = now.difference(lastSeenDate).inHours;
-      
+
       if (diffHours >= 1 && (now.hour >= 23 || now.hour <= 6)) {
         return true;
       }
     }
-    
+
     return false;
   }
 }

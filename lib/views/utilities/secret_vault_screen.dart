@@ -643,13 +643,15 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   borderRadius: BorderRadius.circular(20)),
               title: Text(context.tr('util_thmghichty_5651be'),
                   style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w800, color: SLColors.textPrimary)),
+                      fontWeight: FontWeight.w800,
+                      color: SLColors.textPrimary)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: captionCtrl,
-                    style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        color: Colors.black87, fontWeight: FontWeight.w600),
                     maxLength: 1000,
                     decoration: InputDecoration(
                       filled: true,
@@ -659,10 +661,12 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                       counterText: '',
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFCBD5E1))),
                       enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFCBD5E1))),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: SLColors.danger)),
@@ -907,7 +911,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   TextField(
                     controller: passphraseCtrl,
                     obscureText: obscurePass,
-                    style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        color: Colors.black87, fontWeight: FontWeight.w600),
                     maxLength: 32,
                     decoration: InputDecoration(
                       filled: true,
@@ -942,7 +947,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     TextField(
                       controller: confirmCtrl,
                       obscureText: obscureConfirm,
-                      style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                          color: Colors.black87, fontWeight: FontWeight.w600),
                       maxLength: 32,
                       decoration: InputDecoration(
                         filled: true,
@@ -963,11 +969,13 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFCBD5E1)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFCBD5E1)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -1071,7 +1079,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           content: TextField(
             controller: controller,
             textCapitalization: TextCapitalization.characters,
-            style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+                color: Colors.black87, fontWeight: FontWeight.w600),
             maxLength: 30,
             decoration: InputDecoration(
               filled: true,
@@ -1216,7 +1225,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
       isScrollControlled: true,
       builder: (ctx) => SafeArea(
         child: Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1230,13 +1240,15 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.timer_outlined, color: Color(0xFF334155), size: 22),
+                        const Icon(Icons.timer_outlined,
+                            color: Color(0xFF334155), size: 22),
                         const SizedBox(width: 16),
                         Text(
                           context.tr('auto_lock_after'),
@@ -1250,69 +1262,83 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                     ),
                     const SizedBox(height: 12),
                     ValueListenableBuilder<UiPrefsState>(
-                      valueListenable: UiPrefs.notifier,
-                      builder: (context, uiState, _) {
-                        return SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [0, 1, 5, 15, 60].map((m) {
-                              final isSel = uiState.vaultTimeoutMins == m;
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: ChoiceChip(
-                                  label: Text(m == 0 ? context.tr('home_tcth_3c4371') : '$m phút'),
-                                  selected: isSel,
-                                  selectedColor: const Color(0xFF3B82F6),
-                                  labelStyle: SLTheme.quicksand(
-                                    color: isSel ? Colors.white : const Color(0xFF64748B),
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 13,
+                        valueListenable: UiPrefs.notifier,
+                        builder: (context, uiState, _) {
+                          return SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [0, 1, 5, 15, 60].map((m) {
+                                final isSel = uiState.vaultTimeoutMins == m;
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: ChoiceChip(
+                                    label: Text(m == 0
+                                        ? context.tr('home_tcth_3c4371')
+                                        : '$m phút'),
+                                    selected: isSel,
+                                    selectedColor: const Color(0xFF3B82F6),
+                                    labelStyle: SLTheme.quicksand(
+                                      color: isSel
+                                          ? Colors.white
+                                          : const Color(0xFF64748B),
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 13,
+                                    ),
+                                    backgroundColor: const Color(0xFFF1F5F9),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                    side: BorderSide.none,
+                                    onSelected: (s) {
+                                      if (s) {
+                                        UiPrefs.saveState(uiState.copyWith(
+                                            vaultTimeoutMins: m));
+                                      }
+                                    },
                                   ),
-                                  backgroundColor: const Color(0xFFF1F5F9),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  side: BorderSide.none,
-                                  onSelected: (s) {
-                                    if (s) {
-                                      UiPrefs.saveState(uiState.copyWith(vaultTimeoutMins: m));
-                                    }
-                                  },
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        );
-                      }
-                    ),
+                                );
+                              }).toList(),
+                            ),
+                          );
+                        }),
                   ],
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.style_outlined, color: Color(0xFF334155)),
+                leading:
+                    const Icon(Icons.style_outlined, color: Color(0xFF334155)),
                 title: Text(context.tr('vault_style_title'),
                     style: SLTheme.quicksand(color: const Color(0xFF334155))),
                 subtitle: ValueListenableBuilder<UiPrefsState>(
-                  valueListenable: UiPrefs.notifier,
-                  builder: (context, uiState, _) {
-                    return DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: uiState.vaultHomeStyle,
-                        isExpanded: true,
-                        dropdownColor: Colors.white,
-                        style: SLTheme.quicksand(color: const Color(0xFF3B82F6), fontWeight: FontWeight.w700),
-                        icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF94A3B8)),
-                        items: [
-                          DropdownMenuItem(value: 'soft', child: Text(context.tr('vault_style_soft'))),
-                          DropdownMenuItem(value: 'secure', child: Text(context.tr('vault_style_secure'))),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            UiPrefs.saveState(uiState.copyWith(vaultHomeStyle: val));
-                          }
-                        },
-                      ),
-                    );
-                  }
-                ),
+                    valueListenable: UiPrefs.notifier,
+                    builder: (context, uiState, _) {
+                      return DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: uiState.vaultHomeStyle,
+                          isExpanded: true,
+                          dropdownColor: Colors.white,
+                          style: SLTheme.quicksand(
+                              color: const Color(0xFF3B82F6),
+                              fontWeight: FontWeight.w700),
+                          icon: const Icon(Icons.arrow_drop_down,
+                              color: Color(0xFF94A3B8)),
+                          items: [
+                            DropdownMenuItem(
+                                value: 'soft',
+                                child: Text(context.tr('vault_style_soft'))),
+                            DropdownMenuItem(
+                                value: 'secure',
+                                child: Text(context.tr('vault_style_secure'))),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) {
+                              UiPrefs.saveState(
+                                  uiState.copyWith(vaultHomeStyle: val));
+                            }
+                          },
+                        ),
+                      );
+                    }),
               ),
               const Divider(color: Color(0xFFF1F5F9)),
               ListTile(
@@ -1353,7 +1379,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.key_rounded, color: Color(0xFF3B82F6)),
+                leading:
+                    const Icon(Icons.key_rounded, color: Color(0xFF3B82F6)),
                 title: Text(
                   _hasRecoveryCode
                       ? context.tr('util_tolimkhiph_6a2c38')
@@ -1448,7 +1475,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   TextField(
                     controller: oldPassCtrl,
                     obscureText: obscureOld,
-                    style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        color: Colors.black87, fontWeight: FontWeight.w600),
                     maxLength: 32,
                     decoration: InputDecoration(
                       filled: true,
@@ -1473,7 +1501,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   TextField(
                     controller: newPassCtrl,
                     obscureText: obscureNew,
-                    style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        color: Colors.black87, fontWeight: FontWeight.w600),
                     maxLength: 32,
                     decoration: InputDecoration(
                       filled: true,
@@ -1498,7 +1527,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
                   TextField(
                     controller: confirmCtrl,
                     obscureText: obscureNew,
-                    style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        color: Colors.black87, fontWeight: FontWeight.w600),
                     maxLength: 32,
                     decoration: InputDecoration(
                       filled: true,
@@ -1622,7 +1652,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           _hasPendingReset
               ? 'Kho ảnh mật đã được lên lịch xóa vào ${_formatResetSchedule(_pendingResetRequest?.scheduledAt ?? 0)}. ${context.tr('util_trongthigi_6645aa')}'
               : '${context.tr('util_resetkhonh_d0b294')}${context.tr('util_bnphixcnhn_b3fe0e')}${isWithin12Hours ? '\n\nDù bạn vừa đổi mật khẩu gần đây, hệ thống vẫn áp dụng thời gian chờ đủ 1 ngày trước khi xoá dữ liệu.' : ''}',
-          style: SLTheme.quicksand(color: const Color(0xFF64748B), height: 1.45),
+          style:
+              SLTheme.quicksand(color: const Color(0xFF64748B), height: 1.45),
         ),
         actions: [
           TextButton(
@@ -1801,8 +1832,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           ),
         ),
         leading: IconButton(
-          icon:
-              const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155)),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: Color(0xFF334155)),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [

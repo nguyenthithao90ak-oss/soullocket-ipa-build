@@ -41,7 +41,8 @@ class _LoveCardScreenBody extends StatelessWidget {
     final bottomColor = colors.last;
 
     return Scaffold(
-      backgroundColor: state.widget.isEmbedded ? Colors.transparent : bottomColor,
+      backgroundColor:
+          state.widget.isEmbedded ? Colors.transparent : bottomColor,
       body: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(

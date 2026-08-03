@@ -24,7 +24,8 @@ class SLRoute<T> extends PageRoute<T> with CupertinoRouteTransitionMixin<T> {
   String? get title => null;
 
   @override
-  bool get popGestureEnabled => true; // Luôn bật tính năng vuốt để back trên Android/iOS
+  bool get popGestureEnabled =>
+      true; // Luôn bật tính năng vuốt để back trên Android/iOS
 }
 
 /// Shorthand push helper — thay Navigator.of(context).push(MaterialPageRoute(...))

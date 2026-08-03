@@ -109,7 +109,8 @@ class SecurityService {
 
       // Method 1: Check Network Interfaces (Mobile)
       final interfaces = await NetworkInterface.list(
-          includeLoopback: false, type: InternetAddressType.any).timeout(const Duration(seconds: 2));
+              includeLoopback: false, type: InternetAddressType.any)
+          .timeout(const Duration(seconds: 2));
       for (var interface in interfaces) {
         final name = interface.name.toLowerCase();
 

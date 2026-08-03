@@ -597,7 +597,8 @@ class ChatService {
           ),
           'chats/$roomId/updatedAt': ServerValue.timestamp,
         }).catchError((e) {
-          debugPrint('[ChatService] Failed to update chat metadata on RTDB: $e');
+          debugPrint(
+              '[ChatService] Failed to update chat metadata on RTDB: $e');
         }));
       },
       permissionMessage:

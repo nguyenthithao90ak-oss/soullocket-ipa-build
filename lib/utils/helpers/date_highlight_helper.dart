@@ -1,4 +1,4 @@
-﻿class DateHighlightHelper {
+class DateHighlightHelper {
   static const Map<String, Map<String, String>> _holidayMap = {
     '01-01': {'icon': '🎉', 'text': 'Năm mới'},
     '02-14': {'icon': '💖', 'text': 'Valentine'},
@@ -44,4 +44,3 @@
     return tags.take(3).toList();
   }
 }
-

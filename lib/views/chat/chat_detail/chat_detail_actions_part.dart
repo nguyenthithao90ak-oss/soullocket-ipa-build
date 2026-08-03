@@ -61,9 +61,11 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
           if (result.success) {
             final days = result.daysAdded ?? 0;
             if (days > 0) {
-              displayMessage = '🎉 Chúc mừng! Bạn đã nhận thành công $days ngày VIP PRO.';
+              displayMessage =
+                  '🎉 Chúc mừng! Bạn đã nhận thành công $days ngày VIP PRO.';
             } else {
-              displayMessage = '🎉 Chúc mừng! Bạn đã kích hoạt mã quà tặng thành công.';
+              displayMessage =
+                  '🎉 Chúc mừng! Bạn đã kích hoạt mã quà tặng thành công.';
             }
           }
 

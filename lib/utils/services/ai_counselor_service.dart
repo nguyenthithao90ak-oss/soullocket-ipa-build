@@ -72,7 +72,8 @@ class AiCounselorService {
     }
 
     final projectId = FirebaseFunctions.instance.app.options.projectId;
-    final url = 'https://us-central1-$projectId.cloudfunctions.net/generateAiReplyStream';
+    final url =
+        'https://us-central1-$projectId.cloudfunctions.net/generateAiReplyStream';
 
     try {
       final request = http.Request('POST', Uri.parse(url));
@@ -94,7 +95,9 @@ class AiCounselorService {
         return;
       }
 
-      await for (var line in response.stream.transform(utf8.decoder).transform(const LineSplitter())) {
+      await for (var line in response.stream
+          .transform(utf8.decoder)
+          .transform(const LineSplitter())) {
         if (line.startsWith('data: ')) {
           try {
             final payload = jsonDecode(line.substring(6));
@@ -109,7 +112,8 @@ class AiCounselorService {
       }
     } catch (e) {
       debugPrint('[AiCounselor] streamTextGeneration failed: $e');
-      lastErrorMessage = 'Mình đang gặp lỗi kết nối nên chưa trả lời được. Bạn thử lại sau nhé!';
+      lastErrorMessage =
+          'Mình đang gặp lỗi kết nối nên chưa trả lời được. Bạn thử lại sau nhé!';
     }
   }
 
@@ -207,8 +211,8 @@ class AiCounselorService {
         String.fromEnvironment('GEMINI_PROXY_URL', defaultValue: '');
     const apiKeysString =
         String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
-    const model =
-        String.fromEnvironment('GEMINI_MODEL', defaultValue: 'gemini-1.5-flash');
+    const model = String.fromEnvironment('GEMINI_MODEL',
+        defaultValue: 'gemini-1.5-flash');
 
     final apiKeys = apiKeysString
         .split(',')
