@@ -53,7 +53,7 @@ class AuthSignInService {
         _sharedPreferencesProvider =
             sharedPreferencesProvider ?? SharedPreferences.getInstance,
         _googleSignInBuilder =
-            googleSignInBuilder ?? (() => GoogleSignIn.instance),
+            googleSignInBuilder ?? (() => GoogleSignIn(scopes: ['email'])),
         _firebaseFunctions = firebaseFunctions,
         _httpPost = httpPost ?? http.post,
         _nowProvider = nowProvider ?? DateTime.now,
@@ -769,60 +769,30 @@ class AuthSignInService {
         provider.addScope('email');
         userCredential = await _auth.signInWithPopup(provider);
       } else {
-        final googleSignIn = _googleSignIn ??= _googleSignInBuilder();
-        if (!_isGoogleSignInInitialized) {
-          final initCompleter = Completer<void>();
-          googleSignIn.initialize().then((_) {
-            if (!initCompleter.isCompleted) initCompleter.complete();
-          }).catchError((error) {
-            if (!initCompleter.isCompleted) {
-              initCompleter.completeError(error);
-            } else {
-              debugPrint('Late Google init error swallowed: $error');
-            }
-          });
-          await initCompleter.future.timeout(
-            const Duration(seconds: 15),
-            onTimeout: () =>
-                throw 'Thời gian chờ Google quá lâu. Vui lòng thử lại.',
-          );
-          _isGoogleSignInInitialized = true;
-        }
-
-        // disconnect() + signOut() để xóa hoàn toàn cache phiên cũ,
-        // buộc người dùng chọn lại tài khoản Google (tránh lỗi sign_in_failed khi đổi nick)
-        try {
-          await googleSignIn.disconnect();
-        } catch (_) {}
+        final googleSignIn = _googleSignInBuilder();
         try {
           await googleSignIn.signOut();
         } catch (_) {}
+        try {
+          await googleSignIn.disconnect();
+        } catch (_) {}
 
-        final authCompleter = Completer<dynamic>();
-        googleSignIn.authenticate(
-          scopeHint: const ['email'],
-        ).then((user) {
-          if (!authCompleter.isCompleted) authCompleter.complete(user);
-        }).catchError((error) {
-          if (!authCompleter.isCompleted) {
-            authCompleter.completeError(error);
-          } else {
-            debugPrint('Late Google auth error swallowed: $error');
-          }
-        });
+        final googleUser = await googleSignIn.signIn();
+        if (googleUser == null) {
+          return null;
+        }
 
-        final googleUser = await authCompleter.future.timeout(
-          const Duration(seconds: 20),
-          onTimeout: () =>
-              throw 'Bạn đã để màn hình đăng nhập Google quá lâu hoặc chưa hoàn tất thao tác. Vui lòng thử lại.',
+        final refreshedGoogleUser = await googleSignIn.signInSilently(
+          reAuthenticate: true,
         );
-        if (googleUser == null) return null;
-        final googleAuth = await googleUser.authentication;
+        final googleAuth =
+            await (refreshedGoogleUser ?? googleUser).authentication;
         if ((googleAuth.idToken ?? '').isEmpty) {
-          throw 'Google không trả về ID token hợp lệ. Vui lòng thử lại.';
+          throw 'Google không trả về ID token hợp lệ. Hãy kiểm tra cấu hình Firebase Google Sign-In.';
         }
 
         final credential = firebase_auth.GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
         );
         userCredential = await _auth.signInWithCredential(credential);
