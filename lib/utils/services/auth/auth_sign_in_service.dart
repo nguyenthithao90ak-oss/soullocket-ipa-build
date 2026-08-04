@@ -789,7 +789,11 @@ class AuthSignInService {
           _isGoogleSignInInitialized = true;
         }
 
-        // Sign out trước để xoá cache phiên cũ, tránh lỗi treo và sign_in_failed
+        // disconnect() + signOut() để xóa hoàn toàn cache phiên cũ,
+        // buộc người dùng chọn lại tài khoản Google (tránh lỗi sign_in_failed khi đổi nick)
+        try {
+          await googleSignIn.disconnect();
+        } catch (_) {}
         try {
           await googleSignIn.signOut();
         } catch (_) {}
@@ -1222,12 +1226,21 @@ class AuthSignInService {
 
     try {
       if (!kIsWeb && _googleSignIn != null) {
-        asyncCleanups.add(_googleSignIn!
-            .signOut()
-            .timeout(const Duration(seconds: 2))
-            .catchError((_) {}));
+        // signOut() xóa phiên local; disconnect() hủy hoàn toàn token Google
+        // để lần đăng nhập tiếp theo bắt buộc chọn lại tài khoản
+        asyncCleanups.add(
+          _googleSignIn!
+              .signOut()
+              .then((_) => _googleSignIn!.disconnect())
+              .timeout(const Duration(seconds: 3))
+              .catchError((_) {}),
+        );
       }
     } catch (_) {}
+
+    // Reset static init flag để lần đăng nhập Google tiếp theo
+    // sẽ gọi initialize() lại từ đầu (tránh dùng phiên singleton cũ)
+    _isGoogleSignInInitialized = false;
 
     asyncCleanups.add(_facebookAuth
         .logOut()
