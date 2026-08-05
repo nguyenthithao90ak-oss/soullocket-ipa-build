@@ -666,15 +666,9 @@ class HouseService {
           return fresh;
         }
 
-        if (await _validateHouseMembership(user.uid, cachedHouseId)) {
-          _syncHouseIdToFirestore(user.uid, cachedHouseId)
-              .catchError((_) => null);
-          return cachedHouseId;
-        }
-
-        await SecureStorageService.instance
-            .delete(SecureStorageService.keyHouseId);
-        await prefs.remove('il_house_id');
+        _syncHouseIdToFirestore(user.uid, cachedHouseId)
+            .catchError((_) => null);
+        return cachedHouseId;
       } else {
         final now = DateTime.now();
         if (_lastFetchTime == null ||
@@ -766,6 +760,36 @@ class HouseService {
         await prefs.remove(_authUidPrefsKey);
         _syncHouseIdToFirestore(uid, legacyValue).catchError((_) => null);
         return legacyValue;
+      }
+
+      // 🔍 Firestore fallback: Kiểm tra collection('users').doc(uid)
+      try {
+        final firestoreDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .get()
+            .timeout(const Duration(seconds: 4));
+        if (firestoreDoc.exists && firestoreDoc.data() != null) {
+          final fsHouseId = (firestoreDoc.data()!['houseId'] ??
+                  firestoreDoc.data()!['house_id'])
+              ?.toString()
+              .trim();
+          if (fsHouseId != null &&
+              fsHouseId.isNotEmpty &&
+              (!validateMembership ||
+                  await _validateHouseMembership(uid, fsHouseId))) {
+            await _dbRef.child('users/$uid').update({'houseId': fsHouseId});
+            await SecureStorageService.instance
+                .write(SecureStorageService.keyHouseId, fsHouseId);
+            await SecureStorageService.instance
+                .write(SecureStorageService.keyAuthUid, uid);
+            await prefs.remove('il_house_id');
+            await prefs.remove(_authUidPrefsKey);
+            return fsHouseId;
+          }
+        }
+      } catch (e) {
+        debugPrint('[HouseService] Firestore houseId lookup error: $e');
       }
 
       try {

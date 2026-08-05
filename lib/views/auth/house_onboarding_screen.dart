@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../utils/services/auth_service.dart';
 import '../../utils/services/house_service.dart';
+import '../../utils/services/secure_storage_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/offline_cache_service.dart';
 import '../../utils/flexible_date_input.dart';
@@ -520,6 +521,25 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       final existingHouseId =
           await _houseService.getCurrentHouseId(preferFresh: true);
       if (existingHouseId != null && existingHouseId.isNotEmpty) {
+        debugPrint(
+          '[HouseOnboarding] Found existing house during prerequisite check: $existingHouseId',
+        );
+        final prefs = await OfflineCacheService.getPrefs();
+        final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+        await prefs.setString('il_house_id', existingHouseId);
+        await prefs.setString('il_auth_uid', currentUid);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyHouseId, existingHouseId);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyAuthUid, currentUid);
+        if (widget.onHouseCreated != null) {
+          await widget.onHouseCreated!.call();
+        } else if (mounted) {
+          Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const AppEntry()),
+            (route) => false,
+          );
+        }
         return true;
       }
     } catch (_) {}
@@ -998,6 +1018,32 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     );
     var handedOffToParent = false;
     try {
+      final existingHouseId =
+          await _houseService.getCurrentHouseId(preferFresh: true);
+      if (existingHouseId != null && existingHouseId.isNotEmpty) {
+        debugPrint(
+          '[HouseOnboarding] _createHouse found existing house: $existingHouseId',
+        );
+        final prefs = await OfflineCacheService.getPrefs();
+        await prefs.setString('il_house_id', existingHouseId);
+        await prefs.setString('il_auth_uid', user.uid);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyHouseId, existingHouseId);
+        await SecureStorageService.instance
+            .write(SecureStorageService.keyAuthUid, user.uid);
+        if (widget.onHouseCreated != null) {
+          await widget.onHouseCreated!.call();
+          return;
+        }
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const AppEntry()),
+            (route) => false,
+          );
+        }
+        return;
+      }
+
       final createdHouseId = await _houseService
           .createHouseForCurrentUser(
         email: user.email ?? '',

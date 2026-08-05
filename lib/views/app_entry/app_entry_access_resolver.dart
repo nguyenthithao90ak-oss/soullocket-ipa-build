@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../utils/services/offline_cache_service.dart';
+import '../../utils/services/secure_storage_service.dart';
 import '../../utils/services/auth_service.dart';
 import '../../utils/services/house_service.dart';
 import '../../utils/app_error_mapper.dart';
@@ -190,6 +191,19 @@ class AppEntryAccessResolver {
       );
       final isAdmin = results[0] as bool;
       final remoteState = results[1] as AppEntryAccessState;
+      if (remoteState.houseId != null &&
+          remoteState.houseId!.isNotEmpty &&
+          userId != null) {
+        try {
+          final prefs = await _getPrefs();
+          await prefs.setString('il_house_id', remoteState.houseId!);
+          await prefs.setString('il_auth_uid', userId);
+          await SecureStorageService.instance
+              .write(SecureStorageService.keyHouseId, remoteState.houseId!);
+          await SecureStorageService.instance
+              .write(SecureStorageService.keyAuthUid, userId);
+        } catch (_) {}
+      }
       return AppEntryAccessState(
         houseId: remoteState.houseId,
         blockReason: remoteState.blockReason,
@@ -200,8 +214,12 @@ class AppEntryAccessResolver {
       debugPrint(
           '[AppEntry] Offline fallback triggered: ${AppErrorMapper.resolve(e).message}');
       final isAdmin = await isAdminFuture.catchError((_) => false);
+      final fallbackHouseId = (await SecureStorageService.instance
+                  .read(SecureStorageService.keyHouseId))
+              ?.trim() ??
+          '';
       return AppEntryAccessState(
-        houseId: null,
+        houseId: fallbackHouseId.isNotEmpty ? fallbackHouseId : null,
         isAdmin: isAdmin,
         isMaintenance: false,
       );
