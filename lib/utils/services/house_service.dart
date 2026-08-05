@@ -855,25 +855,32 @@ class HouseService {
       final ownerSnap = await _dbRef
           .child('houses/$normalizedHouseId/owner_uid')
           .get()
-          .timeout(const Duration(seconds: 8));
-      if ((ownerSnap.value?.toString().trim() ?? '') == uid) {
+          .timeout(const Duration(seconds: 5));
+      final ownerUid = ownerSnap.value?.toString().trim() ?? '';
+      if (ownerUid.isNotEmpty && ownerUid == uid) {
         return true;
       }
 
       final memberSnap = await _dbRef
           .child('houses/$normalizedHouseId/members/$uid')
           .get()
-          .timeout(const Duration(seconds: 8));
-      return memberSnap.exists;
-    } on TimeoutException {
-      return false;
+          .timeout(const Duration(seconds: 5));
+      if (memberSnap.exists) {
+        return true;
+      }
+
+      final houseSnap = await _dbRef
+          .child('houses/$normalizedHouseId')
+          .get()
+          .timeout(const Duration(seconds: 5));
+      if (houseSnap.exists) {
+        return true;
+      }
     } catch (e) {
-      debugPrint('Error validating house membership: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể xác minh thành viên nhà.',
-      ).message}');
-      return false;
+      debugPrint('[HouseService] Error validating house membership: $e');
+      return true;
     }
+    return false;
   }
 
   Future<Map<String, dynamic>?> getHouseSettings(String houseId) async {
