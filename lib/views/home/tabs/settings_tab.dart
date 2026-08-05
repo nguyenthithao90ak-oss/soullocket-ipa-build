@@ -1182,7 +1182,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
                 await _authService.signOut();
                 if (!context.mounted) return;
                 Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => LoginScreen()),
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
                   (_) => false,
                 );
               },

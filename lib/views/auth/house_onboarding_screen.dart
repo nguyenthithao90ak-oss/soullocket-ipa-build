@@ -1057,7 +1057,7 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         otp: houseCreationOtp,
         customHouseId: customHouseId,
       )
-          .timeout(const Duration(seconds: 60), onTimeout: () {
+          .timeout(const Duration(seconds: 15), onTimeout: () {
         throw TimeoutException('_createHouse timed out');
       });
       debugPrint('[HouseOnboarding] _createHouse success: $createdHouseId');

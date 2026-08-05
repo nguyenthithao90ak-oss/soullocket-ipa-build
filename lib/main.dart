@@ -16,7 +16,6 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/utils/services/secure_storage_service.dart';
 import 'package:soullocket_app/utils/services/infrastructure/storage_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/scheduler.dart';
