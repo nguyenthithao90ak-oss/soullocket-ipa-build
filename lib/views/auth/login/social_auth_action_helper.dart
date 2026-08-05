@@ -30,7 +30,7 @@ class SocialAuthActionHelper {
         return 'Bạn đã huỷ đăng nhập Apple.';
       case 'Google':
       default:
-        return L10nService().translate('auth_err_google_cancelled');
+        return L10nService().translate('Bạn đã huỷ đăng nhập Google.');
     }
   }
 
