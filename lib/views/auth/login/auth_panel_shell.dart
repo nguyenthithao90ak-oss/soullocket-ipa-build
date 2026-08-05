@@ -158,7 +158,7 @@ class AuthPanelShell extends StatelessWidget {
                             ),
                             const SizedBox(width: 5),
                             Text(
-                              l10n.translate('auth_help_center_guide'),
+                              l10n.translate('Cách đồng bộ'),
                               style: SLTheme.quicksand(
                                 fontSize: 12,
                                 color: SLColors.primary.withValues(alpha: 0.8),
@@ -176,7 +176,7 @@ class AuthPanelShell extends StatelessWidget {
                             final buttons = [
                               _AuthHelpButton(
                                 icon: Icons.menu_book_rounded,
-                                label: l10n.translate('auth_guide_short'),
+                                label: l10n.translate('Hướng dẫn'),
                                 onTap: onOpenGuide,
                                 isGuide: true,
                                 expanded: !stackButtons,
@@ -184,7 +184,7 @@ class AuthPanelShell extends StatelessWidget {
                               ),
                               _AuthHelpButton(
                                 icon: Icons.headset_mic_rounded,
-                                label: l10n.translate('auth_contact_short'),
+                                label: l10n.translate('Hỗ trợ'),
                                 onTap: onOpenContact,
                                 isGuide: false,
                                 expanded: !stackButtons,

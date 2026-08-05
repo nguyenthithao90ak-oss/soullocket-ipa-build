@@ -89,7 +89,7 @@ class RelationshipModeDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      L10nService().translate('auth_msg_role_selection'),
+                      L10nService().translate('Chọn chế độ trải nghiệm phù hợp với bạn'),
                       textAlign: TextAlign.center,
                       style: SLTheme.quicksand(
                         fontSize: 13,
@@ -108,7 +108,7 @@ class RelationshipModeDialog extends StatelessWidget {
                             emoji: '🩷',
                             title: L10nService().translate('Có người yêu'),
                             description: L10nService()
-                                .translate('auth_msg_role_couple_desc'),
+                                .translate('Kết nối và chia sẻ khoảnh khắc cùng nửa kia'),
                             color: const Color(0xFFFF4081),
                             onTap: () => onSelected('couple'),
                           ),
@@ -119,7 +119,7 @@ class RelationshipModeDialog extends StatelessWidget {
                             emoji: '✨',
                             title: L10nService().translate('Độc thân'),
                             description: L10nService()
-                                .translate('auth_msg_role_single_desc'),
+                                .translate('Khám phá và lưu giữ kỷ niệm cho bản thân'),
                             color: const Color(0xFF29B6F6),
                             onTap: () => onSelected('single'),
                           ),

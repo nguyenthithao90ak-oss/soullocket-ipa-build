@@ -73,15 +73,15 @@ class RegisterForm extends StatelessWidget {
     final l10n = L10nService();
     final isBirthQuestion =
         DateInputUtils.looksLikeBirthQuestion(selectedSecurityQuestion);
-    final passwordLabel = l10n.translate('password');
-    final passwordHint = l10n.translate('auth_password_hint_short');
+    final passwordLabel = l10n.translate('Mật khẩu');
+    final passwordHint = l10n.translate('Tối thiểu 6 ký tự');
     final securityQuestionLabel =
-        l10n.translate('auth_security_question_optional');
+        l10n.translate('Câu hỏi bảo mật (Không bắt buộc)');
     final securityQuestionTapLabel =
-        l10n.translate('auth_security_question_tap');
-    final securityNote = l10n.translate('auth_security_note');
-    final securityAnswerHint = l10n.translate('auth_security_answer_hint');
-    final signupLabel = l10n.translate('signup').toUpperCase();
+        l10n.translate('Nhấn để chọn câu hỏi bảo mật');
+    final securityNote = l10n.translate('Dùng để khôi phục mật khẩu khi quên');
+    final securityAnswerHint = l10n.translate('Nhập câu trả lời bảo mật');
+    final signupLabel = l10n.translate('Đăng ký').toUpperCase();
 
     return AutofillGroup(
       child: Column(
@@ -89,7 +89,7 @@ class RegisterForm extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SLTheme.sectionHeader(
-            title: l10n.translate('auth_login_email_label'),
+            title: l10n.translate('Địa chỉ Email'),
           ),
           const SizedBox(height: 8),
           GlassTextField(
@@ -101,7 +101,7 @@ class RegisterForm extends StatelessWidget {
               AutofillHints.email,
             ],
             onSubmitted: (_) => FocusScope.of(context).nextFocus(),
-            hintText: l10n.translate('auth_email_example'),
+            hintText: l10n.translate('nhapemail@gmail.com'),
             accentColor: accentRose,
             prefixIcon: Icon(
               Icons.mail_outline_rounded,

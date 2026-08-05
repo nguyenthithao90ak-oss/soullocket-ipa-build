@@ -18,6 +18,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:in_app_review/in_app_review.dart';
 import '../../app_entry.dart';
+import '../../auth/login_screen.dart';
 import 'package:soullocket_app/views/chat/chat_detail_screen.dart';
 import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart'
     show TapHeartsOverlay, TapHeartsOverlayState;
@@ -1178,21 +1179,12 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
             const SizedBox(height: 10),
             OutlinedButton.icon(
               onPressed: () async {
-                final navigator = Navigator.of(context, rootNavigator: true);
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (_) => const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  ),
+                await _authService.signOut();
+                if (!context.mounted) return;
+                Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => LoginScreen()),
+                  (_) => false,
                 );
-                try {
-                  await _authService.signOut();
-                  navigator.popUntil((route) => route.isFirst);
-                } catch (_) {
-                  navigator.pop();
-                }
-                // AppEntry automatically handles routing to LoginScreen via auth state.
               },
               icon: const Icon(
                 Icons.logout_rounded,
