@@ -721,13 +721,27 @@ Future<void> _initializeFirebaseAppCheck() async {
     }
 
     if (kDebugMode) {
-      debugPrint('Firebase App Check: Skipped in debug mode (emulator-safe).');
-      return;
+      try {
+        const debugToken =
+            String.fromEnvironment('APPCHECK_DEBUG_TOKEN', defaultValue: '');
+        if (debugToken.isNotEmpty) {
+          await SecureStorageService.instance
+              .write('appcheck_debug_token', debugToken);
+          // Also write to SharedPreferences for AppCheck native plugin
+          await SharedPreferences.getInstance().then((prefs) => prefs.setString(
+              'com.google.firebase.appcheck.debug.DebugAppCheckProvider.SECRET_KEY',
+              debugToken));
+          debugPrint(
+              'Firebase App Check: injected debug token for emulator testing.');
+        }
+      } catch (_) {}
     }
 
     await FirebaseAppCheck.instance
         .activate(
-          providerAndroid: const AndroidPlayIntegrityProvider(),
+          providerAndroid: kDebugMode
+              ? const AndroidDebugProvider()
+              : const AndroidPlayIntegrityProvider(),
           providerApple: const AppleAppAttestWithDeviceCheckFallbackProvider(),
         )
         .timeout(const Duration(seconds: 3));

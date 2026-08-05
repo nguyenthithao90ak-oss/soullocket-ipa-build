@@ -999,11 +999,6 @@ extension _MainHomeLoadController on _MainHomeTabState {
           msgCacheSettingsFail,
           msgLoadDataFail,
         );
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
         return;
       }
 

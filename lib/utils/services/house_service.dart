@@ -666,9 +666,15 @@ class HouseService {
           return fresh;
         }
 
-        _syncHouseIdToFirestore(user.uid, cachedHouseId)
-            .catchError((_) => null);
-        return cachedHouseId;
+        if (await _validateHouseMembership(user.uid, cachedHouseId)) {
+          _syncHouseIdToFirestore(user.uid, cachedHouseId)
+              .catchError((_) => null);
+          return cachedHouseId;
+        }
+
+        await SecureStorageService.instance
+            .delete(SecureStorageService.keyHouseId);
+        await prefs.remove('il_house_id');
       } else {
         final now = DateTime.now();
         if (_lastFetchTime == null ||
