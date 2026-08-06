@@ -251,6 +251,13 @@ class NotificationService {
     } catch (e) {
       debugPrint('[NotificationService] clearTokenOnSignOut error: $e');
     }
+
+    // Xóa FCM token local trên thiết bị để ngắt hoàn toàn việc nhận notification
+    try {
+      await _fcm.deleteToken();
+    } catch (e) {
+      debugPrint('[NotificationService] deleteToken error: $e');
+    }
   }
 
   /// Xử lý thông báo khi App đang mở — hiển thị Local Notification

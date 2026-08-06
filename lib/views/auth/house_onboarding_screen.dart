@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -689,6 +690,12 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     if (_needsEmailVerification(error, message)) {
       return 'Cần xác minh Gmail để tiếp tục tạo nhà.';
     }
+    if (normalized.contains('dữ liệu nhà') ||
+        normalized.contains('đã có nhà') ||
+        normalized.contains('đề lên') ||
+        normalized.contains('mất dữ liệu')) {
+      return 'Tài khoản của bạn đã có dữ liệu ngôi nhà. Đang đồng bộ lại dữ liệu, vui lòng bấm Thử lại.';
+    }
     if (normalized.contains('timeout') ||
         normalized.contains('network') ||
         normalized.contains('deadline') ||
@@ -1186,36 +1193,54 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         }
       }
       final isAlreadyExistsError = normalizedError.contains('đã có nhà') ||
+          normalizedError.contains('dữ liệu nhà') ||
+          normalizedError.contains('dữ liệu') ||
+          normalizedError.contains('đã có') ||
+          normalizedError.contains('đè lên') ||
+          normalizedError.contains('mất dữ liệu') ||
           normalizedError.contains('đã tồn tại') ||
           normalizedError.contains('already exists') ||
           normalizedError.contains('already_exists') ||
           normalizedError.contains('tồn tại');
       if (isAlreadyExistsError) {
-        try {
-          final existingHouseId =
-              await _houseService.getCurrentHouseId(preferFresh: true);
+        String? existingHouseId;
+        for (var attempt = 1; attempt <= 3; attempt++) {
+          existingHouseId = await _recoverExistingHouseId(user);
           if (existingHouseId != null && existingHouseId.isNotEmpty) {
-            debugPrint(
-              '[HouseOnboarding] Existing house recovered after creation collision: $existingHouseId',
-            );
-            _authSyncRetryCount = 0;
-            _transientCreateRetryCount = 0;
-            if (!mounted) return;
-            if (widget.onHouseCreated != null) {
-              handedOffToParent = true;
-              await widget.onHouseCreated!.call();
-              return;
-            }
-            Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const AppEntry()),
-              (route) => false,
-            );
+            break;
+          }
+          await Future.delayed(Duration(milliseconds: 800 * attempt));
+        }
+
+        if (existingHouseId != null && existingHouseId.isNotEmpty) {
+          debugPrint(
+            '[HouseOnboarding] Existing house recovered after creation collision: $existingHouseId',
+          );
+          final prefs = await OfflineCacheService.getPrefs();
+          await prefs.setString('il_house_id', existingHouseId);
+          await prefs.setString('il_auth_uid', user.uid);
+          await SecureStorageService.instance
+              .write(SecureStorageService.keyHouseId, existingHouseId);
+          await SecureStorageService.instance
+              .write(SecureStorageService.keyAuthUid, user.uid);
+          try {
+            await FirebaseDatabase.instance
+                .ref('users/${user.uid}/houseId')
+                .set(existingHouseId);
+          } catch (_) {}
+          _authSyncRetryCount = 0;
+          _transientCreateRetryCount = 0;
+          if (!mounted) return;
+          if (widget.onHouseCreated != null) {
+            handedOffToParent = true;
+            await widget.onHouseCreated!.call();
             return;
           }
-        } catch (recoverErr) {
-          debugPrint(
-            '[HouseOnboarding] Failed to recover existing house: $recoverErr',
+          Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const AppEntry()),
+            (route) => false,
           );
+          return;
         }
       }
 
@@ -1229,6 +1254,61 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Future<String?> _recoverExistingHouseId(User user) async {
+    final uid = user.uid;
+
+    try {
+      final h1 = await _houseService.getCurrentHouseId(preferFresh: true);
+      if (h1 != null && h1.isNotEmpty) return h1;
+    } catch (_) {}
+
+    try {
+      final h2 = await _houseService.getCurrentHouseId(preferFresh: false);
+      if (h2 != null && h2.isNotEmpty) return h2;
+    } catch (_) {}
+
+    try {
+      final snap = await FirebaseDatabase.instance
+          .ref('users/$uid')
+          .get()
+          .timeout(const Duration(seconds: 5));
+      if (snap.exists && snap.value is Map) {
+        final val = snap.value as Map;
+        final h3 = (val['houseId'] ?? val['house_id'])?.toString().trim();
+        if (h3 != null && h3.isNotEmpty) return h3;
+      }
+    } catch (_) {}
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get()
+          .timeout(const Duration(seconds: 4));
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data()!;
+        final h4 = (data['houseId'] ?? data['house_id'])?.toString().trim();
+        if (h4 != null && h4.isNotEmpty) return h4;
+      }
+    } catch (_) {}
+
+    try {
+      final ownerSnap = await FirebaseDatabase.instance
+          .ref('houses')
+          .orderByChild('owner_uid')
+          .equalTo(uid)
+          .limitToFirst(1)
+          .get()
+          .timeout(const Duration(seconds: 5));
+      if (ownerSnap.exists && ownerSnap.children.isNotEmpty) {
+        final h5 = ownerSnap.children.first.key?.trim();
+        if (h5 != null && h5.isNotEmpty) return h5;
+      }
+    } catch (_) {}
+
+    return null;
   }
 
   String _resolveErrorTitle(String message) {

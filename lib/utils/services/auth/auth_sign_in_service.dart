@@ -1234,7 +1234,7 @@ class AuthSignInService {
         .timeout(const Duration(seconds: 2))
         .catchError((_) {}));
 
-    Future.wait(asyncCleanups).catchError((_) => []);
+    await Future.wait(asyncCleanups).catchError((_) => []);
 
     // 3. Thực hiện đăng xuất FirebaseAuth (bắt buộc chờ nhưng timeout ngắn)
     try {
