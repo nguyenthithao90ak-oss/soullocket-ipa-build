@@ -29,7 +29,7 @@ class DiaryComposerController {
         },
         {
           'icon': '🤩',
-          'asset': 'assets/images/anhtomau_stickers/sticker_19.gif',
+          'asset': 'assets/images/anhtomau_stickers/sticker_2.gif',
           'label': L10nService()
               .translate(L10nService().translate('home_hngkhi_eef2c4')),
           'color': const Color(0xFFFF8F00),

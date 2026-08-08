@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'package:http/http.dart' as http;
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:video_compress/video_compress.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
@@ -135,6 +134,13 @@ class CloudflareR2Service {
       File finalFile = file;
 
       if (isVideo) {
+        if (!AppConfig.isVideoUploadEnabled) {
+          debugPrint(
+            '[CloudflareR2] TẠM THỜI TẮT UPLOAD VIDEO ĐỂ SỬA CHỮA / BẢO TRÌ (AppConfig.isVideoUploadEnabled = false). '
+            'Để bật lại tính năng này, đổi isVideoUploadEnabled = true trong lib/core/constants/app_config.dart',
+          );
+          return null;
+        }
         final isVip = await PurchaseService().isVip();
         if (!isVip) {
           debugPrint('[CloudflareR2] Non-VIP user: Compressing video to 720p...');

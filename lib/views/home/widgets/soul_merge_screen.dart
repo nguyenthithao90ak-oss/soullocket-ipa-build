@@ -13,7 +13,6 @@ import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:soullocket_app/models/diary_post.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/utils/services/storage/storage_service.dart';
 import 'package:soullocket_app/utils/helpers/bump_detector.dart';
 import 'package:soullocket_app/utils/services/soul_merge_service.dart';
@@ -699,7 +698,10 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   @override
   Widget build(BuildContext context) {
     final photoMessages = _chatHistory
-        .where((m) => (m['imageUrl']?.toString() ?? '').isNotEmpty)
+        .where((m) {
+          final url = (m['imageUrl']?.toString() ?? '').trim();
+          return url.startsWith('http://') || url.startsWith('https://');
+        })
         .toList();
     final latestPhotos = photoMessages.length > 3
         ? photoMessages.sublist(photoMessages.length - 3)

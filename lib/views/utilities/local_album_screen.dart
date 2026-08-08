@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:vision_gallery_saver/vision_gallery_saver.dart';
 
 class LocalAlbumScreen extends StatefulWidget {
@@ -254,6 +255,10 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
   }
 
   Future<void> _pickVideos() async {
+    if (!AppConfig.isVideoUploadEnabled) {
+      _showMsg('Tính năng tải video đang tạm thời bảo trì để nâng cấp.');
+      return;
+    }
     if (_items.length >= _maxItems) {
       _showMsg('Đã đạt giới hạn $_maxItems mục.');
       return;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
+import '../../../utils/sl_notice.dart';
 import 'glass_text_field.dart';
 import 'social_auth_buttons.dart';
 
@@ -170,7 +171,27 @@ class LoginForm extends StatelessWidget {
 
                   return SLTheme.authPrimaryButton(
                     label: loginLabel,
-                    onPressed: isLoading || !isInputValid ? null : onLogin,
+                    onPressed: isLoading
+                        ? null
+                        : () {
+                            if (!isInputValid) {
+                              final email = emailValue.text.trim();
+                              final password = passwordValue.text;
+                              if (email.isEmpty) {
+                                SLNotice.showError(context, 'Vui lòng nhập Email.');
+                              } else if (!_loginEmailRegex.hasMatch(email)) {
+                                SLNotice.showError(context, 'Email không hợp lệ.');
+                              } else if (password.isEmpty) {
+                                SLNotice.showError(context, 'Vui lòng nhập Mật khẩu.');
+                              } else if (password.length < 6) {
+                                SLNotice.showError(context, 'Mật khẩu phải từ 6 ký tự trở lên.');
+                              } else {
+                                SLNotice.showError(context, 'Thông tin đăng nhập chưa hợp lệ.');
+                              }
+                              return;
+                            }
+                            onLogin();
+                          },
                     isLoading: isLoading,
                     colors: isInputValid
                         ? [accentRose, accentBlush, accentLavender]

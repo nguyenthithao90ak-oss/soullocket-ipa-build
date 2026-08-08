@@ -1,5 +1,5 @@
 name: soullocket_app
-description: "SoulLocket - Ứng dụng nhật ký tình yêu và lưu giữ kỷ niệm dành cho các cặp đôi."
+description: "SoulLocket-Đếm Ngày yêu. - Ứng dụng nhật ký tình yêu và lưu giữ kỷ niệm dành cho các cặp đôi."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 3.3.4+107
+version: 3.3.4+108
 
 environment:
   sdk: ^3.5.3
@@ -203,8 +203,6 @@ flutter:
 
     # Home screen bundled interaction stickers
     - assets/images/utility_stickers/
-    - assets/images/interaction_stickers/
-    - assets/images/interaction_stickers/custom/numbered/
     - assets/images/sticker_import/cutout/sheet_02/
     - assets/images/sticker_import/cutout/sheet_03/
     - assets/images/sticker_import/cutout/sheet_04/

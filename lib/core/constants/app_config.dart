@@ -98,7 +98,11 @@ class AppConfig {
   );
   static const String maintenanceModePath = 'sys_settings/is_maintenance';
   static const String legacyMaintenanceModePath =
-      'system_settings/maintenance_mode';
+      'system/maintenance/is_active';
+
+  /// Upload video đã được kiểm tra ổn định qua streamed PUT lên R2.
+  /// Non-VIP tự động nén 720p qua video_compress trước khi upload.
+  static const bool isVideoUploadEnabled = true;
   static const String communityMaintenanceModePath =
       'sys_settings/community_maintenance_mode';
   static const String communityMaintenanceMsgPath =

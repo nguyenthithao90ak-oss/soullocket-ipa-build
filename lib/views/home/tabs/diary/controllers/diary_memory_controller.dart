@@ -1421,6 +1421,12 @@ class DiaryMemoryController extends ChangeNotifier {
       final originalName = (image.name.isNotEmpty ? image.name : image.path).toLowerCase();
       final ext = p.extension(originalName).toLowerCase();
       final isVideoFile = const {'.mp4', '.mov', '.webm', '.3gp', '.m4v', '.avi', '.mkv'}.contains(ext);
+      if (isVideoFile && !AppConfig.isVideoUploadEnabled) {
+        return (
+          error: 'Tính năng tải video đang tạm thời bảo trì để nâng cấp.',
+          payload: null
+        );
+      }
 
       final upload = await _storageService.uploadMemoryImage(
         houseId,

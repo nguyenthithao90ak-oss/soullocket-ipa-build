@@ -119,40 +119,19 @@ class DiaryItem extends StatelessWidget {
               children: [
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.12),
-                    borderRadius: SLRadius.mdAll,
-                    border:
-                        Border.all(color: accentColor.withValues(alpha: 0.25)),
+                    color: accentColor.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        displayName,
-                        style: SLTheme.quicksand(
-                          color: accentColor,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 12,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Image.asset(
-                        _getMoodAsset(post.mood),
-                        width: 22,
-                        height: 22,
-                        gaplessPlayback: true,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Text(
-                            post.mood,
-                            style: TextStyle(fontSize: 12, color: accentColor),
-                          );
-                        },
-                      ),
-                    ],
+                  child: Text(
+                    displayName,
+                    style: SLTheme.quicksand(
+                      color: accentColor,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                      letterSpacing: 0.2,
+                    ),
                   ),
                 ),
                 const Spacer(),
@@ -160,8 +139,8 @@ class DiaryItem extends StatelessWidget {
                   DateFormat('dd/MM/yyyy • HH:mm').format(post.timestamp),
                   style: SLTheme.quicksand(
                     color: SLColors.textTertiary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 if (isMyPost) ...[
@@ -170,73 +149,68 @@ class DiaryItem extends StatelessWidget {
                     onTap: () => onConfirmDelete(post),
                     child: Icon(
                       Icons.delete_rounded,
-                      size: 18,
-                      color: Colors.grey.withValues(alpha: 0.48),
+                      size: 20,
+                      color: SLColors.textTertiary.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
               ],
             ),
             SLSpacing.h16,
-            // Quote Card cho bài viết ngắn, hiển thị dạng Quote to, in nghiêng, căn giữa kèm dấu ngoặc kép watermark mờ ảo
-            if (isShortText)
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned(
-                    left: -6,
-                    top: -16,
-                    child: Text(
-                      '“',
-                      style: TextStyle(
-                        fontSize: 72,
-                        color: accentColor.withValues(alpha: 0.07),
-                        fontWeight: FontWeight.w900,
-                        height: 0.8,
-                      ),
-                    ),
+            if (isShortText) ...[
+              Center(
+                child: Text(
+                  post.content,
+                  textAlign: TextAlign.center,
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
+                    height: 1.4,
+                    color: SLColors.textPrimary,
                   ),
-                  Positioned(
-                    right: -6,
-                    bottom: -32,
-                    child: Text(
-                      '”',
-                      style: TextStyle(
-                        fontSize: 72,
-                        color: accentColor.withValues(alpha: 0.07),
-                        fontWeight: FontWeight.w900,
-                        height: 0.8,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 24),
-                    child: Text(
-                      post.content,
-                      textAlign: TextAlign.center,
-                      style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 17.5,
-                        fontStyle: FontStyle.italic,
-                        height: 1.5,
-                        color: SLColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            else
+                ),
+              ),
+              SLSpacing.h16,
+              Center(
+                child: Image.asset(
+                  _getMoodAsset(post.mood),
+                  width: 84,
+                  height: 84,
+                  gaplessPlayback: true,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Text(
+                      post.mood,
+                      style: TextStyle(fontSize: 36, color: accentColor),
+                    );
+                  },
+                ),
+              ),
+            ] else ...[
               Text(
                 post.content,
                 style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14.5,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
                   height: 1.6,
                   color: SLColors.textPrimary,
                 ),
               ),
+              SLSpacing.h12,
+              Image.asset(
+                _getMoodAsset(post.mood),
+                width: 32,
+                height: 32,
+                gaplessPlayback: true,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Text(
+                    post.mood,
+                    style: TextStyle(fontSize: 20, color: accentColor),
+                  );
+                },
+              ),
+            ],
             if (post.imageUrl.isNotEmpty) ...[
               SLSpacing.h16,
               ClipRRect(
