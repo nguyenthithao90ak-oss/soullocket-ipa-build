@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/services/storage/storage_download_cache_helper.dart';
+import 'package:lottie/lottie.dart';
 
 class R2StickerImage extends StatelessWidget {
   final String assetPath;
@@ -77,14 +78,25 @@ class R2StickerImage extends StatelessWidget {
       );
     }
 
-    if (assetPath.startsWith('assets/images/interaction_stickers/')) {
-      final String r2Url =
-          '${AppConfig.r2PublicDomain}/stickers/${assetPath.substring('assets/images/'.length)}';
+    if (assetPath.startsWith('assets/images/interaction_stickers/') || assetPath.startsWith('http')) {
+      final r2Url = assetPath.startsWith('http') 
+          ? assetPath 
+          : '${AppConfig.r2PublicDomain}/stickers/${assetPath.substring('assets/images/'.length)}';
+      
+      final isLottieUrl = r2Url.toLowerCase().endsWith('.json') || r2Url.toLowerCase().endsWith('.lottie');
 
-      // Nếu file đã được nạp và lưu trong RAM cache, trả về trực tiếp Image.file đồng bộ để không bị nháy
+      // Nếu file đã được nạp và lưu trong RAM cache, trả về trực tiếp Image.file (hoặc Lottie.file) đồng bộ để không bị nháy
       final cachedFile = _resolvedStickerFiles[r2Url];
 
       if (cachedFile != null && cachedFile.existsSync()) {
+        if (isLottieUrl) {
+          return Lottie.file(
+            cachedFile,
+            fit: fit,
+            width: width,
+            height: height,
+          );
+        }
         return Image.file(
           cachedFile,
           fit: fit,
@@ -120,12 +132,32 @@ class R2StickerImage extends StatelessWidget {
           if (file != null && file.existsSync()) {
             // Lưu vào RAM cache để các lần build tiếp theo nạp đồng bộ ngay lập tức
             _resolvedStickerFiles[r2Url] = file;
+            if (isLottieUrl) {
+              return Lottie.file(
+                file,
+                fit: fit,
+                width: width,
+                height: height,
+              );
+            }
             return Image.file(
               file,
               fit: fit,
               width: width,
               height: height,
               cacheWidth: width != null ? (width! * 2).toInt() : 400,
+            );
+          }
+
+          if (isLottieUrl) {
+            return Lottie.network(
+              r2Url,
+              fit: fit,
+              width: width,
+              height: height,
+              errorBuilder: errorWidget != null
+                  ? (context, error, stackTrace) => errorWidget!
+                  : null,
             );
           }
 
@@ -172,7 +204,20 @@ class R2StickerImage extends StatelessWidget {
       );
     }
 
-    // Fallback cho ảnh asset thông thường khác
+    // Fallback cho ảnh asset thông thường (hoặc Lottie)
+    final lowerPath = assetPath.toLowerCase();
+    if (lowerPath.endsWith('.json') || lowerPath.endsWith('.lottie')) {
+      return Lottie.asset(
+        assetPath,
+        fit: fit,
+        width: width,
+        height: height,
+        errorBuilder: errorWidget != null
+            ? (context, error, stackTrace) => errorWidget!
+            : null,
+      );
+    }
+
     return Image.asset(
       assetPath,
       fit: fit,

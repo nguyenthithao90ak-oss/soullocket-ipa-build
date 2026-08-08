@@ -27,7 +27,6 @@ import '../../../../../utils/services/storage/storage_service.dart';
 import 'diary_feed_controller.dart';
 import 'diary_guard_controller.dart';
 import '../../../../ui_prefs.dart';
-import '../../../../../widgets/cute_loading_indicator.dart';
 import 'package:vision_gallery_saver/vision_gallery_saver.dart';
 import '../../../../../utils/app_error_mapper.dart';
 
@@ -68,7 +67,6 @@ class DiaryMemoryController extends ChangeNotifier {
   static const int _appMemoryCacheLimit = 200;
   static const int _memoryUploadConcurrency = 5;
   static const Duration _memoryDownloadCacheTtl = Duration(days: 7);
-  static const Color _diaryPinkDeep = Color(0xFFD81B60);
   static const String _pendingUploadPrefsKey = 'diary_memory_pending_upload_v1';
 
   final DatabaseReference _dbRef;
@@ -140,17 +138,6 @@ class DiaryMemoryController extends ChangeNotifier {
     if (notify) {
       notifyListeners();
     }
-  }
-
-  void _dismissCurrentDialog(BuildContext context) {
-    if (!context.mounted) {
-      return;
-    }
-    final navigator = Navigator.maybeOf(context, rootNavigator: true);
-    if (navigator == null || !navigator.canPop()) {
-      return;
-    }
-    navigator.pop();
   }
 
   Future<List<String>> _extractRecoverableImagePaths(List<XFile> images) async {
@@ -1071,13 +1058,7 @@ class DiaryMemoryController extends ChangeNotifier {
       return;
     }
 
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(
-        child: CuteLoadingIndicator(color: _diaryPinkDeep),
-      ),
-    );
+    showSnackBar('Đang xử lý...');
 
     try {
       final result = await _storageService.moveMemoryImagesToTrash(
@@ -1095,7 +1076,6 @@ class DiaryMemoryController extends ChangeNotifier {
       if (!context.mounted) {
         return;
       }
-      _dismissCurrentDialog(context);
       showSnackBar(
         L10nService().format('diary_deleted_memories', {
           'count': result['deletedCount'] ?? _selectedMemories.length,
@@ -1147,7 +1127,6 @@ class DiaryMemoryController extends ChangeNotifier {
           if (!context.mounted) {
             return;
           }
-          _dismissCurrentDialog(context);
           showSnackBar(
             L10nService().format('diary_deleted_memories', {
               'count': deletedItems.length,
@@ -1160,7 +1139,6 @@ class DiaryMemoryController extends ChangeNotifier {
       if (!context.mounted) {
         return;
       }
-      _dismissCurrentDialog(context);
       showSnackBar(
         L10nService().format('diary_delete_photo_error', {
           'error': AppErrorMapper.resolve(e).message,
@@ -1180,13 +1158,7 @@ class DiaryMemoryController extends ChangeNotifier {
       return;
     }
 
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(
-        child: CuteLoadingIndicator(color: _diaryPinkDeep),
-      ),
-    );
+    showSnackBar('Đang xử lý...');
 
     try {
       final granted = await guardController.ensureGalleryPermission(context);
@@ -1194,7 +1166,6 @@ class DiaryMemoryController extends ChangeNotifier {
         if (!context.mounted) {
           return;
         }
-        _dismissCurrentDialog(context);
         showSnackBar(
           L10nService().translate('home_chacquynlu_10faf8'),
           backgroundColor: const Color(0xFFE53935),
@@ -1230,7 +1201,7 @@ class DiaryMemoryController extends ChangeNotifier {
       if (!context.mounted) {
         return;
       }
-      _dismissCurrentDialog(context);
+
 
       if (savedCount > 0) {
         _exitSelectionMode(notify: false);
@@ -1249,7 +1220,6 @@ class DiaryMemoryController extends ChangeNotifier {
       if (!context.mounted) {
         return;
       }
-      _dismissCurrentDialog(context);
       showSnackBar(
         L10nService().format('diary_save_image_error', {
           'error': AppErrorMapper.resolve(e).message,
@@ -1266,20 +1236,13 @@ class DiaryMemoryController extends ChangeNotifier {
     required void Function(String message, {Color? backgroundColor})
         showSnackBar,
   }) async {
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(
-        child: CuteLoadingIndicator(color: Colors.white),
-      ),
-    );
+    showSnackBar('Đang xử lý...');
     try {
       final granted = await guardController.ensureGalleryPermission(context);
       if (!granted) {
         if (!context.mounted) {
           return;
         }
-        _dismissCurrentDialog(context);
         showSnackBar(
           L10nService().translate('home_chacquynlu_10faf8'),
           backgroundColor: const Color(0xFFE53935),
@@ -1302,13 +1265,11 @@ class DiaryMemoryController extends ChangeNotifier {
         if (!context.mounted) {
           return;
         }
-        _dismissCurrentDialog(context);
         showSnackBar(L10nService().translate('diary_saved_image_to_album'));
       } else {
         if (!context.mounted) {
           return;
         }
-        _dismissCurrentDialog(context);
         showSnackBar(
           L10nService().translate('home_khngthtinh_98b32d'),
           backgroundColor: const Color(0xFFE53935),
@@ -1318,7 +1279,6 @@ class DiaryMemoryController extends ChangeNotifier {
       if (!context.mounted) {
         return;
       }
-      _dismissCurrentDialog(context);
       showSnackBar(
         L10nService().format('diary_save_image_error', {
           'error': AppErrorMapper.resolve(e).message,
@@ -1458,6 +1418,10 @@ class DiaryMemoryController extends ChangeNotifier {
     Position? position,
   }) async {
     try {
+      final originalName = (image.name.isNotEmpty ? image.name : image.path).toLowerCase();
+      final ext = p.extension(originalName).toLowerCase();
+      final isVideoFile = const {'.mp4', '.mov', '.webm', '.3gp', '.m4v', '.avi', '.mkv'}.contains(ext);
+
       final upload = await _storageService.uploadMemoryImage(
         houseId,
         image,
@@ -1482,6 +1446,7 @@ class DiaryMemoryController extends ChangeNotifier {
         'storagePath': upload.storagePath,
         'authorEmail': authorEmail.trim(),
         'authorRole': authorRole.trim(),
+        'type': isVideoFile ? 'video' : 'image',
         if (position != null) 'lat': position.latitude,
         if (position != null) 'lng': position.longitude,
       };
@@ -1613,7 +1578,7 @@ class DiaryMemoryController extends ChangeNotifier {
     final limitToPick = StorageService.clampImagePickLimit(slotsLeft);
 
     final images =
-        presetImages ?? await _storageService.pickImages(limit: limitToPick);
+        presetImages ?? await _storageService.pickMedia(limit: limitToPick);
     if (images.isEmpty || !context.mounted) {
       return;
     }

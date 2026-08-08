@@ -82,38 +82,41 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
       child: ValueListenableBuilder<_LiveUiSnapshot>(
         valueListenable: _liveUiVN,
         builder: (context, uiSnap, _) {
-          final chips = _isSingleRelationship
-              ? <Widget>[
-                  _buildTopChip(
-                    icon: Icons.my_location_rounded,
-                    label: uiSnap.distanceText,
-                    accent: _kMapPinkDeep,
-                  ),
-                ]
-              : <Widget>[
-                  _buildTopChip(
-                    icon: Icons.route_rounded,
-                    label: uiSnap.distanceText,
-                    accent: _kMapPinkDeep,
-                  ),
-                  _buildTopChip(
-                    icon: Icons.alt_route_rounded,
-                    label: uiSnap.isFetchingRoute &&
-                            uiSnap.routeDistanceText == '--'
-                        ? context.tr('map_angtnhng_143257')
-                        : uiSnap.routeDistanceText,
-                    accent: _kMapBlue,
-                  ),
-                  _buildTopChip(
-                    icon: Icons.schedule_rounded,
-                    label: uiSnap.etaText == '--'
-                        ? (uiSnap.isFetchingRoute
-                            ? context.tr('map_angctnh_9fd8b3')
-                            : context.tr('map_chacthigia_2ba794'))
-                        : uiSnap.etaText,
-                    accent: const Color(0xFF7C3AED),
-                  ),
-                ];
+          final chips = <Widget>[
+            _buildTopChip(
+              icon: Icons.route_rounded,
+              label: uiSnap.distanceText,
+              accent: _kMapPinkDeep,
+            ),
+          ];
+
+          if (!_isSingleRelationship) {
+            if (uiSnap.isFetchingRoute || uiSnap.routeDistanceText != '--') {
+              chips.add(
+                _buildTopChip(
+                  icon: Icons.alt_route_rounded,
+                  label: uiSnap.isFetchingRoute && uiSnap.routeDistanceText == '--'
+                      ? context.tr('map_angtnhng_143257')
+                      : uiSnap.routeDistanceText,
+                  accent: _kMapBlue,
+                ),
+              );
+            }
+
+            if (uiSnap.isFetchingRoute || uiSnap.etaText != '--') {
+              chips.add(
+                _buildTopChip(
+                  icon: Icons.schedule_rounded,
+                  label: uiSnap.etaText == '--'
+                      ? (uiSnap.isFetchingRoute
+                          ? context.tr('map_angctnh_9fd8b3')
+                          : context.tr('map_chacthigia_2ba794'))
+                      : uiSnap.etaText,
+                  accent: const Color(0xFF7C3AED),
+                ),
+              );
+            }
+          }
 
           return SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -146,7 +149,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           width: expand ? double.infinity : null,
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             color: SLColors.bgElevated.withValues(alpha: 0.9),
             borderRadius: SLRadius.pillAll,
@@ -164,14 +167,15 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, size: 18, color: accent),
-              const SizedBox(width: 7),
-              Flexible(
+              const SizedBox(width: 6),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 160),
                 child: Text(
                   label,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: SLTheme.quicksand(
-                    fontSize: 11.3,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w900,
                     color: SLColors.textPrimary,
                     height: 1.12,
@@ -322,6 +326,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
                 _preferredFocusPoint() ?? const ll.LatLng(14.0583, 108.2772),
             initialZoom: _preferredFocusPoint() == null ? 5 : 15,
             onTap: (_, point) => _handleMapTapForCheckin(point),
+            onLongPress: (_, point) => _handleMapLongPress(point),
             onMapReady: () {
               if (!mounted) return;
               _isMapReady = true;

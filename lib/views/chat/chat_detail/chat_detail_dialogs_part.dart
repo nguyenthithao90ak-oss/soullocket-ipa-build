@@ -1268,23 +1268,11 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        final stickerGroups = <String, List<String>>{
-          'Bộ 1': List.generate(
-              40,
+        final stickerGroups = {
+          'B? 1': List.generate(
+              35,
               (i) =>
-                  'assets/images/interaction_stickers/custom/numbered/sticker_${(i + 1).toString().padLeft(3, '0')}.png'),
-          'Bộ 2': List.generate(
-              40,
-              (i) =>
-                  'assets/images/interaction_stickers/custom/numbered/sticker_${(i + 41).toString().padLeft(3, '0')}.png'),
-          'Bộ 3': List.generate(
-              40,
-              (i) =>
-                  'assets/images/interaction_stickers/custom/numbered/sticker_${(i + 81).toString().padLeft(3, '0')}.png'),
-          'Bộ 4': List.generate(
-              44,
-              (i) =>
-                  'assets/images/interaction_stickers/custom/numbered/sticker_${(i + 121).toString().padLeft(3, '0')}.png'),
+                  'assets/images/anhtomau_stickers/sticker_${i + 1}.gif'),
         };
         final labels = stickerGroups.keys.toList();
 
@@ -1472,3 +1460,4 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
     );
   }
 }
+

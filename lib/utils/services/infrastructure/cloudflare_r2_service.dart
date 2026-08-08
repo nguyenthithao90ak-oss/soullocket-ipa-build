@@ -4,6 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'package:http/http.dart' as http;
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:video_compress/video_compress.dart';
+import 'package:soullocket_app/utils/services/purchase_service.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
 
 class CloudflareR2Service {
   static final CloudflareR2Service instance = CloudflareR2Service._internal();
@@ -19,6 +23,20 @@ class CloudflareR2Service {
     // Không cần khởi tạo Minio client ở phía App
   }
 
+  /// URL sinh ra từ R2 có thể đã bị gán vào weserv.nl (dành cho ảnh).
+  /// Video_player sẽ lỗi nếu đi qua proxy ảnh. Hàm này bóc URL gốc ra để play.
+  static String resolveVideoUrl(String rawUrl) {
+    if (rawUrl.isEmpty) return rawUrl;
+    if (rawUrl.contains('images.weserv.nl/?url=')) {
+      final unproxied = rawUrl.split('images.weserv.nl/?url=').last;
+      if (!unproxied.startsWith('http')) {
+        return 'https://$unproxied';
+      }
+      return unproxied;
+    }
+    return rawUrl;
+  }
+
   String _getMimeType(String filePath) {
     final ext = path.extension(filePath).toLowerCase();
     switch (ext) {
@@ -28,6 +46,16 @@ class CloudflareR2Service {
         return 'image/webp';
       case '.gif':
         return 'image/gif';
+      case '.mp4':
+        return 'video/mp4';
+      case '.mov':
+        return 'video/quicktime';
+      case '.webm':
+        return 'video/webm';
+      case '.m4v':
+        return 'video/x-m4v';
+      case '.3gp':
+        return 'video/3gpp';
       case '.jpg':
       case '.jpeg':
       default:
@@ -46,21 +74,37 @@ class CloudflareR2Service {
 
       final bytes = base64Decode(cleanBase64);
 
-      // Yêu cầu sinh Presigned URL từ backend
-      final callable =
-          FirebaseFunctions.instance.httpsCallable('getSignedUploadUrlSecure');
-      final result = await callable.call(<String, dynamic>{
-        'fileName': 'image_$extension',
-        'contentType': 'image/$extension',
-        'folderPath': folderPath,
-      });
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return null;
+      final idToken = await user.getIdToken();
 
-      final resData = result.data as Map;
+      final url = Uri.parse('${AppConfig.cloudflareWorkerUrl}/api/getSignedUploadUrl');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode({
+          'fileName': 'image_$extension',
+          'contentType': 'image/$extension',
+          'folderPath': folderPath,
+          'fileSize': bytes.length,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        debugPrint('[CloudflareR2] Worker returned error: ${response.body}');
+        return null;
+      }
+
+      final resData = jsonDecode(response.body)['result'] as Map;
       final uploadUrl = resData['uploadUrl'] as String;
       final publicUrl = resData['publicUrl'] as String;
       final headers = Map<String, String>.from(resData['headers'] ?? {});
+      headers['Authorization'] = 'Bearer $idToken';
 
-      // Tiến hành upload nhị phân trực tiếp bằng HTTP PUT
+      // Tiến hành upload nhị phân trực tiếp bằng HTTP PUT qua proxy Worker hoặc R2
       final putResponse = await http.put(
         Uri.parse(uploadUrl),
         headers: headers,
@@ -84,33 +128,111 @@ class CloudflareR2Service {
   Future<String?> uploadFile(File file,
       {required String folderPath, String? storagePathOverride}) async {
     try {
-      final fileName = path.basename(file.path);
+      String fileName = path.basename(file.path);
       final contentType = _getMimeType(file.path);
-      final bytes = await file.readAsBytes();
+      final isVideo = contentType.startsWith('video/');
+      
+      File finalFile = file;
 
-      // Yêu cầu sinh Presigned URL từ backend
-      final callable =
-          FirebaseFunctions.instance.httpsCallable('getSignedUploadUrlSecure');
-      final result = await callable.call(<String, dynamic>{
-        'fileName': fileName,
-        'contentType': contentType,
-        'folderPath': folderPath,
-        if (storagePathOverride != null) 'exactPath': storagePathOverride,
-      });
+      if (isVideo) {
+        final isVip = await PurchaseService().isVip();
+        if (!isVip) {
+          debugPrint('[CloudflareR2] Non-VIP user: Compressing video to 720p...');
+          try {
+            final mediaInfo = await VideoCompress.compressVideo(
+              file.path,
+              quality: VideoQuality.Res1280x720Quality,
+              deleteOrigin: false,
+            );
+            if (mediaInfo != null && mediaInfo.file != null) {
+              finalFile = mediaInfo.file!;
+              fileName = path.basename(finalFile.path);
+              debugPrint('[CloudflareR2] Video compressed successfully.');
+            }
+          } catch (compressError) {
+            debugPrint('[CloudflareR2] Video compress failed: $compressError, falling back to original');
+          }
+        } else {
+          debugPrint('[CloudflareR2] VIP user: Uploading original video...');
+        }
+      }
 
-      final resData = result.data as Map;
+      final fileSize = await finalFile.length();
+      debugPrint('[CloudflareR2] Upload file: $fileName, size: ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB, type: $contentType');
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        debugPrint('[CloudflareR2] Upload failed: user not authenticated');
+        return null;
+      }
+      final idToken = await user.getIdToken();
+
+      final url = Uri.parse('${AppConfig.cloudflareWorkerUrl}/api/getSignedUploadUrl');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode({
+          'fileName': fileName,
+          'contentType': contentType,
+          'folderPath': folderPath,
+          'fileSize': fileSize,
+          if (storagePathOverride != null) 'exactPath': storagePathOverride,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        debugPrint('[CloudflareR2] Worker returned error (${response.statusCode}): ${response.body}');
+        return null;
+      }
+
+      final resData = jsonDecode(response.body)['result'] as Map;
       final uploadUrl = resData['uploadUrl'] as String;
       final publicUrl = resData['publicUrl'] as String;
       final headers = Map<String, String>.from(resData['headers'] ?? {});
+      headers['Authorization'] = 'Bearer $idToken';
 
-      // Tiến hành upload nhị phân trực tiếp bằng HTTP PUT
+      // Video lớn: dùng streamed request để không load hết vào RAM
+      if (isVideo && fileSize > 5 * 1024 * 1024) {
+        debugPrint('[CloudflareR2] Using streamed upload for video ($fileName)...');
+        final streamedRequest = http.StreamedRequest('PUT', Uri.parse(uploadUrl));
+        streamedRequest.headers.addAll(headers);
+        streamedRequest.contentLength = fileSize;
+
+        // Stream file trực tiếp không qua readAsBytes
+        finalFile.openRead().listen(
+          streamedRequest.sink.add,
+          onDone: () => streamedRequest.sink.close(),
+          onError: (e) => streamedRequest.sink.addError(e),
+          cancelOnError: true,
+        );
+
+        final streamedResponse = await streamedRequest.send()
+            .timeout(const Duration(minutes: 5));
+        final statusCode = streamedResponse.statusCode;
+
+        if (statusCode == 200 || statusCode == 201) {
+          debugPrint('[CloudflareR2] ✅ Video uploaded successfully: $publicUrl');
+          return publicUrl;
+        } else {
+          final body = await streamedResponse.stream.bytesToString();
+          debugPrint('[CloudflareR2] Video PUT failed ($statusCode): $body');
+          return null;
+        }
+      }
+
+      // Ảnh hoặc file nhỏ: dùng readAsBytes như cũ
+      final bytes = await finalFile.readAsBytes();
       final putResponse = await http.put(
         Uri.parse(uploadUrl),
         headers: headers,
         body: bytes,
-      );
+      ).timeout(const Duration(minutes: 2));
 
       if (putResponse.statusCode == 200 || putResponse.statusCode == 201) {
+        debugPrint('[CloudflareR2] ✅ File uploaded successfully: $publicUrl');
         return publicUrl;
       } else {
         debugPrint(
@@ -118,7 +240,7 @@ class CloudflareR2Service {
         return null;
       }
     } catch (e) {
-      debugPrint('[CloudflareR2] Lỗi khi upload: $e');
+      debugPrint('[CloudflareR2] ❌ Lỗi khi upload: $e');
       return null;
     }
   }
@@ -131,12 +253,24 @@ class CloudflareR2Service {
   /// Xoá object trên R2 từ public URL
   Future<bool> deleteFile(String url) async {
     try {
-      final callable =
-          FirebaseFunctions.instance.httpsCallable('deleteR2ObjectSecure');
-      final result = await callable.call(<String, dynamic>{
-        'objectUrl': url,
-      });
-      final resData = result.data as Map;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return false;
+      final idToken = await user.getIdToken();
+
+      final apiUrl = Uri.parse('${AppConfig.cloudflareWorkerUrl}/api/deleteR2Object');
+      final response = await http.post(
+        apiUrl,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode({
+          'objectUrl': url,
+        }),
+      );
+
+      if (response.statusCode != 200) return false;
+      final resData = jsonDecode(response.body)['result'] as Map;
       return resData['success'] as bool? ?? false;
     } catch (e) {
       debugPrint('[CloudflareR2] Lỗi xoá file: $e');
@@ -147,12 +281,24 @@ class CloudflareR2Service {
   /// Xoá object trên R2 trực tiếp từ storage path
   Future<bool> deleteByPath(String objectName) async {
     try {
-      final callable =
-          FirebaseFunctions.instance.httpsCallable('deleteR2ObjectSecure');
-      final result = await callable.call(<String, dynamic>{
-        'objectPath': objectName,
-      });
-      final resData = result.data as Map;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return false;
+      final idToken = await user.getIdToken();
+
+      final apiUrl = Uri.parse('${AppConfig.cloudflareWorkerUrl}/api/deleteR2Object');
+      final response = await http.post(
+        apiUrl,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode({
+          'objectPath': objectName,
+        }),
+      );
+
+      if (response.statusCode != 200) return false;
+      final resData = jsonDecode(response.body)['result'] as Map;
       return resData['success'] as bool? ?? false;
     } catch (e) {
       debugPrint('[CloudflareR2] Lỗi xoá theo path: $e');

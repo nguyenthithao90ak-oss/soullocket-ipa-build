@@ -115,92 +115,25 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
     final sharedStyles = '''
 <style id="sl-inject">
   :root { color-scheme: light; }
-  html, body { 
-    max-width: 100vw; 
-    overflow-x: hidden; 
+  html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
     overflow-y: auto;
-    margin: 0; 
-    padding: 0;
     -webkit-overflow-scrolling: touch;
   }
   body {
     -webkit-text-size-adjust: 100%;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    background: #fff;
-    color: #333;
-    line-height: 1.6;
-    padding: 16px;
-    box-sizing: border-box;
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
-  img, video, canvas, iframe { 
-    max-width: 100%; 
-    height: auto; 
-    border-radius: 0px;
-  }
-  table { 
-    display: block; 
-    width: 100%; 
-    overflow-x: auto; 
-    border-collapse: collapse; 
-  }
-  a { 
-    word-break: break-word; 
-    color: #D81B60;
-  }
-  p, div, li, span {
+  img, video, canvas, iframe {
     max-width: 100%;
+    height: auto;
   }
-  
-  /* Reset app wrapper styles if any exists in html */
-  .app-wrapper, .document-container, .content-box {
-    background: transparent !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    max-width: none !important;
-    border: none !important;
-  }
-
-  .page, .hero, .section, .summary-card, .feature-card, .tech-card, .callout, .contact-box, .toc a {
-    background: transparent !important;
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    backdrop-filter: none !important;
-  }
-
-  .hero, .section, .summary-card, .feature-card, .tech-card, .callout, .contact-box, .toc a {
-    padding: 0 !important;
-    margin: 0 0 16px 0 !important;
-  }
-
-  .page {
-    max-width: none !important;
-    padding: 0 !important;
-  }
-
-  .hero::before,
-  .hero::after {
-    display: none !important;
-  }
-
-  .summary-grid,
-  .feature-grid,
-  .tech-grid,
-  .stack,
-  .toc {
-    display: block !important;
-    gap: 0 !important;
-    margin-top: 16px !important;
-  }
-
-  .summary-card,
-  .feature-card,
-  .tech-card {
-    margin-bottom: 14px !important;
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   $platformStyles
 </style>

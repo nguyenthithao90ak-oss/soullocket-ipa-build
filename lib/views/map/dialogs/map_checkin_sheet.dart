@@ -1,7 +1,10 @@
 part of '../map_screen.dart';
 
 extension _MapCheckinSheetExt on _MapScreenState {
-  Future<void> _showCheckinSheetDialog({ll.LatLng? selectedPoint}) async {
+  Future<void> _showCheckinSheetDialog({
+    ll.LatLng? selectedPoint,
+    String? initialName,
+  }) async {
     final activePoint = selectedPoint ?? _myLiveLocation;
     if (activePoint == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -13,7 +16,7 @@ extension _MapCheckinSheetExt on _MapScreenState {
       return;
     }
 
-    final nameCtrl = TextEditingController();
+    final nameCtrl = TextEditingController(text: initialName);
     final noteCtrl = TextEditingController();
 
     await showModalBottomSheet<void>(

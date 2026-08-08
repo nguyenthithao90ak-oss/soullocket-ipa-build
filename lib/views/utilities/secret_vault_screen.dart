@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
+import '../../utils/helpers/cloudflare_image_helper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:google_fonts/google_fonts.dart';

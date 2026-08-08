@@ -250,8 +250,15 @@ class _CountdownQuickCustomizeSheetContentState
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFF0DDE4)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF0DDE4).withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD81B60).withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -649,8 +656,15 @@ class _CountdownQuickCustomizeSheetContentState
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFF0DDE4)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF0DDE4).withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD81B60).withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -799,8 +813,15 @@ class _CountdownQuickCustomizeSheetContentState
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFF0DDE4)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF0DDE4).withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD81B60).withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1302,8 +1323,15 @@ class _CountdownQuickCustomizeSheetContentState
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFF0DDE4)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF0DDE4).withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD81B60).withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1385,8 +1413,15 @@ class _CountdownQuickCustomizeSheetContentState
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFF0DDE4)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF0DDE4).withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD81B60).withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1465,8 +1500,15 @@ class _CountdownQuickCustomizeSheetContentState
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFF0DDE4)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF0DDE4).withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD81B60).withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -7,6 +7,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:video_player/video_player.dart';
 
 import 'package:intl/intl.dart';
 
@@ -21,6 +22,8 @@ import '../../../utils/sl_notice.dart';
 import '../../../widgets/share_bottom_sheet.dart';
 import '../../../widgets/skeleton_container.dart';
 import '../../../utils/services/l10n_service.dart';
+import '../../../utils/services/private_media_url_service.dart';
+import '../../../utils/services/cloudflare_r2_service.dart';
 import '../../../utils/services/security_service.dart';
 import 'diary_composer.dart';
 import 'package:soullocket_app/views/home/tabs/settings/settings_links_manager_screen.dart';
@@ -36,6 +39,8 @@ import 'diary/widgets/diary_tab_shell_sections.dart';
 
 part 'diary/sections/diary_composer_launcher_section.dart';
 part 'diary/sections/diary_tab_shell.dart';
+part 'diary/sections/diary_tab_ad_section.dart';
+part 'diary/sections/diary_tab_selection_actions.dart';
 
 class DiaryTab extends StatefulWidget {
   final ValueNotifier<bool> isActiveListenable;
@@ -125,6 +130,22 @@ class _DiaryTabState extends State<DiaryTab>
     _throttledRebuild();
   }
 
+  void _setCurrentTab(String tab) {
+    if (_currentTab == tab) return;
+    setState(() {
+      _isAnimatingTabSwitch = true;
+      _currentTab = tab;
+    });
+    _memoryController.handleTabChanged(tab);
+    // Defer loading until animation finishes
+    Future.delayed(const Duration(milliseconds: 320), () {
+      if (mounted) {
+        setState(() => _isAnimatingTabSwitch = false);
+      }
+    });
+    _handleControllerChange();
+  }
+
   /// Throttle rebuild tối đa 1 lần mỗi frame (16ms) — tránh cascade
   /// setState khi upload batch, controller notify, và listener fire
   void _throttledRebuild() {
@@ -155,75 +176,7 @@ class _DiaryTabState extends State<DiaryTab>
     _handleControllerChange();
   }
 
-  void _exitSelectionMode() {
-    _memoryController.exitSelectionMode();
-    _handleControllerChange();
-  }
 
-  void _selectAllVisibleMemories() {
-    final selectedCount = _memoryController.selectAllVisibleMemories();
-    if (selectedCount == 0) {
-      _showDiarySnackBar(
-        context.tr('home_hychntnht1_7e4198'),
-        backgroundColor: const Color(0xFFE53935),
-      );
-    }
-    _preloadMemoryShareRewardedAd();
-    _handleControllerChange();
-  }
-
-  void _preloadMemoryShareRewardedAd() {
-    unawaited(
-      Future<void>.delayed(const Duration(seconds: 20), () async {
-        final adMob = AdMobService();
-        await adMob.initialize();
-        adMob.preloadRewardedAd();
-      }),
-    );
-  }
-
-  void _setCurrentTab(String tab) {
-    if (_currentTab == tab) return;
-    setState(() {
-      _isAnimatingTabSwitch = true;
-      _currentTab = tab;
-    });
-    _memoryController.handleTabChanged(tab);
-    // Defer loading until animation finishes
-    Future.delayed(const Duration(milliseconds: 320), () {
-      if (mounted) {
-        setState(() => _isAnimatingTabSwitch = false);
-      }
-    });
-    _handleControllerChange();
-  }
-
-  Future<void> _deleteSelectedMemories() async {
-    await _memoryController.deleteSelectedMemories(
-      context: context,
-      houseId: _houseId,
-      showSnackBar: _showDiarySnackBar,
-    );
-    _handleControllerChange();
-  }
-
-  Future<void> _saveSelectedMemories() async {
-    await _memoryController.saveSelectedMemories(
-      context: context,
-      guardController: _guardController,
-      showSnackBar: _showDiarySnackBar,
-    );
-    _handleControllerChange();
-  }
-
-  Future<void> _shareSelectedMemories() async {
-    await _createMemoryShareLink(_selectedMemories.values.toList());
-    _handleControllerChange();
-  }
-
-  Future<void> _shareSingleMemory(Map<String, dynamic> item) async {
-    await _createMemoryShareLink([item]);
-  }
 
   Future<void> _createMemoryShareLink(
     List<Map<String, dynamic>> photos,
@@ -733,111 +686,7 @@ class _DiaryTabState extends State<DiaryTab>
     }
   }
 
-  BannerAd? _bottomBannerAd;
-  bool _isBottomBannerReady = false;
 
-  void _loadBottomBanner() async {
-    if (kIsWeb) return;
-    final adMob = AdMobService();
-    await adMob.initialize();
-    if (!mounted) return;
-
-    if (await adMob.isProUser()) {
-      _bottomBannerAd?.dispose();
-      _bottomBannerAd = null;
-      if (!mounted) return;
-      setState(() => _isBottomBannerReady = false);
-      return;
-    }
-
-    _bottomBannerAd?.dispose();
-    _bottomBannerAd = null;
-    if (!mounted) return;
-    final banner = await adMob.createBannerAd(
-      onAdLoaded: (_) {
-        if (!mounted) return;
-        setState(() => _isBottomBannerReady = true);
-      },
-    );
-    if (!mounted) {
-      banner?.dispose();
-      return;
-    }
-    _bottomBannerAd = banner;
-  }
-
-  Widget _buildBottomAdBanner(BannerAd bannerAd) {
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () {
-        AdMobService().showInterstitialAd();
-      },
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 8,
-            ),
-            decoration: BoxDecoration(
-              color: SLColors.bgElevated.withValues(alpha: 0.72),
-              borderRadius: SLRadius.lgAll,
-              border: Border.all(
-                color: SLColors.bgElevated.withValues(alpha: 0.45),
-              ),
-              boxShadow: SLShadow.subtle,
-            ),
-            child: ClipRRect(
-              borderRadius: SLRadius.mdAll,
-              child: SizedBox(
-                width: bannerAd.size.width.toDouble(),
-                height: bannerAd.size.height.toDouble(),
-                child: AdWidget(ad: bannerAd),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _startDiaryActiveTimer() {
-    _diaryActiveTimer?.cancel();
-    _diaryActiveTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
-      if (!mounted || !_isTabActive) {
-        timer.cancel();
-        return;
-      }
-      _activeSecondsInDiary += 10;
-      if (_activeSecondsInDiary >= 15 * 60) {
-        _showForcedDiaryAd();
-      }
-    });
-  }
-
-  void _stopDiaryActiveTimer() {
-    _diaryActiveTimer?.cancel();
-    _diaryActiveTimer = null;
-  }
-
-  Future<void> _showForcedDiaryAd() async {
-    final adMob = AdMobService();
-    if (await adMob.isProUser()) return;
-
-    final hasRecent =
-        adMob.hasRecentFullscreenAd(cooldown: const Duration(minutes: 15));
-    if (hasRecent) {
-      return;
-    }
-
-    debugPrint(
-        'DiaryTab: Showing forced interstitial ad after 15 minutes of activity.');
-    final shown = await adMob.showInterstitialAd();
-    if (shown) {
-      _activeSecondsInDiary = 0;
-    }
-  }
 
   @override
   void initState() {
@@ -845,6 +694,11 @@ class _DiaryTabState extends State<DiaryTab>
     _isTabActive = widget.isActiveListenable.value;
     if (_isTabActive) {
       _startDiaryActiveTimer();
+      if (_deferMemoryLoad) {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) setState(() => _deferMemoryLoad = false);
+        });
+      }
     }
     widget.isActiveListenable.addListener(_onActiveChanged);
     _feedController.addListener(_handleFeedControllerChange);
@@ -886,6 +740,9 @@ class _DiaryTabState extends State<DiaryTab>
       }
     }
   }
+
+  BannerAd? _bottomBannerAd;
+  bool _isBottomBannerReady = false;
 
   @override
   void dispose() {
@@ -959,6 +816,9 @@ class _DiaryTabState extends State<DiaryTab>
 
     if (!mounted) {
       return;
+    }
+    if (_deferMemoryLoad) {
+      setState(() => _deferMemoryLoad = false);
     }
     _handleControllerChange();
   }
@@ -1184,6 +1044,12 @@ class _DiaryTabState extends State<DiaryTab>
     Map<String, dynamic> initialItem,
     List<Map<String, dynamic>> allPhotos,
   ) {
+    // Refresh signed URL cho item hiện tại trước khi mở viewer
+    unawaited(_memoryController.ensureMemoryPhotoUrl(
+      houseId: _houseId ?? '',
+      item: initialItem,
+    ));
+
     final initialIndex =
         allPhotos.indexWhere((photo) => photo['id'] == initialItem['id']);
     int currentIndex = initialIndex < 0 ? 0 : initialIndex;
@@ -1253,6 +1119,11 @@ class _DiaryTabState extends State<DiaryTab>
                                 });
                                 isZoomedInNotifier.value = false;
                                 _warmMemoryViewerAroundIndex(allPhotos, index);
+                                // Refresh signed URL cho item mới
+                                unawaited(_memoryController.ensureMemoryPhotoUrl(
+                                  houseId: _houseId ?? '',
+                                  item: allPhotos[index],
+                                ));
                               },
                               itemBuilder: (context, index) {
                                 return _MemoryViewerPage(
@@ -1880,21 +1751,26 @@ class _MemoryViewerPage extends StatefulWidget {
 }
 
 class _MemoryViewerPageState extends State<_MemoryViewerPage> {
-  late final ImageProvider<Object> _imageProvider;
   late final TransformationController _transformationController;
   late final ValueNotifier<bool> _panEnabledVN;
+  String _lastResolvedUrl = '';
+  ImageProvider<Object>? _imageProvider;
 
   @override
   void initState() {
     super.initState();
-    _imageProvider = widget.imageProviderBuilder(
-      widget.item['url']?.toString() ?? '',
-      maxWidth: 2200,
-    );
     _transformationController = TransformationController();
     _panEnabledVN = ValueNotifier<bool>(false);
-
     _transformationController.addListener(_handleTransformChanged);
+    _resolveImageProvider();
+  }
+
+  void _resolveImageProvider() {
+    final url = widget.item['url']?.toString() ?? '';
+    if (url.isNotEmpty && url != _lastResolvedUrl) {
+      _lastResolvedUrl = url;
+      _imageProvider = widget.imageProviderBuilder(url, maxWidth: 2200);
+    }
   }
 
   void _handleTransformChanged() {
@@ -1907,6 +1783,19 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
     }
   }
 
+  bool get _isVideo {
+    final type = widget.item['type']?.toString().toLowerCase();
+    if (type == 'video') return true;
+    final url = (widget.item['url']?.toString() ?? '').toLowerCase();
+    return url.endsWith('.mp4') ||
+        url.endsWith('.mov') ||
+        url.endsWith('.webm') ||
+        url.endsWith('.m4v') ||
+        url.endsWith('.3gp') ||
+        url.endsWith('.mkv') ||
+        url.endsWith('.avi');
+  }
+
   @override
   void dispose() {
     _transformationController.removeListener(_handleTransformChanged);
@@ -1917,6 +1806,11 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final url = widget.item['url']?.toString() ?? '';
+
+    // Cập nhật imageProvider nếu URL đã thay đổi (do ensureMemoryPhotoUrl refresh)
+    _resolveImageProvider();
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onLongPress: widget.onLongPress,
@@ -1940,22 +1834,35 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
                         panEnabled ? const EdgeInsets.all(24) : EdgeInsets.zero,
                     clipBehavior: Clip.none,
                     interactionEndFrictionCoefficient: 0.00008,
-                    child: Hero(
-                      tag: 'memory_image_${widget.item['id']}',
-                      child: Image(
-                        image: _imageProvider,
-                        fit: BoxFit.contain,
-                        width: double.infinity,
-                        height: double.infinity,
-                        filterQuality: FilterQuality.medium,
-                        gaplessPlayback: true,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(
-                          Icons.broken_image,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ),
+                    child: _isVideo
+                        ? _MemoryVideoWidget(
+                            url: url,
+                            houseId: widget.item['houseId']?.toString() ??
+                                widget.item['house_id']?.toString(),
+                            memoryId: widget.item['id']?.toString(),
+                          )
+                        : _imageProvider != null
+                            ? Hero(
+                                tag: 'memory_image_${widget.item['id']}',
+                                child: Image(
+                                  image: _imageProvider!,
+                                  fit: BoxFit.contain,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  filterQuality: FilterQuality.medium,
+                                  gaplessPlayback: true,
+                                  errorBuilder:
+                                      (context, error, stackTrace) =>
+                                          const Icon(
+                                    Icons.broken_image,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              )
+                            : const Center(
+                                child: CircularProgressIndicator(
+                                    color: Colors.white),
+                              ),
                   ),
                 ),
               );
@@ -1963,6 +1870,229 @@ class _MemoryViewerPageState extends State<_MemoryViewerPage> {
           );
         },
       ),
+    );
+  }
+
+}
+
+class _MemoryVideoWidget extends StatefulWidget {
+  final String url;
+  final String? houseId;
+  final String? memoryId;
+
+  const _MemoryVideoWidget({
+    required this.url,
+    this.houseId,
+    this.memoryId,
+  });
+
+  @override
+  State<_MemoryVideoWidget> createState() => _MemoryVideoWidgetState();
+}
+
+class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
+  VideoPlayerController? _controller;
+  bool _initialized = false;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initVideo();
+  }
+
+  Future<void> _initVideo() async {
+    try {
+      String playUrl = widget.url.trim();
+      if (playUrl.isEmpty &&
+          widget.houseId != null &&
+          widget.houseId!.isNotEmpty &&
+          widget.memoryId != null &&
+          widget.memoryId!.isNotEmpty) {
+        try {
+          final res = await PrivateMediaUrlService().resolve(
+            houseId: widget.houseId!,
+            mediaId: widget.memoryId!,
+            kind: 'memory_image',
+          );
+          playUrl = res.url;
+        } catch (_) {}
+      }
+
+      if (playUrl.isEmpty) {
+        if (mounted) setState(() => _hasError = true);
+        return;
+      }
+
+      playUrl = CloudflareR2Service.resolveVideoUrl(playUrl);
+
+      final uri = Uri.parse(playUrl);
+      final controller = VideoPlayerController.networkUrl(uri);
+      _controller = controller;
+      await controller.initialize();
+      if (mounted) {
+        setState(() => _initialized = true);
+        controller.setLooping(true);
+        controller.play();
+      }
+    } catch (e) {
+      debugPrint('[MemoryVideo] Play error: $e');
+      if (widget.houseId != null &&
+          widget.houseId!.isNotEmpty &&
+          widget.memoryId != null &&
+          widget.memoryId!.isNotEmpty) {
+        try {
+          final res = await PrivateMediaUrlService().resolve(
+            houseId: widget.houseId!,
+            mediaId: widget.memoryId!,
+            kind: 'memory_image',
+          );
+          final freshPlayUrl = CloudflareR2Service.resolveVideoUrl(res.url);
+          final freshUri = Uri.parse(freshPlayUrl);
+          final controller = VideoPlayerController.networkUrl(freshUri);
+          _controller = controller;
+          await controller.initialize();
+          if (mounted) {
+            setState(() => _initialized = true);
+            controller.setLooping(true);
+            controller.play();
+            return;
+          }
+        } catch (_) {}
+      }
+      if (mounted) setState(() => _hasError = true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_hasError) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 48),
+            const SizedBox(height: 8),
+            const Text(
+              'Không thể phát video',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _hasError = false;
+                  _initialized = false;
+                });
+                _initVideo();
+              },
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Thử lại'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final controller = _controller;
+    if (!_initialized || controller == null) {
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      );
+    }
+
+    return ValueListenableBuilder<VideoPlayerValue>(
+      valueListenable: controller,
+      builder: (context, value, child) {
+        if (value.hasError) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline_rounded, color: Colors.white, size: 48),
+                const SizedBox(height: 8),
+                const Text(
+                  'Không thể phát video',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _hasError = false;
+                      _initialized = false;
+                    });
+                    _initVideo();
+                  },
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Thử lại'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final isPlaying = value.isPlaying;
+        final isBuffering = value.isBuffering;
+        final size = value.size;
+        final hasValidSize = size.width > 0 && size.height > 0;
+
+        return GestureDetector(
+          onTap: () {
+            if (controller.value.isPlaying) {
+              controller.pause();
+            } else {
+              controller.play();
+            }
+          },
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox.expand(
+                child: hasValidSize
+                    ? Center(
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: SizedBox(
+                            width: size.width,
+                            height: size.height,
+                            child: VideoPlayer(controller),
+                          ),
+                        ),
+                      )
+                    : Center(
+                        child: AspectRatio(
+                          aspectRatio:
+                              value.aspectRatio > 0 ? value.aspectRatio : 16 / 9,
+                          child: VideoPlayer(controller),
+                        ),
+                      ),
+              ),
+              if (isBuffering)
+                const CircularProgressIndicator(color: Colors.white)
+              else if (!isPlaying)
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: const BoxDecoration(
+                    color: Colors.black54,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 44,
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:lottie/lottie.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,6 +23,7 @@ import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
 import 'package:soullocket_app/utils/services/giftcode_service.dart';
+import 'package:soullocket_app/utils/sl_notice.dart';
 
 part 'soul_merge/exploding_photo_part.dart';
 part 'soul_merge/particle_explosion_part.dart';
@@ -317,18 +319,11 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
       final maxPhotos = _isVip ? 50 : 20;
       if (currentCount >= maxPhotos) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                _isVip
-                    ? 'Bạn đã hết lượt gửi $maxPhotos ảnh hôm nay. Quay lại vào ngày mai nhé!'
-                    : 'Tài khoản thường gửi tối đa $maxPhotos ảnh/ngày. Nâng cấp PRO để gửi 50 ảnh!',
-              ),
-              backgroundColor: const Color(0xFFFF4F4F),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
+          SLNotice.showError(
+            context,
+            _isVip
+                ? 'Oops! 😢 Cậu đã hết lượt gửi $maxPhotos ảnh hôm nay. Hẹn cậu quay lại vào ngày mai nhé! 💕'
+                : 'Oops! 😢 Tài khoản thường gửi tối đa $maxPhotos ảnh/ngày. Nâng cấp PRO để tha hồ gửi 50 ảnh/ngày nha! 💕',
           );
         }
         return;
@@ -980,16 +975,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                     child: Center(
                                       child: ClipRRect(
                                         borderRadius: BorderRadius.circular(55),
-                                        child: R2StickerImage(
-                                          'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
-                                          width: 82,
-                                          height: 82,
+                                        child: Lottie.asset(
+                                          'assets/images/soul_merge_sticker.json',
+                                          width: 90,
+                                          height: 90,
                                           fit: BoxFit.contain,
-                                          errorWidget: const Icon(
-                                            Icons.favorite_rounded,
-                                            color: Color(0xFFFF80B3),
-                                            size: 60,
-                                          ),
+                                          options: LottieOptions(
+                                              enableMergePaths: true),
                                         ),
                                       ),
                                     ),
@@ -1374,6 +1366,76 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     }
   }
 
+  Future<void> _sendStickerMessage(String assetPath) async {
+    if (await _checkSpamAndMaybeBlock()) return;
+    await _mergeService.sendSoulMessage('', imageUrl: assetPath);
+
+    if (_houseId != null && _houseId!.isNotEmpty) {
+      unawaited(
+        NotificationService().sendPartnerNotification(
+          houseId: _houseId!,
+          title: '💬 $_myName vừa gửi nhãn dán',
+          body: 'Đã gửi một nhãn dán',
+          data: const {'screen': 'soul_merge', 'type': 'soul_merge'},
+        ),
+      );
+    }
+  }
+
+  void _showStickerBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Column(
+            children: [
+              Container(
+                width: 40,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                  ),
+                  itemCount: 35 - 7, // 35 minus 7 deleted stickers
+                  itemBuilder: (context, index) {
+                    final validStickers = [
+                      for (int i = 1; i <= 35; i++)
+                        if (![4, 5, 10, 11, 19, 26, 29].contains(i)) i
+                    ];
+                    final stickerPath =
+                        'assets/images/anhtomau_stickers/sticker_${validStickers[index]}.gif';
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _sendStickerMessage(stickerPath);
+                      },
+                      child: Image.asset(stickerPath),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _sendCustomMessage() {
     final text = _customMsgController.text.trim();
     if (text.isEmpty) return;
@@ -1553,6 +1615,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                           final text = (msg['text'] ?? '').toString();
                           final imageUrl = (msg['imageUrl'] ?? '').toString();
                           final timeStr = _formatTime(msg['timestamp'] as int?);
+                          final isSticker = imageUrl
+                              .startsWith('assets/images/anhtomau_stickers/');
 
                           return Align(
                             alignment: isSelf
@@ -1565,47 +1629,57 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                 left: isSelf ? 48 : 0,
                                 right: isSelf ? 0 : 48,
                               ),
-                              padding: imageUrl.isNotEmpty
-                                  ? const EdgeInsets.all(6)
-                                  : const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 11),
-                              decoration: BoxDecoration(
-                                gradient: isSelf
-                                    ? const LinearGradient(
-                                        colors: [
-                                          Color(0xFFFF9A9E),
-                                          Color(0xFFFECFEF)
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      )
-                                    : null,
-                                color: isSelf
-                                    ? null
-                                    : Colors.white.withValues(alpha: 0.75),
-                                borderRadius: BorderRadius.only(
-                                  topLeft: const Radius.circular(24),
-                                  topRight: const Radius.circular(24),
-                                  bottomLeft: Radius.circular(isSelf ? 24 : 6),
-                                  bottomRight: Radius.circular(isSelf ? 6 : 24),
-                                ),
-                                border: Border.all(
-                                  color: isSelf
-                                      ? Colors.white.withValues(alpha: 0.6)
-                                      : Colors.white.withValues(alpha: 0.9),
-                                  width: 1.2,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: isSelf
-                                        ? const Color(0xFFFF9A9E)
-                                            .withValues(alpha: 0.4)
-                                        : Colors.black.withValues(alpha: 0.06),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
+                              padding: isSticker
+                                  ? EdgeInsets.zero
+                                  : (imageUrl.isNotEmpty
+                                      ? const EdgeInsets.all(6)
+                                      : const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 11)),
+                              decoration: isSticker
+                                  ? null
+                                  : BoxDecoration(
+                                      gradient: isSelf
+                                          ? const LinearGradient(
+                                              colors: [
+                                                Color(0xFFFF9A9E),
+                                                Color(0xFFFECFEF)
+                                              ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            )
+                                          : null,
+                                      color: isSelf
+                                          ? null
+                                          : Colors.white
+                                              .withValues(alpha: 0.75),
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: const Radius.circular(24),
+                                        topRight: const Radius.circular(24),
+                                        bottomLeft:
+                                            Radius.circular(isSelf ? 24 : 6),
+                                        bottomRight:
+                                            Radius.circular(isSelf ? 6 : 24),
+                                      ),
+                                      border: Border.all(
+                                        color: isSelf
+                                            ? Colors.white
+                                                .withValues(alpha: 0.6)
+                                            : Colors.white
+                                                .withValues(alpha: 0.9),
+                                        width: 1.2,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: isSelf
+                                              ? const Color(0xFFFF9A9E)
+                                                  .withValues(alpha: 0.4)
+                                              : Colors.black
+                                                  .withValues(alpha: 0.06),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
                               child: Column(
                                 crossAxisAlignment: isSelf
                                     ? CrossAxisAlignment.end
@@ -1614,30 +1688,39 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                 children: [
                                   if (imageUrl.isNotEmpty)
                                     ClipRRect(
-                                      borderRadius: BorderRadius.circular(14),
-                                      child: CachedNetworkImage(
-                                        imageUrl: imageUrl,
-                                        fit: BoxFit.cover,
-                                        width: 200,
-                                        placeholder: (context, url) =>
-                                            Container(
-                                          width: 200,
-                                          height: 150,
-                                          color: Colors.white12,
-                                          child: const Center(
-                                              child: CircularProgressIndicator(
-                                                  color: Colors.white54,
-                                                  strokeWidth: 2)),
-                                        ),
-                                        errorWidget: (context, url, error) =>
-                                            Container(
-                                          width: 200,
-                                          height: 150,
-                                          color: Colors.white12,
-                                          child: const Icon(Icons.broken_image,
-                                              color: Colors.white54),
-                                        ),
-                                      ),
+                                      borderRadius: BorderRadius.circular(
+                                          isSticker ? 0 : 14),
+                                      child: imageUrl.startsWith('assets/')
+                                          ? Image.asset(imageUrl,
+                                              fit: BoxFit.contain,
+                                              width: isSticker ? 160 : 200)
+                                          : CachedNetworkImage(
+                                              imageUrl: imageUrl,
+                                              fit: BoxFit.cover,
+                                              width: 200,
+                                              placeholder: (context, url) =>
+                                                  Container(
+                                                width: 200,
+                                                height: 150,
+                                                color: Colors.white12,
+                                                child: const Center(
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                            color:
+                                                                Colors.white54,
+                                                            strokeWidth: 2)),
+                                              ),
+                                              errorWidget:
+                                                  (context, url, error) =>
+                                                      Container(
+                                                width: 200,
+                                                height: 150,
+                                                color: Colors.white12,
+                                                child: const Icon(
+                                                    Icons.broken_image,
+                                                    color: Colors.white54),
+                                              ),
+                                            ),
                                     ),
                                   if (text.isNotEmpty)
                                     Padding(
@@ -1796,6 +1879,19 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                 strokeWidth: 2, color: Color(0xFFFF9A9E)))
                         : const Icon(Icons.add_photo_alternate_rounded,
                             color: Color(0xFF6B5B6D), size: 22),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: _showStickerBottomSheet,
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 4),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
+                    child: const Icon(Icons.emoji_emotions_rounded,
+                        color: Color(0xFF6B5B6D), size: 22),
                   ),
                 ),
                 Expanded(

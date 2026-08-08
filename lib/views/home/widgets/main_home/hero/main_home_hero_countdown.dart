@@ -77,7 +77,7 @@ class _MainHomeHeroCountdownSection extends StatelessWidget {
             state: state,
             startDate: startDate,
           ),
-        // Hiển thị tên nhà đã bị ẩn theo yêu cầu
+        // Hiá»ƒn thá»‹ tÃªn nhÃ  Ä‘Ã£ bá»‹ áº©n theo yÃªu cáº§u
         // if (homeShowHouseName)
         //   MainHomeHeroBadges(
         //     houseName: houseName,
@@ -296,55 +296,39 @@ class _HomeExplodingPhotoWidgetState extends State<HomeExplodingPhotoWidget>
       child: SizedBox(
         width: 60,
         height: 60,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: CustomPaint(
-                painter: HeartBorderPainter(
-                  color: Colors.white,
-                  shadowColor: Colors.black.withValues(alpha: 0.25),
-                  shadowBlur: 8.0,
+        child: widget.photo.url.isEmpty
+            ? Container(
+                color: const Color(0xFFFFE3EC),
+                child: const Center(
+                  child: Icon(
+                    Icons.favorite_rounded,
+                    color: Color(0xFFFF5E92),
+                    size: 24,
+                  ),
                 ),
-              ),
-            ),
-            Positioned.fill(
-              child: Padding(
-                padding: const EdgeInsets.all(4),
-                child: ClipPath(
-                  clipper: HeartClipper(),
-                  child: widget.photo.url.isEmpty
-                      ? Container(
-                          color: const Color(0xFFFFE3EC),
-                          child: const Center(
-                            child: Icon(
-                              Icons.favorite_rounded,
-                              color: Color(0xFFFF5E92),
-                              size: 24,
-                            ),
-                          ),
-                        )
-                      : CachedNetworkImage(
-                          imageUrl: widget.photo.url,
-                          fit: BoxFit.cover,
-                          memCacheWidth: 300,
-                          useOldImageOnUrlChange: true,
-                          fadeInDuration: Duration.zero,
-                          errorWidget: (_, __, ___) => Container(
-                            color: const Color(0xFFFFE3EC),
-                            child: const Center(
-                              child: Icon(
-                                Icons.favorite_rounded,
-                                color: Color(0xFFFF5E92),
-                                size: 24,
-                              ),
-                            ),
-                          ),
+              )
+            : widget.photo.url.startsWith('assets/')
+                ? Image.asset(
+                    widget.photo.url,
+                    fit: BoxFit.contain,
+                  )
+                : CachedNetworkImage(
+                    imageUrl: widget.photo.url,
+                    fit: BoxFit.contain,
+                    memCacheWidth: 300,
+                    useOldImageOnUrlChange: true,
+                    fadeInDuration: Duration.zero,
+                    errorWidget: (_, __, ___) => Container(
+                      color: const Color(0xFFFFE3EC),
+                      child: const Center(
+                        child: Icon(
+                          Icons.favorite_rounded,
+                          color: Color(0xFFFF5E92),
+                          size: 24,
                         ),
-                ),
-              ),
-            ),
-          ],
-        ),
+                      ),
+                    ),
+                  ),
       ),
     );
   }
@@ -434,7 +418,7 @@ class _MainHomeHeroCountdownCircleState
       if (prefs.getBool('seen_countdown_long_press_hint') != true) {
         if (mounted) {
           setState(() => _showFirstTimeHint = true);
-          // Tự động ẩn sau 1 phút
+          // Tá»± Ä‘á»™ng áº©n sau 1 phÃºt
           _hintDismissTimer = Timer(const Duration(minutes: 1), () {
             if (mounted && _showFirstTimeHint) {
               setState(() => _showFirstTimeHint = false);
@@ -1066,16 +1050,6 @@ class _MainHomeHeroCountdownCircleState
                             ),
                           ),
                         ),
-                        SizedBox(height: widget.circleSize * 0.04),
-                        Text(
-                          'Nhấn giữ để sửa',
-                          style: SLTheme.quicksand(
-                            fontSize:
-                                (widget.circleSize * 0.04).clamp(10.0, 14.0),
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white.withValues(alpha: 0.6),
-                          ),
-                        ),
                       ],
                     ),
                   ],
@@ -1085,20 +1059,6 @@ class _MainHomeHeroCountdownCircleState
 
             // 2. Outer ring & clickable heart badge (positioned in the larger parent stack)
             if (widget.countdownStyleKey == 'floating_hearts') ...[
-              // Outer decorative thin ring
-              IgnorePointer(
-                child: Container(
-                  width: widget.circleSize * 1.16,
-                  height: widget.circleSize * 1.16,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.22),
-                      width: 1.5,
-                    ),
-                  ),
-                ),
-              ),
               // Clickable floating heart badge on bottom-left
               Positioned(
                 left: widget.circleSize * 0.02,
@@ -1216,3 +1176,5 @@ class _MainHomeHeroCountdownTapTarget extends StatelessWidget {
     );
   }
 }
+
+

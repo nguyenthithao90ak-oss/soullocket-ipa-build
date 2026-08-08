@@ -486,7 +486,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(25),
                             child: R2StickerImage(
-                              'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+                              'assets/images/anhtomau_stickers/sticker_1.gif',
                               width: 38,
                               height: 38,
                               fit: BoxFit.contain,

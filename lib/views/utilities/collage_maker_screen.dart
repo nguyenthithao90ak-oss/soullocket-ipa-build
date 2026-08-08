@@ -22,7 +22,7 @@ import 'collage_limit_ui_helper.dart';
 import '../../utils/services/image_picker_recovery_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
-import 'sticker_library_screen.dart';
+
 
 part 'collage_maker/panels/collage_intro_panel.dart';
 part 'collage_maker/panels/collage_controls_panel.dart';
@@ -264,9 +264,16 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
   int? _hoveredSwapTargetIndex;
   double _previewTileSize = 0;
   _FramePinchSession? _framePinchSession;
-  final Set<String> _selectedStickers =
-      StickerLibraryScreen.stickers.take(3).toSet();
-  static final List<String> _stickerOptions = StickerLibraryScreen.stickers;
+  final Set<String> _selectedStickers = {
+    'assets/images/anhtomau_stickers/sticker_1.gif',
+    'assets/images/anhtomau_stickers/sticker_2.gif',
+    'assets/images/anhtomau_stickers/sticker_3.gif',
+  };
+  static final List<String> _stickerOptions = [
+    for (int i = 1; i <= 35; i++)
+      if (![4, 5, 10, 11, 19, 26, 29].contains(i))
+        'assets/images/anhtomau_stickers/sticker_$i.gif'
+  ];
   final bool _showAllStickerOptions = false;
   final TextEditingController _titleCtrl = TextEditingController();
   bool _isGenerating = false;

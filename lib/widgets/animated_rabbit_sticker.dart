@@ -3,9 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 
-const String _interactionStickerPrefix = 'assets/images/interaction_stickers/';
-const String _numberedStickerPrefix =
-    'assets/images/interaction_stickers/custom/numbered/';
+const String _interactionStickerPrefix = 'assets/images/anhtomau_stickers/';
+const String _numberedStickerPrefix = 'assets/images/anhtomau_stickers/';
 const String _cutoutStickerPrefix = 'assets/images/sticker_import/cutout/';
 
 bool isAnimatedRabbitStickerAsset(String assetPath) {
@@ -322,3 +321,4 @@ class _RabbitStickerMotionState extends State<_RabbitStickerMotion>
     );
   }
 }
+

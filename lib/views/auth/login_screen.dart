@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 import '../../core/sl_theme.dart';
 import '../../core/fast_backdrop_filter.dart';
@@ -68,6 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
   int _failedAuthAttempts = 0;
 
   final AuthService _authService = AuthService();
+  final HouseService _houseService = HouseService();
   final AntiSpamRateLimitService _authRateLimiter = AntiSpamRateLimitService();
   final SecurityFlowGuard _securityFlowGuard = SecurityFlowGuard.instance;
 
@@ -158,6 +160,20 @@ class _LoginScreenState extends State<LoginScreen> {
     if (cachedMode != null) {
       return cachedMode;
     }
+
+    try {
+      final existingHouseId =
+          await _houseService.getCurrentHouseId(preferFresh: false);
+      if (existingHouseId != null && existingHouseId.isNotEmpty) {
+        const defaultMode = 'couple';
+        await _authService.cacheRelationshipModeForEmail(
+          normalizedAccountKey,
+          defaultMode,
+        );
+        return defaultMode;
+      }
+    } catch (_) {}
+
     if (!mounted) return null;
 
     final relationshipMode = _authService.normalizeRelationshipMode(
@@ -216,6 +232,35 @@ class _LoginScreenState extends State<LoginScreen> {
       if (savedPerAccount == 'user1' || savedPerAccount == 'user2') {
         return savedPerAccount;
       }
+    }
+
+    final generalRole = prefs.getString('il_role')?.trim();
+    if (generalRole == 'user1' || generalRole == 'user2') {
+      return generalRole;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        final houseId =
+            await _houseService.getCurrentHouseId(preferFresh: false);
+        if (houseId != null && houseId.isNotEmpty) {
+          final snap = await FirebaseDatabase.instance
+              .ref('houses/$houseId/members/${user.uid}/role')
+              .get()
+              .timeout(const Duration(seconds: 2));
+          final roleInDb = snap.value?.toString().trim();
+          if (roleInDb == 'user1' || roleInDb == 'user2') {
+            if (accountKey != null && accountKey.isNotEmpty) {
+              final normalizedAccountKey = accountKey.trim().toLowerCase();
+              await prefs.setString(
+                  'il_saved_gender_$normalizedAccountKey', roleInDb!);
+            }
+            return roleInDb;
+          }
+          return 'user1';
+        }
+      } catch (_) {}
     }
     return null;
   }
@@ -887,7 +932,7 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (context, _) {
         final l10n = L10nService();
         final baseBg =
-            _isLoginTab ? const Color(0xFFFDF7FA) : const Color(0xFFFDF8FC);
+            _isLoginTab ? const Color(0xFFFCF5F0) : const Color(0xFFFCF5F0);
 
         return SensitiveContentGuard(
           child: Scaffold(
@@ -915,9 +960,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 shape: BoxShape.circle,
                                 gradient: RadialGradient(
                                   colors: [
-                                    const Color(0xFFFF6FA3)
-                                        .withValues(alpha: 0.45),
-                                    const Color(0xFFFF6FA3)
+                                    const Color(0xFFD4956B)
+                                        .withValues(alpha: 0.35),
+                                    const Color(0xFFD4956B)
                                         .withValues(alpha: 0.0),
                                   ],
                                 ),
@@ -936,9 +981,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 shape: BoxShape.circle,
                                 gradient: RadialGradient(
                                   colors: [
-                                    const Color(0xFF9030C0)
-                                        .withValues(alpha: 0.35),
-                                    const Color(0xFF9030C0)
+                                    const Color(0xFFC07A56)
+                                        .withValues(alpha: 0.28),
+                                    const Color(0xFFC07A56)
                                         .withValues(alpha: 0.0),
                                   ],
                                 ),
@@ -957,9 +1002,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 shape: BoxShape.circle,
                                 gradient: RadialGradient(
                                   colors: [
-                                    const Color(0xFFFFB26F)
-                                        .withValues(alpha: 0.3),
-                                    const Color(0xFFFFB26F)
+                                    const Color(0xFFE8C4A8)
+                                        .withValues(alpha: 0.30),
+                                    const Color(0xFFE8C4A8)
                                         .withValues(alpha: 0.0),
                                   ],
                                 ),
@@ -1047,7 +1092,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             borderRadius:
                                                 BorderRadius.circular(16),
                                             border: Border.all(
-                                              color: const Color(0xFFFFB6D3)
+                                              color: const Color(0xFFD4A574)
                                                   .withValues(alpha: 0.4),
                                               width: 1.0,
                                             ),
@@ -1071,7 +1116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                               ),
                                               const SizedBox(width: 6),
                                               Text(
-                                                'Cách đồng bộ',
+                                                l10n.translate('auth_sync_guide'),
                                                 style: SLTheme.quicksand(
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.w900,
@@ -1286,12 +1331,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     borderRadius: BorderRadius.circular(32),
                     border: Border.all(
-                      color: const Color(0xFFFFB6D3).withValues(alpha: 0.55),
+                      color: const Color(0xFFD4A574).withValues(alpha: 0.55),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFF85B3).withValues(alpha: 0.18),
+                        color: const Color(0xFFD4956B).withValues(alpha: 0.18),
                         blurRadius: 40,
                         offset: const Offset(0, 20),
                       ),
@@ -1365,8 +1410,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Navigator.pop(stateContext);
                                 },
                           colors: const [
-                            Color(0xFFFF69B4),
-                            Color(0xFFFF85B3),
+                            Color(0xFFD4956B),
+                            Color(0xFFC07A56),
                           ],
                         ),
                       ),

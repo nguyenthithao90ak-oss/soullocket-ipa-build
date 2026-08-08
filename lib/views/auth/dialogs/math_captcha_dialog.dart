@@ -55,7 +55,7 @@ class MathCaptchaDialog {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n.translate('Vui lòng chứng minh bạn không phải robot.'),
+                    l10n.translate('auth_prove_not_robot'),
                     style: SLTheme.quicksand(),
                   ),
                   SLSpacing.h8,

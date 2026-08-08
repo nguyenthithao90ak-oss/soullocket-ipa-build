@@ -21,9 +21,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   decoration: BoxDecoration(
                     color: const Color(0xFF94A3B8).withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(radius),
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.7)),
-                  ),
+                    border: null,
+),
                   child: Center(
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -309,7 +308,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   child: Padding(
                     padding: const EdgeInsets.all(4.0),
                     child: const AnimatedRabbitSticker(
-                        'assets/images/interaction_stickers/custom/numbered/sticker_056.png'),
+                        'assets/images/anhtomau_stickers/sticker_1.gif'),
                   ),
                 ),
                 SLSpacing.w12,
@@ -360,11 +359,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFFFFCEE0),
-                  width: 1.2,
-                ),
-                boxShadow: [
+                border: null,
+boxShadow: [
                   BoxShadow(
                     color: const Color(0xFFFF89B6).withValues(alpha: 0.12),
                     blurRadius: 14,
@@ -533,7 +529,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Image.asset(
-                        'assets/images/interaction_stickers/custom/numbered/sticker_162.png'),
+                        'assets/images/anhtomau_stickers/sticker_1.gif'),
                   ),
                 ),
                 SLSpacing.w12,
@@ -621,11 +617,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: const Color(0xFF80DEEA)
-                                  .withValues(alpha: 0.55),
-                            ),
-                            boxShadow: [
+                            border: null,
+boxShadow: [
                               BoxShadow(
                                 color: const Color(0xFF26C6DA)
                                     .withValues(alpha: 0.08),
@@ -720,7 +713,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   width: 24,
                   height: 24,
                   child: Image.asset(
-                      'assets/images/interaction_stickers/custom/numbered/sticker_160.png'),
+                      'assets/images/anhtomau_stickers/sticker_1.gif'),
                 ),
                 SLSpacing.w8,
                 Flexible(
@@ -775,9 +768,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: SLRadius.lgAll,
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.72)),
-                  boxShadow: [
+                  border: null,
+boxShadow: [
                     BoxShadow(
                       color: const Color(0xFFFF9BBC).withValues(alpha: 0.08),
                       blurRadius: 18,
@@ -986,10 +978,8 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
-                            border: Border.all(
-                              color: widget.color.withValues(alpha: 0.16),
-                            ),
-                            boxShadow: [
+                            border: null,
+boxShadow: [
                               BoxShadow(
                                 color: widget.color.withValues(
                                   alpha: widget.emphasize ? 0.16 : 0.1,
@@ -1045,10 +1035,8 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                               widget.color.withValues(alpha: 0.05),
                             ],
                           ),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.92),
-                          ),
-                        ),
+                          border: null,
+),
                       ),
                       Text(
                         '$clampedValue',
@@ -1110,8 +1098,8 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              border: Border.all(color: widget.color.withValues(alpha: 0.18)),
-              boxShadow: [
+              border: null,
+boxShadow: [
                 BoxShadow(
                   color: widget.color.withValues(alpha: 0.16),
                   blurRadius: 18,
@@ -1198,3 +1186,4 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
     );
   }
 }
+

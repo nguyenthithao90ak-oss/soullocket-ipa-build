@@ -962,7 +962,7 @@ class SlAvatarFrame extends StatelessWidget {
             top: -size * 0.08,
             right: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
+              'assets/images/anhtomau_stickers/sticker_1.gif',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -972,7 +972,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             left: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_003.png',
+              'assets/images/anhtomau_stickers/sticker_1.gif',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -986,7 +986,7 @@ class SlAvatarFrame extends StatelessWidget {
             top: -size * 0.08,
             left: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
+              'assets/images/anhtomau_stickers/sticker_1.gif',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -996,7 +996,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             right: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
+              'assets/images/anhtomau_stickers/sticker_1.gif',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -1010,7 +1010,7 @@ class SlAvatarFrame extends StatelessWidget {
             top: -size * 0.08,
             right: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
+              'assets/images/anhtomau_stickers/sticker_1.gif',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -1020,7 +1020,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             left: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_162.png',
+              'assets/images/anhtomau_stickers/sticker_1.gif',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -1034,7 +1034,7 @@ class SlAvatarFrame extends StatelessWidget {
             top: -size * 0.08,
             left: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_236.png',
+              'assets/images/anhtomau_stickers/sticker_1.gif',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -1044,7 +1044,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             right: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_045.png',
+              'assets/images/anhtomau_stickers/sticker_1.gif',
               width: size * 0.35,
               height: size * 0.35,
               fit: BoxFit.contain,
@@ -1060,7 +1060,7 @@ class SlAvatarFrame extends StatelessWidget {
             right: 0,
             child: Center(
               child: R2StickerImage(
-                'assets/images/interaction_stickers/custom/numbered/sticker_001.png',
+                'assets/images/anhtomau_stickers/sticker_1.gif',
                 width: size * 0.45,
                 height: size * 0.45,
                 fit: BoxFit.contain,
@@ -1071,7 +1071,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             left: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
+              'assets/images/anhtomau_stickers/sticker_1.gif',
               width: size * 0.3,
               height: size * 0.3,
               fit: BoxFit.contain,
@@ -1081,7 +1081,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             right: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
+              'assets/images/anhtomau_stickers/sticker_1.gif',
               width: size * 0.3,
               height: size * 0.3,
               fit: BoxFit.contain,
@@ -1096,7 +1096,7 @@ class SlAvatarFrame extends StatelessWidget {
             top: -size * 0.08,
             left: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
+              'assets/images/anhtomau_stickers/sticker_1.gif',
               width: size * 0.32,
               height: size * 0.32,
               fit: BoxFit.contain,
@@ -1106,7 +1106,7 @@ class SlAvatarFrame extends StatelessWidget {
             bottom: -size * 0.08,
             right: -size * 0.08,
             child: R2StickerImage(
-              'assets/images/interaction_stickers/custom/numbered/sticker_003.png',
+              'assets/images/anhtomau_stickers/sticker_1.gif',
               width: size * 0.32,
               height: size * 0.32,
               fit: BoxFit.contain,
@@ -1122,7 +1122,7 @@ class SlAvatarFrame extends StatelessWidget {
           bottom: -size * 0.1,
           right: -size * 0.15,
           child: R2StickerImage(
-            'assets/images/interaction_stickers/custom/numbered/$frameKey.png',
+            'assets/images/anhtomau_stickers/sticker_1.gif',
             width: size * 0.65,
             height: size * 0.65,
             fit: BoxFit.contain,
@@ -1140,3 +1140,4 @@ class SlAvatarFrame extends StatelessWidget {
     );
   }
 }
+

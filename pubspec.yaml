@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 3.3.2+103
+version: 3.3.4+107
 
 environment:
   sdk: ^3.5.3
@@ -127,6 +127,7 @@ dependencies:
   health: ^13.3.1
   device_info_plus: ^13.2.0
   screen_state: ^5.0.2
+  video_compress: ^3.1.4
 
 
 dev_dependencies:
@@ -150,6 +151,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
+  remove_alpha_ios: true
   image_path: "assets/icon.png"
   adaptive_icon_background: "#702190"
   adaptive_icon_foreground: "assets/icon_foreground.png"
@@ -193,6 +195,11 @@ flutter:
     - assets/splash_icon_android12.png
     - assets/images/avatar_male.jpg
     - assets/images/avatar_female.jpg
+    - assets/images/female_avatar_sticker.json
+    - assets/images/male_avatar_sticker.json
+    - assets/images/empty_diary_sticker.json
+    - assets/images/soul_merge_sticker.json
+    - assets/images/anhtomau_stickers/
 
     # Home screen bundled interaction stickers
     - assets/images/utility_stickers/

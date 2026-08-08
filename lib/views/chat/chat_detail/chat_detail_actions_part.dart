@@ -274,7 +274,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       if (sentCount >= limit) {
         final noticeMsg = vipAccess.isVip
             ? 'Bạn đã đạt giới hạn gửi 50 ảnh/ngày cho tài khoản Pro.'
-            : 'Bạn đã đạt giới hạn gửi 20 ảnh/ngày. Hãy nâng cấp Pro để gửi tối đa 50 ảnh!';
+            : 'Oops! 😢 Cậu đã gửi hết 20 ảnh/ngày của tài khoản thường mất rồi. Nâng cấp PRO để tha hồ gửi 50 ảnh/ngày nha! 💕';
         _showNotice(noticeMsg, error: true);
         return;
       }

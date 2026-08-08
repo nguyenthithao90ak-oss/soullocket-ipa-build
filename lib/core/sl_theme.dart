@@ -963,11 +963,11 @@ class SLTheme {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isDisabled
-                ? [const Color(0xFFF5D6E0), const Color(0xFFE8C1CD)]
+                ? [const Color(0xFFE8D5C4), const Color(0xFFDCC8B5)]
                 : const [
-                    Color(0xFFFF6FA3),
-                    Color(0xFF9030C0)
-                  ], // Gradient rực rỡ và sang trọng hơn
+                    Color(0xFFD4956B),
+                    Color(0xFFC07A56)
+                  ], // Rose gold gradient ấm
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -976,7 +976,7 @@ class SLTheme {
               ? []
               : [
                   BoxShadow(
-                    color: const Color(0xFFFF6FA3)
+                    color: const Color(0xFFD4956B)
                         .withValues(alpha: 0.4), // Glow shadow
                     blurRadius: 24,
                     spreadRadius: 2,

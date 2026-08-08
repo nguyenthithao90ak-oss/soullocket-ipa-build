@@ -24,6 +24,8 @@ import 'login_screen.dart';
 import '../../core/sl_theme.dart';
 import '../../core/fast_backdrop_filter.dart';
 
+part 'house_onboarding_parts/house_onboarding_ui_helpers_part.dart';
+
 class HouseOnboardingScreen extends StatefulWidget {
   final String? initialMode;
   final String? initialRole;
@@ -224,12 +226,22 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted || _isLoading) return;
         try {
-          final existingHouseId =
-              await _houseService.getCurrentHouseId(preferFresh: true);
+          final user = FirebaseAuth.instance.currentUser;
+          final existingHouseId = user != null
+              ? await _recoverExistingHouseId(user)
+              : await _houseService.getCurrentHouseId(preferFresh: true);
           if (existingHouseId != null && existingHouseId.isNotEmpty) {
             debugPrint(
               '[HouseOnboarding] autoCreateOnly found existing house: $existingHouseId',
             );
+            final prefs = await OfflineCacheService.getPrefs();
+            final currentUid = user?.uid ?? FirebaseAuth.instance.currentUser?.uid ?? '';
+            await prefs.setString('il_house_id', existingHouseId);
+            await prefs.setString('il_auth_uid', currentUid);
+            await SecureStorageService.instance
+                .write(SecureStorageService.keyHouseId, existingHouseId);
+            await SecureStorageService.instance
+                .write(SecureStorageService.keyAuthUid, currentUid);
             if (widget.onHouseCreated != null) {
               await widget.onHouseCreated!.call();
               return;
@@ -519,8 +531,10 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
     }
 
     try {
-      final existingHouseId =
-          await _houseService.getCurrentHouseId(preferFresh: true);
+      final user = FirebaseAuth.instance.currentUser;
+      final existingHouseId = user != null
+          ? await _recoverExistingHouseId(user)
+          : await _houseService.getCurrentHouseId(preferFresh: true);
       if (existingHouseId != null && existingHouseId.isNotEmpty) {
         debugPrint(
           '[HouseOnboarding] Found existing house during prerequisite check: $existingHouseId',
@@ -1308,6 +1322,23 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
       }
     } catch (_) {}
 
+    try {
+      final userEmail = user.email?.trim().toLowerCase();
+      if (userEmail != null && userEmail.isNotEmpty) {
+        final emailQuery = await FirebaseDatabase.instance
+            .ref('houses')
+            .orderByChild('security/email')
+            .equalTo(userEmail)
+            .limitToFirst(1)
+            .get()
+            .timeout(const Duration(seconds: 5));
+        if (emailQuery.exists && emailQuery.children.isNotEmpty) {
+          final h6 = emailQuery.children.first.key?.trim();
+          if (h6 != null && h6.isNotEmpty) return h6;
+        }
+      }
+    } catch (_) {}
+
     return null;
   }
 
@@ -1901,6 +1932,28 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
                                   ),
                                 ),
                               ],
+                              const SizedBox(height: 14),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF8F9),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                      color: const Color(0xFFEDD0D8),
+                                      width: 1),
+                                ),
+                                child: Text(
+                                  '💡 Nếu bạn muốn nhanh, có thể gỡ app và tải lại nhé — chúng tôi sẽ khắc phục lỗi này sớm!',
+                                  textAlign: TextAlign.center,
+                                  style: SLTheme.quicksand(
+                                    fontSize: 12,
+                                    height: 1.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF9C6373),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -2051,237 +2104,6 @@ class _HouseOnboardingScreenState extends State<HouseOnboardingScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSectionCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Widget child,
-  }) {
-    return Container(
-      padding: SLSpacing.all16,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
-        borderRadius: SLRadius.xlAll,
-        border: Border.all(color: const Color(0x14D81B60)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFEEF4),
-                  borderRadius: SLRadius.mdAll,
-                ),
-                child: Icon(icon, color: const Color(0xFFD81B60)),
-              ),
-              SLSpacing.w8,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF8A1E46),
-                      ),
-                    ),
-                    SLSpacing.gapH(2),
-                    Text(
-                      subtitle,
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        height: 1.35,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF7A6A72),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SLSpacing.h12,
-          child,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildModeCard({
-    required IconData icon,
-    required String title,
-    required String description,
-    required String value,
-    required Color color,
-  }) {
-    final selected = _mode == value;
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: () => setState(() => _mode = value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        padding: SLSpacing.all12,
-        decoration: BoxDecoration(
-          color: selected ? color : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? color : color.withValues(alpha: 0.35),
-            width: 1.6,
-          ),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.24),
-                    blurRadius: 18,
-                    offset: const Offset(0, 10),
-                  ),
-                ]
-              : [],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: selected
-                    ? Colors.white.withValues(alpha: 0.18)
-                    : color.withValues(alpha: 0.12),
-                borderRadius: SLRadius.mdAll,
-              ),
-              child: Icon(
-                icon,
-                color: selected ? Colors.white : color,
-              ),
-            ),
-            SLSpacing.h8,
-            Text(
-              title,
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w900,
-                fontSize: 15,
-                color: selected ? Colors.white : color,
-              ),
-            ),
-            SLSpacing.h8,
-            Text(
-              description,
-              style: SLTheme.quicksand(
-                height: 1.4,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: selected
-                    ? Colors.white.withValues(alpha: 0.92)
-                    : const Color(0xFF6E6067),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildField({
-    required String label,
-    required TextEditingController controller,
-    required String hint,
-    String? helper,
-    int? maxLength,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildLabel(label),
-        SLSpacing.h8,
-        TextField(
-          controller: controller,
-          maxLength: maxLength,
-          style: SLTheme.quicksand(fontWeight: FontWeight.w700),
-          decoration: _inputDecoration(
-            hint: hint,
-            prefixIcon: Icons.home_rounded,
-          ),
-        ),
-        if (helper != null) ...[
-          SLSpacing.h8,
-          Text(
-            helper,
-            style: SLTheme.quicksand(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF887880),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildQuestionAvatarPlaceholder() {
-    return Container(
-      color: const Color(0xFFD1D5DB),
-      alignment: Alignment.center,
-      child: Text(
-        '?',
-        style: SLTheme.quicksand(
-          fontSize: 26,
-          fontWeight: FontWeight.w900,
-          color: const Color(0xFF6B7280),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String label) {
-    return Text(
-      label,
-      style: SLTheme.quicksand(
-        fontSize: 13,
-        color: const Color(0xFF6D5F67),
-        fontWeight: FontWeight.w900,
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration({
-    required String hint,
-    String? helper,
-    IconData? prefixIcon,
-  }) {
-    return InputDecoration(
-      hintText: hint,
-      helperText: helper,
-      hintStyle: SLTheme.quicksand(
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-      ),
-      prefixIcon: prefixIcon == null
-          ? null
-          : Icon(prefixIcon, color: const Color(0xFFD81B60), size: 20),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: SLRadius.lgAll,
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: SLRadius.lgAll,
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: SLRadius.lgAll,
-        borderSide: const BorderSide(color: Color(0xFFD81B60), width: 2),
-      ),
-      filled: true,
-      fillColor: Colors.white,
     );
   }
 }

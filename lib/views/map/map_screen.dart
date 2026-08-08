@@ -16,6 +16,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart' as ll;
 import 'package:permission_handler/permission_handler.dart' as app_permission;
+import 'package:lottie/lottie.dart';
 import '../../utils/services/offline_cache_service.dart';
 
 import '../../core/constants/app_config.dart';
@@ -25,12 +26,14 @@ import '../../utils/services/daily_quest_service.dart';
 import '../../utils/services/gps_tracker_service.dart';
 import '../../utils/services/location_service.dart';
 import '../../utils/services/map_pin_limit_service.dart';
+import '../../utils/services/nominatim_service.dart';
 import '../../utils/services/notification_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
 
 part 'dialogs/map_checkin_sheet.dart';
 part 'dialogs/map_detail_dialogs.dart';
+part 'dialogs/map_search_sheet.dart';
 part 'map_location_logic.dart';
 part 'map_location_marker_pipeline.dart';
 part 'map_screen_helpers.dart';
@@ -1334,6 +1337,27 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     await _showCheckinSheetDialog(selectedPoint: point);
   }
 
+  Future<void> _handleMapLongPress(ll.LatLng point) async {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    messenger?.showSnackBar(
+      SnackBar(
+        content: Text(context.tr('map_anglychia_d19a1e') ?? 'Đang tải địa chỉ...'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+
+    final addressName = await NominatimService.reverseGeocode(point);
+
+    if (!mounted) return;
+    messenger?.hideCurrentSnackBar();
+
+    await _showCheckinSheetDialog(
+      selectedPoint: point,
+      initialName: addressName,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1375,6 +1399,29 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         titleSpacing: 0,
         title: const SizedBox.shrink(),
         actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: SLColors.borderLight),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: IconButton(
+                tooltip: 'Tìm kiếm địa điểm',
+                onPressed: _showSearchSheet,
+                color: SLColors.textPrimary,
+                icon: const Icon(Icons.search_rounded),
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 10),
             child: Container(

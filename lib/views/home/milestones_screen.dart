@@ -514,7 +514,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                                   child: Padding(
                                     padding: const EdgeInsets.all(4.0),
                                     child: R2StickerImage(
-                                        'assets/images/interaction_stickers/custom/numbered/sticker_005.png'),
+                                        'assets/images/anhtomau_stickers/sticker_1.gif'),
                                   ),
                                 ),
                               ),
@@ -660,7 +660,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: R2StickerImage(
-                        'assets/images/interaction_stickers/custom/numbered/sticker_158.png'), // Thỏ ôm tim/chờ đợi
+                        'assets/images/anhtomau_stickers/sticker_1.gif'), // Thỏ ôm tim/chờ đợi
                   ),
                 ),
               ),
@@ -747,19 +747,19 @@ class _MilestonesScreenState extends State<MilestonesScreen>
 
     final (stickerPath, iconBgColor) = switch (event.type) {
       'birthday' => (
-          'assets/images/interaction_stickers/custom/numbered/sticker_108.png',
+          'assets/images/anhtomau_stickers/sticker_1.gif',
           const Color(0xFFFEF3C7)
         ),
       'anniversary' => (
-          'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
+          'assets/images/anhtomau_stickers/sticker_1.gif',
           const Color(0xFFFCE7F3)
         ),
       'holiday' => (
-          'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
+          'assets/images/anhtomau_stickers/sticker_1.gif',
           const Color(0xFFEDE9FE)
         ),
       _ => (
-          'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
+          'assets/images/anhtomau_stickers/sticker_1.gif',
           const Color(0xFFDBEAFE)
         ),
     };
@@ -961,3 +961,4 @@ class _FloatingOrb extends StatefulWidget {
   @override
   State<_FloatingOrb> createState() => _FloatingOrbState();
 }
+

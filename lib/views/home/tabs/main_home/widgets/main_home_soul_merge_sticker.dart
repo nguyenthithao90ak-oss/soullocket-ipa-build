@@ -368,9 +368,13 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                         shape: BoxShape.circle,
                         color: Colors.white.withValues(alpha: 0.15),
                       ),
-                      child: const R2StickerImage(
-                        'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
-                        fit: BoxFit.contain,
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/images/anhtomau_stickers/sticker_1.gif',
+                          width: 72,
+                          height: 72,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),

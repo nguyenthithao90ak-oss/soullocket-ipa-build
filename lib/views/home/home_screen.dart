@@ -1262,6 +1262,18 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   bool _handlePageScrollNotification(ScrollNotification notification) {
+    if (notification is UserScrollNotification && notification.metrics.axis == Axis.vertical) {
+      if (notification.direction == ScrollDirection.reverse) {
+        if (_isBottomNavVisibleNotifier.value) {
+          _isBottomNavVisibleNotifier.value = false;
+        }
+      } else if (notification.direction == ScrollDirection.forward) {
+        if (!_isBottomNavVisibleNotifier.value) {
+          _isBottomNavVisibleNotifier.value = true;
+        }
+      }
+    }
+
     if (notification.depth != 0) {
       return false;
     }

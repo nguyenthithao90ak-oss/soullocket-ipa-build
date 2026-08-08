@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../../core/sl_theme.dart';
 
@@ -329,7 +330,13 @@ class DiaryPostsEmptyStateCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Text('💌', style: TextStyle(fontSize: 32)),
+          Lottie.asset(
+            'assets/images/empty_diary_sticker.json',
+            width: 140,
+            height: 140,
+            fit: BoxFit.contain,
+            options: LottieOptions(enableMergePaths: true),
+          ),
           SLSpacing.h8,
           Text(
             context.tr('home_chactmsno_a4ad4d'),

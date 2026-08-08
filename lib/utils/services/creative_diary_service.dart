@@ -1,10 +1,14 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
+
+import 'package:soullocket_app/core/constants/app_config.dart';
+
 
 import 'pending_upload_service.dart';
 
@@ -15,7 +19,6 @@ class CreativeDiaryService {
   CreativeDiaryService._internal();
 
   final _db = FirebaseDatabase.instance;
-  final _functions = FirebaseFunctions.instance;
 
   String _voicePendingKey(String houseId) =>
       'creative_diary_voice_${houseId.trim()}';
@@ -109,22 +112,34 @@ class CreativeDiaryService {
     required String contentType,
   }) async {
     try {
-      final callable =
-          _functions.httpsCallable('createCreativeDiaryVoiceUploadSession');
-      final response = await callable.call(<String, dynamic>{
-        'houseId': houseId.trim(),
-        'fileName': fileName.trim(),
-        'contentType': contentType.trim(),
-      });
-      final data = response.data;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Vui lòng đăng nhập lại.');
+      final idToken = await user.getIdToken() ?? '';
+      
+      final response = await http.post(
+        Uri.parse('${AppConfig.cloudflareWorkerUrl}/api/createCreativeDiaryVoiceUploadSession'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode({
+          'houseId': houseId.trim(),
+          'fileName': fileName.trim(),
+          'contentType': contentType.trim(),
+        }),
+      );
+      
+      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200) {
+        throw Exception((decoded['error'] as Map?)?['message'] ?? 'Không thể tạo phiên tải ghi âm cho sổ tay.');
+      }
+      final data = decoded['result'];
       if (data is! Map) {
         throw Exception('Creative diary voice upload session is invalid.');
       }
       return Map<String, dynamic>.from(data);
-    } on FirebaseFunctionsException catch (error) {
-      throw Exception(error.message?.trim().isNotEmpty == true
-          ? error.message!.trim()
-          : 'Không thể tạo phiên tải ghi âm cho sổ tay.');
+    } catch (error) {
+      throw Exception('Không thể tạo phiên tải ghi âm cho sổ tay.');
     }
   }
 
@@ -137,22 +152,35 @@ class CreativeDiaryService {
     required String mimeType,
   }) async {
     try {
-      final callable =
-          _functions.httpsCallable('finalizeCreativeDiaryVoiceUpload');
-      await callable.call(<String, dynamic>{
-        'houseId': houseId.trim(),
-        'sessionId': sessionId.trim(),
-        'content': content,
-        'metadata': metadata,
-        'fileName': fileName.trim(),
-        'mimeType': mimeType.trim(),
-      });
-    } on FirebaseFunctionsException catch (error) {
-      throw Exception(error.message?.trim().isNotEmpty == true
-          ? error.message!.trim()
-          : 'Không thể hoàn tất lưu trang sáng tạo có ghi âm.');
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Vui lòng đăng nhập lại.');
+      final idToken = await user.getIdToken() ?? '';
+      
+      final response = await http.post(
+        Uri.parse('${AppConfig.cloudflareWorkerUrl}/api/finalizeCreativeDiaryVoiceUpload'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode({
+          'houseId': houseId.trim(),
+          'sessionId': sessionId.trim(),
+          'content': content,
+          'metadata': metadata,
+          'fileName': fileName.trim(),
+          'mimeType': mimeType.trim(),
+        }),
+      );
+      
+      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200) {
+        throw Exception((decoded['error'] as Map?)?['message'] ?? 'Không thể hoàn tất lưu trang sáng tạo có ghi âm.');
+      }
+    } catch (error) {
+      throw Exception('Không thể hoàn tất lưu trang sáng tạo có ghi âm.');
     }
   }
+
 
   Future<Uint8List?> _readVoiceBytes(XFile file) async {
     try {

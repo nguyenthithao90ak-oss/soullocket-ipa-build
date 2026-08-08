@@ -195,13 +195,16 @@ class _StableAvatarNetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Widget buildFallback(BoxFit f) {
+      if (fallbackAsset.endsWith('.json')) {
+        return Lottie.asset(fallbackAsset, fit: f);
+      }
+      return Image.asset(fallbackAsset, fit: f, gaplessPlayback: true);
+    }
+
     final url = imageUrl.trim();
     if (url.isEmpty) {
-      return Image.asset(
-        fallbackAsset,
-        fit: fit,
-        gaplessPlayback: true,
-      );
+      return buildFallback(fit);
     }
 
     final startupFile = HomeStartupMediaCache.getFile(url);
@@ -221,27 +224,15 @@ class _StableAvatarNetworkImage extends StatelessWidget {
             startupFile,
             fit: fit,
             gaplessPlayback: true,
-            errorBuilder: (_, __, ___) => Image.asset(
-              fallbackAsset,
-              fit: fit,
-              gaplessPlayback: true,
-            ),
+            errorBuilder: (_, __, ___) => buildFallback(fit),
           );
         }
-        return Image.asset(
-          fallbackAsset,
-          fit: fit,
-          gaplessPlayback: true,
-        );
+        return buildFallback(fit);
       },
       errorWidget: (context, url, error) {
         // Tự động xóa file cache bị hỏng khi nạp lỗi để lần sau tải lại file sạch
         unawaited(_cleanCorruptedCache(url));
-        return Image.asset(
-          fallbackAsset,
-          fit: fit,
-          gaplessPlayback: true,
-        );
+        return buildFallback(fit);
       },
     );
   }
@@ -281,8 +272,8 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
         LegacyWebUi.avatarBorderRadiusForKey(frameKey, effectiveSize);
     final frameIsCircle = LegacyWebUi.avatarFrameIsCircle(frameKey);
     final fallbackAsset = isUser1
-        ? 'assets/images/avatar_male.jpg'
-        : 'assets/images/avatar_female.jpg';
+        ? 'assets/images/male_avatar_sticker.json'
+        : 'assets/images/female_avatar_sticker.json';
     final avatarContent = isSinglePlaceholder
         ? const _AnimatedSinglePlaceholder()
         : _StableAvatarNetworkImage(
@@ -323,7 +314,7 @@ extension _MainHomeAvatarSectionExt on _MainHomeTabState {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: const Color(0xFFF3F4F6),
-                          border: Border.all(color: Colors.white, width: 2),
+                          border: null,
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.12),

@@ -2,10 +2,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../../core/sl_theme.dart';
 import '../../../models/diary_post.dart';
 import '../../../utils/app_cache_manager.dart';
+import '../../../utils/services/cloudflare_r2_service.dart';
 import '../../../utils/services/l10n_service.dart';
 
 class DiaryItem extends StatelessWidget {
@@ -102,10 +104,11 @@ class DiaryItem extends StatelessWidget {
 
     final isShortText = post.content.trim().length < 30;
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: SLTheme.glassCard(
-        margin: EdgeInsets.zero,
+    return RepaintBoundary(
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: SLTheme.glassCard(
+          margin: EdgeInsets.zero,
         radius: 24,
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -123,14 +126,33 @@ class DiaryItem extends StatelessWidget {
                     border:
                         Border.all(color: accentColor.withValues(alpha: 0.25)),
                   ),
-                  child: Text(
-                    '$displayName ${post.mood}',
-                    style: SLTheme.quicksand(
-                      color: accentColor,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 12,
-                      letterSpacing: 0.5,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        displayName,
+                        style: SLTheme.quicksand(
+                          color: accentColor,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Image.asset(
+                        _getMoodAsset(post.mood),
+                        width: 22,
+                        height: 22,
+                        gaplessPlayback: true,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Text(
+                            post.mood,
+                            style: TextStyle(fontSize: 12, color: accentColor),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
                 const Spacer(),
@@ -219,39 +241,50 @@ class DiaryItem extends StatelessWidget {
               SLSpacing.h16,
               ClipRRect(
                 borderRadius: SLRadius.lgAll,
-                child: CachedNetworkImage(
-                  cacheManager: AppCacheManager.instance,
-                  imageUrl: post.imageUrl,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  filterQuality: FilterQuality.medium,
-                  maxWidthDiskCache: postImageCacheWidth,
-                  memCacheWidth: postImageCacheWidth,
-                  fadeInDuration: Duration.zero,
-                  fadeOutDuration: Duration.zero,
-                  placeholderFadeInDuration: Duration.zero,
-                  placeholder: (context, url) => Container(
-                    height: 120,
-                    color: Colors.white.withValues(alpha: 0.08),
-                    alignment: Alignment.center,
-                    child: const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.0,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Color(0xFFE98FB1)),
+                child: () {
+                  final url = post.imageUrl.toLowerCase();
+                  final isVideo = url.endsWith('.mp4') ||
+                      url.endsWith('.mov') ||
+                      url.endsWith('.webm') ||
+                      url.endsWith('.m4v') ||
+                      url.endsWith('.3gp');
+                  if (isVideo) {
+                    return _DiaryItemVideoWidget(url: post.imageUrl);
+                  }
+                  return CachedNetworkImage(
+                    cacheManager: AppCacheManager.instance,
+                    imageUrl: post.imageUrl,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    filterQuality: FilterQuality.medium,
+                    maxWidthDiskCache: postImageCacheWidth,
+                    memCacheWidth: postImageCacheWidth,
+                    fadeInDuration: Duration.zero,
+                    fadeOutDuration: Duration.zero,
+                    placeholderFadeInDuration: Duration.zero,
+                    placeholder: (context, url) => Container(
+                      height: 120,
+                      color: Colors.white.withValues(alpha: 0.08),
+                      alignment: Alignment.center,
+                      child: const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.0,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Color(0xFFE98FB1)),
+                        ),
                       ),
                     ),
-                  ),
-                  errorWidget: (_, __, ___) => Container(
-                    height: 120,
-                    color: Colors.white.withValues(alpha: 0.08),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.broken_image_rounded,
-                        color: Color(0xFFE98FB1), size: 26),
-                  ),
-                ),
+                    errorWidget: (_, __, ___) => Container(
+                      height: 120,
+                      color: Colors.white.withValues(alpha: 0.08),
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.broken_image_rounded,
+                          color: Color(0xFFE98FB1), size: 26),
+                    ),
+                  );
+                }(),
               ),
             ],
             if (post.pinned) ...[
@@ -278,8 +311,137 @@ class DiaryItem extends StatelessWidget {
           ],
         ),
       ),
+      ),
     );
   }
 }
 
 const Color _diarySoftPink = Color(0xFFE98FB1);
+
+class _DiaryItemVideoWidget extends StatefulWidget {
+  final String url;
+
+  const _DiaryItemVideoWidget({required this.url});
+
+  @override
+  State<_DiaryItemVideoWidget> createState() => _DiaryItemVideoWidgetState();
+}
+
+class _DiaryItemVideoWidgetState extends State<_DiaryItemVideoWidget> {
+  VideoPlayerController? _controller;
+  bool _initialized = false;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initVideo();
+  }
+
+  Future<void> _initVideo() async {
+    try {
+      final String rawUrl = widget.url.trim();
+      final playUrl = CloudflareR2Service.resolveVideoUrl(rawUrl);
+      final uri = Uri.parse(playUrl);
+      final controller = VideoPlayerController.networkUrl(uri);
+      _controller = controller;
+      await controller.initialize();
+      if (mounted) {
+        setState(() => _initialized = true);
+        controller.setLooping(true);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _hasError = true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_hasError) {
+      return Container(
+        height: 140,
+        color: Colors.black26,
+        alignment: Alignment.center,
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline_rounded, color: Colors.white70, size: 28),
+            SizedBox(height: 4),
+            Text(
+              'Không thể phát video',
+              style: TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final controller = _controller;
+    if (!_initialized || controller == null) {
+      return Container(
+        height: 160,
+        color: Colors.black12,
+        alignment: Alignment.center,
+        child: const CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE98FB1)),
+        ),
+      );
+    }
+
+    final isPlaying = controller.value.isPlaying;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          if (isPlaying) {
+            controller.pause();
+          } else {
+            controller.play();
+          }
+        });
+      },
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          AspectRatio(
+            aspectRatio: controller.value.aspectRatio > 0
+                ? controller.value.aspectRatio
+                : 16 / 9,
+            child: VideoPlayer(controller),
+          ),
+          if (!isPlaying)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.play_arrow_rounded,
+                color: Colors.white,
+                size: 36,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+String _getMoodAsset(String moodEmoji) {
+  switch (moodEmoji) {
+    case '😍': return 'assets/images/anhtomau_stickers/sticker_1.gif';
+    case '💖': return 'assets/images/anhtomau_stickers/sticker_9.gif';
+    case '🤩': return 'assets/images/anhtomau_stickers/sticker_19.gif';
+    case '🤒': return 'assets/images/anhtomau_stickers/sticker_8.gif';
+    case '🌧️': return 'assets/images/anhtomau_stickers/sticker_24.gif';
+    default: return 'assets/images/anhtomau_stickers/sticker_1.gif';
+  }
+}

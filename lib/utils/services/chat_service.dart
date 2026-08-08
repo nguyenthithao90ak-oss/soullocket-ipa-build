@@ -1,11 +1,15 @@
+import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/core/constants/app_firebase_paths.dart';
 import 'package:soullocket_app/models/chat_message.dart';
 import 'package:soullocket_app/utils/rapid_action_feedback_policy.dart';
@@ -1403,42 +1407,31 @@ class ChatService {
     String? targetHouseId,
   }) async {
     final normalizedStoragePath = storagePath.trim();
-    if (normalizedStoragePath.isEmpty) {
-      return;
-    }
+    if (normalizedStoragePath.isEmpty) return;
 
-    Object? callableError;
     try {
-      final callable = _functions.httpsCallable('deleteChatBackgroundAsset');
-      await callable.call(<String, dynamic>{
-        'houseId': myHouseId.trim(),
-        'scope': isInternal ? 'internal' : 'direct',
-        'storagePath': normalizedStoragePath,
-        if (!isInternal && (targetHouseId ?? '').trim().isNotEmpty)
-          'targetHouseId': targetHouseId!.trim(),
-      });
-      return;
-    } on FirebaseFunctionsException catch (error) {
-      if (error.code.trim().toLowerCase() == 'not-found') {
-        return;
-      }
-      // Fallback to client-side delete for environments where the callable
-      // has not been deployed yet or when the current user owns the file.
-      callableError = error;
-    } catch (error) {
-      callableError = error;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      final idToken = await user.getIdToken() ?? '';
+      final response = await http.post(
+        Uri.parse('${AppConfig.cloudflareWorkerUrl}/api/deleteChatBackgroundAsset'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode({
+          'houseId': myHouseId.trim(),
+          'scope': isInternal ? 'internal' : 'direct',
+          'storagePath': normalizedStoragePath,
+          if (!isInternal && (targetHouseId ?? '').trim().isNotEmpty)
+            'targetHouseId': targetHouseId!.trim(),
+        }),
+      );
+      if (response.statusCode == 200 || response.statusCode == 404) return;
+      // Fallback: client-side delete
+      await _storageService.deleteImageByUrl(normalizedStoragePath);
+    } catch (_) {
+      await _storageService.deleteImageByUrl(normalizedStoragePath);
     }
-
-    final deletedByClient =
-        await _storageService.deleteImageByUrl(normalizedStoragePath);
-    if (deletedByClient) {
-      return;
-    }
-
-    throw Exception(
-      kDebugMode
-          ? 'Không thể xoá file nền chat khỏi Firebase Storage: $callableError'
-          : 'Không xóa được file nền chat cũ. Hãy kiểm tra mạng rồi thử lại.',
-    );
   }
 }

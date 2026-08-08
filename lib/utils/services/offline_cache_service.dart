@@ -78,7 +78,11 @@ class OfflineCacheService {
 
     final task = () async {
       _cachedPrefs = await SharedPreferences.getInstance();
-      _hiveBox = await Hive.openBox('offline_cache');
+      try {
+        _hiveBox = await Hive.openBox('offline_cache');
+      } catch (e) {
+        debugPrint('OfflineCacheService: Hive openBox error: $e');
+      }
 
       // MIGRATION: Copy các dữ liệu đệm nặng (offline_cache_) từ SharedPreferences sang Hive
       final prefs = _cachedPrefs!;

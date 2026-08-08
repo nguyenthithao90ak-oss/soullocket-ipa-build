@@ -6,209 +6,208 @@
   <title>Hướng dẫn cài đặt lần đầu</title>
   <style>
     :root {
-      --bg: #fff7fb;
-      --card: rgba(255, 255, 255, 0.96);
-      --line: #f3d4e3;
-      --text: #243447;
-      --muted: #667085;
-      --pink: #d81b60;
-      --pink-soft: #fff0f7;
-      --purple: #7c4dff;
-      --blue: #1e88e5;
-      --green: #1b9e77;
-      --orange: #ef6c00;
-      --shadow: 0 18px 42px rgba(216, 27, 96, 0.12);
+      --primary: #7b1fa2;
+      --primary-dark: #4a148c;
+      --text: #1c1e21;
+      --text-secondary: #65676b;
+      --text-tertiary: #8a8d91;
+      --border: #e4e6ea;
+      --bg: #f0f2f5;
+      --surface: #ffffff;
+      --blue: #1877f2;
+      --note-bg: #e7f3ff;
+      --warning-bg: #fff4e5;
+      --th-bg: #f7f8fa;
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
 
     body {
-      margin: 0;
-      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
       color: var(--text);
-      line-height: 1.7;
-      background:
-        radial-gradient(circle at top right, rgba(255, 192, 203, 0.34), transparent 22%),
-        radial-gradient(circle at left center, rgba(124, 77, 255, 0.10), transparent 24%),
-        linear-gradient(180deg, #fffafe 0%, var(--bg) 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
     }
 
     .page {
-      max-width: 980px;
+      max-width: 720px;
       margin: 0 auto;
-      padding: 24px 16px 54px;
+      padding: 0 0 48px;
     }
 
-    .hero,
-    .section,
-    .footer-card {
-      background: var(--card);
-      border: 1px solid rgba(255, 255, 255, 0.74);
-      border-radius: 28px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-    }
-
+    /* ── HERO ── */
     .hero {
-      position: relative;
-      overflow: hidden;
-      padding: 28px 24px;
-      margin-bottom: 18px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 20px 24px;
+      position: static;
+      overflow: visible;
     }
 
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: 0 auto auto 0;
-      width: 100%;
-      height: 6px;
-      background: linear-gradient(90deg, #ff8ab3, #d81b60, #7c4dff);
-    }
+    .hero::before, .hero::after { display: none; }
 
     .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      border-radius: 999px;
-      background: var(--pink-soft);
-      color: var(--pink);
-      font-size: 13px;
-      font-weight: 800;
-      margin-bottom: 14px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(28px, 6vw, 42px);
-      line-height: 1.12;
-      color: var(--pink);
-    }
-
-    .lead {
-      margin: 14px 0 0;
-      max-width: 780px;
-      color: var(--muted);
-      font-size: 16px;
-    }
-
-    .quick-nav {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-top: 20px;
-    }
-
-    .quick-nav a {
-      display: block;
-      padding: 14px 16px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,240,247,0.96));
-      border: 1px solid rgba(216, 27, 96, 0.10);
-      color: var(--text);
-      font-size: 14px;
-      font-weight: 800;
-      text-decoration: none;
-      box-shadow: 0 10px 22px rgba(216, 27, 96, 0.08);
-    }
-
-    .section {
-      padding: 24px 22px;
-      margin-top: 18px;
-    }
-
-    h2 {
-      margin: 0 0 12px;
-      color: var(--pink);
-      font-size: 24px;
-      line-height: 1.2;
-    }
-
-    h3 {
-      margin: 18px 0 8px;
-      color: var(--blue);
-      font-size: 18px;
-    }
-
-    p, li {
-      font-size: 15px;
-      color: var(--text);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-      margin-top: 14px;
-    }
-
-    .card {
-      padding: 16px;
-      border-radius: 20px;
-      border: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,244,249,0.96));
-    }
-
-    .card strong {
-      display: block;
-      margin-bottom: 6px;
-      color: var(--pink);
-      font-size: 15px;
-    }
-
-    .steps {
-      margin: 0;
-      padding-left: 20px;
-    }
-
-    .steps li {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: .06em;
       margin-bottom: 10px;
     }
 
-    .tip,
-    .note,
-    .warning {
-      margin-top: 14px;
-      padding: 14px 16px;
-      border-radius: 18px;
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--primary);
+      display: inline-block;
+    }
+
+    h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 16px 0 8px;
+    }
+
+    .lead {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      margin-bottom: 14px;
+    }
+
+    /* ── QUICK NAV (TOC) ── */
+    .quick-nav {
+      display: block;
+      padding: 0 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .quick-nav a {
+      display: flex;
+      align-items: center;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--border);
+      color: var(--blue);
+      text-decoration: none;
       font-size: 14px;
+      font-weight: 600;
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
     }
 
-    .tip {
-      background: rgba(30, 136, 229, 0.08);
-      border: 1px solid rgba(30, 136, 229, 0.15);
+    .quick-nav a:last-child { border-bottom: none; }
+
+    .quick-nav a::after {
+      content: "›";
+      margin-left: auto;
+      color: var(--text-tertiary);
+      font-size: 16px;
     }
 
-    .note {
-      background: rgba(124, 77, 255, 0.08);
-      border: 1px solid rgba(124, 77, 255, 0.15);
+    /* ── GRID CARDS → FLAT LIST ── */
+    .grid { display: block; }
+
+    .card {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
+      background: transparent;
     }
 
-    .warning {
-      background: rgba(239, 108, 0, 0.08);
-      border: 1px solid rgba(239, 108, 0, 0.18);
+    .card:last-child { border-bottom: none; }
+
+    .card strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 3px;
     }
 
-    .footer-card {
-      margin-top: 18px;
-      padding: 18px 20px;
+    /* ── SECTIONS & FOOTER ── */
+    .section, .footer-card {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 20px;
+      border-radius: 0;
+      box-shadow: none;
+      backdrop-filter: none;
+      margin-top: 0;
     }
+
+    p { margin-bottom: 10px; color: var(--text-secondary); font-size: 14px; }
+
+    ul, ol, .steps {
+      padding-left: 18px;
+      margin-bottom: 10px;
+    }
+
+    li {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    a:hover { text-decoration: underline; }
 
     code {
       padding: 2px 6px;
-      border-radius: 8px;
-      background: rgba(216, 27, 96, 0.08);
-      color: var(--pink);
+      border-radius: 4px;
+      background: #e4e6ea;
+      font-family: monospace;
       font-size: 13px;
-      font-weight: 700;
     }
 
-    @media (max-width: 640px) {
-      .page { padding: 18px 12px 44px; }
-      .hero, .section, .footer-card { border-radius: 22px; }
-      .hero { padding: 22px 18px; }
-      .section { padding: 20px 16px; }
+    /* ── CALLOUTS ── */
+    .tip, .note, .warning {
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin: 12px 0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .tip, .note {
+      background: var(--note-bg);
+      border-left: 3px solid var(--blue);
+    }
+
+    .warning {
+      background: var(--warning-bg);
+      border-left: 3px solid #f57c00;
+    }
+
+    .warning strong { color: #e65100; }
+
+    @media (max-width: 600px) {
+      .hero, .section, .footer-card, .quick-nav {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
     }
   </style>
 </head>
@@ -357,7 +356,7 @@
         <code>Viết nhật ký đầu tiên</code> → <code>Khám phá các tab còn lại</code>.
       </p>
       <p style="margin:12px 0 0; color:var(--muted); font-size:13px;">
-        Cập nhật lần cuối: 19/04/2026
+        Cập nhật lần cuối: 07/08/2026
       </p>
     </section>
   </main>

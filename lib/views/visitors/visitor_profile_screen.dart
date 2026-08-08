@@ -16,6 +16,7 @@ import '../../utils/services/house_service.dart';
 import '../../utils/services/social_service.dart';
 import '../../utils/services/pending_upload_service.dart';
 import '../../utils/services/house_settings_service.dart';
+import 'package:soullocket_app/utils/helpers/cloudflare_image_helper.dart';
 import '../../utils/services/storage/storage_service.dart';
 import '../../utils/app_error_mapper.dart';
 import 'profile/dialogs/profile_appearance_sheet.dart';
@@ -1336,7 +1337,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
           CachedNetworkImage(
               maxWidthDiskCache: 300,
               memCacheWidth: 300,
-              imageUrl: img,
+              imageUrl: CloudflareImageHelper.optimizeUrl(img, width: 300),
               fit: BoxFit.cover,
               filterQuality: FilterQuality.low,
               fadeInDuration: const Duration(milliseconds: 150),

@@ -64,30 +64,50 @@ class SLNotice {
         ..hideCurrentSnackBar();
       messenger.showSnackBar(
         SnackBar(
-          content: Row(
-            children: [
-              Icon(icon, color: Colors.white, size: 18),
-              SLSpacing.w8,
-              Expanded(
-                child: Text(
-                  resolvedMessage,
-                  style: SLTheme.quicksand(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(bottom: 24, left: 16, right: 16),
+          duration: const Duration(seconds: 4),
+          content: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: backgroundColor.withValues(alpha: 0.3), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: backgroundColor.withValues(alpha: 0.15),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: backgroundColor.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: backgroundColor, size: 22),
+                ),
+                SLSpacing.w12,
+                Expanded(
+                  child: Text(
+                    resolvedMessage,
+                    style: SLTheme.quicksand(
+                      color: SLColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5,
+                      height: 1.4,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          backgroundColor: backgroundColor,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: SLRadius.lgAll,
-          ),
-          elevation: 8,
-          duration: const Duration(seconds: 3),
         ),
       );
     } catch (_) {}

@@ -397,16 +397,31 @@ void main() {
       return true;
     };
 
+    // Safety fallback: Never allow splash screen to hang longer than 3 seconds
+    if (!kIsWeb) {
+      Future.delayed(const Duration(seconds: 3), () {
+        try {
+          FlutterNativeSplash.remove();
+        } catch (_) {}
+      });
+    }
+
     try {
       await UiPrefs.ensureLoaded();
       await L10nService().init();
 
-      // Firebase khởi tạo trước vì nhiều service cần nó
-      await _initializeFirebaseBootstrap();
+      // Firebase khởi tạo với timeout để không bao giờ treo màn hình Splash
+      try {
+        await _initializeFirebaseBootstrap().timeout(const Duration(seconds: 3));
+      } catch (e) {
+        debugPrint('Firebase bootstrap timeout or error: $e');
+      }
 
       if (!kIsWeb) {
-        FirebaseMessaging.onBackgroundMessage(
-            _firebaseMessagingBackgroundHandler);
+        try {
+          FirebaseMessaging.onBackgroundMessage(
+              _firebaseMessagingBackgroundHandler);
+        } catch (_) {}
       }
 
       runApp(const MyApp());
@@ -532,7 +547,7 @@ Future<void> _initializeFirebaseBootstrap() async {
           kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
       appleProvider:
           kDebugMode ? AppleProvider.debug : AppleProvider.deviceCheck,
-    );
+    ).timeout(const Duration(seconds: 2), onTimeout: () => null);
   } catch (e) {
     debugPrint('Firebase AppCheck init error: $e');
   }
@@ -553,7 +568,7 @@ Future<void> _initializeFirebaseBootstrap() async {
     try {
       FirebaseFirestore.instance.settings = const Settings(
         persistenceEnabled: true,
-        cacheSizeBytes: 100 * 1024 * 1024, // 100 MB
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
       );
     } catch (e) {
       debugPrint('Firestore persistence error: $e');

@@ -38,8 +38,7 @@ class _CountdownVisualSpec {
       return _CountdownVisualSpec(
         outerColor: Colors.white.withValues(alpha: 0.30),
         outerGradient: null,
-        outerBorder:
-            Border.all(color: Colors.white.withValues(alpha: 0.34), width: 2.2),
+        outerBorder: null,
         shadows: const [],
         innerColor: Colors.white.withValues(alpha: 0.08),
         innerGradient: null,
@@ -65,7 +64,7 @@ class _CountdownVisualSpec {
         return _CountdownVisualSpec(
           outerColor: Colors.white,
           outerGradient: null,
-          outerBorder: Border.all(color: const Color(0xFFE9DDE6), width: 2.2),
+          outerBorder: null,
           shadows: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.045),
@@ -116,8 +115,7 @@ class _CountdownVisualSpec {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder: Border.all(
-              color: Colors.white.withValues(alpha: 0.92), width: 4.5),
+          outerBorder: null,
           shadows: const [],
           innerColor: null,
           innerGradient: LinearGradient(
@@ -129,8 +127,7 @@ class _CountdownVisualSpec {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          innerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.34), width: 1),
+          innerBorder: null,
           numberGradient: const [Color(0xFFFFF7FB), Color(0xFFFFD7E8)],
           topLabelColor: Colors.white,
           bottomLabelColor: Colors.white.withValues(alpha: 0.94),
@@ -148,8 +145,7 @@ class _CountdownVisualSpec {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.82), width: 3),
+          outerBorder: null,
           shadows: [
             BoxShadow(
               color: const Color(0xFF8EC5FC).withValues(alpha: 0.34),
@@ -159,8 +155,7 @@ class _CountdownVisualSpec {
           ],
           innerColor: Colors.white.withValues(alpha: 0.16),
           innerGradient: null,
-          innerBorder: Border.all(
-              color: Colors.white.withValues(alpha: 0.42), width: 1.2),
+          innerBorder: null,
           numberGradient: const [Color(0xFF27B4FF), Color(0xFFD81B60)],
           topLabelColor: const Color(0xFF2378A8),
           bottomLabelColor: const Color(0xFF51606D),
@@ -183,8 +178,7 @@ class _CountdownVisualSpec {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.82), width: 5),
+          outerBorder: null,
           shadows: [
             BoxShadow(
               color: const Color(0xFFFF5E92).withValues(alpha: 0.46),
@@ -225,8 +219,7 @@ class _CountdownVisualSpec {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.9), width: 4),
+          outerBorder: null,
           shadows: [
             BoxShadow(
               color: const Color(0xFFFF77C8).withValues(alpha: 0.24),
@@ -241,8 +234,7 @@ class _CountdownVisualSpec {
           ],
           innerColor: Colors.white.withValues(alpha: 0.20),
           innerGradient: null,
-          innerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.58), width: 1),
+          innerBorder: null,
           numberGradient: const [Color(0xFFFF3D9A), Color(0xFF36C9FF)],
           topLabelColor: const Color(0xFFE6378D),
           bottomLabelColor: const Color(0xFF4C6178),
@@ -270,8 +262,7 @@ class _CountdownVisualSpec {
               Color(0xFFFF005D),
             ],
           ),
-          outerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.88), width: 4),
+          outerBorder: null,
           shadows: [
             BoxShadow(
               color: const Color(0xFFFF00A8).withValues(alpha: 0.45),
@@ -288,8 +279,7 @@ class _CountdownVisualSpec {
           ],
           innerColor: Colors.black.withValues(alpha: 0.16),
           innerGradient: null,
-          innerBorder: Border.all(
-              color: Colors.white.withValues(alpha: 0.38), width: 1.4),
+          innerBorder: null,
           numberGradient: const [
             Colors.white,
             Color(0xFFFFF176),
@@ -330,8 +320,7 @@ class _CountdownVisualSpec {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.22), width: 3),
+          outerBorder: null,
           shadows: [
             BoxShadow(
               color: (isLava
@@ -347,8 +336,7 @@ class _CountdownVisualSpec {
           ],
           innerColor: Colors.black.withValues(alpha: 0.12),
           innerGradient: null,
-          innerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.18), width: 1),
+          innerBorder: null,
           numberGradient: isLava
               ? const [Color(0xFFFFF176), Color(0xFFFF5A00), Color(0xFFFF1744)]
               : isAurora
@@ -386,8 +374,7 @@ class _CountdownVisualSpec {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.92), width: 4),
+          outerBorder: null,
           shadows: [
             BoxShadow(
               color: const Color(0xFF9BE7FF).withValues(alpha: 0.28),
@@ -398,8 +385,7 @@ class _CountdownVisualSpec {
           ],
           innerColor: Colors.white.withValues(alpha: 0.18),
           innerGradient: null,
-          innerBorder:
-              Border.all(color: Colors.white.withValues(alpha: 0.52), width: 1),
+          innerBorder: null,
           numberGradient: const [Color(0xFF7B61FF), Color(0xFFFF65B7)],
           topLabelColor: const Color(0xFF7B61FF),
           bottomLabelColor: const Color(0xFF5C6470),
@@ -418,62 +404,80 @@ class _CountdownVisualSpec {
         return _CountdownVisualSpec(
           outerColor: null,
           outerGradient: const LinearGradient(
-            colors: [Color(0xFFFFF0F7), Color(0xFFFFDDEF), Color(0xFFFFC8DE)],
+            colors: [
+              Color(0xFFFFFFFF),
+              Color(0xFFFFF2F8),
+              Color(0xFFFFE3F0),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           outerBorder: Border.all(
-              color: Colors.white.withValues(alpha: 0.95), width: 4.5),
+            color: Colors.white.withValues(alpha: 0.9),
+            width: 5.0,
+          ),
           shadows: [
-            // highlight góc trên-trái (ánh sáng 3D)
             BoxShadow(
-              color: Colors.white.withValues(alpha: 0.92),
-              blurRadius: 20,
-              spreadRadius: 2,
-              offset: const Offset(-8, -8),
-            ),
-            // shadow đổ nặng phía dưới-phải (tạo cảm giác lồi)
-            BoxShadow(
-              color: const Color(0xFFD4547A).withValues(alpha: 0.38),
-              blurRadius: 28,
+              color: Colors.white.withValues(alpha: 0.9),
+              blurRadius: 16,
               spreadRadius: 4,
+              offset: const Offset(-6, -6),
+            ),
+            BoxShadow(
+              color: const Color(0xFFFF85B3).withValues(alpha: 0.25),
+              blurRadius: 36,
+              spreadRadius: 8,
               offset: const Offset(8, 12),
             ),
-            // ambient glow hồng
             BoxShadow(
-              color: const Color(0xFFFF6FA7).withValues(alpha: 0.30),
-              blurRadius: 48,
-              spreadRadius: 0,
-              offset: const Offset(0, 20),
+              color: const Color(0xFFFF5E92).withValues(alpha: 0.15),
+              blurRadius: 24,
+              spreadRadius: 2,
+              offset: const Offset(0, 8),
             ),
           ],
-          innerColor: null,
-          innerGradient: null,
-          innerBorder: null,
-          // Số rõ hơn: gradient đậm dần từ trắng sang hồng đố bão hoà
+          innerColor: Colors.white.withValues(alpha: 0.5),
+          innerGradient: const LinearGradient(
+            colors: [
+              Color(0x40FFFFFF),
+              Color(0x10FFFFFF),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          innerBorder: Border.all(
+            color: Colors.white.withValues(alpha: 0.6),
+            width: 1.5,
+          ),
           numberGradient: const [
-            Color(0xFFFFFFFF),
-            Color(0xFFFF5B9A),
-            Color(0xFFD81B60)
+            Color(0xFFFF3377),
+            Color(0xFFFF72A1),
+            Color(0xFFFF8EB5),
           ],
-          topLabelColor: Colors.white,
-          bottomLabelColor: Colors.white.withValues(alpha: 0.94),
+          topLabelColor: const Color(0xFFFF4282),
+          bottomLabelColor: const Color(0xFFFF548F),
           labelShadows: [
             Shadow(
-                color: const Color(0xFF9D315F).withValues(alpha: 0.52),
-                blurRadius: 12),
-            Shadow(color: Colors.white.withValues(alpha: 0.70), blurRadius: 4),
+              color: Colors.white.withValues(alpha: 0.9),
+              blurRadius: 8,
+              offset: const Offset(1, 1),
+            ),
+            Shadow(
+              color: const Color(0xFFFF5E92).withValues(alpha: 0.25),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
           ],
           numberShadows: [
             Shadow(
-              color: const Color(0xFF8D1A3B).withValues(alpha: 0.55),
-              blurRadius: 24,
-              offset: const Offset(0, 10),
+              color: const Color(0xFFFF1E69).withValues(alpha: 0.25),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
             ),
             Shadow(
-              color: const Color(0xFF8D1A3B).withValues(alpha: 0.25),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              color: Colors.white.withValues(alpha: 0.8),
+              blurRadius: 4,
+              offset: const Offset(-2, -2),
             ),
           ],
         );

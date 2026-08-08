@@ -6,269 +6,257 @@
   <title>Chính sách bảo mật - SoulLocket</title>
   <style>
     :root {
-      --bg: #fff7fb;
-      --bg-soft: #fff0f6;
-      --card: rgba(255, 255, 255, 0.94);
-      --line: #f1cede;
-      --text: #243447;
-      --muted: #6b7280;
       --primary: #d81b60;
       --primary-dark: #ad1457;
-      --blue: #1565c0;
-      --green: #2e7d32;
-      --orange: #ef6c00;
-      --shadow: 0 18px 50px rgba(216, 27, 96, 0.12);
+      --text: #1c1e21;
+      --text-secondary: #65676b;
+      --text-tertiary: #8a8d91;
+      --border: #e4e6ea;
+      --bg: #f0f2f5;
+      --surface: #ffffff;
+      --blue: #1877f2;
+      --note-bg: #e7f3ff;
+      --note-border: #b3d4fb;
+      --warning-bg: #fff4e5;
+      --warning-border: #ffc78a;
+      --th-bg: #f7f8fa;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html {
-      scroll-behavior: smooth;
-    }
+    html { scroll-behavior: smooth; }
 
     body {
-      margin: 0;
+      background: var(--bg);
       color: var(--text);
-      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background:
-        radial-gradient(circle at top right, rgba(255, 182, 193, 0.34), transparent 24%),
-        radial-gradient(circle at left center, rgba(123, 31, 162, 0.08), transparent 24%),
-        linear-gradient(180deg, #fffafe 0%, var(--bg) 100%);
-      line-height: 1.72;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
     }
 
     .page {
-      max-width: 980px;
+      max-width: 720px;
       margin: 0 auto;
-      padding: 24px 16px 56px;
+      padding: 0 0 48px;
     }
 
-    .hero,
-    .section,
-    .contact {
-      background: var(--card);
-      border: 1px solid rgba(255, 255, 255, 0.74);
-      border-radius: 28px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-    }
-
+    /* ── HERO ── */
     .hero {
-      position: relative;
-      overflow: hidden;
-      padding: 28px 24px;
-      margin-bottom: 18px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 20px 24px;
     }
 
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: 0 auto auto 0;
-      width: 100%;
-      height: 6px;
-      background: linear-gradient(90deg, #ffafcc, #d81b60, #7b1fa2);
-    }
+    .hero::before { display: none; }
+    .hero::after  { display: none; }
 
     .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      border-radius: 999px;
-      background: var(--bg-soft);
-      color: var(--primary-dark);
-      font-size: 13px;
-      font-weight: 800;
-      margin-bottom: 14px;
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 10px;
     }
 
     h1 {
-      margin: 0;
-      font-size: clamp(28px, 6vw, 42px);
-      line-height: 1.12;
-      color: var(--primary);
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.25;
+      margin-bottom: 10px;
     }
 
     .lead {
-      margin: 14px 0 0;
-      color: var(--muted);
-      font-size: 16px;
-      max-width: 780px;
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      margin-bottom: 14px;
     }
 
     .meta {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 16px;
+      gap: 6px 12px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-weight: 600;
     }
 
-    .meta span {
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.74);
-      border: 1px solid rgba(216, 27, 96, 0.10);
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 700;
-    }
+    .meta span::before { content: "· "; }
+    .meta span:first-child::before { content: ""; }
 
-    .toc {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 12px;
-      margin-top: 20px;
-    }
-
-    .toc a {
-      display: block;
-      padding: 14px 16px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,242,248,0.96));
-      border: 1px solid rgba(216, 27, 96, 0.10);
-      color: var(--text);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 800;
-      box-shadow: 0 10px 22px rgba(216, 27, 96, 0.08);
-    }
-
+    /* ── SUMMARY GRID → flat list ── */
     .summary {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
-      margin-top: 18px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      display: block;
     }
 
     .summary .card {
-      padding: 16px;
-      border-radius: 20px;
-      border: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,244,249,0.96));
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
+      background: transparent;
     }
+
+    .summary .card:last-child { border-bottom: none; }
 
     .summary strong {
       display: block;
-      margin-bottom: 6px;
-      color: var(--primary-dark);
-      font-size: 15px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 3px;
     }
 
-    .section {
-      padding: 24px 22px;
-      margin-top: 18px;
+    .summary p, .summary div:not(.card) {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* ── TOC ── */
+    .toc {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      display: block;
+    }
+
+    .toc a {
+      display: flex;
+      align-items: center;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--border);
+      color: var(--blue);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .toc a:last-child { border-bottom: none; }
+
+    .toc a::after {
+      content: "›";
+      margin-left: auto;
+      color: var(--text-tertiary);
+      font-size: 16px;
+    }
+
+    /* ── SECTIONS ── */
+    .section, .contact {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 20px;
+      border-radius: 0;
+      box-shadow: none;
+      backdrop-filter: none;
+      margin-top: 0;
+    }
+
+    .section + .section, .section + .contact {
+      border-top: none;
     }
 
     h2 {
-      margin: 0 0 12px;
-      color: var(--primary);
-      font-size: 24px;
-      line-height: 1.2;
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--primary);
+      display: inline-block;
     }
 
     h3 {
-      margin: 18px 0 8px;
-      color: var(--blue);
-      font-size: 18px;
-    }
-
-    p,
-    li {
       font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 16px 0 8px;
     }
 
-    ul,
-    ol {
-      padding-left: 20px;
+    p { margin-bottom: 10px; color: var(--text-secondary); font-size: 14px; }
+
+    ul, ol {
+      padding-left: 18px;
+      margin-bottom: 10px;
     }
 
     li {
-      margin-bottom: 8px;
-    }
-
-    .note,
-    .warning {
-      margin-top: 14px;
-      padding: 14px 16px;
-      border-radius: 18px;
       font-size: 14px;
-    }
-
-    .note {
-      background: rgba(21, 101, 192, 0.08);
-      border: 1px solid rgba(21, 101, 192, 0.15);
-    }
-
-    .warning {
-      background: rgba(239, 108, 0, 0.10);
-      border: 1px solid rgba(239, 108, 0, 0.16);
-    }
-
-    table {
-      width: 100%;
-      margin-top: 14px;
-      border-collapse: collapse;
-      border-radius: 18px;
-      overflow: hidden;
-      background: rgba(255,255,255,0.88);
-    }
-
-    th,
-    td {
-      padding: 13px 14px;
-      text-align: left;
-      border-bottom: 1px solid #f2d6e2;
-      vertical-align: top;
-      font-size: 14px;
-    }
-
-    th {
-      background: #fff1f6;
-      color: var(--primary-dark);
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    tr:last-child td {
-      border-bottom: none;
-    }
-
-    .contact {
-      margin-top: 18px;
-      padding: 20px 22px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      line-height: 1.5;
     }
 
     a {
       color: var(--blue);
       text-decoration: none;
+      font-weight: 600;
+    }
+
+    a:hover { text-decoration: underline; }
+
+    .muted { color: var(--text-tertiary); font-size: 13px; }
+
+    /* ── CALLOUTS ── */
+    .note, .warning {
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin: 12px 0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .note {
+      background: var(--note-bg);
+      border-left: 3px solid var(--blue);
+    }
+
+    .note strong { color: #1565c0; }
+
+    .warning {
+      background: var(--warning-bg);
+      border-left: 3px solid #f57c00;
+    }
+
+    .warning strong { color: #e65100; }
+
+    /* ── TABLE ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--th-bg);
+      font-size: 12px;
       font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: .04em;
     }
 
-    a:hover {
-      text-decoration: underline;
-    }
+    tr:last-child td { border-bottom: none; }
 
-    .muted {
-      color: var(--muted);
-    }
-
-    @media (max-width: 640px) {
-      .page {
-        padding: 16px 12px 40px;
-      }
-
-      .hero,
-      .section,
-      .contact {
-        border-radius: 22px;
-      }
-
-      .hero,
-      .section {
-        padding: 20px 18px;
+    @media (max-width: 600px) {
+      .hero, .section, .contact, .summary, .toc {
+        padding-left: 16px;
+        padding-right: 16px;
       }
     }
   </style>
@@ -284,7 +272,7 @@
         Nội dung dưới đây được viết bám sát vào nhóm tính năng hiện có của sản phẩm tại thời điểm rà soát.
       </p>
       <div class="meta">
-        <span>Ngày hiệu lực: 22/06/2026</span>
+        <span>Ngày hiệu lực: 07/08/2026</span>
         <span>Phiên bản áp dụng: SoulLocket v2.0.1+55</span>
         <span>Áp dụng cho app, tài khoản, hạ tầng đồng bộ và hỗ trợ</span>
       </div>

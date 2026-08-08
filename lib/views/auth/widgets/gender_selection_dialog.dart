@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/sl_theme.dart';
 import '../../../core/fast_backdrop_filter.dart';
 import '../../../utils/services/l10n_service.dart';
+import 'package:lottie/lottie.dart';
 
 class GenderSelectionDialog extends StatefulWidget {
   final Function(String) onSelected;
@@ -77,14 +78,14 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
                 filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(32),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.96),
+                    color: const Color(0xFF1E1E2C).withOpacity(0.92), // Nền tối dark mode
                     borderRadius: BorderRadius.circular(40),
-                    border: Border.all(color: Colors.white, width: 2),
+                    border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFFCDD2).withOpacity(0.25),
+                        color: Colors.black.withOpacity(0.3),
                         blurRadius: 30,
                         offset: const Offset(0, 10),
                       ),
@@ -96,62 +97,52 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
                       builder: (context, constraints) {
                         final optionWidth = isCompactLayout
                             ? constraints.maxWidth
-                            : (constraints.maxWidth - 16) / 2;
+                            : (constraints.maxWidth - 12) / 2;
                         return Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 6),
+                                  horizontal: 16, vertical: 6),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFE4E1),
+                                color: const Color(0xFFF48FB1).withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(30),
                               ),
                               child: Text(
                                 '✨ ${L10nService().translate('GIỚI TÍNH CỦA BẠN')} ✨',
                                 textAlign: TextAlign.center,
                                 style: SLTheme.quicksand(
-                                  color: const Color(0xFFD81B60),
-                                  fontSize: 12,
+                                  color: const Color(0xFFF48FB1),
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: 1.5,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 24),
-                            Text(
-                              L10nService().translate('Bạn là...'),
-                              textAlign: TextAlign.center,
-                              style: SLTheme.quicksand(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFF4E342E),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 16),
+
                             Text(
                               L10nService().translate(
                                   'Để ứng dụng hiển thị đúng giao diện\nmà không cần lật lại sau nhé!'),
                               textAlign: TextAlign.center,
                               style: SLTheme.quicksand(
-                                fontSize: 14,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF5D4037).withOpacity(0.7),
+                                color: Colors.white70,
                                 height: 1.4,
                               ),
                             ),
-                            const SizedBox(height: 36),
-                            Wrap(
-                              spacing: 16,
-                              runSpacing: 16,
+                            const SizedBox(height: 24),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                SizedBox(
-                                  width: optionWidth,
+                                Expanded(
                                   child: _buildOption(
                                     assetPath: 'assets/images/avatar_male.jpg',
+                                    lottieUrl:
+                                        'assets/images/male_avatar_sticker.json',
                                     title: L10nService().translate('Nam'),
-                                    desc: L10nService()
-                                        .translate('Giao diện đằng trai'),
+                                    desc: L10nService().translate('Bạn Nam'),
                                     baseColor: const Color(0xFF81D4FA),
                                     shadowColor: const Color(0xFF03A9F4),
                                     emoji: '👦🏻',
@@ -159,14 +150,15 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
                                     onTap: () => _handleSelect('user1'),
                                   ),
                                 ),
-                                SizedBox(
-                                  width: optionWidth,
+                                const SizedBox(width: 16),
+                                Expanded(
                                   child: _buildOption(
                                     assetPath:
                                         'assets/images/avatar_female.jpg',
+                                    lottieUrl:
+                                        'assets/images/female_avatar_sticker.json',
                                     title: L10nService().translate('Nữ'),
-                                    desc: L10nService()
-                                        .translate('Giao diện đằng gái'),
+                                    desc: L10nService().translate('Bạn Nữ'),
                                     baseColor: const Color(0xFFF48FB1),
                                     shadowColor: const Color(0xFFE91E63),
                                     emoji: '👧🏻',
@@ -192,6 +184,7 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
 
   Widget _buildOption({
     required String assetPath,
+    String? lottieUrl,
     required String title,
     required String desc,
     required Color baseColor,
@@ -203,25 +196,7 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(
-          vertical: compact ? 24 : 32,
-          horizontal: 16,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(36),
-          border: Border.all(
-            color: baseColor.withOpacity(0.3),
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: shadowColor.withOpacity(0.12),
-              blurRadius: 25,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
+        color: Colors.transparent, // Giữ vùng bấm
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -233,22 +208,38 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: baseColor.withOpacity(0.2),
+                    color: baseColor.withOpacity(0.08),
                     boxShadow: [
                       BoxShadow(
-                        color: shadowColor.withOpacity(0.2),
+                        color: shadowColor.withOpacity(0.1),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),
                     ],
                   ),
                   child: ClipOval(
-                    child: Image.asset(
-                      assetPath,
-                      width: compact ? 70 : 85,
-                      height: compact ? 70 : 85,
-                      fit: BoxFit.cover,
-                    ),
+                    child: lottieUrl != null
+                        ? (lottieUrl.startsWith('http')
+                            ? Lottie.network(
+                                lottieUrl,
+                                width: compact ? 80 : 90,
+                                height: compact ? 80 : 90,
+                                fit: BoxFit.cover,
+                                options: LottieOptions(enableMergePaths: true),
+                              )
+                            : Lottie.asset(
+                                lottieUrl,
+                                width: compact ? 80 : 90,
+                                height: compact ? 80 : 90,
+                                fit: BoxFit.cover,
+                                options: LottieOptions(enableMergePaths: true),
+                              ))
+                        : Image.asset(
+                            assetPath,
+                            width: compact ? 80 : 90,
+                            height: compact ? 80 : 90,
+                            fit: BoxFit.cover,
+                          ),
                   ),
                 ),
                 Positioned(
@@ -256,12 +247,13 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
                   right: -10,
                   child: Container(
                     padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2C2C3E),
                       shape: BoxShape.circle,
-                      boxShadow: [
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      boxShadow: const [
                         BoxShadow(
-                          color: Colors.black12,
+                          color: Colors.black26,
                           blurRadius: 8,
                           offset: Offset(0, 3),
                         )
@@ -272,14 +264,14 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             Text(
               title,
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 fontSize: 22,
                 fontWeight: FontWeight.w900,
-                color: const Color(0xFF4E342E),
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 6),
@@ -287,9 +279,9 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
               desc,
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF8D6E63),
+                color: Colors.white60,
               ),
             ),
           ],

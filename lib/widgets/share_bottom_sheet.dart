@@ -12,6 +12,7 @@ import '../utils/services/group_chat_service.dart';
 import '../utils/services/social_service.dart';
 import '../core/sl_theme.dart';
 import '../utils/services/l10n_service.dart';
+import 'package:soullocket_app/views/home/tabs/settings/settings_links_manager_screen.dart';
 
 class ShareBottomSheet extends StatefulWidget {
   final String myHouseId;
@@ -122,8 +123,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && widget.shareUrl.trim().isNotEmpty) {
-        Clipboard.setData(ClipboardData(
-            text: '${widget.contentToShare}\n${widget.shareUrl}'.trim()));
+        Clipboard.setData(ClipboardData(text: widget.shareUrl.trim()));
         ScaffoldMessenger.of(context).showSnackBar(
           _buildFeedbackSnackBar(
             message: L10nService().translate('share_copied'),
@@ -286,9 +286,10 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
     }
   }
 
-  void _copyContentToClipboard({bool closeSheet = false}) {
-    final text = '${widget.contentToShare}\n${widget.shareUrl}'.trim();
-    Clipboard.setData(ClipboardData(text: text));
+  void _copyLinkToClipboard({bool closeSheet = false}) {
+    final link = widget.shareUrl.trim();
+    if (link.isEmpty) return;
+    Clipboard.setData(ClipboardData(text: link));
     if (closeSheet && mounted) {
       Navigator.pop(context);
     }
@@ -302,7 +303,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
   }
 
   void _copyToClipboard() {
-    _copyContentToClipboard(closeSheet: true);
+    _copyLinkToClipboard(closeSheet: true);
   }
 
   String _composeShareMessage() {
@@ -749,12 +750,68 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                           horizontal: contentHorizontalPadding,
                           vertical: SLResponsive.dp(8, screenWidth),
                         ),
-                        child: _buildSectionHeader(
-                          title: L10nService().translate('share_via'),
-                          subtitle:
-                              L10nService().translate('share_external_copy'),
-                          compact: compact,
-                          screenWidth: screenWidth,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _buildSectionHeader(
+                                title: L10nService().translate('share_via'),
+                                subtitle:
+                                    L10nService().translate('share_external_copy'),
+                                compact: compact,
+                                screenWidth: screenWidth,
+                              ),
+                            ),
+                            if (widget.myHouseId.trim().isNotEmpty)
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(12),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => SettingsLinksManagerScreen(
+                                          houseId: widget.myHouseId,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: SLResponsive.dp(10, screenWidth),
+                                      vertical: SLResponsive.dp(6, screenWidth),
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFF0F5),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: const Color(0xFFFFE0EB)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.link_rounded,
+                                          size: SLResponsive.dp(14, screenWidth),
+                                          color: const Color(0xFFD81B60),
+                                        ),
+                                        SizedBox(width: SLResponsive.dp(4, screenWidth)),
+                                        Text(
+                                          'Quản lý',
+                                          style: SLTheme.quicksand(
+                                            fontSize: SLResponsive.sp(
+                                              compact ? 11 : 11.5,
+                                              screenWidth,
+                                            ),
+                                            fontWeight: FontWeight.w800,
+                                            color: const Color(0xFFD81B60),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                       SizedBox(
@@ -1134,7 +1191,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                       color: Colors.transparent,
                       child: InkWell(
                         borderRadius: BorderRadius.circular(999),
-                        onTap: () => _copyContentToClipboard(closeSheet: false),
+                        onTap: () => _copyLinkToClipboard(closeSheet: false),
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
@@ -1155,7 +1212,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                 ),
                 SizedBox(height: SLResponsive.dp(6, screenWidth)),
                 GestureDetector(
-                  onTap: () => _copyContentToClipboard(closeSheet: false),
+                  onTap: () => _copyLinkToClipboard(closeSheet: false),
                   child: MouseRegion(
                     cursor: SystemMouseCursors.click,
                     child: Text(
@@ -1177,7 +1234,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                 if (previewUrl.isNotEmpty) ...[
                   SizedBox(height: SLResponsive.dp(10, screenWidth)),
                   GestureDetector(
-                    onTap: () => _copyContentToClipboard(closeSheet: false),
+                    onTap: () => _copyLinkToClipboard(closeSheet: false),
                     child: MouseRegion(
                       cursor: SystemMouseCursors.click,
                       child: Container(

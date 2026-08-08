@@ -36,7 +36,7 @@ const Set<String> _kUtilityStickerIds = <String>{
 String? utilityStickerAssetForId(String utilityId) {
   final normalizedId = utilityId.trim().toLowerCase();
   if (normalizedId == 'friendly_chat') {
-    return 'assets/images/interaction_stickers/custom/numbered/sticker_330.png';
+    return 'assets/images/anhtomau_stickers/sticker_1.gif';
   }
   if (!_kUtilityStickerIds.contains(normalizedId)) {
     return null;
@@ -214,3 +214,4 @@ Widget buildUtilityStickerIcon({
     },
   );
 }
+

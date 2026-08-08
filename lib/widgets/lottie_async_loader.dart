@@ -31,33 +31,57 @@ class LottieAsyncLoader extends StatefulWidget {
 }
 
 class _LottieAsyncLoaderState extends State<LottieAsyncLoader> {
+  static const int _maxRamCacheSize = 50;
+  static final Map<String, File> _ramCache = {};
+
   bool _shouldLoad = false;
   File? _cachedFile;
+
+  static void _cacheRamFile(String url, File file) {
+    if (_ramCache.containsKey(url)) {
+      _ramCache.remove(url);
+    } else if (_ramCache.length >= _maxRamCacheSize) {
+      _ramCache.remove(_ramCache.keys.first);
+    }
+    _ramCache[url] = file;
+  }
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        setState(() => _shouldLoad = true);
-        _preloadLottie();
-      }
-    });
+    final cleanUrl = widget.url.trim();
+    if (_ramCache.containsKey(cleanUrl)) {
+      _cachedFile = _ramCache[cleanUrl];
+      _shouldLoad = true;
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() => _shouldLoad = true);
+          _preloadLottie();
+        }
+      });
+    }
   }
 
   Future<void> _preloadLottie() async {
     if (kIsWeb) return;
+    final cleanUrl = widget.url.trim();
+    if (_ramCache.containsKey(cleanUrl)) return;
+
     try {
       final file =
           await const StorageDownloadCacheHelper().getCachedNetworkFile(
-        widget.url,
+        cleanUrl,
         namespace: 'lottie_anims',
         ttl: const Duration(days: 30),
       );
-      if (mounted) {
-        setState(() {
-          _cachedFile = file;
-        });
+      if (file != null && file.existsSync()) {
+        _cacheRamFile(cleanUrl, file);
+        if (mounted) {
+          setState(() {
+            _cachedFile = file;
+          });
+        }
       }
     } catch (_) {}
   }

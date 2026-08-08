@@ -91,7 +91,11 @@ class StorageService {
     );
   }
 
-  Future<XFile?> pickMusicFile() => _pickerService.pickMusicFile();
+  Future<List<XFile>> pickImages({int? limit}) =>
+      _pickerService.pickImages(limit: limit);
+
+  Future<List<XFile>> pickMedia({int? limit}) =>
+      _pickerService.pickMedia(limit: limit);
 
   Future<List<XFile>> pickMultipleMusicFiles({int maxFiles = 5}) =>
       _pickerService.pickMultipleMusicFiles(maxFiles: maxFiles);
@@ -103,9 +107,6 @@ class StorageService {
   }
 
   Future<XFile?> pickImage() => _pickerService.pickImage();
-
-  Future<List<XFile>> pickImages({int? limit}) =>
-      _pickerService.pickImages(limit: limit);
 
   Future<File?> getCachedNetworkFile(
     String url, {
@@ -1345,7 +1346,10 @@ class StorageService {
       XFile uploadFile = file;
       String? tempCompressedPath;
 
-      if (!kIsWeb && file.path.isNotEmpty && fileExtension != '.gif') {
+      final contentType = detectContentType(originalFileName);
+      final isImage = contentType.startsWith('image/');
+
+      if (!kIsWeb && file.path.isNotEmpty && isImage && fileExtension != '.gif') {
         try {
           if (onProgress != null) onProgress(0.05);
           final tempDir = await getTemporaryDirectory();
@@ -1391,11 +1395,13 @@ class StorageService {
 
       if (onProgress != null) onProgress(0.4);
 
+      final finalContentType = detectContentType(path);
+
       try {
         final downloadUrl = _rawUploadHelper.uploadFileToPath(
           storagePath: path,
           file: uploadFile,
-          resolvedContentType: 'image/webp',
+          resolvedContentType: finalContentType,
           rejectVideoUpload: _rejectVideoUpload,
           purgeLegacyCache: _purgeLegacyImgBBKeyCache,
           onProgress:

@@ -64,7 +64,6 @@ import '../../utilities/friendly_chat_screen.dart';
 import '../../utilities/habit_screen.dart';
 import '../../utilities/giftcode_screen.dart';
 import '../../utilities/history_screen.dart';
-import '../../utilities/sticker_library_screen.dart';
 import '../../utilities/love_card_screen.dart';
 import '../../utilities/reward_store_screen.dart';
 import '../../utilities/secret_vault_screen.dart';

@@ -16,14 +16,14 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
     with TickerProviderStateMixin {
   // Collection of cute sticker assets bundled in the app
   static const List<String> _cuteStickers = [
-    'assets/images/interaction_stickers/custom/numbered/sticker_001.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_003.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_004.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_006.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_007.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
+    'assets/images/anhtomau_stickers/sticker_1.gif',
+    'assets/images/anhtomau_stickers/sticker_1.gif',
+    'assets/images/anhtomau_stickers/sticker_1.gif',
+    'assets/images/anhtomau_stickers/sticker_1.gif',
+    'assets/images/anhtomau_stickers/sticker_1.gif',
+    'assets/images/anhtomau_stickers/sticker_1.gif',
+    'assets/images/anhtomau_stickers/sticker_1.gif',
+    'assets/images/anhtomau_stickers/sticker_1.gif',
   ];
 
   late int _currentStickerIndex;
@@ -371,3 +371,4 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
     );
   }
 }
+

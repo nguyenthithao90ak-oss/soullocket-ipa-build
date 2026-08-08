@@ -15,30 +15,35 @@ class DiaryComposerController {
   List<Map<String, dynamic>> get moods => <Map<String, dynamic>>[
         {
           'icon': '😍',
+          'asset': 'assets/images/anhtomau_stickers/sticker_1.gif',
           'label': L10nService()
               .translate(L10nService().translate('home_vuiv_2d8b13')),
           'color': const Color(0xFFFF4B72),
         },
         {
           'icon': '💖',
+          'asset': 'assets/images/anhtomau_stickers/sticker_9.gif',
           'label': L10nService()
               .translate(L10nService().translate('home_hnhphc_2a902f')),
           'color': const Color(0xFFD81B60),
         },
         {
           'icon': '🤩',
+          'asset': 'assets/images/anhtomau_stickers/sticker_19.gif',
           'label': L10nService()
               .translate(L10nService().translate('home_hngkhi_eef2c4')),
           'color': const Color(0xFFFF8F00),
         },
         {
           'icon': '🤒',
+          'asset': 'assets/images/anhtomau_stickers/sticker_8.gif',
           'label':
               L10nService().translate(L10nService().translate('home_m_6872a7')),
           'color': const Color(0xFF43A047),
         },
         {
           'icon': '🌧️',
+          'asset': 'assets/images/anhtomau_stickers/sticker_24.gif',
           'label': L10nService()
               .translate(L10nService().translate('home_su_9a7d8d')),
           'color': const Color(0xFF546E7A),

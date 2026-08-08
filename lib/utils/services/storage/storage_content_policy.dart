@@ -20,11 +20,5 @@ void rejectUnsupportedStorageVideoUpload({
   required String resolvedContentType,
   String? originalFileName,
 }) {
-  final normalizedContentType = resolvedContentType.trim().toLowerCase();
-  final sourceName = (originalFileName ?? '').trim();
-  if (normalizedContentType.startsWith('video/') ||
-      looksLikeBlockedStorageVideoFile(storagePath) ||
-      (sourceName.isNotEmpty && looksLikeBlockedStorageVideoFile(sourceName))) {
-    throw Exception('Ứng dụng hiện không hỗ trợ tải video lên.');
-  }
+  // Cloudflare R2 hỗ trợ upload video
 }

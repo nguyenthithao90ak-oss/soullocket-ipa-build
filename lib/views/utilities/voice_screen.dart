@@ -4,11 +4,12 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -88,7 +89,6 @@ class _VoiceScreenState extends State<VoiceScreen>
   }
 
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
-  final FirebaseFunctions _functions = FirebaseFunctions.instance;
   final PrivateMediaUrlService _privateMediaUrlService =
       PrivateMediaUrlService();
   final AudioPlayer _player = AudioPlayer();
@@ -507,25 +507,30 @@ class _VoiceScreenState extends State<VoiceScreen>
   }) async {
     final errCreateSession = context.tr('util_khngthtoph_d7489b');
     try {
-      final callable = _functions.httpsCallable('createVoiceUploadSession');
-      final response = await callable.call(<String, dynamic>{
-        'houseId': widget.houseId.trim(),
-        'fileName': fileName.trim(),
-        'contentType': contentType.trim(),
-      }).timeout(const Duration(seconds: 15));
-      final data = response.data;
-      if (data is! Map) {
-        throw Exception('Voice upload session is invalid.');
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Vui lòng đăng nhập lại.');
+      final idToken = await user.getIdToken() ?? '';
+      
+      final response = await http.post(
+        Uri.parse('${AppConfig.cloudflareWorkerUrl}/api/createVoiceUploadSession'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode({
+          'houseId': widget.houseId.trim(),
+          'fileName': fileName.trim(),
+          'contentType': contentType.trim(),
+        }),
+      ).timeout(const Duration(seconds: 15));
+      
+      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200) {
+        throw Exception((decoded['error'] as Map?)?['message'] ?? errCreateSession);
       }
+      final data = decoded['result'];
+      if (data is! Map) throw Exception('Voice upload session is invalid.');
       return Map<String, dynamic>.from(data);
-    } on FirebaseFunctionsException catch (error, stackTrace) {
-      debugPrint(
-          '[VoiceScreen] createVoiceUploadSession FirebaseFunctionsException: ${error.code} - ${error.message}');
-      unawaited(ErrorLoggerService.instance.logError(error, stackTrace,
-          reason: 'createVoiceUploadSession_firebase_error'));
-      throw Exception(error.message?.trim().isNotEmpty == true
-          ? error.message!.trim()
-          : errCreateSession);
     } catch (error, stackTrace) {
       debugPrint('[VoiceScreen] createVoiceUploadSession error: $error');
       unawaited(ErrorLoggerService.instance.logError(error, stackTrace,
@@ -543,24 +548,31 @@ class _VoiceScreenState extends State<VoiceScreen>
   }) async {
     final errFinalize = context.tr('util_khngthhont_91a9c4');
     try {
-      final callable = _functions.httpsCallable('finalizeVoiceUpload');
-      await callable.call(<String, dynamic>{
-        'houseId': widget.houseId.trim(),
-        'sessionId': sessionId.trim(),
-        'authorName': widget.myName.trim(),
-        'fileName': fileName.trim(),
-        'mimeType': mimeType.trim(),
-        'durationMs': durationMs,
-        'size': size,
-      }).timeout(const Duration(seconds: 15));
-    } on FirebaseFunctionsException catch (error, stackTrace) {
-      debugPrint(
-          '[VoiceScreen] finalizeVoiceUpload FirebaseFunctionsException: ${error.code} - ${error.message}');
-      unawaited(ErrorLoggerService.instance.logError(error, stackTrace,
-          reason: 'finalizeVoiceUpload_firebase_error'));
-      throw Exception(error.message?.trim().isNotEmpty == true
-          ? error.message!.trim()
-          : errFinalize);
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Vui lòng đăng nhập lại.');
+      final idToken = await user.getIdToken() ?? '';
+      
+      final response = await http.post(
+        Uri.parse('${AppConfig.cloudflareWorkerUrl}/api/finalizeVoiceUpload'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode({
+          'houseId': widget.houseId.trim(),
+          'sessionId': sessionId.trim(),
+          'authorName': widget.myName.trim(),
+          'fileName': fileName.trim(),
+          'mimeType': mimeType.trim(),
+          'durationMs': durationMs,
+          'size': size,
+        }),
+      ).timeout(const Duration(seconds: 15));
+      
+      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200) {
+        throw Exception((decoded['error'] as Map?)?['message'] ?? errFinalize);
+      }
     } catch (error, stackTrace) {
       debugPrint('[VoiceScreen] finalizeVoiceUpload error: $error');
       unawaited(ErrorLoggerService.instance.logError(error, stackTrace,

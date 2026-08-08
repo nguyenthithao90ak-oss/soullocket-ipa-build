@@ -76,19 +76,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
                   ),
                 ),
               ],
-              if (!isSingle)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: HeartbeatThreadWidget(
-                      isOnline: _presenceStatusText('user1')
-                              .toLowerCase()
-                              .contains('online') ||
-                          _presenceStatusText('user2')
-                              .toLowerCase()
-                              .contains('online'),
-                    ),
-                  ),
-                ),
+
               Row(
                 mainAxisAlignment: compactMetaLayout
                     ? MainAxisAlignment.spaceEvenly

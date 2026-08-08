@@ -766,16 +766,6 @@ extension _SettingsTabShell on _SettingsTabState {
           },
         ),
         if (kDebugMode) _buildDivider(isDark),
-        if (kDebugMode)
-          _buildiOSRow(
-            icon: Icons.emoji_emotions_rounded,
-            iconBgColor: const Color(0xFFFF8FB7),
-            title: 'Quản lý Kho Sticker',
-            isDark: isDark,
-            onTap: () {
-              slPush(context, const StickerLibraryScreen());
-            },
-          ),
       ], isDark),
       _buildiOSSectionCard([
         _buildiOSRow(
@@ -1201,7 +1191,7 @@ class _DraggableFloatingChatIconState
                 ),
                 child: Center(
                   child: const R2StickerImage(
-                    'assets/images/interaction_stickers/custom/numbered/sticker_330.png',
+                    'assets/images/anhtomau_stickers/sticker_1.gif',
                     width: 36,
                     height: 36,
                   ),
@@ -1243,3 +1233,4 @@ class _DraggableFloatingChatIconState
     );
   }
 }
+

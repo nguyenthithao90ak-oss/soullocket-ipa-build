@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:soullocket_app/utils/helpers/cloudflare_image_helper.dart';
 import 'package:soullocket_app/utils/services/storage/storage_download_cache_helper.dart';
 
 class R2NetworkImage extends StatefulWidget {
@@ -60,7 +61,12 @@ class _R2NetworkImageState extends State<R2NetworkImage> {
   }
 
   void _initFutureIfNeeded() {
-    final cleanUrl = widget.imageUrl.trim();
+    final originalUrl = widget.imageUrl.trim();
+    final cleanUrl = CloudflareImageHelper.optimizeUrl(
+      originalUrl,
+      width: widget.width?.toInt(),
+    );
+    
     if (cleanUrl.isEmpty || cleanUrl.startsWith('assets/')) {
       _fileFuture = null;
       return;
@@ -78,7 +84,11 @@ class _R2NetworkImageState extends State<R2NetworkImage> {
 
   @override
   Widget build(BuildContext context) {
-    final cleanUrl = widget.imageUrl.trim();
+    final originalUrl = widget.imageUrl.trim();
+    final cleanUrl = CloudflareImageHelper.optimizeUrl(
+      originalUrl,
+      width: widget.width?.toInt(),
+    );
 
     if (cleanUrl.isEmpty) {
       return _buildErrorWidget();

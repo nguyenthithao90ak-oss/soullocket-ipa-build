@@ -39,6 +39,14 @@ abstract final class _L10nStaticData {
     'auth_guide_short': 'Hướng dẫn',
     'auth_contact_short': 'Liên hệ',
     'auth_email_example': 'Ví dụ: example@gmail.com',
+    'auth_sync_guide': 'Cách đồng bộ',
+    'auth_email_label': 'Địa chỉ Email',
+    'auth_email_placeholder': 'nhapemail@gmail.com',
+    'auth_security_question_not_required': 'Câu hỏi bảo mật (Không bắt buộc)',
+    'auth_security_question_select_tap': 'Nhấn để chọn câu hỏi bảo mật',
+    'auth_recovery_hint': 'Dùng để khôi phục mật khẩu khi quên',
+    'auth_encrypted_note': 'Đã được mã hóa và bảo mật an toàn',
+    'auth_prove_not_robot': 'Vui lòng chứng minh bạn không phải robot.',
 
     // === Settings UI ===
     'notification_center': 'Trung tâm Thông báo',
@@ -1218,6 +1226,14 @@ abstract final class _L10nStaticData {
     'auth_guide_short': 'Guide',
     'auth_contact_short': 'Contact',
     'auth_email_example': 'e.g. example@gmail.com',
+    'auth_sync_guide': 'How to sync',
+    'auth_email_label': 'Email Address',
+    'auth_email_placeholder': 'enteremail@gmail.com',
+    'auth_security_question_not_required': 'Security Question (Optional)',
+    'auth_security_question_select_tap': 'Tap to select security question',
+    'auth_recovery_hint': 'Used to recover your password if forgotten',
+    'auth_encrypted_note': 'Encrypted and securely stored',
+    'auth_prove_not_robot': 'Please prove you are not a robot.',
 
     // === Settings UI ===
     'notification_center': 'Notification Center',

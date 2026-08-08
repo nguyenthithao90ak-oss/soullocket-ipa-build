@@ -53,7 +53,7 @@ class AppConfig {
   );
   static const String openStreetMapTileUrl = String.fromEnvironment(
     'OSM_TILE_URL',
-    defaultValue: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    defaultValue: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
   );
   static const String osrmRouteBaseUrl = String.fromEnvironment(
     'OSRM_ROUTE_BASE_URL',
@@ -118,7 +118,7 @@ class AppConfig {
   static const int diaryPageSize = 50;
 
   /// Số ảnh album lấy mỗi lần
-  static const int albumPageSize = 100;
+  static const int albumPageSize = 30;
 
   /// Số bài social feed lấy mỗi lần
   static const int feedPageSize = 30;
@@ -158,6 +158,11 @@ class AppConfig {
 
   // ── SUPPORT CHAT ─────────────────────────────────────────────────────
   // ── SERVER VERIFICATION URL ──────────────────────────────────────────
+  static const String cloudflareWorkerUrl = String.fromEnvironment(
+    'CLOUDFLARE_WORKER_URL',
+    defaultValue:
+        'https://soullocket-api.soullocket-api.workers.dev',
+  );
   static const String purchaseVerifyUrl = String.fromEnvironment(
     'PURCHASE_VERIFY_URL',
     defaultValue:
@@ -290,6 +295,6 @@ class AppConfig {
 
   /// Giới hạn thời gian gọi (phút).
   static const int freeCallDurationMinutes = 15;
-  static const int vipCallDurationMinutes = 30;
+  static const int vipCallDurationMinutes = 60;
   static const int callEndWarningSeconds = 30;
 }

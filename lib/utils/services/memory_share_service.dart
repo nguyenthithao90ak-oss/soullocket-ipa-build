@@ -1,11 +1,9 @@
-import 'package:cloud_functions/cloud_functions.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 
 import '../../core/constants/app_config.dart';
 import 'admob_service.dart';
-
-const Duration _memoryShareAppCheckRetryDelay = Duration(milliseconds: 350);
 
 class MemoryLimits {
   const MemoryLimits({
@@ -98,10 +96,8 @@ class MemoryShareResult {
 
 class MemoryShareService {
   MemoryShareService({
-    FirebaseFunctions? functions,
     FirebaseAuth? auth,
-  })  : _functions = functions ?? FirebaseFunctions.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+  }) : _auth = auth ?? FirebaseAuth.instance;
 
   static int get maxPhotosPerShare => fallbackMemoryLimits.shareMaxItems;
   static const String defaultShareTitle = 'Kỷ niệm của chúng mình';
@@ -110,7 +106,6 @@ class MemoryShareService {
   static const String defaultBrandLabel = 'SoulLocket Memories';
   static const String defaultTheme = 'soullocket_dream';
 
-  final FirebaseFunctions _functions;
   final FirebaseAuth _auth;
 
   static MemoryLimits? _cachedLimits;
@@ -118,17 +113,13 @@ class MemoryShareService {
 
   Future<MemoryLimits> fetchLimits() async {
     if (_cachedLimits != null && _lastFetchTime != null) {
-      if (DateTime.now().difference(_lastFetchTime!) <
-          const Duration(hours: 1)) {
+      if (DateTime.now().difference(_lastFetchTime!) < const Duration(hours: 1)) {
         return _cachedLimits!;
       }
     }
     try {
-      final response = await _callWithAuthAndAppCheckRetry(() {
-        final callable = _functions.httpsCallable('getMemoryLimits');
-        return callable.call();
-      });
-      final raw = response.data;
+      final resp = await _workerPost('/api/getMemoryLimits', {});
+      final raw = resp['result'];
       if (raw is Map) {
         _cachedLimits = MemoryLimits.fromMap(raw);
         _lastFetchTime = DateTime.now();
@@ -160,32 +151,24 @@ class MemoryShareService {
     if (safePhotos.isEmpty) {
       throw Exception('Chưa có ảnh hợp lệ để tạo liên kết.');
     }
-    final resolvedExpiryDays =
-        expiryDays.clamp(1, limits.shareMaxTtlDays).toInt();
+    final resolvedExpiryDays = expiryDays.clamp(1, limits.shareMaxTtlDays).toInt();
 
-    final response = await _callWithAuthAndAppCheckRetry(() {
-      final callable = _functions.httpsCallable('createMemoryShareLink');
-      return callable.call(<String, dynamic>{
-        'houseId': normalizedHouseId,
-        'photos': safePhotos,
-        'expiryDays': resolvedExpiryDays,
-        'title': defaultShareTitle,
-        'description': defaultShareDescription,
-        'brandLabel': defaultBrandLabel,
-        'theme': defaultTheme,
-        if (password != null && password.trim().isNotEmpty)
-          'password': password.trim(),
-      });
-    });
-    final raw = response.data;
-    if (raw is! Map) {
-      throw Exception('Phản hồi tạo liên kết không hợp lệ.');
-    }
+    final payload = <String, dynamic>{
+      'houseId': normalizedHouseId,
+      'photos': safePhotos,
+      'expiryDays': resolvedExpiryDays,
+      'title': defaultShareTitle,
+      'description': defaultShareDescription,
+      'brandLabel': defaultBrandLabel,
+      'theme': defaultTheme,
+      if (password != null && password.trim().isNotEmpty) 'password': password.trim(),
+    };
+    final response = await _workerPost('/api/createMemoryShareLink', payload);
+    final raw = response['result'];
+    if (raw is! Map) throw Exception('Phản hồi tạo liên kết không hợp lệ.');
     final data = Map<String, dynamic>.from(raw);
     final token = data['token']?.toString().trim() ?? '';
-    if (token.isEmpty) {
-      throw Exception('Máy chủ chưa trả mã liên kết.');
-    }
+    if (token.isEmpty) throw Exception('Máy chủ chưa trả mã liên kết.');
 
     return MemoryShareResult(
       token: token,
@@ -197,31 +180,16 @@ class MemoryShareService {
 
   Future<void> revokeShareLink(String token) async {
     final normalizedToken = token.trim();
-    if (normalizedToken.isEmpty) {
-      throw Exception('Thiếu token liên kết để thu hồi.');
-    }
-
-    await _callWithAuthAndAppCheckRetry(() {
-      final callable = _functions.httpsCallable('revokeMemoryShareLink');
-      return callable.call(<String, dynamic>{
-        'token': normalizedToken,
-      });
-    });
+    if (normalizedToken.isEmpty) throw Exception('Thiếu token liên kết để thu hồi.');
+    await _workerPost('/api/revokeMemoryShareLink', {'token': normalizedToken});
   }
 
-  List<Map<String, dynamic>> _sanitizePhotos(
-    List<Map<String, dynamic>> photos,
-    int maxItems,
-  ) {
+  List<Map<String, dynamic>> _sanitizePhotos(List<Map<String, dynamic>> photos, int maxItems) {
     final sanitized = <Map<String, dynamic>>[];
     for (final photo in photos) {
-      if (sanitized.length >= maxItems) {
-        break;
-      }
+      if (sanitized.length >= maxItems) break;
       final url = _firstShareableUrl(photo);
-      if (url.isEmpty) {
-        continue;
-      }
+      if (url.isEmpty) continue;
       final previewUrl = _firstShareableUrl(photo, preferPreview: true);
       sanitized.add(<String, dynamic>{
         'id': photo['id']?.toString().trim() ?? '',
@@ -234,140 +202,58 @@ class MemoryShareService {
     return sanitized;
   }
 
-  String _firstShareableUrl(
-    Map<String, dynamic> photo, {
-    bool preferPreview = false,
-  }) {
+  String _firstShareableUrl(Map<String, dynamic> photo, {bool preferPreview = false}) {
     final keys = preferPreview
         ? const ['previewUrl', 'thumbUrl', 'thumbnailUrl', 'url', 'downloadUrl']
-        : const [
-            'url',
-            'downloadUrl',
-            'previewUrl',
-            'thumbUrl',
-            'thumbnailUrl'
-          ];
+        : const ['url', 'downloadUrl', 'previewUrl', 'thumbUrl', 'thumbnailUrl'];
     for (final key in keys) {
       final value = photo[key]?.toString().trim() ?? '';
-      if (_isShareableUrl(value)) {
-        return value;
-      }
+      if (_isShareableUrl(value)) return value;
     }
     return '';
   }
 
   bool _isShareableUrl(String value) {
     final uri = Uri.tryParse(value);
-    if (uri == null) {
-      return false;
-    }
+    if (uri == null) return false;
     return uri.hasScheme && (uri.scheme == 'https' || uri.scheme == 'http');
   }
 
   String _buildPublicUrl(String token, String serverUrl) {
-    if (serverUrl.isNotEmpty) {
-      return serverUrl;
-    }
+    if (serverUrl.isNotEmpty) return serverUrl;
     return AppConfig.webUri(
       'memory-share',
       queryParameters: <String, String>{'token': token},
     ).toString();
   }
 
-  Future<bool> _warmUpAuthToken({bool forceRefresh = false}) async {
+  Future<String> _getIdToken() async {
     final user = _auth.currentUser;
-    if (user == null) {
-      return false;
-    }
-    try {
-      final token = await user.getIdToken(forceRefresh);
-      return (token ?? '').trim().isNotEmpty;
-    } catch (_) {
-      return false;
-    }
+    if (user == null) throw Exception('Phiên đăng nhập đã hết. Vui lòng đăng nhập lại.');
+    return await user.getIdToken() ?? '';
   }
 
-  Future<bool> _warmUpAppCheck({bool forceRefresh = false}) async {
-    try {
-      final token = await FirebaseAppCheck.instance.getToken(forceRefresh);
-      return (token ?? '').trim().isNotEmpty;
-    } catch (_) {
-      return false;
+  Future<Map<String, dynamic>> _workerPost(String path, Map<String, dynamic> body) async {
+    final idToken = await _getIdToken();
+    final response = await http.post(
+      Uri.parse('${AppConfig.cloudflareWorkerUrl}$path'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $idToken',
+      },
+      body: jsonEncode(body),
+    );
+    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode != 200) {
+      final msg = (decoded['error'] as Map?)?['message'] ?? 'Lỗi không xác định.';
+      throw Exception(msg);
     }
-  }
-
-  bool _isAuthFailure(FirebaseFunctionsException error) {
-    return error.code.trim().toLowerCase() == 'unauthenticated' &&
-        !_isAppCheckFailure(error);
-  }
-
-  bool _isAppCheckFailure(FirebaseFunctionsException error) {
-    final code = error.code.trim().toLowerCase();
-    if (code != 'failed-precondition' &&
-        code != 'permission-denied' &&
-        code != 'unauthenticated') {
-      return false;
-    }
-    final message =
-        '${error.message ?? ''} ${error.details ?? ''}'.trim().toLowerCase();
-    const appCheckMarkers = <String>[
-      'app check',
-      'appcheck',
-      'debug token',
-      'play integrity',
-      'attestation',
-      'firebase app check api',
-      'x-firebase-appcheck',
-      'recaptcha',
-      'app attest',
-      'device check',
-      'missing appcheck token',
-      'invalid appcheck token',
-    ];
-    return appCheckMarkers.any(message.contains);
-  }
-
-  Future<HttpsCallableResult<dynamic>> _callWithAuthAndAppCheckRetry(
-    Future<HttpsCallableResult<dynamic>> Function() action,
-  ) async {
-    final user = _auth.currentUser;
-    if (user == null) {
-      throw Exception(
-          'Phiên đăng nhập đã hết. Vui lòng đăng nhập lại rồi thử lại.');
-    }
-
-    await _warmUpAuthToken();
-    await _warmUpAppCheck();
-
-    try {
-      return await action();
-    } on FirebaseFunctionsException catch (error) {
-      if (_isAppCheckFailure(error)) {
-        final refreshed = await _warmUpAppCheck(forceRefresh: true);
-        if (refreshed) {
-          await Future<void>.delayed(_memoryShareAppCheckRetryDelay);
-        }
-        return action();
-      }
-
-      if (_isAuthFailure(error)) {
-        final refreshed = await _warmUpAuthToken(forceRefresh: true);
-        if (refreshed) {
-          await Future<void>.delayed(_memoryShareAppCheckRetryDelay);
-          return action();
-        }
-      }
-      rethrow;
-    }
+    return decoded;
   }
 
   static int _readInt(Object? value, {int fallback = 0}) {
-    if (value is int) {
-      return value;
-    }
-    if (value is num) {
-      return value.toInt();
-    }
+    if (value is int) return value;
+    if (value is num) return value.toInt();
     return int.tryParse(value?.toString() ?? '') ?? fallback;
   }
 }

@@ -6,278 +6,238 @@
   <title>Hướng dẫn sử dụng SoulLocket</title>
   <style>
     :root {
-      --bg: #fff7fb;
-      --bg-soft: #fff0f7;
-      --card: rgba(255, 255, 255, 0.95);
-      --line: #f4cade;
-      --text: #253347;
-      --muted: #667085;
-      --pink: #d81b60;
-      --pink-dark: #ad1457;
-      --blue: #1e88e5;
-      --purple: #7c4dff;
-      --green: #0f9d58;
-      --orange: #ef6c00;
-      --shadow: 0 18px 50px rgba(216, 27, 96, 0.12);
+      --primary: #d81b60;
+      --primary-dark: #ad1457;
+      --text: #1c1e21;
+      --text-secondary: #65676b;
+      --text-tertiary: #8a8d91;
+      --border: #e4e6ea;
+      --bg: #f0f2f5;
+      --surface: #ffffff;
+      --blue: #1877f2;
+      --note-bg: #e7f3ff;
+      --warning-bg: #fff4e5;
+      --th-bg: #f7f8fa;
     }
 
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
 
     body {
-      margin: 0;
+      background: var(--bg);
       color: var(--text);
-      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background:
-        radial-gradient(circle at top right, rgba(255, 182, 193, 0.35), transparent 22%),
-        radial-gradient(circle at left center, rgba(124, 77, 255, 0.10), transparent 24%),
-        linear-gradient(180deg, #fffafe 0%, var(--bg) 100%);
-      line-height: 1.72;
-    }
-
-    a {
-      color: var(--blue);
-      text-decoration: none;
-      font-weight: 700;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
     }
 
     .page {
-      max-width: 980px;
+      max-width: 720px;
       margin: 0 auto;
-      padding: 24px 16px 56px;
+      padding: 0 0 48px;
     }
 
-    .hero,
-    .section,
-    .footer-card {
-      background: var(--card);
-      border: 1px solid rgba(255, 255, 255, 0.72);
-      border-radius: 28px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-    }
-
+    /* ── HERO ── */
     .hero {
-      position: relative;
-      overflow: hidden;
-      padding: 28px 24px;
-      margin-bottom: 18px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 20px 24px;
+      position: static;
+      overflow: visible;
     }
 
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: 0 auto auto 0;
-      width: 100%;
-      height: 6px;
-      background: linear-gradient(90deg, #ff8ab3, #d81b60, #7c4dff);
-    }
+    .hero::before, .hero::after { display: none; }
 
     .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      border-radius: 999px;
-      background: var(--bg-soft);
-      color: var(--pink-dark);
-      font-size: 13px;
-      font-weight: 800;
-      margin-bottom: 14px;
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 10px;
     }
 
     h1 {
-      margin: 0;
-      font-size: clamp(28px, 6vw, 42px);
-      line-height: 1.12;
-      color: var(--pink);
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--primary);
+      display: inline-block;
+    }
+
+    h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 16px 0 8px;
     }
 
     .lead {
-      margin: 14px 0 0;
-      max-width: 780px;
-      color: var(--muted);
-      font-size: 16px;
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      margin-bottom: 14px;
     }
 
     .meta {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 16px;
+      gap: 6px 12px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-weight: 600;
     }
 
-    .meta span {
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.74);
-      border: 1px solid rgba(216, 27, 96, 0.10);
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 700;
-    }
+    .meta span::before { content: "· "; }
+    .meta span:first-child::before { content: ""; }
 
+    /* ── QUICK NAV (TOC) ── */
     .quick-nav {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-top: 20px;
+      display: block;
+      padding: 0 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
     }
 
     .quick-nav a {
-      display: block;
-      padding: 14px 16px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,240,247,0.96));
-      border: 1px solid rgba(216, 27, 96, 0.10);
-      color: var(--text);
-      font-size: 14px;
-      font-weight: 800;
-      box-shadow: 0 10px 22px rgba(216, 27, 96, 0.08);
-    }
-
-    .section,
-    .footer-card {
-      padding: 24px 22px;
-      margin-top: 18px;
-    }
-
-    h2 {
-      margin: 0 0 12px;
-      color: var(--pink);
-      font-size: 24px;
-      line-height: 1.2;
-    }
-
-    h3 {
-      margin: 18px 0 8px;
+      display: flex;
+      align-items: center;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--border);
       color: var(--blue);
-      font-size: 18px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
     }
 
-    p,
-    li {
-      font-size: 15px;
-      color: var(--text);
+    .quick-nav a:last-child { border-bottom: none; }
+
+    .quick-nav a::after {
+      content: "›";
+      margin-left: auto;
+      color: var(--text-tertiary);
+      font-size: 16px;
     }
 
-    .soft {
-      color: var(--muted);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-      margin-top: 14px;
-    }
+    /* ── GRID CARDS → FLAT LIST ── */
+    .grid { display: block; }
 
     .card {
-      padding: 16px;
-      border-radius: 20px;
-      border: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,244,249,0.96));
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
+      background: transparent;
     }
+
+    .card:last-child { border-bottom: none; }
 
     .card strong {
       display: block;
-      margin-bottom: 6px;
-      color: var(--pink-dark);
-      font-size: 15px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 3px;
     }
 
-    .steps {
-      margin: 0;
-      padding-left: 20px;
+    /* ── SECTIONS & FOOTER ── */
+    .section, .footer-card {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 20px;
+      border-radius: 0;
+      box-shadow: none;
+      backdrop-filter: none;
+      margin-top: 0;
     }
 
-    .steps li {
+    p { margin-bottom: 10px; color: var(--text-secondary); font-size: 14px; }
+
+    ul, ol, .steps {
+      padding-left: 18px;
       margin-bottom: 10px;
     }
 
-    .note,
-    .warning,
-    .tip {
-      margin-top: 14px;
-      padding: 14px 16px;
-      border-radius: 18px;
+    li {
       font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      line-height: 1.5;
     }
 
-    .note {
-      background: rgba(30, 136, 229, 0.08);
-      border: 1px solid rgba(30, 136, 229, 0.14);
+    a {
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    a:hover { text-decoration: underline; }
+    .soft { color: var(--text-tertiary); }
+
+    /* ── CALLOUTS ── */
+    .tip, .note, .warning {
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin: 12px 0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .tip, .note {
+      background: var(--note-bg);
+      border-left: 3px solid var(--blue);
     }
 
     .warning {
-      background: rgba(239, 108, 0, 0.10);
-      border: 1px solid rgba(239, 108, 0, 0.16);
+      background: var(--warning-bg);
+      border-left: 3px solid #f57c00;
     }
 
-    .tip {
-      background: rgba(15, 157, 88, 0.10);
-      border: 1px solid rgba(15, 157, 88, 0.16);
-    }
+    .warning strong { color: #e65100; }
 
+    /* ── TABLE ── */
     table {
       width: 100%;
-      margin-top: 14px;
       border-collapse: collapse;
-      overflow: hidden;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.88);
+      margin: 12px 0;
+      font-size: 13px;
     }
 
-    th,
-    td {
-      padding: 13px 14px;
+    th, td {
+      padding: 10px 12px;
       text-align: left;
-      border-bottom: 1px solid #f3d7e3;
+      border-bottom: 1px solid var(--border);
       vertical-align: top;
-      font-size: 14px;
     }
 
     th {
-      background: #fff1f6;
-      color: var(--pink-dark);
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    tr:last-child td {
-      border-bottom: none;
-    }
-
-    code {
-      padding: 2px 6px;
-      border-radius: 8px;
-      background: rgba(216, 27, 96, 0.08);
-      color: var(--pink);
-      font-size: 13px;
+      background: var(--th-bg);
+      font-size: 12px;
       font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: .04em;
     }
 
-    @media (max-width: 640px) {
-      .page {
-        padding: 16px 12px 40px;
-      }
+    tr:last-child td { border-bottom: none; }
 
-      .hero,
-      .section,
-      .footer-card {
-        border-radius: 22px;
-      }
-
-      .hero,
-      .section,
-      .footer-card {
-        padding: 20px 18px;
+    @media (max-width: 600px) {
+      .hero, .section, .footer-card, .quick-nav {
+        padding-left: 16px;
+        padding-right: 16px;
       }
     }
   </style>
@@ -293,8 +253,8 @@
         Nội dung được viết để người dùng mới đọc là dùng được ngay, đồng thời vẫn đủ chi tiết để đối chiếu khi cần.
       </p>
       <div class="meta">
+        <span>Cập nhật tài liệu: 07/08/2026</span>
         <span>Phiên bản áp dụng: SoulLocket v2.0.0+53</span>
-        <span>Cập nhật tài liệu: 19/04/2026</span>
         <span>Phạm vi: app Android và web viewer trong app</span>
       </div>
       <div class="quick-nav">

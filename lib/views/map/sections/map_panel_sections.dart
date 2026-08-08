@@ -69,6 +69,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
     required String avatarUrl,
     required bool isLive,
     required bool hasHistory,
+    bool isMe = true,
+    String role = 'user1',
   }) {
     final statusColor = isLive
         ? const Color(0xFF22C55E)
@@ -77,6 +79,17 @@ extension _MapPanelSectionsExt on _MapScreenState {
             : _kMapTextMuted;
     final initial =
         name.trim().isEmpty ? '?' : name.trim().characters.first.toUpperCase();
+
+    // Chọn Lottie theo role (user1=Nam, user2=Nữ), không theo isMe
+    final String lottieUrl = role == 'user1'
+        ? 'https://lottie.host/cb0fd485-8335-4645-88da-ada1f1114f7c/FDBdYP1TRy.lottie'
+        : 'https://lottie.host/9ffe1940-6a8b-43a7-9d1a-87a928f65dd5/DIeMWZLkuO.lottie';
+
+    // Nền hồng nhạt cho avatar nữ để tránh trắng xác
+    final avatarBgColor = role == 'user2'
+        ? const Color(0xFFFCE4EC)
+        : Colors.transparent;
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -87,35 +100,33 @@ extension _MapPanelSectionsExt on _MapScreenState {
             shape: BoxShape.circle,
             border: Border.all(
                 color: roleColor.withValues(alpha: 0.34), width: 1.5),
-            image: avatarUrl.trim().isEmpty
-                ? null
-                : DecorationImage(
-                    image: CachedNetworkImageProvider(avatarUrl),
-                    fit: BoxFit.cover,
-                  ),
-            gradient: avatarUrl.trim().isEmpty
-                ? LinearGradient(
-                    colors: [
-                      roleColor.withValues(alpha: 0.9),
-                      roleColor.withValues(alpha: 0.45)
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
+            color: avatarBgColor,
           ),
-          child: avatarUrl.trim().isEmpty
-              ? Center(
-                  child: Text(
-                    initial,
-                    style: SLTheme.quicksand(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: SLColors.textPrimary,
-                    ),
-                  ),
-                )
-              : null,
+          child: Lottie.network(
+            lottieUrl,
+            fit: BoxFit.cover,
+            options: LottieOptions(enableMergePaths: true),
+            errorBuilder: (context, error, stackTrace) {
+               // Fallback nếu lỗi load lottie
+               return avatarUrl.trim().isEmpty
+                  ? Center(
+                      child: Text(
+                        initial,
+                        style: SLTheme.quicksand(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          color: SLColors.textPrimary,
+                        ),
+                      ),
+                    )
+                  : ClipOval(
+                      child: Image.network(
+                        avatarUrl,
+                        fit: BoxFit.cover,
+                      ),
+                    );
+            },
+          ),
         ),
         Positioned(
           right: -1,
@@ -246,25 +257,16 @@ extension _MapPanelSectionsExt on _MapScreenState {
           child: Container(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF1E293B).withValues(alpha: 0.95),
-                  const Color(0xFF0F172A).withValues(alpha: 0.95)
-                ],
+              gradient: const LinearGradient(
+                colors: [Colors.white, Color(0xFFF8FAFC)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.06), width: 0.8),
+              border: Border.all(color: SLColors.borderLight, width: 0.8),
               boxShadow: [
                 BoxShadow(
-                  color: _kMapPinkDeep.withValues(alpha: 0.08),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),
@@ -304,7 +306,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                                   style: SLTheme.quicksand(
                                     fontSize: 15.5,
                                     fontWeight: FontWeight.w900,
-                                    color: Colors.white,
+                                    color: SLColors.textPrimary,
                                   ),
                                 ),
                               ),
@@ -319,9 +321,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: SLTheme.quicksand(
-                              fontSize: 11.1,
+                              fontSize: 11.5,
                               fontWeight: FontWeight.w700,
-                              color: Colors.white70,
+                              color: SLColors.textSecondary,
                               height: 1.35,
                             ),
                           ),
@@ -586,18 +588,11 @@ extension _MapPanelSectionsExt on _MapScreenState {
     required Color accent,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.22),
+        color: accent.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: accent.withValues(alpha: 0.45), width: 0.8),
-        boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: 0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        border: Border.all(color: accent.withValues(alpha: 0.15), width: 0.8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -607,9 +602,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: SLTheme.quicksand(
-              fontSize: 9.5,
-              fontWeight: FontWeight.w800,
-              color: accent,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              color: SLColors.textSecondary,
               letterSpacing: 0.2,
             ),
           ),
@@ -619,9 +614,9 @@ extension _MapPanelSectionsExt on _MapScreenState {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: SLTheme.quicksand(
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: FontWeight.w900,
-              color: Colors.white,
+              color: accent,
             ),
           ),
         ],
@@ -640,6 +635,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                     child: _buildPeopleCard(
                       name: widget.myName,
                       isMe: true,
+                      role: widget.myRole,
                       roleColor: _kMapBlue,
                       avatarUrl: widget.myAvatarUrl,
                       gpsPoint: uiSnap.myPoint,
@@ -655,6 +651,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                     child: _buildPeopleCard(
                       name: widget.myName,
                       isMe: true,
+                      role: widget.myRole,
                       roleColor: _kMapBlue,
                       avatarUrl: widget.myAvatarUrl,
                       gpsPoint: uiSnap.myPoint,
@@ -669,6 +666,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                     child: _buildPeopleCard(
                       name: widget.partnerName,
                       isMe: false,
+                      role: widget.partnerRole,
                       roleColor: _kMapPinkDeep,
                       avatarUrl: widget.partnerAvatarUrl,
                       gpsPoint: uiSnap.partnerPoint,
@@ -687,6 +685,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
   Widget _buildPeopleCard({
     required String name,
     required bool isMe,
+    required String role,
     required Color roleColor,
     required String avatarUrl,
     required _GpsPoint? gpsPoint,
@@ -704,31 +703,24 @@ extension _MapPanelSectionsExt on _MapScreenState {
         ? const Color(0xFF22C55E)
         : hasHistory
             ? const Color(0xFFF59E0B)
-            : _kMapTextMuted;
+            : const Color(0xFF475569); // Đậm hơn thay vì _kMapTextMuted
+
     final accuracyUi = _gpsAccuracyPresentation(gpsPoint?.accuracy);
     final accuracyHint = _gpsAccuracyHint(gpsPoint?.accuracy);
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            roleColor.withValues(alpha: 0.35),
-            roleColor.withValues(alpha: 0.12),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border:
-            Border.all(color: roleColor.withValues(alpha: 0.45), width: 0.8),
+        border: Border.all(color: roleColor.withValues(alpha: 0.15), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: roleColor.withValues(alpha: 0.15),
+            color: roleColor.withValues(alpha: 0.08),
             blurRadius: 15,
             offset: const Offset(0, 6),
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -746,6 +738,8 @@ extension _MapPanelSectionsExt on _MapScreenState {
                 avatarUrl: avatarUrl,
                 isLive: isLive,
                 hasHistory: hasHistory,
+                isMe: isMe,
+                role: role,
               ),
               SLSpacing.w10,
               Expanded(
@@ -759,7 +753,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
                       style: SLTheme.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
-                        color: Colors.white,
+                        color: SLColors.textPrimary,
                       ),
                     ),
                     SLSpacing.h4,
@@ -767,10 +761,10 @@ extension _MapPanelSectionsExt on _MapScreenState {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.22),
+                        color: statusColor.withValues(alpha: 0.12),
                         borderRadius: SLRadius.pillAll,
                         border: Border.all(
-                            color: statusColor.withValues(alpha: 0.40)),
+                            color: statusColor.withValues(alpha: 0.30)),
                       ),
                       child: Text(
                         statusText,
@@ -796,7 +790,7 @@ extension _MapPanelSectionsExt on _MapScreenState {
             style: SLTheme.quicksand(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
-              color: Colors.white70,
+              color: const Color(0xFF334155), // Slate 700 đậm hơn cho nền trắng
               height: 1.38,
             ),
           ),
@@ -906,22 +900,20 @@ extension _MapPanelSectionsExt on _MapScreenState {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            _kMapBlue.withValues(alpha: 0.25),
-            _kMapBlue.withValues(alpha: 0.10),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white,
         borderRadius: SLRadius.xlAll,
         border:
-            Border.all(color: _kMapBlue.withValues(alpha: 0.45), width: 0.8),
+            Border.all(color: _kMapBlue.withValues(alpha: 0.15), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: _kMapBlue.withValues(alpha: 0.08),
+            color: _kMapBlue.withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -1013,22 +1005,20 @@ extension _MapPanelSectionsExt on _MapScreenState {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            _kMapPinkDeep.withValues(alpha: 0.25),
-            _kMapPinkDeep.withValues(alpha: 0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white,
         borderRadius: SLRadius.xlAll,
         border: Border.all(
-            color: _kMapPinkDeep.withValues(alpha: 0.20), width: 0.8),
+            color: _kMapPinkDeep.withValues(alpha: 0.15), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: _kMapPinkDeep.withValues(alpha: 0.08),
+            color: _kMapPinkDeep.withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),

@@ -162,33 +162,32 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                   curve: Curves.easeOutCubic,
                   scale: isTarget ? 1.08 : 1.0,
                   child: Container(
-                    width: 72,
-                    height: 72,
+                    width: 68,
+                    height: 68,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(36),
+                      borderRadius: BorderRadius.circular(20),
                       color: isDark
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : Colors.white.withValues(alpha: 0.6),
+                          ? startColor.withValues(alpha: 0.05)
+                          : Colors.white.withValues(alpha: 0.4),
                       gradient: LinearGradient(
                         colors: [
-                          startColor.withValues(alpha: 0.35),
-                          endColor.withValues(alpha: 0.15),
-                          Colors.white.withValues(alpha: isDark ? 0.05 : 0.4),
+                          startColor.withValues(alpha: isDark ? 0.2 : 0.25),
+                          endColor.withValues(alpha: isDark ? 0.05 : 0.1),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        stops: const [0.0, 0.7, 1.0],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: startColor.withValues(alpha: 0.4),
-                          blurRadius: 10,
-                          offset: const Offset(0, 6),
+                          color: startColor.withValues(alpha: 0.3),
+                          blurRadius: 16,
+                          spreadRadius: -2,
+                          offset: const Offset(0, 8),
                         ),
                       ],
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.25),
-                        width: 1.2,
+                        color: startColor.withValues(alpha: isDark ? 0.2 : 0.4),
+                        width: 1.5,
                       ),
                     ),
                     child: Center(
@@ -197,7 +196,7 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                         fallbackIcon: iconData,
                         fallbackColor: endColor,
                         fallbackSize: 34,
-                        padding: const EdgeInsets.all(4),
+                        padding: const EdgeInsets.all(6),
                         devicePixelRatio: dpr,
                       ),
                     ),

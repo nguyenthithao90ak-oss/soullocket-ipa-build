@@ -33,12 +33,14 @@ const Color _accentRose = Color(0xFFD81B60);
 const Color _accentLavender = Color(0xFF7C4DFF);
 const Color _accentBlue = Color(0xFF2563EB);
 const Color _accentGreen = Color(0xFF0F766E);
-const Color _ink = Color(0xFF24324A);
-const Color _muted = Color(0xFF6B7280);
-const Color _panelBorder = Color(0xFFE9DCE7);
-const Color _dialogBackgroundTop = Color(0xFFFFFCFE);
-const Color _dialogBackgroundBottom = Color(0xFFFFF6FB);
-const Color _cardBackground = Color(0xFFFFFDFE);
+const Color _ink = Color(0xFF1C1E21);
+const Color _muted = Color(0xFF65676B);
+const Color _panelBorder = Color(0xFFE4E6EA);
+const Color _dialogBg = Color(0xFFFFFFFF);
+const Color _surfaceBg = Color(0xFFF5F5F5);
+const Color _dialogBackgroundTop = Color(0xFFFFFFFF);
+const Color _dialogBackgroundBottom = Color(0xFFFFFFFF);
+const Color _cardBackground = Color(0xFFFFFFFF);
 
 Future<void> _openDoc(
     BuildContext context, String title, String assetPath) async {
@@ -133,17 +135,14 @@ class _ConsentGateState extends State<ConsentGate> {
       builder: (ctx) {
         var cookieLevel =
             initialCookieLevel == 'essential' ? 'essential' : 'all';
-        final showScrollHintNotifier = ValueNotifier<bool>(true);
 
         return StatefulBuilder(
           builder: (ctx, setState) {
             final screenSize = MediaQuery.sizeOf(ctx);
             final mediaPadding = MediaQuery.of(ctx).padding;
             final compact = screenSize.width < 620;
-            final dialogRadius = compact ? 0.0 : 22.0;
-            final horizontalInset = compact ? 0.0 : 18.0;
-            final verticalInset = compact ? 0.0 : 16.0;
-            final horizontalPadding = compact ? 12.0 : 16.0;
+            final dialogRadius = compact ? 24.0 : 28.0;
+            final horizontalInset = compact ? 12.0 : 40.0;
 
             return PopScope(
               canPop: false,
@@ -152,182 +151,211 @@ class _ConsentGateState extends State<ConsentGate> {
                 elevation: 0,
                 insetPadding: EdgeInsets.symmetric(
                   horizontal: horizontalInset,
-                  vertical: verticalInset,
+                  vertical: compact ? 0 : 24,
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(dialogRadius),
-                  child: Container(
-                    constraints: BoxConstraints(
-                      maxWidth: compact ? screenSize.width : 680,
-                      maxHeight: compact
-                          ? screenSize.height
-                          : screenSize.height * 0.96,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [_dialogBackgroundTop, _dialogBackgroundBottom],
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: 440,
+                    maxHeight: compact
+                        ? screenSize.height
+                        : screenSize.height * 0.92,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _dialogBg,
+                    borderRadius: compact
+                        ? const BorderRadius.vertical(
+                            top: Radius.circular(28),
+                            bottom: Radius.zero,
+                          )
+                        : BorderRadius.circular(dialogRadius),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.12),
+                        blurRadius: 32,
+                        offset: const Offset(0, 12),
                       ),
-                      border: Border.all(color: _panelBorder, width: 1.1),
-                      boxShadow: compact
-                          ? null
-                          : [
-                              BoxShadow(
-                                color: _accentLavender.withValues(alpha: 0.10),
-                                blurRadius: 26,
-                                offset: const Offset(0, 12),
-                              ),
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.06),
-                                blurRadius: 16,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                    ),
-                    child: SafeArea(
-                      top: compact,
-                      bottom: false,
+                    ],
+                  ),
+                  child: SafeArea(
+                    top: compact,
+                    bottom: true,
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(
+                        20,
+                        compact ? 20 : 24,
+                        20,
+                        mediaPadding.bottom > 0
+                            ? mediaPadding.bottom + 8
+                            : 20,
+                      ),
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Expanded(
-                            child: Stack(
-                              children: [
-                                NotificationListener<ScrollNotification>(
-                                  onNotification: (notification) {
-                                    final shouldShow =
-                                        notification.metrics.pixels <= 8 &&
-                                            notification
-                                                    .metrics.maxScrollExtent >
-                                                16;
-                                    if (showScrollHintNotifier.value !=
-                                        shouldShow) {
-                                      showScrollHintNotifier.value = shouldShow;
-                                    }
-                                    return false;
-                                  },
-                                  child: SingleChildScrollView(
-                                    padding: EdgeInsets.fromLTRB(
-                                      horizontalPadding,
-                                      compact ? 12 : 16,
-                                      horizontalPadding,
-                                      14,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        _buildStartupConsentHeader(ctx,
-                                            compact: compact),
-                                        const SizedBox(height: 18),
-                                        _buildStartupSectionLabel(
-                                          title: context
-                                              .tr('consent_trckhibtu_9c9c70'),
-                                          subtitle: context
-                                              .tr('consent_bncnxemcct_f14d22'),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        _buildStartupLegalSection(
-                                          accent: _accentRose,
-                                          icon: Icons.gavel_rounded,
-                                          title: context
-                                              .tr('consent_iukhonsdng_9a9c73'),
-                                          subtitle: context
-                                              .tr('consent_tmttcchdng_0cbb57'),
-                                          bullets: [
-                                            context.tr(
-                                                'consent_pdngchotik_f63a41'),
-                                            context.tr(
-                                                'consent_bncndngapp_4f1851'),
-                                            context.tr(
-                                                'consent_appcthgiih_057f23'),
-                                          ],
-                                          actionLabel: context
-                                              .tr('consent_xemiukhon_5d9f36'),
-                                          onTap: () => _openDoc(
-                                            ctx,
-                                            context.tr(
-                                                'consent_iukhonsdng_9a9c73'),
-                                            'assets/docs/terms.html',
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        _buildStartupLegalSection(
-                                          accent: _accentLavender,
-                                          icon: Icons.privacy_tip_rounded,
-                                          title: context
-                                              .tr('consent_chnhschbom_98b319'),
-                                          subtitle: context
-                                              .tr('consent_tmttdliuap_7cebb7'),
-                                          bullets: [
-                                            context.tr(
-                                                'consent_cthgmtikho_a5b115'),
-                                            context.tr(
-                                                'consent_dliudngngn_4e0d61'),
-                                            context.tr(
-                                                'consent_bncthiquyn_e84865'),
-                                          ],
-                                          actionLabel: context
-                                              .tr('consent_xembomt_eaa9ec'),
-                                          onTap: () => _openDoc(
-                                            context,
-                                            context.tr(
-                                                'consent_chnhschbom_98b319'),
-                                            'assets/docs/privacy.html',
-                                          ),
-                                        ),
-                                        _buildStartupSectionLabel(
-                                          title: context
-                                              .tr('consent_tychnlutr_ffd19f'),
-                                          subtitle: context
-                                              .tr('consent_chnmccooki_16d2d1'),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        _buildStartupCookieStorageSection(
-                                          ctx,
-                                          cookieLevel: cookieLevel,
-                                          onChanged: (value) => setState(() {
-                                            cookieLevel = value;
-                                          }),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        _buildStartupAcknowledgement(ctx),
-                                        const SizedBox(height: 24),
-                                        _buildStartupAgreeBar(
-                                          ctx,
-                                          compact: compact,
-                                          bottomInset: mediaPadding.bottom,
-                                          cookieLevel: cookieLevel,
-                                          onConfirm: () => Navigator.pop(
-                                            ctx,
-                                            _StartupConsentResult(
-                                              cookieLevel: cookieLevel,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  left: 0,
-                                  right: 0,
-                                  bottom: 8,
-                                  child: IgnorePointer(
-                                    child: ValueListenableBuilder<bool>(
-                                      valueListenable: showScrollHintNotifier,
-                                      builder: (context, showHint, _) {
-                                        return AnimatedOpacity(
-                                          duration:
-                                              const Duration(milliseconds: 180),
-                                          opacity: showHint ? 1 : 0,
-                                          child: _buildStartupScrollHint(),
-                                        );
-                                      },
-                                    ),
-                                  ),
+                          // — Compact header: SoulLocket app icon + title + subtitle —
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: SLColors.primary.withValues(alpha: 0.18),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.asset(
+                                'assets/icon.png',
+                                width: 52,
+                                height: 52,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            context.tr('consent_thitlpquyn_20c8a7'),
+                            textAlign: TextAlign.center,
+                            style: SLTheme.quicksand(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: _ink,
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            context.tr('consent_xemnhanhqu_fd347e'),
+                            textAlign: TextAlign.center,
+                            style: SLTheme.quicksand(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: _muted,
+                              height: 1.35,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // — Legal items: compact row cards —
+                          _buildCompactLegalRow(
+                            accent: _accentRose,
+                            icon: Icons.gavel_rounded,
+                            title: context
+                                .tr('consent_iukhonsdng_9a9c73'),
+                            actionLabel: context
+                                .tr('consent_xemiukhon_5d9f36'),
+                            onTap: () => _openDoc(
+                              ctx,
+                              context.tr('consent_iukhonsdng_9a9c73'),
+                              'assets/docs/terms.html',
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildCompactLegalRow(
+                            accent: _accentLavender,
+                            icon: Icons.privacy_tip_rounded,
+                            title: context
+                                .tr('consent_chnhschbom_98b319'),
+                            actionLabel: context
+                                .tr('consent_xembomt_eaa9ec'),
+                            onTap: () => _openDoc(
+                              ctx,
+                              context.tr('consent_chnhschbom_98b319'),
+                              'assets/docs/privacy.html',
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // — Cookie & storage: compact picker —
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: _surfaceBg,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.cookie_rounded,
+                                        color: _accentGreen, size: 18),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      context.tr(
+                                          'consent_tychnlutr_ffd19f'),
+                                      style: SLTheme.quicksand(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: _ink,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                _buildCompactCookieOption(
+                                  value: 'essential',
+                                  groupValue: cookieLevel,
+                                  accent: _accentBlue,
+                                  title: context
+                                      .tr('consent_thityu_cd979a'),
+                                  subtitle: context.tr(
+                                      'consent_gingnhpcon_189e36'),
+                                  onTap: () => setState(
+                                      () => cookieLevel = 'essential'),
+                                ),
+                                const SizedBox(height: 6),
+                                _buildCompactCookieOption(
+                                  value: 'all',
+                                  groupValue: cookieLevel,
+                                  accent: _accentGreen,
+                                  title: context
+                                      .tr('consent_ttc_d8586d'),
+                                  subtitle: context.tr(
+                                      'consent_thmcnhnhac_f0e289'),
+                                  badge: context
+                                      .tr('consent_xut_59efad'),
+                                  onTap: () => setState(
+                                      () => cookieLevel = 'all'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // — Acknowledgement: single compact line —
+                          Text(
+                            context.tr('consent_khinhnvoap_7418c8'),
+                            textAlign: TextAlign.center,
+                            style: SLTheme.quicksand(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: _muted,
+                              height: 1.35,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // — Primary CTA button —
+                          _buildPrimaryButton(
+                            ctx,
+                            accent: _accentBlue,
+                            label: context
+                                .tr('consent_ngvvoapp_93cd33'),
+                            scaleDownContent: true,
+                            fontSize: 15,
+                            verticalPadding: 14,
+                            onTap: () => Navigator.pop(
+                              ctx,
+                              _StartupConsentResult(
+                                cookieLevel: cookieLevel,
+                              ),
                             ),
                           ),
                         ],

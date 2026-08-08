@@ -37,25 +37,22 @@ class StorageRawUploadHelper {
     );
 
     final fileSize = await file.length();
-    if (fileSize > 25 * 1024 * 1024) {
-      // 25MB Limit
+    final isVideo = resolvedContentType.startsWith('video/');
+    final limit = isVideo ? 100 * 1024 * 1024 : 25 * 1024 * 1024;
+    if (fileSize > limit) {
       throw Exception(
-          'Tệp tải lên vượt quá giới hạn 25MB. Vui lòng chọn tệp nhỏ hơn.');
+          'Tệp tải lên vượt quá giới hạn. Vui lòng chọn tệp nhỏ hơn.');
     }
 
     await purgeLegacyCache();
 
     try {
-      if (!CloudflareR2Service.instance.isConfigured) {
-        throw Exception(
-            'Chưa cấu hình R2. Thêm --dart-define R2 keys vào lệnh build.');
-      }
       CloudflareR2Service.instance.init();
 
       final tempDir = await getTemporaryDirectory();
       final ext = _isImageContentType(resolvedContentType)
           ? _imageExtension(resolvedContentType)
-          : '.bin';
+          : (resolvedContentType.startsWith('video/') ? '.mp4' : '.bin');
       final tempPath = p.join(tempDir.path,
           'r2_upload_${DateTime.now().microsecondsSinceEpoch}$ext');
       final tempFile = File(tempPath);

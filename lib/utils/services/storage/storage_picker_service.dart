@@ -179,6 +179,45 @@ class StoragePickerService {
     return files;
   }
 
+  Future<List<XFile>> pickMedia({int? limit}) async {
+    final normalizedLimit = clampImagePickLimit(limit);
+    if (normalizedLimit <= 0) {
+      return const <XFile>[];
+    }
+
+    if (kIsWeb) {
+      StorageWebPickerGuard.arm(const Duration(seconds: 4));
+      try {
+        final result = await FilePicker.pickFiles(
+          type: FileType.media,
+          allowMultiple: true,
+        );
+        final files = (result?.files ?? const <PlatformFile>[])
+            .map(platformFileToXFile)
+            .whereType<XFile>()
+            .toList();
+        if (files.length > normalizedLimit) {
+          return files.take(normalizedLimit).toList();
+        }
+        return files;
+      } finally {
+        StorageWebPickerGuard.arm();
+      }
+    }
+
+    final files = await _guardedPicker(
+      () => _picker.pickMultipleMedia(
+        imageQuality: pickerImageQuality,
+        maxWidth: pickerMaxWidth,
+        maxHeight: pickerMaxHeight,
+      ),
+    );
+    if (files.length > normalizedLimit) {
+      return files.take(normalizedLimit).toList();
+    }
+    return files;
+  }
+
   Future<XFile?> snapPhoto() {
     return _guardedPicker(
       () => ImagePickerRecoveryService.instance.pickImage(

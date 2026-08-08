@@ -8,9 +8,9 @@ import 'social_auth_buttons.dart';
 final RegExp _loginEmailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
 const List<Color> _loginButtonDisabledColors = <Color>[
-  Color(0xFFE8AFC4),
-  Color(0xFFF1C3D3),
-  Color(0xFFE8CFE0),
+  Color(0xFFE8D5C4),
+  Color(0xFFDCC8B5),
+  Color(0xFFD4BDA8),
 ];
 
 bool _isLoginInputValid(String email, String password) {
@@ -222,7 +222,7 @@ class LoginForm extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Center(
               child: Text(
-                l10n.translate('Đã được mã hóa và bảo mật an toàn'),
+                l10n.translate('auth_encrypted_note'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Color(0xFFBBBBBB),

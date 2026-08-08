@@ -49,7 +49,7 @@ class AuthPanelShell extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6A1B9A).withValues(alpha: 0.08),
+              color: const Color(0xFFC07A56).withValues(alpha: 0.08),
                 blurRadius: 40,
                 spreadRadius: 8,
                 offset: const Offset(0, 16),
@@ -80,9 +80,7 @@ class AuthPanelShell extends StatelessWidget {
                     child: Center(
                       child: ShaderMask(
                         shaderCallback: (bounds) => LinearGradient(
-                          colors: isLoginTab
-                              ? const [Color(0xFFE0609A), Color(0xFFA044C0)]
-                              : const [Color(0xFF9030C0), Color(0xFFE060B0)],
+                          colors: const [Color(0xFFD4956B), Color(0xFFC07A56)],
                         ).createShader(bounds),
                         child: Text(
                           'SoulLocket',
@@ -154,14 +152,14 @@ class AuthPanelShell extends StatelessWidget {
                             Icon(
                               Icons.support_agent_rounded,
                               size: 13,
-                              color: SLColors.primary.withValues(alpha: 0.7),
+                              color: const Color(0xFFC07A56).withValues(alpha: 0.7),
                             ),
                             const SizedBox(width: 5),
                             Text(
-                              l10n.translate('Cách đồng bộ'),
+                              l10n.translate('auth_sync_guide'),
                               style: SLTheme.quicksand(
                                 fontSize: 12,
-                                color: SLColors.primary.withValues(alpha: 0.8),
+                                color: const Color(0xFFC07A56).withValues(alpha: 0.8),
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
@@ -251,8 +249,8 @@ class _AuthHelpButton extends StatelessWidget {
         gradient: isGuide
             ? const LinearGradient(
                 colors: [
-                  SLColors.primary,
-                  Color(0xFFE37A9C),
+                  Color(0xFFD4956B),
+                  Color(0xFFC07A56),
                 ],
               )
             : null,
@@ -266,7 +264,7 @@ class _AuthHelpButton extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: (isGuide ? const Color(0xFFA89BDD) : SLColors.secondary)
+            color: (isGuide ? const Color(0xFFD4956B) : SLColors.secondary)
                 .withValues(alpha: 0.14),
             blurRadius: 16,
             offset: const Offset(0, 8),

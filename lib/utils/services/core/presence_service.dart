@@ -19,7 +19,7 @@ class PresenceService {
   factory PresenceService() => _instance;
   PresenceService._internal();
 
-  static const Duration onlineFreshness = Duration(minutes: 15);
+  static const Duration onlineFreshness = Duration(minutes: 3);
   // Heartbeat mỗi 60s để session luôn fresh trong ngưỡng 30 phút stale threshold.
   // Lightweight heartbeat chỉ ghi 1 field 'ts' → ít writes, ít băng thông.
   static const Duration heartbeatInterval = Duration(seconds: 60);

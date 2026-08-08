@@ -442,18 +442,18 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                 itemCount: filteredItems.length,
                                 itemBuilder: (context, index) {
                                   final item = filteredItems[index];
-
+                                  Widget cellWidget;
                                   if (item.isHeader) {
                                     final highlights = item.highlights;
                                     if (highlights.isNotEmpty) {
-                                      return _DiaryMemorySpecialHeader(
+                                      cellWidget = _DiaryMemorySpecialHeader(
                                         icon: highlights.first['icon'] ?? '💖',
                                         title: highlights.first['text'] ?? '',
                                         dateString: item.dateString ?? '',
                                         totalPhotos: item.totalPhotos ?? 0,
                                       );
                                     } else {
-                                      return _DiaryMemoryDateHeader(
+                                      cellWidget = _DiaryMemoryDateHeader(
                                         dateString: item.dateString ?? '',
                                         totalPhotos: item.totalPhotos ?? 0,
                                       );
@@ -462,51 +462,52 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                     final rowPhotos =
                                         item.photosRow ?? const [];
                                     if (rowPhotos.isEmpty) {
-                                      return const SizedBox.shrink();
-                                    }
-
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                          bottom: 8, left: 10, right: 10),
-                                      child: Row(
-                                        children: [
-                                          for (int i = 0;
-                                              i < rowPhotos.length;
-                                              i++) ...[
-                                            if (i > 0) const SizedBox(width: 8),
-                                            Expanded(
-                                              child: AspectRatio(
-                                                aspectRatio:
-                                                    1.0, // Cố định tỷ lệ vuông cho mỗi ảnh trong hàng
-                                                child: _DiaryMemoryPhotoCell(
-                                                  key: ValueKey(rowPhotos[i]
-                                                          ['id'] ??
-                                                      'photo_${index * 10 + i}'),
-                                                  photo: rowPhotos[i],
-                                                  index: index * 10 + i,
-                                                  thumbnailCacheWidth: widget
-                                                      .thumbnailCacheWidth,
-                                                  selectionListenable: widget
-                                                      .selectionListenable,
-                                                  selectedMemories:
-                                                      widget.selectedMemories,
-                                                  isSelectionMode:
-                                                      widget.isSelectionMode,
-                                                  onToggleSelection:
-                                                      widget.onToggleSelection,
-                                                  onOpenMemory:
-                                                      widget.onOpenMemory,
-                                                  allPhotos: filteredPhotos,
-                                                  onEnsurePhotoUrl:
-                                                      widget.onEnsurePhotoUrl,
+                                      cellWidget = const SizedBox.shrink();
+                                    } else {
+                                      cellWidget = Padding(
+                                        padding: const EdgeInsets.only(
+                                            bottom: 8, left: 10, right: 10),
+                                        child: Row(
+                                          children: [
+                                            for (int i = 0;
+                                                i < rowPhotos.length;
+                                                i++) ...[
+                                              if (i > 0) const SizedBox(width: 8),
+                                              Expanded(
+                                                child: AspectRatio(
+                                                  aspectRatio:
+                                                      1.0, // Cố định tỷ lệ vuông cho mỗi ảnh trong hàng
+                                                  child: _DiaryMemoryPhotoCell(
+                                                    key: ValueKey(rowPhotos[i]
+                                                            ['id'] ??
+                                                        'photo_${index * 10 + i}'),
+                                                    photo: rowPhotos[i],
+                                                    index: index * 10 + i,
+                                                    thumbnailCacheWidth: widget
+                                                        .thumbnailCacheWidth,
+                                                    selectionListenable: widget
+                                                        .selectionListenable,
+                                                    selectedMemories:
+                                                        widget.selectedMemories,
+                                                    isSelectionMode:
+                                                        widget.isSelectionMode,
+                                                    onToggleSelection:
+                                                        widget.onToggleSelection,
+                                                    onOpenMemory:
+                                                        widget.onOpenMemory,
+                                                    allPhotos: filteredPhotos,
+                                                    onEnsurePhotoUrl:
+                                                        widget.onEnsurePhotoUrl,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ]
-                                        ],
-                                      ),
-                                    );
+                                            ]
+                                          ],
+                                        ),
+                                      );
+                                    }
                                   }
+                                  return RepaintBoundary(child: cellWidget);
                                 },
                               ),
                             );
@@ -1108,6 +1109,10 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
         photo['isSticker'] == true ||
         photo['isCutout'] == true;
 
+    final isVideo = photo['type']?.toString().toLowerCase() == 'video' ||
+        photoUrl.toLowerCase().endsWith('.mp4') ||
+        photoUrl.toLowerCase().endsWith('.mov');
+
     if (photoUrl.isEmpty) {
       if (_retryCount < 1) {
         _retryCount++;
@@ -1173,50 +1178,61 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
             borderRadius: BorderRadius.circular(24),
             child: Hero(
               tag: 'memory_image_${photo['id']}',
-              child: CachedNetworkImage(
-                imageUrl: photoUrl,
-                memCacheWidth: widget.thumbnailCacheWidth,
-                fit: isStickerOrPng ? BoxFit.contain : BoxFit.cover,
-                filterQuality: FilterQuality.low,
-                placeholder: (context, url) => Container(
-                  color: isStickerOrPng
-                      ? Colors.transparent
-                      : const Color(0xFFF1F5F9),
-                ),
-                errorWidget: (context, url, error) {
-                  if (_retryCount < 2) {
-                    _retryCount++;
-                    WidgetsBinding.instance.addPostFrameCallback((_) async {
-                      if (!mounted) return;
-                      try {
-                        if (_retryCount > 1) {
-                          photo['broken'] = true;
-                        } else {
-                          await _refreshStalePhotoUrl(photo);
-                        }
-                      } catch (_) {
-                        photo['broken'] = true;
-                      }
-                    });
-                  }
-                  if (_retryCount >= 2 || photo['broken'] == true) {
-                    return const SizedBox.shrink();
-                  }
-                  return Container(
-                    color: const Color(0xFFF8FAFC),
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.refresh_rounded,
+              child: isVideo 
+                  ? Container(
+                      color: const Color(0xFFF8FAFC),
+                      child: const Center(
+                        child: Icon(
+                          Icons.play_circle_fill,
                           color: Color(0xFF94A3B8),
-                          size: 24,
+                          size: 48,
                         ),
-                      ],
+                      ),
+                    )
+                  : CachedNetworkImage(
+                      imageUrl: photoUrl,
+                      memCacheWidth: widget.thumbnailCacheWidth,
+                      fit: isStickerOrPng ? BoxFit.contain : BoxFit.cover,
+                      filterQuality: FilterQuality.low,
+                      placeholder: (context, url) => Container(
+                        color: isStickerOrPng
+                            ? Colors.transparent
+                            : const Color(0xFFF1F5F9),
+                      ),
+                      errorWidget: (context, url, error) {
+                        if (_retryCount < 2) {
+                          _retryCount++;
+                          WidgetsBinding.instance.addPostFrameCallback((_) async {
+                            if (!mounted) return;
+                            try {
+                              if (_retryCount > 1) {
+                                photo['broken'] = true;
+                              } else {
+                                await _refreshStalePhotoUrl(photo);
+                              }
+                            } catch (_) {
+                              photo['broken'] = true;
+                            }
+                          });
+                        }
+                        if (_retryCount >= 2 || photo['broken'] == true) {
+                          return const SizedBox.shrink();
+                        }
+                        return Container(
+                          color: const Color(0xFFF8FAFC),
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.refresh_rounded,
+                                color: Color(0xFF94A3B8),
+                                size: 24,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
           ),
         ),
@@ -1443,68 +1459,66 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 14),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.65),
-        borderRadius: BorderRadius.circular(32),
-        border:
-            Border.all(color: Colors.white.withValues(alpha: 0.95), width: 1.8),
+        color: Colors.white.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(36),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.95), width: 2.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF7FB2).withValues(alpha: 0.2),
-            blurRadius: 30,
+            color: const Color(0xFFFF7FB2).withValues(alpha: 0.15),
+            blurRadius: 32,
             offset: const Offset(0, 16),
           ),
           BoxShadow(
-            color: Colors.white.withValues(alpha: 0.6),
-            blurRadius: 12,
-            offset: const Offset(-4, -4),
+            color: Colors.white.withValues(alpha: 0.8),
+            blurRadius: 16,
+            offset: const Offset(-6, -6),
           ),
         ],
       ),
       child: Stack(
         children: [
           Positioned(
-            right: -4,
-            top: -8,
+            right: -10,
+            top: -10,
             child: Icon(
-              Icons.auto_awesome_rounded,
-              size: 50,
-              color: const Color(0xFFFFC857).withValues(alpha: 0.18),
+              Icons.stars_rounded,
+              size: 70,
+              color: const Color(0xFFFFD166).withValues(alpha: 0.15),
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 54,
+                    height: 54,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFFFF6F91), Color(0xFF62C7B5)],
+                        colors: [Color(0xFFFF9A9E), Color(0xFFFECFEF)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(16),
+                      shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color:
-                              const Color(0xFFFF6F91).withValues(alpha: 0.24),
-                          blurRadius: 18,
+                          color: const Color(0xFFFF9A9E).withValues(alpha: 0.35),
+                          blurRadius: 16,
                           offset: const Offset(0, 8),
                         ),
                       ],
                     ),
                     child: const Icon(
-                      Icons.collections_rounded,
+                      Icons.favorite_rounded,
                       color: Colors.white,
-                      size: 24,
+                      size: 26,
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1514,20 +1528,19 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: SLTheme.quicksand(
-                            fontSize: 19,
-                            height: 1.08,
+                            fontSize: 20,
                             fontWeight: FontWeight.w900,
                             color: const Color(0xFF2E2740),
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 4),
                         Text(
                           context.tr('home_lunhmlinha_795e58'),
                           style: SLTheme.quicksand(
-                            fontSize: 12.5,
+                            fontSize: 13,
                             fontWeight: FontWeight.w700,
                             color: const Color(0xFF7C6D83),
-                            height: 1.4,
+                            height: 1.3,
                           ),
                         ),
                       ],
@@ -1535,21 +1548,19 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 18),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  ...statusChips,
-                  _DiaryMemoryAddButton(
-                    onTap: onAdd,
-                    isLoading: isUploading,
-                  ),
-                ],
+                children: statusChips,
+              ),
+              const SizedBox(height: 20),
+              _DiaryMemoryAddButton(
+                onTap: onAdd,
+                isLoading: isUploading,
               ),
               if (hasPendingUploadRetry) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final compact = constraints.maxWidth < 300;
@@ -1577,12 +1588,12 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                     return Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
+                        horizontal: 14,
+                        vertical: 12,
                       ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFF4D6),
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: const Color(0xFFF0C36A),
                         ),
@@ -1739,46 +1750,49 @@ class _DiaryMemoryAddButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: isLoading ? null : () => onTap(),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFF6F91), Color(0xFFD81B60)],
+            color: Colors.white.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: const Color(0xFFFECFEF),
+              width: 2,
             ),
-            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFD81B60).withValues(alpha: 0.22),
+                color: const Color(0xFFFF9A9E).withValues(alpha: 0.15),
                 blurRadius: 12,
-                offset: const Offset(0, 5),
+                offset: const Offset(0, 4),
               ),
             ],
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               isLoading
                   ? const SizedBox(
-                      width: 15,
-                      height: 15,
+                      width: 20,
+                      height: 20,
                       child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
                       ),
                     )
                   : const Icon(
-                      Icons.add_a_photo_rounded,
-                      color: Colors.white,
-                      size: 15,
+                      Icons.add_photo_alternate_rounded,
+                      color: Color(0xFFD81B60),
+                      size: 22,
                     ),
-              const SizedBox(width: 5),
+              const SizedBox(width: 8),
               Text(
-                context.tr('home_thmnh_f63081'),
+                'Lưu giữ kỷ niệm mới ✨',
                 style: SLTheme.quicksand(
-                  fontSize: 11,
+                  fontSize: 15,
                   fontWeight: FontWeight.w900,
-                  color: Colors.white,
+                  color: const Color(0xFFD81B60),
                 ),
               ),
             ],

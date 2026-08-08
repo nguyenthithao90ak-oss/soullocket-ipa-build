@@ -183,6 +183,18 @@ class VipAccessInfo {
     return isVip ? 30 : 10;
   }
 
+  int get dailyMemorySizeLimitMb {
+    return isVip ? 200 : 25;
+  }
+
+  int get totalMemoryStorageCapMb {
+    return isVip ? 512 : 182;
+  }
+
+  int get totalMemoryVideoCapMb {
+    return isVip ? 512 : 182;
+  }
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;

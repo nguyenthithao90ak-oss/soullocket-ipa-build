@@ -726,11 +726,11 @@ class HouseService {
         _dbRef
             .child('users/$uid/houseId')
             .get()
-            .timeout(const Duration(seconds: 10)),
+            .timeout(const Duration(seconds: 4)),
         _dbRef
             .child('users/$uid/house_id')
             .get()
-            .timeout(const Duration(seconds: 10)),
+            .timeout(const Duration(seconds: 4)),
       ]);
 
       final primarySnap = results[0];

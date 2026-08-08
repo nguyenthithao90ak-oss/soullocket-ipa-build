@@ -465,7 +465,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                     fit: StackFit.expand,
                     children: [
                       CachedNetworkImage(
-                        imageUrl: photo['url'],
+                        imageUrl: CloudflareImageHelper.optimizeUrl(photo['url'], width: 600),
                         fit: BoxFit.cover,
                         maxWidthDiskCache: 600,
                         memCacheWidth: 600,

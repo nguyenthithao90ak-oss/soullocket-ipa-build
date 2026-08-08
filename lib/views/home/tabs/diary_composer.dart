@@ -79,17 +79,21 @@ class _DiaryComposerState extends State<DiaryComposer>
             // Mood Selector
             Container(
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(24),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(
+                  color: const Color(0xFFF0E5FA),
+                  width: 2,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: const Color(0xFFE91E63).withValues(alpha: 0.12),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: widget.moods.map((mood) {
@@ -100,7 +104,7 @@ class _DiaryComposerState extends State<DiaryComposer>
                       behavior: HitTestBehavior.opaque,
                       onTap: () => widget.onMoodChanged(mood['icon']),
                       child: AnimatedScale(
-                        scale: active ? 1.15 : 1.0,
+                        scale: active ? 1.18 : 1.0,
                         duration: const Duration(milliseconds: 200),
                         curve: Curves.easeOutBack,
                         child: Column(
@@ -108,36 +112,50 @@ class _DiaryComposerState extends State<DiaryComposer>
                           children: [
                             AnimatedContainer(
                               duration: const Duration(milliseconds: 250),
-                              width: 44,
-                              height: 44,
+                              width: 68,
+                              height: 68,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: active
-                                    ? moodColor.withValues(alpha: 0.18)
-                                    : const Color(0xFFF2F4F8),
+                                gradient: active
+                                    ? LinearGradient(
+                                        colors: [
+                                          moodColor.withValues(alpha: 0.25),
+                                          moodColor.withValues(alpha: 0.05),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      )
+                                    : null,
+                                color: active ? null : const Color(0xFFF4F6F9),
                                 border: Border.all(
-                                  color:
-                                      active ? moodColor : Colors.transparent,
-                                  width: 2.2,
+                                  color: active ? moodColor : Colors.transparent,
+                                  width: 2.5,
                                 ),
                                 boxShadow: active
                                     ? [
                                         BoxShadow(
-                                          color:
-                                              moodColor.withValues(alpha: 0.3),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 3),
+                                          color: moodColor.withValues(alpha: 0.4),
+                                          blurRadius: 16,
+                                          offset: const Offset(0, 5),
                                         )
                                       ]
                                     : null,
                               ),
                               child: Center(
-                                child: Text(
-                                  mood['icon'],
-                                  style: TextStyle(
-                                    fontSize: active ? 25 : 22,
-                                  ),
-                                ),
+                                child: mood['asset'] != null
+                                    ? Image.asset(
+                                        mood['asset'] as String,
+                                        width: active ? 54 : 46,
+                                        height: active ? 54 : 46,
+                                        fit: BoxFit.contain,
+                                        gaplessPlayback: true,
+                                      )
+                                    : Text(
+                                        mood['icon'],
+                                        style: TextStyle(
+                                          fontSize: active ? 36 : 32,
+                                        ),
+                                      ),
                               ),
                             ),
                           ],

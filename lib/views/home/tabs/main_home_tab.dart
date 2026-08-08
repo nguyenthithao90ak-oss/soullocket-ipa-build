@@ -106,6 +106,7 @@ import 'package:soullocket_app/views/home/milestones_screen.dart';
 import 'dart:ui' as ui;
 
 import '../../../widgets/lottie_async_loader.dart';
+import 'package:lottie/lottie.dart';
 import '../../../core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/views/home/tabs/main_home/widgets/main_home_header_button.dart';
@@ -134,6 +135,10 @@ part 'main_home/controllers/main_home_load_controller.dart';
 part 'main_home/controllers/main_home_media_warmup_controller.dart';
 part 'main_home/controllers/main_home_presence_map_controller.dart';
 part 'main_home/controllers/main_home_widget_sync_controller.dart';
+part 'main_home/controllers/main_home_avatar_controller.dart';
+part 'main_home/controllers/main_home_wish_tip_controller.dart';
+part 'main_home/controllers/main_home_countdown_prefs_controller.dart';
+part 'main_home/controllers/main_home_reaction_controller.dart';
 part 'main_home/sections/main_home_body_section.dart';
 part 'main_home/widgets/main_home_state_views.dart';
 part '../widgets/main_home/hero/main_home_animated_wave_background.dart';
@@ -176,6 +181,88 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       'il_home_map_card_first_tap_seen_v1';
   static const String _insightCardFirstTapSeenPrefsKey =
       'il_home_insight_card_first_tap_seen_v1';
+
+  static const Duration _kCountdownQuickUnlockWindow = Duration(hours: 24);
+  static const Set<String> _kCountdownQuickPremiumStyleKeys = {
+    'deep_ocean',
+    'golden_sunset',
+    'neon_pulse',
+  };
+  static const Duration _kReactionThrowWindow = Duration(seconds: 10);
+  static const int _kReactionThrowBurstLimit = 5;
+  static const List<String> _kCountdownPressHoldTips = [
+    '💡 Bấm giữ thẻ đếm ngược để mở nhanh bảng đổi giao diện & màu sắc!',
+    '🎨 Bấm giữ đếm ngược để tùy chỉnh font chữ, hiệu ứng và màu sắc riêng!',
+    '✨ Nhấn giữ thẻ đếm ngày để tùy biến đếm ngược theo phong cách của bạn!',
+  ];
+
+  bool _hideSettingsButtonUntilRestart = false;
+
+  void _hideSettingsButtonForSession() {
+    if (!mounted) return;
+    final isCurrentlyHidden = _hideSettingsButtonUntilRestart;
+    setState(() => _hideSettingsButtonUntilRestart = !isCurrentlyHidden);
+
+    if (!isCurrentlyHidden) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Đã làm mờ nút cài đặt. Bạn vẫn có thể nhấn vào góc này để mở cài đặt, hoặc nhấn giữ để hiện lại.',
+            ),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 3),
+          ),
+        );
+    }
+  }
+
+  String _resolveMyName() => _resolveNameForRole(_currentRole);
+
+  Future<void> _deliverIncomingAlert(
+    _MissYouAlertPayload payload, {
+    String? removalPath,
+  }) async {
+    final prefs = await OfflineCacheService.getPrefs();
+    final lastLocalMs = prefs.getInt('il_last_local_push_time_v2') ?? 0;
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+
+    if (nowMs - lastLocalMs >= 3600000) {
+      await prefs.setInt('il_last_local_push_time_v2', nowMs);
+      await _notificationService.showLocalNotification(
+        title: payload.title,
+        body: payload.body.isNotEmpty ? payload.body : payload.message,
+        data: {
+          'screen': 'home',
+          'type': 'partner_care',
+          'careType': payload.type,
+          if (_houseId != null) 'houseId': _houseId!,
+        },
+        dedupeKey:
+            '${payload.fromUid}|${payload.fromRole}|${payload.sentAtMs}|${payload.type}|${payload.title}',
+      );
+    }
+    if (!mounted) return;
+    _showMissYouScreen(payload);
+    if (removalPath != null) {
+      unawaited(_dbRef.child(removalPath).remove().catchError((_) {}));
+    }
+  }
+
+  int _calculateDays() {
+    final dateStr = _houseSettings?['startDate'] ?? _houseSettings?['loveDate'];
+    if (dateStr == null) return 0;
+    try {
+      final DateTime start = DateTime.parse(dateStr.toString());
+      final DateTime now = DateTime.now();
+      final DateTime current = DateTime(now.year, now.month, now.day);
+      final int diff = current.difference(start).inDays;
+      return diff < 0 ? 0 : diff + 1;
+    } catch (e) {
+      return 0;
+    }
+  }
 
   TextStyle _uiTextStyle({
     required double fontSize,
@@ -245,7 +332,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   static final List<String> _kHomeStickerAssets =
       List<String>.generate(99, (i) {
     final num = (i + 1).toString().padLeft(3, '0');
-    return 'assets/images/interaction_stickers/custom/numbered/sticker_$num.png';
+    return 'assets/images/anhtomau_stickers/sticker_1.gif';
   });
 
   static const List<String> _kGiftSuggestions = [
@@ -325,7 +412,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   final ValueNotifier<bool> _isScrollingNotifier = ValueNotifier<bool>(false);
   int _wishIndex = -1;
   int _tipIndex = -1;
-  bool _hideSettingsButtonUntilRestart = false;
   Timer? _weatherRefreshTimer;
   Timer? _loveWidgetSyncDebounce;
 
@@ -396,6 +482,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       _smartInteractionPresetNotifier.value = v;
   bool _showDefaultHeartSuggestion = false;
   String? _manualInteractionPresetType;
+  bool _isSendingInteraction = false;
   bool _incomingInteractionDialogVisible = false;
   final List<_MissYouAlertPayload> _incomingInteractionQueue =
       <_MissYouAlertPayload>[];
@@ -1173,971 +1260,11 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     return role == 'user1' ? 'Nam' : 'Nữ';
   }
 
-  Future<XFile?> _cropAvatarImage(
-    XFile file, {
-    required bool isUser1,
-  }) async {
-    if (kIsWeb || file.path.isEmpty) {
-      return file;
-    }
 
-    try {
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: file.path,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-        compressFormat: ImageCompressFormat.jpg,
-        compressQuality: 80,
-        maxWidth: 1080,
-        maxHeight: 1080,
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle:
-                isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
-            toolbarColor: const Color(0xFFD81B60),
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: true,
-          ),
-          IOSUiSettings(
-            title: isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
-            aspectRatioLockEnabled: true,
-            aspectRatioPickerButtonHidden: true,
-            resetAspectRatioEnabled: false,
-          ),
-        ],
-      );
 
-      if (croppedFile == null) {
-        return null;
-      }
-      return XFile(croppedFile.path);
-    } catch (_) {
-      return file;
-    }
-  }
 
-  String _pendingAvatarUploadKeyForHouse(String houseId) =>
-      '$_pendingAvatarUploadKeyPrefix$houseId';
 
-  Future<void> _promptPendingAvatarRetryIfNeeded() async {
-    if (_didPromptPendingAvatarRetry || !mounted) {
-      return;
-    }
-    final houseId =
-        (_houseId ?? await _houseService.getCurrentHouseId())?.trim();
-    if (houseId == null || houseId.isEmpty) {
-      return;
-    }
-    final pending = await PendingUploadService.instance.load(
-      _pendingAvatarUploadKeyForHouse(houseId),
-    );
-    if (pending == null || !mounted) {
-      return;
-    }
-    _didPromptPendingAvatarRetry = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Lần đổi avatar trang chủ trước đã bị gián đoạn.',
-          ),
-          behavior: SnackBarBehavior.floating,
-          action: SnackBarAction(
-            label: 'Thử lại',
-            onPressed: () {
-              unawaited(_retryPendingAvatarUpload());
-            },
-          ),
-        ),
-      );
-    });
-  }
 
-  Future<void> _retryPendingAvatarUpload() async {
-    final houseId =
-        (_houseId ?? await _houseService.getCurrentHouseId())?.trim();
-    if (houseId == null || houseId.isEmpty) {
-      return;
-    }
-    final pendingKey = _pendingAvatarUploadKeyForHouse(houseId);
-    final pending = await PendingUploadService.instance.load(pendingKey);
-    if (pending == null || !mounted) {
-      return;
-    }
-    final role = pending['role']?.toString().trim() ?? '';
-    final filePath = pending['filePath']?.toString().trim() ?? '';
-    if (filePath.isEmpty) {
-      await PendingUploadService.instance.clear(pendingKey);
-      return;
-    }
-    final file = XFile(filePath);
-    try {
-      if (await file.length() <= 0) {
-        await PendingUploadService.instance.clear(pendingKey);
-        return;
-      }
-    } catch (_) {
-      await PendingUploadService.instance.clear(pendingKey);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không tìm thấy ảnh avatar cũ để thử lại.'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-      return;
-    }
-    await _changeAvatar(
-      isUser1: role != 'user2',
-      presetFile: file,
-    );
-  }
-
-  Future<void> _changeAvatar({
-    required bool isUser1,
-    XFile? presetFile,
-  }) async {
-    final houseId = _houseId ?? await _houseService.getCurrentHouseId();
-    if (!mounted || houseId == null) return;
-    if (_uploadingAvatarRole != null) return;
-
-    XFile? file;
-    try {
-      file = presetFile ?? await _storageService.pickImage();
-    } catch (e) {
-      if (mounted) SLNotice.showInfo(context, 'Lỗi chọn ảnh: $e');
-    }
-    if (file == null) return;
-    if (!mounted) return;
-
-    final role = isUser1 ? 'user1' : 'user2';
-    final field = isUser1 ? 'avtUser1' : 'avtUser2';
-    final pendingKey = _pendingAvatarUploadKeyForHouse(houseId);
-    setState(() {
-      _uploadingAvatarRole = role;
-    });
-    _avatarUploadProgressNotifier.value = 0.0;
-
-    try {
-      if (presetFile == null) {
-        file = await _cropAvatarImage(file, isUser1: isUser1);
-      }
-      if (file == null) {
-        return;
-      }
-      await PendingUploadService.instance.save(pendingKey, <String, dynamic>{
-        'role': role,
-        'filePath': file.path,
-      });
-
-      final upload = await _storageService.uploadPublicImage(
-        houseId,
-        'home_avatar',
-        file,
-        quality: 84,
-        minWidth: 512,
-        minHeight: 512,
-        onProgress: (p) {
-          if (mounted) {
-            _avatarUploadProgressNotifier.value = p;
-          }
-        },
-      );
-      final url = upload?.downloadUrl.trim() ?? '';
-      if (url.isEmpty) {
-        throw 'Không lấy được ảnh mới.';
-      }
-
-      final oldAvatarUrl = (_houseSettings?[field] ?? '').toString().trim();
-      await PendingUploadService.instance.clear(pendingKey);
-
-      // Lưu URL ảnh R2 vào Firebase Realtime Database để đồng bộ
-      try {
-        final hid = (_houseId ?? '').trim();
-        if (hid.isNotEmpty) {
-          await _dbRef.child('houses/$hid/settings').update({
-            field: url,
-          }).catchError((_) {});
-        }
-      } catch (_) {}
-
-      if (oldAvatarUrl.isNotEmpty && oldAvatarUrl.startsWith('http')) {
-        try {
-          _storageService.deleteImageByUrl(oldAvatarUrl);
-        } catch (_) {}
-      }
-
-      if (mounted) {
-        setState(() {
-          _houseSettings ??= {};
-          _houseSettings![field] = url;
-        });
-        _avatarUploadProgressNotifier.value = 1.0;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isUser1
-                  ? 'Đã cập nhật avatar cho bạn nam.'
-                  : 'Đã cập nhật avatar cho bạn nữ.',
-            ),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content:
-                Text('Chưa thể đổi ảnh đại diện lúc này. Vui lòng thử lại.'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _uploadingAvatarRole = null;
-        });
-        _avatarUploadProgressNotifier.value = -1.0;
-      }
-    }
-  }
-
-  List<String> _resolveHomeWishes() {
-    final raw = _houseSettings?['wishes']?.toString() ?? '';
-    final wishes = raw
-        .split(RegExp(r'\r?\n'))
-        .map((item) => item.trim())
-        .where((item) => item.isNotEmpty)
-        .toList();
-    if (wishes.isNotEmpty) {
-      return wishes;
-    }
-    if (_isSingleRelationship) {
-      return const [
-        'Một chút dịu dàng với chính mình hôm nay cũng đủ làm ngày mới dễ thương hơn rồi.',
-        'Bấm vào trái tim ở giữa để thả sang một tín hiệu thật dễ thương nhé.',
-        'Mở bản đồ lên xem vị trí hiện tại của bạn để lưu lại những nơi mình đã đi qua.',
-        'Lưu lại một bức ảnh xinh hoặc một dòng note ngọt ngào cho trang chủ nhé.',
-      ];
-    }
-    return const [
-      'Một câu nhớ bạn nho nhỏ cũng đủ làm tim người ấy rung nhẹ đó.',
-      'Bấm vào trái tim ở giữa để thả sang một tín hiệu thật dễ thương nhé.',
-      'Mở bản đồ lên xem hai đứa đang xa bao nhiêu để còn thương nhau thêm.',
-      'Lưu lại một bức ảnh xinh hoặc một dòng note ngọt ngào cho trang chủ nhé.',
-    ];
-  }
-
-  String _currentHomeWish() {
-    final wishes = _resolveHomeWishes();
-    if (wishes.isEmpty) return '';
-    final safeIndex = _wishIndex >= 0 ? _wishIndex % wishes.length : 0;
-    return wishes[safeIndex];
-  }
-
-  static const List<String> _kCountdownPressHoldTips = [
-    'Mẹo khi ấn giữ: giữ vòng đếm ngày để mở bảng đổi hiệu ứng nhanh ngay trên trang chủ.',
-    'Mẹo khi ấn giữ: giữ nút mũi tên dưới cùng để ẩn thanh tab cho tới khi mở lại màn hình.',
-    'Mẹo khi ấn giữ: giữ nút cài đặt góc phải để ẩn nút cài đặt cho ảnh chụp gọn hơn.',
-  ];
-
-  int _pickNextRandomIndex({
-    required int length,
-    required int previousIndex,
-  }) {
-    if (length <= 1) {
-      return 0;
-    }
-    var nextIndex = _random.nextInt(length);
-    while (nextIndex == previousIndex) {
-      nextIndex = _random.nextInt(length);
-    }
-    return nextIndex;
-  }
-
-  String _currentCountdownTip() {
-    if (_kCountdownPressHoldTips.isEmpty) return '';
-    final safeIndex =
-        _tipIndex >= 0 ? _tipIndex % _kCountdownPressHoldTips.length : 0;
-    return _kCountdownPressHoldTips[safeIndex];
-  }
-
-  String? _advanceHomeWish() {
-    final wishes = _resolveHomeWishes();
-    if (wishes.isEmpty || !mounted) return null;
-    final nextIndex = _pickNextRandomIndex(
-      length: wishes.length,
-      previousIndex: _wishIndex,
-    );
-    setState(() => _wishIndex = nextIndex);
-    return wishes[nextIndex];
-  }
-
-  String? _advanceCountdownTip() {
-    if (_kCountdownPressHoldTips.isEmpty || !mounted) return null;
-    final nextIndex = _pickNextRandomIndex(
-      length: _kCountdownPressHoldTips.length,
-      previousIndex: _tipIndex,
-    );
-    setState(() => _tipIndex = nextIndex);
-    return _kCountdownPressHoldTips[nextIndex];
-  }
-
-  Widget _buildHomeNoticeSection({
-    required IconData icon,
-    required Color accent,
-    required String label,
-    required String message,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: accent, size: 18),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  label,
-                  style: SLTheme.quicksand(
-                    fontSize: 11.2,
-                    fontWeight: FontWeight.w900,
-                    color: accent,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  message,
-                  style: SLTheme.quicksand(
-                    fontSize: 13.2,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showNextWish() {
-    final nextWish = _advanceHomeWish();
-    if (nextWish == null || !mounted) return;
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    if (messenger == null) return;
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          padding: EdgeInsets.zero,
-          content: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF262E3F), Color(0xFF313A4F)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF111827).withValues(alpha: 0.26),
-                  blurRadius: 26,
-                  offset: const Offset(0, 12),
-                ),
-              ],
-            ),
-            child: _buildHomeNoticeSection(
-              icon: Icons.favorite_rounded,
-              accent: const Color(0xFFFF8DB6),
-              label: 'Lời chúc từ SoulLocket',
-              message: nextWish,
-            ),
-          ),
-        ),
-      );
-  }
-
-  void _showCountdownCircleHint({required String smartGreeting}) {
-    final showWish = Random().nextBool();
-    final selectedMessage =
-        showWish ? _advanceHomeWish() : _advanceCountdownTip();
-    if (selectedMessage == null || !mounted) return;
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    if (messenger == null) return;
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 5),
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          padding: EdgeInsets.zero,
-          content: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF262E3F), Color(0xFF313A4F)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF111827).withValues(alpha: 0.28),
-                  blurRadius: 28,
-                  offset: const Offset(0, 14),
-                ),
-              ],
-            ),
-            child: _buildHomeNoticeSection(
-              icon: showWish
-                  ? Icons.favorite_rounded
-                  : Icons.tips_and_updates_rounded,
-              accent:
-                  showWish ? const Color(0xFFFF8DB6) : const Color(0xFF8BE9FF),
-              label: showWish ? 'Lời chúc từ SoulLocket' : 'Mẹo nhanh',
-              message: selectedMessage,
-            ),
-          ),
-        ),
-      );
-  }
-
-  static const Duration _kCountdownQuickUnlockWindow = Duration(hours: 5);
-  static const List<String> _kCountdownQuickPremiumStyleKeys = <String>[
-    'floating_hearts',
-    'galaxy',
-    'aurora',
-    'crystal',
-    'fireworks',
-    'lava',
-    'cherry_blossom',
-    'meteor_shower',
-    'deep_ocean',
-    'golden_sunset',
-    'neon_pulse',
-  ];
-
-  /// Trả về Set các style đã được mở khóa riêng lẻ qua xem quảng cáo.
-  /// Mỗi style được lưu độc lập, không phụ thuộc nhau.
-  Future<Set<String>> _getUnlockedCountdownStyles() async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final result = <String>{};
-    for (final styleKey in _kCountdownQuickPremiumStyleKeys) {
-      final expiryKey = 'il_countdown_style_unlock_expiry_$styleKey';
-      final expiry = prefs.getInt(expiryKey) ?? 0;
-      if (expiry > now) {
-        result.add(styleKey);
-      }
-    }
-    // Migration: nếu đã có unlock hàng loạt cũ còn hiệu lực thì cộng vào
-    final legacyExpiry =
-        prefs.getInt('il_countdown_unlock_weekly_expiry_v2') ?? 0;
-    if (legacyExpiry > now) {
-      result.addAll(_kCountdownQuickPremiumStyleKeys);
-    } else {
-      final legacyTs = prefs.getInt('il_countdown_unlock_ad_ts') ?? 0;
-      if (legacyTs > 0) {
-        final fallbackExpiry =
-            legacyTs + _kCountdownQuickUnlockWindow.inMilliseconds;
-        if (fallbackExpiry > now) {
-          result.addAll(_kCountdownQuickPremiumStyleKeys);
-        }
-      }
-    }
-    return result;
-  }
-
-  Future<void> _saveCountdownQuickUiPrefs({
-    String? countdownStyleKey,
-    String? fallingEffectKey,
-    double? countdownSizePx,
-    double? avatarSizePx,
-    String? avatarFrameKey,
-    String? customBackgroundUrl,
-    String? countdownTextColor,
-    Set<String>? prevalidatedUnlockedStyles,
-    bool? isVip,
-  }) async {
-    await UiPrefs.ensureLoaded();
-    final current = UiPrefs.notifier.value;
-    final resolvedCountdownStyleKey =
-        (countdownStyleKey ?? current.countdownStyleKey).trim();
-    final resolvedFallingEffectKey =
-        (fallingEffectKey ?? current.fallingEffectKey).trim();
-
-    if (countdownStyleKey != null) {
-      const allowedCountdownStyleKeys = <String>{
-        'default',
-        'floating_hearts',
-        'rose_wave',
-        'glass',
-        'glow',
-        'plain',
-        'candy',
-        'galaxy',
-        'aurora',
-        'crystal',
-        'fireworks',
-        'lava',
-        'cherry_blossom',
-        'meteor_shower',
-        'deep_ocean',
-        'golden_sunset',
-        'neon_pulse',
-      };
-      if (!allowedCountdownStyleKeys.contains(resolvedCountdownStyleKey)) {
-        if (mounted) {
-          _showLatestSnackBar(
-            'Không thể đổi kiểu vòng đếm vì mã kiểu "$resolvedCountdownStyleKey" không hợp lệ.',
-          );
-        }
-        return;
-      }
-    }
-
-    if (fallingEffectKey != null) {
-      const allowedFallingEffectKeys = <String>{
-        'auto',
-        'sparkles',
-        'stars',
-        'hearts',
-        'meteors',
-        'bubbles',
-        'snow',
-        'leaves',
-        'off',
-      };
-      if (!allowedFallingEffectKeys.contains(resolvedFallingEffectKey)) {
-        if (mounted) {
-          _showLatestSnackBar(
-            'Không thể đổi hiệu ứng vì mã hiệu ứng "$resolvedFallingEffectKey" không hợp lệ.',
-          );
-        }
-        return;
-      }
-    }
-
-    final resolvedIsVip = isVip ?? await PurchaseService().isVip();
-    if (countdownStyleKey != null &&
-        _kCountdownQuickPremiumStyleKeys.contains(resolvedCountdownStyleKey) &&
-        !resolvedIsVip) {
-      final resolvedUnlockedStyles =
-          prevalidatedUnlockedStyles ?? await _getUnlockedCountdownStyles();
-      if (!resolvedUnlockedStyles.contains(resolvedCountdownStyleKey)) {
-        if (mounted) {
-          _showLatestSnackBar(
-            'Kiểu "$resolvedCountdownStyleKey" chưa được mở. Hãy xem quảng cáo trong bảng tùy chỉnh để mở kiểu này.',
-          );
-        }
-        return;
-      }
-    }
-
-    final normalizedCountdownStyleKey = countdownStyleKey == null
-        ? current.countdownStyleKey
-        : resolvedCountdownStyleKey;
-    final normalizedFallingEffectKey = fallingEffectKey == null
-        ? current.fallingEffectKey
-        : resolvedFallingEffectKey;
-    final normalizedCountdownSizePx =
-        countdownSizePx ?? current.countdownSizePx;
-    final normalizedAvatarSizePx = avatarSizePx ?? current.avatarSizePx;
-    final normalizedAvatarFrameKey = avatarFrameKey ?? current.avatarFrameKey;
-    final normalizedCustomBackgroundUrl =
-        customBackgroundUrl ?? current.customBackgroundUrl;
-    final normalizedCountdownTextColor =
-        countdownTextColor ?? current.countdownTextColor;
-
-    // Auto turn off transparentMode if user explicitly changes countdown style
-    final newTransparentMode =
-        (countdownStyleKey != null) ? false : current.transparentMode;
-
-    if (normalizedCountdownStyleKey == current.countdownStyleKey &&
-        normalizedFallingEffectKey == current.fallingEffectKey &&
-        normalizedCountdownSizePx == current.countdownSizePx &&
-        normalizedAvatarSizePx == current.avatarSizePx &&
-        normalizedAvatarFrameKey == current.avatarFrameKey &&
-        normalizedCustomBackgroundUrl == current.customBackgroundUrl &&
-        normalizedCountdownTextColor == current.countdownTextColor &&
-        newTransparentMode == current.transparentMode) {
-      return;
-    }
-
-    final nextState = current.copyWith(
-      countdownStyleKey: normalizedCountdownStyleKey,
-      fallingEffectKey: normalizedFallingEffectKey,
-      countdownSizePx: normalizedCountdownSizePx,
-      avatarSizePx: normalizedAvatarSizePx,
-      avatarFrameKey: normalizedAvatarFrameKey,
-      customBackgroundUrl: normalizedCustomBackgroundUrl,
-      countdownTextColor: normalizedCountdownTextColor,
-      transparentMode: newTransparentMode,
-    );
-
-    unawaited(UiPrefs.saveState(nextState).catchError((_) {}));
-
-    final houseId = (_houseId ?? '').trim();
-    if (houseId.isNotEmpty) {
-      final updates = <String, dynamic>{
-        'updatedAt': ServerValue.timestamp,
-      };
-      if (normalizedCountdownStyleKey != current.countdownStyleKey) {
-        updates['countdownStyle'] = normalizedCountdownStyleKey;
-      }
-      if (normalizedFallingEffectKey != current.fallingEffectKey) {
-        updates['fallingEffect'] = normalizedFallingEffectKey;
-      }
-      if (normalizedCountdownSizePx != current.countdownSizePx) {
-        updates['countdownSizePx'] = normalizedCountdownSizePx;
-      }
-      if (normalizedAvatarSizePx != current.avatarSizePx) {
-        updates['avatarSizePx'] = normalizedAvatarSizePx;
-      }
-      if (normalizedAvatarFrameKey != current.avatarFrameKey) {
-        updates['avatarFrame'] = normalizedAvatarFrameKey;
-      }
-      if (normalizedCustomBackgroundUrl != current.customBackgroundUrl) {
-        updates['customBackgroundUrl'] = normalizedCustomBackgroundUrl;
-        updates['customHomeBackground'] = normalizedCustomBackgroundUrl;
-      }
-      if (normalizedCountdownTextColor != current.countdownTextColor) {
-        updates['countdownTextColor'] = normalizedCountdownTextColor;
-      }
-      if (newTransparentMode != current.transparentMode) {
-        updates['transparentMode'] = newTransparentMode;
-      }
-
-      unawaited(_dbRef
-          .child('houses/$houseId/settings')
-          .update(updates)
-          .catchError((e) {
-        if (mounted) {
-          _showLatestSnackBar(
-            'Đã lưu trên máy. Chưa thể đồng bộ lúc này, vui lòng thử lại sau.',
-          );
-        }
-      }));
-    }
-  }
-
-  Future<void> _showCountdownQuickCustomizeSheet() async {
-    final isVip = await PurchaseService().isVip();
-    Set<String> unlockedStyles = isVip
-        ? Set<String>.from(_kCountdownQuickPremiumStyleKeys)
-        : await _getUnlockedCountdownStyles();
-    if (!mounted) return;
-
-    final styleOptions = <_CountdownQuickOption>[
-      _CountdownQuickOption(
-        label: context.tr('countdown_default'),
-        value: 'default',
-        icon: Icons.favorite_rounded,
-        accent: const Color(0xFFD94C86),
-      ),
-      _CountdownQuickOption(
-        label: context.tr('countdown_floating_hearts'),
-        value: 'floating_hearts',
-        icon: Icons.favorite_border_rounded,
-        accent: const Color(0xFFFF8DA1),
-        isPremium: true,
-      ),
-      _CountdownQuickOption(
-        label: context.tr('countdown_glass'),
-        value: 'glass',
-        icon: Icons.blur_on_rounded,
-        accent: const Color(0xFF6AA7D8),
-      ),
-      _CountdownQuickOption(
-        label: context.tr('countdown_glow'),
-        value: 'glow',
-        icon: Icons.auto_awesome_rounded,
-        accent: const Color(0xFFFF8A65),
-      ),
-      _CountdownQuickOption(
-        label: context.tr('countdown_candy'),
-        value: 'candy',
-        icon: Icons.icecream_rounded,
-        accent: const Color(0xFFFF6FA8),
-      ),
-      _CountdownQuickOption(
-        label: context.tr('countdown_galaxy'),
-        value: 'galaxy',
-        icon: Icons.nights_stay_rounded,
-        accent: const Color(0xFF6F63D9),
-        isPremium: true,
-      ),
-      _CountdownQuickOption(
-        label: context.tr('countdown_aurora'),
-        value: 'aurora',
-        icon: Icons.bolt_rounded,
-        accent: const Color(0xFF26A69A),
-        isPremium: true,
-      ),
-      _CountdownQuickOption(
-        label: context.tr('countdown_crystal'),
-        value: 'crystal',
-        icon: Icons.diamond_rounded,
-        accent: const Color(0xFF5C9CE6),
-        isPremium: true,
-      ),
-      _CountdownQuickOption(
-        label: context.tr('countdown_fireworks'),
-        value: 'fireworks',
-        icon: Icons.local_fire_department_rounded,
-        accent: const Color(0xFFFF7043),
-        isPremium: true,
-      ),
-      _CountdownQuickOption(
-        label: context.tr('countdown_lava'),
-        value: 'lava',
-        icon: Icons.whatshot_rounded,
-        accent: const Color(0xFFE53935),
-        isPremium: true,
-      ),
-      _CountdownQuickOption(
-        label: context.tr('countdown_cherry_blossom'),
-        value: 'cherry_blossom',
-        icon: Icons.filter_vintage_rounded,
-        accent: const Color(0xFFFF8DA1),
-        isPremium: true,
-      ),
-      _CountdownQuickOption(
-        label: context.tr('countdown_meteor_shower'),
-        value: 'meteor_shower',
-        icon: Icons.auto_awesome_rounded,
-        accent: const Color(0xFF818CF8),
-        isPremium: true,
-      ),
-      _CountdownQuickOption(
-        label: context.tr('countdown_deep_ocean'),
-        value: 'deep_ocean',
-        icon: Icons.waves_rounded,
-        accent: const Color(0xFF00B4DB),
-        isPremium: true,
-      ),
-      _CountdownQuickOption(
-        label: context.tr('countdown_golden_sunset'),
-        value: 'golden_sunset',
-        icon: Icons.wb_twilight_rounded,
-        accent: const Color(0xFFFF9800),
-        isPremium: true,
-      ),
-      _CountdownQuickOption(
-        label: context.tr('countdown_neon_pulse'),
-        value: 'neon_pulse',
-        icon: Icons.graphic_eq_rounded,
-        accent: const Color(0xFFFF003C),
-        isPremium: true,
-      ),
-    ];
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFFF8F5F6),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (sheetContext) {
-        return _CountdownQuickCustomizeSheetContent(
-          styleOptions: styleOptions,
-          unlockedStyles: unlockedStyles,
-          isVip: isVip,
-          homeState: this,
-          sheetContext: sheetContext,
-        );
-      },
-    );
-  }
-
-  void _hideSettingsButtonForSession() {
-    if (!mounted) return;
-    final isCurrentlyHidden = _hideSettingsButtonUntilRestart;
-    setState(() => _hideSettingsButtonUntilRestart = !isCurrentlyHidden);
-
-    if (!isCurrentlyHidden) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Đã làm mờ nút cài đặt. Bạn vẫn có thể nhấn vào góc này để mở cài đặt, hoặc nhấn giữ để hiện lại.',
-            ),
-            behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 3),
-          ),
-        );
-    }
-  }
-
-  String _resolveMyName() => _resolveNameForRole(_currentRole);
-
-  bool _shouldShowAdminBadge(String role) {
-    return false;
-  }
-
-  void triggerShootingHeartState({String? emoji, String? fromRole}) {
-    final now = DateTime.now().millisecondsSinceEpoch;
-    _showReactionFlight(
-      _HomeReactionFlight(
-        id: 'local-$now-${_random.nextInt(999999)}',
-        fromRole: fromRole ?? _currentRole,
-        toRole: (fromRole ?? _currentRole) == 'user1' ? 'user2' : 'user1',
-        emoji: emoji ?? _emojiForInteractionType('miss'),
-        sentAtMs: now,
-      ),
-    );
-  }
-
-  int _consumeLocalReactionThrowWaitSeconds(int nowMs) {
-    _localReactionThrowMs.removeWhere(
-      (sentAt) => nowMs - sentAt >= _kReactionThrowWindow.inMilliseconds,
-    );
-    if (_localReactionThrowMs.length >= _kReactionThrowBurstLimit) {
-      final oldest = _localReactionThrowMs.first;
-      final remainingMs =
-          _kReactionThrowWindow.inMilliseconds - (nowMs - oldest);
-      final seconds = (remainingMs / 1000).ceil();
-      return seconds < 1 ? 1 : seconds;
-    }
-    _localReactionThrowMs.add(nowMs);
-    return 0;
-  }
-
-  Future<int> _consumeReactionThrowWaitSeconds() async {
-    final houseId = _houseId;
-    if (houseId == null || houseId.isEmpty) return 0;
-
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-    int asInt(dynamic raw) {
-      if (raw is int) return raw;
-      if (raw is double) return raw.toInt();
-      if (raw is String) return int.tryParse(raw) ?? 0;
-      return 0;
-    }
-
-    var waitMs = 0;
-    try {
-      final ref =
-          _dbRef.child('houses/$houseId/reaction_throw_limits/$_currentRole');
-      final tx = await ref.runTransaction((Object? current) {
-        final data =
-            current is Map ? _toStringDynamicMap(current) : <String, dynamic>{};
-        final windowStartMs = asInt(data['windowStartMs']);
-        final count = asInt(data['count']);
-        final elapsedMs = nowMs - windowStartMs;
-        final shouldStartNewWindow = windowStartMs <= 0 ||
-            elapsedMs < 0 ||
-            elapsedMs >= _kReactionThrowWindow.inMilliseconds;
-
-        if (shouldStartNewWindow) {
-          return Transaction.success({
-            'windowStartMs': nowMs,
-            'count': 1,
-            'updatedAtMs': nowMs,
-          });
-        }
-
-        if (count >= _kReactionThrowBurstLimit) {
-          waitMs = _kReactionThrowWindow.inMilliseconds - elapsedMs;
-          return Transaction.abort();
-        }
-
-        return Transaction.success({
-          'windowStartMs': windowStartMs,
-          'count': count + 1,
-          'updatedAtMs': nowMs,
-        });
-      });
-
-      if (tx.committed) return 0;
-      final seconds = (waitMs / 1000).ceil();
-      return seconds < 1 ? 1 : seconds;
-    } catch (_) {
-      return _consumeLocalReactionThrowWaitSeconds(nowMs);
-    }
-  }
-
-  Future<void> _deliverIncomingAlert(
-    _MissYouAlertPayload payload, {
-    String? removalPath,
-  }) async {
-    final prefs = await OfflineCacheService.getPrefs();
-    final lastLocalMs = prefs.getInt('il_last_local_push_time_v2') ?? 0;
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-
-    if (nowMs - lastLocalMs >= 3600000) {
-      await prefs.setInt('il_last_local_push_time_v2', nowMs);
-      await _notificationService.showLocalNotification(
-        title: payload.title,
-        body: payload.body.isNotEmpty ? payload.body : payload.message,
-        data: {
-          'screen': 'home',
-          'type': 'partner_care',
-          'careType': payload.type,
-          if (_houseId != null) 'houseId': _houseId!,
-        },
-        dedupeKey:
-            '${payload.fromUid}|${payload.fromRole}|${payload.sentAtMs}|${payload.type}|${payload.title}',
-      );
-    }
-    if (!mounted) return;
-    _showMissYouScreen(payload);
-    if (removalPath != null) {
-      unawaited(_dbRef.child(removalPath).remove().catchError((_) {}));
-    }
-  }
-
-  int _calculateDays() {
-    final dateStr = _houseSettings?['startDate'] ?? _houseSettings?['loveDate'];
-    if (dateStr == null) return 0;
-    try {
-      final DateTime start = DateTime.parse(dateStr.toString());
-      final DateTime now = DateTime.now();
-      final DateTime current = DateTime(now.year, now.month, now.day);
-      final int diff = current.difference(start).inDays;
-      return diff < 0 ? 0 : diff + 1;
-    } catch (e) {
-      return 0;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -2181,57 +1308,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     );
   }
 
-  bool _isSendingInteraction = false;
 
-  Future<void> _handleSendInteraction(String type, String emoji) async {
-    final cleanEmoji =
-        emoji.trim().isEmpty ? _emojiForInteractionType(type) : emoji;
-
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-    final localWait = _consumeLocalReactionThrowWaitSeconds(nowMs);
-    if (localWait > 0) {
-      _showReactionThrowLimitSnack();
-      return;
-    }
-    if (!mounted) return;
-
-    _sendReactionFlight(type, cleanEmoji);
-    _triggerMissYouEffect(type);
-    _vibrateHeartbeat();
-
-    if (_isSendingInteraction) return;
-    _isSendingInteraction = true;
-
-    final preset = _maybePresetForInteractionType(type);
-    final randomTitle = preset == null
-        ? null
-        : preset.titles[_random.nextInt(preset.titles.length)];
-    final randomMessage = preset == null
-        ? null
-        : preset.messages[_random.nextInt(preset.messages.length)];
-
-    unawaited(Future(() async {
-      final waitSeconds = await _consumeReactionThrowWaitSeconds();
-      if (waitSeconds > 0) {
-        _showReactionThrowLimitSnack();
-        return;
-      }
-      _sendPartnerInteraction(
-        type,
-        showSentNotice: false,
-        emoji: cleanEmoji,
-        customTitle: randomTitle,
-        customMessage: randomMessage,
-      );
-    }));
-
-    // Mở khóa nút bấm sau 2 giây
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        _isSendingInteraction = false;
-      }
-    });
-  }
 }
 
 class _ThemeBackgroundAspectRatioPreset implements CropAspectRatioPresetData {
@@ -2255,3 +1332,5 @@ class HomeUpcomingEvent {
     required this.type,
   });
 }
+
+

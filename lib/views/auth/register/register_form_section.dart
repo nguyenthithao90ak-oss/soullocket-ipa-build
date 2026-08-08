@@ -11,9 +11,9 @@ import '../login/social_auth_buttons.dart';
 final RegExp _registerEmailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
 const List<Color> _registerButtonDisabledColors = <Color>[
-  Color(0xFFE8AFC4),
-  Color(0xFFF1C3D3),
-  Color(0xFFE8CFE0),
+  Color(0xFFE8D5C4),
+  Color(0xFFDCC8B5),
+  Color(0xFFD4BDA8),
 ];
 
 bool _isRegisterInputValid(String email, String password, bool acceptTerms) {
@@ -76,11 +76,11 @@ class RegisterForm extends StatelessWidget {
     final passwordLabel = l10n.translate('Mật khẩu');
     final passwordHint = l10n.translate('Tối thiểu 6 ký tự');
     final securityQuestionLabel =
-        l10n.translate('Câu hỏi bảo mật (Không bắt buộc)');
+        l10n.translate('auth_security_question_not_required');
     final securityQuestionTapLabel =
-        l10n.translate('Nhấn để chọn câu hỏi bảo mật');
-    final securityNote = l10n.translate('Dùng để khôi phục mật khẩu khi quên');
-    final securityAnswerHint = l10n.translate('Nhập câu trả lời bảo mật');
+        l10n.translate('auth_security_question_select_tap');
+    final securityNote = l10n.translate('auth_recovery_hint');
+    final securityAnswerHint = l10n.translate('auth_security_answer_hint');
     final signupLabel = l10n.translate('Đăng ký').toUpperCase();
 
     return AutofillGroup(
@@ -89,7 +89,7 @@ class RegisterForm extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SLTheme.sectionHeader(
-            title: l10n.translate('Địa chỉ Email'),
+            title: l10n.translate('auth_email_label'),
           ),
           const SizedBox(height: 8),
           GlassTextField(
@@ -101,7 +101,7 @@ class RegisterForm extends StatelessWidget {
               AutofillHints.email,
             ],
             onSubmitted: (_) => FocusScope.of(context).nextFocus(),
-            hintText: l10n.translate('nhapemail@gmail.com'),
+            hintText: l10n.translate('auth_email_placeholder'),
             accentColor: accentRose,
             prefixIcon: Icon(
               Icons.mail_outline_rounded,
