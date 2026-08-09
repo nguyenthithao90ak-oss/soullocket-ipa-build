@@ -369,20 +369,27 @@ Future<void> _saveAndClearSleepSession(
 // ─────────────────────────────────────────────
 class BackgroundTrackingService {
   static Future<void> initialize() async {
-    if (Platform.isIOS) {
-      await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
-      await Workmanager().registerPeriodicTask(
-        'sleep_tracker',
-        'sleep_tracker_task',
-        frequency: const Duration(minutes: 30),
-      );
+    final prefs = await SharedPreferences.getInstance();
+    final isTrackingEnabled =
+        prefs.getBool('is_sleep_tracking_enabled') ?? false;
 
-      final health = Health();
-      final types = [
-        HealthDataType.SLEEP_IN_BED,
-        HealthDataType.SLEEP_ASLEEP,
-      ];
-      await health.requestAuthorization(types);
+    if (Platform.isIOS) {
+      if (isTrackingEnabled) {
+        await Workmanager()
+            .initialize(callbackDispatcher, isInDebugMode: false);
+        await Workmanager().registerPeriodicTask(
+          'sleep_tracker',
+          'sleep_tracker_task',
+          frequency: const Duration(minutes: 30),
+        );
+
+        final health = Health();
+        final types = [
+          HealthDataType.SLEEP_IN_BED,
+          HealthDataType.SLEEP_ASLEEP,
+        ];
+        await health.requestAuthorization(types);
+      }
     } else if (Platform.isAndroid) {
       final service = FlutterBackgroundService();
 
@@ -396,21 +403,19 @@ class BackgroundTrackingService {
       final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
           FlutterLocalNotificationsPlugin();
 
-      if (Platform.isAndroid) {
-        await flutterLocalNotificationsPlugin
-            .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin>()
-            ?.createNotificationChannel(channel);
-      }
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channel);
 
       await service.configure(
         androidConfiguration: AndroidConfiguration(
           onStart: onStart,
-          autoStart: true,
+          autoStart: isTrackingEnabled,
           isForegroundMode: true,
           notificationChannelId: 'background_tracking_channel',
           initialNotificationTitle: 'SoulLocket',
-          initialNotificationContent: 'Chạy ngầm để theo dõi trạng thái',
+          initialNotificationContent: 'Chạy ngầm theo dõi giấc ngủ',
           foregroundServiceNotificationId: 888,
         ),
         iosConfiguration: IosConfiguration(
@@ -421,6 +426,62 @@ class BackgroundTrackingService {
           },
         ),
       );
+
+      // Nếu người dùng chưa bật tính năng, đảm bảo service không chạy ngầm
+      if (!isTrackingEnabled) {
+        try {
+          final isRunning = await service.isRunning();
+          if (isRunning) {
+            service.invoke('stopService');
+          }
+        } catch (_) {}
+      }
+    }
+  }
+
+  /// Bật chạy ngầm khi người dùng chủ động bật trong app
+  static Future<void> start() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_sleep_tracking_enabled', true);
+
+    if (Platform.isAndroid) {
+      final service = FlutterBackgroundService();
+      final isRunning = await service.isRunning();
+      if (!isRunning) {
+        await service.startService();
+      }
+    } else if (Platform.isIOS) {
+      await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+      await Workmanager().registerPeriodicTask(
+        'sleep_tracker',
+        'sleep_tracker_task',
+        frequency: const Duration(minutes: 30),
+      );
+      try {
+        final health = Health();
+        final types = [
+          HealthDataType.SLEEP_IN_BED,
+          HealthDataType.SLEEP_ASLEEP,
+        ];
+        await health.requestAuthorization(types);
+      } catch (_) {}
+    }
+  }
+
+  /// Tắt chạy ngầm khi người dùng tắt tính năng trong app
+  static Future<void> stop() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_sleep_tracking_enabled', false);
+
+    if (Platform.isAndroid) {
+      final service = FlutterBackgroundService();
+      try {
+        service.invoke('stopService');
+      } catch (_) {}
+    } else if (Platform.isIOS) {
+      try {
+        await Workmanager().cancelByUniqueName('sleep_tracker');
+      } catch (_) {}
     }
   }
 }

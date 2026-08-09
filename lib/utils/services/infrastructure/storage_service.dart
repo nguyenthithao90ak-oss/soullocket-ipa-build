@@ -1398,6 +1398,12 @@ class StorageService {
       final finalContentType = detectContentType(path);
 
       try {
+        // Đo dung lượng file sau nén trước khi upload
+        int? compressedBytes;
+        try {
+          compressedBytes = await uploadFile.length();
+        } catch (_) {}
+
         final downloadUrl = _rawUploadHelper.uploadFileToPath(
           storagePath: path,
           file: uploadFile,
@@ -1414,6 +1420,7 @@ class StorageService {
         return StorageUploadResult(
           downloadUrl: url,
           storagePath: normalizedStoragePath,
+          uploadedBytes: compressedBytes,
         );
       } finally {
         if (tempCompressedPath != null) {

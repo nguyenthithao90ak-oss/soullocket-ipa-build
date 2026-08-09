@@ -180,19 +180,35 @@ class VipAccessInfo {
   }
 
   int get dailyMemoryUploadLimit {
-    return isVip ? 30 : 10;
+    // Không giới hạn số lượng ảnh nữa — giới hạn bằng dung lượng (MB)
+    return isVip ? 999 : 999;
+  }
+
+  /// Giới hạn dung lượng ảnh (sau nén) upload mỗi ngày (bytes)
+  int get dailyImageUploadLimitBytes {
+    if (!isVip) return 5 * 1024 * 1024;
+    return isLifetime ? 40 * 1024 * 1024 : 20 * 1024 * 1024;
+  }
+
+  /// Giới hạn dung lượng video (sau nén) upload mỗi ngày (bytes)
+  int get dailyVideoUploadLimitBytes {
+    if (!isVip) return 15 * 1024 * 1024;
+    return isLifetime ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
   }
 
   int get dailyMemorySizeLimitMb {
-    return isVip ? 200 : 25;
+    if (!isVip) return 25;
+    return isLifetime ? 400 : 200;
   }
 
   int get totalMemoryStorageCapMb {
-    return isVip ? 512 : 182;
+    if (!isVip) return 182;
+    return isLifetime ? 1024 : 512;
   }
 
   int get totalMemoryVideoCapMb {
-    return isVip ? 512 : 182;
+    if (!isVip) return 182;
+    return isLifetime ? 1024 : 512;
   }
 
   @override

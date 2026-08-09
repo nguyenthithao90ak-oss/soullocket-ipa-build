@@ -810,20 +810,11 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   }
 
   String _securityNote(ProductDetails product) {
-    final info = _planInfoFor(product);
     final planId = _planIdForProduct(product);
-    final memoryNote =
-        info == null ? '' : 'Tối đa ${info.memoryLimit} ảnh Kỷ niệm. ';
     if (VipProduct.isLifetimeProduct(planId)) {
-      return '$memoryNote$_storeDisplayName xử lý thanh toán một lần và bạn có thể khôi phục trên cùng tài khoản.';
+      return 'Gói Vĩnh Viễn: Tải lên tới 40MB ảnh & 100MB video/ngày, kho 1024MB (1GB). $_storeDisplayName xử lý thanh toán một lần và bạn có thể khôi phục trên cùng tài khoản.';
     }
-    if (info != null) {
-      return '$memoryNote$_storeDisplayName xử lý thanh toán an toàn và tự quản lý chu kỳ gia hạn cho gói này.';
-    }
-    if (planId == VipProduct.lifetime) {
-      return '$_storeDisplayName xử lý thanh toán một lần và bạn có thể khôi phục trên cùng tài khoản.';
-    }
-    return '$_storeDisplayName xử lý thanh toán an toàn và tự quản lý chu kỳ gia hạn cho gói này.';
+    return 'Gói VIP: Tải lên 20MB ảnh & 50MB video/ngày, kho 512MB. $_storeDisplayName xử lý thanh toán an toàn và tự quản lý chu kỳ gia hạn cho gói này.';
   }
 
   String _formatVnd(int amount) {
@@ -976,7 +967,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
               ),
               _PremiumInfoPill(
                 icon: Icons.cloud_done_rounded,
-                label: 'Lưu trữ rộng hơn',
+                label: 'Kho lưu trữ 512MB - 1GB',
               ),
               _PremiumInfoPill(
                 icon: Icons.refresh_rounded,
@@ -992,28 +983,28 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
   Widget _buildBenefitsSection() {
     final benefits = <Map<String, Object>>[
       {
+        'icon': Icons.cloud_upload_rounded,
+        'title': 'Kho lưu trữ mở rộng',
+        'desc':
+            'VIP: 20MB ảnh & 50MB video/ngày, kho 512MB. Gói Vĩnh Viễn: Tải lên x2 (40MB ảnh, 100MB video/ngày), kho x2 (1024MB/1GB).',
+      },
+      {
         'icon': Icons.palette_rounded,
         'title': 'Theme & hiệu ứng',
         'desc':
-            'Mở khóa giao diện đẹp hơn, hiệu ứng tình yêu và tùy chỉnh không gian riêng của hai bạn.',
+            'Mở khóa toàn bộ giao diện cao cấp, hiệu ứng tình yêu và tùy chỉnh không gian riêng của hai bạn.',
       },
       {
         'icon': Icons.style_rounded,
         'title': 'Love card & kỷ niệm',
         'desc':
-            'Dùng thêm mẫu thiệp, collage/video export và công cụ lưu giữ khoảnh khắc nâng cao.',
-      },
-      {
-        'icon': Icons.privacy_tip_rounded,
-        'title': 'Riêng tư hơn',
-        'desc':
-            'Tăng quyền kiểm soát không gian riêng, bảo mật và trải nghiệm ít bị làm phiền hơn.',
+            'Dùng không giới hạn mẫu thiệp, collage/video export và công cụ lưu giữ khoảnh khắc nâng cao.',
       },
       {
         'icon': Icons.block_rounded,
-        'title': 'Ít gián đoạn hơn',
+        'title': 'Không quảng cáo',
         'desc':
-            'Giảm quảng cáo nếu gói đang hỗ trợ, ưu tiên trải nghiệm mượt và tập trung hơn.',
+            'Trải nghiệm mượt mà, riêng tư, tập trung 100% cho hai bạn không bị làm phiền.',
       },
     ];
 
@@ -1021,9 +1012,9 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeading(
-          title: 'Premium gồm những gì',
+          title: 'Quyền lợi SoulLocket PRO',
           subtitle:
-              'Mở khóa giao diện, hiệu ứng và công cụ lưu giữ kỷ niệm nâng cao cho hai bạn.',
+              'Mở khóa giao diện, hiệu ứng và kho lưu trữ kỷ niệm chất lượng cao cho hai bạn.',
         ),
         const SizedBox(height: 14),
         LayoutBuilder(
@@ -1065,7 +1056,7 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Free vs Premium',
+            'So sánh quyền lợi',
             style: SLTheme.quicksand(
               color: Colors.white,
               fontWeight: FontWeight.w900,
@@ -1074,23 +1065,34 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
           ),
           const SizedBox(height: 12),
           _buildComparisonRow(
-            title: 'Free',
+            title: 'Tài khoản thường (Miễn phí)',
             items: const [
-              'Lưu kỷ niệm cơ bản',
-              'Viết nhật ký',
-              'Dùng theme mặc định',
-              'Một số tiện ích miễn phí',
+              'Tải lên mỗi ngày: 5MB ảnh & 15MB video',
+              'Dung lượng kho: 182MB ảnh & 182MB video',
+              'Theme mặc định, tiện ích cơ bản',
+              'Có quảng cáo trải nghiệm',
             ],
           ),
           const SizedBox(height: 12),
           _buildComparisonRow(
-            title: 'Premium',
+            title: 'Gói VIP (Tuần / Tháng / 6 Tháng / Năm)',
             highlight: true,
             items: const [
-              'Theme và hiệu ứng cao cấp',
-              'Love card/collage nâng cao',
-              'Tùy chỉnh widget và không gian riêng',
-              'Bảo mật và trải nghiệm ít gián đoạn hơn',
+              'Tải lên mỗi ngày: 20MB ảnh & 50MB video (gấp 4 lần)',
+              'Dung lượng kho mở rộng: 512MB ảnh & 512MB video',
+              'Mở khóa tất cả Theme, Hiệu ứng & Love Card PRO',
+              'Không có quảng cáo làm phiền',
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildComparisonRow(
+            title: 'Gói VIP VĨNH VIỄN (Gấp đôi quyền lợi VIP)',
+            highlight: true,
+            items: const [
+              'Tải lên mỗi ngày: 40MB ảnh & 100MB video (gấp đôi VIP)',
+              'Dung lượng kho tối đa: 1024MB (1GB) ảnh & 1GB video',
+              'Mở khóa vĩnh viễn trọn đời toàn bộ tính năng PRO',
+              'Thanh toán duy nhất 1 lần, không gia hạn định kỳ',
             ],
           ),
         ],

@@ -12,6 +12,7 @@ import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_compress/video_compress.dart';
 import '../../../../../core/constants/app_config.dart';
 import '../../../../../utils/services/private_media_url_service.dart';
 import '../../../../../core/sl_theme.dart';
@@ -1118,6 +1119,28 @@ class DiaryMemoryController extends ChangeNotifier {
         if (updates.isNotEmpty) {
           updates['houses/$houseId/memoriesCount'] =
               ServerValue.increment(-deletedItems.length);
+          // Trừ dung lượng khỏi tổng kho
+          var deletedImageBytes = 0;
+          var deletedVideoBytes = 0;
+          for (final item in deletedItems) {
+            final restore = item['restorePayload'] as Map<String, dynamic>?;
+            if (restore == null) continue;
+            final size = (restore['fileSize'] as num?)?.toInt() ?? 0;
+            if (size <= 0) continue;
+            if (restore['type']?.toString().toLowerCase() == 'video') {
+              deletedVideoBytes += size;
+            } else {
+              deletedImageBytes += size;
+            }
+          }
+          if (deletedImageBytes > 0) {
+            updates['houses/$houseId/memoryStorageBytes/image'] =
+                ServerValue.increment(-deletedImageBytes);
+          }
+          if (deletedVideoBytes > 0) {
+            updates['houses/$houseId/memoryStorageBytes/video'] =
+                ServerValue.increment(-deletedVideoBytes);
+          }
           await _dbRef.update(updates);
           await _logDeletedMemoriesToActivityHistory(
             houseId: houseId,
@@ -1370,11 +1393,23 @@ class DiaryMemoryController extends ChangeNotifier {
           payload['id'] = memoryId;
           payload['deletedAt'] = now;
           payload['purgeAt'] = purgeAt;
-          await _dbRef.update({
+          final singleDeleteUpdates = <String, dynamic>{
             'houses/$houseId/memories_trash/$memoryId': payload,
             'houses/$houseId/memories/$memoryId': null,
             'houses/$houseId/memoriesCount': ServerValue.increment(-1),
-          });
+          };
+          // Trừ dung lượng khỏi tổng kho
+          final delFileSize = (payload['fileSize'] as num?)?.toInt() ?? 0;
+          if (delFileSize > 0) {
+            final typeKey =
+                payload['type']?.toString().toLowerCase() == 'video'
+                    ? 'video'
+                    : 'image';
+            singleDeleteUpdates[
+                    'houses/$houseId/memoryStorageBytes/$typeKey'] =
+                ServerValue.increment(-delFileSize);
+          }
+          await _dbRef.update(singleDeleteUpdates);
           await _logDeletedMemoriesToActivityHistory(
             houseId: houseId,
             deletedItems: [
@@ -1407,7 +1442,7 @@ class DiaryMemoryController extends ChangeNotifier {
   }
 
   /// Upload R2 only — trả về payload để batch-write Firebase sau
-  Future<({String? error, Map<String, dynamic>? payload})>
+  Future<({String? error, Map<String, dynamic>? payload, int uploadedBytes})>
       _uploadSingleMemoryPhoto({
     required String houseId,
     required XFile image,
@@ -1424,7 +1459,8 @@ class DiaryMemoryController extends ChangeNotifier {
       if (isVideoFile && !AppConfig.isVideoUploadEnabled) {
         return (
           error: 'Tính năng tải video đang tạm thời bảo trì để nâng cấp.',
-          payload: null
+          payload: null,
+          uploadedBytes: 0,
         );
       }
 
@@ -1437,8 +1473,34 @@ class DiaryMemoryController extends ChangeNotifier {
       if (upload == null || imageUrl.isEmpty) {
         return (
           error: L10nService().translate('home_khngthtoph_b49958'),
-          payload: null
+          payload: null,
+          uploadedBytes: 0,
         );
+      }
+
+      // ── Tạo thumbnail cho video ──────────────────────────
+      String? thumbnailUrl;
+      if (isVideoFile && !kIsWeb) {
+        try {
+          final thumbFile =
+              await VideoCompress.getFileThumbnail(image.path,
+                  quality: 50, position: -1);
+          if (thumbFile.existsSync() && thumbFile.lengthSync() > 0) {
+            final thumbXFile = XFile(thumbFile.path);
+            final thumbUpload = await _storageService.uploadMemoryImage(
+              houseId,
+              thumbXFile,
+              quality: 60,
+            );
+            thumbnailUrl = thumbUpload?.downloadUrl.trim();
+            // Dọn file tạm
+            try { thumbFile.deleteSync(); } catch (_) {}
+          }
+        } catch (e) {
+          debugPrint(
+            'Tạo thumbnail video thất bại: ${AppErrorMapper.resolve(e).message}',
+          );
+        }
       }
 
       final nowMs = DateTime.now().millisecondsSinceEpoch;
@@ -1453,32 +1515,39 @@ class DiaryMemoryController extends ChangeNotifier {
         'authorEmail': authorEmail.trim(),
         'authorRole': authorRole.trim(),
         'type': isVideoFile ? 'video' : 'image',
+        'fileSize': upload.uploadedBytes ?? 0,
+        if (thumbnailUrl != null && thumbnailUrl.isNotEmpty)
+          'thumbnailUrl': thumbnailUrl,
         if (position != null) 'lat': position.latitude,
         if (position != null) 'lng': position.longitude,
       };
-      return (error: null, payload: payload);
+      return (error: null, payload: payload, uploadedBytes: upload.uploadedBytes ?? 0);
     } catch (e) {
       debugPrint(
         'Lỗi tải ảnh kỷ niệm: ${AppErrorMapper.resolve(e).message}',
       );
-      return (error: AppErrorMapper.resolve(e).message, payload: null);
+      return (error: AppErrorMapper.resolve(e).message, payload: null, uploadedBytes: 0);
     }
   }
 
-  Future<int> _getTotalMemoriesCount(String houseId) async {
+  /// Đọc tổng dung lượng ảnh + video đã lưu trong kho (bytes).
+  Future<Map<String, int>> _getTotalStorageBytes(String houseId) async {
     try {
-      final countSnap =
-          await _dbRef.child('houses/$houseId/memoriesCount').get();
-      if (countSnap.exists && countSnap.value != null) {
-        return (countSnap.value as num).toInt();
+      final snap =
+          await _dbRef.child('houses/$houseId/memoryStorageBytes').get();
+      if (snap.exists && snap.value is Map) {
+        final map = Map<String, dynamic>.from(snap.value as Map);
+        return {
+          'image': (map['image'] as num?)?.toInt() ?? 0,
+          'video': (map['video'] as num?)?.toInt() ?? 0,
+        };
       }
     } catch (e) {
       debugPrint(
-        'Failed to read memoriesCount: ${AppErrorMapper.resolve(e).message}',
+        'Failed to read memoryStorageBytes: ${AppErrorMapper.resolve(e).message}',
       );
     }
-
-    return 0;
+    return {'image': 0, 'video': 0};
   }
 
   Future<void> retryPendingUpload({
@@ -1533,70 +1602,67 @@ class DiaryMemoryController extends ChangeNotifier {
     // Chạy song song để giảm thời gian chờ trước khi hiện picker
     final preCheckResults = await Future.wait([
       PurchaseService().getVipAccessInfo(),
-      _getTotalMemoriesCount(houseId),
+      _getTotalStorageBytes(houseId),
     ]);
 
     final vipAccess = preCheckResults[0] as VipAccessInfo;
-    final totalMemories = preCheckResults[1] as int;
+    final totalStorageMap = preCheckResults[1] as Map<String, int>;
+    final totalImageBytes = totalStorageMap['image'] ?? 0;
+    final totalVideoBytes = totalStorageMap['video'] ?? 0;
 
-    final maxMemories = (vipAccess.memoryVaultLimit ?? 365).toDouble();
+    // ── Kiểm tra tổng kho (tất cả thời gian) ──
+    final imageStorageCap = vipAccess.totalMemoryStorageCapMb * 1024 * 1024;
+    final videoStorageCap = vipAccess.totalMemoryVideoCapMb * 1024 * 1024;
 
-    if (totalMemories >= maxMemories) {
+    if (totalImageBytes >= imageStorageCap && totalVideoBytes >= videoStorageCap) {
+      final imgCapMb = vipAccess.totalMemoryStorageCapMb;
+      final vidCapMb = vipAccess.totalMemoryVideoCapMb;
       showSnackBar(
-        L10nService().format('diary_memory_vault_full', {
-          'current': totalMemories,
-          'limit': maxMemories.toInt(),
-        }),
+        'Kho lưu trữ đã đầy (ảnh ${imgCapMb}MB, video ${vidCapMb}MB). Vui lòng xóa bớt kỷ niệm cũ để tải thêm mới.'
+        '${!vipAccess.isVip && AppConfig.isPurchaseEnabled ? ' Hoặc nâng cấp VIP để mở rộng kho!' : ''}',
         backgroundColor: const Color(0xFFE53935),
       );
       return;
     }
 
-    final dailyLimit = vipAccess.dailyMemoryUploadLimit;
     final uid = FirebaseAuth.instance.currentUser?.uid ?? 'guest';
-
     final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final uploadCountRef =
-        _dbRef.child('houses/$houseId/memoryUploadCounts/$todayStr/$uid');
-    final countSnap = await uploadCountRef.get();
-    final uploadedToday = (countSnap.value as num?)?.toInt() ?? 0;
 
-    if (uploadedToday >= dailyLimit) {
+    // ── Đọc dung lượng ảnh + video đã upload hôm nay (bytes sau nén) ──
+    final uploadBytesRef =
+        _dbRef.child('houses/$houseId/memoryUploadBytes/$todayStr/$uid');
+    final bytesSnap = await uploadBytesRef.get();
+    final bytesMap = bytesSnap.value is Map
+        ? Map<String, dynamic>.from(bytesSnap.value as Map)
+        : <String, dynamic>{};
+    final imageUploadedToday = (bytesMap['image'] as num?)?.toInt() ?? 0;
+    final videoUploadedToday = (bytesMap['video'] as num?)?.toInt() ?? 0;
+
+    final imageLimitBytes = vipAccess.dailyImageUploadLimitBytes;
+    final videoLimitBytes = vipAccess.dailyVideoUploadLimitBytes;
+
+    // Kiểm tra giới hạn dung lượng hàng ngày
+    if (imageUploadedToday >= imageLimitBytes &&
+        videoUploadedToday >= videoLimitBytes) {
+      final imageLimitMb = (imageLimitBytes / (1024 * 1024)).toStringAsFixed(0);
+      final videoLimitMb = (videoLimitBytes / (1024 * 1024)).toStringAsFixed(0);
       showSnackBar(
-        L10nService().translate(
-          vipAccess.isVip
-              ? L10nService().translate('home_bntgiihnng_7baf22')
-              : AppConfig.isPurchaseEnabled
-                  ? L10nService().translate('home_tikhonthng_5aa69a')
-                  : L10nService().translate('home_bntgiihnng_0f0c9d'),
-        ),
+        vipAccess.isVip
+            ? 'Bạn đã dùng hết dung lượng tải lên hôm nay (ảnh ${imageLimitMb}MB, video ${videoLimitMb}MB). Vui lòng thử lại ngày mai.'
+            : AppConfig.isPurchaseEnabled
+                ? 'Tài khoản thường chỉ được tải lên ${imageLimitMb}MB ảnh và ${videoLimitMb}MB video mỗi ngày. Nâng cấp VIP để tải lên nhiều hơn!'
+                : 'Bạn đã dùng hết dung lượng tải lên hôm nay. Vui lòng thử lại ngày mai.',
         backgroundColor: const Color(0xFFE53935),
       );
       return;
     }
 
-    var slotsLeft = dailyLimit - uploadedToday;
-    final slotsUntilFull = maxMemories.toInt() - totalMemories;
-    if (slotsLeft > slotsUntilFull) {
-      slotsLeft = slotsUntilFull;
-    }
-
-    final limitToPick = StorageService.clampImagePickLimit(slotsLeft);
+    // Cho chọn ảnh/video thoải mái — giới hạn bằng dung lượng, không giới hạn số lượng
+    final limitToPick = StorageService.clampImagePickLimit(99);
 
     final images =
         presetImages ?? await _storageService.pickMedia(limit: limitToPick);
     if (images.isEmpty || !context.mounted) {
-      return;
-    }
-    final messenger = ScaffoldMessenger.of(context);
-    if (images.length > slotsLeft) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(L10nService().format('diary_slots_left', {
-            'count': slotsLeft,
-          })),
-        ),
-      );
       return;
     }
 
@@ -1686,6 +1752,8 @@ class DiaryMemoryController extends ChangeNotifier {
 
       var uploadedCount = 0;
       final errorMessages = <String>[];
+      var sessionImageBytes = 0;
+      var sessionVideoBytes = 0;
 
       for (var start = 0;
           start < images.length;
@@ -1715,6 +1783,32 @@ class DiaryMemoryController extends ChangeNotifier {
           if (result.error != null) {
             errorMessages.add(result.error!);
           } else if (result.payload != null) {
+            // Kiểm tra giới hạn dung lượng trước khi chấp nhận
+            final isVideo =
+                result.payload!['type']?.toString().toLowerCase() == 'video';
+            final bytes = result.uploadedBytes;
+            if (isVideo) {
+              if (videoUploadedToday + sessionVideoBytes + bytes >
+                  videoLimitBytes) {
+                final limitMb =
+                    (videoLimitBytes / (1024 * 1024)).toStringAsFixed(0);
+                errorMessages.add(
+                    'Vượt giới hạn video ${limitMb}MB/ngày. Bỏ qua file này.');
+                continue;
+              }
+              sessionVideoBytes += bytes;
+            } else {
+              if (imageUploadedToday + sessionImageBytes + bytes >
+                  imageLimitBytes) {
+                final limitMb =
+                    (imageLimitBytes / (1024 * 1024)).toStringAsFixed(0);
+                errorMessages.add(
+                    'Vượt giới hạn ảnh ${limitMb}MB/ngày. Bỏ qua file này.');
+                continue;
+              }
+              sessionImageBytes += bytes;
+            }
+
             final memoryKey =
                 _dbRef.child('houses/$houseId/memories').push().key ?? '';
             if (memoryKey.isNotEmpty) {
@@ -1742,7 +1836,31 @@ class DiaryMemoryController extends ChangeNotifier {
         }
       }
 
-      await uploadCountRef.set(uploadedToday + uploadedCount);
+      // Ghi dung lượng đã upload hôm nay (bytes) vào Firebase
+      final updatedBytes = <String, dynamic>{};
+      if (sessionImageBytes > 0) {
+        updatedBytes['image'] = imageUploadedToday + sessionImageBytes;
+      }
+      if (sessionVideoBytes > 0) {
+        updatedBytes['video'] = videoUploadedToday + sessionVideoBytes;
+      }
+      if (updatedBytes.isNotEmpty) {
+        await uploadBytesRef.update(updatedBytes);
+      }
+
+      // Cập nhật tổng kho (tất cả thời gian)
+      final storageIncrements = <String, dynamic>{};
+      if (sessionImageBytes > 0) {
+        storageIncrements['houses/$houseId/memoryStorageBytes/image'] =
+            ServerValue.increment(sessionImageBytes);
+      }
+      if (sessionVideoBytes > 0) {
+        storageIncrements['houses/$houseId/memoryStorageBytes/video'] =
+            ServerValue.increment(sessionVideoBytes);
+      }
+      if (storageIncrements.isNotEmpty) {
+        await _dbRef.update(storageIncrements);
+      }
 
       if (uploadedCount > 0) {
         await NotificationService().sendPartnerNotification(

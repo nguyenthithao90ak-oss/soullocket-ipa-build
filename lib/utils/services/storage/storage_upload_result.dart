@@ -9,6 +9,7 @@ class StorageUploadResult {
     this.blurHash,
     this.width,
     this.height,
+    this.uploadedBytes,
   });
 
   final String downloadUrl;
@@ -20,4 +21,7 @@ class StorageUploadResult {
   final String? blurHash;
   final int? width;
   final int? height;
+
+  /// Dung lượng thực tế của file đã upload (sau nén), tính bằng bytes.
+  final int? uploadedBytes;
 }

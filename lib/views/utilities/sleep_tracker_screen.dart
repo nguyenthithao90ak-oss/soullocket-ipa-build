@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/fast_backdrop_filter.dart';
+import '../../utils/services/core/background_tracking_service.dart';
 import '../../utils/services/widget_service.dart';
 
 class SleepTrackerScreen extends StatefulWidget {
@@ -66,8 +67,11 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
   }
 
   Future<void> _toggleTracking(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('is_sleep_tracking_enabled', value);
+    if (value) {
+      await BackgroundTrackingService.start();
+    } else {
+      await BackgroundTrackingService.stop();
+    }
     if (!mounted) return;
     setState(() {
       _isTrackingEnabled = value;

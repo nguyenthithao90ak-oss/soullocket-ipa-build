@@ -1099,6 +1099,59 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
     return fallbackUrl;
   }
 
+  Widget _buildVideoThumbnail(
+      Map<String, dynamic> photo, String videoUrl) {
+    final thumbUrl = photo['thumbnailUrl']?.toString().trim() ?? '';
+    if (thumbUrl.isEmpty) {
+      // Fallback: không có thumbnail → icon play trên nền trắng
+      return Container(
+        color: const Color(0xFFF8FAFC),
+        child: const Center(
+          child: Icon(
+            Icons.play_circle_fill,
+            color: Color(0xFF94A3B8),
+            size: 48,
+          ),
+        ),
+      );
+    }
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        CachedNetworkImage(
+          imageUrl: thumbUrl,
+          memCacheWidth: widget.thumbnailCacheWidth,
+          fit: BoxFit.cover,
+          filterQuality: FilterQuality.low,
+          placeholder: (context, url) =>
+              Container(color: const Color(0xFFF1F5F9)),
+          errorWidget: (context, url, error) => Container(
+            color: const Color(0xFFF8FAFC),
+            child: const Center(
+              child: Icon(Icons.play_circle_fill,
+                  color: Color(0xFF94A3B8), size: 48),
+            ),
+          ),
+        ),
+        // Overlay icon play
+        Center(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.4),
+              shape: BoxShape.circle,
+            ),
+            padding: const EdgeInsets.all(8),
+            child: const Icon(
+              Icons.play_arrow_rounded,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final photo = widget.photo;
@@ -1179,16 +1232,7 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
             child: Hero(
               tag: 'memory_image_${photo['id']}',
               child: isVideo 
-                  ? Container(
-                      color: const Color(0xFFF8FAFC),
-                      child: const Center(
-                        child: Icon(
-                          Icons.play_circle_fill,
-                          color: Color(0xFF94A3B8),
-                          size: 48,
-                        ),
-                      ),
-                    )
+                  ? _buildVideoThumbnail(photo, photoUrl)
                   : CachedNetworkImage(
                       imageUrl: photoUrl,
                       memCacheWidth: widget.thumbnailCacheWidth,

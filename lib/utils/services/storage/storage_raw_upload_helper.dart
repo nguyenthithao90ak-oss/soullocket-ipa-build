@@ -38,7 +38,7 @@ class StorageRawUploadHelper {
 
     final fileSize = await file.length();
     final isVideo = resolvedContentType.startsWith('video/');
-    final limit = isVideo ? 100 * 1024 * 1024 : 25 * 1024 * 1024;
+    final limit = isVideo ? 50 * 1024 * 1024 : 25 * 1024 * 1024;
     if (fileSize > limit) {
       throw Exception(
           'Tệp tải lên vượt quá giới hạn. Vui lòng chọn tệp nhỏ hơn.');
