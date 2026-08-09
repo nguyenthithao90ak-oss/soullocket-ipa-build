@@ -291,7 +291,7 @@ class PurchaseService {
         return;
       }
 
-      final headers = await AppCheckHttpHeaders.withRequiredToken(
+      final headers = await AppCheckHttpHeaders.withOptionalToken(
         {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $idToken',
@@ -369,7 +369,8 @@ class PurchaseService {
 
     try {
       await _iap.buyNonConsumable(purchaseParam: purchaseParam);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('buyProduct error: ${AppErrorMapper.resolve(e).message}');
       _statusController.add(VipPurchaseState.error);
     }
   }
@@ -418,7 +419,7 @@ class PurchaseService {
         return false;
       }
 
-      final headers = await AppCheckHttpHeaders.withRequiredToken(
+      final headers = await AppCheckHttpHeaders.withOptionalToken(
         {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $idToken',
