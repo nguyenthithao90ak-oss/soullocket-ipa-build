@@ -40,29 +40,32 @@ class CalendarHeaderSection extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
         child: FastBackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: Container(
             padding: EdgeInsets.fromLTRB(
               compact ? 14 : 16,
               compact ? 14 : 16,
               compact ? 14 : 16,
-              compact ? 8 : 10,
+              compact ? 10 : 12,
             ),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withValues(alpha: 0.28),
-                  Colors.white.withValues(alpha: 0.14),
+                  Colors.white.withValues(alpha: 0.18),
+                  Colors.white.withValues(alpha: 0.08),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.32)),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.25),
+                width: 1.5,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 18,
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 24,
                   offset: const Offset(0, 10),
                 ),
               ],
@@ -76,10 +79,19 @@ class CalendarHeaderSection extends StatelessWidget {
                       width: compact ? 42 : 46,
                       height: compact ? 42 : 46,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFF5287), Color(0xFFFF7397)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                         borderRadius: BorderRadius.circular(compact ? 14 : 16),
-                        border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.22)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFF5287).withValues(alpha: 0.4),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Icon(
                         Icons.calendar_month_rounded,
@@ -104,7 +116,7 @@ class CalendarHeaderSection extends StatelessWidget {
                           Text(
                             context.tr('util_chmvongybt_98a4c5'),
                             style: SLTheme.quicksand(
-                              color: Colors.white.withValues(alpha: 0.82),
+                              color: Colors.white.withValues(alpha: 0.78),
                               fontWeight: FontWeight.w600,
                               fontSize: compact ? 11.5 : 12,
                               height: 1.35,
@@ -134,37 +146,41 @@ class CalendarHeaderSection extends StatelessWidget {
                   onFormatChanged: onFormatChanged,
                   onPageChanged: onPageChanged,
                   rowHeight: compact ? 44 : 50,
-                  daysOfWeekHeight: compact ? 24 : 28,
+                  daysOfWeekHeight: compact ? 26 : 30,
                   headerStyle: HeaderStyle(
                     titleCentered: true,
                     titleTextStyle: SLTheme.quicksand(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
-                      fontSize: compact ? 15 : 16,
+                      fontSize: compact ? 16 : 17,
                     ),
                     formatButtonTextStyle: SLTheme.quicksand(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
+                      fontSize: 12,
                     ),
                     formatButtonDecoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(14),
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.24)),
+                        color: Colors.white.withValues(alpha: 0.25),
+                      ),
                     ),
                     leftChevronIcon:
-                        const Icon(Icons.chevron_left, color: Colors.white),
+                        const Icon(Icons.chevron_left_rounded, color: Colors.white, size: 24),
                     rightChevronIcon:
-                        const Icon(Icons.chevron_right, color: Colors.white),
+                        const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 24),
                   ),
                   daysOfWeekStyle: DaysOfWeekStyle(
                     weekdayStyle: SLTheme.quicksand(
-                      color: Colors.white.withValues(alpha: 0.84),
+                      color: Colors.white.withValues(alpha: 0.85),
                       fontWeight: FontWeight.w800,
+                      fontSize: 12,
                     ),
                     weekendStyle: SLTheme.quicksand(
-                      color: const Color(0xFFFFF0C7),
+                      color: const Color(0xFFFFC0D3),
                       fontWeight: FontWeight.w800,
+                      fontSize: 12,
                     ),
                   ),
                   calendarStyle: CalendarStyle(
@@ -173,27 +189,34 @@ class CalendarHeaderSection extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                     weekendTextStyle: SLTheme.quicksand(
-                      color: const Color(0xFFFFF0C7),
+                      color: const Color(0xFFFFC0D3),
                       fontWeight: FontWeight.w700,
                     ),
-                    selectedDecoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFFF7396), Color(0xFFE63A71)],
+                    selectedDecoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF5287), Color(0xFFFF7397)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF5287).withValues(alpha: 0.5),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     todayDecoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.24),
+                      color: Colors.white.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        width: 1.4,
+                        color: const Color(0xFFFF7397),
+                        width: 1.8,
                       ),
                     ),
                     outsideTextStyle: SLTheme.quicksand(
-                      color: Colors.white.withValues(alpha: 0.34),
+                      color: Colors.white.withValues(alpha: 0.25),
                     ),
                     markersMaxCount: 1,
                     markerDecoration: const BoxDecoration(
@@ -207,21 +230,20 @@ class CalendarHeaderSection extends StatelessWidget {
                       }
                       return Align(
                         alignment: Alignment.bottomCenter,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            '${events.length}',
-                            style: SLTheme.quicksand(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF2157F2),
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFF5287),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFF5287).withValues(alpha: 0.8),
+                                  blurRadius: 4,
+                                ),
+                              ],
                             ),
                           ),
                         ),

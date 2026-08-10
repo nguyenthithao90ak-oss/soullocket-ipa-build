@@ -79,18 +79,18 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
     final List<String> defaultAssets = [
       'assets/images/avatar_male.jpg',
       'assets/images/avatar_female.jpg',
-      'assets/images/anhtomau_stickers/sticker_1.gif',
-      'assets/images/anhtomau_stickers/sticker_1.gif',
-      'assets/images/anhtomau_stickers/sticker_1.gif',
-      'assets/images/anhtomau_stickers/sticker_1.gif',
-      'assets/images/anhtomau_stickers/sticker_1.gif',
-      'assets/images/anhtomau_stickers/sticker_1.gif',
-      'assets/images/anhtomau_stickers/sticker_1.gif',
-      'assets/images/anhtomau_stickers/sticker_1.gif',
-      'assets/images/anhtomau_stickers/sticker_1.gif',
-      'assets/images/anhtomau_stickers/sticker_1.gif',
-      'assets/images/anhtomau_stickers/sticker_1.gif',
-      'assets/images/anhtomau_stickers/sticker_1.gif',
+      'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_343.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_339.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_228.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_270.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_276.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_165.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_173.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_108.png',
+      'assets/images/interaction_stickers/custom/numbered/sticker_158.png',
     ];
 
     for (final asset in defaultAssets) {
@@ -206,4 +206,3 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
     });
   }
 }
-

@@ -37,7 +37,7 @@ final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     emoji: '\u{1F63E}',
     icon: Icons.sentiment_very_dissatisfied_rounded,
     assetPath:
-        'assets/images/anhtomau_stickers/sticker_1.gif',
+        'assets/images/anhtomau_stickers/sticker_12.gif',
     gradient: [const Color(0xFFFFE6DC), const Color(0xFFFFF6F2)],
     accent: const Color(0xFFE26A3A),
   ),
@@ -47,7 +47,7 @@ final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     emoji: '\u{1F48B}',
     icon: Icons.favorite_border_rounded,
     assetPath:
-        'assets/images/anhtomau_stickers/sticker_1.gif',
+        'assets/images/anhtomau_stickers/sticker_14.gif',
     gradient: [const Color(0xFFFFE1EC), const Color(0xFFFFF7FA)],
     accent: const Color(0xFFE14A8B),
   ),
@@ -57,7 +57,7 @@ final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     emoji: '\u{1F428}',
     icon: Icons.diversity_1_rounded,
     assetPath:
-        'assets/images/anhtomau_stickers/sticker_1.gif',
+        'assets/images/anhtomau_stickers/sticker_6.gif',
     gradient: [const Color(0xFFDDF3FF), const Color(0xFFF5FBFF)],
     accent: const Color(0xFF2D8FE3),
   ),
@@ -67,7 +67,7 @@ final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     emoji: '\u{1F921}',
     icon: Icons.auto_awesome_rounded,
     assetPath:
-        'assets/images/anhtomau_stickers/sticker_1.gif',
+        'assets/images/anhtomau_stickers/sticker_15.gif',
     gradient: [const Color(0xFFE8E1FF), const Color(0xFFF8F5FF)],
     accent: const Color(0xFF7B61D9),
   ),
@@ -77,7 +77,7 @@ final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     emoji: '\u{1F62D}',
     icon: Icons.face_retouching_natural_rounded,
     assetPath:
-        'assets/images/anhtomau_stickers/sticker_1.gif',
+        'assets/images/anhtomau_stickers/sticker_7.gif',
     gradient: [const Color(0xFFDDEBFF), const Color(0xFFF4F8FF)],
     accent: const Color(0xFF5B8DEF),
   ),
@@ -87,7 +87,7 @@ final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     emoji: '\u{1F4A9}',
     icon: Icons.bolt_rounded,
     assetPath:
-        'assets/images/anhtomau_stickers/sticker_1.gif',
+        'assets/images/anhtomau_stickers/sticker_8.gif',
     gradient: [const Color(0xFFFFE1B9), const Color(0xFFFFF4E6)],
     accent: const Color(0xFFB96B2C),
   ),
@@ -865,6 +865,7 @@ class _CountdownModeCircle extends StatelessWidget {
     this.onValueTap,
     this.onBottomTap,
     required this.styleKey,
+    required this.countdownShapeKey,
     required this.transparentMode,
     required this.enableMotion,
   });
@@ -879,6 +880,7 @@ class _CountdownModeCircle extends StatelessWidget {
   final VoidCallback? onValueTap;
   final VoidCallback? onBottomTap;
   final String styleKey;
+  final String countdownShapeKey;
   final bool transparentMode;
   final bool enableMotion;
 
@@ -899,12 +901,14 @@ class _CountdownModeCircle extends StatelessWidget {
       child: Container(
         width: resolvedSize,
         height: resolvedSize,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
+        decoration: ShapeDecoration(
+          shape: SlCountdownShapes.getShapeBorderForKey(
+            countdownShapeKey,
+            side: BorderSide.none,
+          ),
           color: styleData.outerColor,
           gradient: styleData.outerGradient,
-          border: styleData.outerBorder,
-          boxShadow: styleData.shadows,
+          shadows: styleData.shadows,
         ),
         child: Padding(
           padding: (styleData.outerColor != null ||
@@ -913,24 +917,19 @@ class _CountdownModeCircle extends StatelessWidget {
               ? const EdgeInsets.all(14)
               : EdgeInsets.zero,
           child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
+            decoration: ShapeDecoration(
+              shape: SlCountdownShapes.getShapeBorderForKey(
+                countdownShapeKey,
+                side: (styleData.innerBorder is Border)
+                    ? (styleData.innerBorder as Border).top
+                    : BorderSide.none,
+              ),
               color: styleData.innerColor,
               gradient: styleData.innerGradient,
-              border: styleData.innerBorder,
             ),
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Positioned.fill(
-                  child: RepaintBoundary(
-                    child: AnimatedWaveBackground(
-                      styleKey: styleKey,
-                      enableMotion: enableMotion,
-                      transparentMode: transparentMode,
-                    ),
-                  ),
-                ),
                 Padding(
                   padding:
                       EdgeInsets.symmetric(horizontal: resolvedSize * 0.12),
@@ -1208,26 +1207,24 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
       final zIndex = ((rng ^ (i * 13579)) & 0xFFFF) / 0xFFFF;
 
       // Tính toán base size tuỳ theo độ sâu (zIndex) để tạo hiệu ứng 3D
-      // Gần camera (zIndex cao) -> bự hơn, mờ đi chút
-      // Xa camera (zIndex thấp) -> nhỏ, rõ
-      final baseSize = 8.0 + (jitter3 * 18.0) + (zIndex * 24.0);
+      // Tăng kích thước để các hạt rõ và nổi bật hơn
+      final baseSize = 12.0 + (jitter3 * 22.0) + (zIndex * 28.0);
 
       return _HeartParticle(
         startX: 0.05 + (jitter1 * 0.9),
-        speed:
-            0.2 + (jitter2 * 0.5) + (zIndex * 0.6), // Hạt ở gần bay nhanh hơn
+        speed: 0.2 + (jitter2 * 0.6) + (zIndex * 0.7), // Bay nhẹ nhàng bay bổng
         size: baseSize,
-        wobbleAmplitude: 8.0 + (jitter1 * 25.0) + (zIndex * 15.0),
-        wobbleSpeed: 1.5 + (jitter2 * 4.0),
+        wobbleAmplitude: 12.0 + (jitter1 * 30.0) + (zIndex * 20.0),
+        wobbleSpeed: 1.0 + (jitter2 * 3.0),
         phase: jitter1,
-        rotationSpeed: (jitter2 - 0.5) * 6.0,
+        rotationSpeed: (jitter2 - 0.5) * 5.0,
         colorIndex:
             (jitter3 * _kHeartColors.length).toInt() % _kHeartColors.length,
         icon: iconChoices[
             (jitter1 * iconChoices.length).toInt() % iconChoices.length],
-        isGlow: jitter2 > 0.6, // Tăng tỷ lệ phát sáng lên 40%
+        isGlow: jitter2 > 0.35, // Phát sáng nhiều hơn (65%)
         zIndex: zIndex,
-        pulseSpeed: 3.0 + (jitter1 * 4.0), // Tốc độ nhịp đập tim
+        pulseSpeed: 2.0 + (jitter1 * 3.0), // Tốc độ nhịp đập tim
       );
     });
 
@@ -1293,7 +1290,7 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
                     Widget heartWidget = Icon(
                       p.icon,
                       size: p.size,
-                      color: baseColor.withValues(alpha: 0.95),
+                      color: baseColor.withValues(alpha: 1.0), // Đậm màu, không trong suốt
                     );
 
                     if (p.isGlow) {
@@ -1301,22 +1298,17 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
                         decoration:
                             BoxDecoration(shape: BoxShape.circle, boxShadow: [
                           BoxShadow(
-                            color: baseColor.withValues(alpha: 0.65),
-                            blurRadius: 15, // Glow mạnh hơn xíu
-                            spreadRadius: 2,
+                            color: baseColor.withValues(alpha: 0.85),
+                            blurRadius: 22, // Tỏa sáng rộng hơn
+                            spreadRadius: 4,
+                          ),
+                          BoxShadow(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            blurRadius: 8,
+                            spreadRadius: 1, // Lõi sáng trắng nhẹ nhàng
                           ),
                         ]),
                         child: heartWidget,
-                      );
-                    }
-
-                    // Nếu hạt ở rất gần camera, tạo blur để có độ sâu trường ảnh (Depth of Field 3D)
-                    if (p.zIndex > 0.88) {
-                      heartWidget = ClipRect(
-                        child: FastBackdropFilter(
-                          filter: ui.ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
-                          child: heartWidget,
-                        ),
                       );
                     }
 

@@ -50,6 +50,7 @@ class _MainHomeBodySection extends StatelessWidget {
         customBackgroundUrl: customBackgroundUrl,
         showDayCounter: viewData.showDayCounter,
         showLoveTimeDetail: viewData.showLoveTimeDetail,
+        countdownShapeKey: viewData.countdownShapeKey,
         countdownStyleKey: viewData.countdownStyleKey,
         onEditStartDate: state._showEditStartDateDialog,
         onEditTopLabel: viewData.isSingle

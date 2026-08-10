@@ -166,39 +166,57 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                     height: 68,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                      color: isDark
-                          ? startColor.withValues(alpha: 0.05)
-                          : Colors.white.withValues(alpha: 0.4),
                       gradient: LinearGradient(
                         colors: [
-                          startColor.withValues(alpha: isDark ? 0.2 : 0.25),
-                          endColor.withValues(alpha: isDark ? 0.05 : 0.1),
+                          startColor,
+                          endColor,
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: startColor.withValues(alpha: 0.3),
-                          blurRadius: 16,
-                          spreadRadius: -2,
-                          offset: const Offset(0, 8),
+                          color: startColor.withValues(alpha: 0.42),
+                          blurRadius: 14,
+                          spreadRadius: -1,
+                          offset: const Offset(0, 6),
                         ),
                       ],
                       border: Border.all(
-                        color: startColor.withValues(alpha: isDark ? 0.2 : 0.4),
+                        color: Colors.white.withValues(alpha: isDark ? 0.3 : 0.5),
                         width: 1.5,
                       ),
                     ),
-                    child: Center(
-                      child: buildUtilityStickerIcon(
-                        utilityId: app.id,
-                        fallbackIcon: iconData,
-                        fallbackColor: endColor,
-                        fallbackSize: 34,
-                        padding: const EdgeInsets.all(6),
-                        devicePixelRatio: dpr,
-                      ),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(19),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white.withValues(alpha: 0.35),
+                                  Colors.white.withValues(alpha: 0.05),
+                                  Colors.transparent,
+                                ],
+                                stops: const [0.0, 0.35, 1.0],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Center(
+                          child: buildUtilityStickerIcon(
+                            utilityId: app.id,
+                            fallbackIcon: iconData,
+                            fallbackColor: Colors.white,
+                            fallbackSize: 34,
+                            padding: const EdgeInsets.all(6),
+                            devicePixelRatio: dpr,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

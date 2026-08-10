@@ -250,35 +250,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
 
     return Column(
       children: [
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            avatarWidget,
-            if (!hideMeta && _showWeather && weatherText.isNotEmpty)
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    weatherText,
-                    style: const TextStyle(fontSize: 14, height: 1),
-                  ),
-                ),
-              ),
-          ],
-        ),
+        avatarWidget,
         SizedBox(height: compactMeta ? 8 : 12),
         GestureDetector(
           onTap: () async {
@@ -353,18 +325,33 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
           ),
         ),
         if (!compactMeta) SLSpacing.h8,
-        if (!hideMeta && _showStatus)
-          Text(
-            statusText,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: SLTheme.quicksand(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: statusColor,
-            ),
+        if (!hideMeta)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_showWeather && weatherText.isNotEmpty) ...[
+                Text(
+                  weatherText,
+                  style: const TextStyle(fontSize: 12, height: 1),
+                ),
+                const SizedBox(width: 4),
+              ],
+              if (_showStatus)
+                Flexible(
+                  child: Text(
+                    statusText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: statusColor,
+                    ),
+                  ),
+                ),
+            ],
           ),
-        if (!hideMeta && _showStatus) SLSpacing.h8,
       ],
     );
   }

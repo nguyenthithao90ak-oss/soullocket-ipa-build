@@ -17,6 +17,12 @@ class TinyHeart {
   double lifeTimeProgress = 0.0;
   final List<Offset> trail = [];
 
+  // Fields for flying to target
+  bool isFlyingToTarget = false;
+  double targetX = 0;
+  double targetY = 0;
+  int flightPathType = 0;
+
   TinyHeart({
     required this.x,
     required this.y,
@@ -27,6 +33,29 @@ class TinyHeart {
     required this.style,
   })  : startX = x,
         swayPhase = math.Random().nextDouble() * math.pi * 2;
+}
+
+class FlyingStickerParticle {
+  final String assetPath;
+  double x;
+  double y;
+  double targetX;
+  double targetY;
+  double size;
+  double speed;
+  double lifeTimeProgress = 0.0;
+  int flightPathType;
+
+  FlyingStickerParticle({
+    required this.assetPath,
+    required this.x,
+    required this.y,
+    required this.targetX,
+    required this.targetY,
+    required this.size,
+    required this.speed,
+    required this.flightPathType,
+  });
 }
 
 class TapHeartsOverlay extends StatefulWidget {
@@ -41,6 +70,7 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
     with SingleTickerProviderStateMixin {
   late final AnimationController _tickerController;
   final List<TinyHeart> _hearts = [];
+  final List<FlyingStickerParticle> _flyingStickers = [];
 
   @override
   void initState() {
@@ -52,7 +82,7 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
   }
 
   void _tickHearts() {
-    if (_hearts.isEmpty) {
+    if (_hearts.isEmpty && _flyingStickers.isEmpty) {
       if (_tickerController.isAnimating) {
         _tickerController.stop();
       }
@@ -61,9 +91,71 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
 
     setState(() {
       const double dt = 0.016; // approximate delta time per frame
+
+      for (int i = _flyingStickers.length - 1; i >= 0; i--) {
+        final sticker = _flyingStickers[i];
+        sticker.lifeTimeProgress += dt;
+        final dx = sticker.targetX - sticker.x;
+        final dy = sticker.targetY - sticker.y;
+        final distance = math.sqrt(dx * dx + dy * dy);
+
+        if (distance < 25.0 || sticker.lifeTimeProgress > 2.0) {
+          _flyingStickers.removeAt(i);
+          spawnLocalExplosion(Offset(sticker.targetX, sticker.targetY), count: 5);
+          continue;
+        }
+
+        final targetAngle = math.atan2(dy, dx);
+        double currentAngle = targetAngle;
+        
+        if (sticker.flightPathType == 1) {
+          currentAngle += math.sin(sticker.lifeTimeProgress * 15.0) * 0.9;
+        } else if (sticker.flightPathType == 2) {
+          currentAngle += math.sin(sticker.lifeTimeProgress * 25.0) * 1.5;
+        }
+
+        final currentSpeed = math.min(22.0, sticker.speed + sticker.lifeTimeProgress * 20.0);
+        sticker.x += math.cos(currentAngle) * currentSpeed;
+        sticker.y += math.sin(currentAngle) * currentSpeed;
+      }
+
       for (int i = _hearts.length - 1; i >= 0; i--) {
         final heart = _hearts[i];
         heart.lifeTimeProgress += dt;
+
+        if (heart.isFlyingToTarget) {
+          final dx = heart.targetX - heart.x;
+          final dy = heart.targetY - heart.y;
+          final distance = math.sqrt(dx * dx + dy * dy);
+
+          if (distance < 25.0) {
+            _hearts.removeAt(i);
+            spawnLocalExplosion(Offset(heart.targetX, heart.targetY), count: 4);
+            continue;
+          }
+
+          final targetAngle = math.atan2(dy, dx);
+          double currentAngle = targetAngle;
+          
+          if (heart.flightPathType == 1) {
+            currentAngle += math.sin(heart.lifeTimeProgress * 15.0) * 0.9;
+          } else if (heart.flightPathType == 2) {
+            currentAngle += math.sin(heart.lifeTimeProgress * 25.0) * 1.5;
+          }
+
+          final currentSpeed = math.min(22.0, heart.speed + heart.lifeTimeProgress * 20.0);
+          heart.x += math.cos(currentAngle) * currentSpeed;
+          heart.y += math.sin(currentAngle) * currentSpeed;
+
+          if (heart.style == 'aurora' || heart.style == 'cosmic') {
+            heart.trail.add(Offset(heart.x, heart.y));
+            if (heart.trail.length > 8) {
+              heart.trail.removeAt(0);
+            }
+          }
+          
+          continue;
+        }
 
         if (heart.style == 'cosmic') {
           final double sway =
@@ -180,6 +272,89 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
     }
   }
 
+  void spawnFlyingToExplosion(Offset startPosition, Offset targetPosition, {int count = 6}) {
+    if (!mounted) return;
+    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.hasSize || !renderBox.attached) return;
+
+    const palettes = [
+      [Color(0xFFFFB7D5), Color(0xFFFF8FB7), Color(0xFFFFD6EE), Color(0xFFFF6BA8)],
+      [Color(0xFFD8A4FF), Color(0xFFC680FF), Color(0xFFEDD5FF), Color(0xFFB85EFF)],
+      [Color(0xFFA8C8FF), Color(0xFF7AABFF), Color(0xFFCCE0FF), Color(0xFF5591FF)],
+      [Color(0xFFFFEAA0), Color(0xFFFFD966), Color(0xFFFFF3CC), Color(0xFFFFCB33)],
+    ];
+
+    try {
+      final localStart = renderBox.globalToLocal(startPosition);
+      final localTarget = renderBox.globalToLocal(targetPosition);
+      final random = math.Random();
+      final palette = palettes[random.nextInt(palettes.length)];
+
+      setState(() {
+        for (int i = 0; i < count; i++) {
+          final speed = 4.0 + random.nextDouble() * 4.0;
+          final size = 16.0 + random.nextDouble() * 12.0;
+          final heart = TinyHeart(
+            x: localStart.dx,
+            y: localStart.dy,
+            angle: random.nextDouble() * math.pi * 2,
+            speed: speed,
+            size: size,
+            color: palette[random.nextInt(palette.length)],
+            style: widget.style,
+          );
+          heart.isFlyingToTarget = true;
+          heart.targetX = localTarget.dx;
+          heart.targetY = localTarget.dy;
+          heart.flightPathType = random.nextInt(3); // 0: straight, 1: wave, 2: erratic
+          _hearts.add(heart);
+        }
+      });
+      if (!_tickerController.isAnimating) {
+        _tickerController.repeat();
+      }
+    } catch (e) {
+      debugPrint('[_TapHeartsOverlay] spawnFlyingToExplosion error: $e');
+    }
+  }
+
+  void spawnFlyingStickers(Offset startPosition, Offset targetPosition, String assetPath, {int count = 3}) {
+    if (!mounted) return;
+    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.hasSize || !renderBox.attached) return;
+
+    try {
+      final localStart = renderBox.globalToLocal(startPosition);
+      final localTarget = renderBox.globalToLocal(targetPosition);
+      final random = math.Random();
+
+      setState(() {
+        for (int i = 0; i < count; i++) {
+          final speed = 4.0 + random.nextDouble() * 4.0;
+          final size = 48.0 + random.nextDouble() * 16.0;
+          
+          _flyingStickers.add(
+            FlyingStickerParticle(
+              assetPath: assetPath,
+              x: localStart.dx,
+              y: localStart.dy,
+              targetX: localTarget.dx,
+              targetY: localTarget.dy,
+              size: size,
+              speed: speed,
+              flightPathType: random.nextInt(3),
+            ),
+          );
+        }
+      });
+      if (!_tickerController.isAnimating) {
+        _tickerController.repeat();
+      }
+    } catch (e) {
+      debugPrint('[_TapHeartsOverlay] spawnFlyingStickers error: $e');
+    }
+  }
+
   void spawnLocalExplosion(Offset localPosition, {int count = 8}) {
     if (!mounted) return;
     const palettes = [
@@ -260,12 +435,32 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
 
   @override
   Widget build(BuildContext context) {
-    if (_hearts.isEmpty) return const SizedBox.shrink();
-    return RepaintBoundary(
-      child: CustomPaint(
-        painter: HeartsPainter(hearts: _hearts),
-        size: Size.infinite,
-      ),
+    if (_hearts.isEmpty && _flyingStickers.isEmpty) return const SizedBox.shrink();
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        if (_hearts.isNotEmpty)
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: CustomPaint(
+                painter: HeartsPainter(hearts: _hearts),
+                size: Size.infinite,
+              ),
+            ),
+          ),
+        for (final sticker in _flyingStickers)
+          Positioned(
+            left: sticker.x - sticker.size / 2,
+            top: sticker.y - sticker.size / 2,
+            child: Image.asset(
+              sticker.assetPath,
+              width: sticker.size,
+              height: sticker.size,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
+          ),
+      ],
     );
   }
 }

@@ -357,13 +357,13 @@ class _MilestonesScreenState extends State<MilestonesScreen>
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color(0xFFFFF5F8),
-                    Color(0xFFFFEEF4),
-                    Color(0xFFF7ECFF),
+                    Color(0xFFFFF4F8),
+                    Color(0xFFFFEEF5),
+                    Color(0xFFF6ECFF),
                   ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  stops: [0.1, 0.5, 0.9],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: [0.0, 0.5, 1.0],
                 ),
               ),
             ),
@@ -373,7 +373,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
             top: -40,
             right: -50,
             child: _buildBackdropOrb(
-              size: 220,
+              size: 240,
               colors: const [Color(0xFFFFB3D1), Color(0xFFE5C3FF)],
             ),
           ),
@@ -381,7 +381,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
             left: -60,
             top: 200,
             child: _buildBackdropOrb(
-              size: 180,
+              size: 190,
               colors: const [Color(0xFFFFC6D9), Color(0xFFFFB0C7)],
               delay: 1500,
             ),
@@ -390,7 +390,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
             right: -20,
             top: 480,
             child: _buildBackdropOrb(
-              size: 140,
+              size: 150,
               colors: const [Color(0xFFF0C8FF), Color(0xFFFFE0EC)],
               delay: 800,
             ),
@@ -402,19 +402,28 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                 // Custom App Bar siêu đáng yêu
                 Padding(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   child: Row(
                     children: [
                       IconButton(
                         icon: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(
-                            color: Colors.white70,
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.85),
                             shape: BoxShape.circle,
+                            border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.9)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: const Icon(
                             Icons.arrow_back_ios_new_rounded,
-                            color: Color(0xFFFF5E8B),
+                            color: Color(0xFFFF4D7D),
                             size: 18,
                           ),
                         ),
@@ -424,22 +433,31 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                       Text(
                         L10nService().translate('milestone_title'),
                         style: SLTheme.quicksand(
-                          fontSize: 20,
+                          fontSize: 21,
                           fontWeight: FontWeight.w900,
-                          color: const Color(0xFF37474F),
+                          color: const Color(0xFF2D3748),
                         ),
                       ),
                       const Spacer(),
                       IconButton(
                         icon: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(
-                            color: Colors.white70,
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.85),
                             shape: BoxShape.circle,
+                            border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.9)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: const Icon(
                             Icons.calendar_month_rounded,
-                            color: Color(0xFFFF5E8B),
+                            color: Color(0xFFFF4D7D),
                             size: 20,
                           ),
                         ),
@@ -456,26 +474,51 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                     margin:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     width: double.infinity,
-                    height: 96,
+                    height: 100,
                     child: Stack(
                       children: [
                         Positioned.fill(
                           child: Container(
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [Color(0xFFFF9EB7), Color(0xFFFF6B95)],
+                                colors: [
+                                  Color(0xFFFF85A2),
+                                  Color(0xFFFF4D7D),
+                                  Color(0xFFFF6584)
+                                ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius: BorderRadius.circular(26),
+                              border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  width: 1.2),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFFF6B95)
-                                      .withValues(alpha: 0.25),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 8),
+                                  color: const Color(0xFFFF4D7D)
+                                      .withValues(alpha: 0.35),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
                                 ),
                               ],
+                            ),
+                          ),
+                        ),
+                        // Soft highlight line top
+                        Positioned(
+                          top: 0,
+                          left: 20,
+                          right: 20,
+                          height: 1.5,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white.withValues(alpha: 0.0),
+                                  Colors.white.withValues(alpha: 0.6),
+                                  Colors.white.withValues(alpha: 0.0),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -485,8 +528,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                           bottom: -10,
                           child: Icon(
                             Icons.favorite,
-                            size: 100,
-                            color: Colors.white.withValues(alpha: 0.12),
+                            size: 110,
+                            color: Colors.white.withValues(alpha: 0.14),
                           ),
                         ),
                         Positioned(
@@ -494,8 +537,8 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                           top: -20,
                           child: Icon(
                             Icons.favorite_border,
-                            size: 50,
-                            color: Colors.white.withValues(alpha: 0.08),
+                            size: 55,
+                            color: Colors.white.withValues(alpha: 0.10),
                           ),
                         ),
                         Padding(
@@ -504,17 +547,27 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                           child: Row(
                             children: [
                               Container(
-                                width: 48,
-                                height: 48,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white24,
+                                width: 52,
+                                height: 52,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.25),
                                   shape: BoxShape.circle,
+                                  border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.6),
+                                      width: 2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.08),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
-                                child: Center(
+                                child: const Center(
                                   child: Padding(
-                                    padding: const EdgeInsets.all(4.0),
+                                    padding: EdgeInsets.all(5.0),
                                     child: R2StickerImage(
-                                        'assets/images/anhtomau_stickers/sticker_1.gif'),
+                                        'assets/images/anhtomau_stickers/sticker_2.gif'),
                                   ),
                                 ),
                               ),
@@ -531,18 +584,25 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
                                         color:
-                                            Colors.white.withValues(alpha: 0.9),
+                                            Colors.white.withValues(alpha: 0.95),
                                       ),
                                     ),
-                                    const SizedBox(height: 2),
+                                    const SizedBox(height: 3),
                                     Text(
                                       L10nService().format(
                                           'milestone_love_days',
                                           {'days': daysLove.toString()}),
                                       style: SLTheme.quicksand(
-                                        fontSize: 18,
+                                        fontSize: 19,
                                         fontWeight: FontWeight.w900,
                                         color: Colors.white,
+                                        shadows: [
+                                          const Shadow(
+                                            color: Colors.black26,
+                                            blurRadius: 6,
+                                            offset: Offset(0, 2),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
@@ -558,45 +618,48 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                 Container(
                   margin:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.white.withValues(alpha: 0.75),
+                    borderRadius: BorderRadius.circular(22),
                     border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.8)),
+                        Border.all(color: Colors.white, width: 1.5),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFCEBCD0).withValues(alpha: 0.08),
-                        blurRadius: 10,
+                        color: const Color(0xFFCEBCD0).withValues(alpha: 0.12),
+                        blurRadius: 14,
                         offset: const Offset(0, 4),
                       ),
                     ],
                   ),
                   child: TabBar(
                     controller: _tabController,
+                    indicatorSize: TabBarIndicatorSize.tab,
                     indicatorColor: Colors.transparent,
                     labelColor: Colors.white,
-                    unselectedLabelColor: const Color(0xFF8E7A8A),
+                    unselectedLabelColor: const Color(0xFF7E6475),
                     labelStyle: SLTheme.quicksand(
                         fontWeight: FontWeight.w900, fontSize: 13.5),
                     unselectedLabelStyle: SLTheme.quicksand(
                         fontWeight: FontWeight.w700, fontSize: 13.5),
                     indicator: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFFFF9EBA), Color(0xFFFF6D97)],
+                        colors: [Color(0xFFFF7E9B), Color(0xFFFF4D7D)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(18),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFF6D97).withValues(alpha: 0.2),
-                          blurRadius: 6,
+                          color: const Color(0xFFFF4D7D).withValues(alpha: 0.3),
+                          blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
                       ],
                     ),
                     tabs: [
                       Tab(
+                        height: 38,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -608,6 +671,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                         ),
                       ),
                       Tab(
+                        height: 38,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -649,18 +713,25 @@ class _MilestonesScreenState extends State<MilestonesScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 72,
-                height: 72,
+                width: 76,
+                height: 76,
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFF0F5),
                   shape: BoxShape.circle,
                   border: Border.all(color: const Color(0xFFFFC0CB), width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFFC0CB).withValues(alpha: 0.2),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                child: Center(
+                child: const Center(
                   child: Padding(
-                    padding: const EdgeInsets.all(12.0),
+                    padding: EdgeInsets.all(12.0),
                     child: R2StickerImage(
-                        'assets/images/anhtomau_stickers/sticker_1.gif'), // Thỏ ôm tim/chờ đợi
+                        'assets/images/anhtomau_stickers/sticker_25.gif'), // Thỏ chờ đợi
                   ),
                 ),
               ),
@@ -686,10 +757,10 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                       style: SLTheme.quicksand(
                           fontWeight: FontWeight.w800, fontSize: 13)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF6D97),
+                    backgroundColor: const Color(0xFFFF4D7D),
                     foregroundColor: Colors.white,
                     elevation: 4,
-                    shadowColor: const Color(0xFFFF6D97).withValues(alpha: 0.3),
+                    shadowColor: const Color(0xFFFF4D7D).withValues(alpha: 0.35),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                     padding: const EdgeInsets.symmetric(
@@ -715,52 +786,57 @@ class _MilestonesScreenState extends State<MilestonesScreen>
   }
 
   Widget _buildEventItemCard(MilestoneEvent event, {required bool isUpcoming}) {
-    final (countdownText, badgeBgColor, badgeTextColor) =
+    final (countdownText, badgeBgColors, badgeBorderColor, badgeTextColor) =
         switch ((isUpcoming, event.diffDays)) {
       (true, 0) => (
           L10nService().translate('milestone_today'),
-          const Color(0xFFDCFCE7),
-          const Color(0xFF166534)
+          const [Color(0xFFDCFCE7), Color(0xFFBBF7D0)],
+          const Color(0xFF86EFAC),
+          const Color(0xFF15803D)
         ),
       (true, 1) => (
           L10nService().translate('milestone_tomorrow'),
-          const Color(0xFFECFEFF),
-          const Color(0xFF155E75)
+          const [Color(0xFFE0F2FE), Color(0xFFBAE6FD)],
+          const Color(0xFF7DD3FC),
+          const Color(0xFF0369A1)
         ),
       (true, final d) => (
           L10nService().format('milestone_days_left', {'days': d.toString()}),
-          const Color(0xFFFCE7F3),
+          const [Color(0xFFFFF0F5), Color(0xFFFFE4EC)],
+          const Color(0xFFFFC0CB),
           const Color(0xFF9D174D)
         ),
       (false, -1) => (
           L10nService().translate('milestone_yesterday'),
-          const Color(0xFFF1F5F9),
+          const [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
+          const Color(0xFFE2E8F0),
           const Color(0xFF475569)
         ),
       (false, _) => (
           L10nService().format('milestone_days_passed',
               {'days': event.diffDays.abs().toString()}),
-          const Color(0xFFF1F5F9),
+          const [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
+          const Color(0xFFE2E8F0),
           const Color(0xFF475569)
         ),
     };
 
-    final (stickerPath, iconBgColor) = switch (event.type) {
+    final (stickerPath, iconGradients) = switch (event.type) {
       'birthday' => (
-          'assets/images/anhtomau_stickers/sticker_1.gif',
-          const Color(0xFFFEF3C7)
+          'assets/images/anhtomau_stickers/sticker_17.gif',
+          const [Color(0xFFFFF3C4), Color(0xFFFFE082)]
         ),
       'anniversary' => (
-          'assets/images/anhtomau_stickers/sticker_1.gif',
-          const Color(0xFFFCE7F3)
+          'assets/images/anhtomau_stickers/sticker_14.gif',
+          const [Color(0xFFFFD1E1), Color(0xFFFFB2CC)]
         ),
       'holiday' => (
-          'assets/images/anhtomau_stickers/sticker_1.gif',
-          const Color(0xFFEDE9FE)
+          'assets/images/anhtomau_stickers/sticker_22.gif',
+          const [Color(0xFFE9D5FF), Color(0xFFD8B4FE)]
         ),
       _ => (
-          'assets/images/anhtomau_stickers/sticker_1.gif',
-          const Color(0xFFDBEAFE)
+          'assets/images/anhtomau_stickers/sticker_9.gif',
+          const [Color(0xFFBAE6FD), Color(0xFF7DD3FC)]
         ),
     };
 
@@ -780,15 +856,27 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(24),
-        border:
-            Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.5),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.95),
+            Colors.white.withValues(alpha: 0.85),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+            color: Colors.white.withValues(alpha: 0.95), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFFB3CA).withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: const Color(0xFFFF9EB7).withValues(alpha: 0.12),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -799,16 +887,22 @@ class _MilestonesScreenState extends State<MilestonesScreen>
           child: Row(
             children: [
               Transform.rotate(
-                angle: -0.05,
+                angle: -0.03,
                 child: Container(
-                  width: 48,
-                  height: 48,
+                  width: 52,
+                  height: 52,
                   decoration: BoxDecoration(
-                    color: iconBgColor,
-                    borderRadius: BorderRadius.circular(16),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: iconGradients,
+                    ),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.8), width: 1.5),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: iconGradients.last.withValues(alpha: 0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -828,42 +922,58 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                     Text(
                       event.title,
                       style: SLTheme.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF263238),
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF2C3437),
+                        height: 1.3,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      formattedDate,
-                      style: SLTheme.quicksand(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF78909C),
-                      ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.event_outlined,
+                          size: 13,
+                          color: Color(0xFF94A3B8),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          formattedDate,
+                          style: SLTheme.quicksand(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF78909C),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
-                  color: badgeBgColor,
-                  borderRadius: BorderRadius.circular(14),
+                  gradient: LinearGradient(
+                    colors: badgeBgColors,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: badgeBorderColor, width: 1),
                   boxShadow: [
                     BoxShadow(
-                      color: badgeTextColor.withValues(alpha: 0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+                      color: badgeTextColor.withValues(alpha: 0.08),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
                 child: Text(
                   countdownText,
                   style: SLTheme.quicksand(
-                    fontSize: 10.5,
+                    fontSize: 11,
                     fontWeight: FontWeight.w900,
                     color: badgeTextColor,
                   ),

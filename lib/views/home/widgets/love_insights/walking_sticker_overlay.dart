@@ -17,13 +17,13 @@ class _WalkingStickerOverlayState extends State<WalkingStickerOverlay>
   // Collection of cute sticker assets bundled in the app
   static const List<String> _cuteStickers = [
     'assets/images/anhtomau_stickers/sticker_1.gif',
-    'assets/images/anhtomau_stickers/sticker_1.gif',
-    'assets/images/anhtomau_stickers/sticker_1.gif',
-    'assets/images/anhtomau_stickers/sticker_1.gif',
-    'assets/images/anhtomau_stickers/sticker_1.gif',
-    'assets/images/anhtomau_stickers/sticker_1.gif',
-    'assets/images/anhtomau_stickers/sticker_1.gif',
-    'assets/images/anhtomau_stickers/sticker_1.gif',
+    'assets/images/anhtomau_stickers/sticker_2.gif',
+    'assets/images/anhtomau_stickers/sticker_6.gif',
+    'assets/images/anhtomau_stickers/sticker_9.gif',
+    'assets/images/anhtomau_stickers/sticker_14.gif',
+    'assets/images/anhtomau_stickers/sticker_21.gif',
+    'assets/images/anhtomau_stickers/sticker_22.gif',
+    'assets/images/anhtomau_stickers/sticker_25.gif',
   ];
 
   late int _currentStickerIndex;

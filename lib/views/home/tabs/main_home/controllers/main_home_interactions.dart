@@ -244,22 +244,93 @@ extension _MainHomeInteractions on _MainHomeTabState {
               : '$partnerName chưa mở app, lời nhắc giữ ấm sẽ chờ khi người ấy quay lại.';
           break;
         case 'kiss':
-        case 'hug':
-        case 'angry':
-        case 'furious':
-        case 'tease':
-        case 'cry':
-        case 'poop':
-        case 'miss':
-        default:
-          title = customTitle ?? '$myName vừa gửi cho bạn một Sticker';
+          title = customTitle ?? '$myName gửi bạn một nụ hôn';
           body = partnerOnline
-              ? '$partnerName đang online, mở ngay xem sticker gì nào!'
-              : '$partnerName chưa mở nhà, sticker siêu cute đang chờ người ấy xem.';
-          message = customMessage ?? 'Vừa gửi một sticker đáng yêu 💌';
+              ? '$partnerName đang online, nụ hôn này bay tới ngay luôn.'
+              : '$partnerName chưa mở nhà, nụ hôn sẽ nằm chờ xinh xắn khi người ấy quay lại.';
+          message = customMessage ??
+              L10nService().translate('home_chtmtcitht_f7bbad');
           notificationBody = partnerOnline
               ? '$partnerName đang online, mở app là thấy ngay.'
-              : '$partnerName chưa mở app, sticker sẽ nằm chờ khi người ấy quay lại.';
+              : '$partnerName chưa mở app, nụ hôn sẽ chờ sẵn khi người ấy quay lại.';
+          break;
+        case 'hug':
+          title = customTitle ?? '$myName ôm bạn một cái';
+          body = partnerOnline
+              ? '$partnerName đang online, cái ôm mềm này tới ngay rồi.'
+              : '$partnerName chưa mở nhà, cái ôm sẽ đợi sẵn để người ấy mở ra là thấy.';
+          message = customMessage ??
+              L10nService().translate('home_mbnmtcitht_a0ec5e');
+          notificationBody = partnerOnline
+              ? '$partnerName đang online, mở app là thấy ngay.'
+              : '$partnerName chưa mở app, cái ôm sẽ chờ sẵn khi người ấy quay lại.';
+          break;
+        case 'angry':
+          title = customTitle ?? '$myName đang dỗi bạn đó';
+          body = partnerOnline
+              ? '$partnerName đang online, lời dỗi yêu này hiện lên ngay rồi.'
+              : '$partnerName chưa mở nhà, lời dỗi yêu sẽ nằm chờ để người ấy dỗ bạn sau.';
+          message = customMessage ??
+              L10nService().translate('home_hmangdixut_2726ac');
+          notificationBody = partnerOnline
+              ? '$partnerName đang online, mở app là thấy ngay.'
+              : '$partnerName chưa mở app, lời dỗi hờn sẽ chờ sẵn khi người ấy quay lại.';
+          break;
+        case 'furious':
+          title = customTitle ?? '$myName đang tức bạn đỏ mặt luôn';
+          body = partnerOnline
+              ? '$partnerName đang online, cơn tức đỏ rực này hiện lên ngay rồi.'
+              : '$partnerName chưa mở nhà, cơn tức đỏ rực này sẽ chờ sẵn để người ấy dỗ bạn sau.';
+          message = customMessage ??
+              L10nService().translate('home_mnhangtcth_dfdd25');
+          notificationBody = partnerOnline
+              ? '$partnerName đang online, mở app là thấy ngay.'
+              : '$partnerName chưa mở app, cơn tức này sẽ chờ sẵn khi người ấy quay lại.';
+          break;
+        case 'tease':
+          title = customTitle ?? '$myName vừa trêu bạn một chút';
+          body = partnerOnline
+              ? '$partnerName đang online, cú chọc yêu này bật ra ngay rồi.'
+              : '$partnerName chưa mở nhà, cú trêu nghịch này sẽ nằm chờ khi người ấy quay lại.';
+          message = customMessage ??
+              L10nService().translate('home_mnhvachcbn_f70061');
+          notificationBody = partnerOnline
+              ? '$partnerName đang online, mở app là thấy ngay.'
+              : '$partnerName chưa mở app, cú trêu này sẽ chờ sẵn khi người ấy quay lại.';
+          break;
+        case 'cry':
+          title = customTitle ?? '$myName đang cần bạn dỗ dành';
+          body = partnerOnline
+              ? '$partnerName đang online, tín hiệu mít ướt này hiện lên ngay rồi.'
+              : '$partnerName chưa mở nhà, tín hiệu cần dỗ dành sẽ chờ khi người ấy quay lại.';
+          message = customMessage ??
+              L10nService().translate('home_hmnaymnhhi_105e19');
+          notificationBody = partnerOnline
+              ? '$partnerName đang online, mở app là thấy ngay.'
+              : '$partnerName chưa mở app, tín hiệu mít ướt sẽ chờ sẵn khi người ấy quay lại.';
+          break;
+        case 'poop':
+          title = customTitle ?? '$myName vừa ném 💩 vào bạn';
+          body = partnerOnline
+              ? '$partnerName đang online, cú trêu này bật ra ngay rồi.'
+              : '$partnerName chưa mở nhà, cú trêu nghịch này sẽ chờ sẵn khi người ấy quay lại.';
+          message = customMessage ??
+              L10nService().translate('home_nmnhmtcctr_3e8a1f');
+          notificationBody = partnerOnline
+              ? '$partnerName đang online, mở app là thấy ngay.'
+              : '$partnerName chưa mở app, 💩 sẽ chờ sẵn khi người ấy quay lại.';
+          break;
+        case 'miss':
+        default:
+          title = customTitle ?? '$myName gửi ngàn nỗi nhớ';
+          body = partnerOnline
+              ? '$partnerName đang online, nỗi nhớ này chạm tới ngay luôn.'
+              : '$partnerName chưa mở nhà, nỗi nhớ sẽ đợi sẵn để người ấy mở ra là nhận được.';
+          message = customMessage ??
+              L10nService().translate('home_mnhnhbnnhi_88a6c7');
+          notificationBody = partnerOnline
+              ? '$partnerName đang online, mở app là thấy ngay.'
+              : '$partnerName chưa mở app, nỗi nhớ sẽ chờ sẵn khi người ấy quay lại.';
           break;
       }
 

@@ -15,6 +15,7 @@ class UiPrefsState {
   final double avatarSizePx;
   final double countdownSizePx;
   final String avatarFrameKey;
+  final String countdownShapeKey;
   final String countdownStyleKey;
   final String countdownTopLabel;
   final String countdownBottomLabel;
@@ -46,6 +47,7 @@ class UiPrefsState {
     required this.avatarSizePx,
     required this.countdownSizePx,
     required this.avatarFrameKey,
+    required this.countdownShapeKey,
     required this.countdownStyleKey,
     required this.countdownTopLabel,
     required this.countdownBottomLabel,
@@ -78,6 +80,7 @@ class UiPrefsState {
     double? avatarSizePx,
     double? countdownSizePx,
     String? avatarFrameKey,
+    String? countdownShapeKey,
     String? countdownStyleKey,
     String? countdownTopLabel,
     String? countdownBottomLabel,
@@ -109,6 +112,7 @@ class UiPrefsState {
       avatarSizePx: avatarSizePx ?? this.avatarSizePx,
       countdownSizePx: countdownSizePx ?? this.countdownSizePx,
       avatarFrameKey: avatarFrameKey ?? this.avatarFrameKey,
+      countdownShapeKey: countdownShapeKey ?? this.countdownShapeKey,
       countdownStyleKey: countdownStyleKey ?? this.countdownStyleKey,
       countdownTopLabel: countdownTopLabel ?? this.countdownTopLabel,
       countdownBottomLabel: countdownBottomLabel ?? this.countdownBottomLabel,
@@ -147,6 +151,7 @@ class UiPrefsState {
     avatarSizePx: 90,
     countdownSizePx: 400,
     avatarFrameKey: 'off',
+    countdownShapeKey: 'circle',
     // Default countdown visual: floating_hearts (Tim bay)
     countdownStyleKey: 'floating_hearts',
     countdownTopLabel: '',
@@ -199,6 +204,7 @@ class UiPrefs {
   static const _kAvatarSizeKey = 'il_avatar_size';
   static const _kCountdownSizeKey = 'il_countdown_size';
   static const _kAvatarFrameKey = 'il_avatar_frame';
+  static const _kCountdownShapeKey = 'il_countdown_shape';
   static const _kCountdownStyleKey = 'il_countdown_style';
   static const _kCountdownTopLabelKey = 'il_countdown_top_label';
   static const _kCountdownBottomLabelKey = 'il_countdown_bottom_label';
@@ -359,6 +365,9 @@ class UiPrefs {
     final avatarFrameKey = (prefs.getString(_kAvatarFrameKey) ??
             UiPrefsState.defaults.avatarFrameKey)
         .trim();
+    final countdownShapeKey = (prefs.getString(_kCountdownShapeKey) ??
+            UiPrefsState.defaults.countdownShapeKey)
+        .trim();
     final countdownStyleKey = (prefs.getString(_kCountdownStyleKey) ??
             UiPrefsState.defaults.countdownStyleKey)
         .trim();
@@ -396,6 +405,7 @@ class UiPrefs {
           UiPrefsState.defaults.countdownSizePx,
         ),
         avatarFrameKey: avatarFrameKey,
+        countdownShapeKey: countdownShapeKey,
         countdownStyleKey: countdownStyleKey,
         countdownTopLabel: countdownTopLabel,
         countdownBottomLabel: countdownBottomLabel,
@@ -490,6 +500,7 @@ class UiPrefs {
     await prefs.setDouble(_kAvatarSizeKey, normalized.avatarSizePx);
     await prefs.setDouble(_kCountdownSizeKey, normalized.countdownSizePx);
     await prefs.setString(_kAvatarFrameKey, normalized.avatarFrameKey);
+    await prefs.setString(_kCountdownShapeKey, normalized.countdownShapeKey);
     await prefs.setString(_kCountdownStyleKey, normalized.countdownStyleKey);
     await prefs.setString(_kCountdownTopLabelKey, normalized.countdownTopLabel);
     await prefs.setString(
@@ -545,6 +556,7 @@ class UiPrefs {
         maxCountdownSizePx,
       ),
       avatarFrameKey: state.avatarFrameKey,
+      countdownShapeKey: state.countdownShapeKey,
       countdownStyleKey: state.countdownStyleKey,
       countdownTopLabel: state.countdownTopLabel.trim(),
       countdownBottomLabel: state.countdownBottomLabel.trim(),

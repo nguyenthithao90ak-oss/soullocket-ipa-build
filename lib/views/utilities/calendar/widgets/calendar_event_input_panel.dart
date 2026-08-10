@@ -32,20 +32,27 @@ class CalendarEventInputPanel extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: FastBackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: Container(
             padding: EdgeInsets.all(compact ? 16 : 18),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withValues(alpha: 0.9),
-                  Colors.white.withValues(alpha: 0.74),
+                  Colors.white.withValues(alpha: 0.16),
+                  Colors.white.withValues(alpha: 0.08),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.34)),
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.22), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,8 +63,9 @@ class CalendarEventInputPanel extends StatelessWidget {
                       width: compact ? 40 : 44,
                       height: compact ? 40 : 44,
                       decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.12),
+                        color: accent.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(compact ? 14 : 15),
+                        border: Border.all(color: accent.withValues(alpha: 0.4), width: 1.2),
                       ),
                       child: Icon(
                         Icons.edit_calendar_rounded,
@@ -75,7 +83,7 @@ class CalendarEventInputPanel extends StatelessWidget {
                             style: SLTheme.quicksand(
                               fontSize: compact ? 15 : 16,
                               fontWeight: FontWeight.w900,
-                              color: SLTheme.textMain,
+                              color: Colors.white,
                             ),
                           ),
                           SLSpacing.h4,
@@ -84,7 +92,7 @@ class CalendarEventInputPanel extends StatelessWidget {
                             style: SLTheme.quicksand(
                               fontSize: compact ? 11.5 : 12,
                               fontWeight: FontWeight.w700,
-                              color: SLTheme.textMuted,
+                              color: Colors.white.withValues(alpha: 0.8),
                               height: 1.35,
                             ),
                           ),
@@ -96,12 +104,18 @@ class CalendarEventInputPanel extends StatelessWidget {
                 SizedBox(height: compact ? 12 : 14),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.72),
+                    color: Colors.black.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(18),
-                    border:
-                        Border.all(color: Colors.black.withValues(alpha: 0.05)),
+                    border: Border.all(color: accent.withValues(alpha: 0.4), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 16),
+                  padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 16, vertical: 2),
                   child: TextField(
                     controller: controller,
                     minLines: 1,
@@ -109,14 +123,16 @@ class CalendarEventInputPanel extends StatelessWidget {
                     maxLength: 100,
                     textInputAction: TextInputAction.done,
                     style: SLTheme.quicksand(
-                      color: SLTheme.textMain,
-                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
                     ),
                     decoration: InputDecoration(
                       hintText: context.tr('util_vd1930givi_57624e'),
                       hintStyle: SLTheme.quicksand(
-                        color: SLTheme.textMuted,
+                        color: Colors.white.withValues(alpha: 0.45),
                         fontWeight: FontWeight.w600,
+                        fontSize: 13,
                       ),
                       border: InputBorder.none,
                       counterText: '',
@@ -144,16 +160,30 @@ class CalendarEventInputPanel extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: compact ? 12 : 14),
-                SizedBox(
+                Container(
                   width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFF5287), Color(0xFFFF7397)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFF5287).withValues(alpha: 0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
                   child: ElevatedButton.icon(
                     onPressed: onAdd,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: accent,
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
                       foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding:
-                          EdgeInsets.symmetric(vertical: compact ? 13 : 14),
+                      padding: EdgeInsets.symmetric(vertical: compact ? 13 : 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
                       ),
@@ -163,8 +193,9 @@ class CalendarEventInputPanel extends StatelessWidget {
                       context.tr('util_thmvolchic_6b3138'),
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w900,
-                        fontSize: compact ? 13 : 14,
+                        fontSize: compact ? 13.5 : 14.5,
                         color: Colors.white,
+                        letterSpacing: 0.3,
                       ),
                     ),
                   ),

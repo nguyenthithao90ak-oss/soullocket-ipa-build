@@ -40,25 +40,32 @@ class CalendarEventListSection extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(26),
         child: FastBackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: Container(
             padding: EdgeInsets.fromLTRB(
               compact ? 16 : 18,
               compact ? 16 : 18,
               compact ? 16 : 18,
-              10,
+              12,
             ),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withValues(alpha: 0.92),
-                  Colors.white.withValues(alpha: 0.74),
+                  Colors.white.withValues(alpha: 0.16),
+                  Colors.white.withValues(alpha: 0.08),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(26),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.34)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.22), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,8 +76,9 @@ class CalendarEventListSection extends StatelessWidget {
                       width: compact ? 40 : 44,
                       height: compact ? 40 : 44,
                       decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.12),
+                        color: accent.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(compact ? 14 : 15),
+                        border: Border.all(color: accent.withValues(alpha: 0.4), width: 1.2),
                       ),
                       child: Icon(
                         Icons.view_timeline_rounded,
@@ -88,7 +96,7 @@ class CalendarEventListSection extends StatelessWidget {
                             style: SLTheme.quicksand(
                               fontSize: compact ? 15 : 16,
                               fontWeight: FontWeight.w900,
-                              color: SLTheme.textMain,
+                              color: Colors.white,
                             ),
                           ),
                           SLSpacing.h4,
@@ -97,7 +105,7 @@ class CalendarEventListSection extends StatelessWidget {
                             style: SLTheme.quicksand(
                               fontSize: compact ? 11.5 : 12,
                               fontWeight: FontWeight.w700,
-                              color: SLTheme.textMuted,
+                              color: Colors.white.withValues(alpha: 0.8),
                               height: 1.35,
                             ),
                           ),
@@ -110,15 +118,16 @@ class CalendarEventListSection extends StatelessWidget {
                         vertical: compact ? 7 : 8,
                       ),
                       decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.1),
+                        color: accent.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: accent.withValues(alpha: 0.5)),
                       ),
                       child: Text(
                         '$itemCount mục',
                         style: SLTheme.quicksand(
-                          fontSize: compact ? 10 : 11,
+                          fontSize: compact ? 10.5 : 11.5,
                           fontWeight: FontWeight.w900,
-                          color: accent,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -181,7 +190,7 @@ class CalendarEventListSection extends StatelessWidget {
                       physics: const NeverScrollableScrollPhysics(),
                       padding: const EdgeInsets.only(bottom: 10),
                       itemCount: items.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (_, index) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final item = items[index];
                         final eventKey = item['key']?.toString() ?? '';

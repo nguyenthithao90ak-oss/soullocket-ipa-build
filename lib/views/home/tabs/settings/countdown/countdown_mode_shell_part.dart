@@ -203,16 +203,6 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(
-                top: -60,
-                right: -40,
-                child: _CountdownModeGlowOrb(color: themeData.orbA, size: 220),
-              ),
-              Positioned(
-                left: -40,
-                bottom: 60,
-                child: _CountdownModeGlowOrb(color: themeData.orbB, size: 180),
-              ),
               SafeArea(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -325,14 +315,12 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                               fontKey: uiState.fontKey,
                                               styleKey:
                                                   uiState.countdownStyleKey,
+                                              countdownShapeKey:
+                                                  uiState.countdownShapeKey,
                                               transparentMode:
                                                   uiState.transparentMode,
                                               enableMotion: true,
                                             ),
-                                            if (uiState.countdownStyleKey ==
-                                                'floating_hearts')
-                                              FloatingHeartsRingOverlay(
-                                                  size: circleSize),
                                           ],
                                         ),
                                       ),
@@ -384,11 +372,20 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                             }
                                             final size =
                                                 MediaQuery.sizeOf(context);
+                                            final randomPaths = [
+                                              'assets/images/interaction_stickers/custom/numbered/sticker_001.png',
+                                              'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
+                                              'assets/images/interaction_stickers/custom/numbered/sticker_003.png',
+                                            ];
+                                            final assetPath = randomPaths[
+                                                DateTime.now().millisecondsSinceEpoch %
+                                                    randomPaths.length];
                                             _heartsOverlayKey.currentState
-                                                ?.spawnLocalExplosion(
-                                              Offset(size.width / 2,
-                                                  size.height * 0.74),
-                                              count: 10,
+                                                ?.spawnFlyingStickers(
+                                              Offset(size.width / 2, size.height * 0.42),
+                                              Offset(size.width / 2, size.height * 0.74),
+                                              assetPath,
+                                              count: 3,
                                             );
                                             HapticFeedback.mediumImpact();
                                           },

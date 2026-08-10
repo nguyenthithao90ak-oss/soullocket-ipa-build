@@ -63,7 +63,7 @@ class AuthSupportDialog {
                     ),
                     SLSpacing.h16,
                     Text(
-                      L10nService().translate('support_msg_describe_issue'),
+                      'Hãy mô tả vấn đề bạn gặp phải, chúng mình sẽ hỗ trợ sớm nhất có thể.',
                       style: SLTheme.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -122,8 +122,7 @@ class AuthSupportDialog {
                             if (description.isEmpty) {
                               AuthFeedbackDialogs.showError(
                                 dialogContext,
-                                L10nService()
-                                    .translate('support_err_empty_desc'),
+                                'Vui lòng mô tả vấn đề trước khi gửi.',
                               );
                               return;
                             }
@@ -132,8 +131,7 @@ class AuthSupportDialog {
                             if (user == null) {
                               AuthFeedbackDialogs.showError(
                                 dialogContext,
-                                L10nService()
-                                    .translate('support_err_need_login'),
+                                'Bạn cần đăng nhập để gửi yêu cầu.',
                               );
                               return;
                             }
@@ -202,8 +200,7 @@ class AuthSupportDialog {
                               if (!dialogContext.mounted) return;
                               AuthFeedbackDialogs.showError(
                                 dialogContext,
-                                L10nService()
-                                    .translate('support_err_failed_send'),
+                                'Gửi yêu cầu thất bại, vui lòng thử lại.',
                               );
                               return;
                             }

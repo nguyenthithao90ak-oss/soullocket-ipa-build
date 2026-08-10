@@ -1191,7 +1191,7 @@ class _DraggableFloatingChatIconState
                 ),
                 child: Center(
                   child: const R2StickerImage(
-                    'assets/images/anhtomau_stickers/sticker_1.gif',
+                    'assets/images/anhtomau_stickers/sticker_23.gif',
                     width: 36,
                     height: 36,
                   ),

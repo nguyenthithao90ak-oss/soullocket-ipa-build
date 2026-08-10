@@ -1,4 +1,4 @@
-// ignore_for_file: unused_field
+// ignore_for_file: unused_field, unused_import
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
@@ -23,6 +23,7 @@ import 'package:soullocket_app/views/chat/chat_detail_screen.dart';
 import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart'
     show TapHeartsOverlay, TapHeartsOverlayState;
 import 'package:image_cropper/image_cropper.dart';
+import 'package:provider/provider.dart';
 
 import 'dart:io';
 import '../../../utils/services/notification_service.dart';
@@ -76,7 +77,7 @@ import '../../utilities/diary_export_screen.dart';
 import '../../utilities/device_manager_screen.dart';
 // import '../../auth/qr_authorize_scanner_screen.dart';
 import '../../utilities/user_support_chat_screen.dart';
-import 'settings/settings_links_manager_screen.dart';
+import '../../../../core/sl_countdown_shapes.dart';
 import '../../../utils/services/l10n_service.dart';
 import '../../../utils/services/auth_service.dart';
 import '../../../utils/services/device_manager_service.dart';
@@ -94,6 +95,7 @@ import '../../../utils/services/sound_service.dart';
 import '../../../utils/services/utility_service.dart';
 import '../../../utils/services/secure_storage_service.dart';
 import 'settings/controllers/settings_security_controller.dart';
+import 'settings/settings_links_manager_screen.dart';
 import 'settings/security/security_otp_dialogs.dart';
 import '../../../widgets/first_setup_spotlight_guide.dart';
 import '../../../widgets/legacy_web_ui.dart';

@@ -769,11 +769,9 @@ class _DiaryTabState extends State<DiaryTab>
     _syncSelectionOverlayVisibility();
     if (isActive) {
       _startDiaryActiveTimer();
-      // ⚡ Defer memory section load until after swipe animation
+      // ⚡ Tắt _deferMemoryLoad ngay để render giao diện tức thì
       if (_deferMemoryLoad) {
-        Future.delayed(const Duration(milliseconds: 400), () {
-          if (mounted) setState(() => _deferMemoryLoad = false);
-        });
+        if (mounted) setState(() => _deferMemoryLoad = false);
       }
       // ⚡ Flush any setState calls that were skipped while tab was inactive.
       if (mounted) {
@@ -784,8 +782,7 @@ class _DiaryTabState extends State<DiaryTab>
       final currentHouseId = _feedController.houseId;
       if (_feedController.postsVN.value.isEmpty ||
           _lastSyncedMemoryHouseId != currentHouseId) {
-        // ⚡ Increased from 300ms → 450ms to clear swipe animation before fetch
-        Future.delayed(const Duration(milliseconds: 450), () {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted || !_isTabActive) return;
           unawaited(_activateDiaryTab());
         });

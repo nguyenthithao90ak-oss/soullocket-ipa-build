@@ -27,12 +27,12 @@ class CalendarEventTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
+        color: Colors.black.withValues(alpha: 0.22),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accent.withValues(alpha: 0.16)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -46,11 +46,18 @@ class CalendarEventTile extends StatelessWidget {
             height: 42,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [accent.withValues(alpha: 0.9), accent],
+                colors: [accent, accent.withValues(alpha: 0.85)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.4),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             alignment: Alignment.center,
             child: Text(
@@ -78,7 +85,7 @@ class CalendarEventTile extends StatelessWidget {
                         style: SLTheme.quicksand(
                           fontSize: 15,
                           fontWeight: FontWeight.w900,
-                          color: SLTheme.textMain,
+                          color: Colors.white,
                           height: 1.3,
                         ),
                       ),
@@ -90,15 +97,17 @@ class CalendarEventTile extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.1),
+                        color: accent.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                            color: accent.withValues(alpha: 0.4), width: 1),
                       ),
                       child: Text(
                         statusLabel,
                         style: SLTheme.quicksand(
-                          fontSize: 10,
+                          fontSize: 10.5,
                           fontWeight: FontWeight.w900,
-                          color: accent,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -132,12 +141,15 @@ class CalendarEventTile extends StatelessWidget {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFFFFEFF2),
+                color: const Color(0xFFFF5252).withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: const Color(0xFFFF5252).withValues(alpha: 0.35),
+                ),
               ),
               child: const Icon(
                 Icons.delete_outline_rounded,
-                color: Color(0xFFE46A7A),
+                color: Color(0xFFFF6B6B),
                 size: 20,
               ),
             ),
@@ -162,20 +174,21 @@ class _CalendarEventMetaChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F7FB),
+        color: Colors.black.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: SLTheme.textMuted),
+          Icon(icon, size: 14, color: Colors.white70),
           const SizedBox(width: 6),
           Text(
             label,
             style: SLTheme.quicksand(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: SLTheme.textMuted,
+              color: Colors.white.withValues(alpha: 0.85),
             ),
           ),
         ],

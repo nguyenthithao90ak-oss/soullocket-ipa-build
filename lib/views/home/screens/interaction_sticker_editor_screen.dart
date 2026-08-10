@@ -18,7 +18,7 @@ class _InteractionStickerEditorScreenState
       'type': 'miss',
       'label': 'Yêu',
       'emoji': '💖',
-      'defaultPath': 'assets/images/anhtomau_stickers/sticker_1.gif',
+      'defaultPath': 'assets/images/anhtomau_stickers/sticker_20.gif',
       'path': '',
       'gradient': [const Color(0xFFFFD8E6), const Color(0xFFFFF3F7)],
       'accent': const Color(0xFFD94C86),

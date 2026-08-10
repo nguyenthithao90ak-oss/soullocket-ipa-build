@@ -356,27 +356,23 @@ class SecurityFlowGuard {
       return false;
     }
 
+    if (onWarnStepUp != null) {
+      try {
+        return await onWarnStepUp();
+      } catch (_) {
+        return false;
+      }
+    }
+
     final confirmed = await _showDecisionDialog(
       context,
       title: decision.title,
       message: decision.message,
       isBlocking: false,
       continueLabel: continueLabel,
-      requiresStepUp: onWarnStepUp != null,
+      requiresStepUp: false,
     );
-    if (confirmed != true) {
-      return false;
-    }
-
-    if (onWarnStepUp == null) {
-      return true;
-    }
-
-    try {
-      return await onWarnStepUp();
-    } catch (_) {
-      return false;
-    }
+    return confirmed == true;
   }
 
   Future<_SecuritySignalSnapshot> _loadSignals() async {

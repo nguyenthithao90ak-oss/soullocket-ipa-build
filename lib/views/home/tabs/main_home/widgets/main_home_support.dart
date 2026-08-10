@@ -83,11 +83,13 @@ class ShootingHeartEffect extends StatefulWidget {
 
 class _ParticleData {
   final double delay;
-  final double flightDuration; // relative to 1.0
+  final double flightDuration;
   final double peakHeight;
   final double size;
   final double baseRotation;
   final bool willCollide;
+  final double wobblePhase;
+  final double wobbleAmplitude;
 
   _ParticleData({
     required this.delay,
@@ -96,6 +98,8 @@ class _ParticleData {
     required this.size,
     required this.baseRotation,
     this.willCollide = false,
+    this.wobblePhase = 0.0,
+    this.wobbleAmplitude = 0.0,
   });
 }
 
@@ -105,7 +109,6 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
   final List<_ParticleData> _particles = [];
   late final List<Widget> _particleWidgets;
 
-  // Tối ưu hóa: Cache tĩnh cho hiệu ứng nổ nhỏ để loại bỏ jank
   late final Widget _expSparkle;
   late final Widget _expAssetOrEmoji;
 
@@ -113,109 +116,48 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(
-          milliseconds: 2800), // Rơi chậm hơn (tăng từ 2400 lên 2800)
+      duration: const Duration(milliseconds: 3000),
       vsync: this,
     );
 
     final random = Random();
-    const particleCount = 4; // Slightly more particles
+    const particleCount = 3;
     final hasAsset =
         widget.assetPath != null && widget.assetPath!.trim().isNotEmpty;
     final hasImage =
         widget.imageUrl != null && widget.imageUrl!.trim().isNotEmpty;
 
-    // 4 hạt tim thông thường
     for (int i = 0; i < particleCount; i++) {
       _particles.add(_ParticleData(
-        delay: random.nextDouble() * 0.35, // More spread out
-        flightDuration: 0.65,
-        peakHeight: random.nextDouble() * 1.1 + 0.8, // Slightly higher arch
-        size:
-            random.nextDouble() * 20 + 45, // Significantly larger size (45-65)
-        baseRotation: (random.nextDouble() - 0.5) * 0.72,
-        willCollide:
-            widget.hasCollision && i < 2, // 2 hạt sẽ va chạm giữa chừng
+        delay: i * 0.08 + random.nextDouble() * 0.06,
+        flightDuration: 0.62 + random.nextDouble() * 0.08,
+        peakHeight: 0.9 + random.nextDouble() * 0.5 + i * 0.15,
+        size: 48.0 + random.nextDouble() * 14 + i * 3,
+        baseRotation: (random.nextDouble() - 0.5) * 0.5,
+        willCollide: widget.hasCollision && i == 0,
+        wobblePhase: random.nextDouble() * 2 * pi,
+        wobbleAmplitude: 0.03 + random.nextDouble() * 0.04,
       ));
     }
 
-    // 1 hạt ảnh kỷ niệm (lớn hơn, bay theo quỹ đạo hơi khác)
-    if (hasImage) {
-      _particles.add(_ParticleData(
-        delay: random.nextDouble() * 0.15,
-        flightDuration: 0.72,
-        peakHeight: random.nextDouble() * 0.8 + 1.0,
-        size: 90 + random.nextDouble() * 20, // 90–110dp
-        baseRotation: (random.nextDouble() - 0.5) * 0.4,
-      ));
-    }
-
-    // Khởi tạo cache tĩnh 1 lần duy nhất thay vì mỗi khung hình
     _expSparkle =
-        const RepaintBoundary(child: Text('✨', style: TextStyle(fontSize: 14)));
+        const RepaintBoundary(child: Text('✨', style: TextStyle(fontSize: 16)));
     if (hasAsset) {
       _expAssetOrEmoji = RepaintBoundary(
         child: R2StickerImage(
           widget.assetPath!,
-          width: 14,
-          height: 14,
+          width: 16,
+          height: 16,
           fit: BoxFit.contain,
-          errorWidget: Text(widget.emoji, style: const TextStyle(fontSize: 14)),
+          errorWidget: const Text('✨', style: TextStyle(fontSize: 16)),
         ),
       );
     } else {
-      _expAssetOrEmoji = RepaintBoundary(
-        child: Text(widget.emoji, style: const TextStyle(fontSize: 14)),
-      );
+      _expAssetOrEmoji =
+          const RepaintBoundary(child: Text('✨', style: TextStyle(fontSize: 16)));
     }
 
     _particleWidgets = List.generate(_particles.length, (i) {
-      // Hạt ảnh kỷ niệm (hạt cuối)
-      if (hasImage && i == particleCount) {
-        final p = _particles[i];
-        return RepaintBoundary(
-          child: Container(
-            width: p.size,
-            height: p.size,
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.22),
-                  blurRadius: 14,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: CustomPaint(
-              painter: _HeartBorderPainter(),
-              child: ClipPath(
-                clipper: _HeartClipper(),
-                child: CachedNetworkImage(
-                  imageUrl: widget.imageUrl!,
-                  fit: BoxFit.cover,
-                  memCacheWidth: 300,
-                  memCacheHeight: 300,
-                  fadeInDuration: const Duration(milliseconds: 150),
-                  placeholder: (_, __) => Container(
-                    color: const Color(0xFFFFD6E7),
-                    child: const Center(
-                      child: Text('📷', style: TextStyle(fontSize: 24)),
-                    ),
-                  ),
-                  errorWidget: (_, __, ___) => Container(
-                    color: const Color(0xFFFFD6E7),
-                    child: const Center(
-                      child: Text('🖼️', style: TextStyle(fontSize: 24)),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }
-
-      // Hạt tim thông thường
       final p = _particles[i];
       return RepaintBoundary(
         child: hasAsset
@@ -224,33 +166,9 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
                 width: p.size,
                 height: p.size,
                 fit: BoxFit.contain,
-                errorWidget: Text(
-                  widget.emoji,
-                  style: TextStyle(
-                    fontSize: p.size,
-                    height: 1,
-                    shadows: [
-                      Shadow(
-                        color: Colors.pinkAccent.withValues(alpha: 0.3),
-                        blurRadius: 3,
-                      ),
-                    ],
-                  ),
-                ),
+                errorWidget: const SizedBox.shrink(),
               )
-            : Text(
-                widget.emoji,
-                style: TextStyle(
-                  fontSize: p.size,
-                  height: 1,
-                  shadows: [
-                    Shadow(
-                      color: Colors.pinkAccent.withValues(alpha: 0.3),
-                      blurRadius: 3,
-                    ),
-                  ],
-                ),
-              ),
+            : const SizedBox.shrink(),
       );
     });
 
@@ -271,7 +189,6 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
 
   @override
   Widget build(BuildContext context) {
-    // Cache the screen size to avoid layout thrashing
     final screenSize = MediaQuery.sizeOf(context);
     final halfWidth = screenSize.width / 2;
     final halfHeight = screenSize.height / 2;
@@ -285,28 +202,24 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
             final p = _particles[index];
             final particleWidget = _particleWidgets[index];
 
-            // Local progress for this particle
             double t = (_controller.value - p.delay) / p.flightDuration;
             if (t < 0) t = 0;
             if (t > 1) t = 1;
 
-            // X moves from sender to receiver
             final startX = widget.shootToRight ? -0.7 : 0.7;
             final endX = widget.shootToRight ? 0.7 : -0.7;
-            // Easing X
-            final curveX = Curves.easeOutSine.transform(t);
-            final currentX = startX + (endX - startX) * curveX;
+            final curveX = Curves.easeInOutCubic.transform(t);
+            final wobbleOffset = sin(t * 3 * pi + p.wobblePhase) * p.wobbleAmplitude;
+            final currentX = startX + (endX - startX) * curveX + wobbleOffset;
 
-            // Y is a parabola: 0 at t=0, -peakHeight at t=0.5, 0 at t=1
             final currentY = -p.peakHeight * (1 - 4 * (t - 0.5) * (t - 0.5));
 
-            // Scale drops at the end
             double currentScale = 1.0;
             double currentOpacity = 1.0;
             bool isCollidingNow = false;
+            bool isLanding = false;
 
             if (p.willCollide && t >= 0.45 && t <= 0.6) {
-              // Va chạm và nổ ở giữa (từ 45% đến 60% quãng đường)
               final collideProgress = ((t - 0.45) / 0.15).clamp(0.0, 1.0);
               currentScale = 1.0 - collideProgress;
               currentOpacity = 1.0 - collideProgress;
@@ -314,85 +227,68 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
             } else if (p.willCollide && t > 0.6) {
               currentScale = 0.0;
               currentOpacity = 0.0;
-            } else if (t < 0.1) {
-              currentScale = t * 10; // pop in
-            } else if (t > 0.8) {
-              currentScale = 1.0 - (t - 0.8) * 5; // shrink out
-              currentOpacity = (1.0 - (t - 0.8) * 5).clamp(0.0, 1.0);
+            } else if (t < 0.12) {
+              final popT = Curves.elasticOut.transform((t / 0.12).clamp(0.0, 1.0));
+              currentScale = popT;
+            } else if (t > 0.78) {
+              isLanding = true;
+              final landT = ((t - 0.78) / 0.22).clamp(0.0, 1.0);
+              final bounceT = sin(landT * pi * 2.5) * (1.0 - landT) * 0.25;
+              currentScale = (1.0 - landT * 0.7) + bounceT;
+              currentOpacity = (1.0 - landT).clamp(0.0, 1.0);
             }
 
-            // Calculate pixel translation instead of alignment
             final translateX = currentX * halfWidth;
-            // Nếu hạt sẽ va chạm, ép currentY thấp dần về 0 (tâm màn hình) tại điểm va chạm
             final effectiveY = p.willCollide && t >= 0.45
                 ? (currentY * (1 - ((t - 0.45) / 0.15).clamp(0.0, 1.0)))
                 : currentY;
             final translateY = (effectiveY - 0.25) * halfHeight;
 
+            final rotationSpeed = t < 0.3 ? 1.5 : (t > 0.7 ? 0.3 : 0.8);
             final mainWidget = Transform.rotate(
               angle: p.baseRotation +
-                  (t * 3.14 * 2 * (widget.shootToRight ? 1 : -1)),
+                  (t * pi * 2 * rotationSpeed * (widget.shootToRight ? 1 : -1)),
               child: Transform.scale(
                 scale: currentScale,
                 child: particleWidget,
               ),
             );
 
-            // Hiệu ứng nổ nhỏ tỏa ra khi chuẩn bị đáp đất (tới gần avatar) hoặc khi va chạm giữa chừng
-            final List<Widget> explosionWidgets = [];
-            if (isCollidingNow) {
-              final collideProgress = ((t - 0.45) / 0.15).clamp(0.0, 1.0);
-              final ext = collideProgress; // 0.0 -> 1.0
-              final expOpacity = (1.0 - ext).clamp(0.0, 1.0);
-              final expScale =
-                  0.6 + (1.0 - ext) * 0.8; // To hơn khi nổ giữa màn hình
+            final List<Widget> trailAndExplosion = [];
 
-              for (int i = 0; i < 8; i++) {
-                final angle = i * (2 * pi / 8) + (p.baseRotation * 3);
-                final distance = ext * 80.0; // Tỏa ra tối đa 80px
-                final dx = cos(angle) * distance;
-                final dy = sin(angle) * distance;
+            if (t > 0.05 && t < 0.85 && currentOpacity > 0 && !p.willCollide) {
+              for (int ti = 1; ti <= 3; ti++) {
+                final trailT = (t - ti * 0.04).clamp(0.0, 1.0);
+                final trailCurveX = Curves.easeInOutCubic.transform(trailT);
+                final trailWobble = sin(trailT * 3 * pi + p.wobblePhase) * p.wobbleAmplitude;
+                final trailX = startX + (endX - startX) * trailCurveX + trailWobble;
+                final trailY = -p.peakHeight * (1 - 4 * (trailT - 0.5) * (trailT - 0.5));
+                final trailTx = trailX * halfWidth;
+                final trailTy = (trailY - 0.25) * halfHeight;
+                final trailOpacity = (0.35 - ti * 0.1).clamp(0.0, 0.35);
+                final trailSize = p.size * (0.6 - ti * 0.12);
 
-                final bool isSparkle = i % 2 == 0;
-                final Widget expChild =
-                    isSparkle ? _expSparkle : _expAssetOrEmoji;
-
-                explosionWidgets.add(
-                  Transform.translate(
-                    offset: Offset(dx, dy),
-                    child: Transform.scale(
-                      scale: expScale,
-                      child: Opacity(
-                        opacity: expOpacity,
-                        child: expChild,
-                      ),
-                    ),
-                  ),
-                );
-              }
-            } else if (!p.willCollide && t > 0.8) {
-              final ext = (t - 0.8) * 5.0; // 0.0 -> 1.0
-              final expOpacity = (1.0 - ext).clamp(0.0, 1.0);
-              final expScale = 0.4 + (1.0 - ext) * 0.6; // 1.0 -> 0.4
-
-              for (int i = 0; i < 6; i++) {
-                final angle = i * (2 * pi / 6) + (p.baseRotation * 2);
-                final distance = ext * 55.0; // Tỏa ra tối đa 55px
-                final dx = cos(angle) * distance;
-                final dy = sin(angle) * distance;
-
-                final bool isSparkle = i % 2 == 0;
-                final Widget expChild =
-                    isSparkle ? _expSparkle : _expAssetOrEmoji;
-
-                explosionWidgets.add(
-                  Transform.translate(
-                    offset: Offset(dx, dy),
-                    child: Transform.scale(
-                      scale: expScale,
-                      child: Opacity(
-                        opacity: expOpacity,
-                        child: expChild,
+                trailAndExplosion.add(
+                  Positioned.fill(
+                    child: Center(
+                      child: Transform.translate(
+                        offset: Offset(trailTx, trailTy),
+                        child: Opacity(
+                          opacity: trailOpacity * currentOpacity,
+                          child: Container(
+                            width: trailSize,
+                            height: trailSize,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: [
+                                  const Color(0xFFFF80AB).withValues(alpha: 0.5),
+                                  const Color(0xFFFF80AB).withValues(alpha: 0.0),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -400,24 +296,155 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
               }
             }
 
-            return Positioned.fill(
-              child: Center(
-                child: Transform.translate(
-                  offset: Offset(translateX, translateY),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    clipBehavior: Clip.none,
-                    children: [
-                      if (currentOpacity > 0)
-                        Opacity(
-                          opacity: currentOpacity,
-                          child: mainWidget,
+            if (isCollidingNow) {
+              final collideProgress = ((t - 0.45) / 0.15).clamp(0.0, 1.0);
+              final ext = collideProgress;
+              final expOpacity = (1.0 - ext).clamp(0.0, 1.0);
+
+              for (int ri = 0; ri < 2; ri++) {
+                final rippleT = (ext - ri * 0.15).clamp(0.0, 1.0);
+                final rippleSize = rippleT * 120.0;
+                final rippleOpacity = (0.5 * (1.0 - rippleT)).clamp(0.0, 0.5);
+                trailAndExplosion.add(
+                  Positioned.fill(
+                    child: Center(
+                      child: Transform.translate(
+                        offset: Offset(translateX, translateY),
+                        child: Opacity(
+                          opacity: rippleOpacity,
+                          child: Container(
+                            width: rippleSize,
+                            height: rippleSize,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: const Color(0xFFFF4081),
+                                width: 2.0 * (1.0 - rippleT),
+                              ),
+                            ),
+                          ),
                         ),
-                      ...explosionWidgets,
-                    ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              for (int i = 0; i < 8; i++) {
+                final angle = i * (2 * pi / 8) + (p.baseRotation * 3);
+                final distance = ext * 90.0;
+                final dx = cos(angle) * distance;
+                final dy = sin(angle) * distance;
+
+                final bool isSparkle = i % 2 == 0;
+                final Widget expChild = isSparkle ? _expSparkle : _expAssetOrEmoji;
+                final expScale = 0.5 + (1.0 - ext) * 0.9;
+
+                trailAndExplosion.add(
+                  Positioned.fill(
+                    child: Center(
+                      child: Transform.translate(
+                        offset: Offset(translateX + dx, translateY + dy),
+                        child: Transform.scale(
+                          scale: expScale,
+                          child: Opacity(
+                            opacity: expOpacity,
+                            child: expChild,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+            } else if (isLanding && !p.willCollide) {
+              final landT = ((t - 0.78) / 0.22).clamp(0.0, 1.0);
+
+              for (int ri = 0; ri < 2; ri++) {
+                final rippleT = (landT - ri * 0.2).clamp(0.0, 1.0);
+                if (rippleT <= 0) continue;
+                final rippleSize = rippleT * 80.0;
+                final rippleOpacity = (0.4 * (1.0 - rippleT)).clamp(0.0, 0.4);
+                trailAndExplosion.add(
+                  Positioned.fill(
+                    child: Center(
+                      child: Transform.translate(
+                        offset: Offset(translateX, translateY),
+                        child: Opacity(
+                          opacity: rippleOpacity,
+                          child: Container(
+                            width: rippleSize,
+                            height: rippleSize,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: const Color(0xFFFF80AB),
+                                width: 1.5 * (1.0 - rippleT),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              if (landT > 0.2) {
+                final burstT = ((landT - 0.2) / 0.8).clamp(0.0, 1.0);
+                final expOpacity = (1.0 - burstT).clamp(0.0, 1.0);
+                for (int i = 0; i < 6; i++) {
+                  final angle = i * (2 * pi / 6) + (p.baseRotation * 2);
+                  final distance = burstT * 60.0;
+                  final dx = cos(angle) * distance;
+                  final dy = sin(angle) * distance;
+                  final bool isSparkle = i % 2 == 0;
+                  final Widget expChild = isSparkle ? _expSparkle : _expAssetOrEmoji;
+                  final expScale = 0.4 + (1.0 - burstT) * 0.6;
+
+                  trailAndExplosion.add(
+                    Positioned.fill(
+                      child: Center(
+                        child: Transform.translate(
+                          offset: Offset(translateX + dx, translateY + dy),
+                          child: Transform.scale(
+                            scale: expScale,
+                            child: Opacity(
+                              opacity: expOpacity,
+                              child: expChild,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+              }
+            }
+
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                ...trailAndExplosion,
+                Positioned.fill(
+                  child: Center(
+                    child: Transform.translate(
+                      offset: Offset(translateX, translateY),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        clipBehavior: Clip.none,
+                        children: [
+                          if (currentOpacity > 0 && currentScale > 0)
+                            Opacity(
+                              opacity: currentOpacity,
+                              child: mainWidget,
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             );
           }),
         );

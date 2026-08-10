@@ -1,4 +1,5 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
+import 'package:lottie/lottie.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
@@ -106,8 +107,8 @@ import 'package:soullocket_app/views/home/milestones_screen.dart';
 import 'dart:ui' as ui;
 
 import '../../../widgets/lottie_async_loader.dart';
-import 'package:lottie/lottie.dart';
 import '../../../core/fast_backdrop_filter.dart';
+import 'package:soullocket_app/core/sl_countdown_shapes.dart';
 import 'package:soullocket_app/core/sl_route.dart';
 import 'package:soullocket_app/views/home/tabs/main_home/widgets/main_home_header_button.dart';
 
@@ -332,7 +333,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   static final List<String> _kHomeStickerAssets =
       List<String>.generate(99, (i) {
     final num = (i + 1).toString().padLeft(3, '0');
-    return 'assets/images/anhtomau_stickers/sticker_1.gif';
+    return 'assets/images/interaction_stickers/custom/numbered/sticker_$num.png';
   });
 
   static const List<String> _kGiftSuggestions = [
@@ -1332,5 +1333,3 @@ class HomeUpcomingEvent {
     required this.type,
   });
 }
-
-

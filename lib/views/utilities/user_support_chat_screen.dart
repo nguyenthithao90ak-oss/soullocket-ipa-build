@@ -45,7 +45,6 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   final List<_SupportMessage> _messages = [];
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _messagesSub;
   StreamSubscription<DatabaseEvent>? _statusSub;
-  static const int _maxWaitingAdminFollowUps = 3;
 
   @override
   void initState() {
@@ -312,19 +311,19 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       _messages.add(
         _SupportMessage(
           id: 'greeting',
-          text: '👋 Xin chào! Mình là trợ lý SoulLocket.\n\n'
-              'Bạn có thể chạm chủ đề phía trên hoặc gõ số 1-9 để mở mẫu điền nhanh.\n'
-              'Khi gửi ticket, hệ thống sẽ tự đính kèm UID, email, house, thiết bị và phiên bản app để Admin kiểm tra đầy đủ hơn.\n\n'
-              'Các mục hỗ trợ hiện có:\n'
-              '1. Quên mật khẩu / Đăng nhập\n'
-              '2. Ghép đôi / Mất kết nối\n'
-              '3. Lỗi ảnh, video hoặc nhật ký\n'
-              '4. Thanh toán / Trạng thái mua hàng\n'
-              '5. Đổi điện thoại / Đồng bộ lại dữ liệu\n'
-              '6. Góp ý / Báo lỗi kỹ thuật khác\n'
-              '7. Tư vấn gỡ rối tình cảm\n'
-              '8. Hướng dẫn xóa tài khoản / Xóa nhà\n'
-              '${L10nService().translate('util_9gpadminht_8eebd4')}',
+          text: '👋 Xin chào! Mình là Trợ lý AI SoulLocket ✨\n\n'
+              'Mình luôn sẵn sàng trả lời trực tiếp mọi thắc mắc của bạn ngay lập tức! 💕\n'
+              'Khi bạn nhắn từ 5 tin thắc mắc trở lên, hệ thống sẽ tự động gửi thông báo đến Admin người thật để kiểm tra bổ sung nha.\n\n'
+              'Các chủ đề hỗ trợ nhanh:\n'
+              '1. 🔑 Quên mật khẩu / Đăng nhập\n'
+              '2. 🔗 Ghép đôi / Mất kết nối\n'
+              '3. 📸 Lỗi ảnh, video hoặc nhật ký\n'
+              '4. 💳 Thanh toán / Trạng thái VIP\n'
+              '5. 📱 Đổi điện thoại / Đồng bộ dữ liệu\n'
+              '6. 🐞 Góp ý / Báo lỗi kỹ thuật\n'
+              '7. 💖 Tư vấn gỡ rối tình cảm\n'
+              '8. 🗑️ Hướng dẫn xóa tài khoản / Xóa nhà\n'
+              '9. 🧑‍💻 Gặp Admin người thật trực tiếp',
           isBot: true,
           isAdmin: false,
           isMenuCommand: false,
@@ -364,10 +363,6 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     final commandId =
         menuId ?? (validCommands.contains(text.trim()) ? text.trim() : null);
     final isMenuCommand = commandId != null;
-    if (_isWaitingAdmin && !isMenuCommand && _isWaitingAdminInputLocked) {
-      _showWaitingAdminLimitSnackBar();
-      return;
-    }
 
     if (!await SecurityService().guardAction(
       context,
@@ -409,15 +404,6 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
       } catch (e) {
         debugPrint('Error getting ticket metadata (timeout or offline): $e');
       }
-      if (wasAlreadyWaiting &&
-          !isMenuCommand &&
-          _countWaitingAdminFollowUps(_messages) >= _maxWaitingAdminFollowUps) {
-        if (mounted) {
-          setState(() => _isSending = false);
-        }
-        _showWaitingAdminLimitSnackBar();
-        return;
-      }
 
       try {
         await FirebaseFirestore.instance
@@ -444,13 +430,18 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         debugPrint('Error adding support message to Firestore: $e');
       }
 
+      final currentMsgCount = _userMessageCount;
+      final newMsgCount = isMenuCommand ? currentMsgCount : currentMsgCount + 1;
+      final isEscalateToAdmin = newMsgCount >= 5 || commandId == '9';
+      final justReached5 = !isMenuCommand && newMsgCount == 5;
+
       final updates = <String, dynamic>{
         'last_message': summary,
         'last_ts': ServerValue.timestamp,
-        'status': isMenuCommand ? 'bot_handled' : 'waiting_for_admin',
+        'status': isEscalateToAdmin ? 'waiting_for_admin' : 'bot_handled',
       };
 
-      if (!isMenuCommand) {
+      if (isEscalateToAdmin) {
         updates['unread_admin'] = ServerValue.increment(1);
       }
 
@@ -553,6 +544,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         isMenuCommand,
         commandId,
         wasAlreadyWaiting: wasAlreadyWaiting,
+        justReached5: justReached5,
       );
 
       if (mounted) {
@@ -566,7 +558,6 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     } catch (e) {
       debugPrint('Error sending support message: $e');
     } finally {
-      // Luôn đặt lại _isSending về false dù có lỗi hay không
       if (mounted) {
         setState(() => _isSending = false);
       }
@@ -578,56 +569,63 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     bool isMenuCommand,
     String? commandId, {
     bool wasAlreadyWaiting = false,
+    bool justReached5 = false,
   }) async {
-    if (!isMenuCommand) {
-      final localReply = wasAlreadyWaiting
-          ? context.tr('util_mnhbsungth_2f4d73')
-          : context.tr('util_yucucabncg_81d444');
-      String? aiReply;
-      try {
-        aiReply = await AiCounselorService()
-            .callTextGeneration(
-              'Người dùng vừa gửi tin nhắn hỗ trợ: $userText\n${context.tr('util_hytrlinhtr_e42d19')}',
-              context.tr('util_bnltrlailp_9d5e23'),
-            )
-            .timeout(const Duration(seconds: 25)); // Tăng timeout lên 25s
-      } catch (_) {}
+    final categoryName = commandId != null ? _getCategoryName(commandId) : 'Hỗ trợ SoulLocket';
+    const systemInstruction = '''
+Bạn là Trợ lý AI SoulLocket - siêu cute, thân thiện, thông minh và vô cùng ngọt ngào của ứng dụng nhật ký cặp đôi SoulLocket.
+Nhiệm vụ của bạn là giải đáp TRỰC TIẾP và CHÍNH XÁC thắc mắc của người dùng.
 
-      if (aiReply != null && aiReply.trim().isNotEmpty) {
-        // AI làm trợ lý trả lời chính
-        await _saveBotReply('🤖 Trợ lý AI:\n${aiReply.trim()}');
-      } else {
-        // Nếu AI lỗi mới dùng lại câu tự động
-        await _saveBotReply(localReply);
-      }
-      return;
+Dưới đây là một số thông tin kỹ thuật & tính năng chính của SoulLocket để bạn trả lời chính xác:
+1. Ghép đôi nhà & Mất kết nối:
+   - Cách ghép đôi: Vào Cài đặt -> Lấy Mã Nhà gồm 12 số -> Trên điện thoại người kia bấm Ghép Đôi và nhập 12 số này.
+   - Nếu báo "Offline sai lệch / Vừa mới thoát": Đây không phải lỗi mất kết nối, do đường truyền mạng chậm 1-2s. Chỉ cần thử tắt/bật lại 4G/Wifi hoặc chờ 1 lúc app sẽ tự cập nhật đồng bộ lại chữ 'Online'.
+2. Tài khoản & Đăng nhập:
+   - Quên mật khẩu: Chọn "Quên mật khẩu" ở màn hình Đăng nhập để nhận email khôi phục mật khẩu.
+   - Mỗi người dùng một tài khoản riêng, ghép nối với nhau qua Mã Nhà.
+3. VIP & Mua hàng:
+   - Gói VIP mở khóa lưu trữ ảnh/video không giới hạn, nhạc nền cặp đôi, khung ảnh, theme độc quyền.
+4. Ảnh, Video & Nhật ký:
+   - Nếu không tải được ảnh: Kiểm tra dung lượng file, kết nối 4G/Wifi hoặc thử thoát app vào lại.
+5. Chuyển điện thoại / Đồng bộ:
+   - Chỉ cần đăng nhập đúng tài khoản email cũ trên điện thoại mới, toàn bộ dữ liệu Nhà sẽ tự động tải về.
+6. Admin hỗ trợ:
+   - Nhắn từ 5 câu hỏi thắc mắc trở lên, hệ thống sẽ tự động gửi thông báo tới Admin để nhân viên vào kiểm tra & hỗ trợ trực tiếp.
+
+Quy tắc trả lời:
+- Luôn trả lời trực tiếp đúng trọng tâm câu hỏi.
+- Trình bày ngắn gọn, dễ hiểu, từng bước rõ ràng.
+- Giọng điệu siêu dễ thương, có các biểu cảm icon xinh xắn (✨, 💕, 🌸, 🤖, 💖, 📝).
+''';
+
+    final promptText = isMenuCommand
+        ? 'Người dùng vừa chọn chủ đề hỗ trợ: $categoryName. Hãy chào đón dễ thương và hướng dẫn trực tiếp các giải pháp thắc mắc liên quan đến $categoryName.'
+        : 'Người dùng vừa hỏi: "$userText". Hãy trả lời trực tiếp và hướng dẫn ngắn gọn chi tiết nhất.';
+
+    String? aiReply;
+    try {
+      aiReply = await AiCounselorService()
+          .callTextGeneration(
+            promptText,
+            systemInstruction,
+          )
+          .timeout(const Duration(seconds: 25));
+    } catch (e) {
+      debugPrint('AiCounselorService error: $e');
     }
 
-    final localReply = _buildLocalSupportReply(commandId ?? userText);
+    if (aiReply != null && aiReply.trim().isNotEmpty) {
+      await _saveBotReply('🤖 Trợ lý AI:\n${aiReply.trim()}');
+    } else {
+      final localReply = _buildLocalSupportReply(commandId ?? userText);
+      await _saveBotReply('🤖 Trợ lý AI:\n$localReply');
+    }
 
-    try {
-      final category = _getCategoryName(commandId ?? '0');
-      final aiPrompt = 'Người dùng vừa chọn chủ đề hỗ trợ: $category. '
-          '${context.tr('util_hyngvaitrl_c96abd')}'
-          'và giải quyết vấn đề liên quan đến $category. '
-          'Nếu cần cung cấp ảnh chụp màn hình, hãy nhắc người dùng. '
-          'Cuối thư nhắc: ${context.tr('util_muinchitit_37f190')}.';
-
-      final aiReply = await AiCounselorService()
-          .callTextGeneration(
-            aiPrompt,
-            context.tr('util_bnltrlailp_6890a8'),
-          )
-          .timeout(const Duration(seconds: 25)); // Tăng timeout lên 25s
-
-      if (aiReply != null && aiReply.trim().isNotEmpty) {
-        // AI làm trợ lý trả lời chính
-        await _saveBotReply('🤖 Trợ lý AI:\n${aiReply.trim()}');
-        return;
-      }
-    } catch (_) {}
-
-    await _saveBotReply(localReply);
+    if (justReached5) {
+      await _saveBotReply(
+        '📌 Bạn đã nhắn đủ 5 thắc mắc! Hệ thống đã gửi thông báo đến Admin. Admin sẽ kiểm tra và phản hồi bổ sung cho bạn khi online nha! 💕',
+      );
+    }
   }
 
   String _getCategoryName(String id) {
@@ -887,36 +885,9 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     return supportTopicCatalog.any((topic) => topic.id == normalized);
   }
 
-  int _countWaitingAdminFollowUps(Iterable<_SupportMessage> messages) {
-    final substantiveMessages = messages.where(
-      (message) => !message.isBot && !message.isAdmin && !message.isMenuCommand,
-    );
-    final count = substantiveMessages.length;
-    return count > 0 ? count - 1 : 0;
-  }
-
-  int get _waitingAdminFollowUpCount => _countWaitingAdminFollowUps(_messages);
-
-  int get _remainingWaitingAdminFollowUps {
-    final remaining = _maxWaitingAdminFollowUps - _waitingAdminFollowUpCount;
-    return remaining > 0 ? remaining : 0;
-  }
-
-  bool get _isWaitingAdminInputLocked =>
-      _isWaitingAdmin && _remainingWaitingAdminFollowUps == 0;
-
-  void _showWaitingAdminLimitSnackBar() {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          context.tr('util_bngi3tinnh_21d13b'),
-        ),
-      ),
-    );
-  }
-
-  bool get _isWaitingAdmin => _ticketStatus == 'waiting_for_admin';
+  int get _userMessageCount => _messages
+      .where((m) => !m.isBot && !m.isAdmin && !m.isMenuCommand)
+      .length;
 
   bool get _isResolved =>
       _ticketStatus == 'resolved' || _ticketStatus == 'closed';
@@ -926,26 +897,41 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final compact = screenWidth < 360;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F2FF),
+      backgroundColor: const Color(0xFFFFF0F5),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFD81B60),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFFF527B), Color(0xFFFF7597), Color(0xFFD81B60)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         foregroundColor: Colors.white,
+        elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              context.tr('util_htrsoulloc_ed0178'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                fontSize: compact ? 14 : 16,
-              ),
+            Row(
+              children: [
+                Text(
+                  context.tr('util_htrsoulloc_ed0178'),
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    fontSize: compact ? 14 : 16,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Text('✨', style: TextStyle(fontSize: 14)),
+              ],
             ),
             Text(
-              context.tr('util_aiadminphn_b17549'),
+              '🤖 AI Trả lời ngay • Gửi Admin sau 5 tin',
               style: SLTheme.quicksand(
-                fontSize: compact ? 10 : 11,
-                color: Colors.white70,
+                fontSize: compact ? 9.5 : 10.5,
+                color: Colors.white.withValues(alpha: 0.9),
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -955,18 +941,18 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           IconButton(
             onPressed: _showSupportIntakeGuide,
             icon: Container(
-              width: 20,
-              height: 20,
+              width: 24,
+              height: 24,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
+                color: Colors.white.withValues(alpha: 0.22),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withValues(alpha: 0.45)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
               ),
               child: Center(
                 child: Text(
                   'i',
                   style: SLTheme.quicksand(
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
                     height: 1,
@@ -978,7 +964,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           ),
           IconButton(
             onPressed: _showFaq,
-            icon: const Icon(Icons.help_outline_rounded),
+            icon: const Icon(Icons.help_outline_rounded, color: Colors.white),
           ),
         ],
       ),
@@ -987,8 +973,8 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
           if (_supportStatusMessage != null)
             Container(
               width: double.infinity,
-              margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFFFFF4E5),
                 borderRadius: BorderRadius.circular(16),
@@ -997,49 +983,45 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
               child: Text(
                 _supportStatusMessage!,
                 style: SLTheme.quicksand(
-                  fontSize: 12.5,
+                  fontSize: 12,
                   fontWeight: FontWeight.w800,
                   color: const Color(0xFF8A4B00),
-                  height: 1.45,
+                  height: 1.4,
                 ),
               ),
             ),
           if (_entryBannerText != null)
             Container(
               width: double.infinity,
-              margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFFFFEEF5),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: const Color(0xFFFFBED4)),
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 1),
-                    child: Icon(
-                      Icons.shield_outlined,
-                      size: 18,
-                      color: Color(0xFFD81B60),
-                    ),
+                  const Icon(
+                    Icons.shield_outlined,
+                    size: 18,
+                    color: Color(0xFFD81B60),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _entryBannerText!,
                       style: SLTheme.quicksand(
-                        fontSize: 12.5,
+                        fontSize: 12,
                         fontWeight: FontWeight.w800,
                         color: const Color(0xFF9E174D),
-                        height: 1.45,
                       ),
                     ),
                   ),
                 ],
               ),
             ),
+          _buildAdminEscalationBanner(),
           _buildQuickTopics(),
           Expanded(
             child: ListView.builder(
@@ -1049,8 +1031,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
               itemBuilder: (_, index) => _buildBubble(_messages[index]),
             ),
           ),
-          // Chỉ hiển thị typing indicator khi đang gửi VÀ chat chưa bị khóa
-          if (_isSending && !_isWaitingAdminInputLocked)
+          if (_isSending)
             _buildTypingIndicator(),
           _buildInputBar(),
         ],
@@ -1058,10 +1039,101 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
     );
   }
 
+  Widget _buildAdminEscalationBanner() {
+    final count = _userMessageCount;
+    final isEscalated = count >= 5;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isEscalated
+              ? [const Color(0xFFFFF0F5), const Color(0xFFFFE4EE)]
+              : [const Color(0xFFF4F0FF), const Color(0xFFEBE3FF)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isEscalated ? const Color(0xFFFFB6C1) : const Color(0xFFD8B4FE),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                isEscalated ? '💌 Đã kết nối với Admin!' : '💬 AI hỗ trợ trực tiếp',
+                style: SLTheme.quicksand(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w900,
+                  color: isEscalated ? const Color(0xFFD81B60) : const Color(0xFF6B21A8),
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isEscalated ? const Color(0xFFD81B60) : const Color(0xFF7C3AED),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$count/5 tin',
+                  style: SLTheme.quicksand(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: (count / 5.0).clamp(0.0, 1.0),
+              backgroundColor: Colors.white.withValues(alpha: 0.6),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isEscalated ? const Color(0xFFD81B60) : const Color(0xFF8B5CF6),
+              ),
+              minHeight: 5,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            isEscalated
+                ? 'Admin đã nhận thông báo ticket của bạn. AI vẫn sẵn sàng giải đáp thêm mọi câu hỏi!'
+                : 'Nhắn từ 5 câu hỏi trở lên, ứng dụng sẽ tự động chuyển thông báo đến Admin người thật.',
+            style: SLTheme.quicksand(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: Colors.grey[700],
+              height: 1.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildQuickTopics() {
     return Container(
-      height: 54,
-      color: Colors.white,
+      height: 52,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.9),
+        border: const Border(
+          bottom: BorderSide(color: Color(0xFFFFE0EB), width: 1),
+        ),
+      ),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1076,35 +1148,79 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
               unawaited(
                   _send(menuId: topic.id, displayMessage: topic.chipLabel));
             },
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 36),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? const Color(0xFFD81B60).withValues(alpha: 0.18)
-                    : const Color(0xFFD81B60).withValues(alpha: 0.08),
+                gradient: isSelected
+                    ? const LinearGradient(
+                        colors: [Color(0xFFFF527B), Color(0xFFD81B60)],
+                      )
+                    : null,
+                color: isSelected ? null : const Color(0xFFFFF0F5),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isSelected
-                      ? const Color(0xFFD81B60)
-                      : const Color(0xFFD81B60).withValues(alpha: 0.2),
+                  color: isSelected ? Colors.transparent : const Color(0xFFFFB6C1),
+                  width: 1,
                 ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFFD81B60).withValues(alpha: 0.3),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        )
+                      ]
+                    : null,
               ),
-              child: Text(
-                topic.chipLabel,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFFD81B60),
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _getTopicEmoji(topic.id),
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    topic.chipLabel,
+                    style: SLTheme.quicksand(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: isSelected ? Colors.white : const Color(0xFFD81B60),
+                    ),
+                  ),
+                ],
               ),
             ),
           );
         },
       ),
     );
+  }
+
+  String _getTopicEmoji(String id) {
+    switch (id) {
+      case '1':
+        return '🔑';
+      case '2':
+        return '🔗';
+      case '3':
+        return '📸';
+      case '4':
+        return '💳';
+      case '5':
+        return '📱';
+      case '6':
+        return '🐞';
+      case '7':
+        return '💖';
+      case '8':
+        return '🗑️';
+      case '9':
+        return '🧑‍💻';
+      default:
+        return '💡';
+    }
   }
 
   Widget _buildSupportIntakeCard() {
@@ -1311,19 +1427,31 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         children: [
           if (!isMine) ...[
             Container(
-              width: 32,
-              height: 32,
+              width: 34,
+              height: 34,
               margin: const EdgeInsets.only(right: 8),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
-                  colors: [Color(0xFFD81B60), Color(0xFFFF6F91)],
+                  colors: message.isAdmin
+                      ? [const Color(0xFF7C3AED), const Color(0xFF4C1D95)]
+                      : [const Color(0xFFFF527B), Color(0xFFD81B60)],
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: (message.isAdmin
+                            ? const Color(0xFF7C3AED)
+                            : const Color(0xFFD81B60))
+                        .withValues(alpha: 0.3),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Center(
                 child: Text(
-                  message.isAdmin ? '👤' : '🤖',
-                  style: const TextStyle(fontSize: 14),
+                  message.isAdmin ? '👑' : '🤖',
+                  style: const TextStyle(fontSize: 15),
                 ),
               ),
             ),
@@ -1335,29 +1463,43 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
               children: [
                 if (!isMine)
                   Padding(
-                    padding: const EdgeInsets.only(left: 4, bottom: 3),
-                    child: Text(
-                      message.isAdmin
-                          ? 'Admin SoulLocket'
-                          : context.tr('util_trlai_e23336'),
-                      style: SLTheme.quicksand(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.grey[500],
-                      ),
+                    padding: const EdgeInsets.only(left: 4, bottom: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          message.isAdmin
+                              ? '👑 Admin SoulLocket'
+                              : '🤖 Trợ lý AI SoulLocket ✨',
+                          style: SLTheme.quicksand(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            color: message.isAdmin
+                                ? const Color(0xFF7C3AED)
+                                : const Color(0xFFD81B60),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 Container(
                   constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.72,
+                    maxWidth: MediaQuery.of(context).size.width * 0.76,
                   ),
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
                   decoration: BoxDecoration(
+                    gradient: isMine
+                        ? const LinearGradient(
+                            colors: [Color(0xFFFF4D7E), Color(0xFFD81B60)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
                     color: isMine
-                        ? const Color(0xFFD81B60)
+                        ? null
                         : message.isAdmin
-                            ? const Color(0xFF1E293B)
+                            ? const Color(0xFF1E1B4B)
                             : Colors.white,
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(18),
@@ -1365,9 +1507,12 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                       bottomLeft: Radius.circular(isMine ? 18 : 4),
                       bottomRight: Radius.circular(isMine ? 4 : 18),
                     ),
+                    border: isMine || message.isAdmin
+                        ? null
+                        : Border.all(color: const Color(0xFFFFE0EB), width: 1.2),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
@@ -1376,22 +1521,25 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
                   child: Text(
                     message.text,
                     style: SLTheme.quicksand(
-                      fontSize: 13,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w600,
                       color: isMine || message.isAdmin
                           ? Colors.white
-                          : const Color(0xFF222222),
+                          : const Color(0xFF2D2D2D),
                       height: 1.5,
                     ),
                   ),
                 ),
                 const SizedBox(height: 3),
-                Text(
-                  time,
-                  style: SLTheme.quicksand(
-                    fontSize: 9,
-                    color: Colors.grey[400],
-                    fontWeight: FontWeight.w600,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    time,
+                    style: SLTheme.quicksand(
+                      fontSize: 9.5,
+                      color: Colors.grey[500],
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -1414,7 +1562,7 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [Color(0xFFD81B60), Color(0xFFFF6F91)],
+                colors: [Color(0xFFFF527B), Color(0xFFD81B60)],
               ),
             ),
             child: const Center(
@@ -1427,13 +1575,21 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFFFE0EB)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Text(
-              context.tr('util_trlangson_923025'),
+              '🤖 Trợ lý AI đang suy nghĩ câu trả lời cho bạn... ✨',
               style: SLTheme.quicksand(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: Colors.grey[500],
+                color: const Color(0xFFD81B60),
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -1446,37 +1602,9 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
   Widget _buildInputBar() {
     if (_isResolved) {
       return const SizedBox.shrink();
-      /*
-        padding: EdgeInsets.fromLTRB(
-          16,
-          16,
-          16,
-          MediaQuery.of(context).padding.bottom + 16,
-        ),
-        color: Colors.white,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFD81B60),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-          ),
-          onPressed: _startNewChat,
-          child: Text(
-            context.tr('util_btuonchatm_78aa12'),
-            style: SLTheme.quicksand(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      */
     }
 
-    final canSend =
-        !_isSending && _ticketId != null && !_isWaitingAdminInputLocked;
+    final canSend = !_isSending && _ticketId != null;
     final selectedTopic = _currentTopic;
 
     return Container(
@@ -1486,150 +1614,104 @@ class _UserSupportChatScreenState extends State<UserSupportChatScreen> {
         12,
         MediaQuery.of(context).padding.bottom + 8,
       ),
-      color: Colors.white,
-      child: Column(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD81B60).withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, -3),
+          ),
+        ],
+      ),
+      child: Row(
         children: [
-          if (_isWaitingAdmin && !_isWaitingAdminInputLocked)
-            Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          Expanded(
+            child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF3E0),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFFFB74D)),
+                color: const Color(0xFFFFF0F5),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0xFFFFD1DC)),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.access_time_rounded,
-                    size: 16,
-                    color: Color(0xFFF57C00),
+              child: TextField(
+                controller: _msgCtrl,
+                enabled: canSend,
+                minLines: 1,
+                maxLines: 8,
+                maxLength: 1000,
+                buildCounter: (context,
+                        {required currentLength,
+                        required isFocused,
+                        maxLength}) =>
+                    null,
+                textInputAction: TextInputAction.send,
+                onSubmitted: canSend ? (_) => _send() : null,
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: const Color(0xFF222222),
+                ),
+                decoration: InputDecoration(
+                  hintText: _ticketId == null
+                      ? context.tr('util_ngnhpnhn_b4a68d')
+                      : (selectedTopic != null
+                          ? 'Điền theo mẫu ${selectedTopic.title.toLowerCase()}...'
+                          : 'Đặt câu hỏi để AI giải đáp trực tiếp...'),
+                  hintStyle: SLTheme.quicksand(
+                    color: const Color(0xFFD81B60).withValues(alpha: 0.5),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      context.tr('util_ticketangh_dbf826'),
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFFE65100),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          if (_isWaitingAdminInputLocked)
-            Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFEBEE),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE57373)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.lock_clock_rounded,
-                    size: 16,
-                    color: Color(0xFFC62828),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      context.tr('util_bngi3tinnh_236681'),
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFFB71C1C),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: TextField(
-                    controller: _msgCtrl,
-                    enabled: canSend,
-                    minLines: 1,
-                    maxLines: 8,
-                    maxLength: 1000,
-                    buildCounter: (context,
-                            {required currentLength,
-                            required isFocused,
-                            maxLength}) =>
-                        null,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: canSend ? (_) => _send() : null,
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: _ticketId == null
-                          ? context.tr('util_ngnhpnhn_b4a68d')
-                          : (selectedTopic != null
-                              ? 'Điền theo mẫu ${selectedTopic.title.toLowerCase()}...'
-                              : context.tr('util_nhpchititl_2c70ce')),
-                      hintStyle: SLTheme.quicksand(
-                        color: Colors.grey[400],
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                    ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
-              GestureDetector(
-                onTap: canSend ? _send : null,
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: canSend
-                        ? const LinearGradient(
-                            colors: [Color(0xFFFF4D73), Color(0xFFD81B60)],
-                          )
-                        : null,
-                    color: canSend ? null : Colors.grey[300],
-                    shape: BoxShape.circle,
-                  ),
-                  child: _isSending
-                      ? const Center(
-                          child: SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: canSend ? _send : null,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                gradient: canSend
+                    ? const LinearGradient(
+                        colors: [Color(0xFFFF527B), Color(0xFFD81B60)],
+                      )
+                    : null,
+                color: canSend ? null : Colors.grey[300],
+                shape: BoxShape.circle,
+                boxShadow: canSend
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFFD81B60).withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
                         )
-                      : const Icon(
-                          Icons.send_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                ),
+                      ]
+                    : null,
               ),
-            ],
+              child: _isSending
+                  ? const Center(
+                      child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      ),
+                    )
+                  : const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+            ),
           ),
         ],
       ),

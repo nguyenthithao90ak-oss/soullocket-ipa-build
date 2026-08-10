@@ -39,7 +39,7 @@ class CalendarEventStateCard extends StatelessWidget {
               style: SLTheme.quicksand(
                 fontSize: 15,
                 fontWeight: FontWeight.w900,
-                color: SLTheme.textMain,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 6),
@@ -49,7 +49,7 @@ class CalendarEventStateCard extends StatelessWidget {
               style: SLTheme.quicksand(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: SLTheme.textMuted,
+                color: Colors.white.withValues(alpha: 0.8),
                 height: 1.35,
               ),
             ),

@@ -13,6 +13,7 @@ class _MainHomeHeroCountdownSection extends StatelessWidget {
   final bool homeShowHouseName;
   final bool showDayCounter;
   final bool showLoveTimeDetail;
+  final String countdownShapeKey;
   final String countdownStyleKey;
   final bool enableMotionBase;
   final ValueListenable<bool>? isScrollingNotifier;
@@ -35,6 +36,7 @@ class _MainHomeHeroCountdownSection extends StatelessWidget {
     required this.homeShowHouseName,
     required this.showDayCounter,
     required this.showLoveTimeDetail,
+    required this.countdownShapeKey,
     required this.countdownStyleKey,
     required this.enableMotionBase,
     this.isScrollingNotifier,
@@ -60,6 +62,7 @@ class _MainHomeHeroCountdownSection extends StatelessWidget {
             circleTopLabel: circleTopLabel,
             circleBottomLabel: circleBottomLabel,
             circleSize: circleSize,
+            countdownShapeKey: countdownShapeKey,
             countdownStyleKey: countdownStyleKey,
             enableMotionBase: enableMotionBase,
             isScrollingNotifier: isScrollingNotifier,
@@ -342,6 +345,7 @@ class _MainHomeHeroCountdownCircle extends StatefulWidget {
   final String circleTopLabel;
   final String circleBottomLabel;
   final double circleSize;
+  final String countdownShapeKey;
   final String countdownStyleKey;
   final bool enableMotionBase;
   final ValueListenable<bool>? isScrollingNotifier;
@@ -359,6 +363,7 @@ class _MainHomeHeroCountdownCircle extends StatefulWidget {
     required this.circleTopLabel,
     required this.circleBottomLabel,
     required this.circleSize,
+    required this.countdownShapeKey,
     required this.countdownStyleKey,
     required this.enableMotionBase,
     this.isScrollingNotifier,
@@ -724,9 +729,12 @@ class _MainHomeHeroCountdownCircleState
               child: Container(
                 width: widget.circleSize,
                 height: widget.circleSize,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: countdownVisual.outerColor,
+                decoration: ShapeDecoration(
+                  shape: SlCountdownShapes.getShapeBorderForKey(
+                    widget.countdownShapeKey,
+                    side: widget.isMilestone ? milestoneBorderSide : BorderSide.none,
+                  ),
+                  color: (widget.isMilestone || countdownVisual.outerGradient != null) ? null : countdownVisual.outerColor,
                   gradient: widget.isMilestone
                       ? const RadialGradient(
                           center: Alignment.topLeft,
@@ -738,10 +746,7 @@ class _MainHomeHeroCountdownCircleState
                           ],
                         )
                       : countdownVisual.outerGradient,
-                  border: Border.fromBorderSide(
-                    widget.isMilestone ? milestoneBorderSide : BorderSide.none,
-                  ),
-                  boxShadow: widget.isMilestone
+                  shadows: widget.isMilestone
                       ? [
                           BoxShadow(
                             color:
@@ -750,7 +755,7 @@ class _MainHomeHeroCountdownCircleState
                             spreadRadius: 4,
                           ),
                         ]
-                      : null,
+                      : SLShadows.glowingPrimary,
                 ),
                 child: Stack(
                   alignment: Alignment.center,
@@ -773,45 +778,50 @@ class _MainHomeHeroCountdownCircleState
                                         ? SLSpacing.all12
                                         : EdgeInsets.zero,
                                     child: Container(
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: countdownVisual.innerColor,
-                                        gradient: countdownVisual.innerGradient,
-                                        border: countdownVisual.innerBorder,
-                                      ),
-                                      child: RepaintBoundary(
-                                        child: AnimatedWaveBackground(
-                                          styleKey: (transparentMode ||
-                                                  UiPrefs
-                                                      .notifier.value.liteMode)
-                                              ? 'plain'
-                                              : widget.countdownStyleKey,
-                                          enableMotion: enableMotion,
-                                          transparentMode: transparentMode,
+                                      clipBehavior: Clip.antiAlias,
+                                      decoration: ShapeDecoration(
+                                        shape: SlCountdownShapes.getShapeBorderForKey(
+                                          widget.countdownShapeKey,
+                                          side: (countdownVisual.innerBorder is Border)
+                                              ? (countdownVisual.innerBorder as Border).top
+                                              : BorderSide.none,
                                         ),
+                                        color: countdownVisual.innerGradient != null ? null : countdownVisual.innerColor,
+                                        gradient: countdownVisual.innerGradient,
+                                      ),
+                                      child: Stack(
+                                        fit: StackFit.expand,
+                                        children: [
+                                          RepaintBoundary(
+                                            child: AnimatedWaveBackground(
+                                              styleKey: (transparentMode || UiPrefs.notifier.value.liteMode)
+                                                  ? 'plain'
+                                                  : widget.countdownStyleKey,
+                                              enableMotion: enableMotion,
+                                              transparentMode: transparentMode,
+                                            ),
+                                          ),
+                                          if (_cachedPhotoUrls.isNotEmpty &&
+                                              widget.countdownStyleKey == 'floating_hearts')
+                                            RepaintBoundary(
+                                              child: SnowGlobePhotoLayer(
+                                                photoUrls: _cachedPhotoUrls.take(3).toList(),
+                                                circleSize: widget.circleSize,
+                                                enableMotion: enableMotion,
+                                              ),
+                                            ),
+                                          if (widget.countdownStyleKey == 'floating_hearts')
+                                            RepaintBoundary(
+                                              child: FloatingHeartsRingOverlay(
+                                                size: widget.circleSize,
+                                                enableMotion: enableMotion,
+                                              ),
+                                            ),
+                                        ],
                                       ),
                                     ),
                                   ),
                                 ),
-                                if (_cachedPhotoUrls.isNotEmpty &&
-                                    widget.countdownStyleKey ==
-                                        'floating_hearts')
-                                  RepaintBoundary(
-                                    child: SnowGlobePhotoLayer(
-                                      photoUrls:
-                                          _cachedPhotoUrls.take(3).toList(),
-                                      circleSize: widget.circleSize,
-                                      enableMotion: enableMotion,
-                                    ),
-                                  ),
-                                if (widget.countdownStyleKey ==
-                                    'floating_hearts')
-                                  RepaintBoundary(
-                                    child: FloatingHeartsRingOverlay(
-                                      size: widget.circleSize,
-                                      enableMotion: enableMotion,
-                                    ),
-                                  ),
                               ],
                             );
                           }
@@ -823,8 +833,7 @@ class _MainHomeHeroCountdownCircleState
                           return ValueListenableBuilder<bool>(
                             valueListenable: widget.isScrollingNotifier!,
                             builder: (context, isScrolling, _) =>
-                                buildBackground(
-                                    widget.enableMotionBase && !isScrolling),
+                                buildBackground(widget.enableMotionBase),
                           );
                         },
                       ),
@@ -1059,10 +1068,10 @@ class _MainHomeHeroCountdownCircleState
 
             // 2. Outer ring & clickable heart badge (positioned in the larger parent stack)
             if (widget.countdownStyleKey == 'floating_hearts') ...[
-              // Clickable floating heart badge on bottom-left
+              // Clickable floating heart badge on bottom-left, using Align for better dynamic positioning
               Positioned(
-                left: widget.circleSize * 0.02,
-                bottom: widget.circleSize * 0.02,
+                left: widget.circleSize * 0.1,
+                bottom: widget.circleSize * 0.05,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
@@ -1081,8 +1090,15 @@ class _MainHomeHeroCountdownCircleState
                   },
                   child: Icon(
                     Icons.favorite_rounded,
-                    size: widget.circleSize * 0.16,
+                    size: widget.circleSize * 0.18,
                     color: const Color(0xFFFF9FBC),
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                 ),
               ),

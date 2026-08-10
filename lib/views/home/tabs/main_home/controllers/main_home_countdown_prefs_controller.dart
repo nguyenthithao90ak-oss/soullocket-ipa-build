@@ -31,6 +31,7 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
   }
 
   Future<void> _saveCountdownQuickUiPrefs({
+    String? countdownShapeKey,
     String? countdownStyleKey,
     String? fallingEffectKey,
     double? countdownSizePx,
@@ -43,10 +44,31 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
   }) async {
     await UiPrefs.ensureLoaded();
     final current = UiPrefs.notifier.value;
+    final resolvedCountdownShapeKey =
+        (countdownShapeKey ?? current.countdownShapeKey).trim();
     final resolvedCountdownStyleKey =
         (countdownStyleKey ?? current.countdownStyleKey).trim();
     final resolvedFallingEffectKey =
         (fallingEffectKey ?? current.fallingEffectKey).trim();
+
+    if (countdownShapeKey != null) {
+      const allowedCountdownShapeKeys = <String>{
+        'circle',
+        'squircle',
+        'heart',
+        'flower',
+        'hexagon',
+        'diamond',
+      };
+      if (!allowedCountdownShapeKeys.contains(resolvedCountdownShapeKey)) {
+        if (mounted) {
+          _showLatestSnackBar(
+            'Không thể đổi hình dạng vì mã "$resolvedCountdownShapeKey" không hợp lệ.',
+          );
+        }
+        return;
+      }
+    }
 
     if (countdownStyleKey != null) {
       const allowedCountdownStyleKeys = <String>{
@@ -117,6 +139,9 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
       }
     }
 
+    final normalizedCountdownShapeKey = countdownShapeKey == null
+        ? current.countdownShapeKey
+        : resolvedCountdownShapeKey;
     final normalizedCountdownStyleKey = countdownStyleKey == null
         ? current.countdownStyleKey
         : resolvedCountdownStyleKey;
@@ -135,7 +160,8 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
     final newTransparentMode =
         (countdownStyleKey != null) ? false : current.transparentMode;
 
-    if (normalizedCountdownStyleKey == current.countdownStyleKey &&
+    if (normalizedCountdownShapeKey == current.countdownShapeKey &&
+        normalizedCountdownStyleKey == current.countdownStyleKey &&
         normalizedFallingEffectKey == current.fallingEffectKey &&
         normalizedCountdownSizePx == current.countdownSizePx &&
         normalizedAvatarSizePx == current.avatarSizePx &&
@@ -147,6 +173,7 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
     }
 
     final nextState = current.copyWith(
+      countdownShapeKey: normalizedCountdownShapeKey,
       countdownStyleKey: normalizedCountdownStyleKey,
       fallingEffectKey: normalizedFallingEffectKey,
       countdownSizePx: normalizedCountdownSizePx,
@@ -164,6 +191,9 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
       final updates = <String, dynamic>{
         'updatedAt': ServerValue.timestamp,
       };
+      if (normalizedCountdownShapeKey != current.countdownShapeKey) {
+        updates['countdownShape'] = normalizedCountdownShapeKey;
+      }
       if (normalizedCountdownStyleKey != current.countdownStyleKey) {
         updates['countdownStyle'] = normalizedCountdownStyleKey;
       }

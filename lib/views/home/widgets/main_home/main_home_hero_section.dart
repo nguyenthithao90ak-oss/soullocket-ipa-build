@@ -18,6 +18,7 @@ class _ModernHomeBody extends StatelessWidget {
   final String customBackgroundUrl;
   final bool showDayCounter;
   final bool showLoveTimeDetail;
+  final String countdownShapeKey;
   final String countdownStyleKey;
   final VoidCallback? onEditStartDate;
   final VoidCallback? onEditTopLabel;
@@ -42,6 +43,7 @@ class _ModernHomeBody extends StatelessWidget {
     required this.customBackgroundUrl,
     required this.showDayCounter,
     required this.showLoveTimeDetail,
+    required this.countdownShapeKey,
     required this.countdownStyleKey,
     this.onEditStartDate,
     this.onEditTopLabel,
@@ -140,6 +142,7 @@ class _ModernHomeBody extends StatelessWidget {
                   homeShowHouseName: homeShowHouseName,
                   showDayCounter: showDayCounter,
                   showLoveTimeDetail: showLoveTimeDetail,
+                  countdownShapeKey: countdownShapeKey,
                   countdownStyleKey: countdownStyleKey,
                   isMilestone: isMilestone,
                   enableMotionBase: enableMotionBase,

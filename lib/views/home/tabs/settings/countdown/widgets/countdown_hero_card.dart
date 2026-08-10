@@ -76,6 +76,7 @@ extension CountdownHeroCardExt on _CountdownModeIndependentScreenState {
                       styleData: styleData,
                       fontKey: _fontKey,
                       styleKey: _countdownStyleKey,
+                      countdownShapeKey: UiPrefs.notifier.value.countdownShapeKey,
                       transparentMode: _transparentMode,
                       enableMotion: true,
                       onTopTap: () => _editCountdownLabel(

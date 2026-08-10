@@ -308,7 +308,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   child: Padding(
                     padding: const EdgeInsets.all(4.0),
                     child: const AnimatedRabbitSticker(
-                        'assets/images/anhtomau_stickers/sticker_1.gif'),
+                        'assets/images/anhtomau_stickers/sticker_21.gif'),
                   ),
                 ),
                 SLSpacing.w12,
@@ -346,30 +346,19 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             const SizedBox(height: 14),
 
             // ── Hành trình đã đi qua ──
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFFFF5F9),
-                    Color(0xFFFFECF3),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: null,
-boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFF89B6).withValues(alpha: 0.12),
-                    blurRadius: 14,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
+            SLGlassmorphism.apply(
+              blur: 16,
+              opacity: 0.45,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.6),
+                width: 1.5,
               ),
-              child: Column(
-                children: [
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  children: [
                   // Hàng 1: Số ngày + Số album ảnh
                   Row(
                     children: [
@@ -412,6 +401,7 @@ boxShadow: [
                   // MBTI removed
                 ],
               ),
+            ),
             ),
 
             const SizedBox(height: 14),
@@ -529,7 +519,7 @@ boxShadow: [
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Image.asset(
-                        'assets/images/anhtomau_stickers/sticker_1.gif'),
+                        'assets/images/anhtomau_stickers/sticker_16.gif'),
                   ),
                 ),
                 SLSpacing.w12,
@@ -713,7 +703,7 @@ boxShadow: [
                   width: 24,
                   height: 24,
                   child: Image.asset(
-                      'assets/images/anhtomau_stickers/sticker_1.gif'),
+                      'assets/images/anhtomau_stickers/sticker_24.gif'),
                 ),
                 SLSpacing.w8,
                 Flexible(

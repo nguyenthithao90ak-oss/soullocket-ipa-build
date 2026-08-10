@@ -1502,107 +1502,85 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
     ];
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 14),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(36),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.95), width: 2.5),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: const Color(0xFFFFE4EC),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF7FB2).withValues(alpha: 0.15),
-            blurRadius: 32,
-            offset: const Offset(0, 16),
-          ),
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.8),
+            color: const Color(0xFFFF80A6).withValues(alpha: 0.08),
             blurRadius: 16,
-            offset: const Offset(-6, -6),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Positioned(
-            right: -10,
-            top: -10,
-            child: Icon(
-              Icons.stars_rounded,
-              size: 70,
-              color: const Color(0xFFFFD166).withValues(alpha: 0.15),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 54,
-                    height: 54,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFF9A9E), Color(0xFFFECFEF)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+              Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFFF85A1), Color(0xFFFFA6C1)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.favorite_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.tr('home_knimcachng_692bf0'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SLTheme.quicksand(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF2E2740),
                       ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFF9A9E).withValues(alpha: 0.35),
-                          blurRadius: 16,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
                     ),
-                    child: const Icon(
-                      Icons.favorite_rounded,
-                      color: Colors.white,
-                      size: 26,
+                    const SizedBox(height: 2),
+                    Text(
+                      'Lưu giữ khoảnh khắc yêu thương 💕',
+                      style: SLTheme.quicksand(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF8C7E95),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.tr('home_knimcachng_692bf0'),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: SLTheme.quicksand(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF2E2740),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          context.tr('home_lunhmlinha_795e58'),
-                          style: SLTheme.quicksand(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF7C6D83),
-                            height: 1.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 18),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: statusChips,
-              ),
-              const SizedBox(height: 20),
-              _DiaryMemoryAddButton(
-                onTap: onAdd,
-                isLoading: isUploading,
-              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: statusChips,
+          ),
+          const SizedBox(height: 14),
+          _DiaryMemoryAddButton(
+            onTap: onAdd,
+            isLoading: isUploading,
+          ),
               if (hasPendingUploadRetry) ...[
                 const SizedBox(height: 16),
                 LayoutBuilder(
@@ -1683,8 +1661,6 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
               ],
             ],
           ),
-        ],
-      ),
     );
   }
 

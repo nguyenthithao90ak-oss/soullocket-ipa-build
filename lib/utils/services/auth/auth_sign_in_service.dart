@@ -8,7 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
-import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -114,7 +114,7 @@ class AuthSignInService {
 
   GoogleSignIn? _googleSignIn;
 
-  FacebookAuth get _facebookAuth => FacebookAuth.instance;
+
 
   firebase_auth.FirebaseAuth get _auth =>
       _firebaseAuth ?? firebase_auth.FirebaseAuth.instance;
@@ -888,115 +888,7 @@ class AuthSignInService {
   }
 
   Future<firebase_auth.UserCredential?> signInWithFacebook() async {
-    try {
-      firebase_auth.UserCredential userCredential;
-
-      if (kIsWeb) {
-        final provider = firebase_auth.FacebookAuthProvider();
-        provider.addScope('email');
-        provider.addScope('public_profile');
-        provider.setCustomParameters({
-          'display': 'popup',
-        });
-        userCredential = await _auth.signInWithPopup(provider);
-      } else {
-        try {
-          await _facebookAuth.logOut();
-        } catch (_) {}
-
-        // Custom Tab login has been the unreliable path on some Android
-        // emulators/devices for this app, so prefer the in-app dialog flow.
-        final loginBehavior = defaultTargetPlatform == TargetPlatform.android
-            ? LoginBehavior.dialogOnly
-            : LoginBehavior.nativeWithFallback;
-        final loginResult = await _facebookAuth.login(
-          permissions: const ['public_profile'],
-          loginBehavior: loginBehavior,
-          loginTracking: LoginTracking.enabled,
-        );
-        debugPrint(
-          'Facebook login result: behavior=$loginBehavior '
-          'status=${loginResult.status} message=${loginResult.message}',
-        );
-
-        switch (loginResult.status) {
-          case LoginStatus.success:
-            final accessToken = loginResult.accessToken;
-            if (accessToken == null) {
-              throw 'Facebook không trả về access token hợp lệ.';
-            }
-            final credential = accessToken is LimitedToken
-                ? firebase_auth.OAuthProvider('facebook.com').credential(
-                    idToken: accessToken.tokenString,
-                    rawNonce: accessToken.nonce,
-                  )
-                : firebase_auth.FacebookAuthProvider.credential(
-                    accessToken.tokenString.trim(),
-                  );
-            userCredential = await _auth.signInWithCredential(credential);
-            break;
-          case LoginStatus.cancelled:
-            return null;
-          case LoginStatus.operationInProgress:
-            throw 'Đăng nhập Facebook đang được xử lý. Vui lòng đợi một chút rồi thử lại.';
-          case LoginStatus.failed:
-            debugPrint(
-              'Facebook login failed: status=${loginResult.status}, message=${loginResult.message}',
-            );
-            throw normalizeFacebookLoginFailureMessage(loginResult.message);
-        }
-      }
-
-      await _enforceNoNewAccountOnWeb(userCredential);
-
-      final resolvedEmail =
-          userCredential.user?.email?.trim().toLowerCase() ?? '';
-      final loginLimitKey = resolvedEmail.isNotEmpty
-          ? resolvedEmail
-          : 'facebook:${userCredential.user!.uid}';
-
-      if (!await recordDailyLoginLimit(loginLimitKey)) {
-        await signOut();
-        throw dailyLoginLimitMessage;
-      }
-      await _finalizeAuthenticatedSession(
-        userCredential.user!,
-        fallbackEmail: resolvedEmail,
-      );
-
-      return userCredential;
-    } on firebase_auth.FirebaseAuthException catch (error) {
-      switch (error.code) {
-        case 'account-exists-with-different-credential':
-        case 'email-already-in-use':
-        case 'credential-already-in-use':
-          throw 'Email Facebook này đã gắn với phương thức đăng nhập khác. Hãy đăng nhập bằng phương thức cũ trước.';
-        case 'popup-closed-by-user':
-        case 'cancelled-popup-request':
-          return null;
-        case 'operation-not-allowed':
-          throw kDebugMode
-              ? 'Firebase Authentication chưa bật nhà cung cấp Facebook. Hãy vào Firebase Console > Authentication > Sign-in method > Facebook và nhập đúng App ID/App Secret.'
-              : 'Đăng nhập Facebook chưa sẵn sàng trên bản app này. Hãy thử cách đăng nhập khác.';
-        case 'popup-blocked':
-          throw 'Popup đăng nhập Facebook đang bị chặn. Hãy cho phép popup rồi thử lại.';
-        case 'network-request-failed':
-          throw 'Mạng đang lỗi hoặc bị chặn, chưa thể đăng nhập Facebook lúc này.';
-        default:
-          throw handleFirebaseAuthError(error);
-      }
-    } catch (error) {
-      if (isFacebookSignInConfigMismatch(error) ||
-          isFacebookSignInNetworkIssue(error)) {
-        throw normalizeFacebookLoginFailureMessage(error.toString());
-      }
-      if (error is String) rethrow;
-      throw AppErrorMapper.resolve(
-        error,
-        fallbackMessage:
-            'Không đăng nhập Facebook được: hãy kiểm tra tài khoản Facebook, quyền app và kết nối mạng.',
-      ).message;
-    }
+    throw 'Đăng nhập Facebook không còn được hỗ trợ. Hãy dùng Google hoặc Apple.';
   }
 
   Future<void> checkRollingRegisterLimit() async {
@@ -1229,10 +1121,7 @@ class AuthSignInService {
       }
     } catch (_) {}
 
-    asyncCleanups.add(_facebookAuth
-        .logOut()
-        .timeout(const Duration(seconds: 2))
-        .catchError((_) {}));
+
 
     await Future.wait(asyncCleanups).catchError((_) => []);
 

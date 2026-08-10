@@ -452,7 +452,7 @@ class _HomeScreenState extends State<HomeScreen>
     _NavItem(labelKey: 'nav_diary', activeColor: Color(0xFFFF4D79)),
     _NavItem(labelKey: 'nav_apps', activeColor: Color(0xFFB388FF)),
     _NavItem(labelKey: 'nav_fun', activeColor: Color(0xFFFFAB00)),
-    _NavItem(labelKey: 'nav_update', activeColor: Color(0xFF2979FF)),
+    _NavItem(labelKey: 'nav_update', activeColor: Color(0xFFFF4081)),
   ];
 
   @override
@@ -1634,7 +1634,7 @@ class _HomeScreenState extends State<HomeScreen>
   IconData _getIconForTab(int index) {
     switch (index) {
       case 0:
-        return Icons.home_rounded;
+        return Icons.favorite_rounded;
       case 1:
         return Icons.menu_book_rounded;
       case 2:
@@ -1642,7 +1642,7 @@ class _HomeScreenState extends State<HomeScreen>
       case 3:
         return Icons.sports_esports_rounded;
       case 4:
-        return Icons.notifications_rounded;
+        return Icons.auto_awesome_rounded;
       default:
         return Icons.circle;
     }

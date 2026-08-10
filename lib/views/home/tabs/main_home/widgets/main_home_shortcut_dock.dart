@@ -89,25 +89,17 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
   }
 
   Widget _buildShortcutItem(UtilityApp app) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFFFFF), Color(0xFFFFF4FA)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: SLRadius.mdAll,
-        border: Border.all(color: const Color(0xFFFFD9E7), width: 0.8),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF6F9F).withValues(alpha: 0.08),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
+    return SLGlassmorphism.apply(
+      blur: 24.0,
+      opacity: 0.75,
+      borderRadius: SLRadius.mdAll,
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.8),
+        width: 1.0,
       ),
-      child: Stack(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        child: Stack(
         children: [
           Positioned.fill(
             child: IgnorePointer(
@@ -191,6 +183,7 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
             ],
           ),
         ],
+      ),
       ),
     );
   }

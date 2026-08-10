@@ -272,8 +272,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     if (_houseId == null || _houseId!.isEmpty) return;
 
     final size = MediaQuery.of(context).size;
-    _heartsOverlayKey.currentState
-        ?.spawnExplosion(Offset(size.width / 2, size.height / 2), count: 8);
+    _heartsOverlayKey.currentState?.spawnFlyingToExplosion(Offset(size.width / 2, size.height / 2),
+            Offset(size.width / 2, size.height * 0.15),
+            count: 8);
 
     await NotificationService().sendPartnerNotification(
       houseId: _houseId!,
@@ -359,7 +360,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _interactiveScaleNotifier.value = 0.9;
     _lastTapPosition = globalPosition;
     _lastSpawnedPosition = globalPosition;
-    _heartsOverlayKey.currentState?.spawnExplosion(globalPosition);
+    final size = MediaQuery.sizeOf(context);
+    _heartsOverlayKey.currentState?.spawnFlyingToExplosion(
+        globalPosition, Offset(size.width / 2, size.height * 0.15));
     _handleLocalBump();
 
     final now = DateTime.now();
@@ -400,7 +403,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         return;
       }
       _heartsOverlayKey.currentState
-          ?.spawnExplosion(_lastTapPosition, count: 5);
+          ?.spawnFlyingToExplosion(_lastTapPosition, 
+              Offset(MediaQuery.sizeOf(context).width / 2, MediaQuery.sizeOf(context).height * 0.15),
+              count: 5);
       tickCount++;
       if (tickCount % 5 == 0) {
         // Limit haptics to every ~450ms
@@ -876,7 +881,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                           (event.position - lastPos).distance > 18.0) {
                         _lastSpawnedPosition = event.position;
                         _heartsOverlayKey.currentState
-                            ?.spawnExplosion(event.position, count: 3);
+                            ?.spawnFlyingToExplosion(event.position,
+                                Offset(MediaQuery.sizeOf(context).width / 2, MediaQuery.sizeOf(context).height * 0.15),
+                                count: 2);
                       }
                     },
                     onPointerUp: (event) {
@@ -1095,7 +1102,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
         final pos = Offset(x > 0 ? x : MediaQuery.of(context).size.width / 2,
             y > 0 ? y : MediaQuery.of(context).size.height / 2);
-        _heartsOverlayKey.currentState?.spawnExplosion(pos, count: 5);
+        _heartsOverlayKey.currentState?.spawnFlyingToExplosion(pos, 
+            Offset(MediaQuery.sizeOf(context).width / 2, MediaQuery.sizeOf(context).height * 0.15),
+            count: 5);
         if (url.isNotEmpty) {
           _spawnPhotoExplosion(
             specificItem: {
@@ -1198,16 +1207,19 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         }
       }
 
+      final oldSeenMs = _lastSeenMsgTimestamp;
       setState(() {
         _chatHistory = list;
         _lastMsgTimestamp = maxTimestamp;
         _lastSeenMsgTimestamp = maxTimestamp;
       });
 
-      unawaited(_mergeService.updateLastSeenTimestamp(maxTimestamp));
-      SharedPreferences.getInstance().then((prefs) {
-        prefs.setInt('soul_merge_last_seen_msg_ts', maxTimestamp);
-      });
+      if (maxTimestamp > oldSeenMs) {
+        unawaited(_mergeService.updateLastSeenTimestamp(maxTimestamp));
+        SharedPreferences.getInstance().then((prefs) {
+          prefs.setInt('soul_merge_last_seen_msg_ts', maxTimestamp);
+        });
+      }
 
       _sendOverlaySyncPayload();
 

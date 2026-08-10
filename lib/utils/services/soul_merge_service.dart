@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'house_service.dart';
 import 'notification_service.dart';
 import 'widget_service.dart';
+import 'package:soullocket_app/utils/services/core/presence_service.dart';
 
 class SoulMergeService {
   final FirebaseDatabase _db = FirebaseDatabase.instance;
@@ -241,6 +242,16 @@ class SoulMergeService {
 
       final prefs = await SharedPreferences.getInstance();
       final role = _normalizeRole(prefs.getString('il_role'));
+
+      final oppositeRole = role == 'user1' ? 'user2' : 'user1';
+      final presenceSnap = await _db.ref('houses/$houseId/presence/$oppositeRole').get();
+      final presenceData = presenceSnap.value as Map<dynamic, dynamic>?;
+      
+      // Nếu người kia offline, ta không cần gửi event vì đằng nào họ cũng không thấy được (event realtime)
+      // Điều này giúp tiết kiệm lượt ghi/đọc (bandwidth) đáng kể cho Firebase.
+      if (!PresenceService.isPresenceOnline(presenceData)) {
+        return;
+      }
 
       final ref = _db.ref('houses/$houseId/soul_merge/interactive_events');
       await ref.push().set({

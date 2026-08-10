@@ -204,8 +204,8 @@ class _DiaryTabLoadingSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final baseColor = Colors.white.withValues(alpha: 0.15);
-    final highlightColor = Colors.white.withValues(alpha: 0.25);
+    final baseColor = Colors.white.withValues(alpha: 0.35);
+    final highlightColor = Colors.white.withValues(alpha: 0.55);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),

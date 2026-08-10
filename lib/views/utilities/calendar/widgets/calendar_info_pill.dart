@@ -20,11 +20,15 @@ class CalendarInfoPill extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: compact ? 10 : 12,
-        vertical: compact ? 8 : 9,
+        vertical: compact ? 7 : 8,
       ),
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.08),
+        color: Colors.black.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: accent.withValues(alpha: 0.35),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -34,9 +38,9 @@ class CalendarInfoPill extends StatelessWidget {
           Text(
             label,
             style: SLTheme.quicksand(
-              fontSize: compact ? 10 : 11,
+              fontSize: compact ? 10.5 : 11.5,
               fontWeight: FontWeight.w800,
-              color: accent,
+              color: Colors.white.withValues(alpha: 0.95),
             ),
           ),
         ],

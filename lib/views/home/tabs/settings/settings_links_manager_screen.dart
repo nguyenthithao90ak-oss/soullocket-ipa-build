@@ -75,9 +75,20 @@ class _SettingsLinksManagerScreenState
       await _memoryShareService.revokeShareLink(link.token);
       if (!mounted) return;
       SLNotice.showInfo(context, context.tr('home_thuhilinkt_39edd6'));
-    } catch (_) {
-      if (!mounted) return;
-      SLNotice.showError(context, context.tr('home_khngththuh_abe293'));
+    } catch (e) {
+      debugPrint('Revoke API error: $e');
+      try {
+        await _db.ref('houses/${widget.houseId}/memoryShares/${link.token}').update({
+          'revoked': true,
+          'revokedAt': ServerValue.timestamp,
+        });
+        if (!mounted) return;
+        SLNotice.showInfo(context, context.tr('home_thuhilinkt_39edd6'));
+      } catch (fallbackErr) {
+        debugPrint('Revoke fallback error: $fallbackErr');
+        if (!mounted) return;
+        SLNotice.showError(context, context.tr('home_khngththuh_abe293'));
+      }
     }
   }
 
@@ -214,7 +225,7 @@ class _SettingsLinksManagerScreenState
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: link.isRevoked ? const Color(0xFFF1F5F9) : const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Colors.grey[200]!),
             ),
@@ -226,45 +237,59 @@ class _SettingsLinksManagerScreenState
                     style: SLTheme.quicksand(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1E88E5),
+                      color: link.isRevoked ? Colors.grey[400] : const Color(0xFF1E88E5),
+                      decoration: link.isRevoked ? TextDecoration.lineThrough : null,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const SizedBox(width: 8),
-                InkWell(
-                  onTap: () async {
-                    await Clipboard.setData(
-                        ClipboardData(text: _getMemoryDisplayUrl(link.token)));
-                    if (!mounted) return;
-                    SLNotice.showInfo(
-                        context, context.tr('home_copylinkme_7f75af'));
-                  },
-                  child: Icon(Icons.copy_rounded,
-                      size: 20, color: Colors.grey[400]),
-                ),
+                if (!link.isRevoked)
+                  InkWell(
+                    onTap: () async {
+                      await Clipboard.setData(
+                          ClipboardData(text: _getMemoryDisplayUrl(link.token)));
+                      if (!mounted) return;
+                      SLNotice.showInfo(
+                          context, context.tr('home_copylinkme_7f75af'));
+                    },
+                    child: Icon(Icons.copy_rounded,
+                        size: 20, color: Colors.grey[400]),
+                  ),
               ],
             ),
           ),
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerRight,
-            child: InkWell(
-              onTap: () => _deleteMemoryLink(link),
-              borderRadius: BorderRadius.circular(20),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Text(
-                  context.tr('home_thuhi_b8c669'),
-                  style: SLTheme.quicksand(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.red[400],
+            child: link.isRevoked
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Text(
+                      'Đã thu hồi',
+                      style: SLTheme.quicksand(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                  )
+                : InkWell(
+                    onTap: () => _deleteMemoryLink(link),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: Text(
+                        context.tr('home_thuhi_b8c669'),
+                        style: SLTheme.quicksand(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.red[400],
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
           ),
         ],
       ),
@@ -281,11 +306,13 @@ class _MemoryShareLinkData {
   final String token;
   final int ts;
   final int photoCount;
+  final bool isRevoked;
 
   _MemoryShareLinkData({
     required this.token,
     required this.ts,
     required this.photoCount,
+    this.isRevoked = false,
   });
 
   factory _MemoryShareLinkData.fromMap(String key, Map map) {
@@ -294,6 +321,7 @@ class _MemoryShareLinkData {
       token: key,
       ts: map['createdAt'] is int ? map['createdAt'] : 0,
       photoCount: urls?.length ?? 0,
+      isRevoked: map['revoked'] == true,
     );
   }
 }

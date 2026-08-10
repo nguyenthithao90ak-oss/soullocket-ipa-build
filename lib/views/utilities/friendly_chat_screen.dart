@@ -1345,7 +1345,7 @@ class _BotStickerAvatar extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.all(size * 0.12),
         child: const R2StickerImage(
-            'assets/images/anhtomau_stickers/sticker_1.gif'),
+            'assets/images/anhtomau_stickers/sticker_28.gif'),
       ),
     );
   }

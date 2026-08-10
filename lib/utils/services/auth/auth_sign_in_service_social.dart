@@ -313,10 +313,9 @@ extension AuthSignInServiceSocial on AuthSignInService {
       return;
     }
     if (providerIds.contains('facebook.com')) {
-      await _reauthenticateCurrentUserWithFacebook(user);
-      return;
+      throw 'Tài khoản Facebook không còn được hỗ trợ. Hãy liên kết Google hoặc Apple rồi thử lại.';
     }
-    throw 'Phiên đăng nhập đã cũ. Hãy đăng xuất rồi đăng nhập lại bằng Google hoặc Facebook trước khi tạo mật khẩu.';
+    throw 'Phiên đăng nhập đã cũ. Hãy đăng xuất rồi đăng nhập lại bằng Google hoặc Apple trước khi tạo mật khẩu.';
   }
 
   Future<void> _reauthenticateCurrentUserWithGoogle(
@@ -423,67 +422,6 @@ extension AuthSignInServiceSocial on AuthSignInService {
   Future<void> _reauthenticateCurrentUserWithFacebook(
     firebase_auth.User user,
   ) async {
-    try {
-      if (kIsWeb) {
-        final provider = firebase_auth.FacebookAuthProvider();
-        provider.addScope('email');
-        provider.addScope('public_profile');
-        provider.setCustomParameters({'display': 'popup'});
-        await user.reauthenticateWithPopup(provider);
-        return;
-      }
-
-      try {
-        await _facebookAuth.logOut();
-      } catch (_) {}
-
-      final loginBehavior = defaultTargetPlatform == TargetPlatform.android
-          ? LoginBehavior.dialogOnly
-          : LoginBehavior.nativeWithFallback;
-      final loginResult = await _facebookAuth.login(
-        permissions: const ['email', 'public_profile'],
-        loginBehavior: loginBehavior,
-        loginTracking: LoginTracking.enabled,
-      );
-
-      switch (loginResult.status) {
-        case LoginStatus.success:
-          final accessToken = loginResult.accessToken;
-          if (accessToken == null) {
-            throw 'Facebook không trả về access token hợp lệ.';
-          }
-          final credential = accessToken is LimitedToken
-              ? firebase_auth.OAuthProvider('facebook.com').credential(
-                  idToken: accessToken.tokenString,
-                  rawNonce: accessToken.nonce,
-                )
-              : firebase_auth.FacebookAuthProvider.credential(
-                  accessToken.tokenString.trim(),
-                );
-          await user.reauthenticateWithCredential(credential);
-          return;
-        case LoginStatus.cancelled:
-          throw 'Bạn đã hủy xác minh lại Facebook.';
-        case LoginStatus.operationInProgress:
-          throw 'Facebook đang xử lý đăng nhập. Vui lòng đợi một chút rồi thử lại.';
-        case LoginStatus.failed:
-          throw normalizeFacebookLoginFailureMessage(loginResult.message);
-      }
-    } on firebase_auth.FirebaseAuthException catch (error) {
-      if (error.code == 'user-mismatch') {
-        throw 'Bạn cần chọn đúng tài khoản Facebook đã dùng để đăng nhập trước đó.';
-      }
-      if (error.code == 'network-request-failed') {
-        throw 'Lỗi kết nối, chưa thể xác minh lại Facebook lúc này.';
-      }
-      throw handleFirebaseAuthError(error);
-    } catch (error) {
-      if (error is String) rethrow;
-      throw AppErrorMapper.resolve(
-        error,
-        fallbackMessage:
-            'Không xác minh lại Facebook được: hãy chọn đúng tài khoản Facebook đang liên kết và kiểm tra mạng.',
-      ).message;
-    }
+    throw 'Đăng nhập Facebook không còn được hỗ trợ. Hãy liên kết Google hoặc Apple.';
   }
 }

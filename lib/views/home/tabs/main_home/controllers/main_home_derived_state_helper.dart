@@ -16,6 +16,7 @@ class _MainHomeBodyViewData {
   final bool homeShowHouseName;
   final bool showDayCounter;
   final bool showLoveTimeDetail;
+  final String countdownShapeKey;
   final String countdownStyleKey;
 
   const _MainHomeBodyViewData({
@@ -34,6 +35,7 @@ class _MainHomeBodyViewData {
     required this.homeShowHouseName,
     required this.showDayCounter,
     required this.showLoveTimeDetail,
+    required this.countdownShapeKey,
     required this.countdownStyleKey,
   });
 }
@@ -143,6 +145,7 @@ extension _MainHomeDerivedStateHelper on _MainHomeTabState {
       // hours/minutes/seconds row and must never hide or repurpose the circle.
       showDayCounter: !isSingle,
       showLoveTimeDetail: !isSingle && savedHomeShowTimer,
+      countdownShapeKey: uiPrefs.countdownShapeKey,
       countdownStyleKey: uiPrefs.countdownStyleKey,
     );
   }

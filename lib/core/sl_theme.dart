@@ -1727,15 +1727,8 @@ class _CuteMeshPatternPainter extends CustomPainter {
 
     final List<Map<String, dynamic>> icons = [
       {'text': '✨', 'color': const Color(0xFFFFD54F)},
-      {'text': '🌸', 'color': const Color(0xFFFF8A80)},
-      {'text': '🧸', 'color': const Color(0xFFD7CCC8)},
-      {'text': '☁️', 'color': const Color(0xFFE3F2FD)},
-      {'text': '🎈', 'color': const Color(0xFFFF8A80)},
       {'text': '⭐', 'color': const Color(0xFFFFE082)},
-      {'text': '🎀', 'color': const Color(0xFFFF80AB)},
-      {'text': '🧁', 'color': const Color(0xFFF8BBD0)},
-      {'text': '🐾', 'color': const Color(0xFFFFCC80)},
-      {'text': '🍿', 'color': const Color(0xFFFFF59D)},
+      {'text': '💖', 'color': const Color(0xFFFFB3CC)},
     ];
 
     int seed = 42;
@@ -1870,6 +1863,62 @@ class _HeroPrimaryButtonState extends State<_HeroPrimaryButton>
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class SLShadows {
+  static List<BoxShadow> get glowingPrimary => [
+        BoxShadow(
+          color: SLColors.primary.withValues(alpha: 0.4),
+          blurRadius: 24,
+          spreadRadius: 2,
+          offset: const Offset(0, 8),
+        ),
+      ];
+
+  static List<BoxShadow> get softCard => [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: 16,
+          spreadRadius: 0,
+          offset: const Offset(0, 4),
+        ),
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.03),
+          blurRadius: 4,
+          spreadRadius: -1,
+          offset: const Offset(0, 2),
+        ),
+      ];
+}
+
+class SLGlassmorphism {
+  static Widget apply({
+    required Widget child,
+    double blur = 24.0,
+    double opacity = 0.65,
+    BorderRadius? borderRadius,
+    Color? color,
+    BoxBorder? border,
+  }) {
+    return ClipRRect(
+      borderRadius: borderRadius ?? BorderRadius.zero,
+      child: FastBackdropFilter(
+        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        child: Container(
+          decoration: BoxDecoration(
+            color: color ?? SLColors.bgElevated.withValues(alpha: opacity),
+            borderRadius: borderRadius,
+            border: border ??
+                Border.all(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  width: 1.0,
+                ),
+          ),
+          child: child,
         ),
       ),
     );

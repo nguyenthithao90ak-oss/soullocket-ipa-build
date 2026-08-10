@@ -38,7 +38,8 @@ class _CountdownVisualSpec {
       return _CountdownVisualSpec(
         outerColor: Colors.white.withValues(alpha: 0.30),
         outerGradient: null,
-        outerBorder: null,
+        outerBorder:
+            Border.all(color: Colors.white.withValues(alpha: 0.34), width: 2.2),
         shadows: const [],
         innerColor: Colors.white.withValues(alpha: 0.08),
         innerGradient: null,
@@ -64,7 +65,7 @@ class _CountdownVisualSpec {
         return _CountdownVisualSpec(
           outerColor: Colors.white,
           outerGradient: null,
-          outerBorder: null,
+          outerBorder: Border.all(color: const Color(0xFFE9DDE6), width: 2.2),
           shadows: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.045),
@@ -115,7 +116,8 @@ class _CountdownVisualSpec {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder: null,
+          outerBorder: Border.all(
+              color: Colors.white.withValues(alpha: 0.92), width: 4.5),
           shadows: const [],
           innerColor: null,
           innerGradient: LinearGradient(
@@ -127,7 +129,8 @@ class _CountdownVisualSpec {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          innerBorder: null,
+          innerBorder:
+              Border.all(color: Colors.white.withValues(alpha: 0.34), width: 1),
           numberGradient: const [Color(0xFFFFF7FB), Color(0xFFFFD7E8)],
           topLabelColor: Colors.white,
           bottomLabelColor: Colors.white.withValues(alpha: 0.94),
@@ -145,7 +148,8 @@ class _CountdownVisualSpec {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder: null,
+          outerBorder:
+              Border.all(color: Colors.white.withValues(alpha: 0.82), width: 3),
           shadows: [
             BoxShadow(
               color: const Color(0xFF8EC5FC).withValues(alpha: 0.34),
@@ -155,7 +159,8 @@ class _CountdownVisualSpec {
           ],
           innerColor: Colors.white.withValues(alpha: 0.16),
           innerGradient: null,
-          innerBorder: null,
+          innerBorder: Border.all(
+              color: Colors.white.withValues(alpha: 0.42), width: 1.2),
           numberGradient: const [Color(0xFF27B4FF), Color(0xFFD81B60)],
           topLabelColor: const Color(0xFF2378A8),
           bottomLabelColor: const Color(0xFF51606D),
@@ -178,7 +183,8 @@ class _CountdownVisualSpec {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder: null,
+          outerBorder:
+              Border.all(color: Colors.white.withValues(alpha: 0.82), width: 5),
           shadows: [
             BoxShadow(
               color: const Color(0xFFFF5E92).withValues(alpha: 0.46),
@@ -219,7 +225,8 @@ class _CountdownVisualSpec {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder: null,
+          outerBorder:
+              Border.all(color: Colors.white.withValues(alpha: 0.9), width: 4),
           shadows: [
             BoxShadow(
               color: const Color(0xFFFF77C8).withValues(alpha: 0.24),
@@ -234,7 +241,8 @@ class _CountdownVisualSpec {
           ],
           innerColor: Colors.white.withValues(alpha: 0.20),
           innerGradient: null,
-          innerBorder: null,
+          innerBorder:
+              Border.all(color: Colors.white.withValues(alpha: 0.58), width: 1),
           numberGradient: const [Color(0xFFFF3D9A), Color(0xFF36C9FF)],
           topLabelColor: const Color(0xFFE6378D),
           bottomLabelColor: const Color(0xFF4C6178),
@@ -262,7 +270,8 @@ class _CountdownVisualSpec {
               Color(0xFFFF005D),
             ],
           ),
-          outerBorder: null,
+          outerBorder:
+              Border.all(color: Colors.white.withValues(alpha: 0.88), width: 4),
           shadows: [
             BoxShadow(
               color: const Color(0xFFFF00A8).withValues(alpha: 0.45),
@@ -279,7 +288,8 @@ class _CountdownVisualSpec {
           ],
           innerColor: Colors.black.withValues(alpha: 0.16),
           innerGradient: null,
-          innerBorder: null,
+          innerBorder: Border.all(
+              color: Colors.white.withValues(alpha: 0.38), width: 1.4),
           numberGradient: const [
             Colors.white,
             Color(0xFFFFF176),
@@ -320,7 +330,8 @@ class _CountdownVisualSpec {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder: null,
+          outerBorder:
+              Border.all(color: Colors.white.withValues(alpha: 0.22), width: 3),
           shadows: [
             BoxShadow(
               color: (isLava
@@ -336,7 +347,8 @@ class _CountdownVisualSpec {
           ],
           innerColor: Colors.black.withValues(alpha: 0.12),
           innerGradient: null,
-          innerBorder: null,
+          innerBorder:
+              Border.all(color: Colors.white.withValues(alpha: 0.18), width: 1),
           numberGradient: isLava
               ? const [Color(0xFFFFF176), Color(0xFFFF5A00), Color(0xFFFF1744)]
               : isAurora
@@ -374,7 +386,8 @@ class _CountdownVisualSpec {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          outerBorder: null,
+          outerBorder:
+              Border.all(color: Colors.white.withValues(alpha: 0.92), width: 4),
           shadows: [
             BoxShadow(
               color: const Color(0xFF9BE7FF).withValues(alpha: 0.28),
@@ -385,7 +398,8 @@ class _CountdownVisualSpec {
           ],
           innerColor: Colors.white.withValues(alpha: 0.18),
           innerGradient: null,
-          innerBorder: null,
+          innerBorder:
+              Border.all(color: Colors.white.withValues(alpha: 0.52), width: 1),
           numberGradient: const [Color(0xFF7B61FF), Color(0xFFFF65B7)],
           topLabelColor: const Color(0xFF7B61FF),
           bottomLabelColor: const Color(0xFF5C6470),

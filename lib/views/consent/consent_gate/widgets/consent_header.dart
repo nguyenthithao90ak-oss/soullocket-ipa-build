@@ -11,23 +11,13 @@ Widget _buildStartupConsentHeader(BuildContext context,
           width: 40,
           height: 40,
           decoration: BoxDecoration(
+            color: _accentBlue.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: SLColors.primary.withValues(alpha: 0.16),
-                blurRadius: 12,
-                offset: const Offset(0, 3),
-              ),
-            ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              'assets/icon.png',
-              width: 40,
-              height: 40,
-              fit: BoxFit.cover,
-            ),
+          child: const Icon(
+            Icons.verified_user_rounded,
+            color: _accentBlue,
+            size: 22,
           ),
         ),
         SLSpacing.w12,

@@ -78,31 +78,22 @@ Widget _buildModernSocialIcon({
   Gradient? customGradient,
   List<Color>? fallbackColors,
 }) {
-  final gradient = customGradient ??
-      LinearGradient(
-        colors: fallbackColors ?? [Colors.grey, Colors.grey],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
+  final Color solidColor = (fallbackColors != null && fallbackColors.isNotEmpty)
+      ? fallbackColors.first
+      : Colors.grey;
   return Container(
     width: size,
     height: size,
     decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(size * 0.28),
-      gradient: gradient,
-      boxShadow: [
-        BoxShadow(
-          color: gradient.colors.last.withValues(alpha: 0.3),
-          blurRadius: 8,
-          offset: const Offset(0, 3),
-        ),
-      ],
+      borderRadius: BorderRadius.circular(size * 0.24),
+      gradient: customGradient,
+      color: customGradient == null ? solidColor : null,
     ),
     alignment: Alignment.center,
     child: SvgPicture.string(
       svgData,
-      width: size * 0.55,
-      height: size * 0.55,
+      width: size * 0.58,
+      height: size * 0.58,
       colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
     ),
   );
