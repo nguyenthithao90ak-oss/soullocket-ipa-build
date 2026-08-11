@@ -23,6 +23,7 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
 import 'package:soullocket_app/utils/services/giftcode_service.dart';
 import 'package:soullocket_app/utils/sl_notice.dart';
+import 'package:soullocket_app/views/ui_prefs.dart';
 
 part 'soul_merge/exploding_photo_part.dart';
 part 'soul_merge/particle_explosion_part.dart';

@@ -36,41 +36,33 @@ class UtilitiesHubHeader extends StatelessWidget {
                   children: [
                     ShaderMask(
                       shaderCallback: (bounds) => const LinearGradient(
-                        colors: [Color(0xFF00C6FF), Color(0xFF9D50BB)],
+                        colors: [Color(0xFFE91E63), Color(0xFFF48FB1)],
                       ).createShader(bounds),
-                      child: Text(
-                        'UTILITIES HUB',
-                        style: SLTheme.quicksand(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: 2.0,
-                          shadows: [
-                            Shadow(
-                              color: SLColors.primary.withValues(alpha: 0.3),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'UTILITIES HUB',
+                          maxLines: 1,
+                          softWrap: false,
+                          style: SLTheme.quicksand(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: 1.5,
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Container(
-                      width: 80,
-                      height: 4,
+                      width: 100,
+                      height: 3,
                       decoration: BoxDecoration(
-                        borderRadius: SLRadius.pillAll,
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF00C6FF), Color(0xFF9D50BB)],
+                          colors: [Color(0xFFE91E63), Color(0xFFF48FB1)],
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                const Color(0xFF00C6FF).withValues(alpha: 0.4),
-                            blurRadius: 8,
-                          ),
-                        ],
+                        borderRadius: BorderRadius.circular(999),
                       ),
                     ),
                   ],

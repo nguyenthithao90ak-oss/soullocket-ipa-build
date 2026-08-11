@@ -607,7 +607,12 @@ class _GameHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        MediaQuery.paddingOf(context).top + 8,
+        20,
+        0,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -621,13 +626,19 @@ class _GameHeader extends StatelessWidget {
                       shaderCallback: (bounds) => const LinearGradient(
                         colors: [Color(0xFFE91E63), Color(0xFFF48FB1)],
                       ).createShader(bounds),
-                      child: Text(
-                        'GAME CENTER',
-                        style: SLTheme.quicksand(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: 1.5,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'GAME CENTER',
+                          maxLines: 1,
+                          softWrap: false,
+                          style: SLTheme.quicksand(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: 1.5,
+                          ),
                         ),
                       ),
                     ),

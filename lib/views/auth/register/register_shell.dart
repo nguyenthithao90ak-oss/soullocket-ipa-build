@@ -62,9 +62,9 @@ class RegisterShell extends StatelessWidget {
       onSocialLogin: onSocialLogin,
       onTermsTap: onTermsTap,
       onPrivacyTap: onPrivacyTap,
-      accentRose: const Color(0xFFD4956B),
-      accentBlush: const Color(0xFFC8895F),
-      accentLavender: const Color(0xFFC07A56),
+      accentRose: const Color(0xFFFF4B91),
+      accentBlush: const Color(0xFFFF69B4),
+      accentLavender: const Color(0xFFFF85A2),
     );
   }
 }

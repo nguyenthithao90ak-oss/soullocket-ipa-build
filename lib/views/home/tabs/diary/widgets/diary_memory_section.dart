@@ -668,8 +668,8 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                               if (state.label.isEmpty) {
                                 return const SizedBox.shrink();
                               }
-                              final topMargin = 80.0;
-                              final bottomMargin = 120.0;
+                              const topMargin = 80.0;
+                              const bottomMargin = 120.0;
                               final availableHeight =
                                   MediaQuery.of(context).size.height -
                                       topMargin -
@@ -1195,7 +1195,7 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
               style: SLTheme.quicksand(
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF94A3B8),
+                color: const Color(0xFF94A3B8),
               ),
             ),
           ],
@@ -1505,17 +1505,17 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 12),
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: const Color(0xFFFFE4EC),
-          width: 1.2,
+          color: Colors.white,
+          width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF80A6).withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -1775,17 +1775,17 @@ class _DiaryMemoryAddButton extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.9),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: const Color(0xFFFECFEF),
-              width: 2,
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFF758C), Color(0xFFFF7EB3)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+            borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFFF9A9E).withValues(alpha: 0.15),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                color: const Color(0xFFFF7EB3).withValues(alpha: 0.3),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -1798,12 +1798,12 @@ class _DiaryMemoryAddButton extends StatelessWidget {
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD81B60)),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
                   : const Icon(
                       Icons.add_photo_alternate_rounded,
-                      color: Color(0xFFD81B60),
+                      color: Colors.white,
                       size: 22,
                     ),
               const SizedBox(width: 8),
@@ -1812,7 +1812,7 @@ class _DiaryMemoryAddButton extends StatelessWidget {
                 style: SLTheme.quicksand(
                   fontSize: 15,
                   fontWeight: FontWeight.w900,
-                  color: const Color(0xFFD81B60),
+                  color: Colors.white,
                 ),
               ),
             ],

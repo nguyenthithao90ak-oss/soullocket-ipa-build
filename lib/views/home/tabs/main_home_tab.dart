@@ -101,6 +101,7 @@ import 'package:soullocket_app/widgets/legacy_web_ui.dart';
 import 'package:soullocket_app/utils/services/purchase_service.dart';
 import 'package:soullocket_app/utils/services/admob_service.dart';
 import 'package:soullocket_app/utils/app_cache_manager.dart';
+import 'package:soullocket_app/utils/services/love_status_notification_service.dart';
 
 import 'package:soullocket_app/views/home/love_insights_screen.dart';
 import 'package:soullocket_app/views/home/milestones_screen.dart';
@@ -127,6 +128,7 @@ part 'main_home/widgets/main_home_insight_card.dart';
 part 'main_home/widgets/main_home_avatar_section.dart';
 part 'main_home/widgets/main_home_quote_activity_card.dart';
 part 'main_home/widgets/main_home_shortcut_dock.dart';
+part 'main_home/widgets/main_home_fullscreen_layout.dart';
 part 'main_home/controllers/main_home_formatters.dart';
 part 'main_home/controllers/main_home_interactions.dart';
 part 'main_home/controllers/main_home_listeners.dart';
@@ -238,7 +240,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
           'screen': 'home',
           'type': 'partner_care',
           'careType': payload.type,
-          if (_houseId != null) 'houseId': _houseId!,
+          if (_houseId != null) 'houseId': _houseId,
         },
         dedupeKey:
             '${payload.fromUid}|${payload.fromRole}|${payload.sentAtMs}|${payload.type}|${payload.title}',
@@ -1280,7 +1282,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
         hasVisibleContent: _houseSettings != null,
         child: ValueListenableBuilder<UiPrefsState>(
           valueListenable: UiPrefs.notifier,
-          builder: (context, uiState, __) => Stack(
+          builder: (context, uiState, _) => Stack(
             children: [
               ValueListenableBuilder<bool>(
                 valueListenable: widget.isActiveListenable,

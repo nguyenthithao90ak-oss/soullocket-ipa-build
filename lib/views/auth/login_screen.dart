@@ -9,7 +9,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 import '../../core/sl_theme.dart';
-import '../../core/fast_backdrop_filter.dart';
 import '../../utils/services/anti_spam_service.dart';
 import '../../utils/services/auth_service.dart';
 import '../../utils/services/l10n_service.dart';
@@ -931,102 +930,27 @@ class _LoginScreenState extends State<LoginScreen> {
       listenable: L10nService(),
       builder: (context, _) {
         final l10n = L10nService();
-        final baseBg =
-            _isLoginTab ? const Color(0xFFFCF5F0) : const Color(0xFFFCF5F0);
-
         return SensitiveContentGuard(
           child: Scaffold(
             resizeToAvoidBottomInset: false,
-            backgroundColor: baseBg,
+            backgroundColor: Colors.white,
             body: GestureDetector(
               behavior: HitTestBehavior.translucent,
               onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
               child: Stack(
                 children: [
-                  // --- Premium Ambient Blobs ---
                   Positioned.fill(
-                    child: RepaintBoundary(
-                      child: Stack(
-                        children: [
-                          AnimatedPositioned(
-                            duration: const Duration(milliseconds: 1200),
-                            curve: Curves.easeInOutSine,
-                            top: _isLoginTab ? -150 : -80,
-                            left: _isLoginTab ? -100 : -180,
-                            child: Container(
-                              width: 500,
-                              height: 500,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: RadialGradient(
-                                  colors: [
-                                    const Color(0xFFD4956B)
-                                        .withValues(alpha: 0.35),
-                                    const Color(0xFFD4956B)
-                                        .withValues(alpha: 0.0),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          AnimatedPositioned(
-                            duration: const Duration(milliseconds: 1400),
-                            curve: Curves.easeInOutSine,
-                            bottom: _isLoginTab ? -200 : -100,
-                            right: _isLoginTab ? -100 : -250,
-                            child: Container(
-                              width: 600,
-                              height: 600,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: RadialGradient(
-                                  colors: [
-                                    const Color(0xFFC07A56)
-                                        .withValues(alpha: 0.28),
-                                    const Color(0xFFC07A56)
-                                        .withValues(alpha: 0.0),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          AnimatedPositioned(
-                            duration: const Duration(milliseconds: 1000),
-                            curve: Curves.easeInOutSine,
-                            top: _isLoginTab ? 300 : 150,
-                            right: _isLoginTab ? -50 : 50,
-                            child: Container(
-                              width: 400,
-                              height: 400,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: RadialGradient(
-                                  colors: [
-                                    const Color(0xFFE8C4A8)
-                                        .withValues(alpha: 0.30),
-                                    const Color(0xFFE8C4A8)
-                                        .withValues(alpha: 0.0),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          Positioned.fill(
-                            child: FastBackdropFilter(
-                              filter: ImageFilter.blur(
-                                  sigmaX: 60,
-                                  sigmaY: 60), // Mờ mạnh hơn để tạo glow effect
-                              fallbackColor:
-                                  Colors.white.withValues(alpha: 0.6),
-                              child: Container(
-                                color: Colors.white.withValues(
-                                    alpha:
-                                        0.2), // Giảm sương trắng để thấy rõ màu sắc phía sau
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                    child: Image.asset(
+                      'assets/images/default_auth_bg.jpg',
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+                      child: Container(color: Colors.transparent),
                     ),
                   ),
                   LayoutBuilder(
@@ -1085,17 +1009,24 @@ class _LoginScreenState extends State<LoginScreen> {
                                             _showSyncGuideDialog(context),
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(
-                                              horizontal: 12, vertical: 8),
+                                              horizontal: 14, vertical: 8),
                                           decoration: BoxDecoration(
                                             color: Colors.white
-                                                .withValues(alpha: 0.6),
+                                                .withValues(alpha: 0.65),
                                             borderRadius:
-                                                BorderRadius.circular(16),
+                                                BorderRadius.circular(20),
                                             border: Border.all(
-                                              color: const Color(0xFFD4A574)
-                                                  .withValues(alpha: 0.4),
-                                              width: 1.0,
+                                              color: const Color(0xFFFFD6E0),
+                                              width: 1.2,
                                             ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: const Color(0xFFFF4B91)
+                                                    .withValues(alpha: 0.08),
+                                                blurRadius: 10,
+                                                offset: const Offset(0, 3),
+                                              ),
+                                            ],
                                           ),
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
@@ -1118,9 +1049,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                               Text(
                                                 l10n.translate('auth_sync_guide'),
                                                 style: SLTheme.quicksand(
-                                                  fontSize: 12,
+                                                  fontSize: 12.5,
                                                   fontWeight: FontWeight.w900,
-                                                  color: SLColors.textPrimary,
+                                                  color: const Color(0xFFFF4B91),
                                                 ),
                                               ),
                                             ],
@@ -1318,7 +1249,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 insetPadding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                 child: Container(
-                  constraints: const BoxConstraints(maxWidth: 340),
+                  constraints: const BoxConstraints(maxWidth: 420),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [
@@ -1331,18 +1262,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     borderRadius: BorderRadius.circular(32),
                     border: Border.all(
-                      color: const Color(0xFFD4A574).withValues(alpha: 0.55),
+                      color: const Color(0xFFFF85A2).withValues(alpha: 0.55),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFD4956B).withValues(alpha: 0.18),
+                        color: const Color(0xFFFF5277).withValues(alpha: 0.20),
                         blurRadius: 40,
                         offset: const Offset(0, 20),
                       ),
                     ],
                   ),
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(22),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1350,53 +1281,127 @@ class _LoginScreenState extends State<LoginScreen> {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(8),
+                            padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFEBF3),
-                              borderRadius: BorderRadius.circular(12),
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFF7597), Color(0xFFFF5277)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFF5277)
+                                      .withValues(alpha: 0.35),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
                             child: const Icon(
                               Icons.sync_rounded,
-                              color: SLColors.primary,
+                              color: Colors.white,
                               size: 24,
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: Text(
-                              'Cách đồng bộ dữ liệu',
-                              style: SLTheme.quicksand(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w900,
-                                color: SLColors.textPrimary,
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Hướng dẫn đồng bộ dữ liệu',
+                                  style: SLTheme.quicksand(
+                                    fontSize: 16.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: SLColors.textPrimary,
+                                  ),
+                                ),
+                                Text(
+                                  'Mô hình ghép đôi tài khoản riêng',
+                                  style: SLTheme.quicksand(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFFFF5277),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 14),
                       Text(
-                        'SoulLocket đã nâng cấp tính năng đồng bộ. Mỗi người cần dùng tài khoản riêng biệt để ghép đôi với nhau!',
+                        'SoulLocket sử dụng hệ thống tài khoản riêng biệt để bảo vệ quyền riêng tư 100% cho từng người!',
                         style: SLTheme.quicksand(
-                          fontSize: 13,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: SLColors.textSecond,
                           height: 1.35,
                         ),
                       ),
                       const SizedBox(height: 14),
-                      _buildSyncStep(
-                        number: '1',
-                        text:
-                            'Tạo tài khoản: Cả hai tự tạo tài khoản riêng biệt của mình và đăng nhập vào ứng dụng.',
+                      _buildSyncStepCard(
+                        stepNumber: '1',
+                        title: 'Tạo 2 tài khoản riêng biệt',
+                        description:
+                            'Mỗi người tự đăng ký tài khoản riêng (Email, Google, Apple) và đăng nhập vào ứng dụng trên máy mình.',
+                        icon: Icons.person_add_alt_1_rounded,
+                        accentColor: const Color(0xFFFF5277),
                       ),
-                      const SizedBox(height: 12),
-                      _buildSyncStep(
-                        number: '2',
-                        text:
-                            'Ghép đôi: Vào phần Cài đặt -> Ghép nối dữ liệu. Một người Tạo mã, người kia Nhập mã để tiến hành đồng bộ và liên kết dữ liệu với nhau.',
+                      const SizedBox(height: 10),
+                      _buildSyncStepCard(
+                        stepNumber: '2',
+                        title: 'Tạo hoặc nhập Mã ghép đôi',
+                        description:
+                            'Vào Cài đặt ⚙️ → Ghép nối dữ liệu. Một người bấm "Tạo mã ghép nối" và gửi cho người kia nhập vào.',
+                        icon: Icons.qr_code_rounded,
+                        accentColor: const Color(0xFF7C4DFF),
                       ),
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 10),
+                      _buildSyncStepCard(
+                        stepNumber: '3',
+                        title: 'Đồng bộ dữ liệu thời gian thực',
+                        description:
+                            'Sau khi kết nối, mọi kỷ niệm, nhật ký, album ảnh và vị trí sẽ tự động đồng bộ tức thì giữa 2 máy!',
+                        icon: Icons.favorite_rounded,
+                        accentColor: const Color(0xFF00BFA5),
+                      ),
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 9),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF3E0),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color:
+                                const Color(0xFFFFB74D).withValues(alpha: 0.5),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.lightbulb_rounded,
+                              color: Color(0xFFF57C00),
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Mẹo: Dữ liệu được lưu an toàn trên đám mây. Đăng nhập lại trên máy mới dữ liệu tự động tải về đầy đủ.',
+                                style: SLTheme.quicksand(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFFE65100),
+                                  height: 1.3,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 18),
                       SizedBox(
                         width: double.infinity,
                         child: SLTheme.authPrimaryButton(
@@ -1410,8 +1415,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Navigator.pop(stateContext);
                                 },
                           colors: const [
-                            Color(0xFFD4956B),
-                            Color(0xFFC07A56),
+                            Color(0xFFFF5277),
+                            Color(0xFFFF7597),
                           ],
                         ),
                       ),
@@ -1428,40 +1433,97 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  Widget _buildSyncStep({required String number, required String text}) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 22,
-          height: 22,
-          alignment: Alignment.center,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: SLColors.primary,
+  Widget _buildSyncStepCard({
+    required String stepNumber,
+    required String title,
+    required String description,
+    required IconData icon,
+    required Color accentColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: accentColor.withValues(alpha: 0.28),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          child: Text(
-            number,
-            style: SLTheme.quicksand(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [accentColor, accentColor.withValues(alpha: 0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: accentColor.withValues(alpha: 0.35),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Text(
+              stepNumber,
+              style: SLTheme.quicksand(
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            text,
-            style: SLTheme.quicksand(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              color: SLColors.textPrimary,
-              height: 1.35,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(icon, size: 16, color: accentColor),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: SLTheme.quicksand(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          color: SLColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  description,
+                  style: SLTheme.quicksand(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: SLColors.textSecond,
+                    height: 1.35,
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

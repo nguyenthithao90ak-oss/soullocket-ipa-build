@@ -11,8 +11,8 @@ import '../../utils/services/love_card_link_service.dart';
 ///  Xử lý deep link HTTPS khi user nhấp link từ Zalo/Messenger/SMS
 ///
 ///  Link format:
-///    ${AppConfig.webBaseUrl}/join?house=NH_ABC123
-///    ${AppConfig.webBaseUrl}/join?house=NH_ABC123
+///    ${AppConfig.webBaseUrl}/joinif (house != null) house!=NH_ABC123
+///    ${AppConfig.webBaseUrl}/joinif (house != null) house!=NH_ABC123
 ///  Cách dùng (gọi trong main.dart sau Firebase.initializeApp):
 ///    await DeeplinkService().initialize(onJoinHouse: (houseId) {
 ///      // Trae: navigate tới CoupleConnectScreen với houseId này

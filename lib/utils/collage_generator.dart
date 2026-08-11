@@ -190,7 +190,7 @@ class CollageGenerator {
     final picture = recorder.endRecording();
     final img = await picture.toImage(outputWidth, outputHeight);
     final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
-    return byteData?.buffer.asUint8List();
+    return byteData!.buffer.asUint8List();
   }
 
   static double _drawText(

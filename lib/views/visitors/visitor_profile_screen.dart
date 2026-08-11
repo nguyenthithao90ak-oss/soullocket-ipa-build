@@ -298,6 +298,7 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
             aspectRatioLockEnabled: true,
             aspectRatioPickerButtonHidden: true,
             resetAspectRatioEnabled: false,
+            cropStyle: CropStyle.circle,
           ),
         ],
       );

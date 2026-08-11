@@ -1015,7 +1015,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
     final switchWidget = Switch(
       value: value,
       onChanged: onChanged,
-      activeColor: Colors.white,
+      activeThumbColor: Colors.white,
       activeTrackColor: const Color(0xFF34C759),
       inactiveTrackColor:
           isDark ? const Color(0xFF39393D) : const Color(0xFFE9E9EB),

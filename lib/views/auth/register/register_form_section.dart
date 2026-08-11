@@ -11,9 +11,9 @@ import '../login/social_auth_buttons.dart';
 final RegExp _registerEmailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
 const List<Color> _registerButtonDisabledColors = <Color>[
-  Color(0xFFE8D5C4),
-  Color(0xFFDCC8B5),
-  Color(0xFFD4BDA8),
+  Color(0xFFFFD6E0),
+  Color(0xFFFFC2D1),
+  Color(0xFFFFB3C6),
 ];
 
 bool _isRegisterInputValid(String email, String password, bool acceptTerms) {
@@ -236,10 +236,10 @@ class RegisterForm extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Center(
               child: Text(
-                l10n.translate('auth_quick_register').toUpperCase(),
+                '🩷 HOẶC ĐĂNG KÝ NHANH 🩷',
                 style: SLTheme.quicksand(
-                  color: const Color(0xFF888888),
-                  fontSize: 12,
+                  color: const Color(0xFFFF69B4),
+                  fontSize: 13,
                   fontWeight: FontWeight.w900,
                 ),
               ),

@@ -65,7 +65,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
   @override
   void initState() {
     super.initState();
-    _budgetStream = _dbRef.child('houses/${widget.houseId}/budget').onValue;
+    _budgetStream = _dbRef.child('houses/${widget.houseId}/budget')
+        .limitToLast(200)
+        .onValue;
     _loadBudgetPlan();
     _loadSavingsGoal();
   }

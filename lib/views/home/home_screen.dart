@@ -1078,6 +1078,8 @@ class _HomeScreenState extends State<HomeScreen>
           houseId: houseId,
           nameU1: settings.nameU1,
           nameU2: settings.nameU2,
+          avatarU1: settings.avtUser1,
+          avatarU2: settings.avtUser2,
           loveDays: _calculateWidgetLoveDays(settings.startDate),
           relationshipMode: settings.relationshipMode,
         ),
@@ -1422,51 +1424,48 @@ class _HomeScreenState extends State<HomeScreen>
     required bool shouldAnimateEffects,
     required bool shouldAnimateFallingEffect,
   }) {
-    Widget bodyContent = Stack(
-      children: [
-        Positioned.fill(
-          child: RepaintBoundary(
-            child: _buildShellBackground(
-              themeKey: resolvedThemeKey,
-              tabIndex: 0,
-              isDark: isDark,
-              backgroundUrl: UiPrefs.notifier.value.customBackgroundUrl,
-              graphicsQualityKey: graphicsQualityKey,
-              animateAmbientEffects: shouldAnimateEffects,
+    Widget bodyContent = ValueListenableBuilder<int>(
+      valueListenable: _activeTabIndexNotifier,
+      builder: (context, activeIndex, _) {
+        final isMainHomeTab = activeIndex == 0;
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: RepaintBoundary(
+                child: _buildShellBackground(
+                  themeKey: resolvedThemeKey,
+                  tabIndex: activeIndex,
+                  isDark: isDark,
+                  backgroundUrl: UiPrefs.notifier.value.customBackgroundUrl,
+                  graphicsQualityKey: graphicsQualityKey,
+                  animateAmbientEffects: shouldAnimateEffects,
+                ),
+              ),
             ),
-          ),
-        ),
-        foregroundChild,
-        ValueListenableBuilder<int>(
-          valueListenable: _activeTabIndexNotifier,
-          builder: (context, activeIndex, _) {
-            final isMainHomeTab = activeIndex == 0;
-            if (!isMainHomeTab || resolvedEffectKey == 'off') {
-              return const SizedBox.shrink();
-            }
-            return ValueListenableBuilder<bool>(
-              valueListenable: _isUserTabSwipingNotifier,
-              builder: (context, isSwiping, _) {
-                // ⚡ Dùng Visibility(maintainState: false) để dispose hẳn AnimationController khi swipe
-                if (isSwiping) return const SizedBox.shrink();
-                return Positioned.fill(
-                  child: RepaintBoundary(
-                    child: IgnorePointer(
-                      child: LegacyFallingEffect(
-                        type: resolvedEffectKey,
-                        isDark: isDark,
-                        density: graphicsQualityKey,
-                        opacity: isDark ? 0.96 : 0.88,
-                        animate: shouldAnimateFallingEffect,
+            foregroundChild,
+            if (isMainHomeTab && resolvedEffectKey != 'off')
+              ValueListenableBuilder<bool>(
+                valueListenable: _isUserTabSwipingNotifier,
+                builder: (context, isSwiping, _) {
+                  if (isSwiping) return const SizedBox.shrink();
+                  return Positioned.fill(
+                    child: RepaintBoundary(
+                      child: IgnorePointer(
+                        child: LegacyFallingEffect(
+                          type: resolvedEffectKey,
+                          isDark: isDark,
+                          density: graphicsQualityKey,
+                          opacity: isDark ? 0.96 : 0.88,
+                          animate: shouldAnimateFallingEffect,
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
-            );
-          },
-        ),
-      ],
+                  );
+                },
+              ),
+          ],
+        );
+      },
     );
 
     if (shouldAnimateEffects) {
@@ -1590,7 +1589,7 @@ class _HomeScreenState extends State<HomeScreen>
 
                 return ValueListenableBuilder<int>(
                   valueListenable: _vipThemeRotationTickNotifier,
-                  builder: (context, _, __) {
+                  builder: (context, _, _) {
                     final rotatedThemeKey = _resolveThemeKey(uiState.themeKey);
                     final rotatedEffectKey = uiState.liteMode
                         ? 'off'
@@ -1684,35 +1683,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   String _resolveEffectKey(String effectKey, String resolvedThemeKey) {
     final raw = effectKey.trim();
-    final key = raw.isEmpty ? 'auto' : raw;
-    if (key != 'auto') return key;
-
-    if (resolvedThemeKey == 'off' ||
-        UiPrefs.notifier.value.customBackgroundUrl.isNotEmpty) {
-      return 'off';
-    }
-
-    final now = DateTime.now();
-    if (_isDarkTheme(resolvedThemeKey)) {
-      return 'stars';
-    }
-    if (now.month == 12 || now.month == 1) {
-      return 'snow';
-    }
-    if (now.month >= 9 && now.month <= 11) {
-      return 'leaves';
-    }
-
-    switch (resolvedThemeKey) {
-      case 'theme-ocean':
-        return 'bubbles';
-      case 'theme-sunset':
-        return 'meteors';
-      case 'theme-crazy-party':
-        return 'hearts';
-      default:
-        return 'sparkles';
-    }
+    if (raw == 'off') return 'off';
+    if (raw == 'auto' || raw.isEmpty) return 'off';
+    return raw;
   }
 
   bool _isDarkTheme(String themeKey) {

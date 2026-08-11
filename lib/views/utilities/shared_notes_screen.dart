@@ -331,9 +331,13 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: SLTheme.appBar(context, context.tr('util_ghichchung_7f58a6'),
-          actions: [_buildInfoIcon(context)]),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {},
+        backgroundColor: const Color(0xFFE26A8D),
+        elevation: 4,
+        icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+        label: Text('Viết trang mới', style: SLTheme.quicksand(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14)),
+      ),
       body: SLTheme.softCanvasBackdrop(
         baseColor: const Color(0xFFFFFBF8),
         accentColor: const Color(0xFFF59EBA),
@@ -342,6 +346,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
         child: SafeArea(
           child: Column(
             children: <Widget>[
+              _buildTopCard(),
               _buildInputArea(),
               Expanded(child: _buildNotesList()),
             ],
@@ -351,11 +356,111 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     );
   }
 
+  Widget _buildTopCard() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFFDE8EE)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFF59EBA).withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 72,
+            height: 48,
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFFBBDEFB),
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: const Icon(Icons.face, color: Color(0xFF1976D2), size: 26),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFFF8BBD0),
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: const Icon(Icons.face_3, color: Color(0xFFD81B60), size: 26),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text('Hp Bênh Nhau', style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 17, color: SLColors.textPrimary)),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.favorite, color: Color(0xFFF36398), size: 16),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text('Những điều nhỏ bé, nhưng đầy yêu thương', style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 11, color: SLTheme.textMuted)),
+                Text('6 TỪ • ${DateFormat('dd/MM/yyyy').format(DateTime.now())}', style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 10, color: const Color(0xFFD95C8A))),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFDE8EE),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_month_rounded, color: Color(0xFFD95C8A), size: 16),
+                const SizedBox(width: 2),
+                const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFFD95C8A), size: 16),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
   Widget _buildInputArea() {
-    return SLTheme.softPanel(
+    return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 10),
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-      borderColor: const Color(0xFFF4B5C8).withValues(alpha: 0.52),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFFDE8EE)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFF59EBA).withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -364,19 +469,11 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
               Container(
                 width: 42,
                 height: 42,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: const LinearGradient(colors: SLTheme.btnGradient),
-                  boxShadow: <BoxShadow>[
-                    BoxShadow(
-                      color: SLColors.primary.withValues(alpha: 0.18),
-                      blurRadius: 14,
-                      offset: const Offset(0, 7),
-                    ),
-                  ],
+                  color: Color(0xFFE26A8D),
                 ),
-                child: const Icon(Icons.sticky_note_2_rounded,
-                    color: Colors.white, size: 21),
+                child: const Icon(Icons.sticky_note_2_rounded, color: Colors.white, size: 21),
               ),
               SLSpacing.w12,
               Expanded(
@@ -386,7 +483,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                     Text(
                       context.tr('util_ghichmi_32891e'),
                       style: SLTheme.quicksand(
-                        fontSize: 17,
+                        fontSize: 16,
                         fontWeight: FontWeight.w900,
                         color: SLColors.textPrimary,
                       ),
@@ -413,9 +510,9 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF7F5),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFF2CDD7)),
+                    border: Border.all(color: const Color(0xFFFDE8EE)),
                   ),
                   child: TextField(
                     controller: _noteController,
@@ -450,7 +547,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
                   height: 48,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(colors: SLTheme.btnGradient),
+                    color: const Color(0xFFE26A8D),
                     boxShadow: <BoxShadow>[
                       BoxShadow(
                         color: SLColors.primary.withValues(alpha: 0.24),
@@ -514,9 +611,9 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF4F8),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFF2CDD7)),
+        border: Border.all(color: const Color(0xFFFDE8EE)),
       ),
       child: DropdownButton<String>(
         value: _selectedTag,
@@ -657,26 +754,29 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     }).toList();
 
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
-      itemCount: visibleItems.length + (visibleItems.isEmpty ? 2 : 1),
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 80), // extra padding for FAB
+      itemCount: visibleItems.length + (visibleItems.isEmpty ? 2 : 2),
       separatorBuilder: (_, __) => SLSpacing.h12,
       itemBuilder: (context, index) {
         if (index == 0) {
-          return _buildNotesSummary(
-            totalCount: items.length,
-            doneCount: doneCount,
-            pinnedCount: pinnedCount,
-            pendingCount: pendingCount,
-          );
+          return _buildListHeader();
         }
 
-        if (visibleItems.isEmpty) {
+        if (index == visibleItems.length + 1 && visibleItems.isNotEmpty) {
+          return _buildPromptCard();
+        }
+
+        if (visibleItems.isEmpty && index == 1) {
           return SLTheme.emptyStatePanel(
             icon: Icons.filter_alt_off_rounded,
             title: 'Chưa có ghi chú phù hợp',
             subtitle: 'Đổi bộ lọc để xem các ghi chú khác.',
             accentColor: const Color(0xFFF59EBA),
           );
+        }
+        
+        if (visibleItems.isEmpty && index == 2) {
+            return _buildPromptCard();
         }
 
         final item = visibleItems[index - 1];
@@ -695,149 +795,62 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     );
   }
 
-  Widget _buildNotesSummary({
-    required int totalCount,
-    required int doneCount,
-    required int pinnedCount,
-    required int pendingCount,
-  }) {
-    final progress = totalCount == 0 ? 0.0 : doneCount / totalCount;
-    return SLTheme.softPanel(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      borderColor: const Color(0xFFF4B5C8).withValues(alpha: 0.46),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Container(
-                width: 54,
-                height: 54,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: <Color>[
-                      const Color(0xFFF59EBA).withValues(alpha: 0.22),
-                      Colors.white.withValues(alpha: 0.94),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  border: Border.all(
-                    color: const Color(0xFFF4B5C8).withValues(alpha: 0.44),
-                  ),
-                ),
-                child: const Icon(Icons.auto_stories_rounded,
-                    color: Color(0xFFD95C8A), size: 28),
-              ),
-              SLSpacing.w12,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      context.tr('util_bngghinhca_95fd5f'),
-                      style: SLTheme.quicksand(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                        color: SLColors.textPrimary,
-                      ),
-                    ),
-                    SLSpacing.h4,
-                    Text(
-                      'Đã hoàn thành $doneCount / $totalCount ghi chú.',
-                      style: SLTheme.quicksand(
-                        fontSize: 12.2,
-                        fontWeight: FontWeight.w700,
-                        color: SLColors.textSecond,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SLSpacing.w12,
-              SLTheme.chip('$totalCount mục', const Color(0xFFD95C8A)),
-            ],
-          ),
-          SLSpacing.h12,
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: progress.clamp(0.0, 1.0),
-              minHeight: 7,
-              backgroundColor: const Color(0xFFFFEDF4),
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(Color(0xFFD95C8A)),
+  Widget _buildListHeader() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFDE8EE),
+              shape: BoxShape.circle,
             ),
+            child: const Icon(Icons.library_books_rounded, color: Color(0xFFD95C8A), size: 16),
           ),
-          SLSpacing.h12,
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: <Widget>[
-              _buildNoteFilterChip(
-                label: 'Tất cả',
-                value: 'all',
-                count: totalCount,
-                icon: Icons.notes_rounded,
-              ),
-              _buildNoteFilterChip(
-                label: 'Đã ghim',
-                value: 'pinned',
-                count: pinnedCount,
-                icon: Icons.push_pin_rounded,
-              ),
-              _buildNoteFilterChip(
-                label: 'Chưa xong',
-                value: 'pending',
-                count: pendingCount,
-                icon: Icons.pending_actions_rounded,
-              ),
-            ],
-          ),
+          const SizedBox(width: 12),
+          Text('Những ghi chú đã lưu', style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 16, color: SLColors.textPrimary)),
+          const SizedBox(width: 12),
+          Expanded(child: Container(height: 1.5, color: const Color(0xFFFDE8EE))),
+          const SizedBox(width: 8),
+          const Icon(Icons.favorite_border, color: Color(0xFFFDE8EE), size: 16),
         ],
       ),
     );
   }
 
-  Widget _buildNoteFilterChip({
-    required String label,
-    required String value,
-    required int count,
-    required IconData icon,
-  }) {
-    final selected = _noteFilter == value;
-    return GestureDetector(
-      onTap: () => setState(() => _noteFilter = value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFFFFEDF4) : Colors.white,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: selected ? const Color(0xFFD95C8A) : const Color(0xFFF2CDD7),
+  Widget _buildPromptCard() {
+    return Container(
+      margin: const EdgeInsets.only(top: 8, bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7F5),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFFDE8EE)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFDE8EE),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.lightbulb, color: Color(0xFFE26A8D), size: 24),
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(
-              icon,
-              size: 14,
-              color: selected ? const Color(0xFFD95C8A) : SLTheme.textMuted,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Prompt gợi nhớ ✨', style: SLTheme.quicksand(fontWeight: FontWeight.w900, fontSize: 15, color: SLColors.textPrimary)),
+                const SizedBox(height: 2),
+                Text('Hãy thêm một chi tiết nhỏ để ghi nhớ lâu hơn.', style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 12, color: SLTheme.textMuted)),
+              ],
             ),
-            const SizedBox(width: 5),
-            Text(
-              '$label ($count)',
-              style: SLTheme.quicksand(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                color: selected ? const Color(0xFFD95C8A) : SLColors.textSecond,
-              ),
-            ),
-          ],
-        ),
+          ),
+          const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFFE26A8D), size: 16),
+        ],
       ),
     );
   }
@@ -848,162 +861,110 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     required bool isDone,
     required bool isPinned,
   }) {
-    final Color resolvedColor = isDone
-        ? Colors.white.withValues(alpha: 0.96)
-        : Color.lerp(bgColor, Colors.white, 0.18)!;
+    final content = item['c']?.toString() ?? '';
+    final lines = content.split('\n');
+    final title = lines.isNotEmpty ? lines.first : '';
+    final subtitle = lines.length > 1 ? lines.skip(1).join('\n') : content;
+    final wordCount = content.split(RegExp(r'\s+')).where((e) => e.isNotEmpty).length;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(15, 14, 14, 14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: resolvedColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDone
-              ? const Color(0xFFE3E8EF)
-              : Color.lerp(bgColor, const Color(0xFFE9B7C8), 0.34)!,
-        ),
-        boxShadow: <BoxShadow>[
+        border: Border.all(color: const Color(0xFFFDE8EE)),
+        boxShadow: [
           BoxShadow(
-            color: const Color(0xFF5F4765).withValues(alpha: 0.06),
-            blurRadius: 16,
-            spreadRadius: -8,
-            offset: const Offset(0, 10),
-          ),
+            color: const Color(0xFFF59EBA).withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
         ],
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Expanded(
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: <Widget>[
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: const Color(0xFFFDE8EE),
+              // TODO: Real note image if added later
+            ),
+            child: const Icon(Icons.image, color: Color(0xFFF59EBA), size: 28),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title.isNotEmpty ? title : 'Ghi chú',
+                        style: SLTheme.quicksand(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          color: SLColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 11, vertical: 5),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.64),
+                        color: const Color(0xFFFFF4F8),
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.75)),
                       ),
                       child: Text(
-                        item['tag'] ?? 'Chung',
+                        item['tag'] ?? 'Tình yêu',
                         style: SLTheme.quicksand(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          color: isDone ? SLTheme.textLight : SLTheme.textMain,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFFE26A8D),
                         ),
                       ),
                     ),
-                    if (isPinned)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFEDF4),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                              color: const Color(0xFFF2B9CC)
-                                  .withValues(alpha: 0.75)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            const Icon(Icons.push_pin_rounded,
-                                size: 13, color: Color(0xFFD95C8A)),
-                            const SizedBox(width: 4),
-                            Text(
-                              context.tr('util_ghim_4be667'),
-                              style: SLTheme.quicksand(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFFD95C8A),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    if (isDone)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEAF7EF),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(color: const Color(0xFFBFE2CB)),
-                        ),
-                        child: Text(
-                          context.tr('util_honthnh_eb889c'),
-                          style: SLTheme.quicksand(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF15803D),
-                          ),
-                        ),
-                      ),
                   ],
                 ),
-              ),
-              SLSpacing.w8,
-              Text(
-                '${item['a']} • ${item['time']}',
-                style: SLTheme.quicksand(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: isDone ? SLTheme.textLight : SLTheme.textMuted,
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: SLTheme.quicksand(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: SLTheme.textMuted,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                textAlign: TextAlign.right,
-              ),
-            ],
-          ),
-          SLSpacing.h12,
-          Text(
-            item['c'] ?? '',
-            style: SLTheme.quicksand(
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              height: 1.4,
-              decoration: isDone ? TextDecoration.lineThrough : null,
-              color: isDone ? SLTheme.textLight : SLTheme.textMain,
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.access_time_rounded, color: Color(0xFFE26A8D), size: 12),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${item['time']}  •  $wordCount từ',
+                      style: SLTheme.quicksand(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: SLTheme.textMuted,
+                      ),
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () => _deleteNote(item['key']),
+                      child: const Icon(Icons.more_vert_rounded, color: Color(0xFFE26A8D), size: 16),
+                    )
+                  ],
+                ),
+              ],
             ),
-          ),
-          SLSpacing.h12,
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: <Widget>[
-              _buildActionButton(
-                icon: isDone
-                    ? Icons.check_circle_rounded
-                    : Icons.check_circle_outline_rounded,
-                color: isDone ? const Color(0xFF15803D) : SLTheme.textMuted,
-                backgroundColor: isDone
-                    ? const Color(0xFFEAF7EF)
-                    : Colors.white.withValues(alpha: 0.58),
-                onTap: () => _toggleDone(item['key'], isDone),
-              ),
-              _buildActionButton(
-                icon:
-                    isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
-                color: isPinned ? const Color(0xFFD95C8A) : SLTheme.textMuted,
-                backgroundColor: isPinned
-                    ? const Color(0xFFFFEDF4)
-                    : Colors.white.withValues(alpha: 0.58),
-                onTap: () => _togglePinned(item['key'], isPinned),
-              ),
-              _buildActionButton(
-                icon: Icons.delete_outline_rounded,
-                color: SLTheme.textMuted,
-                backgroundColor: Colors.white.withValues(alpha: 0.58),
-                onTap: () => _deleteNote(item['key']),
-              ),
-            ],
-          ),
+          )
         ],
       ),
     );

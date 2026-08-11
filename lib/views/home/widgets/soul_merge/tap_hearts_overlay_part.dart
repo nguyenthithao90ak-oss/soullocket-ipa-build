@@ -192,12 +192,33 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
     });
   }
 
+  void spawnHeart(Offset globalPosition) {
+    if (!mounted) return;
+    
+    final bool liteMode = UiPrefs.notifier.value.liteMode;
+    if (liteMode && _hearts.length > 40) return;
+    if (_hearts.length > 150) return; // Hard limit
+
+    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.hasSize || !renderBox.attached) {
+      return;
+    }
+    
+    spawnExplosion(globalPosition);
+  }
+
   void spawnExplosion(Offset globalPosition, {int count = 8}) {
     if (!mounted) return;
     final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null || !renderBox.hasSize || !renderBox.attached) {
       return;
     }
+    
+    final bool liteMode = UiPrefs.notifier.value.liteMode;
+    if (liteMode && _hearts.length > 50) return;
+    if (_hearts.length > 150) return; // Hard limit
+
+    int finalCount = liteMode ? math.min(count, 3) : count;
 
     const palettes = [
       [
@@ -244,7 +265,7 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
       final palette = palettes[random.nextInt(palettes.length)];
 
       setState(() {
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < finalCount; i++) {
           final angle = random.nextDouble() * math.pi * 2;
           final speed = 1.5 + random.nextDouble() * 3.0;
           final size = 16.0 +
@@ -285,13 +306,19 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
     ];
 
     try {
+      final bool liteMode = UiPrefs.notifier.value.liteMode;
+      if (liteMode && _hearts.length > 50) return;
+      if (_hearts.length > 150) return;
+      
+      int finalCount = liteMode ? math.min(count, 2) : count;
+
       final localStart = renderBox.globalToLocal(startPosition);
       final localTarget = renderBox.globalToLocal(targetPosition);
       final random = math.Random();
       final palette = palettes[random.nextInt(palettes.length)];
 
       setState(() {
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < finalCount; i++) {
           final speed = 4.0 + random.nextDouble() * 4.0;
           final size = 16.0 + random.nextDouble() * 12.0;
           final heart = TinyHeart(
@@ -324,12 +351,18 @@ class TapHeartsOverlayState extends State<TapHeartsOverlay>
     if (renderBox == null || !renderBox.hasSize || !renderBox.attached) return;
 
     try {
+      final bool liteMode = UiPrefs.notifier.value.liteMode;
+      if (liteMode && _flyingStickers.length > 30) return;
+      if (_flyingStickers.length > 100) return;
+
+      int finalCount = liteMode ? math.min(count, 1) : count;
+
       final localStart = renderBox.globalToLocal(startPosition);
       final localTarget = renderBox.globalToLocal(targetPosition);
       final random = math.Random();
 
       setState(() {
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < finalCount; i++) {
           final speed = 4.0 + random.nextDouble() * 4.0;
           final size = 48.0 + random.nextDouble() * 16.0;
           

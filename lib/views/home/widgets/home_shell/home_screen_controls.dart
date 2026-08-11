@@ -88,12 +88,12 @@ extension _HomeScreenShellControls on _HomeScreenState {
 
     final navSurface = Container(
       key: _firstGuideBottomNavKey,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: isDark
-            ? const Color(0xFF2D2D3A).withValues(alpha: 0.65)
-            : const Color(0xFFF3EEEA).withValues(alpha: 0.65),
-        borderRadius: BorderRadius.circular(40),
+            ? const Color(0xFF2D2D3A).withValues(alpha: 0.5)
+            : const Color(0xFFF3EEEA).withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(32),
         border: Border.all(
           color: isDark
               ? Colors.white.withValues(alpha: 0.12)
@@ -144,11 +144,11 @@ extension _HomeScreenShellControls on _HomeScreenState {
               padding: const EdgeInsets.only(top: 10),
               child: RepaintBoundary(
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(40),
+                  borderRadius: BorderRadius.circular(32),
                   child: !useBackdropBlur
                       ? navSurface
-                      : FastBackdropFilter(
-                          filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                        : FastBackdropFilter(
+                          filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
                           fallbackColor: Colors.transparent,
                           child: navSurface,
                         ),
@@ -285,7 +285,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
           child: AnimatedContainer(
             duration: animationDuration,
             curve: Curves.easeOutCubic,
-            height: 46,
+            height: 40,
             padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
             decoration: BoxDecoration(
               color: Colors.transparent,
@@ -314,7 +314,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: SLTheme.quicksand(
-                    fontSize: 8.5,
+                    fontSize: 8.0,
                     fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
                     color: isActive ? item.activeColor : inactiveColor,
                   ),

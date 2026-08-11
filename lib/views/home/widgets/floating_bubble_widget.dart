@@ -485,7 +485,7 @@ class _FloatingBubbleWidgetState extends State<FloatingBubbleWidget>
                         child: Center(
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(25),
-                            child: R2StickerImage(
+                            child: const R2StickerImage(
                               'assets/images/anhtomau_stickers/sticker_33.gif',
                               width: 38,
                               height: 38,

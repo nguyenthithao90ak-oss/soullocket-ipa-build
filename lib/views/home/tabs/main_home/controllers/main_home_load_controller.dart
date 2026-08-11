@@ -384,6 +384,17 @@ extension _MainHomeLoadController on _MainHomeTabState {
         force: forceWarmMedia,
       );
     }
+
+    // Cập nhật persistent notification hiển thị avatar + ngày yêu
+    unawaited(
+      LoveStatusNotificationService.instance.updateIfNeeded(
+        nameU1: (settings['nameU1'] ?? '').toString(),
+        nameU2: (settings['nameU2'] ?? '').toString(),
+        avatarU1: (settings['avtUser1'] ?? settings['avatarU1'] ?? '').toString(),
+        avatarU2: (settings['avtUser2'] ?? settings['avatarU2'] ?? '').toString(),
+        startDate: (settings['startDate'] ?? '').toString(),
+      ),
+    );
   }
 
   Future<void> _loadAndApplySettings({
@@ -763,6 +774,17 @@ extension _MainHomeLoadController on _MainHomeTabState {
           });
           unawaited(_maybeShowFirstSetupGuide());
           _warmHomeMedia();
+
+          // Cập nhật persistent notification khi settings thay đổi realtime
+          unawaited(
+            LoveStatusNotificationService.instance.updateIfNeeded(
+              nameU1: (settings['nameU1'] ?? '').toString(),
+              nameU2: (settings['nameU2'] ?? '').toString(),
+              avatarU1: (settings['avtUser1'] ?? settings['avatarU1'] ?? '').toString(),
+              avatarU2: (settings['avtUser2'] ?? settings['avatarU2'] ?? '').toString(),
+              startDate: (settings['startDate'] ?? '').toString(),
+            ),
+          );
         } else if (visibilityPrefsChanged && mounted) {
           if (isStale()) return;
           setState(() {

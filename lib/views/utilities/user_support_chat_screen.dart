@@ -1435,7 +1435,7 @@ Quy tắc trả lời:
                 gradient: LinearGradient(
                   colors: message.isAdmin
                       ? [const Color(0xFF7C3AED), const Color(0xFF4C1D95)]
-                      : [const Color(0xFFFF527B), Color(0xFFD81B60)],
+                      : [const Color(0xFFFF527B), const Color(0xFFD81B60)],
                 ),
                 boxShadow: [
                   BoxShadow(

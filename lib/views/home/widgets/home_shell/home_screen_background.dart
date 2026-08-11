@@ -21,56 +21,30 @@ extension _HomeScreenShellBackground on _HomeScreenState {
       );
     }
 
-    const usesCustomBackground = false;
-    final effectiveIsDark = _usesDarkShell(
-      tabIndex,
-      isDark,
-      usesCustomBackground: usesCustomBackground,
-    );
-    final gradient = _resolveTabShellGradient(
-      tabIndex: tabIndex,
-      themeKey: themeKey,
-      isDark: effectiveIsDark,
-      usesCustomBackground: usesCustomBackground,
-    );
-
-    final safeQuality = switch (graphicsQualityKey) {
-      'low' => 'low',
-      'high' => 'high',
-      _ => 'balanced',
-    };
-
+    // Áp dụng ảnh nền mặc định cho tất cả các tab
     return Stack(
       fit: StackFit.expand,
       children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: gradient,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+        Positioned.fill(
+          child: Image.asset(
+            'assets/images/default_home_bg.jpg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+            gaplessPlayback: true,
+            filterQuality: FilterQuality.low,
+            isAntiAlias: false,
+            cacheWidth: 720,
+          ),
+        ),
+        // Lớp phủ tối nhẹ giúp làm dịu nền, làm nổi bật nội dung phía trên
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.15),
             ),
           ),
         ),
-        if (safeQuality == 'high')
-          Positioned.fill(
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.white.withValues(alpha: 0.045),
-                      Colors.transparent,
-                      Colors.white.withValues(alpha: 0.03),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    stops: const [0.0, 0.52, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }
@@ -80,47 +54,17 @@ extension _HomeScreenShellBackground on _HomeScreenState {
     required bool isDark,
     required String backgroundUrl,
   }) {
-    final overlayColors = themeKey == 'off'
-        ? [
-            Colors.transparent,
-            Colors.transparent,
-            Colors.black.withValues(alpha: 0.12),
-          ]
-        : (isDark
-            ? [
-                Colors.black.withValues(alpha: 0.30),
-                Colors.black.withValues(alpha: 0.18),
-                Colors.black.withValues(alpha: 0.40),
-              ]
-            : [
-                Colors.white.withValues(alpha: 0.14),
-                Colors.white.withValues(alpha: 0.08),
-                Colors.black.withValues(alpha: 0.30),
-              ]);
-
     return Stack(
       fit: StackFit.expand,
       children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: _resolveShellGradient(themeKey, isDark),
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
         Positioned.fill(
           child: _StableShellBackgroundImage(backgroundUrl: backgroundUrl),
         ),
+        // Lớp phủ tối nhẹ giúp làm dịu nền tùy chỉnh
         Positioned.fill(
           child: DecoratedBox(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: overlayColors,
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+              color: Colors.black.withValues(alpha: 0.15),
             ),
           ),
         ),
@@ -191,8 +135,8 @@ extension _HomeScreenShellBackground on _HomeScreenState {
         return const [
           Color(0xFF141E30),
           Color(0xFF243B55),
-          Color(0xFF4A00E0),
-          Color(0xFF8E2DE2),
+          Color(0xFF3A6073),
+          Color(0xFF162447),
         ];
       case 'theme-dark':
         return const [
@@ -209,26 +153,47 @@ extension _HomeScreenShellBackground on _HomeScreenState {
           Color(0xFF0F0C29),
         ];
       case 'theme-ocean':
-        return const [
-          Color(0xFF4FACFE),
-          Color(0xFF00F2FE),
-          Color(0xFF43E97B),
-          Color(0xFF38F9D7),
-        ];
+        return isDark
+            ? const [
+                Color(0xFF0D1B2A),
+                Color(0xFF1B263B),
+                Color(0xFF415A77),
+                Color(0xFF1D3557),
+              ]
+            : const [
+                Color(0xFFE0F7FA),
+                Color(0xFFB2EBF2),
+                Color(0xFF80DEEA),
+                Color(0xFF4DD0E1),
+              ];
       case 'theme-sunset':
-        return const [
-          Color(0xFFFF0844),
-          Color(0xFFFFB199),
-          Color(0xFFFA709A),
-          Color(0xFFFEE140),
-        ];
+        return isDark
+            ? const [
+                Color(0xFF2C0B1E),
+                Color(0xFF4A1525),
+                Color(0xFF6B1F38),
+                Color(0xFF330A21),
+              ]
+            : const [
+                Color(0xFFFFF3E0),
+                Color(0xFFFFCC80),
+                Color(0xFFFFAB91),
+                Color(0xFFF48FB1),
+              ];
       case 'theme-crazy-party':
-        return const [
-          Color(0xFFFF2400),
-          Color(0xFFE8B71D),
-          Color(0xFF1DE840),
-          Color(0xFF2B1DE8),
-        ];
+        return isDark
+            ? const [
+                Color(0xFF1D0936),
+                Color(0xFF3D136B),
+                Color(0xFF5B178A),
+                Color(0xFF260548),
+              ]
+            : const [
+                Color(0xFFF3E5F5),
+                Color(0xFFCE93D8),
+                Color(0xFFFF80AB),
+                Color(0xFF8C9EFF),
+              ];
       case 'theme-pink-glow':
         return const [
           Color(0xFFFFE4E1),
@@ -400,3 +365,49 @@ class _StableShellBackgroundImageState
   bool get _hasFallback =>
       _diskCachedProvider != null || _retainedProvider != null;
 }
+
+class _BackgroundPatternPainter extends CustomPainter {
+  final bool isDark;
+  const _BackgroundPatternPainter({required this.isDark});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final linePaint = Paint()
+      ..color = (isDark ? Colors.white : Colors.black).withValues(alpha: isDark ? 0.03 : 0.025)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    const double step = 48.0;
+
+    for (double x = -size.height; x < size.width + size.height; x += step) {
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x + size.height, size.height),
+        linePaint,
+      );
+    }
+    for (double x = size.width + size.height; x > -size.height; x -= step) {
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x - size.height, size.height),
+        linePaint,
+      );
+    }
+
+    final dotPaint = Paint()
+      ..color = (isDark ? Colors.white : const Color(0xFFD81B60))
+          .withValues(alpha: isDark ? 0.04 : 0.035)
+      ..style = PaintingStyle.fill;
+
+    for (double y = step / 2; y < size.height; y += step) {
+      for (double x = step / 2; x < size.width; x += step) {
+        canvas.drawCircle(Offset(x, y), 1.5, dotPaint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _BackgroundPatternPainter oldDelegate) =>
+      oldDelegate.isDark != isDark;
+}
+

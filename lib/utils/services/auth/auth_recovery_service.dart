@@ -11,11 +11,10 @@ import '../core/cloud_functions_helper.dart';
 
 class AuthRecoveryService {
   AuthRecoveryService({
-    firebase_auth.FirebaseAuth? firebaseAuth,
-    DatabaseReference? databaseRef,
+    this._firebaseAuth,
+    this._databaseRef,
     FirebaseFunctions? firebaseFunctions,
-  })  : _firebaseAuth = firebaseAuth,
-        _databaseRef = databaseRef;
+  });
 
   final firebase_auth.FirebaseAuth? _firebaseAuth;
   final DatabaseReference? _databaseRef;

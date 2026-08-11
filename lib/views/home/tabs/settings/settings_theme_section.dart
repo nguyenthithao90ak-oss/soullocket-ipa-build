@@ -385,25 +385,17 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildLabel('Màu nền trang chủ'),
-                    if (selection.previewBackground.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Text(
-                          'Bạn đang dùng ảnh nền, không thể dùng màu nền hệ thống.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFFD81B60),
-                            fontStyle: FontStyle.italic,
-                          ),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        'Đã đặt hình nền hình ảnh mặc định. Màu nền chuyển sắc đã được xoá hoàn toàn.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFFD81B60),
+                          fontStyle: FontStyle.italic,
                         ),
-                      )
-                    else
-                      _buildThemeDropdownField(
-                        value: selection.themeKey,
-                        options: config.themes,
-                        onChanged: (value) =>
-                            _updateThemeDraft(() => _draftThemeKey = value),
                       ),
+                    ),
                     const SizedBox(height: 12),
                     _buildLabel(context.tr('theme_falling_effect')),
                     _buildThemeDropdownField(

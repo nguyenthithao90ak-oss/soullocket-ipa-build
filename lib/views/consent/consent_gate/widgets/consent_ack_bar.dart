@@ -51,7 +51,7 @@ Widget _buildStartupAgreeBar(
       children: [
         Row(
           children: [
-            Icon(
+            const Icon(
               Icons.check_circle_rounded,
               color: _accentGreen,
               size: 16,
@@ -107,18 +107,35 @@ Widget _buildPrimaryButton(
 
   return Opacity(
     opacity: enabled ? 1 : 0.45,
-    child: SizedBox(
+    child: Container(
       width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFF7597), Color(0xFFFF5277)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: enabled
+            ? [
+                BoxShadow(
+                  color: const Color(0xFFFF5277).withValues(alpha: 0.35),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
+                ),
+              ]
+            : null,
+      ),
       child: Material(
-        color: accent,
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(18),
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: compact ? 14 : 16,
-              vertical: verticalPadding ?? (compact ? 10 : 12),
+              vertical: verticalPadding ?? (compact ? 11 : 13),
             ),
             child: FittedBox(
               fit: scaleDownContent ? BoxFit.scaleDown : BoxFit.none,
@@ -137,7 +154,7 @@ Widget _buildPrimaryButton(
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       fontSize: fontSize,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w900,
                       color: Colors.white,
                     ),
                   ),

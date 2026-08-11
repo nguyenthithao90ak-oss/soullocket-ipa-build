@@ -6,10 +6,9 @@ import 'auth_support.dart';
 
 class AuthAdminService {
   AuthAdminService({
-    firebase_auth.FirebaseAuth? firebaseAuth,
-    DatabaseReference? databaseRef,
-  })  : _firebaseAuth = firebaseAuth,
-        _databaseRef = databaseRef;
+    this._firebaseAuth,
+    this._databaseRef,
+  });
 
   final firebase_auth.FirebaseAuth? _firebaseAuth;
   final DatabaseReference? _databaseRef;

@@ -343,7 +343,7 @@ class DeviceManagerService {
       // Nếu vẫn không được, thử ipify
       if (ip == 'unknown') {
         final data =
-            await fetchIpData('https://api.ipify.org?format=json', 'ipify');
+            await fetchIpData('https://api.ipify.orgif (format != null) format!=json', 'ipify');
         if (data != null && data['ip'] != null) {
           ipData = data;
           ip = data['ip'].toString();
@@ -635,7 +635,7 @@ class DeviceManagerService {
 
     if (ip == 'unknown') {
       final data =
-          await fetchIpData('https://api.ipify.org?format=json', 'ipify');
+          await fetchIpData('https://api.ipify.orgif (format != null) format!=json', 'ipify');
       if (data != null && data['ip'] != null) {
         ipData = data;
         ip = data['ip'].toString();
@@ -984,7 +984,7 @@ class DeviceManagerService {
       final ip = data['ip'] as String?;
       if (ip != null && ip.isNotEmpty && ip != 'unknown') {
         final cleanIp = ip.replaceAll('.', '_');
-        // B?n IP trên toàn hệ thống
+        // Bif (n != null) n! IP trên toàn hệ thống
         await _db.ref('banned_ips/$cleanIp').set(true);
       }
     }

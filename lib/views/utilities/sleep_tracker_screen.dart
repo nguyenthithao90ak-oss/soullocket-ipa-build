@@ -868,7 +868,7 @@ class _SleepTrackerScreenState extends State<SleepTrackerScreen>
                             ),
                             Switch(
                               value: _isTrackingEnabled,
-                              activeColor: const Color(0xFFE91E63),
+                              activeThumbColor: const Color(0xFFE91E63),
                               activeTrackColor: const Color(0xFFF8BBD0),
                               inactiveThumbColor: Colors.white,
                               inactiveTrackColor: Colors.black12,

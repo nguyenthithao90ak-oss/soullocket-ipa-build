@@ -25,12 +25,14 @@ extension MainHomeAvatarController on _MainHomeTabState {
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.square,
             lockAspectRatio: true,
+            cropStyle: CropStyle.circle,
           ),
           IOSUiSettings(
             title: isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
             aspectRatioLockEnabled: true,
             aspectRatioPickerButtonHidden: true,
             resetAspectRatioEnabled: false,
+            cropStyle: CropStyle.circle,
           ),
         ],
       );

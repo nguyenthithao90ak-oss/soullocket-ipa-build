@@ -494,7 +494,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
       try {
         final uri = Uri.parse(
           'https://nominatim.openstreetmap.org/reverse'
-          '?format=jsonv2&lat=$lat&lon=$lng&accept-language=vi',
+          'if (format != null) format!=jsonv2&lat=$lat&lon=$lng&accept-language=vi',
         );
         final response = await http.get(
           uri,
@@ -569,7 +569,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     try {
       final uri = Uri.parse(
         'https://api.open-meteo.com/v1/forecast'
-        '?latitude=$lat&longitude=$lng'
+        'if (latitude != null) latitude!=$lat&longitude=$lng'
         '&current=temperature_2m,weather_code'
         '&timezone=auto',
       );

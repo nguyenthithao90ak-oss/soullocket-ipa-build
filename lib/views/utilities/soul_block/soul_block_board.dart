@@ -82,7 +82,7 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                       padding: EdgeInsets.all(contentSlack / 2),
                       child: ValueListenableBuilder<int>(
                         valueListenable: _dragVisualTick,
-                        builder: (BuildContext context, int _, Widget? __) {
+                        builder: (BuildContext context, int _, Widget? _) {
                           return RepaintBoundary(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,

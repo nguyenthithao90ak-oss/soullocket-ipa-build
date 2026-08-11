@@ -629,8 +629,10 @@ class SLTheme {
   static Color glassBorderThin = const Color(0x40D7E1E8);
 
   static const List<Color> defaultGradient = [
-    SLColors.primary,
-    SLColors.primary
+    Color(0xFFFFF0F3),
+    Color(0xFFFFD6E0),
+    Color(0xFFFBC2EB),
+    Color(0xFFFF9A9E),
   ];
   static const List<Color> btnGradient = [SLColors.primary, SLColors.primary];
 
@@ -779,13 +781,13 @@ class SLTheme {
                 fit: BoxFit.cover,
                 filterQuality: FilterQuality.medium,
                 errorWidget: (context, url, error) => Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        const Color(0xFF1A1035),
-                        const Color(0xFF0D0B1A),
+                        Color(0xFF1A1035),
+                        Color(0xFF0D0B1A),
                       ],
                     ),
                   ),
@@ -935,11 +937,11 @@ class SLTheme {
       suffixIcon: suffixIcon,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.15), // Kính mờ nhẹ
+      fillColor: Colors.white.withValues(alpha: 0.55),
       enabledBorder:
-          border(Colors.white.withValues(alpha: 0.3), 1.0), // Viền trắng mỏng
+          border(const Color(0xFFFFD6E0).withValues(alpha: 0.7), 1.2),
       focusedBorder:
-          border(Colors.white.withValues(alpha: 0.9), 1.5), // Sáng lên khi gõ
+          border(const Color(0xFFFF4B91), 1.6),
       errorBorder: border(SLColors.danger, 1.2),
       focusedErrorBorder: border(SLColors.danger, 1.5),
     );
@@ -950,47 +952,43 @@ class SLTheme {
     required VoidCallback? onPressed,
     bool isLoading = false,
     List<Color> colors = const <Color>[
-      SLColors.primary,
-      SLColors.primary,
-      SLColors.primary,
+      Color(0xFFFF4B91),
+      Color(0xFFFF69B4),
+      Color(0xFFFF4B91),
     ],
   }) {
     final bool isDisabled = onPressed == null;
     return Opacity(
-      opacity: isDisabled ? 0.65 : 1,
+      opacity: isDisabled ? 0.75 : 1,
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isDisabled
-                ? [const Color(0xFFE8D5C4), const Color(0xFFDCC8B5)]
-                : const [
-                    Color(0xFFD4956B),
-                    Color(0xFFC07A56)
-                  ], // Rose gold gradient ấm
+                ? const [Color(0xFFFFB6C1), Color(0xFFFFC0CB)]
+                : colors,
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(26),
           boxShadow: isDisabled
               ? []
               : [
                   BoxShadow(
-                    color: const Color(0xFFD4956B)
-                        .withValues(alpha: 0.4), // Glow shadow
-                    blurRadius: 24,
-                    spreadRadius: 2,
-                    offset: const Offset(0, 10),
+                    color: const Color(0xFFFF4B91).withValues(alpha: 0.38),
+                    blurRadius: 20,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 8),
                   ),
                 ],
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(26),
             onTap: onPressed,
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 18),
+              padding: const EdgeInsets.symmetric(vertical: 16),
               alignment: Alignment.center,
               child: isLoading
                   ? const SizedBox(
@@ -1006,7 +1004,7 @@ class SLTheme {
                       style: SLTheme.quicksand(
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
-                        fontSize: 17,
+                        fontSize: 16.5,
                         letterSpacing: 1.2,
                       ),
                     ),
@@ -1061,10 +1059,9 @@ class SLTheme {
             child: Text(
               trailing,
               style: SLTheme.quicksand(
-                fontSize: 10,
+                fontSize: 11,
                 color: trailingColor,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.8,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
@@ -1095,13 +1092,13 @@ class SLTheme {
     return Container(
       decoration: BoxDecoration(
         color: selected
-            ? const Color(0xFFF7EFEA).withValues(alpha: 0.98)
-            : const Color(0xFFF9F4EE).withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(16),
+            ? const Color(0xFFFFF0F5).withValues(alpha: 0.65)
+            : Colors.white.withValues(alpha: 0.50),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: selected
-              ? SLColors.primary.withValues(alpha: 0.42)
-              : const Color(0xFFE2D4C7),
+              ? const Color(0xFFFF4B91).withValues(alpha: 0.5)
+              : const Color(0xFFFFD6E0).withValues(alpha: 0.7),
           width: 1.3,
         ),
       ),

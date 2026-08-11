@@ -305,7 +305,7 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                             foregroundColor: Colors.white,
                             disabledBackgroundColor: Colors.transparent,
                             disabledForegroundColor:
-                                Colors.white.withOpacity(0.5),
+                                Colors.white.withValues(alpha: 0.5),
                             padding: const EdgeInsets.symmetric(vertical: 22),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(28),
@@ -682,7 +682,7 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                                     child: ValueListenableBuilder<int>(
                                       valueListenable: _dragVisualTick,
                                       builder: (BuildContext context, int _,
-                                          Widget? __) {
+                                          Widget? _) {
                                         return _buildBoardPanel();
                                       },
                                     ),
@@ -695,7 +695,7 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                                   child: ValueListenableBuilder<int>(
                                     valueListenable: _trayVisualTick,
                                     builder: (BuildContext context, int _,
-                                        Widget? __) {
+                                        Widget? _) {
                                       return _buildTrayPanel(
                                           compact: trayCompact);
                                     },

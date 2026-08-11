@@ -31,40 +31,10 @@ class AuthPanelShell extends StatelessWidget {
     final l10n = L10nService();
     final textScale = MediaQuery.textScalerOf(context).scale(1);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(32),
-      child: FastBackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        fallbackColor: Colors.white.withValues(alpha: 0.85),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 320),
-          curve: Curves.easeOutCubic,
-          decoration: BoxDecoration(
-            color:
-                Colors.white.withValues(alpha: 0.18), // Kính trong suốt Premium
-            borderRadius: BorderRadius.circular(36),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.4), // Viền kính sáng bóng
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-              color: const Color(0xFFC07A56).withValues(alpha: 0.08),
-                blurRadius: 40,
-                spreadRadius: 8,
-                offset: const Offset(0, 16),
-              ),
-              BoxShadow(
-                color: Colors.white.withValues(alpha: 0.4),
-                blurRadius: 24,
-                spreadRadius: -4,
-                offset: const Offset(0, -8),
-              ),
-            ],
-          ),
+    return Container(
           padding: EdgeInsets.fromLTRB(
             compact ? 18 : 28,
-            compact ? 22 : 28,
+            0,
             compact ? 18 : 28,
             compact ? 18 : 24,
           ),
@@ -78,19 +48,46 @@ class AuthPanelShell extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Center(
-                      child: ShaderMask(
-                        shaderCallback: (bounds) => LinearGradient(
-                          colors: const [Color(0xFFD4956B), Color(0xFFC07A56)],
-                        ).createShader(bounds),
-                        child: Text(
-                          'SoulLocket',
-                          style: SLTheme.quicksand(
-                            fontSize: compact ? 22 : 26,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: 1.2,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'SoulLocket',
+                                style: SLTheme.quicksand(
+                                  fontSize: compact ? 34 : 38,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFFFF4B91),
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Image.asset(
+                                'assets/icons/heart_lock.png',
+                                width: compact ? 28 : 32,
+                                height: compact ? 28 : 32,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Icon(
+                                  Icons.lock_person_rounded,
+                                  size: compact ? 30 : 34,
+                                  color: const Color(0xFFFF4B91),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '❤️ Nơi lưu giữ những khoảnh khắc yêu thương ❤️',
+                            textAlign: TextAlign.center,
+                            style: SLTheme.quicksand(
+                              fontSize: compact ? 13 : 14.5,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF7A6A73),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -152,14 +149,14 @@ class AuthPanelShell extends StatelessWidget {
                             Icon(
                               Icons.support_agent_rounded,
                               size: 13,
-                              color: const Color(0xFFC07A56).withValues(alpha: 0.7),
+                              color: const Color(0xFFFF4B91).withValues(alpha: 0.8),
                             ),
                             const SizedBox(width: 5),
                             Text(
                               l10n.translate('auth_sync_guide'),
                               style: SLTheme.quicksand(
                                 fontSize: 12,
-                                color: const Color(0xFFC07A56).withValues(alpha: 0.8),
+                                color: const Color(0xFFFF4B91).withValues(alpha: 0.9),
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
@@ -217,8 +214,6 @@ class AuthPanelShell extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
     );
   }
 }
@@ -242,32 +237,31 @@ class _AuthHelpButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = isGuide ? SLColors.primary : Colors.white;
-    final foreground = isGuide ? Colors.white : SLColors.textPrimary;
+    final foreground = isGuide ? Colors.white : const Color(0xFFFF4B91);
     final buttonChild = Container(
       decoration: BoxDecoration(
         gradient: isGuide
             ? const LinearGradient(
                 colors: [
-                  Color(0xFFD4956B),
-                  Color(0xFFC07A56),
+                  Color(0xFFFF4B91),
+                  Color(0xFFFF69B4),
                 ],
               )
             : null,
-        color: isGuide ? null : bgColor,
-        borderRadius: SLRadius.xlAll,
+        color: isGuide ? null : Colors.white.withValues(alpha: 0.68),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: isGuide
-              ? Colors.white.withValues(alpha: 0.2)
-              : Colors.white.withValues(alpha: 0.86),
-          width: 1.2,
+              ? Colors.white.withValues(alpha: 0.3)
+              : const Color(0xFFFFD6E0),
+          width: 1.3,
         ),
         boxShadow: [
           BoxShadow(
-            color: (isGuide ? const Color(0xFFD4956B) : SLColors.secondary)
-                .withValues(alpha: 0.14),
+            color: const Color(0xFFFF4B91)
+                .withValues(alpha: isGuide ? 0.28 : 0.08),
             blurRadius: 16,
-            offset: const Offset(0, 8),
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -275,7 +269,7 @@ class _AuthHelpButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: SLRadius.xlAll,
+          borderRadius: BorderRadius.circular(22),
           child: Padding(
             padding: EdgeInsets.symmetric(vertical: compact ? 12 : 14),
             child: Row(

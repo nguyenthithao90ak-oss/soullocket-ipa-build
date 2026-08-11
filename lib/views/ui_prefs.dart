@@ -38,6 +38,7 @@ class UiPrefsState {
   final String brandMarkKey;
   final List<String> homeBlockOrder;
   final bool homeShowTimer;
+  final String homeLayoutKey;
   final bool showAvatarFrameIcon;
   final String friendlyChatPersona;
 
@@ -70,6 +71,7 @@ class UiPrefsState {
     required this.brandMarkKey,
     required this.homeBlockOrder,
     required this.homeShowTimer,
+    required this.homeLayoutKey,
     required this.showAvatarFrameIcon,
     required this.friendlyChatPersona,
   });
@@ -103,6 +105,7 @@ class UiPrefsState {
     String? brandMarkKey,
     List<String>? homeBlockOrder,
     bool? homeShowTimer,
+    String? homeLayoutKey,
     bool? showAvatarFrameIcon,
     String? friendlyChatPersona,
   }) {
@@ -138,6 +141,7 @@ class UiPrefsState {
       brandMarkKey: brandMarkKey ?? this.brandMarkKey,
       homeBlockOrder: homeBlockOrder ?? this.homeBlockOrder,
       homeShowTimer: homeShowTimer ?? this.homeShowTimer,
+      homeLayoutKey: homeLayoutKey ?? this.homeLayoutKey,
       showAvatarFrameIcon: showAvatarFrameIcon ?? this.showAvatarFrameIcon,
       friendlyChatPersona: friendlyChatPersona ?? this.friendlyChatPersona,
     );
@@ -175,6 +179,7 @@ class UiPrefsState {
     brandMarkKey: SoulLocketBrand.defaultStyleKey,
     homeBlockOrder: ['highlight', 'map', 'insight'],
     homeShowTimer: false,
+    homeLayoutKey: 'classic',
     showAvatarFrameIcon: true,
     friendlyChatPersona: "",
   );
@@ -230,6 +235,7 @@ class UiPrefs {
   static const _kHomeShowTimerKey = 'il_home_show_timer';
   static const _kShowAvatarFrameIconKey = 'il_show_avatar_frame_icon';
   static const _kFriendlyChatPersonaKey = 'il_friendly_chat_persona';
+  static const _kHomeLayoutKey = 'il_home_layout_key';
 
   static final ValueNotifier<UiPrefsState> notifier =
       ValueNotifier<UiPrefsState>(UiPrefsState.defaults);
@@ -365,9 +371,7 @@ class UiPrefs {
     final avatarFrameKey = (prefs.getString(_kAvatarFrameKey) ??
             UiPrefsState.defaults.avatarFrameKey)
         .trim();
-    final countdownShapeKey = (prefs.getString(_kCountdownShapeKey) ??
-            UiPrefsState.defaults.countdownShapeKey)
-        .trim();
+    const countdownShapeKey = 'circle';
     final countdownStyleKey = (prefs.getString(_kCountdownStyleKey) ??
             UiPrefsState.defaults.countdownStyleKey)
         .trim();
@@ -389,6 +393,9 @@ class UiPrefs {
         (prefs.getString(_kCustomBackgroundUrlKey) ?? '').trim();
     final homeBlockOrder = prefs.getStringList(_kHomeBlockOrderKey) ??
         const ['highlight', 'map', 'insight'];
+    final homeLayoutKey = (prefs.getString(_kHomeLayoutKey) ??
+            UiPrefsState.defaults.homeLayoutKey)
+        .trim();
 
     notifier.value = _normalizeState(
       UiPrefsState(
@@ -442,6 +449,7 @@ class UiPrefs {
           prefs.getString(_kBrandMarkKey) ?? UiPrefsState.defaults.brandMarkKey,
         ),
         homeBlockOrder: homeBlockOrder,
+        homeLayoutKey: homeLayoutKey,
         homeShowTimer: prefs.getBool(_kHomeShowTimerKey) ??
             UiPrefsState.defaults.homeShowTimer,
         showAvatarFrameIcon: prefs.getBool(_kShowAvatarFrameIconKey) ??
@@ -528,6 +536,7 @@ class UiPrefs {
     await prefs.setBool(_kTransparentModeKey, normalized.transparentMode);
     await prefs.setString(_kBrandMarkKey, normalized.brandMarkKey);
     await prefs.setStringList(_kHomeBlockOrderKey, normalized.homeBlockOrder);
+    await prefs.setString(_kHomeLayoutKey, normalized.homeLayoutKey);
 
     try {
       unawaited(SettingsSyncService().backupSettingsToCloud());
@@ -578,6 +587,7 @@ class UiPrefs {
       transparentMode: state.transparentMode,
       brandMarkKey: SoulLocketBrand.normalizeStyleKey(state.brandMarkKey),
       homeBlockOrder: state.homeBlockOrder,
+      homeLayoutKey: _normalizeHomeLayoutKey(state.homeLayoutKey),
       homeShowTimer: state.homeShowTimer,
       showAvatarFrameIcon: state.showAvatarFrameIcon,
       friendlyChatPersona: state.friendlyChatPersona.trim(),
@@ -589,6 +599,19 @@ class UiPrefs {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_kHomeShowTimerKey, enabled);
     notifier.value = notifier.value.copyWith(homeShowTimer: enabled);
+  }
+
+  static String _normalizeHomeLayoutKey(String value) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'fullscreen') return 'fullscreen';
+    return 'classic';
+  }
+
+  static Future<void> setHomeLayoutKey(String layoutKey) async {
+    await ensureLoaded();
+    final key = _normalizeHomeLayoutKey(layoutKey);
+    if (notifier.value.homeLayoutKey == key) return;
+    await saveState(notifier.value.copyWith(homeLayoutKey: key));
   }
 
   static Future<void> setShowAvatarFrameIcon(bool enabled) async {

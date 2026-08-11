@@ -20,8 +20,7 @@ class HealthScreen extends StatefulWidget {
   State<HealthScreen> createState() => _HealthScreenState();
 }
 
-class _HealthScreenState extends State<HealthScreen>
-    with SingleTickerProviderStateMixin {
+class _HealthScreenState extends State<HealthScreen> {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
 
   DateTime? _lastDate;
@@ -31,17 +30,11 @@ class _HealthScreenState extends State<HealthScreen>
   bool _shareWithPartner = true;
   List<DateTime> _recentHistory = const [];
 
-  late AnimationController _animationController;
-
   StreamSubscription<DatabaseEvent>? _healthSub;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
     _checkInitialConsent();
     _loadHealthData();
   }
@@ -111,7 +104,6 @@ class _HealthScreenState extends State<HealthScreen>
   @override
   void dispose() {
     _healthSub?.cancel();
-    _animationController.dispose();
     super.dispose();
   }
 
@@ -220,49 +212,36 @@ class _HealthScreenState extends State<HealthScreen>
     final today = DateTime.now();
     final diffDays = today.difference(_lastDate!).inDays;
 
-    final dayInCycle = ((diffDays % _length) + _length) % _length;
-    final nextPeriodDays = _length - dayInCycle;
+    final safeLength = _length > 0 ? _length : 28;
+    final dayInCycle = ((diffDays % safeLength) + safeLength) % safeLength;
+    final nextPeriodDays = safeLength - dayInCycle;
 
     String phase = '';
-    String tip = '';
-    double progress = 0.0;
+    String fertility = 'Thấp 🍃';
+    Color phaseColor = const Color(0xFFFDE4ED);
 
     if (dayInCycle < _periodDays) {
-      phase = '🩸 Giai đoạn Hành kinh';
-      tip =
-          'Cơ thể có thể mệt hơn bình thường. Hãy ưu tiên nghỉ ngơi, uống nước ấm và chăm sóc nhẹ nhàng nhé.';
-      progress = (dayInCycle / _periodDays) * 0.25;
+      phase = 'Đang trong kỳ';
+      fertility = 'Rất thấp';
+      phaseColor = const Color(0xFFFFEBEE);
     } else if (dayInCycle < _length / 2 - 2) {
-      phase = '✨ Giai đoạn Nang trứng';
-      tip =
-          'Năng lượng đang quay trở lại. Đây là lúc phù hợp cho những hoạt động nhẹ nhàng, vui vẻ hoặc cùng nhau đi ra ngoài.';
-      progress = 0.25 +
-          ((dayInCycle - _periodDays) / (_length / 2 - 2 - _periodDays)) * 0.25;
+      phase = 'Giai đoạn An toàn';
+      fertility = 'Thấp 🍃';
+      phaseColor = const Color(0xFFFDE4ED);
     } else if (dayInCycle < _length / 2 + 2) {
-      phase = '🥚 Giai đoạn Rụng trứng';
-      tip =
-          'Đây thường là giai đoạn cảm xúc và năng lượng ổn hơn. Một lời khen hoặc buổi hẹn nhỏ sẽ rất hợp lúc này.';
-      progress = 0.50 + ((dayInCycle - (_length / 2 - 2)) / 4) * 0.25;
+      phase = 'Giai đoạn Rụng trứng';
+      fertility = 'Cao 🔥';
+      phaseColor = const Color(0xFFFFF3E0);
     } else {
-      phase = '🌙 Giai đoạn Hoàng thể (PMS)';
-
-      if (nextPeriodDays <= 2 && nextPeriodDays > 0) {
-        tip = '⚠️ Chú ý: Chỉ còn $nextPeriodDays ngày nữa là tới kỳ! \n\n'
-            'Hãy chuẩn bị trước một chút: nghỉ ngơi đủ, giữ ấm cơ thể và ưu tiên những cách quan tâm dịu dàng.';
-      } else {
-        tip =
-            'Tâm trạng có thể nhạy cảm hơn bình thường. Hãy kiên nhẫn, lắng nghe và ưu tiên sự dịu dàng trong cách quan tâm.';
-      }
-
-      progress = 0.75 +
-          ((dayInCycle - (_length / 2 + 2)) / (_length - (_length / 2 + 2))) *
-              0.25;
+      phase = 'Giai đoạn An toàn (PMS)';
+      fertility = 'Thấp 🍃';
+      phaseColor = const Color(0xFFF3E5F5);
     }
 
     return {
       'phase': phase,
-      'tip': tip,
-      'progress': progress.clamp(0.0, 1.0),
+      'phaseColor': phaseColor,
+      'fertility': fertility,
       'nextPeriodDays': nextPeriodDays,
     };
   }
@@ -282,63 +261,82 @@ class _HealthScreenState extends State<HealthScreen>
     }
   }
 
+  Widget _buildOutlinedText(String text, double fontSize, Color textColor, Color outlineColor, {FontWeight fontWeight = FontWeight.w900}) {
+    return Stack(
+      children: [
+        Text(
+          text,
+          style: SLTheme.quicksand(
+            fontSize: fontSize,
+            fontWeight: fontWeight,
+            color: outlineColor,
+            shadows: [
+              Shadow(offset: const Offset(-1.5, -1.5), color: outlineColor),
+              Shadow(offset: const Offset(1.5, -1.5), color: outlineColor),
+              Shadow(offset: const Offset(1.5, 1.5), color: outlineColor),
+              Shadow(offset: const Offset(-1.5, 1.5), color: outlineColor),
+            ],
+          ),
+        ),
+        Text(
+          text,
+          style: SLTheme.quicksand(
+            fontSize: fontSize,
+            fontWeight: fontWeight,
+            color: textColor,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cycleData = _calculateCycle();
 
     return Scaffold(
+      key: const ValueKey('health_screen_v2'),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(
-          'SỨC KHỎE & CHU KỲ',
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-            letterSpacing: 1.1,
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: ClipRect(
-          child: FastBackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.2),
-            ),
-          ),
-        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new,
-              color: Colors.white, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFFD81B60), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: SizedBox.expand(
         child: DecoratedBox(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFFFF80AB), Color(0xFFF06292)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              colors: [Color(0xFFFFF0F5), Color(0xFFFFE4E1)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
           child: SafeArea(
             child: SingleChildScrollView(
-              padding: SLSpacing.all20,
+              padding: const EdgeInsets.only(bottom: 40),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  _buildGlassDashboard(cycleData),
+                  SLSpacing.h8,
+                  _buildHeader(),
                   SLSpacing.h24,
                   if (!_hasConsent)
                     _buildConsentButton()
                   else ...[
-                    _buildSettingsSection(),
+                    _buildMainDashboard(cycleData),
+                    SLSpacing.h32,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _buildSettingsSection(),
+                    ),
                     SLSpacing.h24,
-                    _buildPrivacyAndNotesSection(),
-                    SLSpacing.h24,
-                    if (_lastDate != null) _buildForecastSection(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _buildPrivacyAndNotesSection(),
+                    ),
                   ]
                 ],
               ),
@@ -349,20 +347,48 @@ class _HealthScreenState extends State<HealthScreen>
     );
   }
 
+  Widget _buildHeader() {
+    return Column(
+      children: [
+        _buildOutlinedText('Theo dõi', 32, const Color(0xFFFF69B4), Colors.white, fontWeight: FontWeight.w900),
+        const SizedBox(height: 0),
+        _buildOutlinedText('Chu Kì', 48, const Color(0xFFD81B60), Colors.white, fontWeight: FontWeight.w900),
+        SLSpacing.h8,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.favorite, color: Color(0xFFFF80AB), size: 16),
+            const SizedBox(width: 8),
+            Text(
+              'Hiểu cơ thể – Yêu bản thân',
+              style: SLTheme.quicksand(
+                color: const Color(0xFF880E4F),
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.favorite, color: Color(0xFFFF80AB), size: 16),
+          ],
+        )
+      ],
+    );
+  }
+
   Widget _buildConsentButton() {
     return Center(
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFFE91E63),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          backgroundColor: const Color(0xFFD81B60),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(30),
           ),
         ),
         onPressed: _requestConsent,
         child: Text(
-          'Bật theo dõi chu kỳ',
+          'Bật tính năng theo dõi chu kỳ',
           style: SLTheme.quicksand(
             fontWeight: FontWeight.bold,
             fontSize: 16,
@@ -372,118 +398,233 @@ class _HealthScreenState extends State<HealthScreen>
     );
   }
 
-  Widget _buildGlassDashboard(Map<String, dynamic> cycleData) {
-    final availableWidth = MediaQuery.sizeOf(context).width - 40;
-    final outerSize = (availableWidth * 0.72).clamp(220.0, 280.0).toDouble();
-    final innerSize = (outerSize - 20).clamp(200.0, 260.0).toDouble();
-    final innerPadding = outerSize < 240 ? 18.0 : 24.0;
-    final phaseFontSize = outerSize < 240 ? 15.0 : 16.0;
-    final progressFontSize = outerSize < 240 ? 28.0 : 32.0;
-    final tipFontSize = outerSize < 240 ? 10.0 : 11.0;
-
-    return SizedBox(
-      width: outerSize,
-      height: outerSize,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Drop Shape Animation Background
-          AnimatedBuilder(
-            animation: _animationController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: WaterDropPainter(
-                  progress: cycleData['progress'] ?? 0.0,
-                  animationValue: _animationController.value,
-                ),
-                size: Size(outerSize, outerSize),
-              );
-            },
+  Widget _buildMainDashboard(Map<String, dynamic> cycleData) {
+    if (_lastDate == null) {
+      return Center(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFF80AB).withValues(alpha: 0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              )
+            ]
           ),
-          // Glass Dashboard Content
-          ClipRRect(
-            borderRadius: SLRadius.pillAll, // Circular to fit inside drop
-            child: Container(
-              width: innerSize,
-              height: innerSize,
-              padding: EdgeInsets.all(innerPadding),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.15),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+          child: Text(
+            'Vui lòng cài đặt\nngày bắt đầu chu kỳ.',
+            style: SLTheme.quicksand(
+              color: const Color(0xFFD81B60),
+              fontWeight: FontWeight.w800,
+              fontSize: 18,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+        // Outer Gradient Ring
+        Container(
+          width: 280,
+          height: 280,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFFB6C1), Color(0xFFE0B0FF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFF80AB).withValues(alpha: 0.3),
+                blurRadius: 30,
+                offset: const Offset(0, 15),
               ),
-              child: !_hasConsent
-                  ? Center(
-                      child: Text(
-                        'Vui lòng bật tính năng\ntheo dõi chu kỳ.',
-                        style: SLTheme.quicksand(
-                            color: Colors.white, fontWeight: FontWeight.w700),
-                        textAlign: TextAlign.center,
+            ],
+          ),
+          child: Center(
+            // Inner White Circle
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Ngày dự kiến',
+                    style: SLTheme.quicksand(
+                      color: const Color(0xFF880E4F),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFCE4EC),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'bắt đầu kỳ tiếp theo',
+                      style: SLTheme.quicksand(
+                        color: const Color(0xFFD81B60),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
                       ),
-                    )
-                  : _lastDate == null
-                      ? Center(
-                          child: Text(
-                            'Vui lòng cài đặt\nngày bắt đầu\nchu kỳ.',
-                            style: SLTheme.quicksand(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700),
-                            textAlign: TextAlign.center,
-                          ),
-                        )
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              cycleData['phase'],
-                              style: SLTheme.quicksand(
-                                fontSize: phaseFontSize,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            SLSpacing.h8,
-                            Text(
-                              cycleData['nextPeriodDays'] == 0
-                                  ? 'Hôm nay là kỳ mới! 🎉'
-                                  : '${cycleData['nextPeriodDays']} ngày nữa',
-                              style: SLTheme.quicksand(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white.withValues(alpha: 0.9),
-                              ),
-                            ),
-                            SLSpacing.h16,
-                            Text(
-                              '${(cycleData['progress'] * 100).toInt()}%',
-                              style: SLTheme.quicksand(
-                                fontSize: progressFontSize,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                              ),
-                            ),
-                            SLSpacing.h8,
-                            Expanded(
-                              child: SingleChildScrollView(
-                                child: Text(
-                                  cycleData['tip'],
-                                  style: SLTheme.quicksand(
-                                    color: Colors.white,
-                                    fontStyle: FontStyle.italic,
-                                    fontSize: tipFontSize,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    cycleData['nextPeriodDays'] == 0 ? 'Hôm nay' : '${cycleData['nextPeriodDays']}',
+                    style: SLTheme.quicksand(
+                      color: const Color(0xFFD81B60),
+                      fontWeight: FontWeight.w900,
+                      fontSize: cycleData['nextPeriodDays'] == 0 ? 32 : 72,
+                      height: 1.0,
+                    ),
+                  ),
+                  if (cycleData['nextPeriodDays'] != 0)
+                    Text(
+                      'ngày nữa',
+                      style: SLTheme.quicksand(
+                        color: const Color(0xFFD81B60),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3E5F5),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Khả năng thụ thai: ${cycleData['fertility']}',
+                      style: SLTheme.quicksand(
+                        color: const Color(0xFF6A1B9A),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ],
-      ),
+        ),
+        
+        // Top Ring Decor
+        Positioned(
+          top: -8,
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+            ),
+            child: Center(
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFFF80AB),
+                ),
+                child: Center(
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Bottom Status Pill
+        Positioned(
+          bottom: -20,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF80AB).withValues(alpha: 0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                )
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: cycleData['phaseColor'],
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.favorite_border, color: Color(0xFFD81B60), size: 16),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Cơ thể bạn đang ở giai đoạn\n${cycleData['phase']}',
+                  style: SLTheme.quicksand(
+                    color: const Color(0xFF880E4F),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Cute placeholder icon on the bottom right (replacing bunny)
+        Positioned(
+          bottom: 20,
+          right: -10,
+          child: Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF80AB).withValues(alpha: 0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                )
+              ]
+            ),
+            child: const Center(
+              child: Icon(Icons.pets, color: Color(0xFFFF80AB), size: 30),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -492,58 +633,65 @@ class _HealthScreenState extends State<HealthScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'CÀI ĐẶT CHU KỲ',
+          'Cài đặt chu kỳ',
           style: SLTheme.quicksand(
-              color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
+            color: const Color(0xFF4A4A4A),
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+          ),
         ),
-        SLSpacing.h16,
-        _buildGlassListTile(
+        SLSpacing.h12,
+        _buildListTile(
           title: 'Ngày bắt đầu kỳ gần nhất',
           subtitle: _lastDate == null
               ? 'Chưa chọn'
               : DateFormat('dd/MM/yyyy').format(_lastDate!),
           icon: Icons.calendar_today,
+          iconColor: const Color(0xFFFF80AB),
+          iconBgColor: const Color(0xFFFCE4EC),
           onTap: () => _selectDate(context),
         ),
-        SLSpacing.h16,
-        _buildGlassListTile(
+        SLSpacing.h12,
+        _buildListTile(
           title: 'Đánh dấu hôm nay là ngày bắt đầu kỳ',
           subtitle: 'Chạm nhanh để lưu mốc hôm nay',
           icon: Icons.bolt_rounded,
+          iconColor: const Color(0xFF9C27B0),
+          iconBgColor: const Color(0xFFF3E5F5),
           onTap: _markTodayAsPeriodStart,
         ),
-        if (Platform.isAndroid) ...[
-          SLSpacing.h16,
-          _buildPinWidgetTile(),
-        ],
-        SLSpacing.h16,
+        SLSpacing.h12,
         Row(
           children: [
             Expanded(
-              child: _buildGlassInput(
-                label: 'Độ dài (ngày)',
-                initialValue: _length.toString(),
-                onChanged: (val) {
+              child: _buildNumberCard(
+                label: 'Độ dài chu kỳ (ngày)',
+                value: _length.toString(),
+                onTap: () => _showEditDialog('Độ dài chu kỳ', _length.toString(), (val) {
                   final v = int.tryParse(val);
                   if (v != null && v >= 20 && v <= 45) {
                     _length = v;
                     _saveHealthData();
                   }
-                },
+                }),
+                icon: Icons.calendar_month,
+                iconColor: const Color(0xFFFF80AB),
               ),
             ),
-            SLSpacing.w16,
+            SLSpacing.w12,
             Expanded(
-              child: _buildGlassInput(
-                label: 'Số ngày kinh',
-                initialValue: _periodDays.toString(),
-                onChanged: (val) {
+              child: _buildNumberCard(
+                label: 'Số ngày kinh (ngày)',
+                value: _periodDays.toString(),
+                onTap: () => _showEditDialog('Số ngày kinh', _periodDays.toString(), (val) {
                   final v = int.tryParse(val);
                   if (v != null && v >= 2 && v <= 10) {
                     _periodDays = v;
                     _saveHealthData();
                   }
-                },
+                }),
+                icon: Icons.local_florist,
+                iconColor: const Color(0xFFBA68C8),
               ),
             ),
           ],
@@ -552,185 +700,184 @@ class _HealthScreenState extends State<HealthScreen>
     );
   }
 
-  Widget _buildPinWidgetTile() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFFF758C), // Coral Pink
-            Color(0xFFFF7EB3), // Soft Pink
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.9),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF758C).withValues(alpha: 0.45),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+  void _showEditDialog(String title, String initialValue, Function(String) onSave) {
+    String currentValue = initialValue;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(title, style: SLTheme.quicksand(fontWeight: FontWeight.bold, color: const Color(0xFFD81B60))),
+        content: TextField(
+          controller: TextEditingController(text: initialValue),
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
           ),
+          onChanged: (val) => currentValue = val,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Hủy', style: SLTheme.quicksand(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD81B60),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              onSave(currentValue);
+              Navigator.pop(ctx);
+            },
+            child: Text('Lưu', style: SLTheme.quicksand(color: Colors.white, fontWeight: FontWeight.bold)),
+          )
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () async {
-              final scaffoldMessenger = ScaffoldMessenger.of(context);
-              scaffoldMessenger.hideCurrentSnackBar();
-              scaffoldMessenger.showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Đang gửi yêu cầu... Nếu không thấy phản hồi, vui lòng nhấn giữ màn hình chính để tự thêm thủ công nhé! ✨',
+    );
+  }
+
+  Widget _buildListTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBgColor,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: iconBgColor,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  duration: Duration(seconds: 5),
+                  child: Icon(icon, color: iconColor, size: 24),
                 ),
-              );
-              await WidgetService.requestPinCycleWidget();
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
+                SLSpacing.w16,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: SLTheme.quicksand(
+                          color: const Color(0xFF243041),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
                         ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.add_to_home_screen_rounded,
-                      color: Color(0xFFFF758C),
-                      size: 22,
-                    ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: SLTheme.quicksand(
+                          color: const Color(0xFF757575),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
+                ),
+                const Icon(Icons.chevron_right, color: Color(0xFFBDBDBD)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNumberCard({
+    required String label,
+    required String value,
+    required VoidCallback onTap,
+    required IconData icon,
+    required Color iconColor,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: SLTheme.quicksand(
+                    color: const Color(0xFF4A4A4A),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Thêm tiện ích ra màn hình chính',
+                          value,
                           style: SLTheme.quicksand(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15,
+                            color: const Color(0xFFD81B60),
+                            fontWeight: FontWeight.w900,
+                            fontSize: 32,
+                            height: 1.0,
                           ),
                         ),
-                        const SizedBox(height: 3),
+                        const SizedBox(height: 4),
                         Text(
-                          'Ghim tiện ích Chu kỳ ra màn hình để xem nhanh',
+                          'Trung bình',
                           style: SLTheme.quicksand(
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: const Color(0xFF9E9E9E),
                             fontWeight: FontWeight.w600,
-                            fontSize: 12,
+                            fontSize: 11,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: Colors.white,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGlassListTile(
-      {required String title,
-      required String subtitle,
-      required IconData icon,
-      required VoidCallback onTap}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: SLSpacing.all16,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-        ),
-        child: InkWell(
-          onTap: onTap,
-          child: Row(
-            children: [
-              Icon(icon, color: Colors.white70),
-              SLSpacing.w16,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,
-                        style: SLTheme.quicksand(
-                            color: Colors.white, fontWeight: FontWeight.w700)),
-                    Text(subtitle,
-                        style: SLTheme.quicksand(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12)),
+                    Icon(icon, color: iconColor.withValues(alpha: 0.5), size: 36),
                   ],
                 ),
-              ),
-              const Icon(Icons.chevron_right, color: Colors.white70),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGlassInput(
-      {required String label,
-      required String initialValue,
-      required Function(String) onChanged}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.94),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: const Color(0xFFFF8AA0).withValues(alpha: 0.55),
-          ),
-        ),
-        child: TextFormField(
-          initialValue: initialValue,
-          keyboardType: TextInputType.number,
-          cursorColor: const Color(0xFFD81B60),
-          style: SLTheme.quicksand(
-            color: const Color(0xFF243041),
-            fontWeight: FontWeight.w700,
-          ),
-          decoration: InputDecoration(
-            labelText: label,
-            labelStyle: SLTheme.quicksand(
-              color: const Color(0xFFB55A73),
-              fontWeight: FontWeight.w600,
+              ],
             ),
-            border: InputBorder.none,
           ),
-          onChanged: onChanged,
         ),
       ),
     );
@@ -741,282 +888,105 @@ class _HealthScreenState extends State<HealthScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'RIÊNG TƯ & LƯU Ý',
+          'Riêng tư & Lưu ý',
           style: SLTheme.quicksand(
-              color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
+            color: const Color(0xFF4A4A4A),
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+          ),
         ),
-        SLSpacing.h16,
-        ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Chia sẻ với người ấy',
-                            style: SLTheme.quicksand(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 15,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _shareWithPartner
-                                ? 'Người ấy sẽ thấy dự báo và gợi ý chăm sóc.'
-                                : 'Chỉ bạn thấy thông tin này trên máy hiện tại.',
-                            style: SLTheme.quicksand(
-                              color: Colors.white.withValues(alpha: 0.82),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12.5,
-                              height: 1.35,
-                            ),
-                          ),
-                        ],
-                      ),
+        SLSpacing.h12,
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              )
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFCE4EC),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    Switch(
-                      value: _shareWithPartner,
-                      activeThumbColor: const Color(0xFFE91E63),
-                      onChanged: (value) {
-                        setState(() => _shareWithPartner = value);
-                        _saveHealthData();
-                      },
+                    child: const Icon(Icons.favorite, color: Color(0xFFFF80AB), size: 24),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Chia sẻ với người ấy',
+                          style: SLTheme.quicksand(
+                            color: const Color(0xFF243041),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Người ấy sẽ thấy dự báo và gợi ý chăm sóc.',
+                          style: SLTheme.quicksand(
+                            color: const Color(0xFF757575),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: _shareWithPartner,
+                    activeColor: Colors.white,
+                    activeTrackColor: const Color(0xFFFF80AB),
+                    onChanged: (value) {
+                      setState(() => _shareWithPartner = value);
+                      _saveHealthData();
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDF7F8),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFFFE0E8), style: BorderStyle.solid),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.lock, color: Color(0xFFFF80AB), size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Dữ liệu chu kỳ chỉ mang tính tham khảo, không thay thế lời khuyên y tế.',
+                        style: SLTheme.quicksand(
+                          color: const Color(0xFF880E4F),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(16),
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.16)),
-                  ),
-                  child: Text(
-                    'Dự báo chu kỳ chỉ mang tính tham khảo, không thay thế tư vấn y tế. Nếu chu kỳ bất thường kéo dài hoặc bạn thấy không ổn, hãy đi khám để được tư vấn chính xác hơn.',
-                    style: SLTheme.quicksand(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12.5,
-                      height: 1.45,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildForecastSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (_recentHistory.isNotEmpty) ...[
-          Text(
-            'LỊCH SỬ GẦN ĐÂY',
-            style: SLTheme.quicksand(
-                color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
-          ),
-          SLSpacing.h16,
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: _recentHistory
-                .map(
-                  (item) => Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.22)),
-                    ),
-                    child: Text(
-                      DateFormat('dd/MM/yyyy').format(item),
-                      style: SLTheme.quicksand(
-                          color: Colors.white, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                )
-                .toList(growable: false),
-          ),
-          SLSpacing.h24,
-        ],
-        Text(
-          'DỰ BÁO 3 KỲ TỚI',
-          style: SLTheme.quicksand(
-              color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
-        ),
-        SLSpacing.h16,
-        ...List.generate(3, (index) {
-          final nextDate =
-              _lastDate!.add(Duration(days: _length * (index + 1)));
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: ClipRRect(
-              borderRadius: SLRadius.lgAll,
-              child: FastBackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: SLRadius.lgAll,
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.2)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Tháng ${nextDate.month}:',
-                        style: SLTheme.quicksand(
-                            color: Colors.white, fontWeight: FontWeight.w700),
-                      ),
-                      Text(
-                        DateFormat('dd/MM/yyyy').format(nextDate),
-                        style: SLTheme.quicksand(
-                            color: Colors.white, fontWeight: FontWeight.w900),
-                      ),
-                    ],
-                  ),
-                ),
               ),
-            ),
-          );
-        }),
+            ],
+          ),
+        ),
       ],
     );
-  }
-}
-
-class WaterDropPainter extends CustomPainter {
-  final double progress;
-  final double animationValue;
-
-  WaterDropPainter({required this.progress, required this.animationValue});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final width = size.width;
-    final height = size.height;
-    final center = Offset(width / 2, height / 2);
-    final radius = width / 2;
-
-    // Define colors based on progress (phase)
-    Color dropColor;
-    if (progress < 0.25) {
-      dropColor = const Color(0xFFFF5252); // Red for period
-    } else if (progress < 0.5) {
-      dropColor = const Color(0xFFFF4081); // Pink for follicular
-    } else if (progress < 0.75) {
-      dropColor = const Color(0xFFE040FB); // Deep pink for ovulation
-    } else {
-      dropColor = const Color(0xFF7C4DFF); // Purple for luteal (PMS)
-    }
-
-    final paint = Paint()
-      ..color = dropColor.withValues(
-          alpha: 0.6 + 0.2 * math.sin(animationValue * 2 * math.pi))
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-
-    // Create a smooth water drop shape using cubic bezier curves
-    // Top point (the tip of the drop)
-    final topPoint = Offset(
-        center.dx,
-        center.dy -
-            radius * 1.2 +
-            (10 * math.sin(animationValue * 2 * math.pi)));
-
-    path.moveTo(topPoint.dx, topPoint.dy);
-
-    // Right curve
-    path.cubicTo(
-        center.dx + radius * 0.8,
-        center.dy - radius * 0.5,
-        center.dx + radius,
-        center.dy + radius * 0.2,
-        center.dx + radius,
-        center.dy + radius * 0.6);
-
-    // Bottom curve (semi-circle)
-    path.arcToPoint(
-      Offset(center.dx - radius, center.dy + radius * 0.6),
-      radius: Radius.circular(radius),
-      clockwise: false,
-    );
-
-    // Left curve
-    path.cubicTo(
-        center.dx - radius,
-        center.dy + radius * 0.2,
-        center.dx - radius * 0.8,
-        center.dy - radius * 0.5,
-        topPoint.dx,
-        topPoint.dy);
-
-    path.close();
-
-    // Add glowing effect
-    canvas.drawShadow(path, dropColor, 20, false);
-    canvas.drawPath(path, paint);
-
-    // Inner fill for wave effect
-    final wavePaint = Paint()
-      ..color = dropColor.withValues(alpha: 0.8)
-      ..style = PaintingStyle.fill;
-
-    final wavePath = Path();
-    final waveHeight =
-        height * (1 - progress) * 0.8; // Adjust water level based on progress
-
-    wavePath.moveTo(0, waveHeight);
-
-    // Draw animated waves
-    for (double i = 0; i <= width; i++) {
-      wavePath.lineTo(
-          i,
-          waveHeight +
-              15 *
-                  math.sin((i / width * 2 * math.pi) +
-                      (animationValue * 2 * math.pi)));
-    }
-
-    wavePath.lineTo(width, height);
-    wavePath.lineTo(0, height);
-    wavePath.close();
-
-    // Clip the wave to the drop shape
-    canvas.save();
-    canvas.clipPath(path);
-    canvas.drawPath(wavePath, wavePaint);
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant WaterDropPainter oldDelegate) {
-    return oldDelegate.progress != progress ||
-        oldDelegate.animationValue != animationValue;
   }
 }

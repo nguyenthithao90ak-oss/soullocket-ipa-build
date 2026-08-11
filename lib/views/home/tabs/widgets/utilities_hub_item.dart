@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -38,7 +40,7 @@ class UtilitiesHubItem extends StatelessWidget {
             onEditModeChanged(true);
           },
           onDragCompleted: HapticFeedback.lightImpact,
-          onDraggableCanceled: (_, __) => onEditModeChanged(false),
+          onDraggableCanceled: (_, _) => onEditModeChanged(false),
           onDragEnd: (_) => onEditModeChanged(false),
           feedback: _UtilitiesHubDragFeedback(app: app),
           childWhenDragging: AnimatedOpacity(
@@ -161,67 +163,38 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeOutCubic,
                   scale: isTarget ? 1.08 : 1.0,
-                  child: Container(
-                    width: 68,
-                    height: 68,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      gradient: LinearGradient(
-                        colors: [
-                          startColor,
-                          endColor,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: startColor.withValues(alpha: 0.42),
-                          blurRadius: 14,
-                          spreadRadius: -1,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: isDark ? 0.3 : 0.5),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(19),
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.white.withValues(alpha: 0.35),
-                                  Colors.white.withValues(alpha: 0.05),
-                                  Colors.transparent,
-                                ],
-                                stops: const [0.0, 0.35, 1.0],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                            ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      child: Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          // Nền kính mờ pha trộn với màu đặc trưng của từng icon
+                          color: startColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            width: 1.5,
                           ),
                         ),
-                        Center(
+                        child: Center(
                           child: buildUtilityStickerIcon(
                             utilityId: app.id,
                             fallbackIcon: iconData,
-                            fallbackColor: Colors.white,
+                            fallbackColor: startColor,
                             fallbackSize: 34,
                             padding: const EdgeInsets.all(6),
                             devicePixelRatio: dpr,
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               SizedBox(
                 height: 34,
                 child: Center(
@@ -232,19 +205,10 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
                       fontSize: 11.5,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white, // Always white text
-                      letterSpacing: 0.3,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF4A4A4A),
+                      letterSpacing: 0.2,
                       height: 1.15,
-                    ).copyWith(
-                      shadows: const [
-                        Shadow(
-                          color: Colors
-                              .black54, // Soft dark shadow for contrast on bright backgrounds
-                          blurRadius: 4,
-                          offset: Offset(0, 1),
-                        ),
-                      ],
                     ),
                   ),
                 ),

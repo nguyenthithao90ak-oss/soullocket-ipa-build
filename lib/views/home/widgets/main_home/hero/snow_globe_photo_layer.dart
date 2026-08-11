@@ -100,7 +100,7 @@ class _SnowGlobePhotoLayerState extends State<SnowGlobePhotoLayer>
     if (!mounted || _items.isEmpty) return;
 
     const dt = 1 / 60.0;
-    final double gravityMultiplier = 150.0;
+    const double gravityMultiplier = 150.0;
 
     for (var item in _items) {
       item.vx += _gravityX * gravityMultiplier * dt;

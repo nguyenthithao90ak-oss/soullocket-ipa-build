@@ -42,10 +42,9 @@ class AppEntryAccessResolver {
   AppEntryAccessResolver({
     AuthService? authService,
     HouseService? houseService,
-    required Future<SharedPreferences> Function() getPrefs,
+    required this._getPrefs,
   })  : _authService = authService ?? AuthService(),
-        _houseService = houseService ?? HouseService(),
-        _getPrefs = getPrefs;
+        _houseService = houseService ?? HouseService();
 
   final AuthService _authService;
   final HouseService _houseService;

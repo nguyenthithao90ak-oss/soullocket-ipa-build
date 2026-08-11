@@ -1502,7 +1502,7 @@ class _WavePainter extends CustomPainter {
       canvas.rotate(animationValue * pi * rotSpeed + i * 0.5);
 
       // 5 cánh hoa anh đào
-      final petalCount = 5;
+      const petalCount = 5;
       for (var p = 0; p < petalCount; p++) {
         canvas.save();
         canvas.rotate(p * 2 * pi / petalCount);
@@ -1595,7 +1595,7 @@ class _WavePainter extends CustomPainter {
       final tailLength = 50.0 + (i * 15);
       final angle = -pi / 4 - (i * 0.15);
       final originX = width * (0.2 + (i * 0.18) % 0.7);
-      final originY = -20.0;
+      const originY = -20.0;
 
       final headX = originX + progress * width * 0.8 * cos(angle + pi / 2);
       final headY = originY + progress * height * 1.3;
@@ -1781,11 +1781,11 @@ class _WavePainter extends CustomPainter {
       sunCenter,
       sunRadius,
       Paint()
-        ..shader = RadialGradient(
+        ..shader = const RadialGradient(
           colors: [
-            const Color(0xFFFFF9C4),
-            const Color(0xFFFFD54F),
-            const Color(0xFFFF9800),
+            Color(0xFFFFF9C4),
+            Color(0xFFFFD54F),
+            Color(0xFFFF9800),
           ],
         ).createShader(Rect.fromCircle(center: sunCenter, radius: sunRadius)),
     );

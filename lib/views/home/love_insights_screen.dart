@@ -6,7 +6,7 @@ import '../../utils/services/love_insight_service.dart';
 import '../../utils/services/offline_cache_service.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../core/sl_theme.dart';
-import 'package:soullocket_app/views/home/widgets/love_insights/walking_sticker_overlay.dart';
+import 'package:lottie/lottie.dart';
 
 part 'widgets/love_insights/insight_header_cards.dart';
 part 'widgets/love_insights/insight_stats_grid.dart';
@@ -20,6 +20,8 @@ class LoveInsightsScreen extends StatefulWidget {
   final String houseId;
   final String nameU1;
   final String nameU2;
+  final String avatarU1;
+  final String avatarU2;
   final int loveDays;
   final String relationshipMode;
 
@@ -28,6 +30,8 @@ class LoveInsightsScreen extends StatefulWidget {
     required this.houseId,
     required this.nameU1,
     required this.nameU2,
+    required this.avatarU1,
+    required this.avatarU2,
     required this.loveDays,
     required this.relationshipMode,
   });
@@ -44,7 +48,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
   String? _errorText;
 
   bool get _isSingle => widget.relationshipMode == 'single';
-  double get _contentHorizontalPadding => 14;
+  double get _contentHorizontalPadding => 16;
 
   @override
   void initState() {
@@ -100,72 +104,108 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8FB),
+      backgroundColor: const Color(0xFFFFF7FA),
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: const Color(0xFF23192C),
-        titleSpacing: 0,
-        title: Text(
-          _isSingle
-              ? L10nService().translate('insight_title_single')
-              : L10nService().translate('insight_title_couple'),
-          style: SLTheme.quicksand(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFF23192C),
+        scrolledUnderElevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: Center(
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.9),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF4F87).withValues(alpha: 0.10),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_rounded, size: 20),
+                color: const Color(0xFF332C35),
+                onPressed: () => Navigator.of(context).pop(),
+                padding: EdgeInsets.zero,
+              ),
+            ),
           ),
+        ),
+        titleSpacing: 4,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.favorite_rounded,
+              size: 18,
+              color: Color(0xFFFF4F87),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _isSingle
+                      ? L10nService().translate('insight_title_single')
+                      : L10nService().translate('insight_title_couple'),
+                  style: SLTheme.quicksand(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF332C35),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
       body: Stack(
         children: [
+          // ── Background gradient ──
           const Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color(0xFFFFF0F5),
-                    Color(0xFFFFE8F0),
-                    Color(0xFFF3E5FF),
+                    Color(0xFFFFF7FA),
+                    Color(0xFFFFEEF4),
+                    Color(0xFFF7EFFF),
                   ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  stops: [0.1, 0.5, 0.9],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: [0.0, 0.45, 1.0],
                 ),
               ),
             ),
           ),
+          // ── Decorative orbs ──
           Positioned(
-            top: -40,
-            right: -50,
-            child: _buildBackdropOrb(
-              size: 220,
-              colors: const [Color(0xFFFF94C2), Color(0xFFDCA3FF)],
-            ),
-          ),
-          Positioned(
-            left: -60,
-            top: 150,
+            top: -50,
+            right: -40,
             child: _buildBackdropOrb(
               size: 180,
-              colors: const [Color(0xFFFFB3CA), Color(0xFFFF9EB7)],
-              delayItem: 1500,
+              colors: const [Color(0xFFFFB3D0), Color(0xFFE8CCFF)],
             ),
           ),
           Positioned(
-            right: -20,
-            top: 400,
+            left: -50,
+            bottom: 200,
             child: _buildBackdropOrb(
               size: 140,
-              colors: const [Color(0xFFE8B2FF), Color(0xFFFFD1E3)],
-              delayItem: 800,
+              colors: const [Color(0xFFFFD1E3), Color(0xFFE9DDFF)],
+              delayItem: 1200,
             ),
           ),
+          // ── Content ──
           SafeArea(
             top: false,
             child: _buildContent(),
           ),
-          const WalkingStickerOverlay(),
         ],
       ),
     );
@@ -174,7 +214,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
   Widget _buildContent() {
     if (_isLoading && _insight == null) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xFFD81B60)),
+        child: CircularProgressIndicator(color: Color(0xFFFF4F87)),
       );
     }
 
@@ -188,7 +228,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
               Icon(
                 Icons.favorite_rounded,
                 size: 42,
-                color: const Color(0xFFD81B60).withValues(alpha: 0.8),
+                color: const Color(0xFFFF4F87).withValues(alpha: 0.8),
               ),
               SLSpacing.h12,
               Text(
@@ -204,7 +244,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
               FilledButton(
                 onPressed: _loadInsight,
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFD81B60),
+                  backgroundColor: const Color(0xFFFF4F87),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -227,26 +267,24 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
 
     final insight = _insight!;
     return RefreshIndicator(
-      color: const Color(0xFFD81B60),
+      color: const Color(0xFFFF4F87),
       onRefresh: _loadInsight,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.fromLTRB(
           _contentHorizontalPadding,
-          12,
+          MediaQuery.of(context).padding.top + kToolbarHeight + 8,
           _contentHorizontalPadding,
           30,
         ),
         children: [
+          if (!_isSingle) _buildCoupleAvatars(insight),
+          if (!_isSingle) SLSpacing.h16,
           _buildHeaderCard(insight),
           SLSpacing.h16,
           _buildDailyTipCard(insight),
           SLSpacing.h16,
           _buildStatsGrid(insight),
-          SLSpacing.h16,
-          _buildInteractionCard(insight),
-          SLSpacing.h16,
-          _buildOfflineCard(insight),
           SLSpacing.h16,
           if (_isSingle)
             _buildSingleFocusCard(insight)
@@ -277,13 +315,13 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
 
   BoxDecoration _softCardDecoration() {
     return BoxDecoration(
-      color: Colors.white.withValues(alpha: 0.75),
-      borderRadius: BorderRadius.circular(28),
+      color: Colors.white.withValues(alpha: 0.82),
+      borderRadius: BorderRadius.circular(24),
       border:
-          Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.2),
+          Border.all(color: Colors.white.withValues(alpha: 0.7), width: 1),
       boxShadow: [
         BoxShadow(
-          color: const Color(0xFFCEBCD0).withValues(alpha: 0.15),
+          color: const Color(0xFFFF4F87).withValues(alpha: 0.08),
           blurRadius: 20,
           offset: const Offset(0, 8),
         ),
@@ -292,10 +330,10 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
   }
 
   Color _scoreColor(int score) {
-    if (score >= 85) return const Color(0xFFD81B60);
-    if (score >= 70) return const Color(0xFFF57C00);
-    if (score >= 55) return const Color(0xFF7B1FA2);
-    return const Color(0xFF5C6BC0);
+    if (score >= 85) return const Color(0xFFFF4F87);
+    if (score >= 70) return const Color(0xFFFF6B9D);
+    if (score >= 55) return const Color(0xFF9B7AE8);
+    return const Color(0xFFFF85A2);
   }
 
   String _levelLabel(int score) {
@@ -396,7 +434,6 @@ class _FloatingOrbState extends State<_FloatingOrb>
   @override
   void initState() {
     super.initState();
-    // Khởi tạo animation, thời gian bồng bềnh là 3-4s tuỳ random
     _controller = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 3500));
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
@@ -422,7 +459,7 @@ class _FloatingOrbState extends State<_FloatingOrb>
       animation: _animation,
       builder: (context, child) {
         return Transform.translate(
-          offset: Offset(0, -20.0 * _animation.value),
+          offset: Offset(0, -16.0 * _animation.value),
           child: child,
         );
       },
@@ -434,7 +471,7 @@ class _FloatingOrbState extends State<_FloatingOrb>
             shape: BoxShape.circle,
             gradient: RadialGradient(
               colors: [
-                widget.colors.first.withValues(alpha: 0.8),
+                widget.colors.first.withValues(alpha: 0.5),
                 widget.colors.last.withValues(alpha: 0.0),
               ],
             ),

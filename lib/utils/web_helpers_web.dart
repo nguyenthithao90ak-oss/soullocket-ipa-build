@@ -128,7 +128,7 @@ Future<void> ensureGoogleMapsScriptReadyImpl(String apiKey) {
   } else {
     script = web.document.createElement('script') as web.HTMLScriptElement;
     script.src =
-        'https://maps.googleapis.com/maps/api/js?key=$apiKey&libraries=places';
+        'https://maps.googleapis.com/maps/api/jsif (key != null) key!=$apiKey&libraries=places';
     script.defer = true;
     script.async = true;
     script.setAttribute('data-sl-google-maps', '1');

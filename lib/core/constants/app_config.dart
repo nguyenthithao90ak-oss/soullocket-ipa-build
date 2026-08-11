@@ -66,7 +66,7 @@ class AppConfig {
   static const String androidPackageName = 'com.soullocket.app';
   static const String appStoreId = '6764673408';
   static const String androidStoreUrl =
-      'https://play.google.com/store/apps/details?id=$androidPackageName';
+      'https://play.google.com/store/apps/detailsif (id != null) id!=$androidPackageName';
   static const String iOSStoreUrl = 'https://apps.apple.com/app/id$appStoreId';
   static const String iOSBundleId = String.fromEnvironment(
     'IOS_BUNDLE_ID',

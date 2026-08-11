@@ -58,52 +58,26 @@ class _ModernHomeBody extends StatelessWidget {
       state: uiState,
       isWeb: kIsWeb,
     );
-    final showDecorGlow = !effectProfile.performanceMode;
+
+    // Fullscreen layout mode
+    if (uiState.homeLayoutKey == 'fullscreen') {
+      return _FullscreenHomeBody(
+        state: state,
+        isSingle: isSingle,
+        houseName: houseName,
+        circleValue: circleValue,
+        circleTopLabel: circleTopLabel,
+        circleBottomLabel: circleBottomLabel,
+        nameU1: nameU1,
+        nameU2: nameU2,
+        avtUser1: avtUser1,
+        avtUser2: avtUser2,
+        onOpenSettings: onOpenSettings,
+      );
+    }
 
     return Stack(
       children: [
-        Positioned.fill(
-          child: RepaintBoundary(
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFF2A1523).withValues(alpha: 0.18),
-                          const Color(0xFF5B2544).withValues(alpha: 0.12),
-                          const Color(0xFF120A11).withValues(alpha: 0.08),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned.fill(child: SLTheme.meshPattern()),
-                if (showDecorGlow) ...[
-                  Positioned(
-                    top: -88,
-                    right: -72,
-                    child: _HomeDecorGlow(
-                      size: 210,
-                      color: SLColors.primary.withValues(alpha: 0.20),
-                    ),
-                  ),
-                  Positioned(
-                    top: 250,
-                    left: -96,
-                    child: _HomeDecorGlow(
-                      size: 230,
-                      color: SLColors.secondary.withValues(alpha: 0.16),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
         LayoutBuilder(
           builder: (context, constraints) {
             final horizontalPadding = SLResponsive.horizontalPaddingForWidth(
@@ -352,31 +326,4 @@ class _ChatReminderBanner extends StatelessWidget {
   }
 }
 
-class _HomeDecorGlow extends StatelessWidget {
-  final double size;
-  final Color color;
 
-  const _HomeDecorGlow({
-    required this.size,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [
-              color,
-              color.withValues(alpha: 0.0),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

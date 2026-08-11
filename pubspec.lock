@@ -269,26 +269,26 @@ packages:
     dependency: "direct main"
     description:
       name: camera
-      sha256: cf8ed1789aa244392cfc49d13e97879700476ba641c92500e01f630e109c0f6c
+      sha256: "558230d6ce6ccea856b32d390db7e7b557adf4d9320aa614481bd3f2f608953f"
       url: "https://pub.dev"
     source: hosted
-    version: "0.11.0"
+    version: "0.12.0+2"
   camera_android_camerax:
     dependency: transitive
     description:
       name: camera_android_camerax
-      sha256: "8516fe308bc341a5067fb1a48edff0ddfa57c0d3cdcc9dbe7ceca3ba119e2577"
+      sha256: "294b02ae027ad9edc98414a25f5e958d2dc6c65e9f102f21e2b36f0f558751eb"
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.30"
+    version: "0.7.4+4"
   camera_avfoundation:
     dependency: transitive
     description:
       name: camera_avfoundation
-      sha256: "11b4aee2f5e5e038982e152b4a342c749b414aa27857899d20f4323e94cb5f0b"
+      sha256: "866e9cd8370f8055d005c0413937a52dc1d7a472687f0ee3ce02392955aababa"
       url: "https://pub.dev"
     source: hosted
-    version: "0.9.23+2"
+    version: "0.10.2"
   camera_platform_interface:
     dependency: transitive
     description:
@@ -561,6 +561,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
+  facebook_auth_desktop:
+    dependency: transitive
+    description:
+      name: facebook_auth_desktop
+      sha256: "9fcde1146914e9f46497d2b6053ea5865828b576a258be4e0193635f52176712"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.3"
   fake_async:
     dependency: transitive
     description:
@@ -633,6 +641,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.9.3+5"
+  firebase_analytics:
+    dependency: "direct main"
+    description:
+      name: firebase_analytics
+      sha256: a139dd0ada1c6e0ffd77bfdb877ac9061ffdec7c415e3e06113bdf8844db771f
+      url: "https://pub.dev"
+    source: hosted
+    version: "12.4.6"
+  firebase_analytics_platform_interface:
+    dependency: transitive
+    description:
+      name: firebase_analytics_platform_interface
+      sha256: "448c319ea895da002e43892c7d3f15dccbc3c4c3b81d3e307e37da885ea52bdf"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.6"
+  firebase_analytics_web:
+    dependency: transitive
+    description:
+      name: firebase_analytics_web
+      sha256: "67f287a0df75f27eafdd4a66a41e44f232c3aba713ea4794a1159893665a8bf5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.1+12"
   firebase_app_check:
     dependency: "direct main"
     description:
@@ -846,6 +878,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.4.2"
+  flutter_facebook_auth:
+    dependency: "direct main"
+    description:
+      name: flutter_facebook_auth
+      sha256: "393c87b4ffa6cc75d2f39239b8d6ebc9095725805016133f80d1d89adb84682d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.2.0"
+  flutter_facebook_auth_platform_interface:
+    dependency: transitive
+    description:
+      name: flutter_facebook_auth_platform_interface
+      sha256: e04b8dbfa77702bea45a79993163ad5d20b2c0084109bec591fdc2b9ee505779
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.1.2"
+  flutter_facebook_auth_web:
+    dependency: transitive
+    description:
+      name: flutter_facebook_auth_web
+      sha256: f682400d61cf8d52dd8b6458b5ee106ed57e95309a117dc32875d3da129ce47c
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.1.2"
   flutter_image_compress:
     dependency: "direct main"
     description:
@@ -991,18 +1047,18 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_secure_storage
-      sha256: "15e8c8fe269fdf7d469b23008ab3df521c8b826ed345820532364c31bdebace6"
+      sha256: "7686b1d6a29985dcbb808c59518226e603e3bfa7c0ddfd1a0d00e4cda77c868e"
       url: "https://pub.dev"
     source: hosted
-    version: "11.0.0"
+    version: "10.3.1"
   flutter_secure_storage_darwin:
     dependency: transitive
     description:
       name: flutter_secure_storage_darwin
-      sha256: ac6d76a752de0cd738334eb4b21743fc4943f449f5b6e308f18838b048c02ac0
+      sha256: "82329fa5cdf343773b1b6897dea959105a29f092454259edff92f9f6637e8149"
       url: "https://pub.dev"
     source: hosted
-    version: "0.4.0"
+    version: "0.3.2"
   flutter_secure_storage_linux:
     dependency: transitive
     description:
@@ -1073,10 +1129,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_webrtc
-      sha256: "0f89dee7f4c35dab5611f351c3897a3bfe9f7057720cc7da209b52455af4316e"
+      sha256: e997161d7da3adedd3d430691b20931b0b4d96fa48bb60938d9ba0bf6fca98be
       url: "https://pub.dev"
     source: hosted
-    version: "1.5.2"
+    version: "1.6.0"
   geoclue:
     dependency: transitive
     description:
@@ -1169,10 +1225,10 @@ packages:
     dependency: "direct main"
     description:
       name: go_router
-      sha256: "55973bf1b27790489f8710ea615fe939f911ddcc5986fe97305e4fc19fa29ee9"
+      sha256: d7a3576cb312649eaa51f2356450aed686085fb58fcdebda5b359aa951eef7ea
       url: "https://pub.dev"
     source: hosted
-    version: "17.4.0"
+    version: "17.5.0"
   google_fonts:
     dependency: "direct main"
     description:
@@ -1857,10 +1913,10 @@ packages:
     dependency: transitive
     description:
       name: permission_handler_apple
-      sha256: "11b7e94a9d2fbee23c27f0cae0105c6266c03fd83b9a2eda6cf09141fc82624b"
+      sha256: "9239ec1147f2b798fb162e6c5c8f05fddd52c74fcead997a12bd619ace11582c"
       url: "https://pub.dev"
     source: hosted
-    version: "9.5.0"
+    version: "9.6.0"
   permission_handler_html:
     dependency: transitive
     description:
@@ -2318,10 +2374,10 @@ packages:
     dependency: "direct main"
     description:
       name: table_calendar
-      sha256: "0c0c6219878b363a2d5f40c7afb159d845f253d061dc3c822aa0d5fe0f721982"
+      sha256: f276347cad425ef837a41e8d9ad43f3ee7d59227aa4c36d7430607a5a18fa3b3
       url: "https://pub.dev"
     source: hosted
-    version: "3.2.0"
+    version: "3.2.1"
   term_glyph:
     dependency: transitive
     description:

@@ -81,15 +81,15 @@ final List<_CountdownModeCenterIconPreset> _kCountdownModeCenterIconPresets = [
     gradient: [const Color(0xFFDDEBFF), const Color(0xFFF4F8FF)],
     accent: const Color(0xFF5B8DEF),
   ),
-  _CountdownModeCenterIconPreset(
+  const _CountdownModeCenterIconPreset(
     type: 'poop',
     label: 'Troll',
     emoji: '\u{1F4A9}',
     icon: Icons.bolt_rounded,
     assetPath:
         'assets/images/anhtomau_stickers/sticker_8.gif',
-    gradient: [const Color(0xFFFFE1B9), const Color(0xFFFFF4E6)],
-    accent: const Color(0xFFB96B2C),
+    gradient: [Color(0xFFFFE1B9), Color(0xFFFFF4E6)],
+    accent: Color(0xFFB96B2C),
   ),
 ];
 
@@ -921,7 +921,7 @@ class _CountdownModeCircle extends StatelessWidget {
               shape: SlCountdownShapes.getShapeBorderForKey(
                 countdownShapeKey,
                 side: (styleData.innerBorder is Border)
-                    ? (styleData.innerBorder as Border).top
+                    ? (styleData.innerBorder).top
                     : BorderSide.none,
               ),
               color: styleData.innerColor,
@@ -1131,8 +1131,7 @@ class FloatingHeartsRingOverlay extends StatefulWidget {
 
 class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  static const int _kCount = 75; // Tăng số lượng để nổi bật hơn
-
+  late final int _particleCount;
   late final List<_HeartParticle> _particles;
   late final AnimationController _animController;
   double _autoTiltX = 0.0;
@@ -1142,6 +1141,7 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _particleCount = UiPrefs.notifier.value.liteMode ? 15 : 75;
     _initParticles();
     _animController = AnimationController(
       vsync: this,
@@ -1200,7 +1200,7 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
       Icons.volunteer_activism, // Trái tim có tay
     ];
 
-    _particles = List.generate(_kCount, (i) {
+    _particles = List.generate(_particleCount, (i) {
       final jitter1 = ((rng ^ (i * 2654435761)) & 0xFFFF) / 0xFFFF;
       final jitter2 = ((rng ^ (i * 1234567)) & 0xFFFF) / 0xFFFF;
       final jitter3 = ((rng ^ (i * 9876543)) & 0xFFFF) / 0xFFFF;
@@ -1253,7 +1253,7 @@ class _FloatingHeartsRingOverlayState extends State<FloatingHeartsRingOverlay>
               child: ClipOval(
                 child: Stack(
                   clipBehavior: Clip.hardEdge,
-                  children: List.generate(_kCount, (i) {
+                  children: List.generate(_particleCount, (i) {
                     final p = _particles[i];
 
                     final double localProgress =

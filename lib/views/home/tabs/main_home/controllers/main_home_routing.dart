@@ -12,7 +12,8 @@ extension _MainHomeRouting on _MainHomeTabState {
         _houseSettings?['nameU2']?.toString().trim().isNotEmpty == true
             ? _houseSettings!['nameU2'].toString().trim()
             : context.tr('home_ngiy_5bab37');
-
+    final avtUser1 = _houseSettings?['avtUser1']?.toString() ?? '';
+    final avtUser2 = _houseSettings?['avtUser2']?.toString() ?? '';
     Navigator.push(
       context,
       SLRoute(
@@ -20,6 +21,8 @@ extension _MainHomeRouting on _MainHomeTabState {
           houseId: _houseId!,
           nameU1: nameU1,
           nameU2: nameU2,
+          avatarU1: avtUser1,
+          avatarU2: avtUser2,
           loveDays: _calculateDays(),
           relationshipMode:
               _houseSettings?['relationshipMode']?.toString() ?? 'single',

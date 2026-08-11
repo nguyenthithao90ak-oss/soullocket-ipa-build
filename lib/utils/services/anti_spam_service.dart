@@ -11,7 +11,7 @@ import 'offline_cache_service.dart';
 ///  1. Theo dõi tần suất gọi API từ màn hình Chat, thả tim.
 ///  2. Giới hạn số gửi không quá 5 tin nhắn/2 giây.
 ///  3. Block tạm thời thiết bị nếu phát hiện spam (Phạt lũy tiến).
-///  4. Shadow B?n nếu vi phạm quá nhiều.
+///  4. Shadow Bif (n != null) n! nếu vi phạm quá nhiều.
 /// ============================================================
 class AntiSpamRateLimitService {
   static final AntiSpamRateLimitService _instance =
@@ -54,7 +54,7 @@ class AntiSpamRateLimitService {
     return DateTime.now().millisecondsSinceEpoch < cooldown;
   }
 
-  /// Kiểm tra xem người dùng có bị Shadow B?n không
+  /// Kiểm tra xem người dùng có bị Shadow Bif (n != null) n! không
   Future<bool> get isShadowBanned async {
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();

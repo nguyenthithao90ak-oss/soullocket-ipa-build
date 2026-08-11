@@ -928,27 +928,66 @@ struct LockScreenWidgetView: View {
     var body: some View {
         switch family {
         case .accessoryRectangular:
-            VStack(spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(data.name1)
-                        .font(.system(size: 34, weight: .black))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.4)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
+            VStack(spacing: 2) {
+                // Top: Soul Merge branding
+                HStack(spacing: 3) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 8, weight: .semibold))
+                    Text("Soul Merge")
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .tracking(0.5)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .opacity(0.7)
+                
+                // Middle: Avatar + Name ❤️ Avatar + Name
+                HStack(spacing: 4) {
+                    // Person 1: avatar + name
+                    HStack(spacing: 3) {
+                        if let path = data.avatar1Path, let img = downsampleImage(at: path, to: CGSize(width: 36, height: 36)) {
+                            Image(uiImage: img)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 18, height: 18)
+                                .clipShape(Circle())
+                        } else {
+                            Image(systemName: "person.circle.fill")
+                                .font(.system(size: 16))
+                        }
+                        Text(data.name1)
+                            .font(.system(size: 15, weight: .heavy, design: .rounded))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                     
                     Image(systemName: "heart.fill")
-                        .font(.system(size: 16))
+                        .font(.system(size: 10))
                     
-                    Text(data.name2)
-                        .font(.system(size: 34, weight: .black))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.4)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    // Person 2: avatar + name
+                    HStack(spacing: 3) {
+                        if let path = data.avatar2Path, let img = downsampleImage(at: path, to: CGSize(width: 36, height: 36)) {
+                            Image(uiImage: img)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 18, height: 18)
+                                .clipShape(Circle())
+                        } else {
+                            Image(systemName: "person.circle.fill")
+                                .font(.system(size: 16))
+                        }
+                        Text(data.name2)
+                            .font(.system(size: 15, weight: .heavy, design: .rounded))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 
+                // Bottom: Days counter
                 let numberStr = data.resolvedDaysText(referenceDate: date)
                 Text(numberStr)
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
             }
@@ -1352,21 +1391,45 @@ struct LockScreenSoulMergeWidgetView: View {
     let data: CoupleWidgetData
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Image(systemName: "heart.text.square.fill")
-                    .font(.system(size: 14))
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 5) {
+                // Avatar of sender
+                if let path = senderAvatarPath, let img = downsampleImage(at: path, to: CGSize(width: 32, height: 32)) {
+                    Image(uiImage: img)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 16, height: 16)
+                        .clipShape(Circle())
+                } else {
+                    Image(systemName: "person.circle.fill")
+                        .font(.system(size: 14))
+                }
                 Text(data.soulMergeSenderName)
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .lineLimit(1)
                 Spacer()
+                Image(systemName: "sparkles")
+                    .font(.system(size: 9))
+                    .opacity(0.6)
             }
             Text(data.soulMergeMessage)
-                .font(.system(size: 13))
+                .font(.system(size: 12, weight: .medium, design: .rounded))
                 .lineLimit(2)
                 .truncationMode(.tail)
+                .opacity(0.85)
             Spacer(minLength: 0)
         }
         .padding(4)
+    }
+
+    private var senderAvatarPath: String? {
+        // If sender name matches name1, use avatar1; otherwise avatar2
+        let sender = data.soulMergeSenderName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        let n1 = data.name1.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        if sender == n1 {
+            return data.avatar1Path
+        }
+        return data.avatar2Path
     }
 }
 

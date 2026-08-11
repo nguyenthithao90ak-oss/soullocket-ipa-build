@@ -106,20 +106,20 @@ class DiaryTabSectionSwitcher extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Container(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.35),
+          color: Colors.white.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 16,
               offset: const Offset(0, 4),
             )
           ],
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.6),
-            width: 1.5,
+            color: Colors.white.withValues(alpha: 0.8),
+            width: 1,
           ),
         ),
         child: Row(
@@ -176,16 +176,23 @@ class _DiarySegmentBtn extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: active ? Colors.white : Colors.transparent,
+          gradient: active
+              ? const LinearGradient(
+                  colors: [Colors.white, Color(0xFFF8FAFC)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                )
+              : null,
+          color: active ? null : Colors.transparent,
           borderRadius: BorderRadius.circular(24),
           boxShadow: active
               ? [
                   BoxShadow(
-                    color: activeShadowColor.withValues(alpha: 0.18),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: activeShadowColor.withValues(alpha: 0.12),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ]
               : null,
@@ -194,12 +201,11 @@ class _DiarySegmentBtn extends StatelessWidget {
         child: Text(
           label,
           style: SLTheme.quicksand(
-            fontWeight: active ? FontWeight.w900 : FontWeight.w700,
-            fontSize: 14.5,
+            fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+            fontSize: 14.0,
             color: active
                 ? activeColor
-                : SLColors.textPrimary.withValues(alpha: 0.55),
-            letterSpacing: 0.3,
+                : const Color(0xFF718096),
           ),
         ),
       ),

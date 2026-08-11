@@ -77,221 +77,240 @@ extension _InsightTimelineSectionExt on _LoveInsightsScreenState {
   Widget _buildTimelineSection(LoveInsightData insight) {
     final visibleTimeline = _buildVisibleTimeline(insight.timeline);
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
-      decoration: _softCardDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildCardTitle(
-            icon: Icons.timeline_rounded,
-            title: _isSingle
-                ? context.tr('home_dngthigian_231147')
-                : context.tr('home_dngthigian_a93fc5'),
-            subtitle: _isSingle
-                ? context.tr('home_nhngctmcvs_f144c1')
-                : context.tr('home_ccmcquantr_89a221'),
-          ),
-          SLSpacing.h12,
-          if (insight.timeline.isEmpty)
-            Container(
-              width: double.infinity,
-              padding: SLSpacing.all16,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF9FAFC),
-                borderRadius: SLRadius.lgAll,
-                border: Border.all(color: const Color(0xFFE8EAF0)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── Timeline header ──
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.favorite_rounded,
+                color: Color(0xFFFF4F87),
+                size: 20,
               ),
-              child: Text(
-                _isSingle
-                    ? context.tr('home_chacctmcno_6d2fc1')
-                    : context.tr('home_chacknimno_aa5b75'),
-                style: SLTheme.quicksand(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  height: 1.55,
-                  color: const Color(0xFF7A7480),
+              SLSpacing.w8,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isSingle
+                          ? context.tr('home_dngthigian_231147')
+                          : context.tr('home_dngthigian_a93fc5'),
+                      style: SLTheme.quicksand(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF332C35),
+                      ),
+                    ),
+                    Text(
+                      _isSingle
+                          ? context.tr('home_nhngctmcvs_f144c1')
+                          : context.tr('home_ccmcquantr_89a221'),
+                      style: SLTheme.quicksand(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF8D8490),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            )
-          else
-            ...visibleTimeline.map(_buildTimelineItem),
-        ],
-      ),
+            ],
+          ),
+        ),
+        SLSpacing.h16,
+        if (insight.timeline.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: SLSpacing.all16,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFEEF4),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              _isSingle
+                  ? context.tr('home_chacctmcno_6d2fc1')
+                  : context.tr('home_chacknimno_aa5b75'),
+              style: SLTheme.quicksand(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                height: 1.55,
+                color: const Color(0xFF8D8490),
+              ),
+            ),
+          )
+        else
+          ...visibleTimeline.asMap().entries.map(
+                (e) => _buildTimelineItem(e.value, isLast: e.key == visibleTimeline.length - 1),
+              ),
+      ],
     );
   }
 
-  Widget _buildTimelineItem(_TimelineDisplayEntry item) {
+  Widget _buildTimelineItem(_TimelineDisplayEntry item, {bool isLast = false}) {
     final entry = item.entry;
     final dateText = DateFormat('dd/MM/yyyy').format(entry.date);
-    final baseAccent =
-        entry.isCustom ? const Color(0xFF9C27B0) : const Color(0xFFD81B60);
     final isCurrent = item.state == _TimelineEntryState.current;
     final isUpcoming = item.state == _TimelineEntryState.upcoming;
-    final accent = isCurrent
-        ? const Color(0xFFF26A3D)
+
+    final nodeColor = isCurrent
+        ? const Color(0xFFFF4F87)
         : isUpcoming
-            ? const Color(0xFFC4BDCC)
-            : baseAccent;
-    final cardColor = isCurrent
-        ? const Color(0xFFFFF6F0)
+            ? const Color(0xFFE9DDFF)
+            : const Color(0xFFFFB3D0);
+    final cardBg = isCurrent
+        ? Colors.white
         : isUpcoming
-            ? Colors.white.withValues(alpha: 0.55)
-            : Colors.white.withValues(alpha: 0.88);
+            ? Colors.white.withValues(alpha: 0.6)
+            : Colors.white.withValues(alpha: 0.85);
     final borderColor = isCurrent
-        ? const Color(0xFFFFD7C5)
+        ? const Color(0xFFFFDCE8)
         : isUpcoming
-            ? const Color(0xFFE6E1EB)
-            : baseAccent.withValues(alpha: 0.14);
+            ? const Color(0xFFE9DDFF)
+            : const Color(0xFFFFDCE8).withValues(alpha: 0.5);
     final titleColor =
-        isUpcoming ? const Color(0xFF8F8998) : const Color(0xFF233041);
+        isUpcoming ? const Color(0xFFBDB5C2) : const Color(0xFF332C35);
     final subtitleColor =
-        isUpcoming ? const Color(0xFFA8A2AF) : const Color(0xFF837C88);
-    final dateColor = isCurrent
-        ? const Color(0xFFF26A3D)
-        : isUpcoming
-            ? const Color(0xFFBBB5C3)
-            : const Color(0xFF9B98A1);
+        isUpcoming ? const Color(0xFFBDB5C2) : const Color(0xFF8D8490);
     final badgeText = isCurrent
         ? context.tr('home_hinti_d6af47')
         : isUpcoming
             ? context.tr('home_kha_171aa7')
             : context.tr('home_qua_8ff9a0');
+    final badgeBg = isCurrent
+        ? const Color(0xFFFFEEF4)
+        : isUpcoming
+            ? const Color(0xFFF3EEFF)
+            : const Color(0xFFFFEEF4);
+    final badgeColor = isCurrent
+        ? const Color(0xFFFF4F87)
+        : isUpcoming
+            ? const Color(0xFF9B7AE8)
+            : const Color(0xFFFF85A2);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+    return IntrinsicHeight(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // ── Timeline line + node ──
           SizedBox(
-            width: 64,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                dateText,
-                textAlign: TextAlign.right,
-                style: SLTheme.quicksand(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                  color: dateColor,
+            width: 32,
+            child: Column(
+              children: [
+                // Node
+                Container(
+                  width: isCurrent ? 16 : 12,
+                  height: isCurrent ? 16 : 12,
+                  decoration: BoxDecoration(
+                    color: nodeColor,
+                    shape: BoxShape.circle,
+                    border: isUpcoming
+                        ? Border.all(color: const Color(0xFF9B7AE8).withValues(alpha: 0.3), width: 2)
+                        : null,
+                    boxShadow: isCurrent
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFFFF4F87).withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: isCurrent
+                      ? const Icon(Icons.favorite_rounded, size: 9, color: Colors.white)
+                      : null,
                 ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: SLRadius.lgAll,
-                border: Border.all(color: borderColor),
-                boxShadow: isCurrent
-                    ? [
-                        BoxShadow(
-                          color:
-                              const Color(0xFFF26A3D).withValues(alpha: 0.10),
-                          blurRadius: 14,
-                          offset: const Offset(0, 6),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned(
-                    left: -19,
-                    top: 6,
+                // Line
+                if (!isLast)
+                  Expanded(
                     child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: isUpcoming ? Colors.white : accent,
-                        shape: BoxShape.circle,
-                        border: isUpcoming
-                            ? Border.all(
-                                color: const Color(0xFFD5CFDD),
-                                width: 1.4,
-                              )
-                            : null,
-                        boxShadow: [
-                          BoxShadow(
-                            color: accent.withValues(alpha: 0.25),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
+                      width: 2,
+                      color: const Color(0xFFFF8FB3).withValues(alpha: 0.3),
                     ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 9,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isCurrent
-                                  ? const Color(0xFFFFE8DC)
-                                  : isUpcoming
-                                      ? const Color(0xFFF3F0F6)
-                                      : accent.withValues(alpha: 0.10),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              badgeText,
-                              style: SLTheme.quicksand(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w900,
-                                color: accent,
-                              ),
+              ],
+            ),
+          ),
+          SLSpacing.w8,
+          // ── Event card ──
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: cardBg,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: borderColor, width: 1),
+                  boxShadow: isCurrent
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFFFF4F87).withValues(alpha: 0.08),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        // Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: badgeBg,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            badgeText,
+                            style: SLTheme.quicksand(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w900,
+                              color: badgeColor,
                             ),
                           ),
-                          const Spacer(),
-                          if (isCurrent) const _TimelineFlameBadge(),
-                          if (isUpcoming)
-                            Opacity(
-                              opacity: 0.55,
-                              child: Icon(
-                                Icons.lock_rounded,
-                                size: 18,
-                                color: accent,
-                              ),
-                            ),
-                          if (!isCurrent && !isUpcoming)
-                            Icon(
-                              Icons.verified_rounded,
-                              size: 18,
-                              color: accent.withValues(alpha: 0.8),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        entry.title,
-                        style: SLTheme.quicksand(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w900,
-                          color: titleColor,
                         ),
-                      ),
-                      SLSpacing.h4,
-                      Text(
-                        entry.subtitle,
-                        style: SLTheme.quicksand(
-                          fontSize: 11.8,
-                          fontWeight: FontWeight.w800,
-                          color: subtitleColor,
+                        const Spacer(),
+                        Text(
+                          dateText,
+                          style: SLTheme.quicksand(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: subtitleColor,
+                          ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      entry.title,
+                      style: SLTheme.quicksand(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w900,
+                        color: titleColor,
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    SLSpacing.h4,
+                    Text(
+                      entry.subtitle,
+                      style: SLTheme.quicksand(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: subtitleColor,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -318,7 +337,6 @@ class _TimelineFlameBadgeState extends State<_TimelineFlameBadge>
   @override
   void initState() {
     super.initState();
-    // ⚡ Delay animation start by 3s to reduce initial app startup lag
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) _controller.repeat(reverse: true);
     });
@@ -343,12 +361,12 @@ class _TimelineFlameBadgeState extends State<_TimelineFlameBadge>
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFFFF9A6A), Color(0xFFFF5B6E)],
+                colors: [Color(0xFFFF85A2), Color(0xFFFF4F87)],
               ),
               borderRadius: BorderRadius.circular(999),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFF5B6E).withValues(alpha: glow),
+                  color: const Color(0xFFFF4F87).withValues(alpha: glow),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),

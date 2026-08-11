@@ -308,6 +308,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
     _hideInteractionDragOverlay();
   }
 
+  // sticker bắn
   void _showInteractionDragOverlay(Offset globalPosition) {
     _hideInteractionDragOverlay();
     final overlay = Overlay.of(context, rootOverlay: true);
@@ -953,7 +954,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               const SizedBox(height: 12),
               TextField(
                 controller: controller,
-                maxLength: 22,
+                maxLength: 24,
                 textAlign: TextAlign.center,
                 textCapitalization: editTopLabel
                     ? TextCapitalization.characters
@@ -964,7 +965,6 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                 ),
                 decoration: InputDecoration(
                   hintText: hintText,
-                  counterText: '',
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,

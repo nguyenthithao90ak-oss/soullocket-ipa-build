@@ -1,6 +1,107 @@
 part of '../../love_insights_screen.dart';
 
 extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
+  // ── Couple Avatars ──
+  Widget _buildCoupleAvatars(LoveInsightData insight) {
+    final name1 = insight.nameU1.isNotEmpty ? insight.nameU1 : widget.nameU1;
+    final name2 = insight.nameU2.isNotEmpty ? insight.nameU2 : widget.nameU2;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildAvatarCircle(name1, widget.avatarU1, isUser1: true),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.favorite_rounded,
+                  color: Color(0xFFFF4F87),
+                  size: 24,
+                ),
+                const SizedBox(height: 2),
+                Container(
+                  width: 40,
+                  height: 2,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFF4F87), Color(0xFF9B7AE8)],
+                    ),
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _buildAvatarCircle(name2, widget.avatarU2, isUser1: false),
+        ],
+      ),
+    ).animate().fade(duration: 500.ms).slideY(begin: -0.1, end: 0, duration: 500.ms, curve: Curves.easeOut);
+  }
+
+  Widget _buildAvatarCircle(String name, String avatarUrl, {required bool isUser1}) {
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final fallbackAsset = isUser1 
+        ? 'assets/images/male_avatar_sticker.json' 
+        : 'assets/images/female_avatar_sticker.json';
+        
+    return Column(
+      children: [
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFFDCE8), Color(0xFFE9DDFF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            border: Border.all(
+              color: const Color(0xFFFF4F87).withValues(alpha: 0.3),
+              width: 2.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFF4F87).withValues(alpha: 0.15),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+            image: avatarUrl.trim().isNotEmpty
+                ? DecorationImage(
+                    image: NetworkImage(avatarUrl.trim()),
+                    fit: BoxFit.cover,
+                  )
+                : null,
+          ),
+          child: avatarUrl.trim().isEmpty
+              ? ClipOval(
+                  child: Lottie.asset(
+                    fallbackAsset,
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : null,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: SLTheme.quicksand(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: const Color(0xFF332C35),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Hero Card ──
   Widget _buildHeaderCard(LoveInsightData insight) {
     final scoreColor = _scoreColor(insight.loveScore);
     final progress = _progressToNextLevel(insight.loveScore);
@@ -14,34 +115,26 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
     final levelLabel = _levelLabel(insight.loveScore);
 
     return Container(
-      padding: SLSpacing.all20,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white, width: 2),
+        border: Border.all(
+          color: const Color(0xFFFFDCE8).withValues(alpha: 0.6),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFD81B60).withValues(alpha: 0.18),
+            color: const Color(0xFFFF4F87).withValues(alpha: 0.12),
             blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-          BoxShadow(
-            color: const Color(0xFFFFA6C9).withValues(alpha: 0.25),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-          const BoxShadow(
-            color: Colors.white,
-            blurRadius: 4,
-            offset: Offset(0, -2),
-            spreadRadius: 1,
-            blurStyle: BlurStyle.inner,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Score + Days side by side ──
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -52,9 +145,9 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                     Text(
                       scoreTitle,
                       style: SLTheme.quicksand(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF76717A),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF8D8490),
                         letterSpacing: 0.2,
                       ),
                     ),
@@ -69,18 +162,15 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                           curve: Curves.easeOutCubic,
                           builder: (context, value, child) {
                             return ShaderMask(
-                              shaderCallback: (bounds) => LinearGradient(
-                                colors: [
-                                  scoreColor.withValues(alpha: 0.8),
-                                  scoreColor
-                                ],
+                              shaderCallback: (bounds) => const LinearGradient(
+                                colors: [Color(0xFFFF4F87), Color(0xFF9B7AE8)],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ).createShader(bounds),
                               child: Text(
                                 '${value.toInt()}',
                                 style: SLTheme.quicksand(
-                                  fontSize: 64,
+                                  fontSize: 58,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                   height: 0.9,
@@ -94,32 +184,26 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                           child: Text(
                             '/100',
                             style: SLTheme.quicksand(
-                              fontSize: 20,
+                              fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFF908C99),
+                              color: const Color(0xFFBDB5C2),
                             ),
                           ),
                         ),
                       ],
-                    )
-                        .animate(
-                            onPlay: (controller) =>
-                                controller.repeat(reverse: true))
-                        .scaleXY(
-                            end: 1.02,
-                            duration: 1000.ms,
-                            curve: Curves.easeInOutSine),
-                    SLSpacing.h12,
+                    ),
+                    SLSpacing.h10,
+                    // ── Level badge ──
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
+                        horizontal: 12,
+                        vertical: 7,
                       ),
                       decoration: BoxDecoration(
-                        color: scoreColor.withValues(alpha: 0.10),
+                        color: const Color(0xFFFFEEF4),
                         borderRadius: SLRadius.pillAll,
                         border: Border.all(
-                          color: scoreColor.withValues(alpha: 0.2),
+                          color: const Color(0xFFFFDCE8),
                           width: 1,
                         ),
                       ),
@@ -130,16 +214,18 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                             _isSingle
                                 ? Icons.local_fire_department_rounded
                                 : Icons.favorite_rounded,
-                            size: 16,
-                            color: scoreColor,
+                            size: 15,
+                            color: const Color(0xFFFF4F87),
                           ),
                           SLSpacing.w8,
-                          Text(
-                            levelLabel,
-                            style: SLTheme.quicksand(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w900,
-                              color: scoreColor,
+                          Flexible(
+                            child: Text(
+                              levelLabel,
+                              style: SLTheme.quicksand(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFFFF4F87),
+                              ),
                             ),
                           ),
                         ],
@@ -148,47 +234,32 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                   ],
                 ),
               ),
-              SLSpacing.w16,
+              SLSpacing.w12,
+              // ── Days badge ──
               Container(
-                width: 110,
+                width: 100,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 8,
-                  vertical: 18,
+                  vertical: 16,
                 ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Colors.white, Color(0xFFFFF0F7)],
+                    colors: [Color(0xFFFFF7FA), Color(0xFFFFEEF4)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white, width: 2.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFD81B60).withValues(alpha: 0.15),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
-                    ),
-                    BoxShadow(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      blurRadius: 4,
-                      offset: const Offset(0, -2),
-                      spreadRadius: 1,
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color: const Color(0xFFFFDCE8),
+                    width: 1.5,
+                  ),
                 ),
                 child: Column(
                   children: [
-                    Text(
-                      _isSingle
-                          ? L10nService().translate('home_ngydng_ea4a15')
-                          : L10nService().translate('home_ngyyu_caafdc'),
-                      textAlign: TextAlign.center,
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF9B82A1),
-                      ),
+                    Icon(
+                      Icons.favorite_rounded,
+                      size: 16,
+                      color: const Color(0xFFFF4F87).withValues(alpha: 0.6),
                     ),
                     SLSpacing.h8,
                     TweenAnimationBuilder<double>(
@@ -198,14 +269,14 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                       builder: (context, value, child) {
                         return ShaderMask(
                           shaderCallback: (bounds) => const LinearGradient(
-                            colors: [Color(0xFFD81B60), Color(0xFF8E24AA)],
+                            colors: [Color(0xFFFF4F87), Color(0xFF9B7AE8)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ).createShader(bounds),
                           child: Text(
                             '${value.toInt()}',
                             style: SLTheme.quicksand(
-                              fontSize: 38,
+                              fontSize: 32,
                               fontWeight: FontWeight.w900,
                               color: Colors.white,
                               height: 0.95,
@@ -214,14 +285,14 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                         );
                       },
                     ),
-                    SLSpacing.h8,
+                    SLSpacing.h4,
                     Text(
                       dayLabel,
                       textAlign: TextAlign.center,
                       style: SLTheme.quicksand(
                         fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFFC7B1CD),
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF8D8490),
                       ),
                     ),
                   ],
@@ -230,91 +301,77 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
             ],
           ),
           SLSpacing.h16,
+          // ── Progress bar ──
           _buildSectionLabel(
             title: _isSingle
                 ? L10nService().translate('home_tintrnhnhp_7d5499')
                 : L10nService().translate('home_tintrnhcpt_a15e61'),
             trailing: '${progress.round()}%',
           ),
-          SLSpacing.h8,
-          SLSpacing.h8,
+          SLSpacing.h10,
           Container(
-            height: 18,
+            height: 14,
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
+              color: const Color(0xFFFFDCE8),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                  color: Colors.black.withValues(alpha: 0.05), width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                  blurStyle: BlurStyle.inner,
-                ),
-              ],
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
-              child: Stack(
-                children: [
-                  TweenAnimationBuilder<double>(
-                    tween: Tween<double>(begin: 0, end: progress / 100),
-                    duration: const Duration(milliseconds: 1500),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, value, child) {
-                      return FractionallySizedBox(
-                        widthFactor: value,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                scoreColor.withValues(alpha: 0.5),
-                                scoreColor,
-                              ],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
-                          ),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0, end: progress / 100),
+                duration: const Duration(milliseconds: 1500),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  return FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: value,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFFFF85A2), Color(0xFFFF4F87), Color(0xFF9B7AE8)],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
                         ),
-                      );
-                    },
-                  ),
-                ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),
           SLSpacing.h16,
+          // ── Info chips ──
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _buildInfoChip(
                 icon: Icons.local_fire_department_rounded,
                 text: L10nService().translateActiveDays(insight.activeDays),
-                color: const Color(0xFFF5A623),
-                background: const Color(0xFFFFF2D8),
+                color: const Color(0xFFFF6B9D),
+                background: const Color(0xFFFFEEF4),
               ),
               _buildInfoChip(
                 icon: Icons.event_note_rounded,
                 text: L10nService()
                     .translateMemoriesPerMonth(insight.memoryThisMonth),
-                color: const Color(0xFF0F4C81),
-                background: const Color(0xFFEAF4FF),
+                color: const Color(0xFF9B7AE8),
+                background: const Color(0xFFF3E5FF),
               ),
               _buildInfoChip(
                 icon: Icons.sentiment_satisfied_alt_rounded,
                 text: L10nService().translatePositivity(insight.positivity),
-                color: const Color(0xFFD81B60),
-                background: const Color(0xFFFFEAF2),
+                color: const Color(0xFFFF4F87),
+                background: const Color(0xFFFFE4EF),
               ),
             ],
           ),
         ],
       ),
-    );
+    ).animate().fade(duration: 600.ms).slideY(begin: 0.08, end: 0, duration: 600.ms, curve: Curves.easeOutBack);
   }
 
+  // ── Daily Tip Card ──
   Widget _buildDailyTipCard(LoveInsightData insight) {
     String tipEmoji = '💌';
     if (insight.loveScore >= 85) {
@@ -327,71 +384,35 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
       tipEmoji = '💡';
     }
 
-    Widget emojiWidget = Text(tipEmoji, style: const TextStyle(fontSize: 24));
-
-    // Áp dụng animation tuỳ theo emoji
-    if (insight.loveScore >= 85) {
-      emojiWidget = emojiWidget
-          .animate(onPlay: (controller) => controller.repeat(reverse: true))
-          .scaleXY(end: 1.15, duration: 600.ms, curve: Curves.easeInOut)
-          .tint(color: Colors.orange.withValues(alpha: 0.2));
-    } else if (insight.loveScore >= 70) {
-      emojiWidget = emojiWidget
-          .animate(onPlay: (controller) => controller.repeat(reverse: true))
-          .shake(hz: 3, curve: Curves.easeInOut, duration: 1.seconds);
-    } else {
-      emojiWidget = emojiWidget
-          .animate(onPlay: (controller) => controller.repeat(reverse: true))
-          .slideY(end: -0.15, duration: 800.ms, curve: Curves.easeInOut);
-    }
-
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFFFF0F5), Colors.white],
+          colors: [Color(0xFFFFEFF5), Color(0xFFFFF8FB)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF73A6).withValues(alpha: 0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-          const BoxShadow(
-            color: Colors.white,
-            blurRadius: 8,
-            offset: Offset(0, -4),
-            spreadRadius: 2,
-            blurStyle: BlurStyle.inner,
-          ),
-        ],
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: const Color(0xFFFFDCE8),
+          width: 1,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: const Color(0xFFFF4F87).withValues(alpha: 0.10),
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFF73A6).withValues(alpha: 0.2),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
             ),
             child: Center(
-              child: emojiWidget,
+              child: Text(tipEmoji, style: const TextStyle(fontSize: 20)),
             ),
           ),
-          SLSpacing.w16,
+          SLSpacing.w12,
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,20 +420,20 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
                 Text(
                   L10nService().translate('home_linhnhmnay_4773b5'),
                   style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFFA3A1A9),
-                    letterSpacing: 0.25,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF8D8490),
+                    letterSpacing: 0.2,
                   ),
                 ),
                 SLSpacing.h4,
                 Text(
                   _dailyTip(insight),
                   style: SLTheme.quicksand(
-                    fontSize: 14,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w800,
-                    height: 1.4,
-                    color: const Color(0xFF4B4650),
+                    height: 1.45,
+                    color: const Color(0xFF332C35),
                   ),
                 ),
               ],
@@ -420,7 +441,6 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
           ),
         ],
       ),
-    ).animate(onPlay: (controller) => controller.repeat(reverse: true)).shimmer(
-        duration: 4.seconds, color: Colors.white.withValues(alpha: 0.6));
+    ).animate().fade(duration: 500.ms, delay: 100.ms).slideY(begin: 0.06, end: 0, duration: 500.ms, delay: 100.ms, curve: Curves.easeOut);
   }
 }

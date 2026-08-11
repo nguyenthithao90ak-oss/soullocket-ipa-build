@@ -253,6 +253,7 @@ extension MainHomeCountdownPrefsController on _MainHomeTabState {
         icon: Icons.favorite_border_rounded,
         accent: const Color(0xFFFF8DA1),
         isPremium: true,
+        isVipOnly: true,
       ),
       _CountdownQuickOption(
         label: context.tr('countdown_glass'),

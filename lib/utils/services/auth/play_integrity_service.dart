@@ -181,12 +181,11 @@ class PlayIntegrityAssessment {
 
 class PlayIntegrityService {
   PlayIntegrityService({
-    firebase_auth.FirebaseAuth? firebaseAuth,
+    this._firebaseAuth,
     HttpPost? httpPost,
     NowProvider? nowProvider,
     MethodChannel? methodChannel,
-  })  : _firebaseAuth = firebaseAuth,
-        _httpPost = httpPost ?? http.post,
+  })  : _httpPost = httpPost ?? http.post,
         _nowProvider = nowProvider ?? DateTime.now,
         _methodChannel = methodChannel ?? _defaultMethodChannel;
 

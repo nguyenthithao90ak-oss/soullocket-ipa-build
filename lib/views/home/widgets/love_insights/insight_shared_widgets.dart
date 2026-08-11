@@ -1,6 +1,16 @@
 part of '../../love_insights_screen.dart';
 
 extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
+  // ── Palette chung ──
+  static const _primaryPink = Color(0xFFFF4F87);
+  static const _softPink = Color(0xFFFFDCE8);
+  static const _blushPink = Color(0xFFFFEEF4);
+  static const _lavender = Color(0xFFE9DDFF);
+  static const _softPurple = Color(0xFF9B7AE8);
+  static const _textDark = Color(0xFF332C35);
+  static const _textGrey = Color(0xFF8D8490);
+  static const _cardBg = Color(0xFFFFF7FA);
+
   Widget _buildSectionLabel({
     required String title,
     required String trailing,
@@ -13,7 +23,7 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
             style: SLTheme.quicksand(
               fontSize: 13,
               fontWeight: FontWeight.w900,
-              color: const Color(0xFF595260),
+              color: _textGrey,
             ),
           ),
         ),
@@ -22,7 +32,7 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
           style: SLTheme.quicksand(
             fontSize: 13,
             fontWeight: FontWeight.w900,
-            color: const Color(0xFF66606C),
+            color: _textGrey,
           ),
         ),
       ],
@@ -40,33 +50,22 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-          const BoxShadow(
-            color: Colors.white,
-            blurRadius: 4,
-            offset: Offset(0, -2),
-            spreadRadius: 1,
-            blurStyle: BlurStyle.inner,
-          ),
-        ],
+        border: Border.all(
+          color: color.withValues(alpha: 0.12),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: color),
+          Icon(icon, size: 15, color: color),
           const SizedBox(width: 6),
           Text(
             text,
             style: SLTheme.quicksand(
               fontSize: 12,
-              fontWeight: FontWeight.w900,
-              color: color.withValues(alpha: 0.95),
+              fontWeight: FontWeight.w800,
+              color: color,
             ),
           ),
         ],
@@ -78,7 +77,7 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
     required IconData icon,
     required String title,
     required String subtitle,
-    Color accent = const Color(0xFFD81B60),
+    Color accent = const Color(0xFFFF4F87),
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,9 +87,9 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
           height: 38,
           decoration: BoxDecoration(
             color: accent.withValues(alpha: 0.10),
-            borderRadius: SLRadius.mdAll,
+            shape: BoxShape.circle,
           ),
-          child: Icon(icon, size: 20, color: accent),
+          child: Icon(icon, size: 19, color: accent),
         ),
         SLSpacing.w12,
         Expanded(
@@ -102,7 +101,7 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
                 style: SLTheme.quicksand(
                   fontSize: 15,
                   fontWeight: FontWeight.w900,
-                  color: const Color(0xFF202538),
+                  color: _textDark,
                 ),
               ),
               SLSpacing.h4,
@@ -112,7 +111,7 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   height: 1.4,
-                  color: const Color(0xFF867E89),
+                  color: _textGrey,
                 ),
               ),
             ],
@@ -128,7 +127,7 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
       style: SLTheme.quicksand(
         fontSize: 12,
         fontWeight: FontWeight.w900,
-        color: const Color(0xFF6F6772),
+        color: _textGrey,
       ),
     );
   }

@@ -101,7 +101,7 @@ class ExportService {
             level: 0,
             child: pw.Text('NHAT KY TINH YEU - $resolvedHouseName',
                 style:
-                    pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                    const pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
           ),
           ...entries.map((entry) {
             final date = entry['time'] ?? '';
@@ -123,7 +123,7 @@ class ExportService {
                     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                     children: [
                       pw.Text('$date | $author',
-                          style: pw.TextStyle(
+                          style: const pw.TextStyle(
                               fontWeight: pw.FontWeight.bold,
                               color: PdfColors.pink)),
                       pw.Text(mood, style: const pw.TextStyle(fontSize: 16)),

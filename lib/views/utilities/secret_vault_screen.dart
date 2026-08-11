@@ -1131,7 +1131,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           title,
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w800,
-            color: Color(0xFF334155),
+            color: const Color(0xFF334155),
           ),
         ),
         content: Column(
@@ -1820,7 +1820,7 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
             fontWeight: FontWeight.w800,
             fontSize: 18,
             letterSpacing: 1.1,
-            color: Color(0xFF334155),
+            color: const Color(0xFF334155),
           ),
         ),
         centerTitle: true,

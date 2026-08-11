@@ -28,15 +28,15 @@ class AuthTabSwitcher extends StatelessWidget {
           height: compact ? 50 : 54,
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: const Color(0xFFFFF0F5).withValues(alpha: 0.50),
             borderRadius: BorderRadius.circular(26),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.6),
-              width: 1.0,
+              color: const Color(0xFFFFD6E0).withValues(alpha: 0.7),
+              width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
+                color: const Color(0xFFFF4B91).withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -56,18 +56,13 @@ class AuthTabSwitcher extends StatelessWidget {
                     child: Container(
                       width: indicatorWidth,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Colors.white.withValues(alpha: 0.85),
                         borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 12,
+                            color: const Color(0xFFFF4B91).withValues(alpha: 0.15),
+                            blurRadius: 10,
                             offset: const Offset(0, 3),
-                          ),
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
                           ),
                         ],
                       ),
@@ -145,10 +140,8 @@ class _AuthTabButton extends StatelessWidget {
                   curve: Curves.easeOutCubic,
                   style: SLTheme.quicksand(
                     color: active
-                        ? const Color(
-                            0xFFC07A56) // Rose gold cho chữ đang chọn
-                        : const Color(
-                            0xFF757575), // Xám nhạt cho chữ không chọn
+                        ? const Color(0xFFFF4B91) // Romantic pink cho chữ đang chọn
+                        : const Color(0xFF757575), // Xám nhạt cho chữ không chọn
                     fontWeight: active ? FontWeight.w900 : FontWeight.w700,
                     fontSize: fontSize,
                     letterSpacing: letterSpacing,

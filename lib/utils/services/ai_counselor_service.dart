@@ -226,7 +226,7 @@ class AiCounselorService {
     }
     for (final key in apiKeys) {
       urlsToTry.add(
-          'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$key');
+          'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContentif (key != null) key!=$key');
     }
 
     if (urlsToTry.isEmpty) {

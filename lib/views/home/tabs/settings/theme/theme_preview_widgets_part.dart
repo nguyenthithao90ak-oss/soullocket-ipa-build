@@ -1154,26 +1154,47 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
           Color(0xFF0F0C29),
         ];
       case 'theme-ocean':
-        return const [
-          Color(0xFF4FACFE),
-          Color(0xFF00F2FE),
-          Color(0xFF43E97B),
-          Color(0xFF38F9D7),
-        ];
+        return isDark
+            ? const [
+                Color(0xFF0D1B2A),
+                Color(0xFF1B263B),
+                Color(0xFF415A77),
+                Color(0xFF1D3557),
+              ]
+            : const [
+                Color(0xFFE0F7FA),
+                Color(0xFFB2EBF2),
+                Color(0xFF80DEEA),
+                Color(0xFF4DD0E1),
+              ];
       case 'theme-sunset':
-        return const [
-          Color(0xFFFF0844),
-          Color(0xFFFFB199),
-          Color(0xFFFA709A),
-          Color(0xFFFEE140),
-        ];
+        return isDark
+            ? const [
+                Color(0xFF2C0B1E),
+                Color(0xFF4A1525),
+                Color(0xFF6B1F38),
+                Color(0xFF330A21),
+              ]
+            : const [
+                Color(0xFFFFF3E0),
+                Color(0xFFFFCC80),
+                Color(0xFFFFAB91),
+                Color(0xFFF48FB1),
+              ];
       case 'theme-crazy-party':
-        return const [
-          Color(0xFFFF2400),
-          Color(0xFFE8B71D),
-          Color(0xFF1DE840),
-          Color(0xFF2B1DE8),
-        ];
+        return isDark
+            ? const [
+                Color(0xFF1D0936),
+                Color(0xFF3D136B),
+                Color(0xFF5B178A),
+                Color(0xFF260548),
+              ]
+            : const [
+                Color(0xFFF3E5F5),
+                Color(0xFFCE93D8),
+                Color(0xFFFF80AB),
+                Color(0xFF8C9EFF),
+              ];
       case 'theme-pink-glow':
         return const [
           Color(0xFFFFE4E1),
@@ -1189,9 +1210,10 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
                 Color(0xFF302552),
               ]
             : const [
-                Color(0xFFFFF3F8),
-                Color(0xFFFEE8F0),
-                Color(0xFFEFDFFF),
+                Color(0xFFFFF0F3),
+                Color(0xFFFFD6E0),
+                Color(0xFFFBC2EB),
+                Color(0xFFFF9A9E),
               ];
     }
   }

@@ -106,7 +106,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
     }
 
     _sub?.cancel();
-    _sub = _dbRef.child('houses/${widget.houseId}/wishlist').onValue.listen(
+    _sub = _dbRef.child('houses/${widget.houseId}/wishlist')
+        .limitToLast(200)
+        .onValue.listen(
         (event) {
       if (!mounted) return;
       final val = event.snapshot.value;

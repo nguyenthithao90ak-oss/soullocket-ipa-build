@@ -624,7 +624,7 @@ class _LoveCardPreviewPanel extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         alignment: Alignment.center,
-                        child: Icon(
+                        child: const Icon(
                           Icons.draw_rounded,
                           color: SLColors.textSecondary,
                           size: 16,
@@ -1764,7 +1764,7 @@ class _LoveCardSendAction extends StatelessWidget {
                         ),
                       )
                     else
-                      Icon(
+                      const Icon(
                         Icons.send_rounded,
                         color: SLColors.textPrimary,
                         size: 20,

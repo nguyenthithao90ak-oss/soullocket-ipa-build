@@ -182,7 +182,7 @@ class _WheelScreenState extends State<WheelScreen>
       if (apiKey.isNotEmpty) {
         // Fetch from Google Places Nearby Search
         final url = Uri.parse(
-            'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${position.latitude},${position.longitude}&radius=1500&type=restaurant&keyword=food&key=$apiKey');
+            'https://maps.googleapis.com/maps/api/place/nearbysearch/jsonif (location != null) location!=${position.latitude},${position.longitude}&radius=1500&type=restaurant&keyword=food&key=$apiKey');
         final response = await http.get(url).timeout(_restaurantFetchTimeout);
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);

@@ -35,7 +35,7 @@ class UpdateCheckerService {
         final latestVersion = data['latest_version']?.toString() ?? '1.0.0';
         final forceUpdate = data['force_update'] == true;
         final androidUrl = data['android_url']?.toString() ??
-            'https://play.google.com/store/apps/details?id=com.soullocket.app';
+            'https://play.google.com/store/apps/detailsif (id != null) id!=com.soullocket.app';
         final iosUrl = data['ios_url']?.toString() ?? '';
 
         if (_shouldUpdate(currentVersion, latestVersion)) {

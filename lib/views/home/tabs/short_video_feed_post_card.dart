@@ -477,8 +477,8 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
           filterQuality: mediaFilterQuality,
           fadeInDuration: const Duration(milliseconds: 150),
           fadeOutDuration: Duration.zero,
-          placeholder: (_, __) => Container(color: const Color(0xFF120716)),
-          errorWidget: (_, __, ___) =>
+          placeholder: (_, _) => Container(color: const Color(0xFF120716)),
+          errorWidget: (_, _, _) =>
               Container(color: const Color(0xFF120716)),
         ),
         if (!useLiteBackdrop)
@@ -496,9 +496,9 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                     imageUrl: _mediaUrl,
                     fit: BoxFit.cover,
                     filterQuality: mediaFilterQuality,
-                    placeholder: (_, __) =>
+                    placeholder: (context, url) =>
                         Container(color: const Color(0xFF120716)),
-                    errorWidget: (_, __, ___) =>
+                    errorWidget: (context, url, error) =>
                         Container(color: const Color(0xFF120716)),
                   ),
                 ),
@@ -644,12 +644,12 @@ class _ShortVideoFeedPostCardState extends State<_ShortVideoFeedPostCard>
                                           fit: BoxFit.contain,
                                           alignment: Alignment.center,
                                           filterQuality: FilterQuality.medium,
-                                          placeholder: (_, __) => const Center(
+                                          placeholder: (context, url) => const Center(
                                             child: CircularProgressIndicator(
                                               color: Color(0xFFFF7EA8),
                                             ),
                                           ),
-                                          errorWidget: (_, __, ___) =>
+                                          errorWidget: (context, url, error) =>
                                               const Center(
                                             child: Icon(
                                               Icons.broken_image_rounded,

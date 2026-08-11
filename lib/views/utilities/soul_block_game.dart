@@ -774,7 +774,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
         }
         completer.complete(width / height);
       },
-      onError: (Object _, StackTrace? __) {
+      onError: (Object _, StackTrace? _) {
         if (!completer.isCompleted) {
           completer.complete(null);
         }
@@ -2315,7 +2315,7 @@ class _SoulBlockGameState extends State<SoulBlockGame>
             if (_view == _SoulGameView.gameplay)
               ValueListenableBuilder<int>(
                 valueListenable: _dragOverlayTick,
-                builder: (BuildContext context, int _, Widget? __) {
+                builder: (BuildContext context, int _, Widget? _) {
                   final _SoulPieceOption? piece = _draggingPiece;
                   final Widget? overlay = _draggedPieceOverlay;
                   if (piece == null ||

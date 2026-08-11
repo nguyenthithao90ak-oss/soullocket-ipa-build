@@ -1,7 +1,8 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
+import '../../core/fast_backdrop_filter.dart';
 import '../../utils/services/consent_service.dart';
 import '../home/screens/document_viewer_screen.dart';
 import '../../core/sl_theme.dart';
@@ -132,6 +133,7 @@ class _ConsentGateState extends State<ConsentGate> {
       context: context,
       useRootNavigator: true,
       barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.18), // Nền phía sau nhìn thấy rõ Login màn hình hồng
       builder: (ctx) {
         var cookieLevel =
             initialCookieLevel == 'essential' ? 'essential' : 'all';
@@ -142,45 +144,44 @@ class _ConsentGateState extends State<ConsentGate> {
             final screenSize = MediaQuery.sizeOf(ctx);
             final mediaPadding = MediaQuery.of(ctx).padding;
             final compact = screenSize.width < 620;
-            final dialogRadius = compact ? 0.0 : 22.0;
-            final horizontalInset = compact ? 0.0 : 18.0;
-            final verticalInset = compact ? 0.0 : 16.0;
-            final horizontalPadding = compact ? 12.0 : 16.0;
+            const dialogRadius = 26.0;
+            const horizontalInset = 24.0;
+            const verticalInset = 32.0;
+            const horizontalPadding = 14.0;
 
             return PopScope(
               canPop: false,
               child: Dialog(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
-                insetPadding: EdgeInsets.symmetric(
+                insetPadding: const EdgeInsets.symmetric(
                   horizontal: horizontalInset,
                   vertical: verticalInset,
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(dialogRadius),
-                  child: Container(
-                    constraints: BoxConstraints(
-                      maxWidth: compact ? screenSize.width : 680,
-                      maxHeight: compact
-                          ? screenSize.height
-                          : screenSize.height * 0.96,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _dialogBg,
-                      border: compact
-                          ? null
-                          : Border.all(
-                              color: _panelBorder, width: 0.5),
-                      boxShadow: compact
-                          ? null
-                          : [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.10),
-                                blurRadius: 20,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                    ),
+                  child: FastBackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
+                      constraints: BoxConstraints(
+                        maxWidth: 380, // Thu gọn chiều rộng cho cực kỳ xinh xắn
+                        maxHeight: screenSize.height * 0.82, // Thu gọn chiều cao
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFCF5F7).withValues(alpha: 0.90), // Kính mờ trắng hồng nổi trên Login
+                        borderRadius: BorderRadius.circular(dialogRadius),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          width: 1.8,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFF4081).withValues(alpha: 0.15),
+                            blurRadius: 32,
+                            offset: const Offset(0, 12),
+                          ),
+                        ],
+                      ),
                     child: SafeArea(
                       top: compact,
                       bottom: false,
@@ -215,14 +216,7 @@ class _ConsentGateState extends State<ConsentGate> {
                                       children: [
                                         _buildStartupConsentHeader(ctx,
                                             compact: compact),
-                                        const SizedBox(height: 18),
-                                        _buildStartupSectionLabel(
-                                          title: context
-                                              .tr('consent_trckhibtu_9c9c70'),
-                                          subtitle: context
-                                              .tr('consent_bncnxemcct_f14d22'),
-                                        ),
-                                        const SizedBox(height: 10),
+                                        const SizedBox(height: 14),
                                         _buildStartupLegalSection(
                                           accent: _accentRose,
                                           icon: Icons.gavel_rounded,
@@ -230,14 +224,7 @@ class _ConsentGateState extends State<ConsentGate> {
                                               .tr('consent_iukhonsdng_9a9c73'),
                                           subtitle: context
                                               .tr('consent_tmttcchdng_0cbb57'),
-                                          bullets: [
-                                            context.tr(
-                                                'consent_pdngchotik_f63a41'),
-                                            context.tr(
-                                                'consent_bncndngapp_4f1851'),
-                                            context.tr(
-                                                'consent_appcthgiih_057f23'),
-                                          ],
+                                          bullets: [],
                                           actionLabel: context
                                               .tr('consent_xemiukhon_5d9f36'),
                                           onTap: () => _openDoc(
@@ -247,7 +234,7 @@ class _ConsentGateState extends State<ConsentGate> {
                                             'assets/docs/terms.html',
                                           ),
                                         ),
-                                        const SizedBox(height: 12),
+                                        const SizedBox(height: 8),
                                         _buildStartupLegalSection(
                                           accent: _accentLavender,
                                           icon: Icons.privacy_tip_rounded,
@@ -255,14 +242,7 @@ class _ConsentGateState extends State<ConsentGate> {
                                               .tr('consent_chnhschbom_98b319'),
                                           subtitle: context
                                               .tr('consent_tmttdliuap_7cebb7'),
-                                          bullets: [
-                                            context.tr(
-                                                'consent_cthgmtikho_a5b115'),
-                                            context.tr(
-                                                'consent_dliudngngn_4e0d61'),
-                                            context.tr(
-                                                'consent_bncthiquyn_e84865'),
-                                          ],
+                                          bullets: [],
                                           actionLabel: context
                                               .tr('consent_xembomt_eaa9ec'),
                                           onTap: () => _openDoc(
@@ -272,13 +252,18 @@ class _ConsentGateState extends State<ConsentGate> {
                                             'assets/docs/privacy.html',
                                           ),
                                         ),
-                                        _buildStartupSectionLabel(
-                                          title: context
-                                              .tr('consent_tychnlutr_ffd19f'),
-                                          subtitle: context
-                                              .tr('consent_chnmccooki_16d2d1'),
+                                        const SizedBox(height: 14),
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 4, bottom: 6),
+                                          child: Text(
+                                            context.tr('consent_tychnlutr_ffd19f'),
+                                            style: SLTheme.quicksand(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w800,
+                                              color: _ink,
+                                            ),
+                                          ),
                                         ),
-                                        const SizedBox(height: 10),
                                         _buildStartupCookieStorageSection(
                                           ctx,
                                           cookieLevel: cookieLevel,
@@ -286,9 +271,7 @@ class _ConsentGateState extends State<ConsentGate> {
                                             cookieLevel = value;
                                           }),
                                         ),
-                                        const SizedBox(height: 16),
-                                        _buildStartupAcknowledgement(ctx),
-                                        const SizedBox(height: 24),
+                                        const SizedBox(height: 12),
                                         _buildStartupAgreeBar(
                                           ctx,
                                           compact: compact,
@@ -300,12 +283,12 @@ class _ConsentGateState extends State<ConsentGate> {
                                               cookieLevel: cookieLevel,
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                                Positioned(
+                                  Positioned(
                                   left: 0,
                                   right: 0,
                                   bottom: 8,
@@ -332,7 +315,8 @@ class _ConsentGateState extends State<ConsentGate> {
                   ),
                 ),
               ),
-            );
+            ),
+          );
           },
         );
       },
@@ -960,11 +944,6 @@ class _ConsentGateState extends State<ConsentGate> {
 
   @override
   Widget build(BuildContext context) {
-    if (_ready) return widget.child;
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(color: Color(0xFFD81B60)),
-      ),
-    );
+    return widget.child;
   }
 }

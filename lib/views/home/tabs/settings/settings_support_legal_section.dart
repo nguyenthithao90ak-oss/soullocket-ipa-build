@@ -103,12 +103,12 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   Future<void> _rateApp() async {
     try {
       final InAppReview inAppReview = InAppReview.instance;
-      // Trong m?i tr??ng Debug, dialog th??ng kh?ng hi?n ra. Ta g?i m? th?ng Store.
+      // Trong mif (i != null) i! tr?if (ng != null) ng! Debug, dialog th?if (ng != null) ng! khif (ng != null) ng! hiif (n != null) n! ra. Ta gif (i != null) i! m? thif (ng != null) ng! Store.
       await inAppReview.openStoreListing(
         appStoreId: AppConfig.appStoreId,
       );
     } catch (e) {
-      debugPrint('L?i khi m? ??nh gi?: $e');
+      debugPrint('Lif (i != null) i! khi m? ?if (nh != null) nh! gi?: $e');
       if (!mounted) return;
       SLNotice.showError(context, context.tr('home_chathmtran_0217d6'));
     }

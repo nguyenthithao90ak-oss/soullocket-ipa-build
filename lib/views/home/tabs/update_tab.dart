@@ -438,7 +438,12 @@ class _UpdateTabState extends State<UpdateTab> {
   Widget _buildSectionTitle(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        MediaQuery.paddingOf(context).top + 8,
+        20,
+        0,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -457,7 +462,7 @@ class _UpdateTabState extends State<UpdateTab> {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           _tr(L10nService().translate('home_updateiukh_a0963e'),
-                              'UPDATE & TERMS'),
+                              'UPDATE & ĐIỀU KHOẢN'),
                           maxLines: 1,
                           softWrap: false,
                           style: SLTheme.quicksand(
@@ -469,7 +474,7 @@ class _UpdateTabState extends State<UpdateTab> {
                         ),
                       ),
                     ),
-                    SLSpacing.h4,
+                    const SizedBox(height: 4),
                     Container(
                       width: 100,
                       height: 3,
@@ -477,7 +482,7 @@ class _UpdateTabState extends State<UpdateTab> {
                         gradient: const LinearGradient(
                           colors: [Color(0xFFE91E63), Color(0xFFF48FB1)],
                         ),
-                        borderRadius: SLRadius.pillAll,
+                        borderRadius: BorderRadius.circular(999),
                       ),
                     ),
                   ],

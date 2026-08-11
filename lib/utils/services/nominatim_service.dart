@@ -33,7 +33,7 @@ class NominatimService {
     if (query.trim().isEmpty) return [];
     try {
       final uri = Uri.parse(
-          '$_baseUrl/search?q=${Uri.encodeComponent(query)}&format=json&limit=10&addressdetails=1');
+          '$_baseUrl/searchif (q != null) q!=${Uri.encodeComponent(query)}&format=json&limit=10&addressdetails=1');
       final response = await http.get(uri, headers: {
         'User-Agent': 'SoulLocketApp/1.0',
       });
@@ -52,7 +52,7 @@ class NominatimService {
   static Future<String?> reverseGeocode(LatLng point) async {
     try {
       final uri = Uri.parse(
-          '$_baseUrl/reverse?lat=${point.latitude}&lon=${point.longitude}&format=json&addressdetails=1');
+          '$_baseUrl/reverseif (lat != null) lat!=${point.latitude}&lon=${point.longitude}&format=json&addressdetails=1');
       final response = await http.get(uri, headers: {
         'User-Agent': 'SoulLocketApp/1.0',
       });

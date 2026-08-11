@@ -43,6 +43,39 @@ class L10nService extends ChangeNotifier {
       .map(_localeForLangCode)
       .toList(growable: false);
 
+  bool get isAutoSystem {
+    final prefs = OfflineCacheService.getPrefsSync();
+    final saved = prefs?.getString('il_lang');
+    return saved == null || saved.isEmpty || saved == 'auto';
+  }
+
+  String getSystemDetectedLocaleCode() {
+    try {
+      final platformLocale = WidgetsBinding.instance.platformDispatcher.locale;
+      final languageCode = platformLocale.languageCode.toLowerCase();
+      final scriptCode = platformLocale.scriptCode?.toLowerCase();
+      final countryCode = platformLocale.countryCode?.toLowerCase();
+
+      if (languageCode == 'zh') {
+        if (scriptCode == 'hant' ||
+            countryCode == 'tw' ||
+            countryCode == 'hk' ||
+            countryCode == 'mo') {
+          return 'zh-TW';
+        }
+        return 'zh';
+      }
+
+      for (final locale in _L10nAssetLoader.supportedLocales) {
+        if (locale.toLowerCase() == languageCode) {
+          return locale;
+        }
+      }
+    } catch (_) {}
+
+    return 'vi';
+  }
+
   Future<void> init({AssetBundle? bundle}) async {
     if (bundle != null) {
       _state.assetBundle = bundle;
@@ -56,11 +89,11 @@ class L10nService extends ChangeNotifier {
   }
 
   Future<void> setLocale(String langCode) async {
-    final normalizedLangCode = _normalizeLangCode(langCode);
-    _state.currentLocale = _localeForLangCode(normalizedLangCode);
     final prefs = OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
-    await prefs.setString('il_lang', normalizedLangCode);
+    await prefs.setString('il_lang', langCode);
+    final normalizedLangCode = _normalizeLangCode(langCode);
+    _state.currentLocale = _localeForLangCode(normalizedLangCode);
     await _ensureAssetTranslationsLoaded();
     notifyListeners();
   }
@@ -333,7 +366,7 @@ class L10nService extends ChangeNotifier {
 
   String _normalizeLangCode(String? value) {
     final normalized = value?.trim();
-    if (normalized != null && normalized.isNotEmpty) {
+    if (normalized != null && normalized.isNotEmpty && normalized != 'auto') {
       for (final locale in _L10nAssetLoader.supportedLocales) {
         if (locale.toLowerCase() == normalized.toLowerCase()) {
           return locale;
@@ -341,17 +374,7 @@ class L10nService extends ChangeNotifier {
       }
     }
 
-    try {
-      final systemLocale =
-          WidgetsBinding.instance.platformDispatcher.locale.languageCode;
-      for (final locale in _L10nAssetLoader.supportedLocales) {
-        if (locale.toLowerCase() == systemLocale.toLowerCase()) {
-          return locale;
-        }
-      }
-    } catch (_) {}
-
-    return 'en';
+    return getSystemDetectedLocaleCode();
   }
 
   Locale _localeForLangCode(String langCode) {

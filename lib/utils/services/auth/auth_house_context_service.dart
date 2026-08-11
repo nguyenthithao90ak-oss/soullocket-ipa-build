@@ -15,16 +15,13 @@ class AuthHouseContextService {
   static const String _authUidPrefsKey = 'il_auth_uid';
 
   AuthHouseContextService({
-    firebase_auth.FirebaseAuth? firebaseAuth,
-    DatabaseReference? databaseRef,
-    ConsentService? consentService,
+    this._firebaseAuth,
+    this._databaseRef,
+    this._consentService,
     SharedPreferencesProvider? sharedPreferencesProvider,
     HttpGet? httpGet,
     NowProvider? nowProvider,
-  })  : _firebaseAuth = firebaseAuth,
-        _databaseRef = databaseRef,
-        _consentService = consentService,
-        _sharedPreferencesProvider =
+  })  : _sharedPreferencesProvider =
             sharedPreferencesProvider ?? SharedPreferences.getInstance,
         _httpGet = httpGet ?? http.get,
         _nowProvider = nowProvider ?? DateTime.now;

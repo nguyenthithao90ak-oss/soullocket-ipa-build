@@ -18,12 +18,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
         final z2 = ZodiacUtils.getZodiac(dobU2);
         final ageDaysU1 = _extractAgeDays(dobU1);
         final ageDaysU2 = _extractAgeDays(dobU2);
-        final effectProfile = UiPrefs.resolveEffectProfile(
-          state: UiPrefs.notifier.value,
-          isWeb: kIsWeb,
-        );
-        final showDecorGlow = !effectProfile.performanceMode;
-        final decorGlowEnabled = showDecorGlow;
+
 
         return Padding(
           padding: EdgeInsets.fromLTRB(
@@ -36,46 +31,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             clipBehavior: Clip.none,
             alignment: Alignment.center,
             children: [
-              if (decorGlowEnabled && showDecorGlow) ...[
-                Positioned(
-                  top: -8,
-                  left: -4,
-                  child: IgnorePointer(
-                    child: Container(
-                      width: 78,
-                      height: 78,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            const Color(0xFFFFB7D1).withValues(alpha: 0.28),
-                            const Color(0xFFFFB7D1).withValues(alpha: 0.02),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  right: -10,
-                  bottom: -10,
-                  child: IgnorePointer(
-                    child: Container(
-                      width: 96,
-                      height: 96,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            const Color(0xFF8FD8FF).withValues(alpha: 0.22),
-                            const Color(0xFF8FD8FF).withValues(alpha: 0.02),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+
 
               Row(
                 mainAxisAlignment: compactMetaLayout
@@ -384,16 +340,9 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
       height: 28,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.86),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: baseColor.withValues(alpha: 0.34), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: baseColor.withValues(alpha: 0.18),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

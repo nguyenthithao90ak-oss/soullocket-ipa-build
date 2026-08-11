@@ -24,13 +24,19 @@ class NotebookHubScreen extends StatelessWidget {
           elevation: 0,
           leading: const BackButton(color: SLColors.primaryActive),
           title: Text(
-            'Sổ tay chung',
+            'Sổ tay kỷ niệm chung 📔',
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w900,
-              fontSize: 24,
+              fontSize: 20,
               color: SLColors.textPrimary,
             ),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.download_rounded, color: SLColors.primaryActive),
+              onPressed: () {},
+            ),
+          ],
           bottom: TabBar(
             labelColor: SLColors.primaryActive,
             unselectedLabelColor: Colors.grey,

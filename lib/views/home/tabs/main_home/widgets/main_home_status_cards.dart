@@ -247,13 +247,16 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       ));
     }
 
-    // Sắp xếp tăng dần & lọc trùng
+    // Sắp xếp tăng dần & lọc trùng (chỉ lấy sự kiện trong 7 ngày tới)
     upcomingEvents.sort((a, b) => a.date.compareTo(b.date));
     final seenTitles = <String>{};
     final uniqueEvents = <HomeUpcomingEvent>[];
     for (final e in upcomingEvents) {
-      if (seenTitles.add('${e.title}_${e.date.millisecondsSinceEpoch}')) {
-        uniqueEvents.add(e);
+      final diffDays = e.date.difference(todayMidnight).inDays;
+      if (diffDays >= 0 && diffDays <= 7) {
+        if (seenTitles.add('${e.title}_${e.date.millisecondsSinceEpoch}')) {
+          uniqueEvents.add(e);
+        }
       }
     }
 
@@ -305,9 +308,9 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                       ),
                     ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: const AnimatedRabbitSticker(
+                  child: const Padding(
+                    padding: EdgeInsets.all(4.0),
+                    child: AnimatedRabbitSticker(
                         'assets/images/anhtomau_stickers/sticker_21.gif'),
                   ),
                 ),
@@ -335,7 +338,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                     ],
                   ),
                 ),
-                if (dragHandle != null) dragHandle,
+                ?dragHandle,
                 const Icon(
                   Icons.chevron_right_rounded,
                   color: Colors.black26,
@@ -405,6 +408,74 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             ),
 
             const SizedBox(height: 14),
+            
+            // Sắp tới có sự kiện gì
+            if (uniqueEvents.isNotEmpty)
+              SLGlassmorphism.apply(
+                blur: 16,
+                opacity: 0.45,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  width: 1.5,
+                ),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.tr('Sắp tới có sự kiện gì'),
+                        style: SLTheme.quicksand(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF263242),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ...uniqueEvents.take(5).map((e) {
+                        final daysUntil = e.date.difference(todayMidnight).inDays;
+                        final String timeStr = daysUntil <= 0
+                            ? context.tr('home_hmnay_d87b33')
+                            : (daysUntil == 1 ? context.tr('home_ngymai_a3d820') : '$daysUntil ngày nữa');
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 6.0),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.circle, size: 6, color: Color(0xFFFF6D97)),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  e.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: SLTheme.quicksand(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF475569),
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                timeStr,
+                                style: SLTheme.quicksand(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFFFF6D97),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ),
+
+            if (uniqueEvents.isNotEmpty) const SizedBox(height: 14),
+
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
@@ -550,7 +621,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                     ],
                   ),
                 ),
-                if (dragHandle != null) dragHandle,
+                ?dragHandle,
                 Icon(
                   Icons.chevron_right_rounded,
                   color: SLColors.secondary.withValues(alpha: 0.5),

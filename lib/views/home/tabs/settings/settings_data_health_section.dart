@@ -167,7 +167,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusColor.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -269,8 +269,8 @@ extension _SettingsDataHealthSection on _SettingsTabState {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF3E0),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFF3E0),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -474,8 +474,8 @@ extension _SettingsDataHealthSection on _SettingsTabState {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE8F5E9),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -681,8 +681,8 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE3F2FD),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFE3F2FD),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -1476,7 +1476,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
         border: Border.all(color: const Color(0xFFF0F4F8)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF101828).withOpacity(0.04),
+            color: const Color(0xFF101828).withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

@@ -24,6 +24,7 @@ import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart'
     show TapHeartsOverlay, TapHeartsOverlayState;
 import 'package:image_cropper/image_cropper.dart';
 import 'package:provider/provider.dart';
+import '../../ui_prefs.dart';
 
 import 'dart:io';
 import '../../../utils/services/notification_service.dart';

@@ -413,7 +413,7 @@ String _getMoodAsset(String moodEmoji) {
   switch (moodEmoji) {
     case '😍': return 'assets/images/anhtomau_stickers/sticker_20.gif';
     case '💖': return 'assets/images/anhtomau_stickers/sticker_9.gif';
-    case '🤩': return 'assets/images/anhtomau_stickers/sticker_19.gif';
+    case '🤩': return 'assets/images/anhtomau_stickers/sticker_3.gif';
     case '🤒': return 'assets/images/anhtomau_stickers/sticker_8.gif';
     case '🌧️': return 'assets/images/anhtomau_stickers/sticker_24.gif';
     default: return 'assets/images/anhtomau_stickers/sticker_9.gif';

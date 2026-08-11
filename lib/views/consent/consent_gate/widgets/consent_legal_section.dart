@@ -11,86 +11,75 @@ Widget _buildStartupLegalSection({
 }) {
   return Container(
     width: double.infinity,
-    padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
-    decoration: const BoxDecoration(
-      border: Border(bottom: BorderSide(color: Color(0xFFE8E8E8), width: 0.5)),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: accent, size: 19),
-            ),
-            SLSpacing.w10,
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: SLTheme.quicksand(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: _ink,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    subtitle,
-                    style: SLTheme.quicksand(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: _muted,
-                      height: 1.35,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: const Color(0xFFF0E6EA),
+        width: 1.2,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.03),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
         ),
-        const SizedBox(height: 8),
-        ...bullets.take(2).map(
-              (bullet) => Padding(
-                padding: const EdgeInsets.only(left: 46, bottom: 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Icon(
-                        Icons.check_circle_rounded,
-                        color: accent.withValues(alpha: 0.7),
-                        size: 12,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        bullet,
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _ink.withValues(alpha: 0.8),
-                          height: 1.35,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+      ],
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: accent, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            title,
+            style: SLTheme.quicksand(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF2C1B22),
             ),
-        const SizedBox(height: 2),
-        _buildInlineDocLink(accent: accent, label: actionLabel, onTap: onTap),
+          ),
+        ),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: accent.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  actionLabel,
+                  style: SLTheme.quicksand(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                    color: accent,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.open_in_new_rounded,
+                  color: accent,
+                  size: 13,
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     ),
   );

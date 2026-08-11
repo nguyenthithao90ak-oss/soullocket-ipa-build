@@ -271,7 +271,7 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
           child: Container(
             decoration: BoxDecoration(
               color: SLColors.bgElevated.withValues(alpha: 0.95),
-              border: Border(
+              border: const Border(
                 top: BorderSide(color: SLColors.borderLight),
               ),
               boxShadow: [

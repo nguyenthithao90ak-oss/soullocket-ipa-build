@@ -219,7 +219,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
             SLSpacing.h24,
             if (_pairingCode == null) ...[
               DropdownButtonFormField<int>(
-                value: _durationMinutes,
+                initialValue: _durationMinutes,
                 decoration: InputDecoration(
                   labelText: 'Thời hạn mã',
                   labelStyle: SLTheme.quicksand(

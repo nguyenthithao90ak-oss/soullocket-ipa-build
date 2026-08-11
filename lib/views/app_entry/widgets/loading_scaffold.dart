@@ -2,8 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
-import 'package:soullocket_app/widgets/soul_locket_brand_mark.dart';
-import 'package:soullocket_app/views/ui_prefs.dart';
 
 import '../../../core/sl_theme.dart';
 

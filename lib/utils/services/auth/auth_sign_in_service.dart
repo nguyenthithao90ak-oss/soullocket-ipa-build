@@ -39,26 +39,21 @@ part 'auth_sign_in_service_social.dart';
 
 class AuthSignInService {
   AuthSignInService({
-    firebase_auth.FirebaseAuth? firebaseAuth,
-    DatabaseReference? databaseRef,
+    this._firebaseAuth,
+    this._databaseRef,
     SharedPreferencesProvider? sharedPreferencesProvider,
     GoogleSignInBuilder? googleSignInBuilder,
-    FirebaseFunctions? firebaseFunctions,
+    this._firebaseFunctions,
     HttpPost? httpPost,
     NowProvider? nowProvider,
-    required AuthAdminService adminService,
-    required AuthHouseContextService houseContextService,
-  })  : _firebaseAuth = firebaseAuth,
-        _databaseRef = databaseRef,
-        _sharedPreferencesProvider =
+    required this._adminService,
+    required this._houseContextService,
+  })  : _sharedPreferencesProvider =
             sharedPreferencesProvider ?? SharedPreferences.getInstance,
         _googleSignInBuilder =
             googleSignInBuilder ?? (() => GoogleSignIn.instance),
-        _firebaseFunctions = firebaseFunctions,
         _httpPost = httpPost ?? http.post,
         _nowProvider = nowProvider ?? DateTime.now,
-        _adminService = adminService,
-        _houseContextService = houseContextService,
         _playIntegrityService = PlayIntegrityService();
 
   static const String dailyLoginLimitMessage =
@@ -1094,7 +1089,7 @@ class AuthSignInService {
     try {
       final houseId = await HouseService().getCurrentHouseId();
       final role = RoleUtils.currentRoleSync();
-      if (houseId != null && houseId.isNotEmpty && role != null) {
+      if (houseId != null && houseId.isNotEmpty) {
         await PresenceService()
             .goOffline(
               houseId: houseId,

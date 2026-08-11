@@ -566,7 +566,7 @@ extension _SoulBlockFeedbackPart on _SoulBlockGameState {
     final Color accent =
         _kSoulBurstPalette[_random.nextInt(_kSoulBurstPalette.length)];
     final _SoulBlockPerformanceProfile profile = _performanceProfile;
-    final bool simpleParticles = true;
+    const bool simpleParticles = true;
     final int particleCount = subtle
         ? min((6 + (clearedCount * 2)).clamp(6, 12), profile.subtleParticleCap)
         : min(

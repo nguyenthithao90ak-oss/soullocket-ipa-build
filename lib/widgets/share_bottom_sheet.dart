@@ -241,23 +241,23 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
 
     switch (platform) {
       case 'Facebook':
-        urlStr = 'https://www.facebook.com/sharer/sharer.php?u=$link';
+        urlStr = 'https://www.facebook.com/sharer/sharer.phpif (u != null) u!=$link';
         break;
       case 'Messenger':
-        urlStr = 'fb-messenger://share?link=$link';
+        urlStr = 'fb-messenger://shareif (link != null) link!=$link';
         break;
       case 'Zalo':
-        urlStr = 'https://zalo.me/share?url=$link';
+        urlStr = 'https://zalo.me/shareif (url != null) url!=$link';
         break;
       case 'Telegram':
-        urlStr = 'tg://msg?text=$text';
+        urlStr = 'tg://msgif (text != null) text!=$text';
         break;
       case 'Instagram':
         _copyToClipboard();
         urlStr = 'instagram://app';
         break;
       case 'SMS':
-        urlStr = 'sms:?body=$text';
+        urlStr = 'sms:if (body != null) body!=$text';
         break;
       default:
         _shareToExternal();

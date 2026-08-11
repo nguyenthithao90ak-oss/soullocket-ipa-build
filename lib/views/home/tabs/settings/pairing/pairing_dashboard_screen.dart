@@ -281,8 +281,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF0F5),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFFF0F5),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.favorite_rounded,
@@ -470,90 +470,212 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FBFD),
+      backgroundColor: const Color(0xFFFFF5F8),
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: Text(
-          L10nService().translate('settings_partner_connect'),
-          style: SLTheme.quicksand(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFF2C1B22),
-          ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              L10nService().translate('settings_partner_connect'),
+              style: SLTheme.quicksand(
+                fontSize: 19,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF2C1B22),
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Text('💖', style: TextStyle(fontSize: 16)),
+          ],
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: Color(0xFF2C1B22), size: 20),
-          onPressed: () => Navigator.pop(context),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12, top: 8, bottom: 8),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF8FB1).withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+              border: Border.all(color: const Color(0xFFFFD1DC), width: 1.5),
+            ),
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                  color: Color(0xFFD81B60), size: 16),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: _isPaired
           ? null
           : Container(
-              width: 56,
-              height: 56,
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFF2C1B22),
-                borderRadius: BorderRadius.circular(18), // Khối vuông bo góc
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF758C), Color(0xFFD81B60)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF2C1B22).withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: const Color(0xFFD81B60).withValues(alpha: 0.35),
+                    blurRadius: 14,
+                    offset: const Offset(0, 5),
                   ),
                 ],
               ),
               child: Material(
                 type: MaterialType.transparency,
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(24),
                   onTap: _showDetailedGuide,
-                  child: const Center(
-                    child: Icon(Icons.help_outline_rounded,
-                        color: Colors.white, size: 28),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.help_outline_rounded,
+                          color: Colors.white, size: 22),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Hướng dẫn',
+                        style: SLTheme.quicksand(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _isPaired
-              ? _buildPairedState()
-              : ListView(
-                  padding: const EdgeInsets.all(24),
-                  children: [
-                    _buildActionCard(
-                      title: 'Tạo mã ghép nối',
-                      subtitle: 'Tạo mã gồm 12 số để gửi cho người ấy.',
-                      icon: Icons.qr_code_rounded,
-                      color: const Color(0xFFD81B60),
-                      onTap: _showCreateCodeSheet,
-                    ),
-                    SLSpacing.h16,
-                    _buildActionCard(
-                      title: 'Nhập mã ghép nối',
-                      subtitle: 'Nhập mã do người ấy tạo để xin vào nhà chung.',
-                      icon: Icons.keyboard_alt_outlined,
-                      color: const Color(0xFF2196F3),
-                      onTap: _showEnterCodeSheet,
-                    ),
-                    SLSpacing.h32,
-                    Text(
-                      'YÊU CẦU ĐANG CHỜ DUYỆT',
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.grey.shade500,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    SLSpacing.h12,
-                    _buildRequestsList(),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFFFF0F5),
+                    Color(0xFFFFF8FA),
+                    Color(0xFFF4F6FF),
                   ],
+                  stops: [0.0, 0.45, 1.0],
                 ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: -40,
+            right: -30,
+            child: Container(
+              width: 180,
+              height: 180,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFFFB6C1).withValues(alpha: 0.18),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 100,
+            left: -50,
+            child: Container(
+              width: 220,
+              height: 220,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFE6E6FA).withValues(alpha: 0.25),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFD81B60)))
+                : _isPaired
+                    ? _buildPairedState()
+                    : ListView(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 16),
+                        children: [
+                          _buildActionCard(
+                            title: 'Tạo mã ghép nối',
+                            subtitle: 'Tạo mã gồm 12 số để gửi cho người ấy.',
+                            badgeText: 'Gửi mã 💌',
+                            icon: Icons.qr_code_2_rounded,
+                            gradientColors: const [
+                              Color(0xFFFF758C),
+                              Color(0xFFFF7EB3)
+                            ],
+                            borderColor: const Color(0xFFFFD1DC),
+                            shadowColor: const Color(0xFFFF758C),
+                            onTap: _showCreateCodeSheet,
+                          ),
+                          SLSpacing.h16,
+                          _buildActionCard(
+                            title: 'Nhập mã ghép nối',
+                            subtitle:
+                                'Nhập mã do người ấy tạo để xin vào nhà chung.',
+                            badgeText: 'Vào nhà 🏡',
+                            icon: Icons.mark_email_read_rounded,
+                            gradientColors: const [
+                              Color(0xFF42A5F5),
+                              Color(0xFF26C6DA)
+                            ],
+                            borderColor: const Color(0xFFB3E5FC),
+                            shadowColor: const Color(0xFF42A5F5),
+                            onTap: _showEnterCodeSheet,
+                          ),
+                          SLSpacing.h24,
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF0F5),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                      color: const Color(0xFFFFD1DC),
+                                      width: 1.5),
+                                ),
+                                child: const Icon(Icons.favorite_rounded,
+                                    size: 14, color: Color(0xFFD81B60)),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'YÊU CẦU ĐANG CHỜ DUYỆT',
+                                style: SLTheme.quicksand(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFFD81B60),
+                                  letterSpacing: 1.1,
+                                ),
+                              ),
+                              const Spacer(),
+                              const Text('✨', style: TextStyle(fontSize: 14)),
+                            ],
+                          ),
+                          SLSpacing.h12,
+                          _buildRequestsList(),
+                        ],
+                      ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -748,34 +870,25 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                     : const Icon(Icons.person, color: Colors.grey, size: 40),
               ),
               Positioned(
-                bottom: 2,
-                right: 2,
+                right: 0,
+                bottom: 0,
                 child: Container(
-                  padding: const EdgeInsets.all(5),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
+                  padding: const EdgeInsets.all(6),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD81B60),
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
                   ),
                   child: const Icon(Icons.camera_alt_rounded,
-                      color: Color(0xFFD81B60), size: 16),
+                      color: Colors.white, size: 14),
                 ),
               ),
             ],
           ),
-          SLSpacing.h8,
+          const SizedBox(height: 8),
           Text(
             label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: SLTheme.quicksand(
-              fontSize: 13,
+              fontSize: 16,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF2C1B22),
             ),
@@ -788,53 +901,89 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   Widget _buildActionCard({
     required String title,
     required String subtitle,
+    required String badgeText,
     required IconData icon,
-    required Color color,
+    required List<Color> gradientColors,
+    required Color borderColor,
+    required Color shadowColor,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: borderColor, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: color.withValues(alpha: 0.1),
+              color: shadowColor.withValues(alpha: 0.12),
               blurRadius: 20,
-              offset: const Offset(0, 10),
+              offset: const Offset(0, 8),
             ),
           ],
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                gradient: LinearGradient(
+                  colors: gradientColors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: gradientColors.first.withValues(alpha: 0.35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Icon(icon, color: color, size: 28),
+              child: Icon(icon, color: Colors.white, size: 26),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: SLTheme.quicksand(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF2C1B22),
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        title,
+                        style: SLTheme.quicksand(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF2C1B22),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: gradientColors.first.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          badgeText,
+                          style: SLTheme.quicksand(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: gradientColors.first,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
                     style: SLTheme.quicksand(
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Colors.grey.shade600,
                     ),
@@ -842,7 +991,15 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: gradientColors.first.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.chevron_right_rounded,
+                  color: gradientColors.first, size: 20),
+            ),
           ],
         ),
       ),
@@ -894,49 +1051,73 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   Widget _buildEmptyRequestsView() {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF0F2F5), width: 2),
+        border: Border.all(color: const Color(0xFFFFD1DC), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: const Color(0xFFFF8FB1).withValues(alpha: 0.08),
             blurRadius: 20,
-            offset: const Offset(0, 10),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FB),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.mail_outline_rounded,
-                size: 36, color: Colors.grey.shade400),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFFF0F5), Color(0xFFFFE4E1)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  border:
+                      Border.all(color: const Color(0xFFFFD1DC), width: 1.5),
+                ),
+                child: const Center(
+                  child: Text('💌', style: TextStyle(fontSize: 32)),
+                ),
+              ),
+              const Positioned(
+                top: -2,
+                right: -2,
+                child: Text('✨', style: TextStyle(fontSize: 16)),
+              ),
+              const Positioned(
+                bottom: 0,
+                left: -2,
+                child: Text('🌸', style: TextStyle(fontSize: 14)),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           Text(
-            'Chưa có yêu cầu nào',
+            'Chưa có yêu cầu nào 💕',
             style: SLTheme.quicksand(
               fontSize: 16,
               fontWeight: FontWeight.w900,
               color: const Color(0xFF2C1B22),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
-            'Các yêu cầu xin ghép nối sẽ hiển thị tại đây.',
+            'Khi người ấy nhập mã ghép nối của bạn, yêu cầu sẽ xuất hiện ngay tại đây để bạn duyệt nhé!',
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade500,
+              color: Colors.grey.shade600,
+              height: 1.4,
             ),
           ),
         ],
@@ -947,44 +1128,55 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
   Widget _buildRequestTile(PairingRequest request) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFFFD1DC), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFD81B60).withValues(alpha: 0.06),
+            color: const Color(0xFFD81B60).withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
-        border: Border.all(color: const Color(0xFFFFF0F5), width: 1.5),
       ),
       child: Column(
         children: [
           Row(
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFFFE4E1), width: 2),
-                ),
-                child: CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Colors.grey.shade100,
-                  child: request.guestAvatar.isNotEmpty
-                      ? ClipOval(
-                          child: CachedNetworkImage(
-                            imageUrl: request.guestAvatar,
-                            width: 48,
-                            height: 48,
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      : const Icon(Icons.person_rounded, color: Colors.grey),
-                ),
+              Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                          color: const Color(0xFFFF8FB1), width: 2),
+                    ),
+                    child: CircleAvatar(
+                      radius: 26,
+                      backgroundColor: Colors.pink.shade50,
+                      child: request.guestAvatar.isNotEmpty
+                          ? ClipOval(
+                              child: CachedNetworkImage(
+                                imageUrl: request.guestAvatar,
+                                width: 52,
+                                height: 52,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : const Icon(Icons.person_rounded,
+                              color: Color(0xFFD81B60), size: 30),
+                    ),
+                  ),
+                  const Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: Text('💖', style: TextStyle(fontSize: 14)),
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -999,7 +1191,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                         color: const Color(0xFF2C1B22),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     if (request.guestEmail.isNotEmpty) ...[
                       Text(
                         'Email: ${request.guestEmail}',
@@ -1019,12 +1211,12 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                         color: Colors.grey.shade400,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
-                      'Đã gửi yêu cầu ghép nối',
+                      'Đã gửi yêu cầu ghép nối 💌',
                       style: SLTheme.quicksand(
                         fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                         color: const Color(0xFFD81B60),
                       ),
                     ),
@@ -1046,6 +1238,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xFFF5F7FA),
                       borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade200),
                     ),
                     alignment: Alignment.center,
                     child: Text(
@@ -1069,7 +1262,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFFFF8FB1), Color(0xFFD81B60)],
+                        colors: [Color(0xFFFF758C), Color(0xFFD81B60)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -1084,7 +1277,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      'Chấp nhận',
+                      '💖 Chấp nhận',
                       style: SLTheme.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,

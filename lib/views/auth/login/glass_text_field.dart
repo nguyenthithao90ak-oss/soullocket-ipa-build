@@ -88,14 +88,16 @@ class _GlassTextFieldState extends State<GlassTextField>
         enableSuggestions: widget.enableSuggestions,
         autocorrect: widget.autocorrect,
         style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 16),
-        cursorColor: widget.accentColor ?? const Color(0xFFD4956B),
+        cursorColor: widget.accentColor ?? const Color(0xFFFF4B91),
         cursorRadius: const Radius.circular(2),
         cursorWidth: 2.5,
         decoration: SLTheme.authInputDecoration(
           hintText: widget.hintText,
           prefixIcon: widget.prefixIcon,
           suffixIcon: widget.suffixIcon,
-          focusColor: widget.accentColor ?? const Color(0xFFD4956B),
+          focusColor: widget.accentColor ?? const Color(0xFFFF4B91),
+          fillColor: Colors.white,
+          borderColor: const Color(0xFFFFD6E0),
         ),
       ),
     );
