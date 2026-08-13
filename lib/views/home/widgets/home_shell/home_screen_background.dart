@@ -27,7 +27,7 @@ extension _HomeScreenShellBackground on _HomeScreenState {
       children: [
         Positioned.fill(
           child: Image.asset(
-            'assets/images/default_home_bg.jpg',
+            'assets/images/default_home_bg.webp',
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,

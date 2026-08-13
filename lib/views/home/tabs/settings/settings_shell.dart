@@ -796,7 +796,7 @@ extension _SettingsTabShell on _SettingsTabState {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: Image.asset(
-              'assets/icon.png',
+              'assets/icon.webp',
               width: 44,
               height: 44,
               fit: BoxFit.cover,

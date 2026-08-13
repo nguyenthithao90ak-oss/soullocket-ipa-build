@@ -366,7 +366,7 @@ class ExportService {
       if (memUrl.isEmpty) continue;
 
       final memFileName = 'memory_${i + 1}';
-      final memFile = io.File('${memoriesDir.path}/$memFileName.jpg');
+      final memFile = io.File('${memoriesDir.path}/$memFileName.webp');
 
       try {
         final response = await http

@@ -77,20 +77,20 @@ extension _MainHomeMediaWarmupController on _MainHomeTabState {
 
     // Các tài nguyên mặc định cần tải trước (avatar nam/nữ mặc định + các sticker hay dùng tại Home)
     final List<String> defaultAssets = [
-      'assets/images/avatar_male.jpg',
-      'assets/images/avatar_female.jpg',
-      'assets/images/interaction_stickers/custom/numbered/sticker_098.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_343.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_339.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_228.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_270.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_276.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_165.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_173.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_005.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_008.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_108.png',
-      'assets/images/interaction_stickers/custom/numbered/sticker_158.png',
+      'assets/images/avatar_male.webp',
+      'assets/images/avatar_female.webp',
+      'assets/images/interaction_stickers/custom/numbered/sticker_098.webp',
+      'assets/images/interaction_stickers/custom/numbered/sticker_343.webp',
+      'assets/images/interaction_stickers/custom/numbered/sticker_339.webp',
+      'assets/images/interaction_stickers/custom/numbered/sticker_228.webp',
+      'assets/images/interaction_stickers/custom/numbered/sticker_270.webp',
+      'assets/images/interaction_stickers/custom/numbered/sticker_276.webp',
+      'assets/images/interaction_stickers/custom/numbered/sticker_165.webp',
+      'assets/images/interaction_stickers/custom/numbered/sticker_173.webp',
+      'assets/images/interaction_stickers/custom/numbered/sticker_005.webp',
+      'assets/images/interaction_stickers/custom/numbered/sticker_008.webp',
+      'assets/images/interaction_stickers/custom/numbered/sticker_108.webp',
+      'assets/images/interaction_stickers/custom/numbered/sticker_158.webp',
     ];
 
     for (final asset in defaultAssets) {

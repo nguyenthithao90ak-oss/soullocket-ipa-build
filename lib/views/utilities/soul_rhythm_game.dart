@@ -77,7 +77,7 @@ class SoulRhythmGame extends StatefulWidget {
 class _SoulRhythmGameState extends State<SoulRhythmGame>
     with TickerProviderStateMixin {
   static const String _highScoreKey = 'soul_rhythm_best_score';
-  static const String _gameIconPath = 'assets/games/rhythm-tiles/icon.png';
+  static const String _gameIconPath = 'assets/games/rhythm-tiles/icon.webp';
   static const String _customTrackAssetPath =
       'audio/soul_rhythm_reference/tutorial_songs/AxelF_CrazyFrog_Tutorial.mp3';
   static const String _customTrackLabel = 'AXEL F';

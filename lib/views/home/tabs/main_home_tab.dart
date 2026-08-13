@@ -1,5 +1,6 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'package:lottie/lottie.dart';
+import 'dart:ui';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
@@ -106,6 +107,7 @@ import 'package:soullocket_app/utils/services/love_status_notification_service.d
 import 'package:soullocket_app/views/home/love_insights_screen.dart';
 import 'package:soullocket_app/views/home/milestones_screen.dart';
 import 'dart:ui' as ui;
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../widgets/lottie_async_loader.dart';
 import '../../../core/fast_backdrop_filter.dart';
@@ -335,7 +337,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   static final List<String> _kHomeStickerAssets =
       List<String>.generate(99, (i) {
     final num = (i + 1).toString().padLeft(3, '0');
-    return 'assets/images/interaction_stickers/custom/numbered/sticker_$num.png';
+    return 'assets/images/interaction_stickers/custom/numbered/sticker_$num.webp';
   });
 
   static const List<String> _kGiftSuggestions = [

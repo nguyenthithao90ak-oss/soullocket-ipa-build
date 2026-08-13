@@ -39,7 +39,7 @@ class CloudflareR2Service {
   String _getMimeType(String filePath) {
     final ext = path.extension(filePath).toLowerCase();
     switch (ext) {
-      case '.png':
+      case '.webp':
         return 'image/png';
       case '.webp':
         return 'image/webp';
@@ -55,8 +55,8 @@ class CloudflareR2Service {
         return 'video/x-m4v';
       case '.3gp':
         return 'video/3gpp';
-      case '.jpg':
-      case '.jpeg':
+      case '.webp':
+      case '.webp':
       default:
         return 'image/jpeg';
     }

@@ -70,6 +70,10 @@ class LocationService {
         );
         await prefs.setBool('il_gps_prompted', true);
         if (!granted) {
+          final currentPerm = await Geolocator.checkPermission();
+          if (currentPerm == LocationPermission.deniedForever && !kIsWeb) {
+            await Geolocator.openAppSettings();
+          }
           return false;
         }
       }
@@ -80,6 +84,9 @@ class LocationService {
       );
       if (refreshedPermission == LocationPermission.denied ||
           refreshedPermission == LocationPermission.deniedForever) {
+        if (refreshedPermission == LocationPermission.deniedForever && !kIsWeb) {
+          await Geolocator.openAppSettings();
+        }
         return false;
       }
 
@@ -93,6 +100,9 @@ class LocationService {
       }
 
       if (!serviceEnabled) {
+        if (!kIsWeb) {
+          await Geolocator.openLocationSettings();
+        }
         return false;
       }
 

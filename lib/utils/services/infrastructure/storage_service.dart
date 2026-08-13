@@ -1093,7 +1093,7 @@ class StorageService {
     _requireCurrentUid();
     try {
       final nowMs = DateTime.now().millisecondsSinceEpoch;
-      const ext = '.png';
+      const ext = '.webp';
       final currentUid = _requireCurrentUid();
       final path = 'uploads/$currentUid/collage/$nowMs$ext';
       final normalizedStoragePath = _normalizeStorageWritePath(path);
@@ -1386,7 +1386,7 @@ class StorageService {
         fileExtension = p.extension(uploadFile.name).toLowerCase();
       }
       if (fileExtension.isEmpty) {
-        fileExtension = '.jpg';
+        fileExtension = '.webp';
       }
 
       final currentUid = _requireCurrentUid();

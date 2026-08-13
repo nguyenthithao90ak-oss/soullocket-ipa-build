@@ -13,6 +13,8 @@ import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:soullocket_app/models/diary_post.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:soullocket_app/views/utilities/sticker_maker_screen.dart';
+import 'dart:io';
 import 'package:soullocket_app/utils/services/storage/storage_service.dart';
 import 'package:soullocket_app/utils/helpers/bump_detector.dart';
 import 'package:soullocket_app/utils/services/soul_merge_service.dart';
@@ -1417,6 +1419,41 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(10),
                 ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Gửi Nhãn Dán',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  TextButton.icon(
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      final File? result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const StickerMakerScreen()),
+                      );
+                      if (result != null) {
+                        try {
+                          final uploadRes = await StorageService().uploadChatImage(
+                            _houseId!,
+                            XFile(result.path),
+                            isInternal: true,
+                          );
+                          if (uploadRes != null && uploadRes.downloadUrl != null) {
+                            _sendStickerMessage(uploadRes.downloadUrl!);
+                          }
+                        } catch (e) {
+                          debugPrint('Upload AI sticker failed: $e');
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.cut_rounded, color: Colors.pink),
+                    label: const Text('Tạo AI', style: TextStyle(color: Colors.pink)),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               Expanded(

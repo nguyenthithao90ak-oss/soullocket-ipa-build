@@ -451,7 +451,7 @@ class _TarotScreenState extends State<TarotScreen>
     return Opacity(
       opacity: opacity,
       child: Image.asset(
-        'assets/images/utility_stickers/tarot.png',
+        'assets/images/utility_stickers/tarot.webp',
         width: width,
         height: height,
         fit: fit,

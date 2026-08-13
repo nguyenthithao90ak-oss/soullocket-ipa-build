@@ -373,9 +373,9 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                             final size =
                                                 MediaQuery.sizeOf(context);
                                             final randomPaths = [
-                                              'assets/images/interaction_stickers/custom/numbered/sticker_001.png',
-                                              'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
-                                              'assets/images/interaction_stickers/custom/numbered/sticker_003.png',
+                                              'assets/images/interaction_stickers/custom/numbered/sticker_001.webp',
+                                              'assets/images/interaction_stickers/custom/numbered/sticker_002.webp',
+                                              'assets/images/interaction_stickers/custom/numbered/sticker_003.webp',
                                             ];
                                             final assetPath = randomPaths[
                                                 DateTime.now().millisecondsSinceEpoch %

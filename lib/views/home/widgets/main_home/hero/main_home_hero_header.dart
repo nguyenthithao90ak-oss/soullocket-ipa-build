@@ -42,7 +42,7 @@ class _MainHomeHeroHeaderState extends State<_MainHomeHeroHeader> {
                     scale: hideButton ? 0.92 : 1.0,
                     child: MainHomeHeaderButton(
                       key: widget.firstGuideSettingsKey,
-                      icon: Icons.settings_rounded,
+                      icon: Symbols.settings,
                       color: SLTheme.primary,
                       onLongPress: widget.state._hideSettingsButtonForSession,
                       onTap: widget.onOpenSettings ??

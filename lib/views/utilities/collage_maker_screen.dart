@@ -1140,7 +1140,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     try {
       final dir = await getTemporaryDirectory();
       final path =
-          '${dir.path}/collage_${DateTime.now().millisecondsSinceEpoch}.png';
+          '${dir.path}/collage_${DateTime.now().millisecondsSinceEpoch}.webp';
       final file = File(path);
       await file.writeAsBytes(_generatedCollageBytes!);
 

@@ -115,11 +115,11 @@ class StorageRawUploadHelper {
 
   String _imageExtension(String contentType) {
     final ct = contentType.toLowerCase();
-    if (ct.contains('png')) return '.png';
+    if (ct.contains('png')) return '.webp';
     if (ct.contains('webp')) return '.webp';
     if (ct.contains('gif')) return '.gif';
     if (ct.contains('heic') || ct.contains('heif')) return '.heic';
-    return '.jpg';
+    return '.webp';
   }
 
   /// Nén file ảnh nếu > 500KB. Trả về bytes đã nén (hoặc bytes gốc nếu không cần/lỗi).
@@ -131,10 +131,10 @@ class StorageRawUploadHelper {
       final size = await file.length();
       if (size <= _compressThresholdBytes) return await file.readAsBytes();
       final ext = contentType.contains('png')
-          ? CompressFormat.png
+          ? CompressFormat.webp
           : contentType.contains('webp')
               ? CompressFormat.webp
-              : CompressFormat.jpeg;
+              : CompressFormat.webp;
       final result = await FlutterImageCompress.compressWithFile(
         file.absolute.path,
         minWidth: _compressMaxDimension,
@@ -161,10 +161,10 @@ class StorageRawUploadHelper {
     try {
       if (bytes.length <= _compressThresholdBytes) return bytes;
       final ext = contentType.contains('png')
-          ? CompressFormat.png
+          ? CompressFormat.webp
           : contentType.contains('webp')
               ? CompressFormat.webp
-              : CompressFormat.jpeg;
+              : CompressFormat.webp;
       final result = await FlutterImageCompress.compressWithList(
         bytes,
         minWidth: _compressMaxDimension,

@@ -204,15 +204,17 @@ extension _MapLocationMarkerPipelineExt on _MapScreenState {
     List<fm.Polyline> checkinPolylines = [];
     if (checkinPoints.length > 1) {
       final compressedCheckinPoints = _compressLatLngPoints(checkinPoints);
-      checkinPolylines.add(
-        _buildSharpPolyline(
-          points: compressedCheckinPoints,
-          color: _kMapPinkDeep,
-          gradientColors: const [_kMapPinkSoft, _kMapPinkDeep],
-          strokeWidth: 4.6,
-          borderStrokeWidth: 1.8,
-        ),
-      );
+      if (compressedCheckinPoints.length >= 2) {
+        checkinPolylines.add(
+          _buildSharpPolyline(
+            points: compressedCheckinPoints,
+            color: _kMapPinkDeep,
+            gradientColors: const [_kMapPinkSoft, _kMapPinkDeep],
+            strokeWidth: 4.6,
+            borderStrokeWidth: 1.8,
+          ),
+        );
+      }
     }
 
     if (!mounted) return;

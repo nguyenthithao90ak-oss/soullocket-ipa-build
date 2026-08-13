@@ -23,6 +23,7 @@ import '../../core/sl_route.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/auth_service.dart';
 import '../../utils/services/device_manager_service.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../../utils/services/friends_service.dart';
 import '../../utils/services/house_service.dart';
 import '../../utils/services/home_startup_media_cache.dart';
@@ -452,7 +453,7 @@ class _HomeScreenState extends State<HomeScreen>
     _NavItem(labelKey: 'nav_diary', activeColor: Color(0xFFFF4D79)),
     _NavItem(labelKey: 'nav_apps', activeColor: Color(0xFFB388FF)),
     _NavItem(labelKey: 'nav_fun', activeColor: Color(0xFFFFAB00)),
-    _NavItem(labelKey: 'nav_update', activeColor: Color(0xFFFF4081)),
+    _NavItem(labelKey: 'nav_settings', activeColor: Color(0xFFFF4081)),
   ];
 
   @override
@@ -1641,7 +1642,7 @@ class _HomeScreenState extends State<HomeScreen>
       case 3:
         return Icons.sports_esports_rounded;
       case 4:
-        return Icons.auto_awesome_rounded;
+        return Symbols.settings;
       default:
         return Icons.circle;
     }

@@ -177,7 +177,7 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(28),
                               child: Image.asset(
-                                'assets/icon.png',
+                                'assets/icon.webp',
                                 width: 108,
                                 height: 108,
                                 fit: BoxFit.cover,

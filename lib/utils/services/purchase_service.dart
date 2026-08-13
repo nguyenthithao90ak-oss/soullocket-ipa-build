@@ -395,21 +395,52 @@ class PurchaseService {
     List<PurchaseDetails> purchases,
   ) async {
     for (final purchase in purchases) {
+      debugPrint(
+        'PurchaseService: handling update – '
+        'productId=${purchase.productID}, '
+        'status=${purchase.status}, '
+        'pendingComplete=${purchase.pendingCompletePurchase}',
+      );
+
       if (purchase.status == PurchaseStatus.purchased ||
           purchase.status == PurchaseStatus.restored) {
         final verified = await _verifyAndGrantVip(purchase);
-        if (purchase.pendingCompletePurchase && verified) {
+        if (!verified) {
+          debugPrint(
+            'PurchaseService: verification failed for ${purchase.productID}, '
+            'retrying once...',
+          );
+          // Retry once after a short delay
+          await Future<void>.delayed(const Duration(seconds: 2));
+          final retryVerified = await _verifyAndGrantVip(purchase);
+          if (!retryVerified) {
+            debugPrint(
+              'PurchaseService: retry also failed for ${purchase.productID}',
+            );
+          }
+        }
+        // Always complete the purchase to prevent stuck unfinished transactions
+        if (purchase.pendingCompletePurchase) {
           await _iap.completePurchase(purchase);
+          debugPrint(
+            'PurchaseService: completed purchase ${purchase.productID}',
+          );
         }
         continue;
       }
 
       if (purchase.status == PurchaseStatus.error) {
+        debugPrint(
+          'PurchaseService: purchase error for ${purchase.productID}',
+        );
         _statusController.add(VipPurchaseState.error);
         if (purchase.pendingCompletePurchase) {
           await _iap.completePurchase(purchase);
         }
       } else if (purchase.status == PurchaseStatus.canceled) {
+        debugPrint(
+          'PurchaseService: purchase canceled for ${purchase.productID}',
+        );
         _statusController.add(VipPurchaseState.idle);
         if (purchase.pendingCompletePurchase) {
           await _iap.completePurchase(purchase);

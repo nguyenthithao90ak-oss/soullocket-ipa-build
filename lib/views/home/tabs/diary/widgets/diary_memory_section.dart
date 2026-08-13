@@ -1158,7 +1158,7 @@ class _DiaryMemoryPhotoCellState extends State<_DiaryMemoryPhotoCell> {
     final photoUrl = _resolvePhotoUrl(photo);
     final photoId = photo['id']?.toString() ?? 'unknown_${widget.index}';
 
-    final isStickerOrPng = photoUrl.toLowerCase().contains('.png') ||
+    final isStickerOrPng = photoUrl.toLowerCase().contains('.webp') ||
         photo['isSticker'] == true ||
         photo['isCutout'] == true;
 

@@ -479,6 +479,20 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       maxWidth: 1440,
       maxHeight: 2560,
       uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Cắt nền chat',
+            toolbarColor: Colors.black,
+            toolbarWidgetColor: Colors.white,
+            backgroundColor: Colors.black,
+            activeControlsWidgetColor: const Color(0xFFFF6D97),
+            dimmedLayerColor: Colors.black.withValues(alpha: 0.8),
+            cropFrameColor: Colors.transparent,
+            cropGridColor: Colors.transparent,
+            showCropGrid: false,
+            initAspectRatio: CropAspectRatioPreset.square,
+            lockAspectRatio: true,
+            
+          ),
         IOSUiSettings(
           title: 'Cắt nền chat',
           aspectRatioLockEnabled: true,

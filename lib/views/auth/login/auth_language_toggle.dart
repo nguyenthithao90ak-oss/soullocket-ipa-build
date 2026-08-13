@@ -30,6 +30,10 @@ class AuthLanguageToggle extends StatelessWidget {
     'hi': '🇮🇳 हिन्दी',
     'tr': '🇹🇷 Türkçe',
     'ar': '🇸🇦 العربية',
+    'tl': '🇵🇭 Tagalog (Filipino)',
+    'ms': '🇲🇾 Bahasa Melayu',
+    'pl': '🇵🇱 Polski',
+    'nl': '🇳🇱 Nederlands',
   };
 
   void _showLanguagePicker(BuildContext context) {

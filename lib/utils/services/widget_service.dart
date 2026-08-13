@@ -435,7 +435,7 @@ class WidgetService {
       await _saveWidgetDataIfChanged<String>('diaryImagePaths', '[]');
       await _saveWidgetDataIfChanged<String>('diaryImageUrlSignature', '');
       await _saveWidgetDataIfChanged<int>('diaryImageCount', 0);
-      await _cleanupOldFiles(prefix: 'diary_', suffix: '.jpg', keepPaths: []);
+      await _cleanupOldFiles(prefix: 'diary_', suffix: '.webp', keepPaths: []);
       return;
     }
 
@@ -455,7 +455,7 @@ class WidgetService {
     for (final url in limitedUrls) {
       final localPath = await _downloadAndCompressImage(
         url,
-        'diary_${_stableFileToken(url)}.jpg',
+        'diary_${_stableFileToken(url)}.webp',
         useExisting: true,
       );
       if (localPath == null) continue;
@@ -465,7 +465,7 @@ class WidgetService {
 
       final widgetPath = await _widgetReadablePath(
         localPath,
-        sharedFileName: 'diary_${_stableFileToken(url)}.jpg',
+        sharedFileName: 'diary_${_stableFileToken(url)}.webp',
       );
       if (!savedPaths.contains(widgetPath)) {
         savedPaths.add(widgetPath);
@@ -484,7 +484,7 @@ class WidgetService {
 
     await _cleanupOldFiles(
       prefix: 'diary_',
-      suffix: '.jpg',
+      suffix: '.webp',
       keepPaths: localPaths,
     );
   }

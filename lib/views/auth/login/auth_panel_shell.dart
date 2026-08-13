@@ -65,7 +65,7 @@ class AuthPanelShell extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
                               Image.asset(
-                                'assets/icons/heart_lock.png',
+                                'assets/icons/heart_lock.webp',
                                 width: compact ? 28 : 32,
                                 height: compact ? 28 : 32,
                                 errorBuilder: (context, error, stackTrace) =>
@@ -79,7 +79,7 @@ class AuthPanelShell extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            '❤️ Nơi lưu giữ những khoảnh khắc yêu thương ❤️',
+                            l10n.translate('auth_slogan'),
                             textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
                               fontSize: compact ? 13 : 14.5,
@@ -171,7 +171,7 @@ class AuthPanelShell extends StatelessWidget {
                             final buttons = [
                               _AuthHelpButton(
                                 icon: Icons.menu_book_rounded,
-                                label: l10n.translate('Hướng dẫn'),
+                                label: l10n.translate('auth_guide_short'),
                                 onTap: onOpenGuide,
                                 isGuide: true,
                                 expanded: !stackButtons,
@@ -179,7 +179,7 @@ class AuthPanelShell extends StatelessWidget {
                               ),
                               _AuthHelpButton(
                                 icon: Icons.headset_mic_rounded,
-                                label: l10n.translate('Hỗ trợ'),
+                                label: l10n.translate('auth_contact_short'),
                                 onTap: onOpenContact,
                                 isGuide: false,
                                 expanded: !stackButtons,

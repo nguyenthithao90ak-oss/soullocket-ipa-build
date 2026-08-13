@@ -18,11 +18,17 @@ extension MainHomeAvatarController on _MainHomeTabState {
         maxWidth: 1080,
         maxHeight: 1080,
         uiSettings: [
+          
           AndroidUiSettings(
-            toolbarTitle:
-                isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
-            toolbarColor: const Color(0xFFD81B60),
+            toolbarTitle: isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
+            toolbarColor: Colors.black,
             toolbarWidgetColor: Colors.white,
+            backgroundColor: Colors.black,
+            activeControlsWidgetColor: const Color(0xFFFF6D97),
+            dimmedLayerColor: Colors.black.withValues(alpha: 0.8),
+            cropFrameColor: Colors.transparent,
+            cropGridColor: Colors.transparent,
+            showCropGrid: false,
             initAspectRatio: CropAspectRatioPreset.square,
             lockAspectRatio: true,
             cropStyle: CropStyle.circle,

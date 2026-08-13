@@ -207,7 +207,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }
 
   final _currencyFormat = NumberFormat.currency(
-      locale: 'vi_VN', symbol: L10nService().translate('util_txt_b5407d'));
+      locale: 'vi_VN', symbol: 'đ');
 
   int _priorityRank(String? value) {
     switch (value) {

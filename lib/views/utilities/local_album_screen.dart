@@ -239,7 +239,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     for (final xfile in images) {
       if (_items.length >= _maxItems) break;
       final bytes = await xfile.readAsBytes();
-      final fileName = await _saveFile(bytes, '.jpg');
+      final fileName = await _saveFile(bytes, '.webp');
       if (fileName.isEmpty) continue;
       _items.add(LocalAlbumItem(
         id: '${DateTime.now().millisecondsSinceEpoch}_${_items.length}',
@@ -353,7 +353,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
         if (srcPath.isEmpty) continue;
         final bytes = await File(srcPath).readAsBytes();
         if (bytes.isEmpty) continue;
-        final fileName = await _saveFile(bytes, ext.isNotEmpty ? ext : '.jpg');
+        final fileName = await _saveFile(bytes, ext.isNotEmpty ? ext : '.webp');
         if (fileName.isEmpty) continue;
         _items.add(LocalAlbumItem(
           id: '${DateTime.now().millisecondsSinceEpoch}_${_items.length}',

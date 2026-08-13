@@ -11,6 +11,7 @@ import 'package:firebase_database/firebase_database.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/anti_spam_service.dart';
 import '../../utils/services/auth_service.dart';
+import '../../utils/services/consent_service.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../utils/services/security_flow_guard.dart';
 import '../../utils/services/security_service.dart';
@@ -95,7 +96,15 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _checkFirstTimeSyncGuide() async {
-    await Future<void>.delayed(const Duration(milliseconds: 1200));
+    while (!mounted) {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+    // Wait until the user has fully accepted consent (closed the Consent Gate)
+    while (!ConsentService().hasValidConsentSync()) {
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      if (!mounted) return;
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 600)); // Short delay after consent modal closes
     if (!mounted || _isLoading) return;
     final prefs = await SharedPreferences.getInstance();
     final hasSeen = prefs.getBool('il_has_seen_sync_guide_v2') ?? false;
@@ -941,7 +950,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Positioned.fill(
                     child: Image.asset(
-                      'assets/images/default_auth_bg.jpg',
+                      'assets/images/default_auth_bg.webp',
                       fit: BoxFit.cover,
                       width: double.infinity,
                       height: double.infinity,

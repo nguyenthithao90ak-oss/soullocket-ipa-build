@@ -14,6 +14,20 @@ Future<XFile?> _cropCountdownModeAvatarFile(XFile file) async {
       maxWidth: 1080,
       maxHeight: 1080,
       uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: L10nService().translate('home_chnhavatar_d974c0'),
+            toolbarColor: Colors.black,
+            toolbarWidgetColor: Colors.white,
+            backgroundColor: Colors.black,
+            activeControlsWidgetColor: const Color(0xFFFF6D97),
+            dimmedLayerColor: Colors.black.withValues(alpha: 0.8),
+            cropFrameColor: Colors.transparent,
+            cropGridColor: Colors.transparent,
+            showCropGrid: false,
+            initAspectRatio: CropAspectRatioPreset.square,
+            lockAspectRatio: true,
+            
+          ),
         IOSUiSettings(
           title: L10nService().translate('home_chnhavatar_d974c0'),
           aspectRatioPresets: const [CropAspectRatioPreset.square],
@@ -45,6 +59,20 @@ Future<XFile?> _cropCountdownModeBackgroundFile(XFile file) async {
       maxWidth: 1080,
       maxHeight: 2560,
       uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: L10nService().translate('home_chnhnnkhng_a929e1'),
+            toolbarColor: Colors.black,
+            toolbarWidgetColor: Colors.white,
+            backgroundColor: Colors.black,
+            activeControlsWidgetColor: const Color(0xFFFF6D97),
+            dimmedLayerColor: Colors.black.withValues(alpha: 0.8),
+            cropFrameColor: Colors.transparent,
+            cropGridColor: Colors.transparent,
+            showCropGrid: false,
+            initAspectRatio: CropAspectRatioPreset.ratio16x9,
+            lockAspectRatio: true,
+            
+          ),
         IOSUiSettings(
           title: L10nService().translate('home_chnhnnkhng_a929e1'),
           aspectRatioPresets: const [_themeBackgroundAspectRatioPreset],

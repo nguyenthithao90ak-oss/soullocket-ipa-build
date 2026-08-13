@@ -41,7 +41,7 @@ String? utilityStickerAssetForId(String utilityId) {
   if (!_kUtilityStickerIds.contains(normalizedId)) {
     return null;
   }
-  return 'assets/images/utility_stickers/$normalizedId.png';
+  return 'assets/images/utility_stickers/$normalizedId.webp';
 }
 
 bool hasUtilityStickerAsset(String utilityId) {
@@ -147,6 +147,13 @@ Widget buildUtilityStickerIcon({
       fallbackIcon,
       size: fallbackSize,
       color: fallbackColor,
+      shadows: const [
+        Shadow(
+          color: Colors.black26,
+          blurRadius: 6,
+          offset: Offset(0, 2),
+        ),
+      ],
     ),
   );
 
@@ -175,7 +182,7 @@ Widget buildUtilityStickerIcon({
             if (wasSynchronouslyLoaded || frame != null) return child;
             return fallback;
           },
-          errorBuilder: (_, __, ___) => fallback,
+          errorBuilder: (_, _, _) => fallback,
         ),
       ),
     );
@@ -207,7 +214,7 @@ Widget buildUtilityStickerIcon({
               }
               return fallback;
             },
-            errorBuilder: (_, __, ___) => fallback,
+            errorBuilder: (_, _, _) => fallback,
           ),
         ),
       );

@@ -101,7 +101,7 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
                             border: Border.all(color: Colors.white, width: 1.5),
                           ),
                           child: Text(
-                            '✨ ${L10nService().translate('GIỚI TÍNH CỦA BẠN')} ✨',
+                            '✨ ${L10nService().translate('your_gender')} ✨',
                             textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
                               color: const Color(0xFFFF4081), // Chữ hồng đậm
@@ -115,7 +115,7 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
 
                         // --- Subtitle ---
                         Text(
-                          L10nService().translate('Để ứng dụng hiển thị đúng giao diện\nmà không cần lột lớp sau nhé!'),
+                          L10nService().translate('gender_selection_desc'),
                           textAlign: TextAlign.center,
                           style: SLTheme.quicksand(
                             fontSize: 14,
@@ -167,10 +167,10 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
                                 children: [
                                   Expanded(
                                     child: _buildOption(
-                                      assetPath: 'assets/images/avatar_male.jpg',
+                                      assetPath: 'assets/images/avatar_male.webp',
                                       lottieUrl: 'assets/images/male_avatar_sticker.json',
-                                      title: L10nService().translate('Nam'),
-                                      desc: L10nService().translate('Bạn Nam'),
+                                      title: L10nService().translate('gender_male'),
+                                      desc: L10nService().translate('gender_male_desc'),
                                       baseColor: const Color(0xFF82B1FF),
                                       shadowColor: const Color(0xFF82B1FF),
                                       compact: isCompactLayout,
@@ -180,10 +180,10 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
                                   const SizedBox(width: 40), // Khoảng cách giữa 2 avatar
                                   Expanded(
                                     child: _buildOption(
-                                      assetPath: 'assets/images/avatar_female.jpg',
+                                      assetPath: 'assets/images/avatar_female.webp',
                                       lottieUrl: 'assets/images/female_avatar_sticker.json',
-                                      title: L10nService().translate('Nữ'),
-                                      desc: L10nService().translate('Bạn Nữ'),
+                                      title: L10nService().translate('gender_female'),
+                                      desc: L10nService().translate('gender_female_desc'),
                                       baseColor: const Color(0xFFFF80AB),
                                       shadowColor: const Color(0xFFFF80AB),
                                       compact: isCompactLayout,

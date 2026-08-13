@@ -59,7 +59,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
   ];
   final _fmt = NumberFormat.currency(
       locale: 'vi_VN',
-      symbol: L10nService().translate('util_txt_b5407d'),
+      symbol: 'đ',
       decimalDigits: 0);
 
   @override

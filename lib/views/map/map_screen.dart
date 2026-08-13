@@ -1149,7 +1149,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     return fm.Polyline(
       points: points,
       color: color,
-      gradientColors: gradientColors,
+      // Removed gradientColors to prevent flutter_map crashes on short segments
+      // gradientColors: gradientColors,
       strokeWidth: strokeWidth,
       borderStrokeWidth: borderStrokeWidth,
       borderColor: borderColor,
@@ -1178,29 +1179,33 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       final myRenderPoints = _compressHistoryPoints(history.myPoints)
           .map((e) => e.latLng)
           .toList();
-      polylines.add(
-        _buildSharpPolyline(
-          points: myRenderPoints,
-          color: _kMapBlue,
-          gradientColors: const [_kMapBlueSoft, _kMapBlue],
-          strokeWidth: 4.8,
-          borderStrokeWidth: 1.8,
-        ),
-      );
+      if (myRenderPoints.length >= 2) {
+        polylines.add(
+          _buildSharpPolyline(
+            points: myRenderPoints,
+            color: _kMapBlue,
+            gradientColors: const [_kMapBlueSoft, _kMapBlue],
+            strokeWidth: 4.8,
+            borderStrokeWidth: 1.8,
+          ),
+        );
+      }
     }
     if (history.partnerPoints.length >= 2) {
       final partnerRenderPoints = _compressHistoryPoints(history.partnerPoints)
           .map((e) => e.latLng)
           .toList();
-      polylines.add(
-        _buildSharpPolyline(
-          points: partnerRenderPoints,
-          color: _kMapPinkDeep,
-          gradientColors: const [_kMapPinkSoft, _kMapPinkDeep],
-          strokeWidth: 4.8,
-          borderStrokeWidth: 1.8,
-        ),
-      );
+      if (partnerRenderPoints.length >= 2) {
+        polylines.add(
+          _buildSharpPolyline(
+            points: partnerRenderPoints,
+            color: _kMapPinkDeep,
+            gradientColors: const [_kMapPinkSoft, _kMapPinkDeep],
+            strokeWidth: 4.8,
+            borderStrokeWidth: 1.8,
+          ),
+        );
+      }
     }
     return polylines;
   }

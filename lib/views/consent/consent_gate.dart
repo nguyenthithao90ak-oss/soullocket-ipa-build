@@ -137,7 +137,6 @@ class _ConsentGateState extends State<ConsentGate> {
       builder: (ctx) {
         var cookieLevel =
             initialCookieLevel == 'essential' ? 'essential' : 'all';
-        final showScrollHintNotifier = ValueNotifier<bool>(true);
 
         return StatefulBuilder(
           builder: (ctx, setState) {
@@ -188,22 +187,7 @@ class _ConsentGateState extends State<ConsentGate> {
                       child: Column(
                         children: [
                           Expanded(
-                            child: Stack(
-                              children: [
-                                NotificationListener<ScrollNotification>(
-                                  onNotification: (notification) {
-                                    final shouldShow =
-                                        notification.metrics.pixels <= 8 &&
-                                            notification
-                                                    .metrics.maxScrollExtent >
-                                                16;
-                                    if (showScrollHintNotifier.value !=
-                                        shouldShow) {
-                                      showScrollHintNotifier.value = shouldShow;
-                                    }
-                                    return false;
-                                  },
-                                  child: SingleChildScrollView(
+                            child: SingleChildScrollView(
                                     padding: EdgeInsets.fromLTRB(
                                       horizontalPadding,
                                       compact ? 12 : 16,
@@ -288,27 +272,6 @@ class _ConsentGateState extends State<ConsentGate> {
                                       ),
                                     ),
                                   ),
-                                  Positioned(
-                                  left: 0,
-                                  right: 0,
-                                  bottom: 8,
-                                  child: IgnorePointer(
-                                    child: ValueListenableBuilder<bool>(
-                                      valueListenable: showScrollHintNotifier,
-                                      builder: (context, showHint, _) {
-                                        return AnimatedOpacity(
-                                          duration:
-                                              const Duration(milliseconds: 180),
-                                          opacity: showHint ? 1 : 0,
-                                          child: _buildStartupScrollHint(),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                         ],
                       ),
                     ),

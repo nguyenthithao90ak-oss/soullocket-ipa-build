@@ -545,7 +545,7 @@ class DrawingStudioService {
     }
 
     final dir = await _ensureGalleryDirectory();
-    final file = File('${dir.path}/$id.png');
+    final file = File('${dir.path}/$id.webp');
     await file.writeAsBytes(bytes, flush: true);
     return DrawingStudioGalleryItem(
       id: id,

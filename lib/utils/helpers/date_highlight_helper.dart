@@ -1,17 +1,19 @@
+import 'package:soullocket_app/utils/services/l10n_service.dart';
+
 class DateHighlightHelper {
-  static const Map<String, Map<String, String>> _holidayMap = {
-    '01-01': {'icon': '🎉', 'text': 'Năm mới'},
-    '02-14': {'icon': '💖', 'text': 'Valentine'},
-    '03-08': {'icon': '💐', 'text': 'Quốc tế Phụ nữ'},
-    '04-30': {'icon': '🇻🇳', 'text': 'Giải phóng miền Nam'},
-    '05-01': {'icon': '🛠️', 'text': 'Quốc tế Lao động'},
-    '06-01': {'icon': '🧸', 'text': 'Quốc tế Thiếu nhi'},
-    '09-02': {'icon': '🇻🇳', 'text': 'Quốc khánh'},
-    '10-20': {'icon': '🌹', 'text': 'Phụ nữ Việt Nam'},
-    '11-20': {'icon': '👩‍🏫', 'text': 'Nhà giáo Việt Nam'},
-    '12-24': {'icon': '🎄', 'text': 'Giáng sinh'},
-    '12-25': {'icon': '🎅', 'text': 'Giáng sinh'},
-    '12-31': {'icon': '🎆', 'text': 'Giao thừa'},
+  static Map<String, Map<String, String>> get _holidayMap => {
+    '01-01': {'icon': '🎉', 'text': L10nService().translate('holiday_new_year')},
+    '02-14': {'icon': '💖', 'text': L10nService().translate('holiday_valentine')},
+    '03-08': {'icon': '💐', 'text': L10nService().translate('holiday_womens_day')},
+    '04-30': {'icon': '🇻🇳', 'text': L10nService().translate('holiday_liberation_day')},
+    '05-01': {'icon': '🛠️', 'text': L10nService().translate('holiday_labor_day')},
+    '06-01': {'icon': '🧸', 'text': L10nService().translate('holiday_children_day')},
+    '09-02': {'icon': '🇻🇳', 'text': L10nService().translate('holiday_national_day')},
+    '10-20': {'icon': '🌹', 'text': L10nService().translate('holiday_vn_womens_day')},
+    '11-20': {'icon': '👩‍🏫', 'text': L10nService().translate('holiday_teachers_day')},
+    '12-24': {'icon': '🎄', 'text': L10nService().translate('holiday_christmas')},
+    '12-25': {'icon': '🎅', 'text': L10nService().translate('holiday_christmas')},
+    '12-31': {'icon': '🎆', 'text': L10nService().translate('holiday_new_year_eve')},
   };
 
   static List<Map<String, String>> getDateHighlights(
@@ -34,10 +36,10 @@ class DateHighlightHelper {
         d.month == anniversaryDate.month &&
         d.day == anniversaryDate.day) {
       if (d.year == anniversaryDate.year) {
-        tags.add({'icon': '💕', 'text': 'Ngày bắt đầu yêu'});
+        tags.add({'icon': '💕', 'text': L10nService().translate('holiday_anniversary_start')});
       } else if (d.year > anniversaryDate.year) {
         final years = d.year - anniversaryDate.year;
-        tags.add({'icon': '💕', 'text': 'Kỷ niệm $years năm yêu nhau'});
+        tags.add({'icon': '💕', 'text': L10nService().translate('holiday_anniversary_years').replaceAll('{years}', years.toString())});
       }
     }
 
