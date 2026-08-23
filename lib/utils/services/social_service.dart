@@ -997,8 +997,8 @@ class SocialService {
       'isHidden': hasViolations,
       if (resolvedAvt.isNotEmpty) 'avt': resolvedAvt,
       if (resolvedAvt.isNotEmpty) 'authorAvt': resolvedAvt,
-      if (replyTo != null) 'replyTo': replyTo,
-      if (replyToName != null) 'replyToName': replyToName,
+      'replyTo': ?replyTo,
+      'replyToName': ?replyToName,
       'likes_map': <String, dynamic>{},
     };
 

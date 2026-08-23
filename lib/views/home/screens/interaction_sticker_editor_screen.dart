@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 // sticker bắn
 class InteractionStickerEditorScreen extends StatefulWidget {
@@ -160,8 +161,8 @@ class _InteractionStickerEditorScreenState
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Lưu thay đổi thất bại, vui lòng thử lại.')),
+        SnackBar(
+            content: Text(context.tr('Lưu thay đổi thất bại, vui lòng thử lại.'))),
       );
     } finally {
       if (mounted) {

@@ -1,14 +1,10 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
-import 'dart:ui' as ui;
-import 'dart:math' as math;
 import '../../core/sl_theme.dart';
 import '../../utils/services/health_period_service.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/utils/services/widget_service.dart';
 
 class HealthScreen extends StatefulWidget {
@@ -949,7 +945,7 @@ class _HealthScreenState extends State<HealthScreen> {
                   ),
                   Switch(
                     value: _shareWithPartner,
-                    activeColor: Colors.white,
+                    activeThumbColor: Colors.white,
                     activeTrackColor: const Color(0xFFFF80AB),
                     onChanged: (value) {
                       setState(() => _shareWithPartner = value);

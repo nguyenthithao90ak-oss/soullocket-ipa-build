@@ -250,7 +250,7 @@ class DiaryItem extends StatelessWidget {
                         ),
                       ),
                     ),
-                    errorWidget: (_, __, ___) => Container(
+                    errorWidget: (_, _, _) => Container(
                       height: 120,
                       color: Colors.white.withValues(alpha: 0.08),
                       alignment: Alignment.center,

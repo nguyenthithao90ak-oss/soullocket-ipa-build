@@ -1,8 +1,6 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
-import '../../../core/fast_backdrop_filter.dart';
 import '../../../utils/services/l10n_service.dart';
 import 'auth_tab_switcher.dart';
 
@@ -106,7 +104,7 @@ class AuthPanelShell extends StatelessWidget {
                         alignment: Alignment.topCenter,
                         children: [
                           ...previousChildren,
-                          if (currentChild != null) currentChild,
+                          ?currentChild,
                         ],
                       );
                     },

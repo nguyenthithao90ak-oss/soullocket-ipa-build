@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/pairing_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 class PairingEnterCodeSheet extends StatefulWidget {
   const PairingEnterCodeSheet({super.key});
@@ -239,7 +239,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet>
               ],
             ),
             child: Icon(
-              isInput ? Symbols.link : Symbols.send_rounded,
+              isInput ? Icons.link_rounded : Icons.send_rounded,
               color: Colors.white,
               size: 28,
             ),
@@ -299,7 +299,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet>
                   color: const Color(0xFFEF5350).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Symbols.warning_rounded,
+                child: const Icon(Icons.warning_rounded,
                     color: Color(0xFFC62828), size: 18),
               ),
               const SizedBox(width: 10),
@@ -353,7 +353,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet>
               border: InputBorder.none,
               prefixIcon: Padding(
                 padding: const EdgeInsets.only(left: 16),
-                child: Icon(Symbols.pin, color: Colors.grey.shade400, size: 22),
+                child: Icon(Icons.pin_rounded, color: Colors.grey.shade400, size: 22),
               ),
               prefixIconConstraints:
                   const BoxConstraints(minWidth: 48, maxHeight: 22),
@@ -365,7 +365,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet>
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Symbols.error, size: 16, color: Color(0xFFD32F2F)),
+              const Icon(Icons.error_rounded, size: 16, color: Color(0xFFD32F2F)),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
@@ -419,7 +419,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet>
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Symbols.send_rounded, size: 20),
+                      const Icon(Icons.send_rounded, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         'Gửi Yêu Cầu',
@@ -471,11 +471,11 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet>
                 PairingService.instance.cancelMyRequest();
                 setState(() => _status = 'input');
               },
-              icon: const Icon(Symbols.close, size: 18),
-              label: Text('Hủy yêu cầu',
+              icon: const Icon(Icons.close_rounded, size: 18),
+              label: Text(context.tr('Hủy yêu cầu'),
                   style: SLTheme.quicksand(
                       fontWeight: FontWeight.w800,
-                      color: Colors.red.shade400)),
+                       color: Colors.red.shade400)),
               style: TextButton.styleFrom(
                 foregroundColor: Colors.red.shade400,
               ),
@@ -483,8 +483,8 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet>
             const SizedBox(width: 16),
             TextButton.icon(
               onPressed: () => Navigator.pop(context),
-              icon: Icon(Symbols.close, size: 18, color: Colors.grey.shade500),
-              label: Text('Đóng',
+              icon: Icon(Icons.close_rounded, size: 18, color: Colors.grey.shade500),
+              label: Text(context.tr('Đóng'),
                   style: SLTheme.quicksand(
                       fontWeight: FontWeight.w800,
                       color: Colors.grey.shade500)),
@@ -510,7 +510,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet>
               color: const Color(0xFF4CAF50).withValues(alpha: 0.10),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Symbols.check_circle,
+            child: const Icon(Icons.check_circle_rounded,
                 size: 48, color: Color(0xFF4CAF50), fill: 1),
           ),
           SLSpacing.h16,
@@ -557,7 +557,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet>
               color: Colors.red.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Symbols.cancel,
+            child: const Icon(Icons.cancel_rounded,
                 size: 48, color: Color(0xFFE53935), fill: 1),
           ),
           SLSpacing.h16,
@@ -592,8 +592,8 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet>
                   _status = 'input';
                 });
               },
-              icon: const Icon(Symbols.refresh, size: 20),
-              label: Text('Thử lại',
+              icon: const Icon(Icons.refresh_rounded, size: 20),
+              label: Text(context.tr('Thử lại'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,
@@ -636,7 +636,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet>
                     ),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Symbols.favorite,
+                  child: const Icon(Icons.favorite_rounded,
                       size: 64, color: Color(0xFFE91E63), fill: 1),
                 ),
                 SLSpacing.h24,

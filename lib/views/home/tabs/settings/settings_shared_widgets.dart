@@ -567,7 +567,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
                           letterSpacing: 0.8,
                         ),
                       ),
-                      if (titleBadge != null) titleBadge,
+                      ?titleBadge,
                     ],
                   ),
                 ),
@@ -894,7 +894,7 @@ extension _SettingsTabSharedWidgets on _SettingsTabState {
               ),
             ),
           ),
-          if (trailing != null) trailing,
+          ?trailing,
         ],
       ),
     );

@@ -487,7 +487,7 @@ class _LoveCardScreenState extends State<LoveCardScreen>
       PageRouteBuilder(
         barrierDismissible: true,
         opaque: false,
-        pageBuilder: (context, _, __) => Scaffold(
+        pageBuilder: (context, _, _) => Scaffold(
           backgroundColor: Colors.black.withValues(alpha: 0.88),
           body: Stack(
             children: [

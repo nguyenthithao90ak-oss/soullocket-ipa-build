@@ -1730,7 +1730,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
                 height: playArea.height,
                 child: ValueListenableBuilder<int>(
                   valueListenable: _playfieldFrame,
-                  builder: (context, _, __) => GestureDetector(
+                  builder: (context, _, _) => GestureDetector(
                     onTapDown: _handleTapDown,
                     behavior: HitTestBehavior.opaque,
                     child: _buildPlayfieldLayers(
@@ -1751,7 +1751,7 @@ class _SoulRhythmGameState extends State<SoulRhythmGame>
                 right: 8,
                 child: ValueListenableBuilder<int>(
                   valueListenable: _hudFrame,
-                  builder: (context, _, __) => LayoutBuilder(
+                  builder: (context, _, _) => LayoutBuilder(
                     builder: (context, constraints) {
                       final compactHud = constraints.maxWidth < 370;
                       if (compactHud) {

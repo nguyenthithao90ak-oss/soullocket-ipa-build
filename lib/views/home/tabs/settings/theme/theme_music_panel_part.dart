@@ -376,7 +376,7 @@ extension _SettingsTabThemeMusicPanelPart on _SettingsTabState {
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: Text('Đã hiểu',
+                        child: Text(context.tr('Đã hiểu'),
                             style: SLTextStyles.quicksand(
                                 fontWeight: FontWeight.bold,
                                 color: const Color(0xFFD81B60))),

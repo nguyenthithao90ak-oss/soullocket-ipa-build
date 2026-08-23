@@ -7,10 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../core/sl_theme.dart';
-import '../../core/fast_backdrop_filter.dart';
 import '../../utils/services/ai_counselor_service.dart';
 import '../ui_prefs.dart';
 import '../../widgets/r2_sticker_image.dart';
@@ -837,7 +835,7 @@ Quy tắc:
           ),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Symbols.lightbulb, color: Color(0xFFE91E63), fill: 1),
+            icon: const Icon(Icons.lightbulb_rounded, color: Color(0xFFE91E63)),
             tooltip: 'Chọn Tính Cách AI',
             initialValue: _persona,
             onSelected: (value) {
@@ -870,12 +868,12 @@ Quy tắc:
           IconButton(
             tooltip: 'Phong cách trò chuyện',
             onPressed: _showPersonaConfigSheet,
-            icon: const Icon(Symbols.tune, color: Color(0xFFE91E63)),
+            icon: const Icon(Icons.tune_rounded, color: Color(0xFFE91E63)),
           ),
           IconButton(
             tooltip: 'Làm mới cuộc trò chuyện',
             onPressed: _clearHistory,
-            icon: const Icon(Symbols.refresh, color: Color(0xFFE91E63)),
+            icon: const Icon(Icons.refresh_rounded, color: Color(0xFFE91E63)),
           ),
         ],
       ),
@@ -936,7 +934,7 @@ Quy tắc:
         children: [
           Row(
             children: [
-              const Icon(Symbols.magic_button, color: Color(0xFFF48FB1), size: 20, fill: 1),
+              const Icon(Icons.auto_awesome_rounded, color: Color(0xFFF48FB1), size: 20),
               const SizedBox(width: 8),
               Text(
                 context.tr('friendly_chat_suggestions'),
@@ -951,17 +949,17 @@ Quy tắc:
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _buildSuggestionChip(context.tr('friendly_chat_sugg_1'), Symbols.favorite, const Color(0xFFFFCDD2), const Color(0xFFE53935))),
+              Expanded(child: _buildSuggestionChip(context.tr('friendly_chat_sugg_1'), Icons.favorite_rounded, const Color(0xFFFFCDD2), const Color(0xFFE53935))),
               const SizedBox(width: 12),
-              Expanded(child: _buildSuggestionChip(context.tr('friendly_chat_sugg_2'), Symbols.calendar_month, const Color(0xFFF8BBD0), const Color(0xFFD81B60))),
+              Expanded(child: _buildSuggestionChip(context.tr('friendly_chat_sugg_2'), Icons.calendar_month_rounded, const Color(0xFFF8BBD0), const Color(0xFFD81B60))),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _buildSuggestionChip(context.tr('friendly_chat_sugg_3'), Symbols.chat_bubble, const Color(0xFFFCE4EC), const Color(0xFFC2185B))),
+              Expanded(child: _buildSuggestionChip(context.tr('friendly_chat_sugg_3'), Icons.chat_bubble_rounded, const Color(0xFFFCE4EC), const Color(0xFFC2185B))),
               const SizedBox(width: 12),
-              Expanded(child: _buildSuggestionChip(context.tr('friendly_chat_sugg_4'), Symbols.star, const Color(0xFFFFEBEE), const Color(0xFFE57373))),
+              Expanded(child: _buildSuggestionChip(context.tr('friendly_chat_sugg_4'), Icons.star_rounded, const Color(0xFFFFEBEE), const Color(0xFFE57373))),
             ],
           ),
         ],
@@ -997,7 +995,7 @@ Quy tắc:
                 color: bgColor,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: iconColor, size: 16, fill: 1),
+              child: Icon(icon, color: iconColor, size: 16),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -1011,7 +1009,7 @@ Quy tắc:
                 ),
               ),
             ),
-            const Icon(Symbols.chevron_right, color: Colors.grey, size: 16),
+            const Icon(Icons.chevron_right_rounded, color: Colors.grey, size: 16),
           ],
         ),
       ),
@@ -1100,12 +1098,11 @@ Quy tắc:
                     onTap: _isSending ? null : _sendMessage,
                     child: Center(
                       child: Icon(
-                        Symbols.send_rounded,
+                        Icons.send_rounded,
                         size: 24,
                         color: _isSending
                             ? Colors.white.withValues(alpha: 0.5)
                             : Colors.white,
-                        fill: 1,
                       ),
                     ),
                   ),
@@ -1235,8 +1232,8 @@ class _FriendlyChatBubble extends StatelessWidget {
                     child: IconButton(
                       icon: Icon(
                         message.reported
-                            ? Symbols.check_circle
-                            : Symbols.flag,
+                            ? Icons.check_circle_rounded
+                            : Icons.flag_rounded,
                         size: 20,
                         color: message.reported
                             ? const Color(0xFF16A34A)
@@ -1265,7 +1262,6 @@ class _FriendlyChatBubble extends StatelessWidget {
 
   Widget _buildBotText(String text) {
     final spans = <InlineSpan>[];
-    String remaining = text;
     final regex = RegExp(r'(Chat thân thiện|SoulLocket|Chat Thân Thiện)');
     
     int lastMatchEnd = 0;

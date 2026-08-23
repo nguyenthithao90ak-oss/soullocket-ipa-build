@@ -221,10 +221,10 @@ class _LoginScreenState extends State<LoginScreen> {
     if (shouldShowRapidActionWarningSeconds(cooldown)) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content:
-              Text('Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.'),
-          duration: Duration(seconds: 2),
+              Text(context.tr('Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.')),
+          duration: const Duration(seconds: 2),
         ),
       );
     }

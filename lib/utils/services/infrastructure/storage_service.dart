@@ -594,7 +594,7 @@ class StorageService {
           'caption': caption.trim(),
           'thumbUrl': thumbUrl.trim(),
           'type': type.trim(),
-          if (blurHash != null) 'blurHash': blurHash,
+          'blurHash': ?blurHash,
         },
         label: 'Album finalize response',
       );
@@ -654,9 +654,9 @@ class StorageService {
           'authorName': authorName.trim(),
           'authorEmail': authorEmail.trim(),
           'authorRole': authorRole.trim(),
-          if (lat != null) 'lat': lat,
-          if (lng != null) 'lng': lng,
-          if (blurHash != null) 'blurHash': blurHash,
+          'lat': ?lat,
+          'lng': ?lng,
+          'blurHash': ?blurHash,
         },
         label: 'Memory finalize response',
       );
@@ -934,7 +934,7 @@ class StorageService {
           'isLocket': isLocket,
           'commentsEnabled': commentsEnabled,
           'flagged': flagged,
-          if (blurHash != null) 'blurHash': blurHash,
+          'blurHash': ?blurHash,
         },
         label: 'Public image finalize response',
       );

@@ -46,7 +46,7 @@ class FirstSetupSpotlightGuide extends StatefulWidget {
       barrierLabel: 'First setup spotlight guide',
       barrierColor: Colors.transparent,
       transitionDuration: Duration.zero,
-      pageBuilder: (_, __, ___) => FirstSetupSpotlightGuide(
+      pageBuilder: (_, _, _) => FirstSetupSpotlightGuide(
         steps: steps,
         onFinished: onFinished,
       ),

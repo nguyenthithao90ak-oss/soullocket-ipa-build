@@ -39,12 +39,19 @@ class CloudflareR2Service {
   String _getMimeType(String filePath) {
     final ext = path.extension(filePath).toLowerCase();
     switch (ext) {
-      case '.webp':
+      case '.png':
         return 'image/png';
+      case '.jpg':
+      case '.jpeg':
+        return 'image/jpeg';
       case '.webp':
         return 'image/webp';
       case '.gif':
         return 'image/gif';
+      case '.heic':
+        return 'image/heic';
+      case '.heif':
+        return 'image/heif';
       case '.mp4':
         return 'video/mp4';
       case '.mov':
@@ -55,10 +62,20 @@ class CloudflareR2Service {
         return 'video/x-m4v';
       case '.3gp':
         return 'video/3gpp';
-      case '.webp':
-      case '.webp':
+      case '.m4a':
+        return 'audio/m4a';
+      case '.aac':
+        return 'audio/aac';
+      case '.mp3':
+        return 'audio/mpeg';
+      case '.ogg':
+        return 'audio/ogg';
+      case '.wav':
+        return 'audio/wav';
+      case '.caf':
+        return 'audio/x-caf';
       default:
-        return 'image/jpeg';
+        return 'application/octet-stream';
     }
   }
 
@@ -124,11 +141,15 @@ class CloudflareR2Service {
   }
 
   /// Upload File lên R2 và trả về public link
-  Future<String?> uploadFile(File file,
-      {required String folderPath, String? storagePathOverride}) async {
+  Future<String?> uploadFile(
+    File file, {
+    required String folderPath,
+    String? storagePathOverride,
+    String? contentTypeOverride,
+  }) async {
     try {
       String fileName = path.basename(file.path);
-      final contentType = _getMimeType(file.path);
+      final contentType = contentTypeOverride ?? _getMimeType(file.path);
       final isVideo = contentType.startsWith('video/');
       
       File finalFile = file;
@@ -198,7 +219,10 @@ class CloudflareR2Service {
       final uploadUrl = resData['uploadUrl'] as String;
       final publicUrl = resData['publicUrl'] as String;
       final headers = Map<String, String>.from(resData['headers'] ?? {});
-      headers['Authorization'] = 'Bearer $idToken';
+      if (!uploadUrl.contains('X-Amz-Signature') && !uploadUrl.contains('r2.cloudflarestorage.com')) {
+        headers['Authorization'] = 'Bearer $idToken';
+      }
+      headers.putIfAbsent('Content-Type', () => contentType);
 
       // Video lớn: dùng streamed request để không load hết vào RAM
       if (isVideo && fileSize > 5 * 1024 * 1024) {

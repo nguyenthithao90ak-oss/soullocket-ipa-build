@@ -775,7 +775,7 @@ class _DiaryAttachmentStrip extends StatelessWidget {
                 imageUrl: firstImage,
                 fit: BoxFit.cover,
                 filterQuality: FilterQuality.medium,
-                errorWidget: (_, __, ___) => Container(
+                errorWidget: (_, _, _) => Container(
                   color: page.surface,
                   alignment: Alignment.center,
                   child: Icon(Icons.broken_image_rounded, color: page.accent),
@@ -841,7 +841,7 @@ class _DiaryAttachmentStrip extends StatelessWidget {
               imageUrl: imageUrl,
               fit: BoxFit.contain,
               filterQuality: FilterQuality.medium,
-              errorWidget: (_, __, ___) => Container(
+              errorWidget: (_, _, _) => Container(
                 height: 260,
                 color: Colors.white,
                 alignment: Alignment.center,

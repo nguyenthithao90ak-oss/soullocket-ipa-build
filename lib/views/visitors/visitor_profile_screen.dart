@@ -1370,8 +1370,8 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
               fit: BoxFit.cover,
               filterQuality: FilterQuality.low,
               fadeInDuration: const Duration(milliseconds: 150),
-              placeholder: (_, __) => Container(color: SLColors.borderLight),
-              errorWidget: (_, __, ___) => Container(color: SLColors.border))
+              placeholder: (_, _) => Container(color: SLColors.borderLight),
+              errorWidget: (_, _, _) => Container(color: SLColors.border))
         else
           Container(
               color: SLColors.borderLight,

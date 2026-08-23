@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/models/soul_event.dart';
 import 'package:soullocket_app/utils/services/soul_event_service.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 import 'soul_event_editor_sheet.dart';
 
@@ -55,15 +56,15 @@ class _SoulEventDetailScreenState extends State<SoulEventDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xóa sự kiện?'),
-        content: const Text('Sự kiện này sẽ bị xóa vĩnh viễn.'),
+        title: Text(ctx.tr('Xóa sự kiện?')),
+        content: Text(ctx.tr('Sự kiện này sẽ bị xóa vĩnh viễn.')),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Hủy')),
+              child: Text(ctx.tr('Hủy'))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+            child: Text(ctx.tr('Xóa'), style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),

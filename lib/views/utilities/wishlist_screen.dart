@@ -38,20 +38,20 @@ class _WishlistScreenState extends State<WishlistScreen> {
           'Danh sách Ước nguyện',
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
-              Text(
+              Text(context.tr('Tính năng:'), style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              const Text(
                   '- Lưu lại những món quà hoặc những nơi bạn muốn đi để người ấy biết.\n- Tạo bất ngờ bằng cách âm thầm đánh dấu "Đã mua tặng".'),
-              SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
-              Text(
+              const SizedBox(height: 12),
+              Text(context.tr('Cách sử dụng:'),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              const Text(
                   '- Bấm Thêm điều ước, nhập tên món quà, đính kèm hình ảnh và link mua hàng.\n- Nửa kia có thể vào xem và bấm nút Thực hiện điều ước để tặng bạn một sự bất ngờ.'),
             ],
           ),
@@ -59,8 +59,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: SLColors.primary)),
+            child: Text(context.tr('Đã hiểu'),
+                style: const TextStyle(color: SLColors.primary)),
           ),
         ],
       ),
@@ -188,18 +188,18 @@ class _WishlistScreenState extends State<WishlistScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xoá điều ước'),
-        content: const Text('Bạn có chắc chắn muốn xoá điều ước này?'),
+        title: Text(ctx.tr('Xoá điều ước')),
+        content: Text(ctx.tr('Bạn có chắc chắn muốn xoá điều ước này?')),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+              onPressed: () => Navigator.pop(ctx), child: Text(ctx.tr('Huỷ'))),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _dbRef.child('houses/${widget.houseId}/wishlist/$key').remove();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Xoá'),
+            child: Text(ctx.tr('Xoá')),
           ),
         ],
       ),
@@ -615,7 +615,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
       itemCount: items.length + 1,
-      separatorBuilder: (_, __) => SLSpacing.h12,
+      separatorBuilder: (_, _) => SLSpacing.h12,
       itemBuilder: (context, index) {
         if (index == 0) {
           return _buildWishlistSummary(

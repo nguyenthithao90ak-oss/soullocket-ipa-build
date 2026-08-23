@@ -1,11 +1,6 @@
 part of '../../love_insights_screen.dart';
 
 extension _InsightOfflineContributionCardsExt on _LoveInsightsScreenState {
-  Widget _buildOfflineCard(LoveInsightData insight) {
-    // Offline card gộp vào contribution flow, giữ widget để không vỡ code
-    return const SizedBox.shrink();
-  }
-
   Widget _buildContributionCard(LoveInsightData insight) {
     final leftPercent = (insight.shareU1 * 100).round().clamp(5, 95);
     final rightPercent = (insight.shareU2 * 100).round().clamp(5, 95);

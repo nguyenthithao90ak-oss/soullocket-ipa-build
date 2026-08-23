@@ -543,7 +543,7 @@ class NotificationService {
     await initialize();
     if (!await hasPermission()) return;
 
-    final payloadData = <String, dynamic>{if (data != null) ...data};
+    final payloadData = <String, dynamic>{...?data};
     final key = dedupeKey ?? '$title|$body|${jsonEncode(payloadData)}';
     final now = DateTime.now();
     final shouldSkip = _lastForegroundMessageKey == key &&

@@ -84,9 +84,9 @@ class _UtilitiesHubDragFeedback extends StatelessWidget {
         child: Transform.translate(
           offset: const Offset(-36, -42),
           child: Transform.scale(
-            scale: 1.08,
+            scale: 1.05,
             child: Opacity(
-              opacity: 0.94,
+              opacity: 0.90,
               child: SizedBox(
                 width: 86,
                 height: 112,
@@ -96,7 +96,7 @@ class _UtilitiesHubDragFeedback extends StatelessWidget {
                     boxShadow: [
                       BoxShadow(
                         color: SLColors.textPrimary.withValues(alpha: 0.18),
-                        blurRadius: 22,
+                        blurRadius: 16,
                         offset: const Offset(0, 10),
                       ),
                     ],
@@ -144,10 +144,14 @@ class _UtilitiesHubTileContent extends StatelessWidget {
     final dpr = MediaQuery.devicePixelRatioOf(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // Softer gradient for glass feel
+    final Color softStart = Color.lerp(startColor, Colors.white, 0.08)!;
+    final Color softEnd = Color.lerp(endColor, Colors.black, 0.05)!;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(26),
         onTap: onTap,
         child: SizedBox(
           width: double.infinity,
@@ -163,50 +167,66 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                   curve: Curves.easeOutCubic,
                   scale: isTarget ? 1.08 : 1.0,
                   child: Container(
-                    width: 72,
-                    height: 72,
+                    width: 66,
+                    height: 66,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(22),
+                      borderRadius: BorderRadius.circular(20),
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [startColor, endColor],
+                        colors: [softStart, softEnd],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: startColor.withValues(alpha: 0.38),
-                          blurRadius: 12,
-                          spreadRadius: -1,
+                          color: startColor.withValues(alpha: 0.25),
+                          blurRadius: 14,
+                          spreadRadius: -2,
                           offset: const Offset(0, 5),
                         ),
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 4,
+                          color: endColor.withValues(alpha: 0.10),
+                          blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
                       ],
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.45),
-                        width: 1.5,
+                        color: Colors.white.withValues(alpha: isDark ? 0.15 : 0.45),
+                        width: 1.0,
                       ),
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(19),
                       child: Stack(
                         children: [
+                          // Glass shine
                           Positioned(
                             top: 0,
                             left: 0,
                             right: 0,
-                            height: 28,
+                            height: 30,
                             child: DecoratedBox(
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
                                   colors: [
-                                    Colors.white.withValues(alpha: 0.3),
+                                    Colors.white.withValues(alpha: 0.35),
                                     Colors.white.withValues(alpha: 0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Radial glow
+                          Positioned.fill(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: RadialGradient(
+                                  center: const Alignment(0.3, -0.4),
+                                  radius: 1.2,
+                                  colors: [
+                                    Colors.white.withValues(alpha: 0.10),
+                                    Colors.transparent,
                                   ],
                                 ),
                               ),
@@ -217,8 +237,8 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                               utilityId: app.id,
                               fallbackIcon: iconData,
                               fallbackColor: iconColor,
-                              fallbackSize: 33,
-                              padding: const EdgeInsets.all(6),
+                              fallbackSize: 28,
+                              padding: const EdgeInsets.all(8),
                               devicePixelRatio: dpr,
                             ),
                           ),
@@ -228,7 +248,7 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 7),
               SizedBox(
                 height: 34,
                 child: Center(
@@ -238,13 +258,13 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
                       color: isDark
-                          ? const Color(0xFFF3F4F6)
-                          : const Color(0xFF2D3748),
-                      letterSpacing: 0.1,
-                      height: 1.15,
+                          ? const Color(0xFFE8ECF0)
+                          : const Color(0xFF374151),
+                      letterSpacing: 0.05,
+                      height: 1.2,
                     ),
                   ),
                 ),

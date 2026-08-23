@@ -10,6 +10,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../../utils/services/chat_service.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/app_error_mapper.dart';
+import '../../utils/services/l10n_service.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../utils/services/webrtc_service.dart';
@@ -744,7 +745,7 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
                     keyboardType: TextInputType.url,
                     style: SLTheme.quicksand(fontWeight: FontWeight.w700),
                     decoration: InputDecoration(
-                      labelText: 'Dán link video hoặc website',
+                      labelText: context.tr('Dán link video hoặc website'),
                       hintText: 'youtube.com, tiktok.com, vnexpress.net...',
                       labelStyle:
                           SLTheme.quicksand(fontWeight: FontWeight.w800),

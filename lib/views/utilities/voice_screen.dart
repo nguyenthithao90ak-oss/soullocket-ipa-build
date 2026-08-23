@@ -5,13 +5,10 @@ import 'dart:math' as math;
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -23,6 +20,7 @@ import 'package:soullocket_app/utils/services/app_lifecycle_presence_guard.dart'
 import 'package:soullocket_app/utils/services/error_logger_service.dart';
 import 'package:soullocket_app/utils/services/private_media_url_service.dart';
 import 'package:soullocket_app/utils/services/activity_history_service.dart';
+import 'package:soullocket_app/utils/services/cloudflare_r2_service.dart';
 
 class VoiceScreen extends StatefulWidget {
   final String houseId;
@@ -60,20 +58,20 @@ class _VoiceScreenState extends State<VoiceScreen>
           'Ghi âm giọng nói',
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
-              Text(
+              Text(context.tr('Tính năng:'), style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              const Text(
                   '- Ghi lại các lời chúc, giọng hát, hoặc tiếng ngáy của người ấy để lưu giữ.\n- Lưu trữ trên mây, không lo mất file khi đổi điện thoại.'),
-              SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
-              Text(
+              const SizedBox(height: 12),
+              Text(context.tr('Cách sử dụng:'),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              const Text(
                   '- Bấm và giữ biểu tượng Micro để bắt đầu ghi âm.\n- Đặt tên cho bản ghi và lưu lại.\n- Bấm nút Phát để nghe lại bất cứ lúc nào, âm thanh sẽ đồng bộ sang máy người kia.'),
             ],
           ),
@@ -81,7 +79,7 @@ class _VoiceScreenState extends State<VoiceScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu'),
+            child: Text(context.tr('Đã hiểu')),
           ),
         ],
       ),
@@ -102,6 +100,7 @@ class _VoiceScreenState extends State<VoiceScreen>
   Map<String, dynamic>? _pendingRetryUpload;
   String? _playingKey;
   String? _loadingKey;
+  StreamSubscription? _playerCompleteSub;
   Timer? _recordTicker;
   Timer? _recordLimitTimer;
   DateTime? _recordStartedAt;
@@ -122,7 +121,7 @@ class _VoiceScreenState extends State<VoiceScreen>
     )..repeat(reverse: true);
     _voiceStream = _voiceRef.onValue;
     WidgetsBinding.instance.addObserver(this);
-    _player.onPlayerComplete.listen((_) {
+    _playerCompleteSub = _player.onPlayerComplete.listen((_) {
       if (!mounted) return;
       setState(() {
         _playingKey = null;
@@ -135,6 +134,7 @@ class _VoiceScreenState extends State<VoiceScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _playerCompleteSub?.cancel();
     _recordTicker?.cancel();
     _recordLimitTimer?.cancel();
     _recorder.dispose();
@@ -447,137 +447,78 @@ class _VoiceScreenState extends State<VoiceScreen>
     required String mimeType,
     required int durationMs,
   }) async {
-    final errNoSession = context.tr('util_chatocphin_2b4d32');
-
-    final session = await _createVoiceUploadSession(
-      fileName: fileName,
-      contentType: mimeType,
+    final tempDir = await getTemporaryDirectory();
+    final tempPath = p.join(
+      tempDir.path,
+      'voice_upload_${DateTime.now().millisecondsSinceEpoch}.$extension',
     );
-    final uploadUrl = session['uploadUrl']?.toString().trim() ?? '';
-    final sessionId = session['sessionId']?.toString().trim() ?? '';
-    final headers = Map<String, String>.from(
-      ((session['headers'] as Map?) ?? const <String, dynamic>{}).map(
-        (key, value) => MapEntry(key.toString(), value.toString()),
-      ),
-    );
-    if (uploadUrl.isEmpty || sessionId.isEmpty) {
-      throw Exception(errNoSession);
-    }
-    headers.putIfAbsent('Content-Type', () => mimeType);
-
-    debugPrint(
-        '[VoiceScreen] Uploading voice bytes to R2 signed URL: $uploadUrl');
+    final tempFile = File(tempPath);
+    await tempFile.writeAsBytes(bytes);
 
     try {
-      final uploadResponse = await http
-          .put(
-            Uri.parse(uploadUrl),
-            headers: headers,
-            body: bytes,
-          )
-          .timeout(const Duration(seconds: 20));
-      debugPrint(
-          '[VoiceScreen] R2 response status: ${uploadResponse.statusCode}');
-      if (uploadResponse.statusCode < 200 || uploadResponse.statusCode >= 300) {
-        throw Exception(
-            'Tải audio lên máy chủ thất bại (${uploadResponse.statusCode}). Response: ${uploadResponse.body}');
+      final folder = 'houses/${widget.houseId}/utilities/voices';
+      String? publicUrl = await CloudflareR2Service.instance.uploadFile(
+        tempFile,
+        folderPath: folder,
+        contentTypeOverride: mimeType,
+      );
+
+      // Fallback 1: Thử upload base64 nếu upload file trực tiếp gặp sự cố
+      if (publicUrl == null || publicUrl.isEmpty) {
+        final cleanBase64 = base64Encode(bytes);
+        publicUrl = await CloudflareR2Service.instance.uploadBase64(
+          cleanBase64,
+          folderPath: folder,
+          extension: extension.replaceAll('.', ''),
+        );
       }
+
+      // Fallback 2: Lưu trữ dạng Data URI âm thanh trực tiếp để không bao giờ bị mất file
+      if (publicUrl == null || publicUrl.isEmpty) {
+        publicUrl = 'data:$mimeType;base64,${base64Encode(bytes)}';
+      }
+
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final newVoiceRef = _voiceRef.push();
+      final newKey = newVoiceRef.key ?? '${now}_voice';
+
+      final voicePayload = <String, dynamic>{
+        'aud': publicUrl,
+        'name': widget.myName.trim(),
+        'a': widget.myName.trim(),
+        'duration': durationMs,
+        'dur': (durationMs / 1000).round(),
+        'durationMs': durationMs,
+        'size': bytes.length,
+        'ts': now,
+        'createdAt': now,
+      };
+
+      await newVoiceRef.set(voicePayload);
+
+      unawaited(ActivityHistoryService.instance.add(
+        'Đã gửi một lời nhắn thoại mới',
+        houseId: widget.houseId,
+        title: 'Ghi âm lời nhắn',
+        subtitle: widget.myName.trim(),
+        action: 'create',
+        module: 'voice',
+        entityType: 'voice',
+        entityId: newKey,
+        previewUrl: publicUrl,
+        previewType: 'audio',
+      ));
     } catch (e, stackTrace) {
-      debugPrint('[VoiceScreen] HTTP put to R2 error: $e');
-      unawaited(ErrorLoggerService.instance
-          .logError(e, stackTrace, reason: 'r2_upload_put_error'));
+      debugPrint('[VoiceScreen] Upload voice error: $e');
+      unawaited(ErrorLoggerService.instance.logError(e, stackTrace,
+          reason: 'voice_upload_direct_error'));
       rethrow;
-    }
-
-    // Đợi 500ms để Cloudflare R2 đồng bộ file hoàn chỉnh
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    await _finalizeVoiceUpload(
-      sessionId: sessionId,
-      fileName: fileName,
-      mimeType: mimeType,
-      durationMs: durationMs,
-      size: bytes.length,
-    );
-  }
-
-  Future<Map<String, dynamic>> _createVoiceUploadSession({
-    required String fileName,
-    required String contentType,
-  }) async {
-    final errCreateSession = context.tr('util_khngthtoph_d7489b');
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw Exception('Vui lòng đăng nhập lại.');
-      final idToken = await user.getIdToken() ?? '';
-      
-      final response = await http.post(
-        Uri.parse('${AppConfig.cloudflareWorkerUrl}/api/createVoiceUploadSession'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-        body: jsonEncode({
-          'houseId': widget.houseId.trim(),
-          'fileName': fileName.trim(),
-          'contentType': contentType.trim(),
-        }),
-      ).timeout(const Duration(seconds: 15));
-      
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-      if (response.statusCode != 200) {
-        throw Exception((decoded['error'] as Map?)?['message'] ?? errCreateSession);
+    } finally {
+      if (await tempFile.exists()) {
+        try {
+          await tempFile.delete();
+        } catch (_) {}
       }
-      final data = decoded['result'];
-      if (data is! Map) throw Exception('Voice upload session is invalid.');
-      return Map<String, dynamic>.from(data);
-    } catch (error, stackTrace) {
-      debugPrint('[VoiceScreen] createVoiceUploadSession error: $error');
-      unawaited(ErrorLoggerService.instance.logError(error, stackTrace,
-          reason: 'createVoiceUploadSession_unknown_error'));
-      rethrow;
-    }
-  }
-
-  Future<void> _finalizeVoiceUpload({
-    required String sessionId,
-    required String fileName,
-    required String mimeType,
-    required int durationMs,
-    required int size,
-  }) async {
-    final errFinalize = context.tr('util_khngthhont_91a9c4');
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw Exception('Vui lòng đăng nhập lại.');
-      final idToken = await user.getIdToken() ?? '';
-      
-      final response = await http.post(
-        Uri.parse('${AppConfig.cloudflareWorkerUrl}/api/finalizeVoiceUpload'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-        body: jsonEncode({
-          'houseId': widget.houseId.trim(),
-          'sessionId': sessionId.trim(),
-          'authorName': widget.myName.trim(),
-          'fileName': fileName.trim(),
-          'mimeType': mimeType.trim(),
-          'durationMs': durationMs,
-          'size': size,
-        }),
-      ).timeout(const Duration(seconds: 15));
-      
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-      if (response.statusCode != 200) {
-        throw Exception((decoded['error'] as Map?)?['message'] ?? errFinalize);
-      }
-    } catch (error, stackTrace) {
-      debugPrint('[VoiceScreen] finalizeVoiceUpload error: $error');
-      unawaited(ErrorLoggerService.instance.logError(error, stackTrace,
-          reason: 'finalizeVoiceUpload_unknown_error'));
-      rethrow;
     }
   }
 

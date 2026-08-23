@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -37,7 +37,6 @@ class GameDownloadService extends ChangeNotifier {
   factory GameDownloadService() => _instance;
   GameDownloadService._internal();
 
-  final Dio _dio = Dio();
   final Map<String, double> _downloadProgress = {};
   final Map<String, bool> _isDownloading = {};
 
@@ -161,18 +160,43 @@ class GameDownloadService extends ChangeNotifier {
               _getCleanR2Domain(CloudflareR2Service.publicDomain);
           final remoteUrl = '$cleanDomain/$fullStoragePath';
 
-          await _dio.download(
-            remoteUrl,
-            localPath,
-            onReceiveProgress: (received, total) {
-              if (total != -1) {
-                double fileProgress = received / total;
+          final client = http.Client();
+          try {
+            final request = http.Request('GET', Uri.parse(remoteUrl));
+            final response = await client.send(request);
+
+            if (response.statusCode < 200 || response.statusCode >= 300) {
+              throw HttpException(
+                'Tải file thất bại (mã lỗi: ${response.statusCode})',
+                uri: Uri.parse(remoteUrl),
+              );
+            }
+
+            final totalBytes = response.contentLength ?? -1;
+            int receivedBytes = 0;
+            final sink = localFile.openWrite();
+
+            await for (final chunk in response.stream) {
+              sink.add(chunk);
+              receivedBytes += chunk.length;
+              if (totalBytes > 0) {
+                final fileProgress = receivedBytes / totalBytes;
                 _downloadProgress[gameId] =
                     (downloadedFiles + fileProgress) / totalFiles;
                 notifyListeners();
               }
-            },
-          );
+            }
+
+            await sink.flush();
+            await sink.close();
+          } catch (e) {
+            if (await localFile.exists()) {
+              await localFile.delete();
+            }
+            rethrow;
+          } finally {
+            client.close();
+          }
           downloadedFiles++;
         }
       }

@@ -93,73 +93,71 @@ class _DiaryComposerState extends State<DiaryComposer>
                   ),
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: widget.moods.map((mood) {
                   final active = widget.selectedMood == mood['icon'];
                   final moodColor = mood['color'] as Color;
-                  return Expanded(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => widget.onMoodChanged(mood['icon']),
-                      child: AnimatedScale(
-                        scale: active ? 1.18 : 1.0,
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeOutBack,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 250),
-                              width: 68,
-                              height: 68,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: active
-                                    ? LinearGradient(
-                                        colors: [
-                                          moodColor.withValues(alpha: 0.25),
-                                          moodColor.withValues(alpha: 0.05),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      )
-                                    : null,
-                                color: active ? null : const Color(0xFFF4F6F9),
-                                border: Border.all(
-                                  color: active ? moodColor : Colors.transparent,
-                                  width: 2.5,
-                                ),
-                                boxShadow: active
-                                    ? [
-                                        BoxShadow(
-                                          color: moodColor.withValues(alpha: 0.4),
-                                          blurRadius: 16,
-                                          offset: const Offset(0, 5),
-                                        )
-                                      ]
-                                    : null,
+                  return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => widget.onMoodChanged(mood['icon']),
+                    child: AnimatedScale(
+                      scale: active ? 1.1 : 1.0,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutBack,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: active
+                                  ? LinearGradient(
+                                      colors: [
+                                        moodColor.withValues(alpha: 0.20),
+                                        moodColor.withValues(alpha: 0.05),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    )
+                                  : null,
+                              color: active ? null : const Color(0xFFF4F6F9),
+                              border: Border.all(
+                                color: active ? moodColor : Colors.transparent,
+                                width: 2,
                               ),
-                              child: Center(
-                                child: mood['asset'] != null
-                                    ? Image.asset(
-                                        mood['asset'] as String,
-                                        width: active ? 54 : 46,
-                                        height: active ? 54 : 46,
-                                        fit: BoxFit.contain,
-                                        gaplessPlayback: true,
+                              boxShadow: active
+                                  ? [
+                                      BoxShadow(
+                                        color: moodColor.withValues(alpha: 0.3),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
                                       )
-                                    : Text(
-                                        mood['icon'],
-                                        style: TextStyle(
-                                          fontSize: active ? 36 : 32,
-                                        ),
-                                      ),
-                              ),
+                                    ]
+                                  : null,
                             ),
-                          ],
-                        ),
+                            child: Center(
+                              child: mood['asset'] != null
+                                  ? Image.asset(
+                                      mood['asset'] as String,
+                                      width: active ? 38 : 32,
+                                      height: active ? 38 : 32,
+                                      fit: BoxFit.contain,
+                                      gaplessPlayback: true,
+                                    )
+                                  : Text(
+                                      mood['icon'],
+                                      style: TextStyle(
+                                        fontSize: active ? 26 : 22,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   );

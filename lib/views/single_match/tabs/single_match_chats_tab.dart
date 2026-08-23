@@ -368,7 +368,7 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               ),
               icon: const Icon(Icons.chat_rounded, size: 16),
-              label: Text('Nhắn tin',
+              label: Text(context.tr('Nhắn tin'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
             ),
           ],

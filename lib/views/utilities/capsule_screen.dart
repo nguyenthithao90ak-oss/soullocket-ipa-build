@@ -293,10 +293,10 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
             child: CachedNetworkImage(
               imageUrl: imageUrl,
               fit: BoxFit.contain,
-              placeholder: (_, __) => const Center(
+              placeholder: (_, _) => const Center(
                 child: CircularProgressIndicator(color: Colors.white),
               ),
-              errorWidget: (_, __, ___) => const Icon(
+              errorWidget: (_, _, _) => const Icon(
                 Icons.image_not_supported_outlined,
                 color: Colors.white70,
                 size: 50,
@@ -454,13 +454,13 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                           fit: BoxFit.cover,
                                           memCacheWidth: 600,
                                           filterQuality: FilterQuality.medium,
-                                          placeholder: (_, __) =>
+                                          placeholder: (_, _) =>
                                               const SkeletonContainer.rounded(
                                             width: double.infinity,
                                             height: 220,
                                             borderRadius: BorderRadius.zero,
                                           ),
-                                          errorWidget: (_, __, ___) =>
+                                          errorWidget: (_, _, _) =>
                                               const SizedBox(
                                             height: 220,
                                             child: Center(
@@ -554,24 +554,24 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
           style: SLTheme.quicksand(
               fontWeight: FontWeight.w900, color: Colors.white),
         ),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:',
-                  style: TextStyle(
+              Text(context.tr('Tính năng:'),
+                  style: const TextStyle(
                       fontWeight: FontWeight.bold, color: Colors.white)),
-              SizedBox(height: 4),
-              Text(
+              const SizedBox(height: 4),
+              const Text(
                   '- Gửi gắm một thông điệp, hình ảnh, hoặc video vào tương lai.\n- Hộp sẽ bị khóa cứng và không ai (kể cả bạn) có thể mở ra xem trước thời hạn.',
                   style: TextStyle(color: Colors.white70)),
-              SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(
+              const SizedBox(height: 12),
+              Text(context.tr('Cách sử dụng:'),
+                  style: const TextStyle(
                       fontWeight: FontWeight.bold, color: Colors.white)),
-              SizedBox(height: 4),
-              Text(
+              const SizedBox(height: 4),
+              const Text(
                   '- Bấm Tạo hộp mới, chọn thời gian mở khóa (ví dụ: kỷ niệm 10 năm).\n- Thêm lời nhắn, ảnh, video, sau đó bấm Niêm phong.\n- Cả hai sẽ nhận được thông báo khi hộp thời gian đến ngày mở khóa.',
                   style: TextStyle(color: Colors.white70)),
             ],
@@ -580,8 +580,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: Color(0xFF64B5F6))),
+            child: Text(context.tr('Đã hiểu'),
+                style: const TextStyle(color: Color(0xFF64B5F6))),
           ),
         ],
       ),
@@ -637,14 +637,14 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
             ),
           ),
           child: SafeArea(
-            child: SingleChildScrollView(
+            child: CustomScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              child: Column(
-                children: [
-                  _buildInputArea(),
-                  _buildCapsuleList(),
-                ],
-              ),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: _buildInputArea(),
+                ),
+                _buildCapsuleList(),
+              ],
             ),
           ),
         ),
@@ -826,6 +826,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                       child: Image.file(
                         File(_selectedImage!.path),
                         fit: BoxFit.cover,
+                        cacheWidth: 800,
                         filterQuality: FilterQuality.medium,
                       ),
                     ),
@@ -1072,8 +1073,11 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
   }
 
   Widget _buildCapsuleList() {
-    return _capsules.isEmpty
-        ? Center(
+    if (_capsules.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 28),
+          child: Center(
             child: Text(
               context.tr('util_chachpthno_00896c'),
               style: SLTheme.quicksand(
@@ -1081,13 +1085,15 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-          )
-        : ListView.builder(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            itemCount: _capsules.length,
-            itemBuilder: (context, index) {
+          ),
+        ),
+      );
+    }
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+      sliver: SliverList.builder(
+        itemCount: _capsules.length,
+        itemBuilder: (context, index) {
               final capsule = _capsules[index];
               final unlockDate =
                   (capsule['unlock_time_ms'] as num?)?.toInt() ?? 0;
@@ -1175,7 +1181,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                         child: CachedNetworkImage(
                                           imageUrl: capsule['image_url'],
                                           fit: BoxFit.cover,
-                                          placeholder: (_, __) =>
+                                          placeholder: (_, _) =>
                                               const SkeletonContainer.rounded(
                                             width: double.infinity,
                                             height: 140,
@@ -1382,7 +1388,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                 ),
               );
             },
-          );
+          ),
+        );
   }
 
   Future<bool> _confirmDeleteCapsule(Map<String, dynamic> capsule) async {

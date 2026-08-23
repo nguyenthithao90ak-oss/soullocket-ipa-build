@@ -30,11 +30,11 @@ class PushNotificationHelper {
         'from': from,
         'msg': msg,
         'ts': ServerValue.timestamp,
-        if (title != null) 'title': title,
-        if (postId != null) 'postId': postId,
-        if (fromId != null) 'fromId': fromId,
-        if (fromLabel != null) 'fromLabel': fromLabel,
-        if (extra != null) ...extra,
+        'title': ?title,
+        'postId': ?postId,
+        'fromId': ?fromId,
+        'fromLabel': ?fromLabel,
+        ...?extra,
       };
       await _db.ref('notifications/$toHouseId').push().set(payload);
     } catch (_) {}
@@ -67,7 +67,7 @@ class PushNotificationHelper {
               'type': type,
               'title': title,
               'content': content,
-              if (extra != null) 'extra': extra,
+              'extra': ?extra,
             }),
           )
           .timeout(const Duration(seconds: 12));
@@ -198,7 +198,7 @@ class PushNotificationHelper {
         content: content,
         extra: {
           'fromLabel': from,
-          if (extra != null) ...extra,
+          ...?extra,
         },
       );
 

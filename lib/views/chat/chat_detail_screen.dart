@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/sl_page_physics.dart';
 import '../../utils/services/l10n_service.dart';
+import '../../utils/services/cloudflare_r2_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -35,6 +37,10 @@ import '../../core/fast_backdrop_filter.dart';
 import '../../core/sl_route.dart';
 import '../../utils/rapid_action_feedback_policy.dart';
 import '../../widgets/animated_rabbit_sticker.dart';
+import '../../widgets/audio_waveform_bubble.dart';
+import 'package:record/record.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 part 'chat_detail/chat_detail_helpers_part.dart';
 part 'chat_detail/chat_detail_actions_part.dart';
@@ -115,6 +121,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final ImagePicker _picker = ImagePicker();
   final StorageService _storageService = StorageService();
   final MilitaryLockService _militaryLockService = MilitaryLockService();
+  final AudioRecorder _audioRecorder = AudioRecorder();
+  bool _isRecordingVoice = false;
+  Duration _recordElapsed = Duration.zero;
+  Timer? _recordTimer;
+  DateTime? _recordStartedAt;
 
   static const int _chatPageSize = 40;
   static const List<String> _quickReactionOptions = <String>[
@@ -244,6 +255,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   @override
   void dispose() {
     AdMobService().resumeAutoInterstitial();
+    _recordTimer?.cancel();
+    _audioRecorder.dispose();
     _msgController.removeListener(_handleComposerTextChanged);
     _msgController.dispose();
     _messagesScrollController.dispose();

@@ -158,7 +158,7 @@ class _AnniversaryCelebrationDialogState
                       // Confetti layer
                       AnimatedBuilder(
                         animation: _particleCtrl,
-                        builder: (_, __) {
+                        builder: (_, _) {
                           return CustomPaint(
                             size: const Size(double.infinity, 380),
                             painter: _ConfettiPainter(
@@ -180,7 +180,7 @@ class _AnniversaryCelebrationDialogState
                               children: [
                                 AnimatedBuilder(
                                   animation: _pulseCtrl,
-                                  builder: (_, __) => Text(
+                                  builder: (_, _) => Text(
                                     '✨',
                                     style: TextStyle(
                                       fontSize: 22 + _pulseCtrl.value * 6,
@@ -190,7 +190,7 @@ class _AnniversaryCelebrationDialogState
                                 const SizedBox(width: 8),
                                 AnimatedBuilder(
                                   animation: _pulseCtrl,
-                                  builder: (_, __) => Text(
+                                  builder: (_, _) => Text(
                                     '🎉',
                                     style: TextStyle(
                                       fontSize: 28 + _pulseCtrl.value * 4,
@@ -200,7 +200,7 @@ class _AnniversaryCelebrationDialogState
                                 const SizedBox(width: 8),
                                 AnimatedBuilder(
                                   animation: _pulseCtrl,
-                                  builder: (_, __) => Text(
+                                  builder: (_, _) => Text(
                                     '✨',
                                     style: TextStyle(
                                       fontSize: 22 + _pulseCtrl.value * 6,
@@ -251,7 +251,7 @@ class _AnniversaryCelebrationDialogState
                             // Days number — big glowing number
                             AnimatedBuilder(
                               animation: _pulseCtrl,
-                              builder: (_, __) {
+                              builder: (_, _) {
                                 return Container(
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
@@ -429,7 +429,7 @@ class _AnniversaryCelebrationDialogState
       right: right,
       child: AnimatedBuilder(
         animation: _pulseCtrl,
-        builder: (_, __) {
+        builder: (_, _) {
           return Transform.scale(
             scale: 0.85 + _pulseCtrl.value * 0.3,
             child: Text('⭐', style: TextStyle(fontSize: size)),

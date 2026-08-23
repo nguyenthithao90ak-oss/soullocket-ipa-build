@@ -1138,7 +1138,7 @@ Quy tắc trả lời:
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         itemCount: supportTopicCatalog.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, index) {
           final topic = supportTopicCatalog[index];
           final isSelected = _selectedTopicId == topic.id;

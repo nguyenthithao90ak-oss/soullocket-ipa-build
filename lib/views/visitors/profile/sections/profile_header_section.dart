@@ -81,7 +81,7 @@ class VisitorProfileHeaderSection extends StatelessWidget {
             fit: BoxFit.cover,
             filterQuality: FilterQuality.medium,
             fadeInDuration: const Duration(milliseconds: 180),
-            errorWidget: (_, __, ___) => const SizedBox.shrink(),
+            errorWidget: (_, _, _) => const SizedBox.shrink(),
           ),
         Positioned.fill(
           child: DecoratedBox(
@@ -185,7 +185,7 @@ class VisitorProfileHeaderSection extends StatelessWidget {
                                       imageUrl: trimmedAvatar,
                                       fit: BoxFit.cover,
                                       filterQuality: FilterQuality.medium,
-                                      errorWidget: (_, __, ___) =>
+                                      errorWidget: (_, _, _) =>
                                           SLTheme.avatarPlaceholder(
                                         name,
                                         size: avatarSize,
@@ -337,7 +337,7 @@ class _VisitorProfileSmallHouseAvatarBadge extends StatelessWidget {
                 imageUrl: avatarUrl,
                 fit: BoxFit.cover,
                 filterQuality: FilterQuality.medium,
-                errorWidget: (_, __, ___) =>
+                errorWidget: (_, _, _) =>
                     SLTheme.avatarPlaceholder(fallbackLabel, size: 32),
               )
             : SLTheme.avatarPlaceholder(fallbackLabel, size: 32),

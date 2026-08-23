@@ -329,13 +329,13 @@ class _CinemaScreenState extends State<CinemaScreen> {
                         ? CachedNetworkImage(
                             imageUrl: reel.items.first.imageUrl,
                             fit: BoxFit.cover,
-                            errorWidget: (_, __, ___) =>
+                            errorWidget: (_, _, _) =>
                                 Container(color: Colors.black),
                           )
                         : Image.file(
                             File(reel.items.first.imageUrl),
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
+                            errorBuilder: (_, _, _) =>
                                 Container(color: Colors.black),
                           ),
                     FastBackdropFilter(

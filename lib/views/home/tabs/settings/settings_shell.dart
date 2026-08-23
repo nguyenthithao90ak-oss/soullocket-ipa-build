@@ -868,7 +868,7 @@ extension _SettingsTabShell on _SettingsTabState {
         const _SettingsBackgroundLayer(),
         ValueListenableBuilder<int>(
           valueListenable: _panelRebuildNotifier,
-          builder: (context, _, __) {
+          builder: (context, _, _) {
             return Scaffold(
               backgroundColor: Colors.transparent,
               body: SafeArea(

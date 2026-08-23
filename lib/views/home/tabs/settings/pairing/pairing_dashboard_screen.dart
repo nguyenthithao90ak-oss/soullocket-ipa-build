@@ -410,7 +410,7 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                       borderRadius: BorderRadius.circular(20)),
                   minimumSize: const Size(double.infinity, 56),
                 ),
-                child: Text('ĐÃ HIỂU',
+                child: Text(context.tr('ĐÃ HIỂU'),
                     style: SLTheme.quicksand(
                         fontSize: 16, fontWeight: FontWeight.bold)),
               ),

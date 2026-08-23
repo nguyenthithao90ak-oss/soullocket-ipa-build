@@ -53,7 +53,7 @@ class AppConfig {
   );
   static const String openStreetMapTileUrl = String.fromEnvironment(
     'OSM_TILE_URL',
-    defaultValue: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+    defaultValue: 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
   );
   static const String osrmRouteBaseUrl = String.fromEnvironment(
     'OSRM_ROUTE_BASE_URL',

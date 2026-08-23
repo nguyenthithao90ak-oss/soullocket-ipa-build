@@ -827,7 +827,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
                                       File(_filePath(item)),
                                       fit: BoxFit.cover,
                                       filterQuality: FilterQuality.low,
-                                      errorBuilder: (_, __, ___) => Container(
+                                      errorBuilder: (_, _, _) => Container(
                                           color: Colors.grey[200],
                                           child: const Icon(
                                               Icons.broken_image_rounded,
@@ -1139,7 +1139,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
                       child: Image.file(
                         File(_filePath(index)),
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Center(
+                        errorBuilder: (_, _, _) => const Center(
                             child: Text('Không thể hiển thị ảnh',
                                 style: TextStyle(color: Colors.white))),
                       ),

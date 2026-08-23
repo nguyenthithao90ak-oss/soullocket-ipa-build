@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/auth_service.dart';
+import '../../utils/services/l10n_service.dart';
 import 'widgets/admin_shared_widgets.dart';
 
 class AdminFeedbackScreen extends StatefulWidget {
@@ -245,7 +246,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                                               TextButton(
                                                 onPressed: () =>
                                                     Navigator.pop(ctx),
-                                                child: Text('Huỷ',
+                                                child: Text(ctx.tr('Huỷ'),
                                                     style: SLTheme.quicksand(
                                                         color: const Color(
                                                             0xFF64748B))),
@@ -255,7 +256,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                                                   Navigator.pop(ctx);
                                                   _deleteFeedback(item.id);
                                                 },
-                                                child: Text('Xoá',
+                                                child: Text(ctx.tr('Xoá'),
                                                     style: SLTheme.quicksand(
                                                         color: Colors.redAccent,
                                                         fontWeight:

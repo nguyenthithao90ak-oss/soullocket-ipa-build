@@ -292,6 +292,7 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
   Future<void> _confirmDeleteGame(
       BuildContext context, String gameId, String name) async {
     final messenger = ScaffoldMessenger.maybeOf(context);
+    final deletedLabel = context.tr('Đã xóa');
     final confirmed = await showDialog<bool>(
       context: context,
       useRootNavigator: true,
@@ -437,7 +438,7 @@ class _GameTabState extends State<GameTab> with AutomaticKeepAliveClientMixin {
       if (mounted) {
         await _loadDownloadStatus();
         messenger?.showSnackBar(
-          SnackBar(content: Text('Đã xóa dữ liệu game $name.')),
+          SnackBar(content: Text('$deletedLabel $name')),
         );
       }
     }

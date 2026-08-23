@@ -7,14 +7,14 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
         title: context.tr('home_nhtk_d59e8b'),
         value: '${insight.diaryTotal}',
         subtitle: L10nService().translateThisMonth(insight.diaryMonth),
-        accent: const Color(0xFFFF4F87),
+        accent: const Color(0xFFE91E63),
         icon: Icons.menu_book_rounded,
       ),
       _MetricCardData(
         title: context.tr('home_albumnh_9e1acf'),
         value: '${insight.albumTotal}',
         subtitle: L10nService().translateThisMonth(insight.albumMonth),
-        accent: const Color(0xFF9B7AE8),
+        accent: const Color(0xFF7C4DFF),
         icon: Icons.photo_library_rounded,
       ),
       _MetricCardData(
@@ -25,14 +25,14 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
         subtitle: _isSingle
             ? context.tr('home_cdliu_81b703')
             : context.tr('home_ngycdun_98fd1e'),
-        accent: const Color(0xFFFF6B9D),
+        accent: const Color(0xFF00897B),
         icon: Icons.auto_graph_rounded,
       ),
       _MetricCardData(
         title: context.tr('home_tchcc_f12429'),
         value: '${insight.positivity}%',
         subtitle: _positivityStatus(insight.positivity),
-        accent: const Color(0xFFFF4F87),
+        accent: const Color(0xFFFF6D00),
         icon: Icons.favorite_rounded,
       ),
     ];

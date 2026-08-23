@@ -224,7 +224,7 @@ class _StableAvatarNetworkImage extends StatelessWidget {
             startupFile,
             fit: fit,
             gaplessPlayback: true,
-            errorBuilder: (_, __, ___) => buildFallback(fit),
+            errorBuilder: (_, _, _) => buildFallback(fit),
           );
         }
         return buildFallback(fit);

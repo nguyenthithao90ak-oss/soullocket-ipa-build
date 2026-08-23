@@ -148,7 +148,7 @@ Widget _buildCountdownModeCenterIconVisual({
       height: size,
       fit: BoxFit.contain,
       filterQuality: FilterQuality.medium,
-      errorBuilder: (_, __, ___) => _buildCountdownModeCenterIconVisual(
+      errorBuilder: (_, _, _) => _buildCountdownModeCenterIconVisual(
         preset: preset,
         size: size,
         emojiSize: emojiSize,
@@ -828,7 +828,7 @@ class _CountdownModeAvatarFrame extends StatelessWidget {
         imageUrl: avatarUrl.trim(),
         fit: BoxFit.cover,
         filterQuality: FilterQuality.medium,
-        errorWidget: (_, __, ___) => _buildFallback(),
+        errorWidget: (_, _, _) => _buildFallback(),
       );
     }
 
@@ -911,18 +911,12 @@ class _CountdownModeCircle extends StatelessWidget {
           shadows: styleData.shadows,
         ),
         child: Padding(
-          padding: (styleData.outerColor != null ||
-                  styleData.outerGradient != null ||
-                  styleData.outerBorder != null)
-              ? const EdgeInsets.all(14)
-              : EdgeInsets.zero,
+          padding: const EdgeInsets.all(14),
           child: Container(
             decoration: ShapeDecoration(
               shape: SlCountdownShapes.getShapeBorderForKey(
                 countdownShapeKey,
-                side: (styleData.innerBorder is Border)
-                    ? (styleData.innerBorder).top
-                    : BorderSide.none,
+                side: styleData.innerBorder.top,
               ),
               color: styleData.innerColor,
               gradient: styleData.innerGradient,

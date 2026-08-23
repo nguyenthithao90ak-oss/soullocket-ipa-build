@@ -119,8 +119,8 @@ extension MainHomeAvatarController on _MainHomeTabState {
       await PendingUploadService.instance.clear(pendingKey);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không tìm thấy ảnh avatar cũ để thử lại.'),
+          SnackBar(
+            content: Text(context.tr('Không tìm thấy ảnh avatar cũ để thử lại.')),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -227,9 +227,9 @@ extension MainHomeAvatarController on _MainHomeTabState {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content:
-                Text('Chưa thể đổi ảnh đại diện lúc này. Vui lòng thử lại.'),
+                Text(context.tr('Chưa thể đổi ảnh đại diện lúc này. Vui lòng thử lại.')),
             behavior: SnackBarBehavior.floating,
           ),
         );

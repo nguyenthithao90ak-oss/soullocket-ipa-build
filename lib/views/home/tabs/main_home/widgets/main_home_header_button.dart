@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
 
 class MainHomeHeaderButton extends StatelessWidget {
   final IconData icon;

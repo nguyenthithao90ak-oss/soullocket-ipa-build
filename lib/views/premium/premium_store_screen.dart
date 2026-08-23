@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_config.dart';
+import '../../services/remote_config_service.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../utils/services/purchase_service.dart';
@@ -631,6 +632,8 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
+                              if (RemoteConfigService().showWebTopup)
+                                _buildWebTopupBanner(),
                               _buildHeroSection(),
                               const SizedBox(height: 22),
                               _buildBenefitsSection(),
@@ -740,47 +743,6 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     );
   }
 
-  // ignore: unused_element
-  Widget _buildStoreNotConfiguredCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.storefront_rounded,
-            color: Color(0xFFF9C15A),
-            size: 32,
-          ),
-          const SizedBox(height: 14),
-          Text(
-            _tr('Tính năng chưa khả dụng trên bản phát hành này',
-                'Feature not available in this release'),
-            style: SLTheme.quicksand(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _tr('Mục này đang được tạm ẩn và sẽ được cập nhật trong bản phát hành sau.',
-                'This section is temporarily hidden and will be updated later.'),
-            style: SLTheme.quicksand(
-              color: const Color(0xFFD8DDF0),
-              fontWeight: FontWeight.w600,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   String _badgeLabel(ProductDetails product, VipPlanInfo? info) {
     final planId = _planIdForProduct(product);
@@ -858,6 +820,66 @@ class _PremiumStoreScreenState extends State<PremiumStoreScreen> {
     }
 
     return 'Tính theo ngày';
+  }
+
+  Widget _buildWebTopupBanner() {
+    return GestureDetector(
+      onTap: () async {
+        const url = 'https://nap-soullockket.web.app';
+        if (await canLaunchUrl(Uri.parse(url))) {
+          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFE91E63), Color(0xFFFF9800)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFE91E63).withValues(alpha: 0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.stars_rounded, color: Colors.white, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _tr('Ưu đãi Nạp Web', 'Web Topup Offer'),
+                    style: SLTheme.quicksand(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _tr('Giảm ngay 15% khi nạp VIP qua web', 'Get 15% off via Web topup'),
+                    style: SLTheme.quicksand(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 16),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildHeroSection() {

@@ -188,7 +188,7 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                       imageUrl: uiState.customBackgroundUrl,
                       fit: BoxFit.cover,
                       filterQuality: FilterQuality.medium,
-                      errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                      errorWidget: (_, _, _) => const SizedBox.shrink(),
                     ),
                   ),
                 ),
@@ -649,7 +649,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                             child: ListView.separated(
                               shrinkWrap: true,
                               itemCount: friends.length,
-                              separatorBuilder: (_, __) =>
+                              separatorBuilder: (_, _) =>
                                   const SizedBox(height: 10),
                               itemBuilder: (context, index) {
                                 final friend = friends[index];

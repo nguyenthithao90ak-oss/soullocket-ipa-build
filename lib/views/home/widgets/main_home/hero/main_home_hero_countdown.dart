@@ -321,7 +321,7 @@ class _HomeExplodingPhotoWidgetState extends State<HomeExplodingPhotoWidget>
                     memCacheWidth: 300,
                     useOldImageOnUrlChange: true,
                     fadeInDuration: Duration.zero,
-                    errorWidget: (_, __, ___) => Container(
+                    errorWidget: (_, _, _) => Container(
                       color: const Color(0xFFFFE3EC),
                       child: const Center(
                         child: Icon(

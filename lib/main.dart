@@ -1,275 +1,35 @@
 import 'dart:async';
-import 'package:soullocket_app/app.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
-import 'package:soullocket_app/utils/build_signature_service.dart';
-import 'package:soullocket_app/core/service_locator.dart';
-import 'package:soullocket_app/utils/services/core/background_tracking_service.dart';
 
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/utils/services/infrastructure/storage_service.dart';
-import 'package:soullocket_app/utils/services/l10n_service.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:io';
-import 'dart:convert';
-import 'package:path_provider/path_provider.dart';
-
-import 'package:soullocket_app/core/constants/app_config.dart';
-import 'package:soullocket_app/utils/services/connectivity_service.dart';
-import 'package:soullocket_app/utils/services/local_database_service.dart';
-import 'package:soullocket_app/utils/services/music_service.dart';
-import 'package:soullocket_app/utils/services/offline_cache_service.dart';
-import 'package:soullocket_app/utils/services/security_service.dart';
-import 'package:soullocket_app/utils/services/widget_service.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
+import 'package:soullocket_app/app.dart';
+import 'package:soullocket_app/core/bootstrap/app_bootstrap.dart';
+import 'package:soullocket_app/core/bootstrap/app_lifecycle.dart';
+import 'package:soullocket_app/core/bootstrap/background_handlers.dart';
+import 'package:soullocket_app/core/service_locator.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/build_signature_service.dart';
+import 'package:soullocket_app/utils/services/core/background_tracking_service.dart';
 import 'package:soullocket_app/utils/services/error_logger_service.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/utils/services/offline_cache_service.dart';
+import 'package:soullocket_app/utils/services/performance_profile_service.dart';
 import 'package:soullocket_app/utils/services/revenue_security_telemetry_service.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
-import 'package:soullocket_app/views/home/widgets/floating_bubble_widget.dart';
-import 'package:soullocket_app/utils/services/performance_profile_service.dart';
-import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+import 'package:soullocket_app/services/remote_config_service.dart';
 
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  debugPrint('Handling background message: ${message.messageId ?? 'unknown'}');
-  try {
-    if (Firebase.apps.isEmpty) {
-      await _initializeFirebaseBootstrap();
-    }
-    FirebaseDatabase.instance.setPersistenceEnabled(true);
+// Re-export các entry-point cần @pragma('vm:entry-point')
+export 'package:soullocket_app/core/bootstrap/background_handlers.dart'
+    show firebaseMessagingBackgroundHandler, overlayMain;
 
-    // Hiển thị bong bóng tâm hồn / chat nếu app ở background
-    final type = message.data['type']?.toString() ?? '';
-    final screen = message.data['screen']?.toString() ?? '';
-    if (type == 'soul_merge' ||
-        screen == 'soul_merge' ||
-        type == 'chat' ||
-        screen == 'chat') {
-      // Đồng bộ iOS Widget cho Soul Merge
-      if (type == 'soul_merge' || screen == 'soul_merge') {
-        try {
-          final text = message.notification?.body ??
-              message.data['text'] ??
-              'Có tin nhắn mới 💕';
-          final senderName =
-              message.data['senderName']?.toString() ?? 'Người ấy';
-          await WidgetService.syncSoulMergeWidgetData(
-              message: text.toString(), senderName: senderName);
-        } catch (_) {}
-      }
-      try {
-        final granted = await FlutterOverlayWindow.isPermissionGranted();
-        if (granted) {
-          final active = await FlutterOverlayWindow.isActive();
-          if (!active) {
-            await FlutterOverlayWindow.showOverlay(
-              enableDrag: true,
-              height: 100,
-              width: 100,
-              alignment: OverlayAlignment.centerRight,
-              overlayTitle: 'Bong bóng tâm hồn',
-              overlayContent: 'Lời thì thầm đang kết nối...',
-            );
-          }
-        }
-      } catch (e) {
-        debugPrint('Error showing overlay in background: $e');
-      }
-    }
-  } catch (error, stackTrace) {
-    debugPrint('FCM background bootstrap error: ${AppErrorMapper.resolve(
-      error,
-      fallbackMessage: L10nService().translate('core_err_fcm_bg_init_failed'),
-    ).message}');
-    unawaited(ErrorLoggerService.instance.logError(
-      error,
-      stackTrace,
-      reason: 'fcm_background_bootstrap_error',
-      fatal: false,
-    ));
-  }
-}
-
-/// Build signature verification đã chuyển sang BuildSignatureService (lib/utils/build_signature_service.dart)
-
-const MethodChannel _bootstrapChannel = MethodChannel('soul_locket/bootstrap');
-
-Future<void> _purgeDeprecatedSecrets() async {
-  await OfflineCacheService.initialize();
-  final prefs = OfflineCacheService.getPrefsSync()!;
-  await prefs.remove('gemini_api_key');
-  try {
-    const secureStorage = FlutterSecureStorage();
-    await secureStorage.delete(key: 'gemini_api_key');
-  } catch (_) {}
-}
-
-Future<void> _clearStaleIosAuthAfterFreshInstall() async {
-  if (kIsWeb ||
-      (defaultTargetPlatform != TargetPlatform.iOS &&
-          defaultTargetPlatform != TargetPlatform.macOS)) {
-    return;
-  }
-
-  await OfflineCacheService.initialize();
-  final prefs = OfflineCacheService.getPrefsSync()!;
-  const installMarkerKey = 'il_install_marker_v1';
-  if (prefs.getBool(installMarkerKey) == true) {
-    return;
-  }
-
-  final hasLocalAppState = prefs.getKeys().any(
-        (key) => key.startsWith('il_') || key.startsWith('email_verify_'),
-      );
-  final staleUser = FirebaseAuth.instance.currentUser;
-  final hasStaleAuth = staleUser != null;
-  final shouldSignOut = !hasLocalAppState && hasStaleAuth;
-
-  if (hasStaleAuth) {
-    try {
-      unawaited(FirebaseDatabase.instance
-          .ref('debugFreshInstallCleanup/${staleUser.uid}')
-          .push()
-          .set({
-        'platform': defaultTargetPlatform.name,
-        'hasLocalAppState': hasLocalAppState,
-        'hasStaleAuth': hasStaleAuth,
-        'didSignOut': shouldSignOut,
-        'localKeyCount': prefs.getKeys().length,
-        'createdAtMs': DateTime.now().millisecondsSinceEpoch,
-      }));
-    } catch (e) {
-      debugPrint('Fresh install cleanup log skipped: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage:
-            L10nService().translate('core_err_log_fresh_install_failed'),
-      ).message}');
-    }
-  }
-
-  if (shouldSignOut) {
-    await FirebaseAuth.instance.signOut();
-    try {
-      const secureStorage = FlutterSecureStorage();
-      await secureStorage.deleteAll();
-    } catch (_) {}
-  }
-
-  await prefs.setBool(installMarkerKey, true);
-}
-
-Future<void> _configureSystemUiForEdgeToEdge() async {
-  if (kIsWeb) {
-    return;
-  }
-
-  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  // ⚠️ Android 15 (SDK 35) deprecates statusBarColor & navigationBarColor.
-  //     Edge-to-edge is now the system default; color-based inset APIs are
-  //     no-ops and trigger Play Console warnings. We omit them entirely.
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      systemNavigationBarDividerColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      statusBarBrightness: Brightness.light,
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ),
-  );
-}
-
-@pragma('vm:entry-point')
-void overlayMain() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await _initializeFirebaseBootstrap();
-  } catch (e) {
-    debugPrint('[Overlay] Firebase init error: $e');
-  }
-
-  String? houseId;
-  String? role;
-  String? partnerName;
-  try {
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/overlay_sync.json');
-      if (await file.exists()) {
-        final data = jsonDecode(await file.readAsString());
-        houseId = data['houseId']?.toString();
-        role = data['role']?.toString();
-        partnerName = data['partnerName']?.toString();
-      }
-    } catch (_) {}
-
-    if (houseId == null || houseId.isEmpty) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.reload(); // Đảm bảo lấy dữ liệu mới nhất từ isolate chính
-      houseId =
-          prefs.getString('overlay_house_id') ?? prefs.getString('il_house_id');
-      role = prefs.getString('overlay_role') ??
-          prefs.getString('il_role') ??
-          'user1';
-      partnerName = prefs.getString('overlay_partner_name');
-    }
-
-    if (houseId == null || houseId.isEmpty) {
-      try {
-        final uid = FirebaseAuth.instance.currentUser?.uid;
-        if (uid != null) {
-          final snap = await FirebaseDatabase.instance.ref('users/$uid').get();
-          final userData = snap.value as Map?;
-          if (userData != null) {
-            houseId = userData['houseId']?.toString();
-            role = userData['role']?.toString() ?? 'user1';
-          }
-        }
-      } catch (e) {
-        debugPrint('[Overlay] Fallback Firebase fetch error: $e');
-      }
-    }
-
-    if (partnerName == null || partnerName.isEmpty) {
-      // Đọc tên partner từ settings nếu có
-      try {
-        final houseIdLocal = houseId;
-        if (houseIdLocal != null && houseIdLocal.isNotEmpty) {
-          final snap = await FirebaseDatabase.instance
-              .ref('houses/$houseIdLocal/settings')
-              .child(role == 'user2' ? 'nameU1' : 'nameU2')
-              .get();
-          partnerName = snap.value?.toString();
-        }
-      } catch (_) {}
-    }
-  } catch (e) {
-    debugPrint('[Overlay] prefs read error: $e');
-  }
-
-  runApp(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: FloatingBubbleWidget(
-        initialHouseId: houseId,
-        initialRole: role ?? 'user1',
-        initialPartnerName: partnerName ?? 'Người ấy',
-      ),
-    ),
-  );
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// App entry point
+// ─────────────────────────────────────────────────────────────────────────────
 
 @pragma('vm:entry-point')
 void main() {
@@ -277,7 +37,6 @@ void main() {
     final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
 
     // Tắt toàn bộ debugPrint trong bản Release để tránh rò rỉ log
-    // và giảm overhead trên main thread.
     if (!kDebugMode) {
       debugPrint = (String? message, {int? wrapWidth}) {};
     }
@@ -286,11 +45,11 @@ void main() {
     unawaited(OfflineSyncQueue.instance.startListening());
     setupLocator();
     FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-    _configureRenderingDefaults();
-    await _configureSystemUiForEdgeToEdge();
+    configureRenderingDefaults();
+    await configureSystemUiForEdgeToEdge();
     GoogleFonts.config.allowRuntimeFetching = true;
 
-    // Giữ dọc trên mobile; riêng macOS không khóa để cho phép xoay/ngang.
+    // Giữ dọc trên mobile; riêng macOS không khóa để cho phép xoay/ngang
     if (!kIsWeb && defaultTargetPlatform != TargetPlatform.macOS) {
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
@@ -298,6 +57,7 @@ void main() {
       ]);
     }
 
+    // ── Global error handlers ──────────────────────────────────────────────
     FlutterError.onError = (details) {
       final errStr = details.exception.toString().toLowerCase();
       if (errStr.contains('unable to load asset') ||
@@ -325,51 +85,7 @@ void main() {
       );
     };
 
-    ErrorWidget.builder = (FlutterErrorDetails details) {
-      return Material(
-        color: SLColors.bgMain,
-        child: Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.favorite,
-                color: SLColors.primary,
-                size: 44,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Có lỗi nhỏ xảy ra, vui lòng thử lại 💕',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: SLColors.danger,
-                  decoration: TextDecoration.none,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextButton.icon(
-                onPressed: () {
-                  // Try to pop current route or restart
-                },
-                icon: const Icon(Icons.refresh_rounded),
-                label: Text(
-                  'Thử lại',
-                  style: GoogleFonts.quicksand(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    };
+    ErrorWidget.builder = buildDefaultErrorWidget;
 
     PlatformDispatcher.instance.onError = (error, stackTrace) {
       final errStr = error.toString().toLowerCase();
@@ -397,7 +113,7 @@ void main() {
       return true;
     };
 
-    // Safety fallback: Never allow splash screen to hang longer than 3 seconds
+    // ── Splash safety fallback (3s max) ───────────────────────────────────
     if (!kIsWeb) {
       Future.delayed(const Duration(seconds: 3), () {
         try {
@@ -406,32 +122,39 @@ void main() {
       });
     }
 
+    // ── Bootstrap ─────────────────────────────────────────────────────────
     try {
       await UiPrefs.ensureLoaded();
       await L10nService().init();
 
-      // Firebase khởi tạo với timeout để không bao giờ treo màn hình Splash
       try {
-        await _initializeFirebaseBootstrap().timeout(const Duration(seconds: 3));
+        await initializeFirebaseBootstrap()
+            .timeout(const Duration(seconds: 3));
       } catch (e) {
         debugPrint('Firebase bootstrap timeout or error: $e');
+      }
+      
+      try {
+        await RemoteConfigService().initialize();
+      } catch (e) {
+        debugPrint('RemoteConfig init error: $e');
       }
 
       if (!kIsWeb) {
         try {
           FirebaseMessaging.onBackgroundMessage(
-              _firebaseMessagingBackgroundHandler);
+              firebaseMessagingBackgroundHandler);
         } catch (_) {}
       }
 
       runApp(const MyApp());
-      _scheduleDeferredBootstrap();
+      scheduleDeferredBootstrap();
 
-      // Các tác vụ không cần chặn UI — chạy sau khi đã hiển thị app
+      // Tác vụ không chặn UI – chạy sau 500ms
       unawaited(
           Future<void>.delayed(const Duration(milliseconds: 500), () async {
         await BuildSignatureService.verifyOfficialBuildSignature();
-        await _clearStaleIosAuthAfterFreshInstall();
+        await clearStaleIosAuthAfterFreshInstall();
         if (!kIsWeb) {
           try {
             await BackgroundTrackingService.initialize();
@@ -441,10 +164,8 @@ void main() {
         }
         await PerformanceProfileService.instance.initialize();
       }));
-    } on _MissingBootstrapConfig {
-      if (!kIsWeb) {
-        FlutterNativeSplash.remove();
-      }
+    } on MissingBootstrapConfig {
+      if (!kIsWeb) FlutterNativeSplash.remove();
       runApp(StartupErrorApp(
         title: L10nService().translate('core_err_missing_env_title'),
         message: kDebugMode
@@ -457,9 +178,7 @@ void main() {
         ],
       ));
     } on UnofficialBuildDetected catch (error) {
-      if (!kIsWeb) {
-        FlutterNativeSplash.remove();
-      }
+      if (!kIsWeb) FlutterNativeSplash.remove();
       runApp(StartupErrorApp(
         title: L10nService().translate('core_err_invalid_install_title'),
         message: L10nService().translate('core_err_official_release_only'),
@@ -475,14 +194,10 @@ void main() {
         RevenueSecurityTelemetryService.instance.logSystemEvent(
           type: 'bootstrap_error',
           reason: bootstrapError.message,
-          extra: {
-            'mappedMessage': bootstrapError.message,
-          },
+          extra: {'mappedMessage': bootstrapError.message},
         ),
       );
-      if (!kIsWeb) {
-        FlutterNativeSplash.remove();
-      }
+      if (!kIsWeb) FlutterNativeSplash.remove();
       runApp(StartupErrorApp(
         title: bootstrapError.isNetworkError
             ? L10nService().translate('core_err_conn_start_title')
@@ -498,495 +213,5 @@ void main() {
         ],
       ));
     }
-  }, (error, stackTrace) {
-    final mappedError = AppErrorMapper.resolve(
-      error,
-      fallbackMessage: L10nService().translate('core_err_uncaught_start'),
-    );
-    debugPrint('Uncaught zone error: ${mappedError.message}');
-    unawaited(ErrorLoggerService.instance.logError(
-      error,
-      stackTrace,
-      reason: 'uncaught_zone_error',
-      fatal: true,
-    ));
-    unawaited(
-      RevenueSecurityTelemetryService.instance.logSystemEvent(
-        type: 'uncaught_zone_error',
-        reason: mappedError.message,
-      ),
-    );
-  });
-}
-
-Future<void> _initializeFirebaseBootstrap() async {
-  if (kIsWeb) {
-    _throwIfFirebaseEnvMissing();
-    await Firebase.initializeApp(options: _firebaseOptionsFromEnv())
-        .timeout(const Duration(seconds: 8));
-
-    try {
-      FirebaseFirestore.instance.settings = const Settings(
-        persistenceEnabled: true,
-        cacheSizeBytes: 100 * 1024 * 1024, // 100 MB
-      );
-    } catch (e) {
-      debugPrint('Firestore web persistence error: $e');
-    }
-  } else {
-    await _initializeNativeFirebaseBootstrap();
-  }
-
-  if (Firebase.apps.isEmpty) {
-    throw StateError(L10nService().translate('core_err_firebase_not_init'));
-  }
-
-  try {
-    await FirebaseAppCheck.instance.activate(
-      androidProvider:
-          kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
-      appleProvider:
-          kDebugMode ? AppleProvider.debug : AppleProvider.deviceCheck,
-    ).timeout(const Duration(seconds: 2), onTimeout: () => null);
-  } catch (e) {
-    debugPrint('Firebase AppCheck init error: $e');
-  }
-
-  if (!kIsWeb) {
-    try {
-      FirebaseDatabase.instance.setPersistenceEnabled(true);
-      // ⚡ Increased from 5MB → 40MB to significantly improve offline chat/diary caching and reduce bandwidth
-      FirebaseDatabase.instance.setPersistenceCacheSizeBytes(41943040);
-    } catch (e) {
-      debugPrint('Firebase persistence error: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage:
-            L10nService().translate('core_err_firebase_cache_failed'),
-      ).message}');
-    }
-
-    try {
-      FirebaseFirestore.instance.settings = const Settings(
-        persistenceEnabled: true,
-        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-      );
-    } catch (e) {
-      debugPrint('Firestore persistence error: $e');
-    }
-
-    unawaited(_initializeFirebaseAppCheck());
-    await ErrorLoggerService.instance.initialize();
-  }
-}
-
-FirebaseOptions _firebaseOptionsFromEnv() {
-  final authDomain = AppConfig.firebaseAuthDomain.trim();
-  return FirebaseOptions(
-    apiKey: AppConfig.firebaseApiKey,
-    appId: AppConfig.firebaseAppId,
-    messagingSenderId: AppConfig.firebaseMessagingSenderId,
-    projectId: AppConfig.firebaseProjectId,
-    storageBucket: AppConfig.firebaseStorageBucket,
-    databaseURL: AppConfig.firebaseDatabaseUrl,
-    authDomain: authDomain.isEmpty ? null : authDomain,
-  );
-}
-
-Future<void> _initializeNativeFirebaseBootstrap() async {
-  try {
-    await _initializeDefaultNativeFirebaseApp();
-    return;
-  } catch (nativeError) {
-    debugPrint('Firebase native init error: ${AppErrorMapper.resolve(
-      nativeError,
-      fallbackMessage:
-          L10nService().translate('core_err_firebase_native_failed'),
-    ).message}');
-  }
-
-  final fallbackOptions = await _resolveNativeFirebaseFallbackOptions();
-  if (fallbackOptions == null) {
-    _throwIfFirebaseEnvMissing();
-    throw StateError(
-      'Firebase native initialization failed and no Android fallback '
-      'FirebaseOptions were available.',
-    );
-  }
-
-  await Firebase.initializeApp(options: fallbackOptions)
-      .timeout(const Duration(seconds: 3));
-}
-
-Future<void> _initializeDefaultNativeFirebaseApp() async {
-  const attemptTimeouts = <Duration>[
-    Duration(seconds: 2),
-    Duration(seconds: 4),
-  ];
-
-  Object? lastError;
-  StackTrace? lastStackTrace;
-
-  for (var index = 0; index < attemptTimeouts.length; index++) {
-    try {
-      if (Firebase.apps.isNotEmpty) {
-        return;
-      }
-      await Firebase.initializeApp().timeout(attemptTimeouts[index]);
-      return;
-    } catch (error, stackTrace) {
-      lastError = error;
-      lastStackTrace = stackTrace;
-      if (Firebase.apps.isNotEmpty) {
-        return;
-      }
-      debugPrint(
-          'Firebase native init attempt ${index + 1} failed: ${AppErrorMapper.resolve(
-        error,
-        fallbackMessage: 'Không thể khởi tạo Firebase native.',
-      ).message}');
-      if (index < attemptTimeouts.length - 1) {
-        await Future<void>.delayed(const Duration(milliseconds: 350));
-      }
-    }
-  }
-
-  if (lastError != null && lastStackTrace != null) {
-    Error.throwWithStackTrace(lastError, lastStackTrace);
-  }
-
-  throw StateError('Firebase native initialization failed.');
-}
-
-Future<FirebaseOptions?> _resolveNativeFirebaseFallbackOptions() async {
-  final nativeOptions = await _loadNativeFirebaseOptions();
-  if (nativeOptions != null) {
-    return nativeOptions;
-  }
-
-  if (_missingFirebaseBootstrapKeys().isEmpty) {
-    return _firebaseOptionsFromEnv();
-  }
-
-  return null;
-}
-
-Future<FirebaseOptions?> _loadNativeFirebaseOptions() async {
-  if (kIsWeb) {
-    return null;
-  }
-
-  try {
-    final rawOptions = await _bootstrapChannel.invokeMapMethod<String, dynamic>(
-      'getNativeFirebaseOptions',
-    );
-    if (rawOptions == null || rawOptions.isEmpty) {
-      return null;
-    }
-
-    String readValue(String key) => (rawOptions[key] as String? ?? '').trim();
-
-    final apiKey = readValue('apiKey');
-    final appId = readValue('appId');
-    final messagingSenderId = readValue('messagingSenderId');
-    final projectId = readValue('projectId');
-
-    if (apiKey.isEmpty ||
-        appId.isEmpty ||
-        messagingSenderId.isEmpty ||
-        projectId.isEmpty) {
-      return null;
-    }
-
-    final authDomain = readValue('authDomain');
-    final storageBucket = readValue('storageBucket');
-    final databaseUrl = readValue('databaseURL');
-
-    return FirebaseOptions(
-      apiKey: apiKey,
-      appId: appId,
-      messagingSenderId: messagingSenderId,
-      projectId: projectId,
-      authDomain: authDomain.isEmpty ? null : authDomain,
-      storageBucket: storageBucket.isEmpty ? null : storageBucket,
-      databaseURL: databaseUrl.isEmpty ? null : databaseUrl,
-    );
-  } catch (error) {
-    debugPrint('Native Firebase options load error: ${AppErrorMapper.resolve(
-      error,
-      fallbackMessage:
-          L10nService().translate('core_err_firebase_read_config_failed'),
-    ).message}');
-    return null;
-  }
-}
-
-Future<void> _initializeFirebaseAppCheck() async {
-  try {
-    final webSiteKey = AppConfig.recaptchaV3SiteKey.trim();
-    if (kIsWeb) {
-      if (webSiteKey.isEmpty) {
-        debugPrint('Firebase App Check skipped on web: missing site key');
-        return;
-      }
-      await FirebaseAppCheck.instance
-          .activate(providerWeb: ReCaptchaV3Provider(webSiteKey))
-          .timeout(const Duration(seconds: 3));
-      return;
-    }
-
-    if (kDebugMode) {
-      debugPrint('Firebase App Check: Skipped in debug mode (emulator-safe).');
-      return;
-    }
-  } catch (e) {
-    debugPrint('Firebase App Check init error: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: L10nService().translate('core_err_appcheck_failed'),
-    ).message}');
-  }
-}
-
-Future<void> _requestIosTrackingAuthorization() async {
-  if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
-    return;
-  }
-
-  try {
-    final status = await AppTrackingTransparency.trackingAuthorizationStatus;
-    if (status == TrackingStatus.notDetermined) {
-      await AppTrackingTransparency.requestTrackingAuthorization();
-    }
-  } catch (e) {
-    debugPrint('ATT request skipped: $e');
-  }
-}
-
-Future<void> _initializeGoogleMobileAds() async {
-  if (kIsWeb) {
-    return;
-  }
-
-  try {
-    await MobileAds.instance.initialize();
-    debugPrint('Google Mobile Ads initialized successfully');
-  } catch (e) {
-    debugPrint('Google Mobile Ads init error: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: 'Could not initialize Google Mobile Ads',
-    ).message}');
-  }
-}
-
-void _scheduleDeferredBootstrap() {
-  SchedulerBinding.instance.addPostFrameCallback((_) {
-    unawaited(Future<void>(() async {
-      try {
-        PlatformDispatcher.instance.onError = (error, stackTrace) {
-          final mappedError = AppErrorMapper.resolve(
-            error,
-            fallbackMessage: 'Lỗi nền hệ thống.',
-          );
-          unawaited(ErrorLoggerService.instance.logError(
-            error,
-            stackTrace,
-            reason: 'platform_dispatcher',
-            fatal: true,
-          ));
-          unawaited(
-            RevenueSecurityTelemetryService.instance.logSystemEvent(
-              type: 'platform_dispatcher_error',
-              reason: mappedError.message,
-            ),
-          );
-          return true;
-        };
-        await Future.wait([
-          _initializeDeferredFirebaseAppCheck(),
-          _purgeDeprecatedSecretsDeferred(),
-          _warmUpOfflineCache(),
-          _warmUpLocalDatabase(),
-          _warmUpWidgetService(),
-          _warmUpGoogleFonts(),
-          StorageService.instance.purgeStaleCache(),
-        ]);
-        unawaited(_warmUpBackgroundServices());
-
-        // Delay heavy SDK initializations to ensure smooth first frames
-        unawaited(Future.delayed(const Duration(seconds: 3), () {
-          unawaited(_initializeGoogleMobileAds());
-          unawaited(_requestIosTrackingAuthorization());
-        }));
-      } catch (error, stackTrace) {
-        debugPrint('Deferred bootstrap error: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: L10nService().translate('core_err_bg_task_failed'),
-        ).message}');
-        unawaited(ErrorLoggerService.instance.logError(
-          error,
-          stackTrace,
-          reason: 'deferred_bootstrap_error',
-          fatal: false,
-        ));
-      }
-    }));
-  });
-}
-
-Future<void> _initializeDeferredFirebaseAppCheck() async {
-  if (!kIsWeb) return;
-  await _initializeFirebaseAppCheck();
-}
-
-Future<void> _purgeDeprecatedSecretsDeferred() async {
-  try {
-    await _purgeDeprecatedSecrets();
-  } catch (e) {
-    debugPrint('Deprecated secrets cleanup error: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: L10nService().translate('core_err_clean_secrets_failed'),
-    ).message}');
-  }
-}
-
-Future<void> _warmUpGoogleFonts() async {
-  try {
-    await GoogleFonts.pendingFonts([
-      GoogleFonts.quicksand(),
-      GoogleFonts.dancingScript(),
-      GoogleFonts.caveat(),
-      GoogleFonts.nunito(),
-    ]);
-  } catch (e) {
-    debugPrint('GoogleFonts pre-warm info: $e');
-  }
-}
-
-Future<void> _warmUpOfflineCache() async {
-  try {
-    await OfflineCacheService.initialize();
-  } catch (e) {
-    debugPrint('Prefs init error: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: L10nService().translate('core_err_init_prefs_failed'),
-    ).message}');
-  }
-}
-
-Future<void> _warmUpLocalDatabase() async {
-  try {
-    await LocalDatabaseService().initialize();
-  } catch (e) {
-    debugPrint('LocalDB init error: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: L10nService().translate('core_err_init_local_db_failed'),
-    ).message}');
-  }
-}
-
-Future<void> _warmUpWidgetService() async {
-  if (kIsWeb) return;
-  try {
-    await WidgetService.ensureInitialized();
-  } catch (e) {
-    debugPrint('Widget bootstrap error: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: L10nService().translate('core_err_init_widget_failed'),
-    ).message}');
-  }
-}
-
-Future<void> _warmUpBackgroundServices() async {
-  unawaited(_runBackgroundWarmUpTask(
-    'Music init error',
-    () => MusicService().init(),
-  ));
-  unawaited(_runBackgroundWarmUpTask(
-    'Connectivity init error',
-    () => ConnectivityService().initialize(),
-  ));
-  unawaited(_runBackgroundWarmUpTask(
-    'Security warm-up error',
-    () => SecurityService().isProxyOrVpnActive(),
-  ));
-}
-
-Future<void> _runBackgroundWarmUpTask(
-  String label,
-  Future<void> Function() task,
-) async {
-  try {
-    await task();
-  } catch (e) {
-    debugPrint('$label: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: 'Không thể chạy tác vụ khởi động nền.',
-    ).message}');
-  }
-}
-
-void _configureRenderingDefaults() {
-  final imageCache = PaintingBinding.instance.imageCache;
-  if (kIsWeb) {
-    imageCache.maximumSize = 100;
-    imageCache.maximumSizeBytes = 80 << 20; // 80 MB
-  } else if (defaultTargetPlatform == TargetPlatform.iOS ||
-      defaultTargetPlatform == TargetPlatform.macOS) {
-    // iOS: giới hạn thấp để tránh bị hệ thống kill vì dùng quá nhiều RAM (tránh OOM Crash)
-    imageCache.maximumSize = 100;
-    imageCache.maximumSizeBytes = 50 << 20; // Giảm từ 150MB xuống 50MB
-  } else {
-    // Android: Giảm từ 256MB xuống 80MB để tránh tràn RAM khi lướt nhiều ảnh
-    imageCache.maximumSize = 150;
-    imageCache.maximumSizeBytes = 80 << 20; // 80 MB
-  }
-  SchedulerBinding.instance.scheduleWarmUpFrame();
-}
-
-class _MissingBootstrapConfig implements Exception {
-  final List<String> missingKeys;
-
-  const _MissingBootstrapConfig(this.missingKeys);
-}
-
-void _throwIfFirebaseEnvMissing() {
-  final missingKeys = _missingFirebaseBootstrapKeys();
-  if (missingKeys.isNotEmpty) {
-    throw _MissingBootstrapConfig(missingKeys);
-  }
-}
-
-List<String> _missingFirebaseBootstrapKeys() {
-  if (!kIsWeb && kDebugMode) return [];
-
-  final entries = <String, String>{
-    'FIREBASE_API_KEY': AppConfig.firebaseApiKey,
-    'FIREBASE_AUTH_DOMAIN': AppConfig.firebaseAuthDomain,
-    'FIREBASE_DATABASE_URL': AppConfig.firebaseDatabaseUrl,
-    'FIREBASE_PROJECT_ID': AppConfig.firebaseProjectId,
-    'FIREBASE_STORAGE_BUCKET': AppConfig.firebaseStorageBucket,
-    'FIREBASE_MESSAGING_SENDER_ID': AppConfig.firebaseMessagingSenderId,
-    'FIREBASE_APP_ID': AppConfig.firebaseAppId,
-  };
-
-  final placeholderByKey = <String, Set<String>>{
-    'FIREBASE_API_KEY': {'your-firebase-api-key'},
-    'FIREBASE_AUTH_DOMAIN': {'your-project.firebaseapp.com'},
-    'FIREBASE_DATABASE_URL': {
-      'https://your-project-default-rtdb.firebaseio.com'
-    },
-    'FIREBASE_PROJECT_ID': {'your-project-id'},
-    'FIREBASE_STORAGE_BUCKET': {'your-project.appspot.com'},
-    'FIREBASE_MESSAGING_SENDER_ID': {'123456789000'},
-    'FIREBASE_APP_ID': {'1:123456789000:web:abcdef1234567890'},
-  };
-
-  return entries.entries
-      .where((entry) {
-        final value = entry.value.trim();
-        if (value.isEmpty) return true;
-        final placeholders = placeholderByKey[entry.key];
-        return placeholders != null && placeholders.contains(value);
-      })
-      .map((entry) => entry.key)
-      .toList();
+  }, handleZoneError);
 }

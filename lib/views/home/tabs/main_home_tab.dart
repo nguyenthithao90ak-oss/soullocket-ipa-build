@@ -33,7 +33,6 @@ import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:latlong2/latlong.dart' as ll;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
-import 'package:soullocket_app/views/chat/messenger_screen.dart';
 import 'package:soullocket_app/views/chat/chat_detail_screen.dart';
 import 'package:soullocket_app/views/map/map_screen.dart';
 import 'package:soullocket_app/views/relationship/couple_connect_screen.dart';
@@ -107,12 +106,13 @@ import 'package:soullocket_app/utils/services/love_status_notification_service.d
 import 'package:soullocket_app/views/home/love_insights_screen.dart';
 import 'package:soullocket_app/views/home/milestones_screen.dart';
 import 'dart:ui' as ui;
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../widgets/lottie_async_loader.dart';
 import '../../../core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/core/sl_countdown_shapes.dart';
 import 'package:soullocket_app/core/sl_route.dart';
+import 'package:soullocket_app/views/home/widgets/main_home/hero/main_home_animated_wave_background.dart';
+export 'package:soullocket_app/views/home/widgets/main_home/hero/main_home_animated_wave_background.dart';
 import 'package:soullocket_app/views/home/tabs/main_home/widgets/main_home_header_button.dart';
 
 part 'main_home/widgets/main_home_dialogs.dart';
@@ -141,12 +141,10 @@ part 'main_home/controllers/main_home_media_warmup_controller.dart';
 part 'main_home/controllers/main_home_presence_map_controller.dart';
 part 'main_home/controllers/main_home_widget_sync_controller.dart';
 part 'main_home/controllers/main_home_avatar_controller.dart';
-part 'main_home/controllers/main_home_wish_tip_controller.dart';
 part 'main_home/controllers/main_home_countdown_prefs_controller.dart';
 part 'main_home/controllers/main_home_reaction_controller.dart';
 part 'main_home/sections/main_home_body_section.dart';
 part 'main_home/widgets/main_home_state_views.dart';
-part '../widgets/main_home/hero/main_home_animated_wave_background.dart';
 part '../widgets/main_home/hero/main_home_countdown_visual_spec.dart';
 part '../widgets/main_home/hero/main_home_hero_badges.dart';
 part '../widgets/main_home/hero/main_home_hero_countdown.dart';
@@ -195,11 +193,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   };
   static const Duration _kReactionThrowWindow = Duration(seconds: 10);
   static const int _kReactionThrowBurstLimit = 5;
-  static const List<String> _kCountdownPressHoldTips = [
-    '💡 Bấm giữ thẻ đếm ngược để mở nhanh bảng đổi giao diện & màu sắc!',
-    '🎨 Bấm giữ đếm ngược để tùy chỉnh font chữ, hiệu ứng và màu sắc riêng!',
-    '✨ Nhấn giữ thẻ đếm ngày để tùy biến đếm ngược theo phong cách của bạn!',
-  ];
 
   bool _hideSettingsButtonUntilRestart = false;
 
@@ -415,8 +408,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   final ValueNotifier<Map<String, dynamic>?> _homeMyBatteryNotifier =
       ValueNotifier<Map<String, dynamic>?>(null);
   final ValueNotifier<bool> _isScrollingNotifier = ValueNotifier<bool>(false);
-  int _wishIndex = -1;
-  int _tipIndex = -1;
   Timer? _weatherRefreshTimer;
   Timer? _loveWidgetSyncDebounce;
 
@@ -522,7 +513,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
 
   static const Duration _kHomeMotionWarmupDelay = Duration(milliseconds: 650);
 
-  bool get _showLegacyMessengerButton => false;
   String get _partnerRole => _currentRole == 'user1' ? 'user2' : 'user1';
 
   Map<String, dynamic> _buildDefaultHomeSettings() {

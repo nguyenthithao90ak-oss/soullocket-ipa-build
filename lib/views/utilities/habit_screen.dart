@@ -125,12 +125,12 @@ class _HabitScreenState extends State<HabitScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xoá thói quen'),
-        content: const Text(
-            'Bạn có chắc chắn muốn xoá thói quen này? Dữ liệu điểm danh sẽ mất.'),
+        title: Text(ctx.tr('Xoá thói quen')),
+        content: Text(ctx.tr(
+            'Bạn có chắc chắn muốn xoá thói quen này? Dữ liệu điểm danh sẽ mất.')),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+              onPressed: () => Navigator.pop(ctx), child: Text(ctx.tr('Huỷ'))),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -141,7 +141,7 @@ class _HabitScreenState extends State<HabitScreen> {
               _dbRef.child(path).remove();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Xoá'),
+            child: Text(ctx.tr('Xoá')),
           ),
         ],
       ),

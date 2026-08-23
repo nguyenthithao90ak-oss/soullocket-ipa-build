@@ -228,124 +228,199 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
                   ),
                 ),
               ),
-              Expanded(
-                child: Container(
-                  constraints:
-                      const BoxConstraints(minHeight: 42, maxHeight: 110),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: hasChatBackground
-                        ? const Color(0xFFFFFFFF).withValues(alpha: 0.82)
-                        : const Color(0xFFF0F2F5),
-                    borderRadius: BorderRadius.circular(24),
-                    border: hasChatBackground
-                        ? Border.all(
-                            color: Colors.white.withValues(alpha: 0.35))
-                        : null,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      GestureDetector(
-                        onTap: _isUploading ? null : _pickImage,
-                        child: SizedBox(
-                          width: 28,
-                          height: 28,
-                          child: _isUploading
-                              ? const Padding(
-                                  padding: EdgeInsets.all(4),
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Icon(
-                                  Icons.image_outlined,
-                                  color: Color(0xFF0A7CFF),
-                                  size: 20,
-                                ),
-                        ),
-                      ),
-                      SLSpacing.w8,
-                      Expanded(
-                        child: TextField(
-                          controller: _msgController,
-                          maxLines: null,
-                          maxLength: 2000,
-                          textInputAction: TextInputAction.send,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            color: Color(0xFF1E293B),
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'Nhắn tin...',
-                            hintStyle: SLTheme.quicksand(
-                              color: Colors.grey,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding:
-                                const EdgeInsets.symmetric(vertical: 8),
-                            counterText: '',
-                          ),
-                          onSubmitted: (_) => _sendMsg(),
-                        ),
-                      ),
-                      SLSpacing.w8,
-                      GestureDetector(
-                        onTap: _showStickerBottomSheet,
-                        child: const SizedBox(
-                          width: 28,
-                          height: 28,
-                          child: Icon(
-                            Icons.emoji_emotions_outlined,
-                            color: Color(0xFF6B7280),
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SLSpacing.w8,
-              GestureDetector(
-                onTap: _sendQuickLike,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: _hasComposerText
-                        ? const Color(0xFF0A7CFF)
-                        : const Color(0xFFEAF2FF),
-                    border: Border.all(
-                      color: const Color(0xFFC7DCFF),
-                      width: _hasComposerText ? 0 : 1,
+              if (_isRecordingVoice)
+                Expanded(
+                  child: Container(
+                    height: 44,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFECEF),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: const Color(0xFFFFB3C6)),
                     ),
-                    shape: BoxShape.circle,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE53935),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${_recordElapsed.inMinutes.remainder(60).toString().padLeft(2, '0')}:${_recordElapsed.inSeconds.remainder(60).toString().padLeft(2, '0')}',
+                          style: SLTheme.quicksand(
+                            color: const Color(0xFFE53935),
+                            fontWeight: FontWeight.w900,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            context.tr('Đang ghi âm...'),
+                            style: SLTheme.quicksand(
+                              color: const Color(0xFF881337),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                          icon: const Icon(Icons.delete_outline_rounded,
+                              color: Color(0xFFE53935), size: 22),
+                          onPressed: _cancelVoiceRecording,
+                        ),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                          icon: const Icon(Icons.send_rounded,
+                              color: Color(0xFF0A7CFF), size: 22),
+                          onPressed: _stopAndSendVoiceRecording,
+                        ),
+                      ],
+                    ),
                   ),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    child: _hasComposerText
-                        ? const Icon(
-                            Icons.send_rounded,
-                            key: ValueKey('send'),
-                            color: Colors.white,
-                            size: 19,
-                          )
-                        : Text(
-                            _quickReactionEmoji,
-                            key: ValueKey('quick_$_quickReactionEmoji'),
+                )
+              else
+                Expanded(
+                  child: Container(
+                    constraints:
+                        const BoxConstraints(minHeight: 42, maxHeight: 110),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: hasChatBackground
+                          ? const Color(0xFFFFFFFF).withValues(alpha: 0.82)
+                          : const Color(0xFFF0F2F5),
+                      borderRadius: BorderRadius.circular(24),
+                      border: hasChatBackground
+                          ? Border.all(
+                              color: Colors.white.withValues(alpha: 0.35))
+                          : null,
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        GestureDetector(
+                          onTap: _isUploading ? null : _pickImage,
+                          child: SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: _isUploading
+                                ? const Padding(
+                                    padding: EdgeInsets.all(4),
+                                    child:
+                                        CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : const Icon(
+                                    Icons.image_outlined,
+                                    color: Color(0xFF0A7CFF),
+                                    size: 20,
+                                  ),
+                          ),
+                        ),
+                        SLSpacing.w8,
+                        Expanded(
+                          child: TextField(
+                            controller: _msgController,
+                            maxLines: null,
+                            maxLength: 2000,
+                            textInputAction: TextInputAction.send,
                             style: const TextStyle(
-                              fontSize: 20,
-                              height: 1,
+                              fontSize: 15,
+                              color: Color(0xFF1E293B),
+                            ),
+                            decoration: InputDecoration(
+                              hintText: context.tr('Nhắn tin...'),
+                              hintStyle: SLTheme.quicksand(
+                                color: Colors.grey,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 8),
+                              counterText: '',
+                            ),
+                            onSubmitted: (_) => _sendMsg(),
+                          ),
+                        ),
+                        SLSpacing.w8,
+                        GestureDetector(
+                          onTap: _showStickerBottomSheet,
+                          child: const SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: Icon(
+                              Icons.emoji_emotions_outlined,
+                              color: Color(0xFF6B7280),
+                              size: 20,
                             ),
                           ),
+                        ),
+                        SLSpacing.w8,
+                        GestureDetector(
+                          onTap: _startVoiceRecording,
+                          child: const SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: Icon(
+                              Icons.mic_none_rounded,
+                              color: Color(0xFF6B7280),
+                              size: 21,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
+              if (!_isRecordingVoice) ...[
+                SLSpacing.w8,
+                GestureDetector(
+                  onTap: _sendQuickLike,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: _hasComposerText
+                          ? const Color(0xFF0A7CFF)
+                          : const Color(0xFFEAF2FF),
+                      border: Border.all(
+                        color: const Color(0xFFC7DCFF),
+                        width: _hasComposerText ? 0 : 1,
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 180),
+                      child: _hasComposerText
+                          ? const Icon(
+                              Icons.send_rounded,
+                              key: ValueKey('send'),
+                              color: Colors.white,
+                              size: 19,
+                            )
+                          : Text(
+                              _quickReactionEmoji,
+                              key: ValueKey('quick_$_quickReactionEmoji'),
+                              style: const TextStyle(
+                                fontSize: 20,
+                                height: 1,
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

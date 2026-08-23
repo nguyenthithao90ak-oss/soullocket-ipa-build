@@ -245,18 +245,18 @@ class _FinanceScreenState extends State<FinanceScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xoá giao dịch'),
-        content: const Text('Bạn có chắc chắn muốn xoá giao dịch này?'),
+        title: Text(ctx.tr('Xoá giao dịch')),
+        content: Text(ctx.tr('Bạn có chắc chắn muốn xoá giao dịch này?')),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
+              onPressed: () => Navigator.pop(ctx), child: Text(ctx.tr('Huỷ'))),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _dbRef.child('houses/${widget.houseId}/budget/$key').remove();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Xoá'),
+            child: Text(ctx.tr('Xoá')),
           ),
         ],
       ),
@@ -386,24 +386,24 @@ class _FinanceScreenState extends State<FinanceScreen> {
           style: SLTheme.quicksand(
               fontWeight: FontWeight.w900, color: SLTheme.textMain),
         ),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:',
-                  style: TextStyle(
+              Text(context.tr('Tính năng:'),
+                  style: const TextStyle(
                       fontWeight: FontWeight.bold, color: SLTheme.textMain)),
-              SizedBox(height: 4),
-              Text(
+              const SizedBox(height: 4),
+              const Text(
                   '- Ghi chép chi tiêu chung của hai người (đi ăn, xem phim, du lịch).\n- Thống kê biểu đồ trực quan xem tiền đang được tiêu vào mục nào nhiều nhất.\n- Theo dõi số dư quỹ chung nếu có đóng góp.',
                   style: TextStyle(color: SLTheme.textLight)),
-              SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(
+              const SizedBox(height: 12),
+              Text(context.tr('Cách sử dụng:'),
+                  style: const TextStyle(
                       fontWeight: FontWeight.bold, color: SLTheme.textMain)),
-              SizedBox(height: 4),
-              Text(
+              const SizedBox(height: 4),
+              const Text(
                   '- Bấm + Giao dịch mới mỗi khi phát sinh chi tiêu.\n- Nhập số tiền, chọn hạng mục và ghi chú ai là người trả tiền.\n- Xem mục Thống kê để cân đối lại tài chính vào cuối tháng.',
                   style: TextStyle(color: SLTheme.textLight)),
             ],
@@ -412,8 +412,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: SLColors.primary)),
+            child: Text(context.tr('Đã hiểu'),
+                style: const TextStyle(color: SLColors.primary)),
           ),
         ],
       ),

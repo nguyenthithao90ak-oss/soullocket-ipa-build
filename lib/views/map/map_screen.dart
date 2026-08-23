@@ -1347,7 +1347,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final messenger = ScaffoldMessenger.maybeOf(context);
     messenger?.showSnackBar(
       SnackBar(
-        content: Text(context.tr('map_anglychia_d19a1e') ?? 'Đang tải địa chỉ...'),
+        content: Text(context.tr('map_anglychia_d19a1e')),
         duration: const Duration(seconds: 1),
       ),
     );

@@ -6,6 +6,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../../core/sl_theme.dart';
 import '../../../../../utils/app_error_mapper.dart';
@@ -165,7 +166,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: months.length + 1,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final isAll = index == 0;
                 final isSelected = isAll
@@ -1755,7 +1756,7 @@ class _DiaryMemoryHeroChip extends StatelessWidget {
   }
 }
 
-class _DiaryMemoryAddButton extends StatelessWidget {
+class _DiaryMemoryAddButton extends StatefulWidget {
   final Future<void> Function() onTap;
   final bool isLoading;
 
@@ -1765,60 +1766,190 @@ class _DiaryMemoryAddButton extends StatelessWidget {
   });
 
   @override
+  State<_DiaryMemoryAddButton> createState() => _DiaryMemoryAddButtonState();
+}
+
+class _DiaryMemoryAddButtonState extends State<_DiaryMemoryAddButton>
+    with SingleTickerProviderStateMixin {
+  bool _showOnboarding = false;
+  late final AnimationController _pulseCtrl;
+  static const _prefKey = 'diary_memory_onboarding_done';
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+    _checkFirstVisit();
+  }
+
+  Future<void> _checkFirstVisit() async {
+    final prefs = await SharedPreferences.getInstance();
+    final done = prefs.getBool(_prefKey) ?? false;
+    if (!done && mounted) {
+      setState(() => _showOnboarding = true);
+    }
+  }
+
+  Future<void> _dismissOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_prefKey, true);
+    if (mounted) setState(() => _showOnboarding = false);
+  }
+
+  @override
+  void dispose() {
+    _pulseCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: isLoading ? null : () => onTap(),
-        borderRadius: BorderRadius.circular(24),
-        child: Ink(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFF758C), Color(0xFFFF7EB3)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFFF7EB3).withValues(alpha: 0.3),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ── Onboarding tooltip ──
+        if (_showOnboarding)
+          GestureDetector(
+            onTap: _dismissOnboarding,
+            child: Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6C5CE7), Color(0xFFA855F7)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF6C5CE7).withValues(alpha: 0.25),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              child: Row(
+                children: [
+                  const Icon(Icons.touch_app_rounded,
+                      color: Colors.white, size: 22),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Nhấn vào đây để đăng nhật ký, video, ảnh kỷ niệm nhé! 💕',
+                      style: SLTheme.quicksand(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        height: 1.35,
                       ),
-                    )
-                  : const Icon(
-                      Icons.add_photo_alternate_rounded,
-                      color: Colors.white,
-                      size: 22,
                     ),
-              const SizedBox(width: 8),
-              Text(
-                'Lưu giữ kỷ niệm mới ✨',
-                style: SLTheme.quicksand(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.close_rounded,
+                        color: Colors.white, size: 14),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        // ── Button with optional glow ring ──
+        AnimatedBuilder(
+          animation: _pulseCtrl,
+          builder: (context, child) {
+            final glowAlpha = _showOnboarding
+                ? 0.15 + (_pulseCtrl.value * 0.20)
+                : 0.0;
+            return Container(
+              decoration: _showOnboarding
+                  ? BoxDecoration(
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF6C5CE7)
+                              .withValues(alpha: glowAlpha),
+                          blurRadius: 20,
+                          spreadRadius: 4,
+                        ),
+                      ],
+                    )
+                  : null,
+              child: child,
+            );
+          },
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: widget.isLoading
+                  ? null
+                  : () {
+                      if (_showOnboarding) _dismissOnboarding();
+                      widget.onTap();
+                    },
+              borderRadius: BorderRadius.circular(24),
+              child: Ink(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFF758C), Color(0xFFFF7EB3)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF7EB3).withValues(alpha: 0.3),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    widget.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Icon(
+                            Icons.add_photo_alternate_rounded,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Đăng kỷ niệm mới ✨',
+                      style: SLTheme.quicksand(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }

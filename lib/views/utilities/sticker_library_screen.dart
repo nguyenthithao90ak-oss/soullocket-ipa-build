@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import '../../core/sl_theme.dart';
-import 'sticker_maker_screen.dart';
-import 'dart:io';
+import '../../utils/services/l10n_service.dart';
 
 class StickerLibraryScreen extends StatelessWidget {
   Widget _buildInfoIcon(BuildContext context) {
@@ -23,20 +22,20 @@ class StickerLibraryScreen extends StatelessWidget {
           'Thư viện nhãn dán',
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
-              Text(
+              Text(context.tr('Tính năng:'), style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              const Text(
                   '- Nơi quản lý và thêm các bộ nhãn dán độc quyền dùng để ném vào người ấy trên màn hình chính.\n- Mở khóa nhãn dán hiếm thông qua vòng quay hoặc điểm tình yêu.'),
-              SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
-              Text(
+              const SizedBox(height: 12),
+              Text(context.tr('Cách sử dụng:'),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              const Text(
                   '- Duyệt qua các bộ nhãn dán, bấm Tải về để thêm vào bộ sưu tập.\n- Tại màn hình chính, mở ngăn kéo nhãn dán và ném chúng để tạo hiệu ứng tương tác.'),
             ],
           ),
@@ -44,8 +43,8 @@ class StickerLibraryScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: SLColors.primary)),
+            child: Text(context.tr('Đã hiểu'),
+                style: const TextStyle(color: SLColors.primary)),
           ),
         ],
       ),
@@ -360,23 +359,6 @@ class StickerLibraryScreen extends StatelessWidget {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.cut_rounded, color: Color(0xFF24324A)),
-            tooltip: 'Tạo Sticker AI',
-            onPressed: () async {
-              final File? result = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const StickerMakerScreen()),
-              );
-              if (result != null) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã lưu Sticker AI thành công!')),
-                  );
-                }
-              }
-            },
-          ),
           _buildInfoIcon(context),
         ],
       ),

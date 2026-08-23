@@ -336,6 +336,11 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                                 ],
                               ),
                             )
+                    else if (msg.type == 'voice')
+                      AudioWaveformBubble(
+                        audioUrl: msg.text,
+                        isMe: isMe,
+                      )
                     else if (isSticker)
                       AnimatedRabbitSticker(
                         msg.text,

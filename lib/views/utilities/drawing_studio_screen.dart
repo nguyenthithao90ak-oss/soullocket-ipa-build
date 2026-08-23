@@ -60,7 +60,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
   String _backgroundId = 'paper_grid';
   String _aspectRatioId = '4_5';
   Color _currentColor = const Color(0xFFFF3B4D);
-  double _strokeWidth = 8;
+  final ValueNotifier<double> _strokeWidthVN = ValueNotifier<double>(8.0);
   bool _isSaving = false;
   bool _isSavingToDevice = false;
   bool _isSavingSticker = false;
@@ -104,6 +104,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
     _activeStrokesSub?.cancel();
     _backgroundSub?.cancel();
     _presenceSub?.cancel();
+    _strokeWidthVN.dispose();
     final myRole = RoleUtils.currentRoleSync();
     if (myRole.isNotEmpty) {
       unawaited(_drawingService.removePresence(
@@ -298,7 +299,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
           id: strokeId,
           authorUid: uid,
           color: _currentColor,
-          width: _strokeWidth,
+          width: _strokeWidthVN.value,
           points: [point],
         ),
       );
@@ -914,13 +915,14 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return CachedNetworkImage(
         imageUrl: item.remoteUrl!,
         fit: fit,
+        memCacheWidth: 600,
         filterQuality: FilterQuality.medium,
         imageBuilder: (context, imageProvider) => Container(
           decoration: BoxDecoration(
             image: DecorationImage(image: imageProvider, fit: fit),
           ),
         ),
-        errorWidget: (_, __, ___) => _buildLocalFallbackImage(item, fit),
+        errorWidget: (_, _, _) => _buildLocalFallbackImage(item, fit),
       );
     }
     return _buildLocalFallbackImage(item, fit);
@@ -931,6 +933,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return Image.memory(
         base64Decode(item.inlineBase64!),
         fit: fit,
+        cacheWidth: 600,
         filterQuality: FilterQuality.medium,
         gaplessPlayback: true,
       );
@@ -940,9 +943,10 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return Image.file(
         File(item.path),
         fit: fit,
+        cacheWidth: 600,
         filterQuality: FilterQuality.medium,
         gaplessPlayback: true,
-        errorBuilder: (_, __, ___) => _brokenImagePlaceholder(),
+        errorBuilder: (_, _, _) => _brokenImagePlaceholder(),
       );
     }
 
@@ -975,24 +979,24 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
           style: SLTheme.quicksand(
               fontWeight: FontWeight.w900, color: const Color(0xFFD81B60)),
         ),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:',
-                  style: TextStyle(
+              Text(context.tr('Tính năng:'),
+                  style: const TextStyle(
                       fontWeight: FontWeight.bold, color: Color(0xFFD81B60))),
-              SizedBox(height: 4),
-              Text(
+              const SizedBox(height: 4),
+              const Text(
                   '- Bảng vẽ đồng bộ trực tiếp: bạn vẽ một nét, máy người kia lập tức hiện lên.\n- Cùng nhau tạo ra các tác phẩm nghệ thuật hoặc chơi trò đoán hình.',
                   style: TextStyle(color: Color(0xFF8A5B76))),
-              SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(
+              const SizedBox(height: 12),
+              Text(context.tr('Cách sử dụng:'),
+                  style: const TextStyle(
                       fontWeight: FontWeight.bold, color: Color(0xFFD81B60))),
-              SizedBox(height: 4),
-              Text(
+              const SizedBox(height: 4),
+              const Text(
                   '- Chọn cọ vẽ, màu sắc và độ dày nét vẽ ở thanh công cụ.\n- Bắt đầu vẽ trên màn hình. Mọi thay đổi sẽ lập tức truyền đến máy người ấy.\n- Bấm nút Lưu để lưu tác phẩm vào thư viện máy hoặc cài làm nền.',
                   style: TextStyle(color: Color(0xFF8A5B76))),
             ],
@@ -1001,8 +1005,8 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: Color(0xFFD81B60))),
+            child: Text(context.tr('Đã hiểu'),
+                style: const TextStyle(color: Color(0xFFD81B60))),
           ),
         ],
       ),
@@ -1150,41 +1154,53 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
             children: _palette.map(_buildColorButton).toList(),
           ),
           SLSpacing.h16,
-          Row(
-            children: [
-              Text(
-                context.tr('util_dynt_e5cd93'),
-                style: SLTheme.quicksand(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFFD81B60),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${_strokeWidth.toStringAsFixed(1)}px',
-                style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF8A5B76),
-                ),
-              ),
-            ],
-          ),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: 4,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
-              overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
-            ),
-            child: Slider(
-              value: _strokeWidth,
-              min: 2,
-              max: 18,
-              activeColor: const Color(0xFFD81B60),
-              inactiveColor: const Color(0xFFEED7E2),
-              onChanged: (value) => setState(() => _strokeWidth = value),
-            ),
+          ValueListenableBuilder<double>(
+            valueListenable: _strokeWidthVN,
+            builder: (context, strokeWidth, _) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        context.tr('util_dynt_e5cd93'),
+                        style: SLTheme.quicksand(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFFD81B60),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${strokeWidth.toStringAsFixed(1)}px',
+                        style: SLTheme.quicksand(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF8A5B76),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 4,
+                      thumbShape:
+                          const RoundSliderThumbShape(enabledThumbRadius: 10),
+                      overlayShape:
+                          const RoundSliderOverlayShape(overlayRadius: 18),
+                    ),
+                    child: Slider(
+                      value: strokeWidth,
+                      min: 2,
+                      max: 18,
+                      activeColor: const Color(0xFFD81B60),
+                      inactiveColor: const Color(0xFFEED7E2),
+                      onChanged: (value) => _strokeWidthVN.value = value,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -1562,7 +1578,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
                 itemCount: _gallery.length,
-                separatorBuilder: (_, __) => SLSpacing.gapW(10),
+                separatorBuilder: (_, _) => SLSpacing.gapW(10),
                 itemBuilder: (context, index) {
                   final item = _gallery[index];
                   return _buildGalleryTile(item, index);

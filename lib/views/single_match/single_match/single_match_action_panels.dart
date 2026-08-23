@@ -457,7 +457,7 @@ class _SingleMatchAvatarVisual extends StatelessWidget {
                   fit: BoxFit.cover,
                   maxWidthDiskCache: 720,
                   filterQuality: FilterQuality.medium,
-                  errorWidget: (_, __, ___) => Container(
+                  errorWidget: (_, _, _) => Container(
                     color: Colors.white,
                     alignment: Alignment.center,
                     child: Icon(

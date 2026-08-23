@@ -637,7 +637,7 @@ class _AudioWaveState extends State<_AudioWave>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _anim,
-      builder: (_, __) => Container(
+      builder: (_, _) => Container(
         width: 4,
         height: _anim.value,
         decoration: BoxDecoration(

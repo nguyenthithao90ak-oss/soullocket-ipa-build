@@ -1,33 +1,5 @@
 part of '../../consent_gate.dart';
 
-Widget _buildStartupAcknowledgement(BuildContext context) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 4),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 1),
-          child: Icon(Icons.check_circle_rounded,
-              color: _accentLavender, size: 18),
-        ),
-        SLSpacing.w8,
-        Expanded(
-          child: Text(
-            context.tr('consent_khinhnvoap_7418c8'),
-            style: SLTheme.quicksand(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: _muted,
-              height: 1.35,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
 Widget _buildStartupAgreeBar(
   BuildContext context, {
   required bool compact,
@@ -164,32 +136,6 @@ Widget _buildPrimaryButton(
           ),
         ),
       ),
-    ),
-  );
-}
-
-Widget _buildRequiredConsentHint(
-  BuildContext context, {
-  required Color accent,
-}) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 4),
-    child: Row(
-      children: [
-        Icon(Icons.info_outline_rounded, color: accent, size: 16),
-        SLSpacing.w8,
-        Expanded(
-          child: Text(
-            context.tr('consent_bncnngtipt_207123'),
-            style: SLTheme.quicksand(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              color: _ink.withValues(alpha: 0.85),
-              height: 1.30,
-            ),
-          ),
-        ),
-      ],
     ),
   );
 }

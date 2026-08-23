@@ -375,8 +375,7 @@ class BackgroundTrackingService {
 
     if (Platform.isIOS) {
       if (isTrackingEnabled) {
-        await Workmanager()
-            .initialize(callbackDispatcher, isInDebugMode: false);
+        await Workmanager().initialize(callbackDispatcher);
         await Workmanager().registerPeriodicTask(
           'sleep_tracker',
           'sleep_tracker_task',
@@ -413,6 +412,7 @@ class BackgroundTrackingService {
           onStart: onStart,
           autoStart: isTrackingEnabled,
           isForegroundMode: true,
+          foregroundServiceTypes: [AndroidForegroundType.specialUse],
           notificationChannelId: 'background_tracking_channel',
           initialNotificationTitle: 'SoulLocket',
           initialNotificationContent: 'Chạy ngầm theo dõi giấc ngủ',
@@ -451,7 +451,7 @@ class BackgroundTrackingService {
         await service.startService();
       }
     } else if (Platform.isIOS) {
-      await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+      await Workmanager().initialize(callbackDispatcher);
       await Workmanager().registerPeriodicTask(
         'sleep_tracker',
         'sleep_tracker_task',

@@ -407,26 +407,53 @@ class _UpdateTabState extends State<UpdateTab> {
           children: [
             _buildSectionTitle(context),
             Expanded(
-              child: ListView(
+              child: ListView.builder(
                 physics: const BouncingScrollPhysics(),
                 padding: SLSpacing.fromLTRB(6, 16, 6, 120),
-                children: [
-                  _buildHeroBoard(context),
-                  SLSpacing.h16,
-                  _buildUpcomingEventsBoard(context),
-                  SLSpacing.h16,
-                  _buildQuickActions(context),
-                  SLSpacing.h16,
-                  _buildRoadmapBoard(context),
-                  SLSpacing.h16,
-                  _buildGuideBoard(context),
-                  SLSpacing.h16,
-                  _buildSupportBoard(context, isAdmin: _isAdmin),
-                  SLSpacing.h16,
-                  _buildFeedbackPanel(context),
-                  SLSpacing.h24,
-                  _buildFooter(),
-                ],
+                itemCount: 8,
+                itemBuilder: (context, index) {
+                  switch (index) {
+                    case 0:
+                      return _buildHeroBoard(context);
+                    case 1:
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: _buildUpcomingEventsBoard(context),
+                      );
+                    case 2:
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: _buildQuickActions(context),
+                      );
+                    case 3:
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: _buildRoadmapBoard(context),
+                      );
+                    case 4:
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: _buildGuideBoard(context),
+                      );
+                    case 5:
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: _buildSupportBoard(context, isAdmin: _isAdmin),
+                      );
+                    case 6:
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: _buildFeedbackPanel(context),
+                      );
+                    case 7:
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 24),
+                        child: _buildFooter(),
+                      );
+                    default:
+                      return const SizedBox.shrink();
+                  }
+                },
               ),
             ),
           ],

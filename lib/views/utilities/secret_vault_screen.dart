@@ -1688,81 +1688,6 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
     );
   }
 
-  // ignore: unused_element
-  void _showForgotPassphraseDialog(bool isWithin12Hours) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(context.tr('util_khiphckhom_4fc524'),
-            style: SLTheme.quicksand(
-                fontWeight: FontWeight.bold, color: SLColors.danger)),
-        content: Text(
-            isWithin12Hours
-                ? context.tr('util_vbnthitlpm_b25608')
-                : 'Vì kho này dùng mã hóa đầu cuối, nếu bạn quên mật khẩu thì toàn bộ ảnh bí mật cũ sẽ bị xóa vĩnh viễn và không thể khôi phục.\n\nBạn có chắc chắn muốn xóa kho mật cũ để tạo lại mật khẩu mới không?',
-            style: SLTheme.quicksand(color: const Color(0xFF64748B))),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(context.tr('util_hy_1e4050'),
-                  style: SLTheme.quicksand(color: Colors.white38))),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              _safeSetState(() {
-                _encryptionReady = false;
-                _encStatusMsg = context.tr('util_angxlkhiph_5f7957');
-              });
-              try {
-                if (isWithin12Hours) {
-                  await _enc.resetVaultKeepData(widget.houseId);
-                  if (mounted) {
-                    _safeSetState(() {
-                      _encStatusMsg = context.tr('util_khomtcrese_b11161');
-                      _hasRecoveryCode = false;
-                      // Không clear _photos, giữ nguyên dữ liệu trên UI
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(context.tr('util_resetmtkhu_02f484')),
-                        backgroundColor: SLColors.success));
-                  }
-                } else {
-                  await _enc.resetVault(widget.houseId);
-                  if (mounted) {
-                    _safeSetState(() {
-                      _encStatusMsg = context.tr('util_khomtcrese_aee917');
-                      _photos = [];
-                      _hasRecoveryCode = false;
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(context.tr('util_xakhomtchy_906978')),
-                        backgroundColor: SLColors.warning));
-                  }
-                }
-                if (mounted) {
-                  _prepareVault(); // Mở lại dialog thiết lập
-                }
-              } catch (e) {
-                if (mounted) {
-                  _safeSetState(() {
-                    _encStatusMsg = context.tr('util_lixlkhomt_6c14b7');
-                  });
-                }
-              }
-            },
-            child: Text(
-                isWithin12Hours
-                    ? context.tr('util_tiptc_555f1f')
-                    : context.tr('util_xavtoli_90b1ee'),
-                style: SLTheme.quicksand(
-                    color: SLColors.danger, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showInfoDialog(BuildContext context) {
     showDialog<void>(
@@ -1775,24 +1700,24 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
           style: SLTheme.quicksand(
               fontWeight: FontWeight.w900, color: Colors.white),
         ),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:',
-                  style: TextStyle(
+              Text(context.tr('Tính năng:'),
+                  style: const TextStyle(
                       fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
-              SizedBox(height: 4),
-              Text(
+              const SizedBox(height: 4),
+              const Text(
                   '- Nơi an toàn nhất để cất giữ hình ảnh và video nhạy cảm, riêng tư.\n- Bảo vệ bằng mã PIN hoặc FaceID/Vân tay.\n- Tùy chọn "Mã PIN giả" để hiển thị một hầm trống khi bị ép buộc mở.',
                   style: TextStyle(color: Colors.white60)),
-              SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(
+              const SizedBox(height: 12),
+              Text(context.tr('Cách sử dụng:'),
+                  style: const TextStyle(
                       fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
-              SizedBox(height: 4),
-              Text(
+              const SizedBox(height: 4),
+              const Text(
                   '- Thiết lập mã PIN lần đầu khi truy cập.\n- Bấm biểu tượng + để thêm ảnh/video từ thư viện máy.\n- Bật tính năng Mã PIN giả trong phần cài đặt của hầm để tăng cường bảo mật.',
                   style: TextStyle(color: Colors.white60)),
             ],
@@ -1801,8 +1726,8 @@ class SecretVaultScreenState extends State<SecretVaultScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: Colors.blueAccent)),
+            child: Text(context.tr('Đã hiểu'),
+                style: const TextStyle(color: Colors.blueAccent)),
           ),
         ],
       ),

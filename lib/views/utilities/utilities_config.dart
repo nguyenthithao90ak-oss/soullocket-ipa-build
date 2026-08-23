@@ -29,113 +29,77 @@ const List<String> utilitiesHubDefaultOrder = <String>[
 final Map<String, Map<String, dynamic>> appConfig = {
   'local_album': {
     'icon': Icons.photo_library_rounded,
-    'colors': [const Color(0xFF8E2DE2), const Color(0xFF4A00E0)],
+    'colors': [const Color(0xFFB07CE8), const Color(0xFF8B5CF6)],
     'title': L10nService().translate('util_luunhtbit_6f4b4a'),
   },
   'giftcode': {
     'icon': Icons.confirmation_number_rounded,
-    'colors': [const Color(0xFFFF512F), const Color(0xFFDD2476)],
-  },
-  'voice': {
-    'icon': Icons.graphic_eq_rounded,
-    'colors': [const Color(0xFF11998E), const Color(0xFF38EF7D)],
-    'title': L10nService().translate('util_ghim_b8035c'),
-  },
-  'note': {
-    'icon': Icons.menu_book_rounded,
-    'colors': [const Color(0xFFFF8008), const Color(0xFFFFC837)],
-    'title': 'Sổ tay chung',
+    'colors': [const Color(0xFFFF7E6B), const Color(0xFFE8507A)],
   },
   'friendly_chat': {
     'icon': Icons.smart_toy_rounded,
-    'colors': [const Color(0xFFFF2A85), const Color(0xFFFF758C)],
+    'colors': [const Color(0xFFFF6B9D), const Color(0xFFF472B6)],
     'title': L10nService().translate('util_chatthnthi_c39699'),
   },
   'capsule': {
     'icon': Icons.mark_email_unread_rounded,
-    'colors': [const Color(0xFFF857A6), const Color(0xFFFF5858)],
+    'colors': [const Color(0xFFF472B6), const Color(0xFFEC4899)],
     'title': L10nService().translate('util_hpth_2eb02b'),
   },
   'finance': {
     'icon': Icons.account_balance_wallet_rounded,
-    'colors': [const Color(0xFF00C6FF), const Color(0xFF0072FF)],
+    'colors': [const Color(0xFF60A5FA), const Color(0xFF3B82F6)],
     'title': L10nService().translate('util_tichnh_3998ba'),
   },
   'habit': {
     'icon': Icons.local_fire_department_rounded,
-    'colors': [const Color(0xFFFF512F), const Color(0xFFF09819)],
+    'colors': [const Color(0xFFFB923C), const Color(0xFFF97316)],
     'title': L10nService().translate('util_thiquen_b0785c'),
   },
   'health': {
     'icon': Icons.health_and_safety_rounded,
-    'colors': [const Color(0xFF00F260), const Color(0xFF0575E6)],
+    'colors': [const Color(0xFF4ADE80), const Color(0xFF22C55E)],
     'title': L10nService().translate('health'),
   },
   'sleep_tracker': {
     'icon': Icons.bedtime_rounded,
-    'colors': [const Color(0xFF4A00E0), const Color(0xFF8E2DE2)],
+    'colors': [const Color(0xFF818CF8), const Color(0xFF6366F1)],
     'title': 'Giấc ngủ',
   },
   'wheel': {
     'icon': Icons.pie_chart_rounded,
-    'colors': [const Color(0xFFFF3366), const Color(0xFFFF655B)],
-    'title': L10nService().translate('util_vngquay_5051d4'),
-  },
-  'vault': {
-    'icon': Icons.lock_person_rounded,
-    'colors': [const Color(0xFF232526), const Color(0xFF414345)],
-    'iconColor': const Color(0xFFFFD700),
-    'title': L10nService().translate('util_khonhmt_2e47ef'),
-  },
-  'cinema': {
-    'icon': Icons.local_movies_rounded,
-    'colors': [const Color(0xFFED213A), const Color(0xFF93291E)],
-    'title': L10nService().translate('util_rpphim_7652be'),
+    'colors': [const Color(0xFFFB7185), const Color(0xFFF43F5E)],
+    'category': 'practical',
   },
   'calendar': {
     'icon': Icons.event_note_rounded,
-    'colors': [const Color(0xFF3A7BD5), const Color(0xFF3A6073)],
+    'colors': [const Color(0xFF90C8F0), const Color(0xFF5B9BD5)],
     'title': L10nService().translate('util_lchchung_801c40'),
+    'category': 'practical',
   },
-  'gift': {
-    'icon': Icons.redeem_rounded,
-    'colors': [const Color(0xFFFF4E50), const Color(0xFFF9D423)],
-    'title': L10nService().translate('util_lmqu_940cc1'),
+  'note': {
+    'icon': Icons.menu_book_rounded,
+    'colors': [const Color(0xFF94D0E8), const Color(0xFF5BA8C8)],
+    'title': 'Sổ tay chung',
+    'category': 'practical',
   },
-  'tarot': {
-    'icon': Icons.auto_awesome_rounded,
-    'colors': [const Color(0xFFDA22FF), const Color(0xFF9733EE)],
-    'title': 'Tarot',
-  },
-  'collage': {
-    'icon': Icons.dashboard_customize_rounded,
-    'colors': [const Color(0xFF2193B0), const Color(0xFF6DD5ED)],
-    'title': L10nService().translate('util_ghpnh_fb3a4a'),
+  'voice': {
+    'icon': Icons.graphic_eq_rounded,
+    'colors': [const Color(0xFF7CC5C8), const Color(0xFF4AA8AC)],
+    'title': L10nService().translate('util_ghim_b8035c'),
+    'category': 'practical',
   },
   'store': {
     'icon': Icons.storefront_rounded,
-    'colors': [const Color(0xFFE55D87), const Color(0xFF5FC3E4)],
+    'colors': [const Color(0xFF88BDD8), const Color(0xFF5A9BBF)],
     'title': L10nService().translate('util_cahng_c7fe00'),
+    'category': 'practical',
   },
-  'diary_export': {
-    'icon': Icons.language_rounded,
-    'colors': [const Color(0xFF4568DC), const Color(0xFFB06AB3)],
-    'title': L10nService().translate('util_xuthtml_c57dd1'),
-  },
-  'love_card': {
-    'icon': Icons.style_rounded,
-    'colors': [const Color(0xFFF80759), const Color(0xFFBC4E9C)],
-    'title': 'Love Card',
-  },
-  'creative_diary': {
-    'icon': Icons.menu_book_rounded,
-    'colors': [const Color(0xFF11998E), const Color(0xFF38EF7D)],
-    'title': L10nService().translate('util_ssngto_1095a7'),
-  },
-  'drawing': {
-    'icon': Icons.brush_rounded,
-    'colors': [const Color(0xFFFF007F), const Color(0xFF7928CA)],
-    'title': L10nService().translate('util_xngv_c89b3f'),
+  'gift': {
+    'icon': Icons.redeem_rounded,
+    'colors': [const Color(0xFF7DCAD0), const Color(0xFF4FAFB7)],
+    'title': L10nService().translate('util_lmqu_940cc1'),
+    'category': 'practical',
   },
 };
 

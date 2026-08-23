@@ -51,7 +51,6 @@ import '../../../models/data_export_result.dart';
 import '../../../utils/services/data_export_service.dart';
 import '../../../utils/services/friends_service.dart';
 import '../../relationship/couple_connect_screen.dart';
-import '../../ui_prefs.dart';
 import '../../premium/premium_store_screen.dart';
 
 import '../../utilities/bucket_list_screen.dart';

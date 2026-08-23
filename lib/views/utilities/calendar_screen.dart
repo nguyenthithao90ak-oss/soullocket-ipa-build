@@ -9,7 +9,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 
-import '../../utils/services/l10n_service.dart';
 import '../../utils/services/notification_service.dart';
 import '../../utils/services/widget_service.dart';
 
@@ -161,6 +160,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     _titleController.clear();
     _locationController.clear();
     _timeController.clear();
+    if (!mounted) return;
     FocusScope.of(context).unfocus();
   }
 

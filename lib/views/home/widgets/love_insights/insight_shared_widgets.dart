@@ -2,14 +2,8 @@ part of '../../love_insights_screen.dart';
 
 extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
   // ── Palette chung ──
-  static const _primaryPink = Color(0xFFFF4F87);
-  static const _softPink = Color(0xFFFFDCE8);
-  static const _blushPink = Color(0xFFFFEEF4);
-  static const _lavender = Color(0xFFE9DDFF);
-  static const _softPurple = Color(0xFF9B7AE8);
   static const _textDark = Color(0xFF332C35);
   static const _textGrey = Color(0xFF8D8490);
-  static const _cardBg = Color(0xFFFFF7FA);
 
   Widget _buildSectionLabel({
     required String title,
@@ -118,17 +112,6 @@ extension _InsightSharedWidgetsExt on _LoveInsightsScreenState {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildSmallHeader(String title) {
-    return Text(
-      title,
-      style: SLTheme.quicksand(
-        fontSize: 12,
-        fontWeight: FontWeight.w900,
-        color: _textGrey,
-      ),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../../../../../utils/services/private_media_url_service.dart';
 import '../../../../../utils/services/cloudflare_r2_service.dart';
+import '../../../../../utils/services/l10n_service.dart';
 class MemoryZoomDraggableWrapper extends StatefulWidget {
   final Widget child;
   final VoidCallback onDismiss;
@@ -345,7 +346,7 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
                 _initVideo();
               },
               icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Thử lại'),
+              label: Text(context.tr('Thử lại')),
             ),
           ],
         ),
@@ -369,9 +370,9 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
               children: [
                 const Icon(Icons.error_outline_rounded, color: Colors.white, size: 48),
                 const SizedBox(height: 8),
-                const Text(
-                  'Không thể phát video',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                Text(
+                  context.tr('Không thể phát video'),
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 12),
                 ElevatedButton.icon(
@@ -383,7 +384,7 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
                     _initVideo();
                   },
                   icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text('Thử lại'),
+                  label: Text(context.tr('Thử lại')),
                 ),
               ],
             ),

@@ -44,20 +44,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
           'Lịch sử hoạt động',
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
-              Text(
+              Text(context.tr('Tính năng:'), style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              const Text(
                   '- Ghi lại toàn bộ dấu chân tương tác của hai người: ngày bắt đầu yêu, lần đầu thêm ảnh, khi thay đổi hình nền, v.v.\n- Giúp dễ dàng theo dõi dòng thời gian phát triển tình cảm.'),
-              SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
-              Text(
+              const SizedBox(height: 12),
+              Text(context.tr('Cách sử dụng:'),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              const Text(
                   '- Hệ thống tự động lưu các sự kiện quan trọng vào lịch sử.\n- Bạn có thể xem lại để thấy nhà chung của mình đã thay đổi thế nào qua thời gian.'),
             ],
           ),
@@ -65,8 +65,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu',
-                style: TextStyle(color: SLColors.primary)),
+            child: Text(context.tr('Đã hiểu'),
+                style: const TextStyle(color: SLColors.primary)),
           ),
         ],
       ),
@@ -475,10 +475,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     fit: BoxFit.cover,
                     memCacheWidth: 150,
                     filterQuality: FilterQuality.medium,
-                    placeholder: (_, __) => const Center(
+                    placeholder: (_, _) => const Center(
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
-                    errorWidget: (_, __, ___) => const Icon(
+                    errorWidget: (_, _, _) => const Icon(
                       Icons.image_not_supported_outlined,
                       color: Colors.white70,
                     ),

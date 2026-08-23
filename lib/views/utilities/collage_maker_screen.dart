@@ -70,20 +70,20 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
           'Ghép ảnh nghệ thuật',
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
-              Text(
+              Text(context.tr('Tính năng:'), style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              const Text(
                   '- Ghép nhiều bức ảnh kỷ niệm lại với nhau theo nhiều bố cục đẹp mắt.\n- Hỗ trợ đổi nền, chỉnh viền và bo góc khung ảnh.'),
-              SizedBox(height: 12),
-              Text('Cách sử dụng:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
-              Text(
+              const SizedBox(height: 12),
+              Text(context.tr('Cách sử dụng:'),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              const Text(
                   '- Chọn từ 2 đến 9 bức ảnh.\n- Chọn bố cục ưng ý, thay đổi màu nền hoặc độ dày viền.\n- Bấm Lưu để tải ảnh ghép về máy hoặc lưu vào Album chung.'),
             ],
           ),
@@ -91,7 +91,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đã hiểu', style: TextStyle(color: Colors.blue)),
+            child: Text(context.tr('Đã hiểu'), style: const TextStyle(color: Colors.blue)),
           ),
         ],
       ),
@@ -1144,9 +1144,11 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
       final file = File(path);
       await file.writeAsBytes(_generatedCollageBytes!);
 
-      await Share.shareXFiles(
-        [XFile(path)],
-        text: L10nService().translate('util_knimcachng_78d43f'),
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(path)],
+          text: L10nService().translate('util_knimcachng_78d43f'),
+        ),
       );
       await CollageLimitService().consumeLimit();
     } catch (e) {

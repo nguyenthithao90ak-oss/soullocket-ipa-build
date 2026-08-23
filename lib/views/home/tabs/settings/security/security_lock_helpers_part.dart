@@ -264,7 +264,7 @@ extension _SettingsTabSecurityLockHelpersPart on _SettingsTabState {
                 ),
               ),
             ),
-            if (trailing != null) trailing,
+            ?trailing,
           ],
         ),
       ),

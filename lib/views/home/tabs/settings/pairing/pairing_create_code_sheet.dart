@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/services/pairing_service.dart';
 
@@ -183,67 +182,74 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet>
             ),
             const SizedBox(height: 8),
 
-            // ── Header with gradient ──
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFFFFF0F5), Colors.white],
-                ),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFFFF6B9D), Color(0xFFE91E63)],
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color:
-                              const Color(0xFFE91E63).withValues(alpha: 0.30),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
+            // ── Scrollable content ──
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.zero,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // ── Header with gradient ──
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0xFFFFF0F5), Colors.white],
                         ),
-                      ],
-                    ),
-                    child: const Icon(Symbols.key_rounded,
-                        color: Colors.white, size: 28),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'Tạo Mã Ghép Nối',
-                    style: SLTheme.quicksand(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFFBF1451),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: Text(
-                      'Gửi mã này cho nửa kia để ghép nối dữ liệu. Mã chỉ dùng 1 lần.',
-                      textAlign: TextAlign.center,
-                      style: SLTheme.quicksand(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade500,
-                        height: 1.4,
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Color(0xFFFF6B9D), Color(0xFFE91E63)],
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      const Color(0xFFE91E63).withValues(alpha: 0.30),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(Icons.vpn_key_rounded,
+                                color: Colors.white, size: 28),
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            'Tạo Mã Ghép Nối',
+                            style: SLTheme.quicksand(
+                              fontSize: 21,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFFBF1451),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 40),
+                            child: Text(
+                              'Gửi mã này cho nửa kia để ghép nối dữ liệu. Mã chỉ dùng 1 lần.',
+                              textAlign: TextAlign.center,
+                              style: SLTheme.quicksand(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade500,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
 
             // ── Content ──
             Padding(
@@ -270,7 +276,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet>
                             color: const Color(0xFFFFB300).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Symbols.info_rounded,
+                          child: const Icon(Icons.info_rounded,
                               color: Color(0xFFF57F17), size: 18),
                         ),
                         const SizedBox(width: 10),
@@ -358,12 +364,33 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet>
 
                     if (_errorMsg != null) ...[
                       const SizedBox(height: 12),
-                      Text(
-                        _errorMsg!,
-                        style: SLTheme.quicksand(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.red),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFEBEE),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFEF9A9A)),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.error_outline_rounded,
+                                color: Color(0xFFD32F2F), size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _errorMsg!,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                                style: SLTheme.quicksand(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFFD32F2F),
+                                    height: 1.4),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                     const SizedBox(height: 24),
@@ -404,7 +431,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet>
                             : Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Symbols.magic_button, size: 20),
+                                  const Icon(Icons.auto_awesome_rounded, size: 20),
                                   const SizedBox(width: 8),
                                   Text(
                                     'Tạo Mã Ngay',
@@ -467,7 +494,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet>
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Symbols.timer,
+                                    const Icon(Icons.timer_rounded,
                                         size: 15, color: Color(0xFFE91E63)),
                                     const SizedBox(width: 6),
                                     Text(
@@ -494,7 +521,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet>
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: _deleteCode,
-                            icon: const Icon(Symbols.close_rounded, size: 18),
+                            icon: const Icon(Icons.close_rounded, size: 18),
                             label: Text(
                               'Hủy Mã',
                               style: SLTheme.quicksand(
@@ -541,7 +568,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet>
                                 );
                               },
                               icon:
-                                  const Icon(Symbols.content_copy, size: 18),
+                                  const Icon(Icons.copy_rounded, size: 18),
                               label: Text(
                                 'Sao Chép',
                                 style: SLTheme.quicksand(
@@ -603,6 +630,10 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet>
                     ),
                   ],
                 ],
+              ),
+            ),
+                  ],
+                ),
               ),
             ),
           ],
