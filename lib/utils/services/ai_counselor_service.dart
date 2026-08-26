@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
-import 'package:soullocket_app/utils/services/core/api_cache_manager.dart';
 
 class AiCounselorService {
   static final AiCounselorService _instance = AiCounselorService._internal();
@@ -125,34 +124,16 @@ class AiCounselorService {
     String? memoryText,
   }) async {
     lastErrorMessage = null;
-    
-    // Hash key to avoid excessively long keys
-    final cacheKey = 'ai_counselor_${prompt.hashCode}_${systemInstruction.hashCode}';
-    final cachedData = await ApiCacheManager.getCache(cacheKey);
-    if (cachedData != null) {
-      return cachedData as String;
-    }
-
     final openAiReply = await _callOpenAiFunction(
       prompt,
       systemInstruction,
       memoryScope: memoryScope,
       memoryText: memoryText,
     );
-    
-    String? finalReply;
     if (openAiReply != null && openAiReply.isNotEmpty) {
-      finalReply = openAiReply;
-    } else {
-      finalReply = await _callGeminiProxy(prompt, systemInstruction);
+      return openAiReply;
     }
-    
-    if (finalReply != null && finalReply.isNotEmpty) {
-      // Cache AI responses for 24 hours to save API costs
-      await ApiCacheManager.saveCache(cacheKey, finalReply, const Duration(hours: 24));
-    }
-    
-    return finalReply;
+    return _callGeminiProxy(prompt, systemInstruction);
   }
 
   Future<bool> reportAiReply({
@@ -245,7 +226,7 @@ class AiCounselorService {
     }
     for (final key in apiKeys) {
       urlsToTry.add(
-          'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$key');
+          'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContentif (key != null) key!=$key');
     }
 
     if (urlsToTry.isEmpty) {

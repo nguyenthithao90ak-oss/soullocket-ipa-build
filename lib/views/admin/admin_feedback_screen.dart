@@ -4,7 +4,6 @@ import 'package:firebase_database/firebase_database.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/auth_service.dart';
-import '../../utils/services/l10n_service.dart';
 import 'widgets/admin_shared_widgets.dart';
 
 class AdminFeedbackScreen extends StatefulWidget {
@@ -81,7 +80,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                             ConnectionState.waiting) {
                           return const Center(
                             child: CircularProgressIndicator(
-                                color: Color(0xFFFF4B91)),
+                                color: SLColors.brandPink),
                           );
                         }
 
@@ -100,7 +99,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                             child: Text(
                               'Chưa có đóng góp ý kiến nào.',
                               style: SLTheme.quicksand(
-                                  color: const Color(0xFF9AA8C4), fontSize: 16),
+                                  color: const SLColors.textMuted, fontSize: 16),
                             ),
                           );
                         }
@@ -175,7 +174,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                                             children: [
                                               const Icon(
                                                   Icons.account_circle_rounded,
-                                                  color: Color(0xFFFF4B91),
+                                                  color: SLColors.brandPink,
                                                   size: 20),
                                               const SizedBox(width: 8),
                                               Expanded(
@@ -240,13 +239,13 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                                               'Bạn có chắc chắn muốn xoá đóng góp ý kiến này không?',
                                               style: SLTheme.quicksand(
                                                   color:
-                                                      const Color(0xFF9AA8C4)),
+                                                      const SLColors.textMuted),
                                             ),
                                             actions: [
                                               TextButton(
                                                 onPressed: () =>
                                                     Navigator.pop(ctx),
-                                                child: Text(ctx.tr('Huỷ'),
+                                                child: Text('Huỷ',
                                                     style: SLTheme.quicksand(
                                                         color: const Color(
                                                             0xFF64748B))),
@@ -256,7 +255,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                                                   Navigator.pop(ctx);
                                                   _deleteFeedback(item.id);
                                                 },
-                                                child: Text(ctx.tr('Xoá'),
+                                                child: Text('Xoá',
                                                     style: SLTheme.quicksand(
                                                         color: Colors.redAccent,
                                                         fontWeight:

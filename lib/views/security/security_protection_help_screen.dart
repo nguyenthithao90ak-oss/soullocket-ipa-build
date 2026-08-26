@@ -133,7 +133,7 @@ class _SecurityProtectionHelpScreenState
                 Text(
                   copy.subtitle,
                   style: SLTheme.quicksand(
-                    color: const Color(0xFF475467),
+                    color: const SLColors.textMedium,
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
                     height: 1.55,
@@ -232,7 +232,7 @@ class _SecurityProtectionHelpScreenState
                         style: SLTheme.quicksand(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF475467),
+                          color: const SLColors.textMedium,
                           height: 1.5,
                         ),
                       ),
@@ -251,7 +251,7 @@ class _SecurityProtectionHelpScreenState
                 style: SLTheme.quicksand(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF475467),
+                  color: const SLColors.textMedium,
                   height: 1.5,
                 ),
               ),

@@ -141,7 +141,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
   @override
   void dispose() {
-    _timeoutTimer?.cancel();
     _elapsedTimer?.cancel();
     AdSuppressionGuard.instance.resumeAds();
     _roomStatusSub?.cancel();
@@ -546,7 +545,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   }
 
   Future<void> _endCall() async {
-    _timeoutTimer?.cancel();
     _elapsedTimer?.cancel();
     await _webrtcService.hangUp();
     if (!mounted) return;

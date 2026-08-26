@@ -865,7 +865,7 @@ class _MessengerScreenState extends State<MessengerScreen>
       final mine = _myHouseInfo['houseName']?.toString().trim() ?? '';
       return mine.isNotEmpty
           ? repairMojibakeText(mine)
-          : context.tr('Nhà của bạn');
+          : repairMojibakeText('Nhà của bạn');
     }
     return _displayName(houseId);
   }
@@ -914,7 +914,7 @@ class _MessengerScreenState extends State<MessengerScreen>
         .map(_groupHouseName)
         .toList();
     if (others.isEmpty) {
-      return context.tr('Nhóm mới');
+      return repairMojibakeText('Nhóm mới');
     }
     if (others.length == 1) {
       return repairMojibakeText('Nhóm với ${others.first}');

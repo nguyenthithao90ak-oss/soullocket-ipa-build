@@ -58,7 +58,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          context.tr('Tạo nhóm mới'),
+                          repairMojibakeText('Tạo nhóm mới'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w900,
                             fontSize: 18,
@@ -71,7 +71,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                           maxLength: 36,
                           decoration: InputDecoration(
                             counterText: '',
-                            hintText: context.tr('Tên nhóm'),
+                            hintText: repairMojibakeText('Tên nhóm'),
                             filled: true,
                             fillColor: const Color(0xFFF8FAFC),
                             border: OutlineInputBorder(
@@ -90,7 +90,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          context.tr('Chọn thành viên'),
+                          repairMojibakeText('Chọn thành viên'),
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w900,
                             fontSize: 14,
@@ -105,7 +105,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                           child: ListView.separated(
                             shrinkWrap: true,
                             itemCount: sortedFriends.length,
-                            separatorBuilder: (_, _) =>
+                            separatorBuilder: (_, __) =>
                                 const SizedBox(height: 8),
                             itemBuilder: (context, index) {
                               final friendId = sortedFriends[index];
@@ -181,7 +181,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                                 ? null
                                 : () {
                                     final memberIds = <String>[
-                                      ?_myHouseId,
+                                      if (_myHouseId != null) _myHouseId!,
                                       ...selectedIds,
                                     ];
                                     Navigator.of(sheetContext).pop(
@@ -206,7 +206,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                               ),
                             ),
                             child: Text(
-                              context.tr('Tạo nhóm'),
+                              repairMojibakeText('Tạo nhóm'),
                               style: SLTheme.quicksand(
                                 fontWeight: FontWeight.w900,
                                 color: Colors.white,
@@ -352,7 +352,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                               await _renameGroupDraft(current);
                             },
                             child: Text(
-                              sheetContext.tr('Đổi tên'),
+                              repairMojibakeText('Đổi tên'),
                             ),
                           ),
                         ),
@@ -367,7 +367,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                               foregroundColor: const Color(0xFFDC2626),
                             ),
                             child: Text(
-                              sheetContext.tr('Xóa nhóm'),
+                              repairMojibakeText('Xóa nhóm'),
                             ),
                           ),
                         ),
@@ -375,7 +375,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      sheetContext.tr('Thành viên'),
+                      repairMojibakeText('Thành viên'),
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w900,
                         fontSize: 14,
@@ -390,7 +390,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                       child: ListView.separated(
                         shrinkWrap: true,
                         itemCount: current.memberHouseIds.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
                         itemBuilder: (context, idx) {
                           final houseId = current.memberHouseIds[idx];
                           final isMine = houseId == _myHouseId;
@@ -468,25 +468,25 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(
-            dialogContext.tr('Đổi tên nhóm'),
+            repairMojibakeText('Đổi tên nhóm'),
           ),
           content: TextField(
             controller: ctrl,
             maxLength: 36,
             autofocus: true,
             decoration: InputDecoration(
-              hintText: dialogContext.tr('Nhập tên nhóm mới'),
+              hintText: repairMojibakeText('Nhập tên nhóm'),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(dialogContext.tr('Hủy')),
+              child: Text(repairMojibakeText('Hủy')),
             ),
             TextButton(
               onPressed: () =>
                   Navigator.of(dialogContext).pop(ctrl.text.trim()),
-              child: Text(dialogContext.tr('Lưu')),
+              child: Text(repairMojibakeText('Lưu')),
             ),
           ],
         );
@@ -511,18 +511,20 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(dialogContext.tr('Xóa nhóm?')),
+          title: Text(repairMojibakeText('Xóa nhóm?')),
           content: Text(
-            'Nh\u00f3m ${group.name} s\u1ebd b\u1ecb x\u00f3a kh\u1ecfi danh s\u00e1ch n\u00e0y.',
+            repairMojibakeText(
+              'Nh\u00f3m ${group.name} s\u1ebd b\u1ecb x\u00f3a kh\u1ecfi danh s\u00e1ch n\u00e0y.',
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(dialogContext.tr('Hủy')),
+              child: Text(repairMojibakeText('Hủy')),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(dialogContext.tr('Xóa')),
+              child: Text(repairMojibakeText('Xóa')),
             ),
           ],
         );

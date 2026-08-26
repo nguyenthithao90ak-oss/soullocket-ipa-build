@@ -105,7 +105,7 @@ class StorageManagedUploadHelper {
         fileExtension = p.extension(uploadFile.name).toLowerCase();
       }
       if (fileExtension.isEmpty) {
-        fileExtension = '.webp';
+        fileExtension = '.jpg';
       }
 
       final currentUid = requireCurrentUid();

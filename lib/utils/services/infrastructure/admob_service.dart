@@ -1468,7 +1468,7 @@ class AdMobService {
       }
       return {
         'ok': false,
-        ...?decodedMap,
+        if (decodedMap != null) ...decodedMap,
         'statusCode': response.statusCode,
         'error': error,
       };

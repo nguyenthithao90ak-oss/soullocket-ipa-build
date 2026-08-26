@@ -149,7 +149,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
               fontSize: 13.5,
               fontWeight: FontWeight.w700,
               height: 1.45,
-              color: const Color(0xFF475467),
+              color: const SLColors.textMedium,
             ),
           ),
           actions: [
@@ -380,7 +380,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             style: SLTextStyles.quicksand(
               fontSize: 11.6,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF475467),
+              color: const SLColors.textMedium,
             ),
           ),
           const SizedBox(height: 8),

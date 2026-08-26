@@ -319,7 +319,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
       filterQuality: FilterQuality.medium,
       fadeInDuration: const Duration(milliseconds: 180),
       maxWidthDiskCache: 1080,
-      placeholder: (_, _) => const DecoratedBox(
+      placeholder: (_, __) => const DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -338,7 +338,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
           ),
         ),
       ),
-      errorWidget: (_, _, _) => Container(
+      errorWidget: (_, __, ___) => Container(
         color: const Color(0xFFFFEEF5),
         alignment: Alignment.center,
         child: const Icon(

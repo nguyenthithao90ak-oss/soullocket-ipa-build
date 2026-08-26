@@ -210,7 +210,7 @@ class _SecurityProtectionRolloutPanelState
           Text(
             context.tr('admin_tun1chlogt_6ed83b'),
             style: SLTheme.quicksand(
-              color: const Color(0xFF9AA8C4),
+              color: const SLColors.textMuted,
               fontSize: 13,
               fontWeight: FontWeight.w700,
               height: 1.55,
@@ -326,7 +326,7 @@ class _SecurityProtectionRolloutPanelState
             focusedBorder: OutlineInputBorder(
               borderRadius: SLRadius.lgAll,
               borderSide:
-                  const BorderSide(color: Color(0xFFFF4B91), width: 1.3),
+                  const BorderSide(color: SLColors.brandPink, width: 1.3),
             ),
           ),
         ),
@@ -399,7 +399,7 @@ class _SecurityProtectionRolloutPanelState
           Text(
             context.tr('admin_chacdliutu_791a47'),
             style: SLTheme.quicksand(
-              color: const Color(0xFF9AA8C4),
+              color: const SLColors.textMuted,
               fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
@@ -434,7 +434,7 @@ class _SecurityProtectionRolloutPanelState
                             Text(
                               'Tổng ${item.totalCount} sự kiện',
                               style: SLTheme.quicksand(
-                                color: const Color(0xFF9AA8C4),
+                                color: const SLColors.textMuted,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -481,7 +481,7 @@ class _SecurityProtectionRolloutPanelState
         Text(
           context.tr('admin_ngi3cmapny_ea4a19'),
           style: SLTheme.quicksand(
-            color: const Color(0xFF9AA8C4),
+            color: const SLColors.textMuted,
             fontSize: 13,
             fontWeight: FontWeight.w700,
             height: 1.5,
@@ -598,7 +598,7 @@ class _SecurityProtectionRolloutPanelState
         Text(
           'Đường dẫn rollout: ${SecurityProtectionRolloutService.configPath}',
           style: SLTheme.quicksand(
-            color: const Color(0xFF9AA8C4),
+            color: const SLColors.textMuted,
             fontSize: 13,
             fontWeight: FontWeight.w700,
           ),
@@ -607,7 +607,7 @@ class _SecurityProtectionRolloutPanelState
         Text(
           context.tr('admin_ngdnsummar_b0a8b4'),
           style: SLTheme.quicksand(
-            color: const Color(0xFF9AA8C4),
+            color: const SLColors.textMuted,
             fontSize: 13,
             fontWeight: FontWeight.w700,
           ),
@@ -643,7 +643,7 @@ class _SecurityProtectionRolloutPanelState
           Text(
             'Người cập nhật: ${_config.updatedBy.isEmpty ? widget.actorId : _config.updatedBy}',
             style: SLTheme.quicksand(
-              color: const Color(0xFF9AA8C4),
+              color: const SLColors.textMuted,
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
             ),
@@ -655,7 +655,7 @@ class _SecurityProtectionRolloutPanelState
                 child: Text(
                   context.tr('admin_luxongltea_d264d1'),
                   style: SLTheme.quicksand(
-                    color: const Color(0xFF9AA8C4),
+                    color: const SLColors.textMuted,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     height: 1.5,
@@ -666,7 +666,7 @@ class _SecurityProtectionRolloutPanelState
               ElevatedButton.icon(
                 onPressed: _isSaving ? null : _save,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF4B91),
+                  backgroundColor: const SLColors.brandPink,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -785,7 +785,7 @@ class _StageOptionCard extends StatelessWidget {
             Text(
               stage.adminDescription,
               style: SLTheme.quicksand(
-                color: const Color(0xFF9AA8C4),
+                color: const SLColors.textMuted,
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
                 height: 1.5,
@@ -837,7 +837,7 @@ class _ReasonToggleTile extends StatelessWidget {
                 Text(
                   'Mã: ${reason.key}',
                   style: SLTheme.quicksand(
-                    color: const Color(0xFF9AA8C4),
+                    color: const SLColors.textMuted,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
@@ -848,7 +848,7 @@ class _ReasonToggleTile extends StatelessWidget {
           Switch(
             value: enabled,
             onChanged: onChanged,
-            activeThumbColor: const Color(0xFFFF4B91),
+            activeThumbColor: const SLColors.brandPink,
           ),
         ],
       ),

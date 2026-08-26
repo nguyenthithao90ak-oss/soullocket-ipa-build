@@ -79,8 +79,8 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
           debugPrint('Error redeeming giftcode in chat: $e');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(context.tr('Có lỗi xảy ra khi kích hoạt Giftcode.')),
+              const SnackBar(
+                content: Text('Có lỗi xảy ra khi kích hoạt Giftcode.'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -191,9 +191,9 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.tr('Lần upload chat trước đã bị gián đoạn.')),
+          content: const Text('Lần upload chat trước đã bị gián đoạn.'),
           action: SnackBarAction(
-            label: context.tr('Thử lại'),
+            label: 'Thử lại',
             onPressed: () {
               unawaited(_retryPendingChatUploads());
             },
@@ -255,139 +255,6 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
           pendingBackground['currentBackgroundStoragePath']?.toString() ?? '',
       presetFile: file,
     );
-  }
-
-  Future<void> _startVoiceRecording() async {
-    if (_isRecordingVoice || _isSendingMessage) return;
-    if (!await SecurityService().guardAction(context, 'chat_send_voice')) {
-      return;
-    }
-
-    try {
-      final hasPermission = await _audioRecorder.hasPermission();
-      if (!hasPermission) {
-        _showNotice('Vui lòng cấp quyền Microphone để ghi âm.');
-        return;
-      }
-
-      final tempDir = await getTemporaryDirectory();
-      final recordPath = p.join(
-        tempDir.path,
-        'chat_voice_${DateTime.now().millisecondsSinceEpoch}.m4a',
-      );
-
-      await _audioRecorder.start(
-        const RecordConfig(
-          encoder: AudioEncoder.aacLc,
-          bitRate: 32000,
-          sampleRate: 22050,
-          numChannels: 1,
-        ),
-        path: recordPath,
-      );
-
-      _recordTimer?.cancel();
-      _recordStartedAt = DateTime.now();
-      _recordTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (!mounted || !_isRecordingVoice) return;
-        final started = _recordStartedAt;
-        if (started != null) {
-          setState(() => _recordElapsed = DateTime.now().difference(started));
-        }
-      });
-
-      if (mounted) {
-        setState(() {
-          _isRecordingVoice = true;
-          _recordElapsed = Duration.zero;
-        });
-      }
-    } catch (e) {
-      debugPrint('[ChatDetail] Start voice recording error: $e');
-      _showNotice('Không thể bắt đầu ghi âm lúc này.');
-    }
-  }
-
-  Future<void> _cancelVoiceRecording() async {
-    _recordTimer?.cancel();
-    _recordTimer = null;
-    _recordStartedAt = null;
-    try {
-      final path = await _audioRecorder.stop();
-      if (path != null && path.isNotEmpty) {
-        final f = File(path);
-        if (await f.exists()) {
-          await f.delete();
-        }
-      }
-    } catch (_) {}
-    if (mounted) {
-      setState(() {
-        _isRecordingVoice = false;
-        _recordElapsed = Duration.zero;
-      });
-    }
-  }
-
-  Future<void> _stopAndSendVoiceRecording() async {
-    if (!_isRecordingVoice) return;
-    _recordTimer?.cancel();
-    _recordTimer = null;
-    final started = _recordStartedAt;
-    final elapsed = started != null
-        ? DateTime.now().difference(started)
-        : _recordElapsed;
-    _recordStartedAt = null;
-
-    if (mounted) {
-      setState(() {
-        _isRecordingVoice = false;
-        _recordElapsed = Duration.zero;
-      });
-    }
-
-    String? recordPath;
-    try {
-      recordPath = await _audioRecorder.stop();
-      if (recordPath == null || recordPath.isEmpty || elapsed.inSeconds < 1) {
-        if (elapsed.inSeconds < 1) {
-          _showNotice('Đoạn ghi âm quá ngắn.');
-        }
-        return;
-      }
-
-      if (mounted) {
-        setState(() => _isUploading = true);
-      }
-
-      final file = File(recordPath);
-      final folder = 'chat_voices/${widget.myHouseId}';
-      final audioUrl = await CloudflareR2Service.instance.uploadFile(
-        file,
-        folderPath: folder,
-      );
-
-      if (audioUrl != null && audioUrl.isNotEmpty) {
-        await _sendChatMessage(audioUrl, type: 'voice');
-      } else {
-        _showNotice('Không thể tải đoạn ghi âm lên máy chủ.', error: true);
-      }
-    } catch (e) {
-      debugPrint('[ChatDetail] Stop & send voice error: $e');
-      _showNotice('Lỗi khi gửi tin nhắn thoại.', error: true);
-    } finally {
-      if (recordPath != null && recordPath.isNotEmpty) {
-        try {
-          final f = File(recordPath);
-          if (await f.exists()) {
-            await f.delete();
-          }
-        } catch (_) {}
-      }
-      if (mounted) {
-        setState(() => _isUploading = false);
-      }
-    }
   }
 
   Future<void> _pickImage({XFile? presetImage}) async {
@@ -492,7 +359,7 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
     if (roomId == null || roomId.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('Không tìm thấy phòng gọi'))),
+        const SnackBar(content: Text('Không tìm thấy phòng gọi')),
       );
       return;
     }
@@ -612,20 +479,6 @@ extension _ChatDetailActionsPart on _ChatDetailScreenState {
       maxWidth: 1440,
       maxHeight: 2560,
       uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Cắt nền chat',
-            toolbarColor: Colors.black,
-            toolbarWidgetColor: Colors.white,
-            backgroundColor: Colors.black,
-            activeControlsWidgetColor: const Color(0xFFFF6D97),
-            dimmedLayerColor: Colors.black.withValues(alpha: 0.8),
-            cropFrameColor: Colors.transparent,
-            cropGridColor: Colors.transparent,
-            showCropGrid: false,
-            initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: true,
-            
-          ),
         IOSUiSettings(
           title: 'Cắt nền chat',
           aspectRatioLockEnabled: true,

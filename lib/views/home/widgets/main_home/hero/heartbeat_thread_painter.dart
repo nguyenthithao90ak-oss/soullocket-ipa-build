@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 class HeartbeatThreadWidget extends StatefulWidget {
@@ -60,6 +61,15 @@ class _FateStringPainter extends CustomPainter {
 
     final start = Offset(size.width * 0.2, size.height * 0.5);
     final end = Offset(size.width * 0.8, size.height * 0.5);
+    
+    // Wave animation for the string to feel "alive"
+    final waveOffset = sin(progress * 2 * pi) * 8.0;
+    final controlPoint = Offset(size.width * 0.5, size.height * 0.15 + waveOffset);
+
+    // Build the path
+    final path = Path()
+      ..moveTo(start.dx, start.dy)
+      ..quadraticBezierTo(controlPoint.dx, controlPoint.dy, end.dx, end.dy);
 
     // 1. Draw glowing shadow of the vein
     final shadowPaint = Paint()

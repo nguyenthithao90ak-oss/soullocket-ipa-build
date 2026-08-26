@@ -1,6 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
+import '../../../core/fast_backdrop_filter.dart';
 import '../../../utils/services/l10n_service.dart';
 import 'auth_tab_switcher.dart';
 
@@ -57,27 +59,27 @@ class AuthPanelShell extends StatelessWidget {
                                 style: SLTheme.quicksand(
                                   fontSize: compact ? 34 : 38,
                                   fontWeight: FontWeight.w900,
-                                  color: const Color(0xFFFF4B91),
+                                  color: const SLColors.brandPink,
                                   letterSpacing: 1.0,
                                 ),
                               ),
                               const SizedBox(width: 8),
                               Image.asset(
-                                'assets/icons/heart_lock.webp',
+                                'assets/icons/heart_lock.png',
                                 width: compact ? 28 : 32,
                                 height: compact ? 28 : 32,
                                 errorBuilder: (context, error, stackTrace) =>
                                     Icon(
                                   Icons.lock_person_rounded,
                                   size: compact ? 30 : 34,
-                                  color: const Color(0xFFFF4B91),
+                                  color: const SLColors.brandPink,
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            l10n.translate('auth_slogan'),
+                            '❤️ Nơi lưu giữ những khoảnh khắc yêu thương ❤️',
                             textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
                               fontSize: compact ? 13 : 14.5,
@@ -104,7 +106,7 @@ class AuthPanelShell extends StatelessWidget {
                         alignment: Alignment.topCenter,
                         children: [
                           ...previousChildren,
-                          ?currentChild,
+                          if (currentChild != null) currentChild,
                         ],
                       );
                     },
@@ -147,14 +149,14 @@ class AuthPanelShell extends StatelessWidget {
                             Icon(
                               Icons.support_agent_rounded,
                               size: 13,
-                              color: const Color(0xFFFF4B91).withValues(alpha: 0.8),
+                              color: const SLColors.brandPink.withValues(alpha: 0.8),
                             ),
                             const SizedBox(width: 5),
                             Text(
                               l10n.translate('auth_sync_guide'),
                               style: SLTheme.quicksand(
                                 fontSize: 12,
-                                color: const Color(0xFFFF4B91).withValues(alpha: 0.9),
+                                color: const SLColors.brandPink.withValues(alpha: 0.9),
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
@@ -169,7 +171,7 @@ class AuthPanelShell extends StatelessWidget {
                             final buttons = [
                               _AuthHelpButton(
                                 icon: Icons.menu_book_rounded,
-                                label: l10n.translate('auth_guide_short'),
+                                label: l10n.translate('Hướng dẫn'),
                                 onTap: onOpenGuide,
                                 isGuide: true,
                                 expanded: !stackButtons,
@@ -177,7 +179,7 @@ class AuthPanelShell extends StatelessWidget {
                               ),
                               _AuthHelpButton(
                                 icon: Icons.headset_mic_rounded,
-                                label: l10n.translate('auth_contact_short'),
+                                label: l10n.translate('Hỗ trợ'),
                                 onTap: onOpenContact,
                                 isGuide: false,
                                 expanded: !stackButtons,
@@ -235,13 +237,13 @@ class _AuthHelpButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final foreground = isGuide ? Colors.white : const Color(0xFFFF4B91);
+    final foreground = isGuide ? Colors.white : const SLColors.brandPink;
     final buttonChild = Container(
       decoration: BoxDecoration(
         gradient: isGuide
             ? const LinearGradient(
                 colors: [
-                  Color(0xFFFF4B91),
+                  SLColors.brandPink,
                   Color(0xFFFF69B4),
                 ],
               )
@@ -256,7 +258,7 @@ class _AuthHelpButton extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF4B91)
+            color: const SLColors.brandPink
                 .withValues(alpha: isGuide ? 0.28 : 0.08),
             blurRadius: 16,
             offset: const Offset(0, 6),

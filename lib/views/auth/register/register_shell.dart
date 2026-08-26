@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/sl_theme.dart';
 import 'register_form_section.dart';
 
 class RegisterShell extends StatelessWidget {
@@ -62,7 +63,7 @@ class RegisterShell extends StatelessWidget {
       onSocialLogin: onSocialLogin,
       onTermsTap: onTermsTap,
       onPrivacyTap: onPrivacyTap,
-      accentRose: const Color(0xFFFF4B91),
+      accentRose: const SLColors.brandPink,
       accentBlush: const Color(0xFFFF69B4),
       accentLavender: const Color(0xFFFF85A2),
     );

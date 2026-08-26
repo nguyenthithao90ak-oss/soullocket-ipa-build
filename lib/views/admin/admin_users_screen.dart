@@ -184,7 +184,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: const SLColors.darkNavy,
         title: Text(title, style: const TextStyle(color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -202,7 +202,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   enabledBorder: const OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey)),
                   focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFFFF4B91))),
+                      borderSide: BorderSide(color: SLColors.brandPink)),
                 ),
               ),
           ],

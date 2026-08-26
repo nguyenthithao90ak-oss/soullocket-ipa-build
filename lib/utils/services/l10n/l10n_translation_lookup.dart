@@ -143,10 +143,6 @@ class _L10nTranslationLookup {
     'zh': {
       'login': '进入小屋',
       'signup': '创建新小屋',
-      'signup_btn': '注册',
-      'Đăng ký': '注册',
-      'ĐĂNG KÝ': '注册',
-      'đăng ký': '注册',
       'password': '小屋密码:',
       'Email đăng nhập:': '登录邮箱:',
       'QUAN TRỌNG': '重要',
@@ -163,10 +159,6 @@ class _L10nTranslationLookup {
     'ja': {
       'login': 'ホームに入る',
       'signup': '新しいホームを作成',
-      'signup_btn': '新規登録',
-      'Đăng ký': '新規登録',
-      'ĐĂNG KÝ': '新規登録',
-      'đăng ký': '新規登録',
       'password': 'ホームパスワード:',
       'Email đăng nhập:': 'ログインメール:',
       'QUAN TRỌNG': '重要',

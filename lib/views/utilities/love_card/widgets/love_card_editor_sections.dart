@@ -294,7 +294,7 @@ class _LoveCardThemePicker extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         scrollDirection: Axis.horizontal,
         itemCount: state._themes.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final entry = state._themes.entries.elementAt(index);
           final data = entry.value;

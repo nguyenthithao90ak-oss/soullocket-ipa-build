@@ -573,7 +573,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                                 dimension: safeBoardExtent,
                                 child: ValueListenableBuilder<int>(
                                   valueListenable: _dragVisualTick,
-                                  builder: (context, _, _) {
+                                  builder: (context, _, __) {
                                     return _buildBoardPanel();
                                   },
                                 ),
@@ -583,7 +583,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                               height: trayHeight,
                               child: ValueListenableBuilder<int>(
                                 valueListenable: _trayVisualTick,
-                                builder: (context, _, _) {
+                                builder: (context, _, __) {
                                   return _buildTrayPanel(compact: trayCompact);
                                 },
                               ),
@@ -1016,7 +1016,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                             child: ListView.separated(
                               shrinkWrap: true,
                               itemCount: _leaderboard.length,
-                              separatorBuilder: (_, _) =>
+                              separatorBuilder: (_, __) =>
                                   const SizedBox(height: 10),
                               itemBuilder: (context, index) {
                                 final item = _leaderboard[index];
@@ -1392,7 +1392,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                                 sparkleOpacity: sparkleOpacity,
                                 sparkleCount: profile.memoryBurstSparkleCount,
                               ),
-                            ?child,
+                            if (child != null) child,
                           ],
                         ),
                       ),
@@ -1558,7 +1558,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                           ),
                         );
                       },
-                      placeholder: (_, _) => Center(
+                      placeholder: (_, __) => Center(
                         child: SizedBox(
                           width: 28,
                           height: 28,
@@ -1568,7 +1568,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                           ),
                         ),
                       ),
-                      errorWidget: (_, _, _) => DecoratedBox(
+                      errorWidget: (_, __, ___) => DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: <Color>[

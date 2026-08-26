@@ -2,29 +2,11 @@ part of '../l10n_service.dart';
 
 abstract final class _L10nStaticData {
   static const Map<String, String> _vi = {
-    'auth_slogan': '❤️ Nơi lưu giữ những khoảnh khắc yêu thương ❤️',
-    'continue_with_google': 'Tiếp tục với Google',
-    'auth_security_verify': 'Xác thực bảo mật',
-    'auth_solve_math': 'Vui lòng giải phép toán bên dưới để tiếp tục.',
-    'auth_math_result': 'Kết quả của phép tính trên',
-    'your_gender': 'GIỚI TÍNH CỦA BẠN',
-    'gender_selection_desc': 'Để ứng dụng hiển thị đúng giao diện\nmà không cần lột lớp sau nhé!',
-    'gender_male': 'Nam',
-    'gender_male_desc': 'Bạn Nam',
-    'gender_female': 'Nữ',
-    'gender_female_desc': 'Bạn Nữ',
-    'auth_cancel': 'Hủy',
-    'auth_confirm': 'Xác nhận',
-    'nav_settings': 'Cài đặt',
-
     // === Auth ===
     'app_name': 'SoulLocket',
     'welcome_message': '',
     'login': 'Vào Nhà',
     'signup': 'Tạo Nhà Mới',
-    'signup_btn': 'Đăng Ký',
-    'Đăng ký': 'Đăng Ký',
-    'ĐĂNG KÝ': 'ĐĂNG KÝ',
     'email': 'Email:',
     'password': 'Mật khẩu mở cửa:',
     'remember_me': 'Ghi nhớ đăng nhập',
@@ -1209,28 +1191,11 @@ abstract final class _L10nStaticData {
   };
 
   static const Map<String, String> _en = {
-    'auth_slogan': '❤️ Where precious moments are kept ❤️',
-    'continue_with_google': 'Continue with Google',
-    'auth_security_verify': 'Security Verification',
-    'auth_solve_math': 'Please solve the math problem below to continue.',
-    'auth_math_result': 'Result of the calculation',
-    'your_gender': 'YOUR GENDER',
-    'gender_selection_desc': 'To display the correct interface\nwithout modifying it later!',
-    'gender_male': 'Male',
-    'gender_male_desc': 'Male Partner',
-    'gender_female': 'Female',
-    'gender_female_desc': 'Female Partner',
-    'auth_cancel': 'Cancel',
-    'auth_confirm': 'Confirm',
-
     // === Auth ===
     'app_name': 'SoulLocket',
     'welcome_message': '',
     'login': 'Enter House',
     'signup': 'Create New House',
-    'signup_btn': 'Sign Up',
-    'Đăng ký': 'Sign Up',
-    'ĐĂNG KÝ': 'SIGN UP',
     'email': 'Email:',
     'password': 'Door Password:',
     'remember_me': 'Remember me',

@@ -1576,7 +1576,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                           color: const Color(0xFF2C1B22),
                         ),
                         decoration: InputDecoration(
-                          labelText: context.tr('Nhập mã nhà mới'),
+                          labelText: 'Nhập mã nhà mới',
                           labelStyle: SLTextStyles.quicksand(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,

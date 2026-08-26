@@ -61,6 +61,21 @@ class _MainHomeHeroHeaderState extends State<_MainHomeHeroHeader> {
             },
           ),
         ),
+        if (widget.state._showLegacyMessengerButton && !widget.isSingle)
+          Positioned(
+            top: MediaQuery.paddingOf(context).top + 12,
+            left: 66,
+            child: MainHomeHeaderButton(
+              icon: Icons.messenger_outline,
+              color: const Color(0xFFD81B60),
+              onTap: () => Navigator.push(
+                context,
+                SLRoute(
+                  builder: (_) => const MessengerScreen(),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }

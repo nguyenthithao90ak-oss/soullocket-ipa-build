@@ -139,7 +139,7 @@ class PasswordResetOtpDialog {
                           letterSpacing: 4,
                         ),
                         decoration: InputDecoration(
-                          labelText: dialogContext.tr('Mã xác nhận'),
+                          labelText: 'Mã xác nhận',
                           counterText: '',
                           border: OutlineInputBorder(
                             borderRadius: SLRadius.mdAll,
@@ -158,8 +158,8 @@ class PasswordResetOtpDialog {
                         },
                         style: SLTheme.quicksand(),
                         decoration: InputDecoration(
-                          labelText: dialogContext.tr('Mật khẩu mới'),
-                          helperText: dialogContext.tr('Tối thiểu 6 ký tự'),
+                          labelText: 'Mật khẩu mới',
+                          helperText: 'Tối thiểu 6 ký tự',
                           border: OutlineInputBorder(
                             borderRadius: SLRadius.mdAll,
                           ),
@@ -183,7 +183,7 @@ class PasswordResetOtpDialog {
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(dialogContext, false),
-                    child: Text(dialogContext.tr('Hủy'), style: SLTheme.quicksand()),
+                    child: Text('Hủy', style: SLTheme.quicksand()),
                   ),
                   if (sendError != null || verifyError != null)
                     TextButton(

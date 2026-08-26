@@ -1108,10 +1108,9 @@ class AuthSignInService {
         .catchError((_) {}));
 
     try {
-      if (!kIsWeb) {
-        final googleSignInToClear = _googleSignIn ?? _googleSignInBuilder();
-        asyncCleanups.add(googleSignInToClear
-            .disconnect()
+      if (!kIsWeb && _googleSignIn != null) {
+        asyncCleanups.add(_googleSignIn!
+            .signOut()
             .timeout(const Duration(seconds: 2))
             .catchError((_) {}));
       }

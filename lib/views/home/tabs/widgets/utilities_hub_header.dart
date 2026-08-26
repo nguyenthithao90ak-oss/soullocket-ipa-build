@@ -36,31 +36,31 @@ class UtilitiesHubHeader extends StatelessWidget {
                   children: [
                     ShaderMask(
                       shaderCallback: (bounds) => const LinearGradient(
-                        colors: [Color(0xFFD85A7F), Color(0xFFF4A0B8)],
+                        colors: [Color(0xFFE91E63), Color(0xFFF48FB1)],
                       ).createShader(bounds),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Tiện ích',
+                          'UTILITIES HUB',
                           maxLines: 1,
                           softWrap: false,
                           style: SLTheme.quicksand(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w800,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
                             color: Colors.white,
-                            letterSpacing: 0.3,
+                            letterSpacing: 1.5,
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 4),
                     Container(
-                      width: 60,
+                      width: 100,
                       height: 3,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFFD85A7F), Color(0xFFF4A0B8)],
+                          colors: [Color(0xFFE91E63), Color(0xFFF48FB1)],
                         ),
                         borderRadius: BorderRadius.circular(999),
                       ),
@@ -205,8 +205,8 @@ class _UtilitiesHubSegmentButton extends StatelessWidget {
         child: Text(
           label,
           style: SLTheme.quicksand(
-            fontWeight: active ? FontWeight.w700 : FontWeight.w600,
-            fontSize: 13.5,
+            fontWeight: active ? FontWeight.w900 : FontWeight.w700,
+            fontSize: 14.5,
             color: active
                 ? SLColors.primary
                 : SLColors.textPrimary.withValues(alpha: 0.55),

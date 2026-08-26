@@ -14,7 +14,6 @@ import '../../utils/services/group_chat_service.dart';
 import '../../utils/services/security_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/rapid_action_feedback_policy.dart';
-import '../../utils/services/l10n_service.dart';
 import 'chat_house_info_loader.dart';
 
 class GroupChatScreen extends StatefulWidget {
@@ -151,7 +150,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     if (nameU1.isNotEmpty || nameU2.isNotEmpty) {
       return [nameU1, nameU2].where((item) => item.isNotEmpty).join(' • ');
     }
-    return houseId == widget.myHouseId ? L10nService().translate('Nhà của bạn') : 'Nhà $houseId';
+    return houseId == widget.myHouseId ? 'Nhà của bạn' : 'Nhà $houseId';
   }
 
   String _houseAvatar(String houseId) {
@@ -509,24 +508,24 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(dialogContext.tr('Đổi tên nhóm')),
+          title: const Text('Đổi tên nhóm'),
           content: TextField(
             controller: controller,
             maxLength: 50,
             autofocus: true,
-            decoration: InputDecoration(
-              hintText: dialogContext.tr('Nhập tên nhóm mới'),
+            decoration: const InputDecoration(
+              hintText: 'Nhập tên nhóm mới',
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(dialogContext.tr('Hủy')),
+              child: const Text('Hủy'),
             ),
             ElevatedButton(
               onPressed: () =>
                   Navigator.of(dialogContext).pop(controller.text.trim()),
-              child: Text(dialogContext.tr('Lưu')),
+              child: const Text('Lưu'),
             ),
           ],
         );
@@ -558,25 +557,25 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
             return AlertDialog(
-              title: Text(dialogContext.tr('Báo cáo nhóm')),
+              title: const Text('Báo cáo nhóm'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
                     initialValue: selected,
-                    items: [
-                      DropdownMenuItem(value: 'spam', child: Text(dialogContext.tr('Spam'))),
+                    items: const [
+                      DropdownMenuItem(value: 'spam', child: Text('Spam')),
                       DropdownMenuItem(
                         value: 'harassment',
-                        child: Text(dialogContext.tr('Quấy rối')),
+                        child: Text('Quấy rối'),
                       ),
                       DropdownMenuItem(
                         value: 'inappropriate_content',
-                        child: Text(dialogContext.tr('Nội dung không phù hợp')),
+                        child: Text('Nội dung không phù hợp'),
                       ),
                       DropdownMenuItem(
                         value: 'other',
-                        child: Text(dialogContext.tr('Khác')),
+                        child: Text('Khác'),
                       ),
                     ],
                     onChanged: (value) {
@@ -592,8 +591,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                   TextField(
                     controller: reasonCtrl,
                     maxLength: 140,
-                    decoration: InputDecoration(
-                      hintText: dialogContext.tr('Ghi chú thêm (không bắt buộc)'),
+                    decoration: const InputDecoration(
+                      hintText: 'Ghi chú thêm (không bắt buộc)',
                     ),
                   ),
                 ],
@@ -601,7 +600,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: Text(dialogContext.tr('Hủy')),
+                  child: const Text('Hủy'),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -609,7 +608,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                     Navigator.of(dialogContext)
                         .pop(extra.isEmpty ? selected : '$selected: $extra');
                   },
-                  child: Text(dialogContext.tr('Gửi báo cáo')),
+                  child: const Text('Gửi báo cáo'),
                 ),
               ],
             );
@@ -706,7 +705,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                             Navigator.of(sheetContext).pop();
                             await _renameGroup();
                           },
-                          child: Text(sheetContext.tr('Đổi tên')),
+                          child: const Text('Đổi tên'),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -717,8 +716,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                             await _toggleGroupMute();
                           },
                           child: Text(_isGroupMuted
-                              ? sheetContext.tr('Bật thông báo')
-                              : sheetContext.tr('Tắt thông báo')),
+                              ? 'Bật thông báo'
+                              : 'Tắt thông báo'),
                         ),
                       ),
                     ],
@@ -734,12 +733,12 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFFDC2626),
                       ),
-                      child: Text(sheetContext.tr('Báo cáo nhóm')),
+                      child: const Text('Báo cáo nhóm'),
                     ),
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    sheetContext.tr('Thành viên'),
+                    'Thành viên',
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w900,
                       fontSize: 14,
@@ -754,7 +753,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                     child: ListView.separated(
                       shrinkWrap: true,
                       itemCount: room.memberHouseIds.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 8),
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
                       itemBuilder: (context, index) {
                         final houseId = room.memberHouseIds[index];
                         final isMine = houseId == widget.myHouseId;
@@ -855,7 +854,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             ? Image(
                 image: CachedNetworkImageProvider(trimmedAvatar),
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) =>
+                errorBuilder: (_, __, ___) =>
                     _buildAvatarFallback(displayLabel),
               )
             : _buildAvatarFallback(displayLabel),

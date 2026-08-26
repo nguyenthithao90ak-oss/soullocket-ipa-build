@@ -1,6 +1,29 @@
 part of '../../main_home_tab.dart';
 
 extension MainHomeReactionController on _MainHomeTabState {
+  Future<void> _cleanupOldReactionFlights(String houseId) async {
+    try {
+      final cutoff = DateTime.now().millisecondsSinceEpoch -
+          const Duration(minutes: 2).inMilliseconds;
+      final snapshot = await _dbRef
+          .child('houses/$houseId/reaction_flights')
+          .orderByChild('sentAt')
+          .endAt(cutoff)
+          .limitToFirst(30)
+          .get();
+      final raw = snapshot.value;
+      if (raw is! Map) return;
+
+      final updates = <String, Object?>{};
+      for (final key in raw.keys) {
+        updates['houses/$houseId/reaction_flights/${key.toString()}'] = null;
+      }
+      if (updates.isNotEmpty) {
+        await _dbRef.update(updates);
+      }
+    } catch (_) {}
+  }
+
   void triggerShootingHeartState({String? emoji, String? fromRole}) {
     final now = DateTime.now().millisecondsSinceEpoch;
     _showReactionFlight(
@@ -18,13 +41,13 @@ extension MainHomeReactionController on _MainHomeTabState {
     _localReactionThrowMs.removeWhere(
       (sentAt) =>
           nowMs - sentAt >=
-          _kReactionThrowWindow.inMilliseconds,
+          _MainHomeTabState._kReactionThrowWindow.inMilliseconds,
     );
     if (_localReactionThrowMs.length >=
-        _kReactionThrowBurstLimit) {
+        _MainHomeTabState._kReactionThrowBurstLimit) {
       final oldest = _localReactionThrowMs.first;
       final remainingMs =
-          _kReactionThrowWindow.inMilliseconds -
+          _MainHomeTabState._kReactionThrowWindow.inMilliseconds -
               (nowMs - oldest);
       final seconds = (remainingMs / 1000).ceil();
       return seconds < 1 ? 1 : seconds;

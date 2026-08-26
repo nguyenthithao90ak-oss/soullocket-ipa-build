@@ -188,7 +188,7 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                       imageUrl: uiState.customBackgroundUrl,
                       fit: BoxFit.cover,
                       filterQuality: FilterQuality.medium,
-                      errorWidget: (_, _, _) => const SizedBox.shrink(),
+                      errorWidget: (_, __, ___) => const SizedBox.shrink(),
                     ),
                   ),
                 ),
@@ -373,9 +373,9 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                                             final size =
                                                 MediaQuery.sizeOf(context);
                                             final randomPaths = [
-                                              'assets/images/interaction_stickers/custom/numbered/sticker_001.webp',
-                                              'assets/images/interaction_stickers/custom/numbered/sticker_002.webp',
-                                              'assets/images/interaction_stickers/custom/numbered/sticker_003.webp',
+                                              'assets/images/interaction_stickers/custom/numbered/sticker_001.png',
+                                              'assets/images/interaction_stickers/custom/numbered/sticker_002.png',
+                                              'assets/images/interaction_stickers/custom/numbered/sticker_003.png',
                                             ];
                                             final assetPath = randomPaths[
                                                 DateTime.now().millisecondsSinceEpoch %
@@ -649,7 +649,7 @@ class _CountdownModeAvatarCardState extends State<_CountdownModeAvatarCard> {
                             child: ListView.separated(
                               shrinkWrap: true,
                               itemCount: friends.length,
-                              separatorBuilder: (_, _) =>
+                              separatorBuilder: (_, __) =>
                                   const SizedBox(height: 10),
                               itemBuilder: (context, index) {
                                 final friend = friends[index];

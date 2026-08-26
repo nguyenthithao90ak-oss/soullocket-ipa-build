@@ -10,20 +10,20 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
           'Rạp chiếu phim',
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
-        content: SingleChildScrollView(
+        content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(context.tr('Tính năng:'), style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              const Text(
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text(
                   '- Cùng nhau xem YouTube đồng bộ từ xa (vừa xem vừa chat/call).\n- Bạn tua video hoặc tạm dừng, máy người ấy cũng đồng bộ theo lập tức.'),
-              const SizedBox(height: 12),
-              Text(context.tr('Cách sử dụng:'),
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              const Text(
+              SizedBox(height: 12),
+              Text('Cách sử dụng:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text(
                   '- Dán link video YouTube vào ô tìm kiếm hoặc chọn từ lịch sử.\n- Khi video phát, cả hai sẽ xem cùng một khoảnh khắc. Bất kỳ ai bấm Pause hoặc tua đi, hệ thống sẽ đồng bộ cho người còn lại.'),
             ],
           ),
@@ -31,8 +31,8 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(context.tr('Đã hiểu'),
-                style: const TextStyle(color: SLColors.primary)),
+            child: const Text('Đã hiểu',
+                style: TextStyle(color: SLColors.primary)),
           ),
         ],
       ),
@@ -865,7 +865,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
               color: Colors.white.withValues(alpha: 0.76),
             ),
           ),
-          ?child,
+          if (child != null) child,
         ],
       ),
     );
@@ -960,7 +960,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
         imageUrl: url,
         fit: BoxFit.cover,
         filterQuality: FilterQuality.medium,
-        placeholder: (_, _) => Container(
+        placeholder: (_, __) => Container(
           color: const Color(0xFF182334),
           alignment: Alignment.center,
           child: const CircularProgressIndicator(
@@ -968,7 +968,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
             color: Color(0xFFFF6FA5),
           ),
         ),
-        errorWidget: (_, _, _) => Container(
+        errorWidget: (_, __, ___) => Container(
           color: const Color(0xFF182334),
           alignment: Alignment.center,
           child: const Icon(
@@ -984,7 +984,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
         cacheWidth: 1440,
         fit: BoxFit.cover,
         filterQuality: FilterQuality.medium,
-        errorBuilder: (_, _, _) => Container(
+        errorBuilder: (_, __, ___) => Container(
           color: const Color(0xFF182334),
           alignment: Alignment.center,
           child: const Icon(
@@ -1014,7 +1014,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                 fit: BoxFit.scaleDown,
                 filterQuality: FilterQuality.medium,
                 alignment: Alignment.center,
-                placeholder: (_, _) => const SizedBox(
+                placeholder: (_, __) => const SizedBox(
                   width: 34,
                   height: 34,
                   child: CircularProgressIndicator(
@@ -1022,7 +1022,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                     color: Color(0xFFFF6FA5),
                   ),
                 ),
-                errorWidget: (_, _, _) => Icon(
+                errorWidget: (_, __, ___) => Icon(
                   Icons.broken_image_outlined,
                   color: Colors.white70,
                   size: errorIconSize,
@@ -1034,7 +1034,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
                 fit: BoxFit.scaleDown,
                 filterQuality: FilterQuality.medium,
                 alignment: Alignment.center,
-                errorBuilder: (_, _, _) => Icon(
+                errorBuilder: (_, __, ___) => Icon(
                   Icons.broken_image_outlined,
                   color: Colors.white70,
                   size: errorIconSize,

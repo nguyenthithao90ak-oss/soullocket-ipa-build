@@ -241,10 +241,10 @@ extension _MainHomeWidgetSyncController on _MainHomeTabState {
       final configuredBucket = AppConfig.firebaseStorageBucket.trim();
       final defaultMaleAvatarUrl = configuredBucket.isEmpty
           ? ''
-          : 'https://firebasestorage.googleapis.com/v0/b/$configuredBucket/o/default_avatars%2Fmale.webpif (alt != null) alt!=media';
+          : 'https://firebasestorage.googleapis.com/v0/b/$configuredBucket/o/default_avatars%2Fmale.jpgif (alt != null) alt!=media';
       final defaultFemaleAvatarUrl = configuredBucket.isEmpty
           ? ''
-          : 'https://firebasestorage.googleapis.com/v0/b/$configuredBucket/o/default_avatars%2Ffemale.webpif (alt != null) alt!=media';
+          : 'https://firebasestorage.googleapis.com/v0/b/$configuredBucket/o/default_avatars%2Ffemale.jpgif (alt != null) alt!=media';
       final avt1 = settings['avtUser1']?.toString().isNotEmpty == true
           ? settings['avtUser1'].toString()
           : defaultMaleAvatarUrl;

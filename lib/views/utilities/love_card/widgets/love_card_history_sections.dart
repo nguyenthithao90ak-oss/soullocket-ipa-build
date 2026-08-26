@@ -55,7 +55,7 @@ class _LoveCardHistoryView extends StatelessWidget {
           ),
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
           itemCount: cards.length + 1,
-          separatorBuilder: (_, _) => const SizedBox(height: 14),
+          separatorBuilder: (_, __) => const SizedBox(height: 14),
           itemBuilder: (context, index) {
             if (index == 0) {
               return _LoveCardHistoryHero(

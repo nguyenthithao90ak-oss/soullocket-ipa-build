@@ -796,7 +796,7 @@ extension _SettingsTabShell on _SettingsTabState {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: Image.asset(
-              'assets/icon.webp',
+              'assets/icon.png',
               width: 44,
               height: 44,
               fit: BoxFit.cover,
@@ -868,7 +868,7 @@ extension _SettingsTabShell on _SettingsTabState {
         const _SettingsBackgroundLayer(),
         ValueListenableBuilder<int>(
           valueListenable: _panelRebuildNotifier,
-          builder: (context, _, _) {
+          builder: (context, _, __) {
             return Scaffold(
               backgroundColor: Colors.transparent,
               body: SafeArea(

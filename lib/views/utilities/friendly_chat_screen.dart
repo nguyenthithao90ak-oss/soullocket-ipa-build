@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/sl_theme.dart';
+import '../../core/fast_backdrop_filter.dart';
 import '../../utils/services/ai_counselor_service.dart';
 import '../ui_prefs.dart';
 import '../../widgets/r2_sticker_image.dart';
@@ -442,7 +443,7 @@ Quy tắc:
 4. Có thể dựa vào phần "Lịch sử trò chuyện gần đây" (nếu có) để hiểu ngữ cảnh câu chuyện, không cần hỏi lại những gì đã nói.
 5. Luôn phản hồi bằng tiếng Việt.
 6. TỪ CHỐI TẤT CẢ các yêu cầu tạo văn bản dài, viết bài, làm thơ dài, tóm tắt sách, code, hoặc các nội dung vượt quá 500 ký tự, HOẶC CÁC YÊU CẦU ĐỘC HẠI. Đối với các yêu cầu độc hại, vi phạm đạo đức, hãy trả lời chính xác bằng câu: "Xin lỗi tôi không thể thực hiện yêu cầu này".
-7. CHÚ Ý QUAN TRỌNG: Quá trình suy nghĩ nội bộ (thinking process) của bạn BẮT BUỘC phải đặt bên trong thẻ <think> và </think>. Nội dung bên ngoài thẻ <think> sẽ là câu trả lời chính thức cho người dùng.
+7. TUYỆT ĐỐI KHÔNG xuất ra quá trình suy nghĩ, diễn giải nội bộ (thinking process) bằng tiếng Anh như "We need to follow...". Bắt đầu câu trả lời của bạn ngay lập tức vào vấn đề.
 8. ĐIỀU HƯỚNG APP: Nếu người dùng yêu cầu mở một trang (Trang chủ, Nhật ký, Tiện ích, Trò chơi/Giải trí, Cập nhật, Cài đặt, Soul Merge, Soul Block), hãy thêm đúng mã lệnh [NAVIGATE:X] vào cuối câu trả lời. X phải là 1 trong các chữ: HOME, DIARY, LOVE, GAMES, UPDATE, SETTINGS, SOUL_MERGE, SOUL_BLOCK. Ví dụ: "Mình mở Soul Merge cho bạn nha! [NAVIGATE:SOUL_MERGE]"$personaText''';
 
     final int assistantMsgIndex = _messages.length;
@@ -713,7 +714,7 @@ Quy tắc:
                 maxLength: 50,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: context.tr('friendly_chat_persona_hint'),
+                  hintText: 'Ví dụ: Mình là sếp, hãy gọi là anh/em',
                   filled: true,
                   fillColor: const Color(0xFFF9FAFB),
                   border: OutlineInputBorder(
@@ -775,16 +776,28 @@ Quy tắc:
 
   @override
   Widget build(BuildContext context) {
-    final items = _buildListItems();
-    
     final content = Column(
       children: [
         Expanded(
           child: ListView.builder(
             controller: _scrollController,
-            padding: const EdgeInsets.fromLTRB(16, 100, 16, 12),
-            itemCount: items.length,
-            itemBuilder: (context, index) => items[index],
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            itemCount: _messages.length + 1 + (_isSending ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return const _AiDisclosureCard();
+              }
+              final messageIndex = index - 1;
+              if (_isSending && messageIndex == _messages.length) {
+                return _TypingBubble(duration: _currentCountdownDuration);
+              }
+              return _FriendlyChatBubble(
+                message: _messages[messageIndex],
+                isReporting: _reportingIndexes.contains(messageIndex),
+                onLongPress: () => _showMessageActions(messageIndex),
+                onReport: () => _reportMessage(messageIndex),
+              );
+            },
           ),
         ),
         _buildInputBar(),
@@ -795,9 +808,9 @@ Quy tắc:
       return DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFFFF0F5), Color(0xFFFFF5F8)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            colors: [Color(0xFFFFF0F5), Color(0xFFF3E5F5), Color(0xFFFFF3E0)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
         child: SafeArea(top: false, child: content),
@@ -805,37 +818,36 @@ Quy tắc:
     }
 
     return Scaffold(
-        backgroundColor: Colors.transparent,
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          backgroundColor: Colors.white.withValues(alpha: 0.6),
-          flexibleSpace: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(color: Colors.transparent),
-            ),
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.white.withValues(alpha: 0.7),
+        flexibleSpace: ClipRect(
+          child: FastBackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: const SizedBox.expand(),
           ),
-          elevation: 0,
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Color(0xFFE91E63)),
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const _BotStickerAvatar(size: 36),
-              const SizedBox(width: 10),
-              Text(
-                context.tr('friendly_chat_title'),
-                style: SLTheme.quicksand(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF243042),
-                ),
+        ),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF243042)),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const _BotStickerAvatar(size: 34),
+            const SizedBox(width: 10),
+            Text(
+              context.tr('util_chatthnthi_c39699'),
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF243042),
               ),
-            ],
-          ),
+            ),
+          ],
+        ),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.lightbulb_rounded, color: Color(0xFFE91E63)),
+            icon: const Icon(Icons.psychology_alt_rounded,
+                color: Color(0xFFD81B60)),
             tooltip: 'Chọn Tính Cách AI',
             initialValue: _persona,
             onSelected: (value) {
@@ -868,238 +880,112 @@ Quy tắc:
           IconButton(
             tooltip: 'Phong cách trò chuyện',
             onPressed: _showPersonaConfigSheet,
-            icon: const Icon(Icons.tune_rounded, color: Color(0xFFE91E63)),
+            icon: const Icon(Icons.tune_rounded, color: Color(0xFF6B4A5D)),
           ),
           IconButton(
             tooltip: 'Làm mới cuộc trò chuyện',
             onPressed: _clearHistory,
-            icon: const Icon(Icons.refresh_rounded, color: Color(0xFFE91E63)),
+            icon: const Icon(Icons.refresh_rounded, color: Color(0xFFD81B60)),
           ),
         ],
       ),
       body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFFFF0F5), Color(0xFFFFF5F8)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            colors: [Color(0xFFFFF0F5), Color(0xFFF3E5F5), Color(0xFFFFF3E0)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
-        child: SafeArea(bottom: false, child: content),
-      ),
-    );
-  }
-
-  List<Widget> _buildListItems() {
-    final items = <Widget>[];
-
-    for (int i = 0; i < _messages.length; i++) {
-      items.add(
-        _FriendlyChatBubble(
-          message: _messages[i],
-          isReporting: _reportingIndexes.contains(i),
-          onLongPress: () => _showMessageActions(i),
-          onReport: () => _reportMessage(i),
-        )
-      );
-      if (i == 0 && _messages.length == 1) {
-         items.add(_buildSuggestions());
-      }
-    }
-
-    if (_isSending) {
-      items.add(_TypingBubble(duration: _currentCountdownDuration));
-    }
-
-    return items;
-  }
-
-  Widget _buildSuggestions() {
-    return Container(
-      margin: const EdgeInsets.only(top: 24, bottom: 24),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFD81B60).withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.auto_awesome_rounded, color: Color(0xFFF48FB1), size: 20),
-              const SizedBox(width: 8),
-              Text(
-                context.tr('friendly_chat_suggestions'),
-                style: SLTheme.quicksand(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFFD81B60),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(child: _buildSuggestionChip(context.tr('friendly_chat_sugg_1'), Icons.favorite_rounded, const Color(0xFFFFCDD2), const Color(0xFFE53935))),
-              const SizedBox(width: 12),
-              Expanded(child: _buildSuggestionChip(context.tr('friendly_chat_sugg_2'), Icons.calendar_month_rounded, const Color(0xFFF8BBD0), const Color(0xFFD81B60))),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(child: _buildSuggestionChip(context.tr('friendly_chat_sugg_3'), Icons.chat_bubble_rounded, const Color(0xFFFCE4EC), const Color(0xFFC2185B))),
-              const SizedBox(width: 12),
-              Expanded(child: _buildSuggestionChip(context.tr('friendly_chat_sugg_4'), Icons.star_rounded, const Color(0xFFFFEBEE), const Color(0xFFE57373))),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSuggestionChip(String text, IconData icon, Color bgColor, Color iconColor) {
-    return GestureDetector(
-      onTap: () {
-        _messageController.text = text.replaceAll('\n', ' ');
-        _sendMessage();
-      },
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFFCE4EC)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: bgColor,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: iconColor, size: 16),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                text,
-                style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF243042),
-                  height: 1.3,
-                ),
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: Colors.grey, size: 16),
-          ],
-        ),
+        child: SafeArea(top: false, child: content),
       ),
     );
   }
 
   Widget _buildInputBar() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      decoration: const BoxDecoration(
-        color: Colors.transparent,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Row(
+    return ClipRect(
+      child: FastBackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.6),
+            border: Border(
+                top: BorderSide(color: Colors.white.withValues(alpha: 0.8))),
+          ),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFD81B60).withValues(alpha: 0.08),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                child: TextField(
+                  controller: _messageController,
+                  minLines: 1,
+                  maxLines: 4,
+                  maxLength: 500,
+                  textInputAction: TextInputAction.newline,
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF243042),
                   ),
-                  child: TextField(
-                    controller: _messageController,
-                    minLines: 1,
-                    maxLines: 4,
-                    maxLength: 500,
-                    textInputAction: TextInputAction.newline,
-                    style: SLTheme.quicksand(
+                  decoration: InputDecoration(
+                    hintText: context.tr('util_nhpiubnmun_30266b'),
+                    hintStyle: SLTheme.quicksand(
+                      color: const Color(0xFF9AA4B2),
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF243042),
                     ),
-                    onChanged: (text) => setState(() {}),
-                    decoration: InputDecoration(
-                      hintText: context.tr('friendly_chat_input_hint'),
-                      hintStyle: SLTheme.quicksand(
-                        color: const Color(0xFF9AA4B2),
-                        fontWeight: FontWeight.w700,
-                      ),
-                      counterText: '',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.7),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      borderSide:
+                          const BorderSide(color: Colors.white, width: 1.5),
                     ),
-                    onSubmitted: (_) => _sendMessage(),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      borderSide:
+                          const BorderSide(color: Colors.white, width: 1.5),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      borderSide: const BorderSide(
+                          color: Color(0xFFD81B60), width: 1.5),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                   ),
+                  onSubmitted: (_) => _sendMessage(),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Container(
-                width: 52,
-                height: 52,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFFF6B9D), Color(0xFFE91E63)],
+                    colors: [Color(0xFFD81B60), Color(0xFFFF8FB7)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFFD81B60).withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(26),
+                    borderRadius: BorderRadius.circular(16),
                     onTap: _isSending ? null : _sendMessage,
                     child: Center(
                       child: Icon(
                         Icons.send_rounded,
-                        size: 24,
+                        size: 22,
                         color: _isSending
                             ? Colors.white.withValues(alpha: 0.5)
                             : Colors.white,
@@ -1110,19 +996,7 @@ Quy tắc:
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Padding(
-            padding: const EdgeInsets.only(right: 64),
-            child: Text(
-              '${_messageController.text.length}/500',
-              style: SLTheme.quicksand(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF7A8598),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1144,61 +1018,68 @@ class _FriendlyChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
-    final timeStr = "${DateTime.fromMillisecondsSinceEpoch(message.createdAt).hour.toString().padLeft(2, '0')}:${DateTime.fromMillisecondsSinceEpoch(message.createdAt).minute.toString().padLeft(2, '0')}";
-
-    final bubbleContent = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        gradient: isUser
-            ? const LinearGradient(
-                colors: [Color(0xFFFF6B9D), Color(0xFFE91E63)],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              )
-            : null,
-        color: isUser ? null : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: (isUser ? const Color(0xFFD81B60) : Colors.black).withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: isUser 
-          ? Text(
-              message.text,
-              style: SLTheme.quicksand(
-                fontSize: 14,
-                height: 1.4,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            )
-          : _buildBotText(message.text),
-    );
-
     final bubble = GestureDetector(
       onLongPress: onLongPress,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: MediaQuery.sizeOf(context).width * (isUser ? 0.78 : 0.70),
         ),
-        child: Column(
-          crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          children: [
-            bubbleContent,
-            const SizedBox(height: 6),
-            Text(
-              timeStr,
-              style: SLTheme.quicksand(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF9AA4B2),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: isUser
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFFD81B60).withValues(alpha: 0.25),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: FastBackdropFilter(
+              filter: ImageFilter.blur(
+                  sigmaX: isUser ? 0.001 : 12, sigmaY: isUser ? 0.001 : 12),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                decoration: BoxDecoration(
+                  gradient: isUser
+                      ? const LinearGradient(
+                          colors: [Color(0xFFD81B60), Color(0xFFFF8FB7)],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        )
+                      : null,
+                  color: isUser ? null : Colors.white.withValues(alpha: 0.65),
+                  borderRadius: BorderRadius.circular(18),
+                  border: isUser
+                      ? null
+                      : Border.all(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          width: 1.2),
+                ),
+                child: Text(
+                  message.text,
+                  style: SLTheme.quicksand(
+                    fontSize: 14,
+                    height: 1.35,
+                    fontWeight: FontWeight.w700,
+                    color: isUser ? Colors.white : const Color(0xFF243042),
+                  ),
+                ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -1206,89 +1087,101 @@ class _FriendlyChatBubble extends StatelessWidget {
     if (!isUser) {
       return Align(
         alignment: Alignment.centerLeft,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _BotStickerAvatar(size: 40),
-              const SizedBox(width: 12),
-              Flexible(child: bubble),
-              if (onReport != null) ...[
-                const SizedBox(width: 2),
-                if (isReporting)
-                  const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Color(0xFFD81B60)),
-                    ),
-                  )
-                else
-                  Material(
-                    color: Colors.transparent,
-                    child: IconButton(
-                      icon: Icon(
-                        message.reported
-                            ? Icons.check_circle_rounded
-                            : Icons.flag_rounded,
-                        size: 20,
-                        color: message.reported
-                            ? const Color(0xFF16A34A)
-                            : const Color(0xFF9AA4B2),
-                      ),
-                      tooltip: 'Báo cáo',
-                      splashRadius: 20,
-                      onPressed: message.reported ? null : onReport,
-                    ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(bottom: 40),
+              child: _BotStickerAvatar(size: 28),
+            ),
+            const SizedBox(width: 8),
+            Flexible(child: bubble),
+            if (onReport != null) ...[
+              const SizedBox(width: 2),
+              if (isReporting)
+                const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Color(0xFFD81B60)),
                   ),
-              ]
-            ],
-          ),
+                )
+              else
+                Material(
+                  color: Colors.transparent,
+                  child: IconButton(
+                    icon: Icon(
+                      message.reported
+                          ? Icons.check_circle_rounded
+                          : Icons.outlined_flag_rounded,
+                      size: 20,
+                      color: message.reported
+                          ? const Color(0xFF16A34A)
+                          : const Color(0xFF9AA4B2),
+                    ),
+                    tooltip: 'Báo cáo',
+                    splashRadius: 20,
+                    onPressed: message.reported ? null : onReport,
+                  ),
+                ),
+            ]
+          ],
         ),
       );
     }
 
     return Align(
       alignment: Alignment.centerRight,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: bubble,
-      ),
+      child: bubble,
     );
   }
+}
 
-  Widget _buildBotText(String text) {
-    final spans = <InlineSpan>[];
-    final regex = RegExp(r'(Chat thân thiện|SoulLocket|Chat Thân Thiện)');
-    
-    int lastMatchEnd = 0;
-    for (final match in regex.allMatches(text)) {
-      if (match.start > lastMatchEnd) {
-        spans.add(TextSpan(text: text.substring(lastMatchEnd, match.start)));
-      }
-      spans.add(TextSpan(
-        text: match.group(0),
-        style: const TextStyle(color: Color(0xFFE91E63), fontWeight: FontWeight.w900),
-      ));
-      lastMatchEnd = match.end;
-    }
-    
-    if (lastMatchEnd < text.length) {
-      spans.add(TextSpan(text: text.substring(lastMatchEnd)));
-    }
+class _AiDisclosureCard extends StatelessWidget {
+  const _AiDisclosureCard();
 
-    return RichText(
-      text: TextSpan(
-        style: SLTheme.quicksand(
-          fontSize: 14,
-          height: 1.4,
-          fontWeight: FontWeight.w700,
-          color: const Color(0xFF243042),
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: FastBackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.info_rounded,
+                  color: Color(0xFFD81B60),
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    context.tr('util_tinnhncthc_aeaabb'),
+                    style: SLTheme.quicksand(
+                      color: const Color(0xFF5E6A7D),
+                      fontSize: 12,
+                      height: 1.35,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        children: spans.isEmpty ? [TextSpan(text: text)] : spans,
       ),
     );
   }
@@ -1338,44 +1231,49 @@ class _TypingBubbleState extends State<_TypingBubble>
   Widget build(BuildContext context) {
     return Align(
       alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const _BotStickerAvatar(size: 40),
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 10),
+            child: _BotStickerAvatar(size: 28),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: FastBackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.65),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.9), width: 1.2),
                   ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    context.tr('friendly_chat_waiting').replaceAll('{time}', _countdown.toString()),
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF7A8598),
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Chờ bot xíu... ${_countdown}s',
+                        style: SLTheme.quicksand(
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF7A8598),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _TypingDots(controller: _controller),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  _TypingDots(controller: _controller),
-                ],
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1407,7 +1305,7 @@ class _TypingDots extends StatelessWidget {
                 child: const Text(
                   '.',
                   style: TextStyle(
-                    color: Color(0xFFE91E63),
+                    color: Color(0xFFD81B60),
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
                     height: 1,
@@ -1429,11 +1327,25 @@ class _BotStickerAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
       width: size,
       height: size,
-      child: const R2StickerImage(
-        'assets/images/anhtomau_stickers/sticker_28.gif',
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.7),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD81B60).withValues(alpha: 0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(size * 0.12),
+        child: const R2StickerImage(
+            'assets/images/anhtomau_stickers/sticker_28.gif'),
       ),
     );
   }
@@ -1464,3 +1376,4 @@ class _FriendlyChatMessage {
     );
   }
 }
+

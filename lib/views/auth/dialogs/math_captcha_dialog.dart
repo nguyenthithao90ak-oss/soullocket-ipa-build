@@ -107,9 +107,9 @@ class MathCaptchaDialog {
                           Container(
                             width: 85,
                             height: 85,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Color(0xFFFFEBF1),
+                              color: const Color(0xFFFFEBF1),
                             ),
                           ),
                           // Khiên 3D
@@ -158,12 +158,12 @@ class MathCaptchaDialog {
                             child: Icon(Icons.favorite, size: 12, color: const Color(0xFFFF80AB).withValues(alpha: 0.9)),
                           ),
                           // Tia sáng (Stars)
-                          const Positioned(
+                          Positioned(
                             left: 50,
                             top: 10,
                             child: Icon(Icons.auto_awesome, size: 16, color: Colors.white),
                           ),
-                          const Positioned(
+                          Positioned(
                             right: 40,
                             top: 15,
                             child: Icon(Icons.auto_awesome, size: 14, color: Colors.white),
@@ -175,7 +175,7 @@ class MathCaptchaDialog {
 
                   // --- Tiêu đề & Subtitle ---
                   Text(
-                    l10n.translate('auth_security_verify'),
+                    l10n.translate('Xác thực bảo mật'),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       color: const Color(0xFF1E1E1E),
@@ -185,7 +185,7 @@ class MathCaptchaDialog {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    l10n.translate('auth_solve_math'),
+                    l10n.translate('Vui lòng giải phép toán bên dưới để tiếp tục.'),
                     textAlign: TextAlign.center,
                     style: SLTheme.quicksand(
                       fontSize: 14,
@@ -291,7 +291,7 @@ class MathCaptchaDialog {
                       const Icon(Icons.shield_outlined, size: 16, color: Color(0xFF9E9E9E)),
                       const SizedBox(width: 6),
                       Text(
-                        l10n.translate('auth_math_result'),
+                        l10n.translate('Kết quả của phép tính trên'),
                         style: SLTheme.quicksand(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF9E9E9E)),
                       ),
                     ],

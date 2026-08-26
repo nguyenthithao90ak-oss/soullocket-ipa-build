@@ -226,7 +226,7 @@ class LoginForm extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Center(
               child: Text(
-                l10n.translate('auth_quick_register').toUpperCase(),
+                '🩷 HOẶC ĐĂNG KÝ NHANH 🩷',
                 style: SLTheme.quicksand(
                   color: const Color(0xFFFF69B4),
                   fontSize: 13,
@@ -257,7 +257,7 @@ class LoginForm extends StatelessWidget {
           Center(
             child: Text(
               l10n.translate(
-                l10n.translate('auth_social_login_notice'),
+                'Đăng nhập/Đăng ký qua Google hoặc Apple nữa\nBạn xác nhận rằng bạn 13 tuổi và chấp nhận các điều kiện.',
               ),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(

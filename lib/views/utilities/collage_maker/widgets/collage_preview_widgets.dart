@@ -103,7 +103,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
                     scrollDirection: Axis.horizontal,
                     itemCount: photos.length,
                     padding: EdgeInsets.zero,
-                    separatorBuilder: (_, _) =>
+                    separatorBuilder: (_, __) =>
                         SizedBox(width: compact ? 8 : 10),
                     itemBuilder: (context, index) {
                       final photo = photos[index];
@@ -196,7 +196,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
       onLeave: (_) => _clearHoveredSwapTarget(),
       onAcceptWithDetails: (details) =>
           _swapEditablePhotos(details.data, index),
-      builder: (context, _, _) {
+      builder: (context, _, __) {
         return GestureDetector(
           onTap: () => _selectEditablePhoto(index),
           onDoubleTap: () => _resetEditablePhoto(index),
@@ -284,7 +284,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
       ),
       childWhenDragging: Opacity(opacity: 0.34, child: tile),
       onDragStarted: () => _selectEditablePhoto(index),
-      onDraggableCanceled: (_, _) => _clearHoveredSwapTarget(),
+      onDraggableCanceled: (_, __) => _clearHoveredSwapTarget(),
       onDragEnd: (_) => _clearHoveredSwapTarget(),
       child: tile,
     );

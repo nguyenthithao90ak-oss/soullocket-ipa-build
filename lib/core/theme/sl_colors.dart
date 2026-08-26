@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 
 class SLColors {
-  // â”€â”€â”€ Primary Brand (#FF4B91 vibrant pink) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // --- Primary Brand (#FF4B91 vibrant pink) ---
   static const primary = Color(0xFFD85A7F);
   static const primaryHover = Color(0xFFC64B6E);
   static const primaryActive = Color(0xFFB84466);
@@ -20,7 +20,13 @@ class SLColors {
   static const accentBlueSoft = Color(0xFFA8D7E3);
   static const accent = accentPink;
 
-  // â”€â”€â”€ Semantic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // --- Brand Legacy (hardcoded across codebase, keep for migration) ---
+  static const brandPink = Color(0xFFFF4B91);
+  static const darkNavy = Color(0xFF1E293B);
+  static const textMuted = Color(0xFF9AA8C4);
+  static const textMedium = Color(0xFF475467);
+
+  // --- Semantic ---
   static const success = Color(0xFF00C853);
   static const successLight = Color(0xFFE8F5E9);
   static const warning = Color(0xFFFFAB00);
@@ -31,7 +37,7 @@ class SLColors {
   static const info = Color(0xFF2979FF);
   static const infoLight = Color(0xFFE3F2FD);
 
-  // â”€â”€â”€ Neutral (Light Mode) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // --- Neutral (Light Mode) ---
   static const bgMain = Color(0xFFFFF8F5);
   static const bgCard = Color(0xFFFFFCFA);
   static const bgElevated = Color(0xFFFFFFFF);
@@ -44,7 +50,7 @@ class SLColors {
   static const border = Color(0xFFE9DFDA);
   static const borderLight = Color(0xFFF2EAE6);
 
-  // â”€â”€â”€ Dark Mode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // --- Dark Mode ---
   static const darkBgMain = Color(0xFF1E1E2C);
   static const darkBgCard = Color(0xFF2D2D3A);
   static const darkBgElevated = Color(0xFF3B3B4F);
@@ -52,7 +58,7 @@ class SLColors {
   static const darkTextSecond = Color(0xFFB0B0C0);
   static const darkBorder = Color(0xFF3D3D5C);
 
-  // â”€â”€â”€ Gradients â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // --- Gradients ---
   static const primaryGradient = LinearGradient(
     colors: [primary, primary],
     begin: Alignment.topLeft,
@@ -65,5 +71,3 @@ class SLColors {
     end: Alignment.bottomRight,
   );
 }
-
-

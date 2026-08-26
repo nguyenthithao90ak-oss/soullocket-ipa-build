@@ -10,14 +10,12 @@ class MilestoneEvent {
   final DateTime date;
   final String type; // 'anniversary' | 'birthday' | 'holiday' | 'calendar'
   final int diffDays; // Countdown days (negative for past events)
-  final int? daysCount; // Số ngày cụ thể (dùng để chọn sticker milestone)
 
   MilestoneEvent({
     required this.title,
     required this.date,
     required this.type,
     required this.diffDays,
-    this.daysCount,
   });
 }
 
@@ -104,7 +102,6 @@ class _MilestonesScreenState extends State<MilestonesScreen>
           date: milestoneDate,
           type: 'anniversary',
           diffDays: diff,
-          daysCount: m,
         ));
       }
 
@@ -120,13 +117,11 @@ class _MilestonesScreenState extends State<MilestonesScreen>
         final title = L10nService().localeCode == 'vi'
             ? 'Kỷ niệm $m tháng bên nhau 💖'
             : 'Celebrating $m months of love 💖';
-        // Tính số ngày xấp xỉ cho tháng (để chọn sticker)
         allEvents.add(MilestoneEvent(
           title: title,
           date: milestoneDate,
           type: 'anniversary',
           diffDays: diff,
-          daysCount: -m, // Dùng âm để đánh dấu là tháng (không phải ngày)
         ));
       }
 
@@ -141,7 +136,6 @@ class _MilestonesScreenState extends State<MilestonesScreen>
           date: annivDate,
           type: 'anniversary',
           diffDays: diff,
-          daysCount: -(y * 100 + 1000), // Dùng mã âm đặc biệt để đánh dấu năm
         ));
       }
     }
@@ -336,155 +330,6 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     ).then((_) {
       _calculateEvents();
     });
-  }
-
-  /// Trả về đường dẫn sticker milestone phù hợp với số ngày/tháng/năm.
-  /// daysCount:
-  ///   > 0: số ngày chính xác (100, 200, 365...)
-  ///   < 0 và > -100: số tháng âm (-1 → 1 tháng, -11 → 11 tháng)
-  ///   <= -1000: mã năm âm (-(y*100+1000) → y năm)
-  String _getMilestoneSticker(int? daysCount) {
-    const base = 'assets/images/milestone_stickers';
-    const fallback = 'assets/images/milestone_stickers_2/ms_ngay_dac_biet.webp';
-
-    if (daysCount == null) return fallback;
-
-    // Trường hợp NĂM (mã âm đặc biệt <= -1000)
-    if (daysCount <= -1000) {
-      final years = ((-daysCount) - 1000) ~/ 100;
-      final yearMap = {
-        1: 'ms_1nam_365b.webp',
-        2: 'ms_1nam_2nam.webp',
-        3: 'ms_3nam.webp',
-        4: 'ms_4nam.webp',
-        5: 'ms_5nam.webp',
-        6: 'ms_6nam.webp',
-        7: 'ms_7nam.webp',
-        8: 'ms_8nam.webp',
-        9: 'ms_9nam.webp',
-        10: 'ms_10nam.webp',
-      };
-      return yearMap.containsKey(years) ? '$base/${yearMap[years]}' : fallback;
-    }
-
-    // Trường hợp THÁNG (âm từ -1 đến -11)
-    if (daysCount < 0) {
-      final months = -daysCount;
-      if (months >= 1 && months <= 12) {
-        return 'assets/images/milestone_stickers_2/ms_thang_$months.webp';
-      }
-      return fallback;
-    }
-
-    // Trường hợp NGÀY (> 0)
-    return _getStickerByDays(daysCount, base, fallback);
-  }
-
-  String _getStickerByDays(int days, String base, String fallback) {
-    // Map chính xác
-    final exactMap = {
-      1:    'ms_1ngay.webp',
-      7:    'ms_7ngay.webp',
-      10:   'ms_10ngay.webp',
-      14:   'ms_14ngay.webp',
-      20:   'ms_20ngay.webp',
-      30:   'ms_30ngay_a.webp',
-      40:   'ms_40ngay.webp',
-      50:   'ms_50ngay_a.webp',
-      60:   'ms_60ngay.webp',
-      70:   'ms_70ngay.webp',
-      80:   'ms_80ngay.webp',
-      90:   'ms_90ngay.webp',
-      100:  'ms_100ngay_a.webp',
-      111:  'ms_111ngay.webp',
-      120:  'ms_120ngay.webp',
-      130:  'ms_130ngay.webp',
-      140:  'ms_140ngay.webp',
-      150:  'ms_150ngay.webp',
-      160:  'ms_160ngay.webp',
-      170:  'ms_170ngay.webp',
-      180:  'ms_180ngay.webp',
-      190:  'ms_190ngay.webp',
-      200:  'ms_200ngay.webp',
-      210:  'ms_210ngay.webp',
-      220:  'ms_220ngay.webp',
-      230:  'ms_230ngay.webp',
-      240:  'ms_240ngay.webp',
-      250:  'ms_250ngay.webp',
-      260:  'ms_260ngay.webp',
-      270:  'ms_270ngay.webp',
-      280:  'ms_280ngay.webp',
-      290:  'ms_290ngay.webp',
-      300:  'ms_300ngay.webp',
-      310:  'ms_310ngay.webp',
-      320:  'ms_320ngay.webp',
-      330:  'ms_330ngay.webp',
-      340:  'ms_340ngay.webp',
-      350:  'ms_350ngay.webp',
-      360:  'ms_360ngay.webp',
-      365:  'ms_365ngay_a.webp',
-      400:  'ms_400ngay.webp',
-      500:  'ms_500ngay.webp',
-      600:  'ms_600ngay.webp',
-      700:  'ms_700ngay.webp',
-      730:  'ms_730ngay.webp',
-      800:  'ms_800ngay_a.webp',
-      900:  'ms_900ngay.webp',
-      1000: 'ms_1000ngay.webp',
-      1001: 'ms_1001ngay.webp',
-      1460: 'ms_1460ngay.webp',
-      1500: 'ms_1460ngay.webp',
-      1825: 'ms_1825ngay.webp',
-      2000: 'ms_2000ngay.webp',
-      2500: 'ms_2000ngay.webp',
-      3000: 'ms_3000ngay.webp',
-      4000: 'ms_4000ngay.webp',
-      5000: 'ms_5000ngay.webp',
-      6000: 'ms_6000ngay.webp',
-      7000: 'ms_7000ngay.webp',
-      8000: 'ms_8000ngay.webp',
-      9000: 'ms_9000ngay.webp',
-      10000: 'ms_10000ngay.webp',
-    };
-
-    if (exactMap.containsKey(days)) {
-      return '$base/${exactMap[days]}';
-    }
-
-    // Fallback về gần nhất
-    final keys = exactMap.keys.toList()..sort();
-    int closest = keys.first;
-    for (final k in keys) {
-      if ((k - days).abs() < (closest - days).abs()) closest = k;
-    }
-    return '$base/${exactMap[closest]}';
-  }
-
-
-  String _getHolidaySticker(MilestoneEvent event) {
-    const base = 'assets/images/milestone_stickers_2';
-    final d = event.date.day;
-    final m = event.date.month;
-    
-    if (d == 1 && m == 1) return '$base/ms_tet_duong_lich_1_1.webp';
-    if (d == 14 && m == 2) return '$base/ms_valentine_14_2.webp';
-    if (d == 8 && m == 3) return '$base/ms_quoc_te_phu_nu_8_3.webp';
-    if (d == 20 && m == 3) return '$base/ms_quoc_te_hanh_phuc_20_3.webp';
-    if (d == 30 && m == 4) return '$base/ms_giai_phong_mien_nam_30_4.webp';
-    if (d == 1 && m == 5) return '$base/ms_quoc_te_lao_dong_1_5.webp';
-    if (d == 1 && m == 6) return '$base/ms_tet_thieu_nhi_1_6.webp';
-    if (d == 20 && m == 11) return '$base/ms_ngay_nha_giao_20_11.webp';
-    if (d == 25 && m == 12) return '$base/ms_giang_sinh_25_12.webp';
-    
-    final title = event.title.toLowerCase();
-    if (title.contains('tết nguyên đán') || title.contains('lunar new year')) {
-      return '$base/ms_tet_nguyen_dan.webp';
-    }
-    if (title.contains('giỗ tổ') || title.contains('hùng vương')) {
-      return '$base/ms_gio_to_hung_vuong.webp';
-    }
-    
-    return '$base/ms_chuc_mung.webp';
   }
 
   @override
@@ -720,9 +565,9 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                                 ),
                                 child: const Center(
                                   child: Padding(
-                                    padding: EdgeInsets.all(0.0),
+                                    padding: EdgeInsets.all(5.0),
                                     child: R2StickerImage(
-                                        'assets/images/milestone_stickers_2/ms_ky_niem.webp'),
+                                        'assets/images/anhtomau_stickers/sticker_2.gif'),
                                   ),
                                 ),
                               ),
@@ -884,9 +729,9 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                 ),
                 child: const Center(
                   child: Padding(
-                    padding: EdgeInsets.all(2.0),
+                    padding: EdgeInsets.all(12.0),
                     child: R2StickerImage(
-                        'assets/images/milestone_stickers_2/ms_ngay_dac_biet.webp'), 
+                        'assets/images/anhtomau_stickers/sticker_25.gif'), // Thỏ chờ đợi
                   ),
                 ),
               ),
@@ -976,25 +821,24 @@ class _MilestonesScreenState extends State<MilestonesScreen>
         ),
     };
 
-    String stickerPath;
-    List<Color> iconGradients;
-    switch (event.type) {
-      case 'birthday':
-        stickerPath = 'assets/images/milestone_stickers_2/ms_sinh_nhat.webp';
-        iconGradients = const [Color(0xFFFFF3C4), Color(0xFFFFE082)];
-        break;
-      case 'anniversary':
-        stickerPath = _getMilestoneSticker(event.daysCount);
-        iconGradients = const [Color(0xFFFFD1E1), Color(0xFFFFB2CC)];
-        break;
-      case 'holiday':
-        stickerPath = _getHolidaySticker(event);
-        iconGradients = const [Color(0xFFE9D5FF), Color(0xFFD8B4FE)];
-        break;
-      default:
-        stickerPath = 'assets/images/milestone_stickers_2/ms_ngay_dac_biet.webp';
-        iconGradients = const [Color(0xFFBAE6FD), Color(0xFF7DD3FC)];
-    }
+    final (stickerPath, iconGradients) = switch (event.type) {
+      'birthday' => (
+          'assets/images/anhtomau_stickers/sticker_17.gif',
+          const [Color(0xFFFFF3C4), Color(0xFFFFE082)]
+        ),
+      'anniversary' => (
+          'assets/images/anhtomau_stickers/sticker_14.gif',
+          const [Color(0xFFFFD1E1), Color(0xFFFFB2CC)]
+        ),
+      'holiday' => (
+          'assets/images/anhtomau_stickers/sticker_22.gif',
+          const [Color(0xFFE9D5FF), Color(0xFFD8B4FE)]
+        ),
+      _ => (
+          'assets/images/anhtomau_stickers/sticker_9.gif',
+          const [Color(0xFFBAE6FD), Color(0xFF7DD3FC)]
+        ),
+    };
 
     final weekdays = [
       L10nService().translate('milestone_weekday_1'),
@@ -1009,49 +853,37 @@ class _MilestonesScreenState extends State<MilestonesScreen>
     final formattedDate =
         '$weekdayStr, ${event.date.day.toString().padLeft(2, '0')}/${event.date.month.toString().padLeft(2, '0')}/${event.date.year}';
 
-    final bool isMajorEvent = event.type == 'birthday' ||
-        (event.type == 'anniversary' &&
-            (event.daysCount == null || event.daysCount! > 0));
-
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: isMajorEvent
-          ? BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: 0.95),
-                  Colors.white.withValues(alpha: 0.85),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.95), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFF9EB7).withValues(alpha: 0.12),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.02),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            )
-          : BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.8), width: 1.2),
-            ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.95),
+            Colors.white.withValues(alpha: 0.85),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+            color: Colors.white.withValues(alpha: 0.95), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFF9EB7).withValues(alpha: 0.12),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Material(
         color: Colors.transparent,
         child: Padding(
-          padding: EdgeInsets.symmetric(
-              horizontal: 16, vertical: isMajorEvent ? 14 : 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
               Transform.rotate(
@@ -1059,7 +891,6 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                 child: Container(
                   width: 52,
                   height: 52,
-                  clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -1078,7 +909,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                     ],
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(2.0),
+                    padding: const EdgeInsets.all(8.0),
                     child: R2StickerImage(stickerPath),
                   ),
                 ),

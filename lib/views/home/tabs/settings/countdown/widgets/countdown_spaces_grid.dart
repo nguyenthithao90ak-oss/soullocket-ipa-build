@@ -417,7 +417,7 @@ extension CountdownSpacesGridExt on _CountdownModeIndependentScreenState {
                                 fadeInDuration:
                                     const Duration(milliseconds: 180),
                                 maxWidthDiskCache: 720,
-                                placeholder: (_, _) => DecoratedBox(
+                                placeholder: (_, __) => DecoratedBox(
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
@@ -443,7 +443,7 @@ extension CountdownSpacesGridExt on _CountdownModeIndependentScreenState {
                                     ),
                                   ),
                                 ),
-                                errorWidget: (_, _, _) => DecoratedBox(
+                                errorWidget: (_, __, ___) => DecoratedBox(
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
@@ -1002,7 +1002,7 @@ extension CountdownSpacesGridExt on _CountdownModeIndependentScreenState {
                       child: ListView.separated(
                         shrinkWrap: true,
                         itemCount: _incomingSpaceRequests.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 10),
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           final request =
                               _incomingSpaceRequests.values.elementAt(index);

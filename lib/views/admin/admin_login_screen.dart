@@ -249,7 +249,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                             Text(
                               context.tr('admin_dngtikhonc_ffd8dc'),
                               style: SLTheme.quicksand(
-                                color: const Color(0xFF9AA8C4),
+                                color: const SLColors.textMuted,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -281,7 +281,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                                   _obscurePassword
                                       ? Icons.visibility_off_rounded
                                       : Icons.visibility_rounded,
-                                  color: const Color(0xFF9AA8C4),
+                                  color: const SLColors.textMuted,
                                 ),
                               ),
                             ),
@@ -315,7 +315,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                               child: ElevatedButton(
                                 onPressed: _isLoading ? null : _handleLogin,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFFF4B91),
+                                  backgroundColor: const SLColors.brandPink,
                                   foregroundColor: Colors.white,
                                   elevation: 0,
                                   padding:

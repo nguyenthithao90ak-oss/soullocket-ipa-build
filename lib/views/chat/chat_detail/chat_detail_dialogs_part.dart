@@ -703,29 +703,29 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(
-            dialogContext.tr('Biệt danh trong chat'),
+            'Biệt danh trong chat',
             style: SLTheme.quicksand(fontWeight: FontWeight.w900),
           ),
           content: TextField(
             controller: ctrl,
             maxLength: 28,
-            decoration: InputDecoration(
-              hintText: dialogContext.tr('Nhập biệt danh...'),
+            decoration: const InputDecoration(
+              hintText: 'Nhập biệt danh...',
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(dialogContext.tr('Hủy')),
+              child: const Text('Hủy'),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(''),
-              child: Text(dialogContext.tr('Bỏ biệt danh')),
+              child: const Text('Bỏ biệt danh'),
             ),
             ElevatedButton(
               onPressed: () =>
                   Navigator.of(dialogContext).pop(ctrl.text.trim()),
-              child: Text(dialogContext.tr('Lưu')),
+              child: const Text('Lưu'),
             ),
           ],
         );
@@ -937,9 +937,9 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                       TextField(
                         controller: nameCtrl,
                         maxLength: 36,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           counterText: '',
-                          hintText: sheetContext.tr('Tên nhóm'),
+                          hintText: 'Tên nhóm',
                         ),
                       ),
                       SLSpacing.h8,
@@ -951,7 +951,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                         child: ListView.separated(
                           shrinkWrap: true,
                           itemCount: allFriendIds.length,
-                          separatorBuilder: (_, _) =>
+                          separatorBuilder: (_, __) =>
                               const SizedBox(height: 6),
                           itemBuilder: (context, index) {
                             final friendId = allFriendIds[index];
@@ -1042,7 +1042,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                                     'createdAtMs': createdAt,
                                   });
                                 },
-                          child: Text(sheetContext.tr('Tạo nhóm')),
+                          child: const Text('Tạo nhóm'),
                         ),
                       ),
                     ],
@@ -1088,18 +1088,18 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(dialogContext.tr('Chặn người dùng')),
+          title: const Text('Chặn người dùng'),
           content: Text(
             'Bạn có chắc muốn chặn ${widget.targetName}? Sau khi chặn, hai bên sẽ không thể nhắn tin.',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(dialogContext.tr('Hủy')),
+              child: const Text('Hủy'),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(dialogContext.tr('Chặn')),
+              child: const Text('Chặn'),
             ),
           ],
         );
@@ -1132,7 +1132,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(dialogContext.tr('Xóa đoạn chat')),
+          title: const Text('Xóa đoạn chat'),
           content: Text(
             _isInternal
                 ? 'Xóa toàn bộ lịch sử tin nhắn nội bộ?'
@@ -1141,11 +1141,11 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(dialogContext.tr('Hủy')),
+              child: const Text('Hủy'),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(dialogContext.tr('Xóa')),
+              child: const Text('Xóa'),
             ),
           ],
         );
@@ -1186,25 +1186,25 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
             return AlertDialog(
-              title: Text(dialogContext.tr('Báo cáo người dùng')),
+              title: const Text('Báo cáo người dùng'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
                     initialValue: selected,
-                    items: [
-                      DropdownMenuItem(value: 'spam', child: Text(dialogContext.tr('Spam'))),
+                    items: const [
+                      DropdownMenuItem(value: 'spam', child: Text('Spam')),
                       DropdownMenuItem(
                         value: 'harassment',
-                        child: Text(dialogContext.tr('Quấy rối')),
+                        child: Text('Quấy rối'),
                       ),
                       DropdownMenuItem(
                         value: 'scam',
-                        child: Text(dialogContext.tr('Lừa đảo')),
+                        child: Text('Lừa đảo'),
                       ),
                       DropdownMenuItem(
                         value: 'inappropriate_content',
-                        child: Text(dialogContext.tr('Nội dung không phù hợp')),
+                        child: Text('Nội dung không phù hợp'),
                       ),
                     ],
                     onChanged: (value) {
@@ -1216,8 +1216,8 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                   TextField(
                     controller: reasonCtrl,
                     maxLength: 140,
-                    decoration: InputDecoration(
-                      hintText: dialogContext.tr('Ghi chú thêm (không bắt buộc)'),
+                    decoration: const InputDecoration(
+                      hintText: 'Ghi chú thêm (không bắt buộc)',
                     ),
                   ),
                 ],
@@ -1225,7 +1225,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: Text(dialogContext.tr('Hủy')),
+                  child: const Text('Hủy'),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -1233,7 +1233,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                     Navigator.of(dialogContext)
                         .pop(extra.isEmpty ? selected : '$selected: $extra');
                   },
-                  child: Text(dialogContext.tr('Gửi báo cáo')),
+                  child: const Text('Gửi báo cáo'),
                 ),
               ],
             );

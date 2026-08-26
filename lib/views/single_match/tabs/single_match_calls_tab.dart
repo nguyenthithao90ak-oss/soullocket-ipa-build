@@ -193,14 +193,14 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
               const Icon(Icons.casino_rounded,
                   size: 40, color: Color(0xFF7C61FF)),
               const SizedBox(height: 8),
-              Text(context.tr('Gọi ngẫu nhiên'),
+              Text('Gọi ngẫu nhiên',
                   style: SLTheme.quicksand(
                     fontSize: 17,
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFF32203B),
                   )),
               const SizedBox(height: 4),
-              Text(context.tr('Hệ thống chọn người phù hợp và kết nối ngay'),
+              Text('Hệ thống chọn người phù hợp và kết nối ngay',
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
                     fontSize: 12,
@@ -219,7 +219,7 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                             borderRadius: BorderRadius.circular(16)),
                       ),
                       icon: const Icon(Icons.call_rounded, size: 18),
-                      label: Text(context.tr('Gọi audio'),
+                      label: Text('Gọi audio',
                           style:
                               SLTheme.quicksand(fontWeight: FontWeight.w900)),
                     ),
@@ -234,7 +234,7 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                             borderRadius: BorderRadius.circular(16)),
                       ),
                       icon: const Icon(Icons.videocam_rounded, size: 18),
-                      label: Text(context.tr('Gọi video'),
+                      label: Text('Gọi video',
                           style:
                               SLTheme.quicksand(fontWeight: FontWeight.w900)),
                     ),
@@ -272,7 +272,7 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
           const SizedBox(height: 18),
           Row(
             children: [
-              Text(context.tr('Lịch sử cuộc gọi'),
+              Text('Lịch sử cuộc gọi',
                   style: SLTheme.quicksand(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,

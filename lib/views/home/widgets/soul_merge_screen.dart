@@ -42,7 +42,7 @@ class SoulMergeScreen extends StatefulWidget {
 }
 
 class _SoulMergeScreenState extends State<SoulMergeScreen>
-    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+    with SingleTickerProviderStateMixin {
   late BumpDetector _bumpDetector;
   final SoulMergeService _mergeService = SoulMergeService();
   StreamSubscription<Map<String, int>>? _mergeTimesSub;
@@ -61,6 +61,8 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   String? _houseId;
   String _partnerName = 'Người ấy';
   String _myName = 'Người ấy';
+  bool _iHaveBumped = false;
+  bool _partnerHasBumped = false;
   final GlobalKey<TapHeartsOverlayState> _heartsOverlayKey =
       GlobalKey<TapHeartsOverlayState>();
   final ValueNotifier<double> _interactiveScaleNotifier = ValueNotifier(1.0);
@@ -68,7 +70,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   Offset _lastTapPosition = Offset.zero;
   Offset? _lastSpawnedPosition;
   DateTime? _lastManualNudgeTime;
-  DateTime? _lastExplosion;
 
   final TextEditingController _customMsgController = TextEditingController();
   StreamSubscription<List<Map<String, dynamic>>>? _messagesSub;
@@ -82,7 +83,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   bool _hasProcessedFirstMessages = false;
   String _myRole = 'user1';
   List<Map<String, dynamic>> _chatHistory = [];
-  List<Map<String, dynamic>> _cachedLatestPhotos = [];
   final ScrollController _chatScrollController = ScrollController();
   bool _overlayEnabled = false;
   StreamSubscription<dynamic>? _overlayListenerSub;
@@ -102,7 +102,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -175,6 +174,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         final partnerRole = myRole == 'user2' ? 'user1' : 'user2';
         final iBumped = mergeTimes.containsKey(myRole);
         final partnerBumped = mergeTimes.containsKey(partnerRole);
+
+        if (mounted) {
+          setState(() {
+            _iHaveBumped = iBumped;
+            _partnerHasBumped = partnerBumped;
+          });
+        }
 
         if (iBumped && partnerBumped) {
           final time1 = mergeTimes[myRole]!;
@@ -427,6 +433,27 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     _pulseController.repeat(reverse: true);
   }
 
+  // ignore: unused_element
+  String _getConnectionStatusText() {
+    if (!_iHaveBumped && !_partnerHasBumped) {
+      return 'Đang chờ hai bạn chạm... 💫';
+    } else if (_iHaveBumped && !_partnerHasBumped) {
+      return 'Bạn đã chạm! Đang chờ $_partnerName chạm cùng lúc... 💕';
+    } else if (!_iHaveBumped && _partnerHasBumped) {
+      return '$_partnerName đã chạm! Chạm vào trái tim để kết nối ngay nhé! 💞';
+    } else {
+      return 'Đang kết nối... 💖';
+    }
+  }
+
+  // ignore: unused_element
+  Color _getConnectionStatusColor() {
+    if (_iHaveBumped || _partnerHasBumped) {
+      return const Color(0xFFFF7FB2);
+    }
+    return Colors.white70;
+  }
+
   List<Widget> _buildSparkles() {
     const double radius = 45;
     // 4 sparkles thay vì 6 — tiết kiệm render
@@ -610,13 +637,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
   void _spawnPhotoExplosion(
       {Map<String, String>? specificItem, Offset? specificPosition}) {
-    final now = DateTime.now();
-    if (_lastExplosion != null &&
-        now.difference(_lastExplosion!).inMilliseconds < 200) {
-      return;
-    }
-    _lastExplosion = now;
-
     if (_memoriesData.isEmpty && specificItem == null) return;
     final randomItem =
         specificItem ?? _memoriesData[_random.nextInt(_memoriesData.length)];
@@ -663,25 +683,13 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.hidden) {
-      _continuousHeartsTimer?.cancel();
-      _continuousHeartsTimer = null;
-    }
-  }
-
-  @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _vipSub?.cancel();
     _customMsgController.dispose();
     _chatScrollController.dispose();
     _messagesSub?.cancel();
     _interactiveEventsSub?.cancel();
     _continuousHeartsTimer?.cancel();
-    _continuousHeartsTimer = null;
     _bumpDetector.stop();
     _mergeTimesSub?.cancel();
     _overlayListenerSub?.cancel();
@@ -695,6 +703,16 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final photoMessages = _chatHistory
+        .where((m) {
+          final url = (m['imageUrl']?.toString() ?? '').trim();
+          return url.startsWith('http://') || url.startsWith('https://');
+        })
+        .toList();
+    final latestPhotos = photoMessages.length > 3
+        ? photoMessages.sublist(photoMessages.length - 3)
+        : photoMessages;
+
     return Scaffold(
       backgroundColor: const Color(0xFF1A0533),
       appBar: AppBar(
@@ -839,11 +857,11 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
           for (final msg in _floatingMessages)
             FloatingMessageWidget(key: msg.id, message: msg),
 
-          for (int i = 0; i < _cachedLatestPhotos.length; i++)
+          for (int i = 0; i < latestPhotos.length; i++)
             PersistentFloatingPhotoWidget(
-                key: ValueKey(_cachedLatestPhotos[i]['id']?.toString() ??
-                    _cachedLatestPhotos[i]['timestamp'].toString()),
-                url: _cachedLatestPhotos[i]['imageUrl'].toString(),
+                key: ValueKey(latestPhotos[i]['id']?.toString() ??
+                    latestPhotos[i]['timestamp'].toString()),
+                url: latestPhotos[i]['imageUrl'].toString(),
                 index: i),
 
           if (!_isMerged)
@@ -1190,20 +1208,9 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         }
       }
 
-      final photoMessages = list
-          .where((m) {
-            final url = (m['imageUrl']?.toString() ?? '').trim();
-            return url.startsWith('http://') || url.startsWith('https://');
-          })
-          .toList();
-      final latestPhotos = photoMessages.length > 3
-          ? photoMessages.sublist(photoMessages.length - 3)
-          : photoMessages;
-
       final oldSeenMs = _lastSeenMsgTimestamp;
       setState(() {
         _chatHistory = list;
-        _cachedLatestPhotos = latestPhotos;
         _lastMsgTimestamp = maxTimestamp;
         _lastSeenMsgTimestamp = maxTimestamp;
       });
@@ -1410,16 +1417,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(10),
                 ),
-              ),
-              const SizedBox(height: 16),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Gửi Nhãn Dán',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ],
               ),
               const SizedBox(height: 16),
               Expanded(

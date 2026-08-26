@@ -30,7 +30,7 @@ class SLRoute<T> extends PageRoute<T> with CupertinoRouteTransitionMixin<T> {
 
 /// Shorthand push helper — thay Navigator.of(context).push(MaterialPageRoute(...))
 Future<T?> slPush<T>(BuildContext context, Widget screen) {
-  return Navigator.of(context, rootNavigator: true).push<T>(
+  return Navigator.of(context).push<T>(
     SLRoute<T>(builder: (_) => screen),
   );
 }

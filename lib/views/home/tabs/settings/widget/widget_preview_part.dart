@@ -952,7 +952,7 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
   Widget _buildWidgetPreview() {
     return ValueListenableBuilder<int>(
       valueListenable: _widgetPreviewTickNotifier,
-      builder: (context, _, _) {
+      builder: (context, _, __) {
         final themeKey = _draftWidgetThemeKey ?? 'pink';
         final theme = _widgetPreviewThemeSpec(themeKey);
         final textColor = theme.textColor;
@@ -1671,7 +1671,7 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
                 filterQuality: FilterQuality.medium,
                 maxWidthDiskCache: tileWidth.ceil(),
                 maxHeightDiskCache: tileHeight.ceil(),
-                errorWidget: (_, _, _) {
+                errorWidget: (_, __, ___) {
                   return Icon(
                     Icons.broken_image_rounded,
                     size: iconSize,

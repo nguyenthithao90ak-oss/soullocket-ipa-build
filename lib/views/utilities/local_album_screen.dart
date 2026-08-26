@@ -239,7 +239,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     for (final xfile in images) {
       if (_items.length >= _maxItems) break;
       final bytes = await xfile.readAsBytes();
-      final fileName = await _saveFile(bytes, '.webp');
+      final fileName = await _saveFile(bytes, '.jpg');
       if (fileName.isEmpty) continue;
       _items.add(LocalAlbumItem(
         id: '${DateTime.now().millisecondsSinceEpoch}_${_items.length}',
@@ -353,7 +353,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
         if (srcPath.isEmpty) continue;
         final bytes = await File(srcPath).readAsBytes();
         if (bytes.isEmpty) continue;
-        final fileName = await _saveFile(bytes, ext.isNotEmpty ? ext : '.webp');
+        final fileName = await _saveFile(bytes, ext.isNotEmpty ? ext : '.jpg');
         if (fileName.isEmpty) continue;
         _items.add(LocalAlbumItem(
           id: '${DateTime.now().millisecondsSinceEpoch}_${_items.length}',
@@ -827,7 +827,7 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
                                       File(_filePath(item)),
                                       fit: BoxFit.cover,
                                       filterQuality: FilterQuality.low,
-                                      errorBuilder: (_, _, _) => Container(
+                                      errorBuilder: (_, __, ___) => Container(
                                           color: Colors.grey[200],
                                           child: const Icon(
                                               Icons.broken_image_rounded,
@@ -1139,7 +1139,7 @@ class _LocalItemViewerScreenState extends State<_LocalItemViewerScreen> {
                       child: Image.file(
                         File(_filePath(index)),
                         fit: BoxFit.contain,
-                        errorBuilder: (_, _, _) => const Center(
+                        errorBuilder: (_, __, ___) => const Center(
                             child: Text('Không thể hiển thị ảnh',
                                 style: TextStyle(color: Colors.white))),
                       ),

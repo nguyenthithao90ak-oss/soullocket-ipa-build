@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import
+// ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../../main_home_tab.dart';
 
 extension _MainHomeInsightCardExt on _MainHomeTabState {
@@ -8,6 +8,33 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
     required String nameU2,
   }) {
     final insight = _insightData;
+    final metrics = insight == null
+        ? const <_InsightBubbleSpec>[]
+        : [
+            if (!isSingle)
+              _InsightBubbleSpec(
+                label: nameU1.trim(),
+                value: insight.loveU1,
+                color: const Color(0xFF42A5F5),
+                phase: 0.4,
+              ),
+            _InsightBubbleSpec(
+              label: isSingle
+                  ? L10nService().translate('home_hotng_faccd7')
+                  : 'LOVE',
+              value: insight.loveScore,
+              color: const Color(0xFFD81B60),
+              phase: 1.7,
+              emphasize: true,
+            ),
+            if (!isSingle)
+              _InsightBubbleSpec(
+                label: nameU2.trim(),
+                value: insight.loveU2,
+                color: const Color(0xFF7C83FD),
+                phase: 2.7,
+              ),
+          ];
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -22,237 +49,88 @@ extension _MainHomeInsightCardExt on _MainHomeTabState {
       child: _buildHomeCardFirstTapWrapper(
         showHint: _showInsightCardFirstTapHintNotifier.value,
         onTap: _handleInsightCardTap,
-        child: Container(
-          width: double.infinity,
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(32),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFFFDCE8).withValues(alpha: 0.6),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
-            border: Border.all(color: Colors.white, width: 2.0),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Tiêu đề
-              Row(
-                children: [
-                  const Text('💕 ', style: TextStyle(fontSize: 16)),
-                  Expanded(
-                    child: Text(
-                      'Hành trình yêu thương',
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 17,
-                        color: const Color(0xFF332C35),
-                      ),
-                    ),
-                  ),
-                  const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                    color: Color(0xFFFF6FA5),
-                  ),
-                ],
-              ),
-              SLSpacing.h20,
-              if (insight == null)
-                _buildInsightLoadingShimmer()
-              else ...[
-                // Rings & LOVE Card
+        child: SLTheme.glassCard(
+          child: Container(
+            width: double.infinity,
+            padding: SLSpacing.all16,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    if (!isSingle)
-                      _buildProgressRing(
-                        value: insight.loveU1,
-                        label: nameU1.trim(),
-                        color: const Color(0xFF42A5F5), // Hoặc đổi sang pastel pink/purple tuỳ thích
-                      ),
-                    
-                    // LOVE Center Card
-                    Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFF85A2), Color(0xFFFF4F87)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFF4F87).withValues(alpha: 0.35),
-                              blurRadius: 12,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'LOVE',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 11,
-                                    color: Colors.white70,
-                                    letterSpacing: 1.2,
-                                  ),
-                                ),
-                                SizedBox(width: 4),
-                                Icon(Icons.favorite_rounded, color: Colors.white, size: 12),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              '${insight.loveScore}%',
-                              style: GoogleFonts.outfit(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 26,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
+                    const Icon(
+                      Icons.auto_awesome,
+                      color: Color(0xFFD81B60),
+                      size: 18,
+                    ),
+                    SLSpacing.w8,
+                    Flexible(
+                      child: Text(
+                        isSingle
+                            ? L10nService().translate('home_thngkcnhn_e82ba1')
+                            : L10nService().translate('home_chshnhphc_243d83'),
+                        maxLines: 1,
+                        overflow: TextOverflow.visible,
+                        style: SLTheme.quicksand(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: const Color(0xFFD81B60),
                         ),
                       ),
                     ),
-
-                    if (!isSingle)
-                      _buildProgressRing(
-                        value: insight.loveU2,
-                        label: nameU2.trim(),
-                        color: const Color(0xFF9B7AE8), // Pastel purple
-                      ),
+                    SLSpacing.w8,
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: Color(0xFFD81B60),
+                    ),
                   ],
                 ),
-                SLSpacing.h20,
-                // AI Nhận xét
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: FastBackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.6),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF332C35).withValues(alpha: 0.04),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
+                SLSpacing.h16,
+                if (insight == null)
+                  _buildInsightLoadingShimmer()
+                else ...[
+                  _buildInsightBubbleWrap(metrics, compact: true),
+                  SLSpacing.h16,
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 13),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFFFFF0F6),
+                          Color(0xFFF8F0FF),
                         ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Text('✨ ', style: TextStyle(fontSize: 14)),
-                          Text(
-                            'AI phân tích',
-                            style: GoogleFonts.outfit(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 13,
-                              color: const Color(0xFFFF4F87),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        insight.suggestion,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: const Color(0xFF4A3060),
-                          height: 1.5,
-                          fontWeight: FontWeight.w600,
+                      borderRadius: SLRadius.lgAll,
+                      border: Border.all(color: const Color(0xFFF9D8E5)),
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              const Color(0xFFFF6FA5).withValues(alpha: 0.08),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
                         ),
+                      ],
+                    ),
+                    child: Text(
+                      insight.suggestion,
+                      style: SLTheme.quicksand(
+                        fontSize: 13,
+                        color: const Color(0xFF4A3060),
+                        height: 1.5,
+                        fontWeight: FontWeight.w700,
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildProgressRing({
-    required int value,
-    required String label,
-    required Color color,
-  }) {
-    return Column(
-      children: [
-        SizedBox(
-          width: 56,
-          height: 56,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              CircularProgressIndicator(
-                value: 1.0,
-                strokeWidth: 6,
-                color: color.withValues(alpha: 0.15),
-              ),
-              CircularProgressIndicator(
-                value: value / 100,
-                strokeWidth: 6,
-                color: color,
-                strokeCap: StrokeCap.round,
-              ),
-              Center(
-                child: Text(
-                  '$value',
-                  style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 17,
-                    color: color,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        SizedBox(
-          width: 60,
-          child: Text(
-            label,
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w700,
-              fontSize: 11,
-              color: const Color(0xFF8D8490),
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
     );
   }
 

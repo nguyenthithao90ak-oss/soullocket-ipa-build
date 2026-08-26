@@ -178,7 +178,7 @@ extension _MainHomeInteractions on _MainHomeTabState {
         'type': type,
         'emoji': emoji,
         'assetPath': preset?.assetPath ?? '',
-        'imageUrl': ?randomImageUrl,
+        if (randomImageUrl != null) 'imageUrl': randomImageUrl,
         'fromUid': user.uid,
         'fromRole': _currentRole,
         'toRole': _partnerRole,

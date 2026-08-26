@@ -20,7 +20,7 @@ class AdminConfigScreen extends StatefulWidget {
 }
 
 class _AdminConfigScreenState extends State<AdminConfigScreen> {
-  static const Color _maintenanceAccentColor = Color(0xFFFF4B91);
+  static const Color _maintenanceAccentColor = SLColors.brandPink;
 
   final _db = FirebaseDatabase.instance.ref();
   final _authService = AuthService();

@@ -262,7 +262,7 @@ Widget _buildInteractionVisual({
       fit: fit,
       isAntiAlias: true,
       filterQuality: FilterQuality.medium,
-      errorBuilder: (_, _, _) => _buildInteractionVisual(
+      errorBuilder: (_, __, ___) => _buildInteractionVisual(
         visual: visual,
         size: size,
         emojiSize: emojiSize,

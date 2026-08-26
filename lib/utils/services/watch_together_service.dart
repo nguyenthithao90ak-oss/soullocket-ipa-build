@@ -102,7 +102,7 @@ class WatchTogetherService {
       'positionSec': positionSec.isNegative ? 0.0 : positionSec,
       if (durationSec != null)
         'durationSec': durationSec.isNegative ? 0.0 : durationSec,
-      'updatedBy': ?uid,
+      if (uid != null) 'updatedBy': uid,
       if (updatedByName != null && updatedByName.trim().isNotEmpty)
         'updatedByName': updatedByName.trim(),
       if (originClientId != null && originClientId.trim().isNotEmpty)
@@ -124,7 +124,7 @@ class WatchTogetherService {
     final uid = _auth.currentUser?.uid;
     await _db.ref('houses/$normalizedHouseId/movie_sync').update({
       'positionSec': positionSec.isNegative ? 0.0 : positionSec,
-      'updatedBy': ?uid,
+      if (uid != null) 'updatedBy': uid,
       if (updatedByName != null && updatedByName.trim().isNotEmpty)
         'updatedByName': updatedByName.trim(),
       if (originClientId != null && originClientId.trim().isNotEmpty)

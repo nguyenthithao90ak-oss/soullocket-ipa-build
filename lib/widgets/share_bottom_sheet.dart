@@ -550,7 +550,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                 ),
                               ),
                               itemCount: 4,
-                              separatorBuilder: (_, _) => SizedBox(
+                              separatorBuilder: (_, __) => SizedBox(
                                 width: SLResponsive.dp(12, screenWidth),
                               ),
                               itemBuilder: (ctx, i) {
@@ -1366,7 +1366,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                     imageUrl: avatarUrl,
                                     fit: BoxFit.cover,
                                     filterQuality: FilterQuality.medium,
-                                    errorWidget: (_, _, _) => Icon(
+                                    errorWidget: (_, __, ___) => Icon(
                                       icon,
                                       color: accentColor,
                                     ),

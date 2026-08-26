@@ -818,14 +818,14 @@ class LoveInsightService {
     loveScore = max(isSingle ? 30 : 28, min(100, loveScore));
 
     final level = loveScore >= 90
-        ? _tr('insight_level_soulmate')
+        ? 'Soulmate rực rỡ'
         : loveScore >= 75
-            ? _tr('insight_level_deep_love')
+            ? 'Yêu sâu đậm'
             : loveScore >= 60
-                ? _tr('insight_level_stable')
+                ? 'Đang rất ổn'
                 : loveScore >= 45
-                    ? _tr('insight_level_needs_warmth')
-                    : _tr('insight_level_needs_attention');
+                    ? 'Cần hâm nóng'
+                    : 'Nên chăm nhau hơn';
 
     final user1Positivity = moodTotalU1 > 0
         ? ((moodPosU1 / moodTotalU1) * 100).round().clamp(0, 100)
@@ -874,10 +874,10 @@ class LoveInsightService {
         ? ((recentMemory30 / recentActiveDays.length) * 10).round() / 10
         : 0.0;
     final favoriteActivity = diaryTotal > albumTotal
-        ? _tr('insight_fav_diary')
+        ? 'Viết nhật ký'
         : diaryTotal < albumTotal
-            ? _tr('insight_fav_album')
-            : _tr('insight_fav_balanced');
+            ? 'Đăng ảnh/video'
+            : 'Cân bằng cả hai';
 
     final timeline = _buildTimeline(
       startDate: startDate,
@@ -1011,16 +1011,16 @@ class LoveInsightService {
         return _tr('love_insight_suggest_single_slow_rhythm');
       }
       if (currentStreak >= 5) {
-        return _tr('insight_single_streak').replaceAll('{streak}', currentStreak.toString());
+        return 'Bạn đang có chuỗi $currentStreak ngày tương tác liên tiếp cực kỳ tích cực. Cứ giữ nhịp này, năng lượng yêu thương sẽ ngày càng rực rỡ!';
       }
       if (loveScore >= 85) {
-        return _tr('insight_single_good_score');
+        return 'Bạn đang giữ nhịp sống rất ổn và đều. Hãy tiếp tục lưu lại những khoảnh khắc đẹp để hành trình của chính mình ngày càng đáng nhớ hơn.';
       }
       if (positivity >= 75 && memoryThisMonth >= 6) {
-        return _tr('insight_single_good_positivity');
+        return 'Năng lượng của bạn đang khá sáng và ổn. Giữ nhịp đều thêm vài ngày nữa, chỉ số này sẽ tăng rất nhanh chứ không chỉ đẹp nhất thời.';
       }
       if (loveScore >= 65) {
-        return _tr('insight_single_fair_score');
+        return 'Nhịp sống của bạn đang đi đúng hướng. Chỉ cần thêm vài ngày ghi nhật ký hoặc lưu ảnh đều hơn là bảng chỉ số sẽ sáng lên rất nhanh.';
       }
       if (milestoneSuggestion != null) {
         return milestoneSuggestion;
@@ -1035,32 +1035,32 @@ class LoveInsightService {
     }
 
     if (currentStreak >= 7) {
-      return _tr('insight_couple_streak').replaceAll('{streak}', currentStreak.toString());
+      return 'Thật tuyệt vời! Hai bạn đã duy trì tương tác suốt $currentStreak ngày liên tục. Sự đều đặn này chính là chìa khóa của một tình yêu bền vững.';
     }
 
     if (shareU1 > 0.8) {
-      return _tr('insight_couple_unbalanced_u1').replaceAll('{u1}', nameU1).replaceAll('{u2}', nameU2);
+      return 'Có vẻ $nameU1 đang là người chủ động tạo phần lớn kỷ niệm. $nameU2 ơi, hãy gửi một lời yêu thương nhỏ để cân bằng lại nhịp tim chung nhé!';
     } else if (shareU2 > 0.8) {
-      return _tr('insight_couple_unbalanced_u2').replaceAll('{u1}', nameU1).replaceAll('{u2}', nameU2);
+      return 'Gần đây $nameU2 đang chăm chút cho nhà chung rất nhiều. $nameU1 hãy đáp lại bằng một bức ảnh hoặc nhật ký ngọt ngào nhé!';
     }
 
     if (daysSinceLastMemory >= 6) {
       return _tr('love_insight_suggest_couple_sparse_shared_marks');
     }
     if (balanceRatio < 0.45) {
-      return _tr('insight_couple_slightly_unbalanced');
+      return 'Một phía đang chủ động nhiều hơn phía còn lại. Chỉ cần người đang yên hơn lên tiếng trước một chút, cảm giác cân bằng sẽ quay lại rất rõ.';
     }
     if (offU1 >= 2 || offU2 >= 2) {
-      return _tr('insight_couple_offline');
+      return 'Có vẻ một trong hai bạn đang vắng nhịp hơn bình thường. Một lời hỏi han ngắn nhưng đúng lúc sẽ hiệu quả hơn rất nhiều so với nhắn cho có.';
     }
     if (loveScore >= 85) {
-      return _tr('insight_couple_good_score');
+      return 'Hai bạn đang giữ được nhịp yêu rất đẹp và ổn định. Chỉ cần thêm vài khoảnh khắc nhỏ có chủ đích, tình cảm sẽ còn đậm và sáng hơn nữa.';
     }
     if (loveDays >= 180 && memoryThisMonth >= 8) {
-      return _tr('insight_couple_stable');
+      return 'Nền của hai bạn vẫn tốt, chỉ cần giữ đều chất lượng tương tác trong vài tuần tới là cảm giác gắn bó sẽ tăng lên rất tự nhiên.';
     }
     if (loveScore >= 65) {
-      return _tr('insight_couple_fair_score');
+      return 'Mối quan hệ đang khá ổn và có nền tảng tốt. Một cuộc trò chuyện chất lượng hoặc một bất ngờ nhỏ đúng lúc sẽ kéo cảm xúc đi lên rất nhanh.';
     }
     if (milestoneSuggestion != null) {
       return milestoneSuggestion;
@@ -1096,12 +1096,12 @@ class LoveInsightService {
       if (daysUntil <= 7) {
         if (daysUntil <= 0) {
           return isSingle
-              ? _tr('insight_milestone_single_today')
-              : _tr('insight_milestone_couple_today');
+              ? 'Hôm nay là một cột mốc đẹp của hành trình này. Ghi lại một khoảnh khắc nhỏ để ngày đặc biệt có dấu ấn riêng nhé.'
+              : 'Hôm nay là một cột mốc đẹp của hai bạn. Chỉ cần lưu lại một tấm ảnh hay một lời nhắn ngắn là đủ làm ngày này đáng nhớ hơn.';
         }
         return isSingle
-            ? _tr('insight_milestone_single_upcoming').replaceAll('{days}', daysUntil.toString()).replaceAll('{title}', nearestUpcoming.title)
-            : _tr('insight_milestone_couple_upcoming').replaceAll('{days}', daysUntil.toString()).replaceAll('{title}', nearestUpcoming.title);
+            ? 'Chỉ còn $daysUntil ngày nữa tới "${nearestUpcoming.title}". Giữ nhịp vài ghi chú nhỏ từ bây giờ sẽ giúp cột mốc này ý nghĩa hơn nhiều.'
+            : 'Chỉ còn $daysUntil ngày nữa tới "${nearestUpcoming.title}". Hai bạn có thể chuẩn bị một kỷ niệm nhỏ từ bây giờ để cảm xúc đến tự nhiên hơn.';
       }
     }
 
@@ -1110,8 +1110,8 @@ class LoveInsightService {
           today.difference(_startOfDay(nearestRecentPast.date)).inDays;
       if (daysSince <= 7) {
         return isSingle
-            ? _tr('insight_milestone_single_past').replaceAll('{title}', nearestRecentPast.title)
-            : _tr('insight_milestone_couple_past').replaceAll('{title}', nearestRecentPast.title);
+            ? '"${nearestRecentPast.title}" vừa đi qua. Đây là lúc đẹp để ghi lại cảm xúc còn mới, để hành trình này có thêm chiều sâu.'
+            : '"${nearestRecentPast.title}" vừa đi qua. Nếu hai bạn lưu lại một lời nhắn hay một tấm ảnh lúc này, cột mốc đó sẽ ở lại lâu hơn.';
       }
     }
 
@@ -1185,9 +1185,9 @@ class LoveInsightService {
         await PushNotificationHelper.systemEvent(
           toHouseId: houseId,
           type: 'upcoming_anniversary_reminder',
-          title: _tr('notify_anniversary_title'),
+          title: '💞 Sắp tới ngày kỷ niệm rồi',
           content:
-              _tr('notify_anniversary_content'),
+              'Còn 7 ngày nữa là tới ngày đặc biệt của hai bạn, chuẩn bị một bất ngờ nhỏ nha.',
         );
         return;
       }
@@ -1210,7 +1210,7 @@ class LoveInsightService {
         await PushNotificationHelper.systemEvent(
           toHouseId: houseId,
           type: 'ai_interaction_reminder',
-          title: _tr('notify_love_heart_title'),
+          title: 'Gửi một chút yêu thương ❤️',
           content: message,
         );
         return;
@@ -1224,14 +1224,14 @@ class LoveInsightService {
             nowTs: nowTs,
           )) {
         final name = quietRole == 'user2'
-            ? _string(settings['nameU2'], fallback: _tr('str_partner'))
-            : _string(settings['nameU1'], fallback: _tr('str_partner'));
+            ? _string(settings['nameU2'], fallback: 'người ấy')
+            : _string(settings['nameU1'], fallback: 'người ấy');
         await PushNotificationHelper.systemEvent(
           toHouseId: houseId,
           type: 'long_time_no_checkin',
-          title: _tr('notify_quiet_rhythm_title'),
+          title: '🌙 Dạo này hơi vắng nhịp',
           content:
-              _tr('notify_quiet_rhythm_content').replaceAll('{name}', name),
+              'Lâu rồi chưa thấy $name ghé app, thử gửi một lời hỏi han dịu dàng nhé.',
         );
       }
     } catch (_) {}

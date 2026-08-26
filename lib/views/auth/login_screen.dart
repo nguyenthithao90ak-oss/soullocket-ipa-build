@@ -11,7 +11,6 @@ import 'package:firebase_database/firebase_database.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/anti_spam_service.dart';
 import '../../utils/services/auth_service.dart';
-import '../../utils/services/consent_service.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../utils/services/security_flow_guard.dart';
 import '../../utils/services/security_service.dart';
@@ -96,15 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _checkFirstTimeSyncGuide() async {
-    while (!mounted) {
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-    }
-    // Wait until the user has fully accepted consent (closed the Consent Gate)
-    while (!ConsentService().hasValidConsentSync()) {
-      await Future<void>.delayed(const Duration(milliseconds: 400));
-      if (!mounted) return;
-    }
-    await Future<void>.delayed(const Duration(milliseconds: 600)); // Short delay after consent modal closes
+    await Future<void>.delayed(const Duration(milliseconds: 1200));
     if (!mounted || _isLoading) return;
     final prefs = await SharedPreferences.getInstance();
     final hasSeen = prefs.getBool('il_has_seen_sync_guide_v2') ?? false;
@@ -221,10 +212,10 @@ class _LoginScreenState extends State<LoginScreen> {
     if (shouldShowRapidActionWarningSeconds(cooldown)) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content:
-              Text(context.tr('Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.')),
-          duration: const Duration(seconds: 2),
+              Text('Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.'),
+          duration: Duration(seconds: 2),
         ),
       );
     }
@@ -950,7 +941,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Positioned.fill(
                     child: Image.asset(
-                      'assets/images/default_auth_bg.webp',
+                      'assets/images/default_auth_bg.jpg',
                       fit: BoxFit.cover,
                       width: double.infinity,
                       height: double.infinity,
@@ -1030,7 +1021,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: const Color(0xFFFF4B91)
+                                                color: const SLColors.brandPink
                                                     .withValues(alpha: 0.08),
                                                 blurRadius: 10,
                                                 offset: const Offset(0, 3),
@@ -1060,7 +1051,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 style: SLTheme.quicksand(
                                                   fontSize: 12.5,
                                                   fontWeight: FontWeight.w900,
-                                                  color: const Color(0xFFFF4B91),
+                                                  color: const SLColors.brandPink,
                                                 ),
                                               ),
                                             ],

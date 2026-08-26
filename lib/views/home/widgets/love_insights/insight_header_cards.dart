@@ -42,6 +42,7 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
   }
 
   Widget _buildAvatarCircle(String name, String avatarUrl, {required bool isUser1}) {
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
     final fallbackAsset = isUser1 
         ? 'assets/images/male_avatar_sticker.json' 
         : 'assets/images/female_avatar_sticker.json';
@@ -102,6 +103,7 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
 
   // ── Hero Card ──
   Widget _buildHeaderCard(LoveInsightData insight) {
+    final scoreColor = _scoreColor(insight.loveScore);
     final progress = _progressToNextLevel(insight.loveScore);
     final scoreTitle = _isSingle
         ? L10nService().translate('home_chshotng_328c7a')
@@ -115,11 +117,7 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Colors.white, Color(0xFFFFF0F5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
           color: const Color(0xFFFFDCE8).withValues(alpha: 0.6),
@@ -127,14 +125,9 @@ extension _InsightHeaderCardsExt on _LoveInsightsScreenState {
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFE91E63).withValues(alpha: 0.10),
-            blurRadius: 28,
-            offset: const Offset(0, 12),
-          ),
-          BoxShadow(
-            color: const Color(0xFF7C4DFF).withValues(alpha: 0.06),
-            blurRadius: 20,
-            offset: const Offset(-8, 8),
+            color: const Color(0xFFFF4F87).withValues(alpha: 0.12),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
           ),
         ],
       ),

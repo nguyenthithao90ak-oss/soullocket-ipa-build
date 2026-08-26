@@ -101,7 +101,7 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
                             border: Border.all(color: Colors.white, width: 1.5),
                           ),
                           child: Text(
-                            '✨ ${L10nService().translate('your_gender')} ✨',
+                            '✨ ${L10nService().translate('GIỚI TÍNH CỦA BẠN')} ✨',
                             textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
                               color: const Color(0xFFFF4081), // Chữ hồng đậm
@@ -115,7 +115,7 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
 
                         // --- Subtitle ---
                         Text(
-                          L10nService().translate('gender_selection_desc'),
+                          L10nService().translate('Để ứng dụng hiển thị đúng giao diện\nmà không cần lột lớp sau nhé!'),
                           textAlign: TextAlign.center,
                           style: SLTheme.quicksand(
                             fontSize: 14,
@@ -142,11 +142,11 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
                                 right: -10, top: 30,
                                 child: Icon(Icons.favorite, size: 24, color: const Color(0xFFFF80AB).withValues(alpha: 0.8)),
                               ),
-                              const Positioned(
+                              Positioned(
                                 right: 10, top: -30,
                                 child: Icon(Icons.auto_awesome, size: 16, color: Colors.white),
                               ),
-                              const Positioned(
+                              Positioned(
                                 left: 30, top: 40,
                                 child: Icon(Icons.auto_awesome, size: 12, color: Colors.white),
                               ),
@@ -157,8 +157,8 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
                                   painter: _GenderDottedCurvePainter(),
                                 ),
                               ),
-                              const Center(
-                                child: Icon(Icons.favorite, size: 24, color: Color(0xFFFF80AB)),
+                              Center(
+                                child: Icon(Icons.favorite, size: 24, color: const Color(0xFFFF80AB)),
                               ),
 
                               // Avatars
@@ -167,10 +167,10 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
                                 children: [
                                   Expanded(
                                     child: _buildOption(
-                                      assetPath: 'assets/images/avatar_male.webp',
+                                      assetPath: 'assets/images/avatar_male.jpg',
                                       lottieUrl: 'assets/images/male_avatar_sticker.json',
-                                      title: L10nService().translate('gender_male'),
-                                      desc: L10nService().translate('gender_male_desc'),
+                                      title: L10nService().translate('Nam'),
+                                      desc: L10nService().translate('Bạn Nam'),
                                       baseColor: const Color(0xFF82B1FF),
                                       shadowColor: const Color(0xFF82B1FF),
                                       compact: isCompactLayout,
@@ -180,10 +180,10 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
                                   const SizedBox(width: 40), // Khoảng cách giữa 2 avatar
                                   Expanded(
                                     child: _buildOption(
-                                      assetPath: 'assets/images/avatar_female.webp',
+                                      assetPath: 'assets/images/avatar_female.jpg',
                                       lottieUrl: 'assets/images/female_avatar_sticker.json',
-                                      title: L10nService().translate('gender_female'),
-                                      desc: L10nService().translate('gender_female_desc'),
+                                      title: L10nService().translate('Nữ'),
+                                      desc: L10nService().translate('Bạn Nữ'),
                                       baseColor: const Color(0xFFFF80AB),
                                       shadowColor: const Color(0xFFFF80AB),
                                       compact: isCompactLayout,

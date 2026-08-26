@@ -99,7 +99,7 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: const SLColors.darkNavy,
         title: Text(context.tr('admin_chnhsaimth_98fea8'),
             style: const TextStyle(color: Colors.white)),
         content: Column(
@@ -118,7 +118,7 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
                 enabledBorder: const OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.grey)),
                 focusedBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFFF4B91))),
+                    borderSide: BorderSide(color: SLColors.brandPink)),
               ),
             ),
           ],
@@ -131,7 +131,7 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF4B91)),
+                backgroundColor: const SLColors.brandPink),
             onPressed: () async {
               final newPoints = int.tryParse(pointsCtrl.text.trim());
               if (newPoints != null) {
@@ -234,7 +234,7 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
                                               color: Colors.amber)),
                                       trailing: IconButton(
                                         icon: const Icon(Icons.edit_rounded,
-                                            color: Color(0xFFFF4B91)),
+                                            color: SLColors.brandPink),
                                         onPressed: () =>
                                             _showAdjustPointsDialog(u),
                                         tooltip:

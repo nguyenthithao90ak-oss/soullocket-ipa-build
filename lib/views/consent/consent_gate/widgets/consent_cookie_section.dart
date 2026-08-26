@@ -49,6 +49,7 @@ Widget _buildCookieChoiceCard({
   required String subtitle,
   required List<String> bullets,
   String? badge,
+  bool large = false,
   required VoidCallback onTap,
 }) {
   final selected = value == groupValue;

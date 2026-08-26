@@ -349,12 +349,8 @@ extension _MapSurfaceSectionsExt on _MapScreenState {
               maxZoom: 19,
               maxNativeZoom: 19,
               retinaMode: false,
-              keepBuffer: 5,
-              panBuffer: 3,
-              fallbackUrl: 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-              errorTileCallback: (tile, error, stackTrace) {
-                debugPrint('Tile load error: $error');
-              },
+              keepBuffer: 2,
+              panBuffer: 1,
             ),
             ValueListenableBuilder<List<fm.Polyline>>(
               valueListenable: _historyPolylinesVN,

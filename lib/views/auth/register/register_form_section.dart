@@ -81,7 +81,7 @@ class RegisterForm extends StatelessWidget {
         l10n.translate('auth_security_question_select_tap');
     final securityNote = l10n.translate('auth_recovery_hint');
     final securityAnswerHint = l10n.translate('auth_security_answer_hint');
-    final signupLabel = l10n.translate('signup_btn').toUpperCase();
+    final signupLabel = l10n.translate('Đăng ký').toUpperCase();
 
     return AutofillGroup(
       child: Column(
@@ -236,7 +236,7 @@ class RegisterForm extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Center(
               child: Text(
-                l10n.translate('auth_quick_register').toUpperCase(),
+                '🩷 HOẶC ĐĂNG KÝ NHANH 🩷',
                 style: SLTheme.quicksand(
                   color: const Color(0xFFFF69B4),
                   fontSize: 13,

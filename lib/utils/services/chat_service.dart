@@ -529,9 +529,9 @@ class ChatService {
       'type': type,
       'ts': ServerValue.timestamp,
       'isRead': isRead,
-      'callRoomId': ?callRoomId,
-      'callMode': ?callMode,
-      'sharedUrl': ?sharedUrl,
+      if (callRoomId != null) 'callRoomId': callRoomId,
+      if (callMode != null) 'callMode': callMode,
+      if (sharedUrl != null) 'sharedUrl': sharedUrl,
     };
   }
 
@@ -552,9 +552,9 @@ class ChatService {
       'isRead': isRead,
       'type': type,
       if (messageId != null && messageId.isNotEmpty) 'messageId': messageId,
-      'callRoomId': ?callRoomId,
-      'callMode': ?callMode,
-      'sharedUrl': ?sharedUrl,
+      if (callRoomId != null) 'callRoomId': callRoomId,
+      if (callMode != null) 'callMode': callMode,
+      if (sharedUrl != null) 'sharedUrl': sharedUrl,
     };
   }
 

@@ -11,7 +11,7 @@ extension PreviewEditorExt on _CountdownModeEditorScreenState {
           TextButton.icon(
             onPressed: _copyFromMainCountdown,
             icon: const Icon(Icons.copy_all_rounded, size: 18),
-            label: Text(context.tr('Sao chép từ Vòng Đếm chính')),
+            label: const Text('Sao chép từ Vòng Đếm chính'),
             style: TextButton.styleFrom(
               foregroundColor:
                   themeData.isDark ? Colors.white : const Color(0xFFD81B60),

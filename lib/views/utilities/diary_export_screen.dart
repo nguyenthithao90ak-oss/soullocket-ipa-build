@@ -109,20 +109,20 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text('Xuất nhật ký',
             style: SLTheme.quicksand(fontWeight: FontWeight.w900)),
-        content: SingleChildScrollView(
+        content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(context.tr('Tính năng:'), style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              const Text(
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text(
                   '- Đóng gói toàn bộ nhật ký tình yêu thành một file duy nhất để lưu trữ Offline vĩnh viễn.\n- Dễ dàng in thành sách nếu muốn lưu giữ kỷ niệm cầm tay.'),
-              const SizedBox(height: 12),
-              Text(context.tr('Cách sử dụng:'),
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              const Text(
+              SizedBox(height: 12),
+              Text('Cách sử dụng:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text(
                   '- Bấm "Bắt đầu xuất dữ liệu", hệ thống sẽ thu thập bài viết, ảnh, và sticker.\n- File tải về được lưu trong ứng dụng, bạn có thể mở lại bất cứ lúc nào.'),
             ],
           ),
@@ -130,8 +130,8 @@ class _DiaryExportScreenState extends State<DiaryExportScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(context.tr('Đã hiểu'),
-                style: const TextStyle(color: SLColors.primary)),
+            child: const Text('Đã hiểu',
+                style: TextStyle(color: SLColors.primary)),
           ),
         ],
       ),

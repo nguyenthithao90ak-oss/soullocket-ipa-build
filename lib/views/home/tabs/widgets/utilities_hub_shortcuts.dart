@@ -107,7 +107,7 @@ class _ShortcutGroup extends StatelessWidget {
               title,
               style: SLTheme.quicksand(
                 fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w900,
                 color: SLColors.primary,
                 letterSpacing: 0.1,
               ),
@@ -221,23 +221,23 @@ class _ShortcutChip extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                colors.first.withValues(alpha: 0.10),
-                colors.last.withValues(alpha: 0.06),
+                colors.first.withValues(alpha: 0.16),
+                colors.last.withValues(alpha: 0.10),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: colors.last.withValues(alpha: 0.12),
+              color: colors.last.withValues(alpha: 0.18),
             ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 24,
-                height: 24,
+                width: 26,
+                height: 26,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(colors: colors),
                   shape: BoxShape.circle,
@@ -258,7 +258,7 @@ class _ShortcutChip extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: SLTheme.quicksand(
                   fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w800,
                   color: SLColors.textPrimary,
                 ),
               ),

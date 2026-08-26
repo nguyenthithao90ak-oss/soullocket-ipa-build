@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/sl_theme.dart';
 import 'login_form_section.dart';
 
 class LoginShell extends StatelessWidget {
@@ -41,7 +42,7 @@ class LoginShell extends StatelessWidget {
       onLogin: onLogin,
       onForgotPassword: onForgotPassword,
       onSocialLogin: onSocialLogin,
-      accentRose: const Color(0xFFFF4B91),
+      accentRose: const SLColors.brandPink,
       accentBlush: const Color(0xFFFF69B4),
       accentLavender: const Color(0xFFFF85A2),
     );

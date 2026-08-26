@@ -394,16 +394,16 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
                 Text(
                   context.tr('admin_phthinspam_f8ae5c'),
                   style: SLTheme.quicksand(
-                    color: const Color(0xFF9AA8C4),
+                    color: const SLColors.textMuted,
                     fontSize: 14,
                   ),
                 ),
                 SLSpacing.h16,
                 TabBar(
                   controller: _tabController,
-                  indicatorColor: const Color(0xFFFF4B91),
-                  labelColor: const Color(0xFFFF4B91),
-                  unselectedLabelColor: const Color(0xFF9AA8C4),
+                  indicatorColor: const SLColors.brandPink,
+                  labelColor: const SLColors.brandPink,
+                  unselectedLabelColor: const SLColors.textMuted,
                   labelStyle: SLTheme.quicksand(fontWeight: FontWeight.bold),
                   tabs: [
                     Tab(text: context.tr('admin_nhtklmdng_7a4f22')),
@@ -462,7 +462,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
                     decoration: InputDecoration(
                       hintText: context.tr('admin_nhptkhacnc_03102a'),
                       hintStyle:
-                          SLTheme.quicksand(color: const Color(0xFF9AA8C4)),
+                          SLTheme.quicksand(color: const SLColors.textMuted),
                       filled: true,
                       fillColor: const Color(0xFF0E1322),
                       border: OutlineInputBorder(
@@ -481,7 +481,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
                   icon: const Icon(Icons.add_rounded),
                   label: Text(context.tr('admin_thm_d9cb42')),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF4B91),
+                    backgroundColor: const SLColors.brandPink,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 14),
@@ -604,7 +604,7 @@ class _AdminAbuseScreenState extends State<AdminAbuseScreen>
                       Text(
                         'User: ${log['uid']} - ${log['details'] ?? ''}',
                         style: SLTheme.quicksand(
-                            color: const Color(0xFF9AA8C4), fontSize: 13),
+                            color: const SLColors.textMuted, fontSize: 13),
                       ),
                     ],
                   ),

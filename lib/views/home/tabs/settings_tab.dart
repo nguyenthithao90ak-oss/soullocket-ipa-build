@@ -25,6 +25,7 @@ import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart'
 import 'package:image_cropper/image_cropper.dart';
 import 'package:provider/provider.dart';
 import '../../ui_prefs.dart';
+import '../../../core/sl_theme.dart';
 
 import 'dart:io';
 import '../../../utils/services/notification_service.dart';
@@ -51,6 +52,7 @@ import '../../../models/data_export_result.dart';
 import '../../../utils/services/data_export_service.dart';
 import '../../../utils/services/friends_service.dart';
 import '../../relationship/couple_connect_screen.dart';
+import '../../ui_prefs.dart';
 import '../../premium/premium_store_screen.dart';
 
 import '../../utilities/bucket_list_screen.dart';

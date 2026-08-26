@@ -273,7 +273,6 @@ class AppErrorMapper {
         normalized.contains('không tồn tại') ||
         normalized.contains('đã được sử dụng') ||
         normalized.contains('đã có tài khoản') ||
-        normalized.contains('tài khoản khác') ||
         normalized.contains('mật khẩu quá yếu') ||
         normalized.contains('sai mật khẩu') ||
         normalized.contains('thông tin đăng nhập') ||
@@ -414,11 +413,6 @@ class AppErrorMapper {
     }
     if (normalized.contains('permission denied')) {
       return L10nService().translate('err_server_blocking_action');
-    }
-    if (normalized.contains('provider_already_linked')) {
-      final text = L10nService().translate('auth_err_provider_already_linked');
-      if (text != 'auth_err_provider_already_linked') return text;
-      return 'Tài khoản mạng xã hội này đã được đăng ký hoặc liên kết với một tài khoản khác.';
     }
     if (normalized.contains('api key') ||
         normalized.contains('internal error has occurred')) {

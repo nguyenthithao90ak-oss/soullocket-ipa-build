@@ -416,20 +416,6 @@ extension _SettingsTabThemePanelActionsPart on _SettingsTabState {
             maxWidth: 1440,
             maxHeight: 3200,
             uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Chỉnh sửa ảnh nền',
-            toolbarColor: Colors.black,
-            toolbarWidgetColor: Colors.white,
-            backgroundColor: Colors.black,
-            activeControlsWidgetColor: const Color(0xFFFF6D97),
-            dimmedLayerColor: Colors.black.withValues(alpha: 0.8),
-            cropFrameColor: Colors.transparent,
-            cropGridColor: Colors.transparent,
-            showCropGrid: false,
-            initAspectRatio: CropAspectRatioPreset.ratio16x9,
-            lockAspectRatio: true,
-            
-          ),
               IOSUiSettings(
                 title: 'Chỉnh sửa ảnh nền',
                 aspectRatioPresets: const [_themeBackgroundAspectRatioPreset],

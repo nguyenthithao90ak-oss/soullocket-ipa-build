@@ -39,7 +39,7 @@ class UtilitiesHubGrid extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         const crossAxisCount = 4;
-        const tileHeight = 114.0; // Tăng chiều cao để chứa icon to hơn
+        const tileHeight = 122.0; // Tăng chiều cao để chứa icon to hơn
         final spacing = width >= 430 ? 18.0 : 14.0; // Tăng khoảng cách ngang
         final itemWidth =
             ((width - 44 - (spacing * (crossAxisCount - 1))) / crossAxisCount)
@@ -60,11 +60,11 @@ class UtilitiesHubGrid extends StatelessWidget {
                 ),
               ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+              padding: const EdgeInsets.fromLTRB(22, 8, 22, 12),
               sliver: SliverGrid(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: crossAxisCount,
-                  mainAxisSpacing: 16.0, // Tăng khoảng cách dọc
+                  mainAxisSpacing: 20, // Tăng khoảng cách dọc
                   crossAxisSpacing: spacing,
                   childAspectRatio: itemWidth / tileHeight,
                 ),

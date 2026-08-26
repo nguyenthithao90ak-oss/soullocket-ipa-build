@@ -84,7 +84,7 @@ extension _InsightMoodHabitCardsExt on _LoveInsightsScreenState {
       child: Stack(
         children: [
           // ── Decorative heart ──
-          const Positioned(
+          Positioned(
             right: -8,
             bottom: -8,
             child: Opacity(
@@ -92,7 +92,7 @@ extension _InsightMoodHabitCardsExt on _LoveInsightsScreenState {
               child: Icon(
                 Icons.favorite_rounded,
                 size: 80,
-                color: Color(0xFFFF4F87),
+                color: const Color(0xFFFF4F87),
               ),
             ),
           ),

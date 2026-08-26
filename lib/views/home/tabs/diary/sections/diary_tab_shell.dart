@@ -114,9 +114,6 @@ class _DiaryTabShell extends StatelessWidget {
                       builder: (context, posts, child) {
                         return DiaryList(
                           header: header,
-                          scrollController: state._diaryScrollController,
-                          isLoadingMore: state._feedController.isLoadingMore,
-                          hasMore: state._feedController.hasMore,
                           showDiaryPrivacyNotice: state._showDiaryPrivacyNotice,
                           buildDiaryPrivacyNotice: () =>
                               const SizedBox.shrink(),
@@ -174,7 +171,7 @@ class _DiaryTabShell extends StatelessWidget {
                 child: RepaintBoundary(
                   child: ValueListenableBuilder<int>(
                     valueListenable: state._memoryController.selectionTickVN,
-                    builder: (context, _, _) {
+                    builder: (context, _, __) {
                       if (!state._isSelectionMode ||
                           state._selectedMemories.isEmpty) {
                         return const SizedBox.shrink();

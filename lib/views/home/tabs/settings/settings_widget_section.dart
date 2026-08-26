@@ -471,7 +471,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 style: SLTheme.quicksand(
                   fontSize: 12.8,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF475467),
+                  color: const SLColors.textMedium,
                   height: 1.45,
                 ),
               ),
@@ -492,7 +492,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 style: SLTheme.quicksand(
                   fontSize: 12.8,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF475467),
+                  color: const SLColors.textMedium,
                   height: 1.45,
                 ),
               ),

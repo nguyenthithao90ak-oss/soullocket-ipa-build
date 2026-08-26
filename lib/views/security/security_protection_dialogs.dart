@@ -150,7 +150,7 @@ class _SecurityProtectionDialogSheet extends StatelessWidget {
                 Text(
                   copy.subtitle,
                   style: SLTheme.quicksand(
-                    color: const Color(0xFF475467),
+                    color: const SLColors.textMedium,
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
                     height: 1.52,

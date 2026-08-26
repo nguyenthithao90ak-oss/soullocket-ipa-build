@@ -23,7 +23,6 @@ import '../../core/sl_route.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/auth_service.dart';
 import '../../utils/services/device_manager_service.dart';
-
 import '../../utils/services/friends_service.dart';
 import '../../utils/services/house_service.dart';
 import '../../utils/services/home_startup_media_cache.dart';
@@ -431,6 +430,7 @@ class _HomeScreenState extends State<HomeScreen>
   String? _notificationBadgeHouseId;
 
   static const String _navCollapsedPrefsKey = 'il_home_nav_collapsed_v2';
+  static const String _lastTabPrefsKey = 'il_home_last_tab_v1';
   static const String _countdownPinnedLaunchPrefsKey =
       'il_countdown_mode_pinned_launch_v1';
   static const int _notificationBadgeLimit = 30;
@@ -452,7 +452,7 @@ class _HomeScreenState extends State<HomeScreen>
     _NavItem(labelKey: 'nav_diary', activeColor: Color(0xFFFF4D79)),
     _NavItem(labelKey: 'nav_apps', activeColor: Color(0xFFB388FF)),
     _NavItem(labelKey: 'nav_fun', activeColor: Color(0xFFFFAB00)),
-    _NavItem(labelKey: 'nav_settings', activeColor: Color(0xFFFF4081)),
+    _NavItem(labelKey: 'nav_update', activeColor: Color(0xFFFF4081)),
   ];
 
   @override
@@ -506,6 +506,7 @@ class _HomeScreenState extends State<HomeScreen>
     });
     unawaited(_openPinnedCountdownModeIfNeeded());
     _hydrateNavCollapsed();
+    _hydrateLastTab();
     WidgetsBinding.instance.addObserver(this);
     _startupAnimationTimer = Timer(_homeStartupAnimationDelay, () {
       if (!mounted || _allowStartupAnimations) return;
@@ -1203,6 +1204,7 @@ class _HomeScreenState extends State<HomeScreen>
       SLTheme.isTabSwiping.value = false;
       _backgroundTabIndexNotifier.value = nextIndex;
     }
+    unawaited(_persistCurrentTab(nextIndex));
     if (_pageController.hasClients) {
       final currentPage = _pageController.page ?? oldIndex.toDouble();
       if ((currentPage - nextIndex).abs() < 0.001) {
@@ -1258,6 +1260,7 @@ class _HomeScreenState extends State<HomeScreen>
       _backgroundTabIndexNotifier.value =
           index; // ⚡ Cập nhật background riêng biệt
     }
+    unawaited(_persistCurrentTab(index));
   }
 
   bool _handlePageScrollNotification(ScrollNotification notification) {
@@ -1343,6 +1346,23 @@ class _HomeScreenState extends State<HomeScreen>
       context,
       context.tr('home_nthanhtabm_68ae53'),
     );
+  }
+
+  Future<void> _hydrateLastTab() async {
+    // Không phục hồi tab cũ nữa, luôn mở ở trang chủ (tab 0)
+    // if (widget.initialTab != 0) return;
+    // final prefs = await SharedPreferences.getInstance();
+    // final savedIndex = prefs.getInt(_lastTabPrefsKey);
+    // if (savedIndex == null) return;
+    // final clampedIndex = savedIndex.clamp(0, _navItems.length - 1);
+    // if (!mounted || clampedIndex == _currentIndex) return;
+    // setState(() => _currentIndex = clampedIndex);
+  }
+
+  Future<void> _persistCurrentTab(int index) async {
+    // Không lưu tab hiện tại vào cache nữa
+    // final prefs = await SharedPreferences.getInstance();
+    // await prefs.setInt(_lastTabPrefsKey, index);
   }
 
   Future<void> _openHomeMessenger() async {
@@ -1621,7 +1641,7 @@ class _HomeScreenState extends State<HomeScreen>
       case 3:
         return Icons.sports_esports_rounded;
       case 4:
-        return Icons.settings_rounded;
+        return Icons.auto_awesome_rounded;
       default:
         return Icons.circle;
     }

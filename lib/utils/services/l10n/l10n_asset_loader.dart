@@ -20,11 +20,7 @@ class _L10nAssetLoader {
     'ru',
     'hi',
     'tr',
-    'ar',
-    'tl',
-    'ms',
-    'pl',
-    'nl'
+    'ar'
   ];
 
   static const Map<String, Locale> supportedLocaleMap = {
@@ -45,10 +41,6 @@ class _L10nAssetLoader {
     'hi': Locale('hi', 'IN'),
     'tr': Locale('tr', 'TR'),
     'ar': Locale('ar', 'SA'),
-    'tl': Locale('tl', 'PH'),
-    'ms': Locale('ms', 'MY'),
-    'pl': Locale('pl', 'PL'),
-    'nl': Locale('nl', 'NL'),
   };
 
   Future<void> ensureLoaded(_L10nLocaleState state) async {

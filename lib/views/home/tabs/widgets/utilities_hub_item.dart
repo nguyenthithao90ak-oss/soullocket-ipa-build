@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -84,9 +86,9 @@ class _UtilitiesHubDragFeedback extends StatelessWidget {
         child: Transform.translate(
           offset: const Offset(-36, -42),
           child: Transform.scale(
-            scale: 1.05,
+            scale: 1.08,
             child: Opacity(
-              opacity: 0.90,
+              opacity: 0.94,
               child: SizedBox(
                 width: 86,
                 height: 112,
@@ -96,7 +98,7 @@ class _UtilitiesHubDragFeedback extends StatelessWidget {
                     boxShadow: [
                       BoxShadow(
                         color: SLColors.textPrimary.withValues(alpha: 0.18),
-                        blurRadius: 16,
+                        blurRadius: 22,
                         offset: const Offset(0, 10),
                       ),
                     ],
@@ -137,21 +139,16 @@ class _UtilitiesHubTileContent extends StatelessWidget {
         };
     final List<Color> colors = List<Color>.from(config['colors'] as List);
     final IconData iconData = config['icon'] as IconData;
-    final Color iconColor = config['iconColor'] as Color? ?? Colors.white;
 
     final Color startColor = colors.first;
     final Color endColor = colors.last;
     final dpr = MediaQuery.devicePixelRatioOf(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Softer gradient for glass feel
-    final Color softStart = Color.lerp(startColor, Colors.white, 0.08)!;
-    final Color softEnd = Color.lerp(endColor, Colors.black, 0.05)!;
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(24),
         onTap: onTap,
         child: SizedBox(
           width: double.infinity,
@@ -166,89 +163,38 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeOutCubic,
                   scale: isTarget ? 1.08 : 1.0,
-                  child: Container(
-                    width: 66,
-                    height: 66,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [softStart, softEnd],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: startColor.withValues(alpha: 0.25),
-                          blurRadius: 14,
-                          spreadRadius: -2,
-                          offset: const Offset(0, 5),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      child: Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          // Nền kính mờ pha trộn với màu đặc trưng của từng icon
+                          color: startColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            width: 1.5,
+                          ),
                         ),
-                        BoxShadow(
-                          color: endColor.withValues(alpha: 0.10),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
+                        child: Center(
+                          child: buildUtilityStickerIcon(
+                            utilityId: app.id,
+                            fallbackIcon: iconData,
+                            fallbackColor: startColor,
+                            fallbackSize: 34,
+                            padding: const EdgeInsets.all(6),
+                            devicePixelRatio: dpr,
+                          ),
                         ),
-                      ],
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: isDark ? 0.15 : 0.45),
-                        width: 1.0,
-                      ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(19),
-                      child: Stack(
-                        children: [
-                          // Glass shine
-                          Positioned(
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            height: 30,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.white.withValues(alpha: 0.35),
-                                    Colors.white.withValues(alpha: 0.0),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Radial glow
-                          Positioned.fill(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: RadialGradient(
-                                  center: const Alignment(0.3, -0.4),
-                                  radius: 1.2,
-                                  colors: [
-                                    Colors.white.withValues(alpha: 0.10),
-                                    Colors.transparent,
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          Center(
-                            child: buildUtilityStickerIcon(
-                              utilityId: app.id,
-                              fallbackIcon: iconData,
-                              fallbackColor: iconColor,
-                              fallbackSize: 28,
-                              padding: const EdgeInsets.all(8),
-                              devicePixelRatio: dpr,
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 7),
+              const SizedBox(height: 10),
               SizedBox(
                 height: 34,
                 child: Center(
@@ -258,13 +204,11 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? const Color(0xFFE8ECF0)
-                          : const Color(0xFF374151),
-                      letterSpacing: 0.05,
-                      height: 1.2,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF4A4A4A),
+                      letterSpacing: 0.2,
+                      height: 1.15,
                     ),
                   ),
                 ),

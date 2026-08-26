@@ -134,12 +134,6 @@ String normalizeFacebookLoginFailureMessage(String? message) {
 }
 
 String handleFirebaseAuthError(firebase_auth.FirebaseAuthException error) {
-  if (error.code == 'unknown' &&
-      error.message != null &&
-      error.message!.contains('PROVIDER_ALREADY_LINKED')) {
-    return 'Tài khoản Google này đã được đăng ký hoặc liên kết với một tài khoản khác. Vui lòng thử đăng nhập bằng Google hoặc dùng tài khoản khác.';
-  }
-
   switch (error.code) {
     case 'user-not-found':
       return 'Tài khoản không tồn tại.';

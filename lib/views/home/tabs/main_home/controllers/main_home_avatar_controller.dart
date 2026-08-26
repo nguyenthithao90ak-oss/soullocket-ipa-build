@@ -18,17 +18,11 @@ extension MainHomeAvatarController on _MainHomeTabState {
         maxWidth: 1080,
         maxHeight: 1080,
         uiSettings: [
-          
           AndroidUiSettings(
-            toolbarTitle: isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
-            toolbarColor: Colors.black,
+            toolbarTitle:
+                isUser1 ? 'Cắt avatar bạn nam' : 'Cắt avatar người ấy',
+            toolbarColor: const Color(0xFFD81B60),
             toolbarWidgetColor: Colors.white,
-            backgroundColor: Colors.black,
-            activeControlsWidgetColor: const Color(0xFFFF6D97),
-            dimmedLayerColor: Colors.black.withValues(alpha: 0.8),
-            cropFrameColor: Colors.transparent,
-            cropGridColor: Colors.transparent,
-            showCropGrid: false,
             initAspectRatio: CropAspectRatioPreset.square,
             lockAspectRatio: true,
             cropStyle: CropStyle.circle,
@@ -119,8 +113,8 @@ extension MainHomeAvatarController on _MainHomeTabState {
       await PendingUploadService.instance.clear(pendingKey);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.tr('Không tìm thấy ảnh avatar cũ để thử lại.')),
+          const SnackBar(
+            content: Text('Không tìm thấy ảnh avatar cũ để thử lại.'),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -227,9 +221,9 @@ extension MainHomeAvatarController on _MainHomeTabState {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content:
-                Text(context.tr('Chưa thể đổi ảnh đại diện lúc này. Vui lòng thử lại.')),
+                Text('Chưa thể đổi ảnh đại diện lúc này. Vui lòng thử lại.'),
             behavior: SnackBarBehavior.floating,
           ),
         );

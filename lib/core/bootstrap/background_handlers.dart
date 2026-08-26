@@ -6,11 +6,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soullocket_app/utils/shared_prefs_mmkv.dart';
 import 'package:soullocket_app/core/bootstrap/app_bootstrap.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'package:soullocket_app/utils/services/error_logger_service.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
@@ -172,42 +175,169 @@ void overlayMain() async {
 // ─────────────────────────────────────────────────────────────────────────────
 
 Widget buildDefaultErrorWidget(FlutterErrorDetails details) {
+  // Log error to Crashlytics in background (non-blocking)
+  unawaited(ErrorLoggerService.instance.logError(
+    details.exception,
+    details.stack,
+    reason: 'ErrorWidget.builder',
+    fatal: false,
+  ));
+
+  final l10n = L10nService();
+
   return Material(
-    color: const Color(0xFF110820),
-    child: Container(
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.favorite,
-            color: Color(0xFFAD1457),
-            size: 44,
+    color: SLColors.darkBgMain,
+    child: SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: SLColors.primary.withAlpha(25),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.favorite_border_rounded,
+                  color: SLColors.primary,
+                  size: 36,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.translate('core_err_widget_title'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: SLColors.darkTextPrimary,
+                  decoration: TextDecoration.none,
+                  fontFamily: 'Quicksand',
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l10n.translate('core_err_widget_desc'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                  color: SLColors.darkTextSecond,
+                  decoration: TextDecoration.none,
+                  fontFamily: 'Quicksand',
+                ),
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: () {
+                  try {
+                    SystemNavigator.pop();
+                  } catch (_) {}
+                },
+                icon: const Icon(Icons.close_rounded, size: 18),
+                label: Text(l10n.translate('core_err_widget_close')),
+                style: FilledButton.styleFrom(
+                  backgroundColor: SLColors.primary,
+                  foregroundColor: SLColors.textInverse,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(SLRadius.sm),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
+                ),
+              ),
+              if (kDebugMode) ...[
+                const SizedBox(height: 20),
+                _ErrorDetailsSection(details: details),
+              ],
+            ],
           ),
-          const SizedBox(height: 12),
-          const Text(
-            'Có lỗi nhỏ xảy ra, vui lòng thử lại 💕',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFFE53935),
-              decoration: TextDecoration.none,
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Thử lại'),
-          ),
-        ],
+        ),
       ),
     ),
   );
+}
+
+class _ErrorDetailsSection extends StatefulWidget {
+  final FlutterErrorDetails details;
+  const _ErrorDetailsSection({required this.details});
+
+  @override
+  State<_ErrorDetailsSection> createState() => _ErrorDetailsSectionState();
+}
+
+class _ErrorDetailsSectionState extends State<_ErrorDetailsSection> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => setState(() => _expanded = !_expanded),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: SLColors.darkBgCard,
+          borderRadius: BorderRadius.circular(SLRadius.sm),
+          border: Border.all(color: SLColors.darkBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.bug_report_rounded,
+                    size: 14, color: SLColors.danger),
+                const SizedBox(width: 6),
+                const Expanded(
+                  child: Text(
+                    'Debug: Error Details',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: SLColors.darkTextSecond,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+                Icon(
+                  _expanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  size: 16,
+                  color: SLColors.darkTextSecond,
+                ),
+              ],
+            ),
+            if (_expanded) ...[
+              const SizedBox(height: 8),
+              Text(
+                widget.details.exception.toString(),
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: SLColors.darkTextSecond,
+                  decoration: TextDecoration.none,
+                  fontFamily: 'monospace',
+                ),
+                maxLines: 20,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

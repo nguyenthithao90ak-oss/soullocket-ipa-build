@@ -18,7 +18,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                 fit: BoxFit.scaleDown,
                 filterQuality: FilterQuality.medium,
                 alignment: Alignment.center,
-                placeholder: (_, _) => const SizedBox(
+                placeholder: (_, __) => const SizedBox(
                   width: 36,
                   height: 36,
                   child: CircularProgressIndicator(
@@ -26,7 +26,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                     color: Color(0xFFFF6FA5),
                   ),
                 ),
-                errorWidget: (_, _, _) => Icon(
+                errorWidget: (_, __, ___) => Icon(
                   Icons.broken_image_outlined,
                   color: Colors.white70,
                   size: errorIconSize,
@@ -38,7 +38,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
                 fit: BoxFit.scaleDown,
                 filterQuality: FilterQuality.medium,
                 alignment: Alignment.center,
-                errorBuilder: (_, _, _) => Icon(
+                errorBuilder: (_, __, ___) => Icon(
                   Icons.broken_image_outlined,
                   color: Colors.white70,
                   size: errorIconSize,

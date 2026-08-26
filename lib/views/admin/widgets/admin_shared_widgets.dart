@@ -31,7 +31,7 @@ class AdminScaffold extends StatelessWidget {
               left: -40,
               child: _blurCircle(
                 size: 260,
-                color: const Color(0xFFFF4B91).withValues(alpha: 0.26),
+                color: const SLColors.brandPink.withValues(alpha: 0.26),
               ),
             ),
             Positioned(
@@ -122,7 +122,7 @@ class AdminTopBar extends StatelessWidget {
                   Text(
                     '${user.email ?? 'Admin'} · ${lastUpdatedAt == null ? context.tr('admin_changbdliu_d09b70') : 'Cập nhật ${formatDateTime(lastUpdatedAt!)}'}',
                     style: SLTheme.quicksand(
-                      color: const Color(0xFF9AA8C4),
+                      color: const SLColors.textMuted,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
@@ -293,7 +293,7 @@ class AdminTextField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: SLRadius.lgAll,
-          borderSide: const BorderSide(color: Color(0xFFFF4B91), width: 1.3),
+          borderSide: const BorderSide(color: SLColors.brandPink, width: 1.3),
         ),
       ),
     );
@@ -340,7 +340,7 @@ class AdminStatCard extends StatelessWidget {
             Text(
               title,
               style: SLTheme.quicksand(
-                color: const Color(0xFF9AA8C4),
+                color: const SLColors.textMuted,
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
               ),
@@ -394,7 +394,7 @@ class OverviewListTile extends StatelessWidget {
             color: const Color(0x1AFFFFFF),
             borderRadius: SLRadius.mdAll,
           ),
-          child: Icon(icon, color: const Color(0xFFFF4B91)),
+          child: Icon(icon, color: const SLColors.brandPink),
         ),
         SLSpacing.w12,
         Expanded(
@@ -413,7 +413,7 @@ class OverviewListTile extends StatelessWidget {
               Text(
                 subtitle,
                 style: SLTheme.quicksand(
-                  color: const Color(0xFF9AA8C4),
+                  color: const SLColors.textMuted,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   height: 1.5,
@@ -486,7 +486,7 @@ class HighlightChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: const Color(0xFFFF4B91)),
+          Icon(icon, size: 16, color: const SLColors.brandPink),
           SLSpacing.w8,
           Text(
             label,

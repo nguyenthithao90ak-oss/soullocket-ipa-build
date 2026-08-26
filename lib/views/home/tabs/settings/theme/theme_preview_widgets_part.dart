@@ -58,7 +58,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
                       child: CachedNetworkImage(
                         imageUrl: imageUrl,
                         fit: BoxFit.cover,
-                        errorWidget: (_, _, _) => const SizedBox.shrink(),
+                        errorWidget: (_, __, ___) => const SizedBox.shrink(),
                       ),
                     ),
                   ),
@@ -897,7 +897,7 @@ extension _SettingsTabThemePreviewWidgetsPart on _SettingsTabState {
         imageUrl: avatarUrl.trim(),
         fit: BoxFit.cover,
         filterQuality: FilterQuality.medium,
-        errorWidget: (_, _, _) =>
+        errorWidget: (_, __, ___) =>
             _buildThemePreviewAvatarFallback(accent, name),
       );
     }

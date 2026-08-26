@@ -72,12 +72,12 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       return context.tr('home_cpnhtgnnht_d75b69');
     }
     if (diff.inHours < 1) {
-      return context.tr('home_updated_mins').replaceAll('{mins}', diff.inMinutes.toString());
+      return 'Cập nhật gần nhất ${diff.inMinutes} phút trước';
     }
     if (diff.inDays < 1) {
-      return context.tr('home_updated_hours').replaceAll('{hours}', diff.inHours.toString());
+      return 'Cập nhật gần nhất ${diff.inHours} giờ trước';
     }
-    return context.tr('home_updated_days').replaceAll('{days}', diff.inDays.toString());
+    return 'Cập nhật gần nhất ${diff.inDays} ngày trước';
   }
 
   Widget _buildModernHighlightCard({
@@ -183,8 +183,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             : '';
         upcomingEvents.add(HomeUpcomingEvent(
           title: giftHint.isNotEmpty
-              ? context.tr('home_birthday_with_gift').replaceAll('{name}', name).replaceAll('{gift}', giftHint)
-              : context.tr('home_birthday').replaceAll('{name}', name),
+              ? 'Sinh nhật $name 🎂 $giftHint'
+              : 'Sinh nhật $name 🎂',
           date: nextBday,
           type: 'birthday',
         ));
@@ -196,19 +196,19 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
 
     // 3. Ngày lễ lớn
     final holidaysList = [
-      {'month': 1, 'day': 1, 'name': 'home_tet_duong_lich'},
-      {'month': 2, 'day': 14, 'name': 'home_valentine'},
-      {'month': 3, 'day': 8, 'name': 'home_8_3'},
-      {'month': 3, 'day': 14, 'name': 'home_white_valentine'},
-      {'month': 4, 'day': 1, 'name': 'home_april_fools'},
-      {'month': 4, 'day': 14, 'name': 'home_black_valentine'},
-      {'month': 6, 'day': 1, 'name': 'home_1_6'},
-      {'month': 6, 'day': 28, 'name': 'home_family_day'},
-      {'month': 10, 'day': 20, 'name': 'home_20_10'},
-      {'month': 10, 'day': 31, 'name': 'home_halloween'},
-      {'month': 12, 'day': 24, 'name': 'home_christmas_eve'},
-      {'month': 12, 'day': 25, 'name': 'home_christmas'},
-      {'month': 12, 'day': 31, 'name': 'home_new_years_eve'},
+      {'month': 1, 'day': 1, 'name': 'Tết Dương Lịch 🎆'},
+      {'month': 2, 'day': 14, 'name': 'Lễ Tình Nhân (Valentine) 💝'},
+      {'month': 3, 'day': 8, 'name': 'Quốc tế Phụ nữ 💐'},
+      {'month': 3, 'day': 14, 'name': 'Valentine Trắng 🤍'},
+      {'month': 4, 'day': 1, 'name': 'Cá tháng Tư 🃏'},
+      {'month': 4, 'day': 14, 'name': 'Valentine Đen 🖤'},
+      {'month': 6, 'day': 1, 'name': 'Quốc tế Thiếu nhi 🧸'},
+      {'month': 6, 'day': 28, 'name': 'Ngày Gia đình Việt Nam 👨‍👩‍👧‍👦'},
+      {'month': 10, 'day': 20, 'name': 'Ngày Phụ nữ Việt Nam 🌸'},
+      {'month': 10, 'day': 31, 'name': 'Lễ Halloween 🎃'},
+      {'month': 12, 'day': 24, 'name': 'Đêm Giáng sinh 🎄'},
+      {'month': 12, 'day': 25, 'name': 'Lễ Giáng sinh ❄️'},
+      {'month': 12, 'day': 31, 'name': 'Đêm Giao thừa ✨'},
     ];
     for (final h in holidaysList) {
       DateTime nextH =
@@ -218,7 +218,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             todayMidnight.year + 1, h['month'] as int, h['day'] as int);
       }
       upcomingEvents.add(HomeUpcomingEvent(
-        title: context.tr(h['name'] as String),
+        title: h['name'] as String,
         date: nextH,
         type: 'holiday',
       ));
@@ -426,7 +426,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        context.tr('home_upcoming_events'),
+                        context.tr('Sắp tới có sự kiện gì'),
                         style: SLTheme.quicksand(
                           fontSize: 12,
                           fontWeight: FontWeight.w900,

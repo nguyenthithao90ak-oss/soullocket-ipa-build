@@ -44,20 +44,20 @@ class _BucketListScreenState extends State<BucketListScreen>
           'Danh sách Bucket 100',
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
-        content: SingleChildScrollView(
+        content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(context.tr('Tính năng:'), style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              const Text(
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text(
                   '- Gợi ý và lưu trữ 100 điều các cặp đôi nên làm cùng nhau.\n- Theo dõi tiến độ hoàn thành (0/100).\n- Chia sẻ cảm xúc khi hoàn thành từng mục.'),
-              const SizedBox(height: 12),
-              Text(context.tr('Cách sử dụng:'),
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              const Text(
+              SizedBox(height: 12),
+              Text('Cách sử dụng:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text(
                   '- Bấm dấu + để tự thêm điều muốn làm hoặc chọn từ gợi ý có sẵn.\n- Khi cả hai cùng hoàn thành một mục, hãy đánh dấu "Hoàn thành" để lưu lại kỷ niệm.'),
             ],
           ),
@@ -65,8 +65,8 @@ class _BucketListScreenState extends State<BucketListScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(context.tr('Đã hiểu'),
-                style: const TextStyle(color: SLColors.primary)),
+            child: const Text('Đã hiểu',
+                style: TextStyle(color: SLColors.primary)),
           ),
         ],
       ),
@@ -188,18 +188,18 @@ class _BucketListScreenState extends State<BucketListScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(ctx.tr('Xoá mục bucket list')),
-        content: Text(ctx.tr('Bạn có chắc chắn muốn xoá mục này?')),
+        title: const Text('Xoá mục bucket list'),
+        content: const Text('Bạn có chắc chắn muốn xoá mục này?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: Text(ctx.tr('Huỷ'))),
+              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _doDeleteItem(key);
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(ctx.tr('Xoá')),
+            child: const Text('Xoá'),
           ),
         ],
       ),
@@ -318,7 +318,7 @@ class _BucketListScreenState extends State<BucketListScreen>
                                 padding:
                                     const EdgeInsets.fromLTRB(16, 6, 16, 24),
                                 itemCount: items.length,
-                                separatorBuilder: (_, _) => SLSpacing.h12,
+                                separatorBuilder: (_, __) => SLSpacing.h12,
                                 itemBuilder: (ctx, i) {
                                   final item = items[i];
                                   final isDone = item['done'] == true;

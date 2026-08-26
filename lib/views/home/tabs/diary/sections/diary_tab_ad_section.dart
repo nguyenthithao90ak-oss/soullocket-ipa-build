@@ -31,6 +31,42 @@ extension DiaryTabAdSection on _DiaryTabState {
     _bottomBannerAd = banner;
   }
 
+  Widget _buildBottomAdBanner(BannerAd bannerAd) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () {
+        AdMobService().showInterstitialAd();
+      },
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: SLColors.bgElevated.withValues(alpha: 0.72),
+              borderRadius: SLRadius.lgAll,
+              border: Border.all(
+                color: SLColors.bgElevated.withValues(alpha: 0.45),
+              ),
+              boxShadow: SLShadow.subtle,
+            ),
+            child: ClipRRect(
+              borderRadius: SLRadius.mdAll,
+              child: SizedBox(
+                width: bannerAd.size.width.toDouble(),
+                height: bannerAd.size.height.toDouble(),
+                child: AdWidget(ad: bannerAd),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _startDiaryActiveTimer() {
     _diaryActiveTimer?.cancel();
     _diaryActiveTimer = Timer.periodic(const Duration(seconds: 10), (timer) {

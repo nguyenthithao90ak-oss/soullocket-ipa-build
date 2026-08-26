@@ -10,7 +10,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
   }) {
     return ValueListenableBuilder<Map<String, dynamic>>(
       valueListenable: _presenceDataNotifier,
-      builder: (context, _, _) {
+      builder: (context, _, __) {
         final compactMetaLayout = !isSingle && !_showStatus && !_showWeather;
         final dobU1 = _houseSettings?['dobU1']?.toString() ?? '';
         final dobU2 = _houseSettings?['dobU2']?.toString() ?? '';

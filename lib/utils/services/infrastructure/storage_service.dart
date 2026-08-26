@@ -594,7 +594,7 @@ class StorageService {
           'caption': caption.trim(),
           'thumbUrl': thumbUrl.trim(),
           'type': type.trim(),
-          'blurHash': ?blurHash,
+          if (blurHash != null) 'blurHash': blurHash,
         },
         label: 'Album finalize response',
       );
@@ -654,9 +654,9 @@ class StorageService {
           'authorName': authorName.trim(),
           'authorEmail': authorEmail.trim(),
           'authorRole': authorRole.trim(),
-          'lat': ?lat,
-          'lng': ?lng,
-          'blurHash': ?blurHash,
+          if (lat != null) 'lat': lat,
+          if (lng != null) 'lng': lng,
+          if (blurHash != null) 'blurHash': blurHash,
         },
         label: 'Memory finalize response',
       );
@@ -934,7 +934,7 @@ class StorageService {
           'isLocket': isLocket,
           'commentsEnabled': commentsEnabled,
           'flagged': flagged,
-          'blurHash': ?blurHash,
+          if (blurHash != null) 'blurHash': blurHash,
         },
         label: 'Public image finalize response',
       );
@@ -1093,7 +1093,7 @@ class StorageService {
     _requireCurrentUid();
     try {
       final nowMs = DateTime.now().millisecondsSinceEpoch;
-      const ext = '.webp';
+      const ext = '.png';
       final currentUid = _requireCurrentUid();
       final path = 'uploads/$currentUid/collage/$nowMs$ext';
       final normalizedStoragePath = _normalizeStorageWritePath(path);
@@ -1386,7 +1386,7 @@ class StorageService {
         fileExtension = p.extension(uploadFile.name).toLowerCase();
       }
       if (fileExtension.isEmpty) {
-        fileExtension = '.webp';
+        fileExtension = '.jpg';
       }
 
       final currentUid = _requireCurrentUid();

@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -9,6 +10,7 @@ import 'package:lottie/lottie.dart';
 
 part 'widgets/love_insights/insight_header_cards.dart';
 part 'widgets/love_insights/insight_stats_grid.dart';
+part 'widgets/love_insights/insight_interaction_card.dart';
 part 'widgets/love_insights/insight_offline_contribution_cards.dart';
 part 'widgets/love_insights/insight_mood_habit_cards.dart';
 part 'widgets/love_insights/insight_timeline_section.dart';
@@ -170,14 +172,13 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color(0xFFFFF5F7),
-                    Color(0xFFFCE4EC),
-                    Color(0xFFF3E5F5),
-                    Color(0xFFEDE7F6),
+                    Color(0xFFFFF7FA),
+                    Color(0xFFFFEEF4),
+                    Color(0xFFF7EFFF),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  stops: [0.0, 0.3, 0.65, 1.0],
+                  stops: [0.0, 0.45, 1.0],
                 ),
               ),
             ),
@@ -188,7 +189,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
             right: -40,
             child: _buildBackdropOrb(
               size: 180,
-              colors: const [Color(0xFFFF80AB), Color(0xFFCE93D8)],
+              colors: const [Color(0xFFFFB3D0), Color(0xFFE8CCFF)],
             ),
           ),
           Positioned(
@@ -196,7 +197,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
             bottom: 200,
             child: _buildBackdropOrb(
               size: 140,
-              colors: const [Color(0xFFB39DDB), Color(0xFF80CBC4)],
+              colors: const [Color(0xFFFFD1E3), Color(0xFFE9DDFF)],
               delayItem: 1200,
             ),
           ),
@@ -328,6 +329,13 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
     );
   }
 
+  Color _scoreColor(int score) {
+    if (score >= 85) return const Color(0xFFFF4F87);
+    if (score >= 70) return const Color(0xFFFF6B9D);
+    if (score >= 55) return const Color(0xFF9B7AE8);
+    return const Color(0xFFFF85A2);
+  }
+
   String _levelLabel(int score) {
     if (_isSingle) {
       if (score >= 90) return L10nService().translate('insight_single_90');
@@ -357,6 +365,12 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
     final base = nextLevel - 15;
     final progress = ((score - base) / 15) * 100;
     return progress.clamp(5, 100).toDouble();
+  }
+
+  String _offlineText(double value) {
+    if (value <= 0) return L10nService().translate('insight_0_days');
+    if (value < 1) return L10nService().translate('insight_less_than_1_day');
+    return '${value.floor()} ${L10nService().translate('insight_days')}';
   }
 
   String _favoriteActivityLabel(LoveInsightData insight) {

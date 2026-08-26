@@ -40,7 +40,7 @@ class CloudflareImageHelper {
         cdnParams = 'width=$targetWidth,$cdnParams';
       }
 
-      // Format chuẩn Cloudflare: https://domain.com/cdn-cgi/image/width=X,format=auto/path/image.webp
+      // Format chuẩn Cloudflare: https://domain.com/cdn-cgi/image/width=X,format=auto/path/image.jpg
       return '$scheme://$host/cdn-cgi/image/$cdnParams$path$query';
     } catch (e) {
       debugPrint('[CloudflareImageHelper] Error parsing URL: $e');

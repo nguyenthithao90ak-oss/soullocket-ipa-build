@@ -23,6 +23,53 @@ class SharedNotesScreen extends StatefulWidget {
 }
 
 class _SharedNotesScreenState extends State<SharedNotesScreen> {
+  Widget _buildInfoIcon(BuildContext context) {
+    return IconButton(
+      tooltip: 'Hướng dẫn',
+      icon:
+          const Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
+      onPressed: () => _showInfoDialog(context),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Ghi chú chung',
+          style: SLTheme.quicksand(fontWeight: FontWeight.w900),
+        ),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text(
+                  '- Đồng bộ hóa ghi chú theo thời gian thực giữa hai người.\n- Phân loại ghi chú bằng màu sắc và ghim lên màn hình chính (Widget).\n- Cùng nhau chỉnh sửa một danh sách chung.'),
+              SizedBox(height: 12),
+              Text('Cách sử dụng:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text(
+                  '- Bấm nút Tạo ghi chú để bắt đầu.\n- Gõ nội dung, chọn màu sắc để dễ phân biệt.\n- Vuốt một ghi chú để xóa hoặc bấm vào biểu tượng ghim để đưa lên Widget ngoài màn hình chính.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đã hiểu',
+                style: TextStyle(color: SLColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final TextEditingController _noteController = TextEditingController();
 
@@ -33,7 +80,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
 
   String _selectedColor = 'yellow';
   String _selectedTag = L10nService().translate('util_tnhyu_2814db');
-  final String _noteFilter = 'all';
+  String _noteFilter = 'all';
 
   final Map<String, Color> _colors = {
     'yellow': const Color(0xFFFFF9C4),
@@ -212,22 +259,34 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     FocusScope.of(context).unfocus();
   }
 
+  void _togglePinned(String key, bool currentPinned) {
+    _dbRef
+        .child('houses/${widget.houseId}/note/$key')
+        .update({'pinned': !currentPinned}).then((_) => _touchMetadata());
+  }
+
+  void _toggleDone(String key, bool currentDone) {
+    _dbRef
+        .child('houses/${widget.houseId}/note/$key')
+        .update({'done': !currentDone}).then((_) => _touchMetadata());
+  }
+
   void _deleteNote(String key) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(ctx.tr('Xoá ghi chú')),
-        content: Text(ctx.tr('Bạn có chắc chắn muốn xoá ghi chú này?')),
+        title: const Text('Xoá ghi chú'),
+        content: const Text('Bạn có chắc chắn muốn xoá ghi chú này?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: Text(ctx.tr('Huỷ'))),
+              onPressed: () => Navigator.pop(ctx), child: const Text('Huỷ')),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _doDeleteNote(key);
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(ctx.tr('Xoá')),
+            child: const Text('Xoá'),
           ),
         ],
       ),
@@ -373,11 +432,11 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
               color: const Color(0xFFFDE8EE),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.calendar_month_rounded, color: Color(0xFFD95C8A), size: 16),
-                SizedBox(width: 2),
-                Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFFD95C8A), size: 16),
+                const Icon(Icons.calendar_month_rounded, color: Color(0xFFD95C8A), size: 16),
+                const SizedBox(width: 2),
+                const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFFD95C8A), size: 16),
               ],
             ),
           )
@@ -679,6 +738,10 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
       return (b['ts'] as int? ?? 0).compareTo(a['ts'] as int? ?? 0);
     });
 
+    final int doneCount = items.where((item) => item['done'] == true).length;
+    final int pinnedCount =
+        items.where((item) => item['pinned'] == true).length;
+    final int pendingCount = items.length - doneCount;
     final visibleItems = items.where((item) {
       switch (_noteFilter) {
         case 'pinned':
@@ -693,7 +756,7 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 80), // extra padding for FAB
       itemCount: visibleItems.length + (visibleItems.isEmpty ? 2 : 2),
-      separatorBuilder: (_, _) => SLSpacing.h12,
+      separatorBuilder: (_, __) => SLSpacing.h12,
       itemBuilder: (context, index) {
         if (index == 0) {
           return _buildListHeader();
@@ -903,6 +966,27 @@ class _SharedNotesScreenState extends State<SharedNotesScreen> {
             ),
           )
         ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required Color color,
+    required Color backgroundColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(left: 10),
+        padding: const EdgeInsets.all(9),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+        ),
+        child: Icon(icon, color: color, size: 18),
       ),
     );
   }

@@ -142,20 +142,20 @@ class _LoveCardHeaderSection extends StatelessWidget {
           'Love Card (Thẻ tình yêu)',
           style: SLTheme.quicksand(fontWeight: FontWeight.w900),
         ),
-        content: SingleChildScrollView(
+        content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(context.tr('Tính năng:'), style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              const Text(
+              Text('Tính năng:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text(
                   '- Bộ sưu tập thẻ bài tương tác vui nhộn dùng để "phạt" hoặc "thưởng" người ấy.\n- Bao gồm nhiều cấp độ hiếm (Common, Rare, Epic, Legendary).'),
-              const SizedBox(height: 12),
-              Text(context.tr('Cách sử dụng:'),
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              const Text(
+              SizedBox(height: 12),
+              Text('Cách sử dụng:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text(
                   '- Bốc thẻ hàng ngày để sưu tập.\n- Chọn một thẻ và bấm Dùng để bắt người ấy thực hiện một hành động (ví dụ: Massage 10 phút, Cấm giận dỗi 1 ngày).\n- Thẻ đã dùng sẽ vào lịch sử và bị tiêu hao.'),
             ],
           ),
@@ -163,8 +163,8 @@ class _LoveCardHeaderSection extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(context.tr('Đã hiểu'),
-                style: const TextStyle(color: SLColors.primary)),
+            child: const Text('Đã hiểu',
+                style: TextStyle(color: SLColors.primary)),
           ),
         ],
       ),

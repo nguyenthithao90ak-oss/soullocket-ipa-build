@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/sl_theme.dart';
 import '../../../utils/services/l10n_service.dart';
 
 class AuthLanguageToggle extends StatelessWidget {
@@ -30,10 +31,6 @@ class AuthLanguageToggle extends StatelessWidget {
     'hi': '🇮🇳 हिन्दी',
     'tr': '🇹🇷 Türkçe',
     'ar': '🇸🇦 العربية',
-    'tl': '🇵🇭 Tagalog (Filipino)',
-    'ms': '🇲🇾 Bahasa Melayu',
-    'pl': '🇵🇱 Polski',
-    'nl': '🇳🇱 Nederlands',
   };
 
   void _showLanguagePicker(BuildContext context) {
@@ -68,7 +65,7 @@ class AuthLanguageToggle extends StatelessWidget {
                       offset: const Offset(0, 10),
                     ),
                     BoxShadow(
-                      color: const Color(0xFFFF4B91).withValues(alpha: 0.10),
+                      color: const SLColors.brandPink.withValues(alpha: 0.10),
                       blurRadius: 14,
                       offset: const Offset(0, 4),
                     ),
@@ -99,7 +96,7 @@ class AuthLanguageToggle extends StatelessWidget {
                         child: Row(
                           children: [
                             const Icon(Icons.language_rounded,
-                                size: 18, color: Color(0xFFFF4B91)),
+                                size: 18, color: SLColors.brandPink),
                             const SizedBox(width: 8),
                             Text(
                               l10n.translate('language'),
@@ -214,7 +211,7 @@ class AuthLanguageToggle extends StatelessWidget {
                       fontWeight:
                           isSelected ? FontWeight.w900 : FontWeight.w600,
                       color: isSelected
-                          ? const Color(0xFFFF4B91)
+                          ? const SLColors.brandPink
                           : const Color(0xFF334155),
                     ),
                   ),
@@ -226,7 +223,7 @@ class AuthLanguageToggle extends StatelessWidget {
                         fontSize: 10.5,
                         fontWeight: FontWeight.w500,
                         color: isSelected
-                            ? const Color(0xFFFF4B91).withValues(alpha: 0.8)
+                            ? const SLColors.brandPink.withValues(alpha: 0.8)
                             : const Color(0xFF94A3B8),
                       ),
                     ),
@@ -237,7 +234,7 @@ class AuthLanguageToggle extends StatelessWidget {
             if (isSelected)
               const Icon(
                 Icons.check_circle_rounded,
-                color: Color(0xFFFF4B91),
+                color: SLColors.brandPink,
                 size: 18,
               ),
           ],
@@ -262,7 +259,7 @@ class AuthLanguageToggle extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFF4B91).withValues(alpha: 0.10),
+              color: const SLColors.brandPink.withValues(alpha: 0.10),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -285,14 +282,14 @@ class AuthLanguageToggle extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w900,
-                color: Color(0xFFFF4B91),
+                color: SLColors.brandPink,
               ),
             ),
             const SizedBox(width: 2),
             const Icon(
               Icons.arrow_drop_down_rounded,
               size: 20,
-              color: Color(0xFFFF4B91),
+              color: SLColors.brandPink,
             ),
           ],
         ),

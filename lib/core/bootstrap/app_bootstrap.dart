@@ -50,10 +50,12 @@ Future<void> initializeFirebaseBootstrap() async {
 
   try {
     await FirebaseAppCheck.instance.activate(
-      androidProvider:
-          kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
-      appleProvider:
-          kDebugMode ? AppleProvider.debug : AppleProvider.deviceCheck,
+      providerAndroid: kDebugMode
+          ? const AndroidDebugProvider()
+          : const AndroidPlayIntegrityProvider(),
+      providerApple: kDebugMode
+          ? const AppleDebugProvider()
+          : const AppleDeviceCheckProvider(),
     ).timeout(const Duration(seconds: 2), onTimeout: () => null);
   } catch (e) {
     debugPrint('Firebase AppCheck init error: $e');
