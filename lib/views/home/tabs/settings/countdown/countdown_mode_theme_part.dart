@@ -651,7 +651,7 @@ class _CountdownModeStyleData {
         return _CountdownModeStyleData(
           outerColor: const Color(0xFF0F172A),
           outerGradient: const LinearGradient(
-            colors: [Color(0xFF050B14), Color(0xFF1E293B)],
+            colors: [Color(0xFF050B14), SLColors.darkNavy],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

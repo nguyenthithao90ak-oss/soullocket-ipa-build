@@ -684,7 +684,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w900,
                       fontSize: 18,
-                      color: const Color(0xFF1E293B),
+                      color: SLColors.darkNavy,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -742,7 +742,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                     style: SLTheme.quicksand(
                       fontWeight: FontWeight.w900,
                       fontSize: 14,
-                      color: const Color(0xFF1E293B),
+                      color: SLColors.darkNavy,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -782,7 +782,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                                   overflow: TextOverflow.ellipsis,
                                   style: SLTheme.quicksand(
                                     fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF1E293B),
+                                    color: SLColors.darkNavy,
                                   ),
                                 ),
                               ),
@@ -977,7 +977,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               style: SLTheme.quicksand(
                 fontWeight: FontWeight.w900,
                 fontSize: 16,
-                color: const Color(0xFF1E293B),
+                color: SLColors.darkNavy,
               ),
             ),
             const SizedBox(height: 8),
@@ -1030,7 +1030,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     final timeLabel = DateFormat('HH:mm').format(message.timestamp);
     final bubbleColor =
         isMe ? const Color(0xFFD81B60) : const Color(0xFFFFFFFF);
-    final textColor = isMe ? Colors.white : const Color(0xFF1E293B);
+    final textColor = isMe ? Colors.white : SLColors.darkNavy;
 
     if (isSystem) {
       return Padding(
@@ -1245,7 +1245,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w900,
                         fontSize: 14.2,
-                        color: const Color(0xFF1E293B),
+                        color: SLColors.darkNavy,
                         height: 1.3,
                       ),
                     ),
@@ -1409,7 +1409,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                     icon: const Icon(
                       Icons.arrow_back_ios_new,
                       size: 18,
-                      color: Color(0xFF1E293B),
+                      color: SLColors.darkNavy,
                     ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
@@ -1425,7 +1425,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: SLTheme.quicksand(
-                            color: const Color(0xFF1E293B),
+                            color: SLColors.darkNavy,
                             fontSize: 16.4,
                             fontWeight: FontWeight.w900,
                             height: 1.05,

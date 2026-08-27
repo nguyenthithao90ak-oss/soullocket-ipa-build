@@ -86,8 +86,8 @@ extension _InsightTimelineSectionExt on _LoveInsightsScreenState {
           child: Row(
             children: [
               const Icon(
-                Icons.favorite_rounded,
-                color: Color(0xFFFF4F87),
+                Icons.timeline_rounded,
+                color: Color(0xFF6366F1),
                 size: 20,
               ),
               SLSpacing.w8,
@@ -100,9 +100,9 @@ extension _InsightTimelineSectionExt on _LoveInsightsScreenState {
                           ? context.tr('home_dngthigian_231147')
                           : context.tr('home_dngthigian_a93fc5'),
                       style: SLTheme.quicksand(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF332C35),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF111827),
                       ),
                     ),
                     Text(
@@ -111,8 +111,8 @@ extension _InsightTimelineSectionExt on _LoveInsightsScreenState {
                           : context.tr('home_ccmcquantr_89a221'),
                       style: SLTheme.quicksand(
                         fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF8D8490),
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6B7280),
                       ),
                     ),
                   ],
@@ -127,8 +127,9 @@ extension _InsightTimelineSectionExt on _LoveInsightsScreenState {
             width: double.infinity,
             padding: SLSpacing.all16,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFEEF4),
-              borderRadius: BorderRadius.circular(20),
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
             ),
             child: Text(
               _isSingle
@@ -136,9 +137,9 @@ extension _InsightTimelineSectionExt on _LoveInsightsScreenState {
                   : context.tr('home_chacknimno_aa5b75'),
               style: SLTheme.quicksand(
                 fontSize: 13,
-                fontWeight: FontWeight.w800,
-                height: 1.55,
-                color: const Color(0xFF8D8490),
+                fontWeight: FontWeight.w700,
+                height: 1.5,
+                color: const Color(0xFF6B7280),
               ),
             ),
           )
@@ -157,39 +158,27 @@ extension _InsightTimelineSectionExt on _LoveInsightsScreenState {
     final isUpcoming = item.state == _TimelineEntryState.upcoming;
 
     final nodeColor = isCurrent
-        ? const Color(0xFFFF4F87)
+        ? const Color(0xFFEF4444)
         : isUpcoming
-            ? const Color(0xFFE9DDFF)
-            : const Color(0xFFFFB3D0);
-    final cardBg = isCurrent
-        ? Colors.white
-        : isUpcoming
-            ? Colors.white.withValues(alpha: 0.6)
-            : Colors.white.withValues(alpha: 0.85);
+            ? const Color(0xFFE5E7EB)
+            : const Color(0xFF9CA3AF);
+    final cardBg = Colors.white;
     final borderColor = isCurrent
-        ? const Color(0xFFFFDCE8)
-        : isUpcoming
-            ? const Color(0xFFE9DDFF)
-            : const Color(0xFFFFDCE8).withValues(alpha: 0.5);
+        ? const Color(0xFFE5E7EB)
+        : const Color(0xFFE5E7EB);
     final titleColor =
-        isUpcoming ? const Color(0xFFBDB5C2) : const Color(0xFF332C35);
+        isUpcoming ? const Color(0xFF9CA3AF) : const Color(0xFF111827);
     final subtitleColor =
-        isUpcoming ? const Color(0xFFBDB5C2) : const Color(0xFF8D8490);
+        isUpcoming ? const Color(0xFF9CA3AF) : const Color(0xFF6B7280);
     final badgeText = isCurrent
         ? context.tr('home_hinti_d6af47')
         : isUpcoming
             ? context.tr('home_kha_171aa7')
             : context.tr('home_qua_8ff9a0');
-    final badgeBg = isCurrent
-        ? const Color(0xFFFFEEF4)
-        : isUpcoming
-            ? const Color(0xFFF3EEFF)
-            : const Color(0xFFFFEEF4);
+    final badgeBg = const Color(0xFFF3F4F6);
     final badgeColor = isCurrent
-        ? const Color(0xFFFF4F87)
-        : isUpcoming
-            ? const Color(0xFF9B7AE8)
-            : const Color(0xFFFF85A2);
+        ? const Color(0xFFEF4444)
+        : const Color(0xFF4B5563);
 
     return IntrinsicHeight(
       child: Row(

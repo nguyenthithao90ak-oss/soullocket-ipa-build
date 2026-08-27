@@ -48,8 +48,19 @@ class SingleMatchService {
     Map<String, dynamic>? singleMatch,
     Object? updatedAt,
   }) {
-    // Return empty map to prevent permission-denied due to missing rules
-    return <String, dynamic>{};
+    final path = profileIndexPath(houseId);
+    final updates = <String, dynamic>{};
+    if (displayName != null) updates['$path/displayName'] = displayName;
+    if (houseName != null) updates['$path/houseName'] = houseName;
+    if (avatarUrl != null) updates['$path/avatarUrl'] = avatarUrl;
+    if (bio != null) updates['$path/bio'] = bio;
+    if (dobU1 != null) updates['$path/dobU1'] = dobU1;
+    if (relationshipMode != null) updates['$path/relationshipMode'] = relationshipMode;
+    if (privacy != null) updates['$path/privacy'] = privacy;
+    if (searchPrivacy != null) updates['$path/searchPrivacy'] = searchPrivacy;
+    if (singleMatch != null) updates['$path/singleMatch'] = singleMatch;
+    if (updatedAt != null) updates['$path/updatedAt'] = updatedAt;
+    return updates;
   }
 
   Future<String?> getCurrentHouseId() => _houseService.getCurrentHouseId();

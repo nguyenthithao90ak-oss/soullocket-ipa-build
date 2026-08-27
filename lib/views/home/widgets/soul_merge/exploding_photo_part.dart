@@ -186,6 +186,7 @@ class _ExplodingPhotoWidgetState extends State<ExplodingPhotoWidget>
                         child: CachedNetworkImage(
                           imageUrl: widget.photo.url,
                           fit: BoxFit.cover,
+                          memCacheWidth: 400,
                           placeholder: (context, url) => Container(
                             color: Colors.purple.shade50,
                             child: const Center(

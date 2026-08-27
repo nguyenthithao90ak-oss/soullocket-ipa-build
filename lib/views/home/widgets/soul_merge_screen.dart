@@ -1234,13 +1234,18 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
         });
       }
 
-      // Scroll to bottom
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_chatScrollController.hasClients) {
-          _chatScrollController
-              .jumpTo(_chatScrollController.position.maxScrollExtent);
+      _scrollChatToBottom();
+    });
+  }
+
+  void _scrollChatToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_chatScrollController.hasClients) {
+        if (_chatScrollController.offset != 0) {
+          _chatScrollController.jumpTo(0);
         }
-      });
+      }
     });
   }
 
@@ -1713,6 +1718,7 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
                                               imageUrl: imageUrl,
                                               fit: BoxFit.cover,
                                               width: 200,
+                                              memCacheWidth: 400,
                                               placeholder: (context, url) =>
                                                   Container(
                                                 width: 200,

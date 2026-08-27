@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/sl_theme.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
 
 class CalendarInfoPill extends StatelessWidget {
   final IconData icon;
@@ -20,15 +20,11 @@ class CalendarInfoPill extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: compact ? 10 : 12,
-        vertical: compact ? 7 : 8,
+        vertical: compact ? 8 : 9,
       ),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.25),
+        color: accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: accent.withValues(alpha: 0.35),
-          width: 1,
-        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -38,9 +34,9 @@ class CalendarInfoPill extends StatelessWidget {
           Text(
             label,
             style: SLTheme.quicksand(
-              fontSize: compact ? 10.5 : 11.5,
+              fontSize: compact ? 10 : 11,
               fontWeight: FontWeight.w800,
-              color: Colors.white.withValues(alpha: 0.95),
+              color: accent,
             ),
           ),
         ],

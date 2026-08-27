@@ -818,14 +818,14 @@ class LoveInsightService {
     loveScore = max(isSingle ? 30 : 28, min(100, loveScore));
 
     final level = loveScore >= 90
-        ? 'Soulmate rực rỡ'
+        ? _tr('love_level_soulmate')
         : loveScore >= 75
-            ? 'Yêu sâu đậm'
+            ? _tr('love_level_deep_love')
             : loveScore >= 60
-                ? 'Đang rất ổn'
+                ? _tr('love_level_stable')
                 : loveScore >= 45
-                    ? 'Cần hâm nóng'
-                    : 'Nên chăm nhau hơn';
+                    ? _tr('love_level_warming_up')
+                    : _tr('love_level_care_more');
 
     final user1Positivity = moodTotalU1 > 0
         ? ((moodPosU1 / moodTotalU1) * 100).round().clamp(0, 100)
@@ -874,10 +874,10 @@ class LoveInsightService {
         ? ((recentMemory30 / recentActiveDays.length) * 10).round() / 10
         : 0.0;
     final favoriteActivity = diaryTotal > albumTotal
-        ? 'Viết nhật ký'
+        ? _tr('love_activity_diary')
         : diaryTotal < albumTotal
-            ? 'Đăng ảnh/video'
-            : 'Cân bằng cả hai';
+            ? _tr('love_activity_photo')
+            : _tr('love_activity_balanced');
 
     final timeline = _buildTimeline(
       startDate: startDate,
@@ -1011,16 +1011,16 @@ class LoveInsightService {
         return _tr('love_insight_suggest_single_slow_rhythm');
       }
       if (currentStreak >= 5) {
-        return 'Bạn đang có chuỗi $currentStreak ngày tương tác liên tiếp cực kỳ tích cực. Cứ giữ nhịp này, năng lượng yêu thương sẽ ngày càng rực rỡ!';
+        return _tr('love_insight_suggest_single_streak', {'currentStreak': currentStreak});
       }
       if (loveScore >= 85) {
-        return 'Bạn đang giữ nhịp sống rất ổn và đều. Hãy tiếp tục lưu lại những khoảnh khắc đẹp để hành trình của chính mình ngày càng đáng nhớ hơn.';
+        return _tr('love_insight_suggest_single_stable_rhythm');
       }
       if (positivity >= 75 && memoryThisMonth >= 6) {
-        return 'Năng lượng của bạn đang khá sáng và ổn. Giữ nhịp đều thêm vài ngày nữa, chỉ số này sẽ tăng rất nhanh chứ không chỉ đẹp nhất thời.';
+        return _tr('love_insight_suggest_single_bright_energy');
       }
       if (loveScore >= 65) {
-        return 'Nhịp sống của bạn đang đi đúng hướng. Chỉ cần thêm vài ngày ghi nhật ký hoặc lưu ảnh đều hơn là bảng chỉ số sẽ sáng lên rất nhanh.';
+        return _tr('love_insight_suggest_single_on_track');
       }
       if (milestoneSuggestion != null) {
         return milestoneSuggestion;
@@ -1035,32 +1035,32 @@ class LoveInsightService {
     }
 
     if (currentStreak >= 7) {
-      return 'Thật tuyệt vời! Hai bạn đã duy trì tương tác suốt $currentStreak ngày liên tục. Sự đều đặn này chính là chìa khóa của một tình yêu bền vững.';
+      return _tr('love_insight_suggest_couple_streak', {'currentStreak': currentStreak});
     }
 
     if (shareU1 > 0.8) {
-      return 'Có vẻ $nameU1 đang là người chủ động tạo phần lớn kỷ niệm. $nameU2 ơi, hãy gửi một lời yêu thương nhỏ để cân bằng lại nhịp tim chung nhé!';
+      return _tr('love_insight_suggest_couple_u1_dominant', {'nameU1': nameU1, 'nameU2': nameU2});
     } else if (shareU2 > 0.8) {
-      return 'Gần đây $nameU2 đang chăm chút cho nhà chung rất nhiều. $nameU1 hãy đáp lại bằng một bức ảnh hoặc nhật ký ngọt ngào nhé!';
+      return _tr('love_insight_suggest_couple_u2_dominant', {'nameU1': nameU1, 'nameU2': nameU2});
     }
 
     if (daysSinceLastMemory >= 6) {
       return _tr('love_insight_suggest_couple_sparse_shared_marks');
     }
     if (balanceRatio < 0.45) {
-      return 'Một phía đang chủ động nhiều hơn phía còn lại. Chỉ cần người đang yên hơn lên tiếng trước một chút, cảm giác cân bằng sẽ quay lại rất rõ.';
+      return _tr('love_insight_suggest_couple_balance_needed');
     }
     if (offU1 >= 2 || offU2 >= 2) {
-      return 'Có vẻ một trong hai bạn đang vắng nhịp hơn bình thường. Một lời hỏi han ngắn nhưng đúng lúc sẽ hiệu quả hơn rất nhiều so với nhắn cho có.';
+      return _tr('love_insight_suggest_couple_absence_detected');
     }
     if (loveScore >= 85) {
-      return 'Hai bạn đang giữ được nhịp yêu rất đẹp và ổn định. Chỉ cần thêm vài khoảnh khắc nhỏ có chủ đích, tình cảm sẽ còn đậm và sáng hơn nữa.';
+      return _tr('love_insight_suggest_couple_stable_rhythm');
     }
     if (loveDays >= 180 && memoryThisMonth >= 8) {
-      return 'Nền của hai bạn vẫn tốt, chỉ cần giữ đều chất lượng tương tác trong vài tuần tới là cảm giác gắn bó sẽ tăng lên rất tự nhiên.';
+      return _tr('love_insight_suggest_couple_positive_momentum');
     }
     if (loveScore >= 65) {
-      return 'Mối quan hệ đang khá ổn và có nền tảng tốt. Một cuộc trò chuyện chất lượng hoặc một bất ngờ nhỏ đúng lúc sẽ kéo cảm xúc đi lên rất nhanh.';
+      return _tr('love_insight_suggest_couple_good_foundation');
     }
     if (milestoneSuggestion != null) {
       return milestoneSuggestion;
@@ -1096,12 +1096,12 @@ class LoveInsightService {
       if (daysUntil <= 7) {
         if (daysUntil <= 0) {
           return isSingle
-              ? 'Hôm nay là một cột mốc đẹp của hành trình này. Ghi lại một khoảnh khắc nhỏ để ngày đặc biệt có dấu ấn riêng nhé.'
-              : 'Hôm nay là một cột mốc đẹp của hai bạn. Chỉ cần lưu lại một tấm ảnh hay một lời nhắn ngắn là đủ làm ngày này đáng nhớ hơn.';
+              ? _tr('love_insight_suggest_milestone_today_single')
+              : _tr('love_insight_suggest_milestone_today_couple');
         }
         return isSingle
-            ? 'Chỉ còn $daysUntil ngày nữa tới "${nearestUpcoming.title}". Giữ nhịp vài ghi chú nhỏ từ bây giờ sẽ giúp cột mốc này ý nghĩa hơn nhiều.'
-            : 'Chỉ còn $daysUntil ngày nữa tới "${nearestUpcoming.title}". Hai bạn có thể chuẩn bị một kỷ niệm nhỏ từ bây giờ để cảm xúc đến tự nhiên hơn.';
+            ? _tr('love_insight_suggest_milestone_upcoming_single', {'daysUntil': daysUntil, 'title': nearestUpcoming.title})
+            : _tr('love_insight_suggest_milestone_upcoming_couple', {'daysUntil': daysUntil, 'title': nearestUpcoming.title});
       }
     }
 
@@ -1110,8 +1110,8 @@ class LoveInsightService {
           today.difference(_startOfDay(nearestRecentPast.date)).inDays;
       if (daysSince <= 7) {
         return isSingle
-            ? '"${nearestRecentPast.title}" vừa đi qua. Đây là lúc đẹp để ghi lại cảm xúc còn mới, để hành trình này có thêm chiều sâu.'
-            : '"${nearestRecentPast.title}" vừa đi qua. Nếu hai bạn lưu lại một lời nhắn hay một tấm ảnh lúc này, cột mốc đó sẽ ở lại lâu hơn.';
+            ? _tr('love_insight_suggest_milestone_past_single', {'title': nearestRecentPast.title})
+            : _tr('love_insight_suggest_milestone_past_couple', {'title': nearestRecentPast.title});
       }
     }
 

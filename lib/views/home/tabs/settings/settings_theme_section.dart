@@ -929,7 +929,7 @@ class _ThemeSectionCardState extends State<_ThemeSectionCard>
                   style: SLTheme.quicksand(
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
-                    color: const Color(0xFF1E293B),
+                    color: SLColors.darkNavy,
                   ),
                 ),
                 subtitle: Text(

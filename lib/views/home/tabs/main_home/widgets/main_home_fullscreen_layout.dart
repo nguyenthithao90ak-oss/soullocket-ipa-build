@@ -290,7 +290,7 @@ class _FullscreenHomeBody extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(4.0),
                   child: Image.asset(
-                    'assets/images/anhtomau_stickers/sticker_20.gif',
+                    'assets/icons/cute_3d/avatar_puppy_heart.png',
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) => const Icon(
                       Icons.pets_rounded,

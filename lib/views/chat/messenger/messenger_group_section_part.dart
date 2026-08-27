@@ -37,7 +37,7 @@ extension _MessengerGroupSectionPart on _MessengerScreenState {
                               style: SLTheme.quicksand(
                                 fontWeight: FontWeight.w900,
                                 fontSize: 14,
-                                color: const Color(0xFF1E293B),
+                                color: SLColors.darkNavy,
                               ),
                             ),
                           ),

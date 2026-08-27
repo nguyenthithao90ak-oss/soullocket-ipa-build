@@ -262,7 +262,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: const SLColors.darkNavy,
+        backgroundColor: SLColors.darkNavy,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 500, maxHeight: 800),
@@ -313,7 +313,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                         Text(
                           context.tr('admin_tinnhnngid_d15860'),
                           style: SLTheme.quicksand(
-                              color: const SLColors.brandPink,
+                              color: SLColors.brandPink,
                               fontWeight: FontWeight.bold),
                         ),
                         SLSpacing.h8,
@@ -328,7 +328,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                         Text(
                           context.tr('admin_cutrliai_d21f89'),
                           style: SLTheme.quicksand(
-                              color: const SLColors.brandPink,
+                              color: SLColors.brandPink,
                               fontWeight: FontWeight.bold),
                         ),
                         SLSpacing.h8,
@@ -351,7 +351,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                         Text(
                           context.tr('admin_nidungbivi_bf8a19'),
                           style: SLTheme.quicksand(
-                              color: const SLColors.brandPink,
+                              color: SLColors.brandPink,
                               fontWeight: FontWeight.bold),
                         ),
                         SLSpacing.h8,
@@ -392,7 +392,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
                         Text(
                           context.tr('admin_nidungbnhl_1b0dd9'),
                           style: SLTheme.quicksand(
-                              color: const SLColors.brandPink,
+                              color: SLColors.brandPink,
                               fontWeight: FontWeight.bold),
                         ),
                         SLSpacing.h8,

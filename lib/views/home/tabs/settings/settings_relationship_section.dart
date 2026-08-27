@@ -285,9 +285,6 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
   Widget _buildRelationshipPanelV2({bool hideBackButton = false}) {
     final panelState = _buildRelationshipPanelState();
     final isSingle = panelState.isSingle;
-    final effectiveStatusText = isSingle
-        ? context.tr('status_single')
-        : context.tr('status_in_relationship');
     final panelDescription = _relationshipPanelDescription(isSingle);
     final showQrConnect = _canShowRelationshipQrConnect(isSingle) &&
         !panelState.hasActiveBreakupRequest;
@@ -300,32 +297,78 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Trạng thái: $effectiveStatusText',
-            style: const TextStyle(fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 10),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF5F8),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0x1FD81B60)),
-            ),
-            child: Text(
-              panelDescription,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[700],
-                fontWeight: FontWeight.w700,
-                height: 1.45,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isSingle
+                    ? [const Color(0xFF1E2030), const Color(0xFF2B2D42)]
+                    : [const Color(0xFFFFF0F5), const Color(0xFFFFE4EE)],
               ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isSingle
+                    ? const Color(0xFF8B5CF6).withValues(alpha: 0.3)
+                    : const Color(0xFFFF6BA7).withValues(alpha: 0.3),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: isSingle
+                      ? const Color(0xFF4F46E5).withValues(alpha: 0.15)
+                      : const Color(0xFFFF6BA7).withValues(alpha: 0.15),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Image.asset(
+                  isSingle
+                      ? 'assets/icons/cute_3d/status_doc_than_3d.png'
+                      : 'assets/icons/cute_3d/status_co_nguoi_yeu_3d.png',
+                  width: 48,
+                  height: 48,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isSingle ? 'Chế độ Độc thân ✨' : 'Chế độ Có người yêu 💖',
+                        style: SLTheme.quicksand(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          color: isSingle ? Colors.white : const Color(0xFFD81B60),
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        panelDescription,
+                        style: SLTheme.quicksand(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: isSingle
+                              ? Colors.white.withValues(alpha: 0.6)
+                              : const Color(0xFF6F5A62),
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
           _buildRelationshipStatusCard(panelState),
           if (showQrConnect) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             _buildGradientBtn(
               label: _relationshipQrActionLabel(isSingle),
               gradient: const [Color(0xFFFF4D73), Color(0xFFD81B60)],
@@ -338,7 +381,7 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
             ),
           ],
           if (panelState.hasHouseId && !panelState.hasActiveBreakupRequest) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             _buildGradientBtn(
               label: _breakupActionLabel,
               gradient: const [Color(0xFFFFB3C1), Color(0xFFD81B60)],

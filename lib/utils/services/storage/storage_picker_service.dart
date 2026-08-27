@@ -78,13 +78,13 @@ class StoragePickerService {
     if (kIsWeb) {
       StorageWebPickerGuard.arm(const Duration(seconds: 4));
       try {
-        final result = await FilePicker.pickFiles(
+        final files = await FilePicker.pickFiles(
           type: FileType.custom,
           allowedExtensions: storageMusicPickerExtensions,
           allowMultiple: true,
         );
-        if (result != null && result.files.isNotEmpty) {
-          return result.files
+        if (files.isNotEmpty) {
+          return files
               .take(maxFiles)
               .map((f) => platformFileToXFile(f))
               .whereType<XFile>()
@@ -97,15 +97,15 @@ class StoragePickerService {
     }
 
     final list = await _guardedPicker<List<XFile>>(() async {
-      final result = await FilePicker.pickFiles(
+      final files = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: storageMusicPickerExtensions,
         allowMultiple: true,
       );
-      if (result == null || result.files.isEmpty) {
+      if (files.isEmpty) {
         return <XFile>[];
       }
-      return result.files
+      return files
           .take(maxFiles)
           .map((f) => platformFileToXFile(f))
           .whereType<XFile>()
@@ -149,17 +149,17 @@ class StoragePickerService {
     if (kIsWeb) {
       StorageWebPickerGuard.arm(const Duration(seconds: 4));
       try {
-        final result = await FilePicker.pickFiles(
+        final files = await FilePicker.pickFiles(
           type: FileType.image,
         );
-        final files = (result?.files ?? const <PlatformFile>[])
+        final mapped = files
             .map(platformFileToXFile)
             .whereType<XFile>()
             .toList();
-        if (files.length > normalizedLimit) {
-          return files.take(normalizedLimit).toList();
+        if (mapped.length > normalizedLimit) {
+          return mapped.take(normalizedLimit).toList();
         }
-        return files;
+        return mapped;
       } finally {
         StorageWebPickerGuard.arm();
       }
@@ -188,18 +188,18 @@ class StoragePickerService {
     if (kIsWeb) {
       StorageWebPickerGuard.arm(const Duration(seconds: 4));
       try {
-        final result = await FilePicker.pickFiles(
+        final files = await FilePicker.pickFiles(
           type: FileType.media,
           allowMultiple: true,
         );
-        final files = (result?.files ?? const <PlatformFile>[])
+        final mapped = files
             .map(platformFileToXFile)
             .whereType<XFile>()
             .toList();
-        if (files.length > normalizedLimit) {
-          return files.take(normalizedLimit).toList();
+        if (mapped.length > normalizedLimit) {
+          return mapped.take(normalizedLimit).toList();
         }
-        return files;
+        return mapped;
       } finally {
         StorageWebPickerGuard.arm();
       }

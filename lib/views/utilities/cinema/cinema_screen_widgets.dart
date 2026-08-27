@@ -959,6 +959,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
         maxWidthDiskCache: 720,
         imageUrl: url,
         fit: BoxFit.cover,
+        memCacheWidth: 600,
         filterQuality: FilterQuality.medium,
         placeholder: (_, __) => Container(
           color: const Color(0xFF182334),
@@ -1010,6 +1011,7 @@ extension _CinemaScreenStateWidgetsPart on _CinemaScreenState {
         child: isNetwork
             ? CachedNetworkImage(
                 maxWidthDiskCache: memCacheWidth,
+                memCacheWidth: memCacheWidth,
                 imageUrl: url,
                 fit: BoxFit.scaleDown,
                 filterQuality: FilterQuality.medium,

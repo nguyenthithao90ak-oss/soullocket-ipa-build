@@ -301,6 +301,7 @@ extension _CollagePreviewWidgets on _CollageMakerScreenState {
             maxWidthDiskCache: cacheWidth,
             imageUrl: photo.source,
             fit: BoxFit.cover,
+            memCacheWidth: 600,
             filterQuality: FilterQuality.medium,
             fadeInDuration: Duration.zero,
             fadeOutDuration: Duration.zero,

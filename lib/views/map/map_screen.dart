@@ -30,6 +30,8 @@ import '../../utils/services/nominatim_service.dart';
 import '../../utils/services/notification_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
+import '../../utils/services/sleep_mode_service.dart';
+import '../../utils/services/music_service.dart';
 
 part 'dialogs/map_checkin_sheet.dart';
 part 'dialogs/map_detail_dialogs.dart';
@@ -170,6 +172,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   StreamSubscription<DatabaseEvent>? _memoriesRootSub;
   StreamSubscription<DatabaseEvent>? _memoriesHouseSub;
   StreamSubscription<DatabaseEvent>? _checkinsSub;
+  StreamSubscription<SleepModeState?>? _sleepModeSub;
+  StreamSubscription<DatabaseEvent>? _musicSub;
+  SleepModeState? _partnerSleepState;
+  String? _currentMusicTitle;
 
   Timer? _routeDebounce;
   Timer? _liveRefreshDebounce;
@@ -254,6 +260,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _memoriesRootSub?.cancel();
     _memoriesHouseSub?.cancel();
     _checkinsSub?.cancel();
+    _sleepModeSub?.cancel();
+    _musicSub?.cancel();
     _mapController.dispose();
     _staticMarkersVN.dispose();
     _historyPolylinesVN.dispose();
@@ -1589,6 +1597,136 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 ],
                 if (!marker.compact)
                   () {
+                    final speedKmh =
+                        marker.speed != null ? (marker.speed! * 3.6).round() : 0;
+                    final isFastMoving = marker.isSpeeding || speedKmh >= 40;
+
+                    // 1. Dynamic Top Banner Status
+                    Widget? topBadge;
+                    if (marker.isTogether) {
+                      topBadge = Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF2D75),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFF2D75).withValues(alpha: 0.4),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.favorite_rounded, color: Colors.white, size: 11),
+                            const SizedBox(width: 3),
+                            Text(
+                              marker.togetherTime ?? 'Đang bên nhau 💕',
+                              style: SLTheme.quicksand(
+                                fontSize: 9.0,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    } else if (marker.isSleeping) {
+                      topBadge = Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF312E81),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFF818CF8), width: 1),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF312E81).withValues(alpha: 0.4),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('🌙 ', style: TextStyle(fontSize: 10)),
+                            Text(
+                              'Đang ngủ 💤',
+                              style: SLTheme.quicksand(
+                                fontSize: 9.0,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFFC7D2FE),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    } else if (isFastMoving) {
+                      topBadge = Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEA580C),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFEA580C).withValues(alpha: 0.4),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('🚗 ', style: TextStyle(fontSize: 10)),
+                            Text(
+                              '$speedKmh km/h • Đi cẩn thận!',
+                              style: SLTheme.quicksand(
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    } else if (marker.musicTitle != null && marker.musicTitle!.isNotEmpty) {
+                      topBadge = Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF7C3AED),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF7C3AED).withValues(alpha: 0.4),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('🎵 ', style: TextStyle(fontSize: 10)),
+                            Flexible(
+                              child: Text(
+                                marker.musicTitle!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: SLTheme.quicksand(
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
                     var displayText = marker.title;
                     if (marker.battery != null) {
                       final pct = marker.battery!;
@@ -1598,47 +1736,53 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                       displayText += ' $batteryEmoji $pct%';
                     }
 
-                    if (marker.speed != null && marker.speed! > 0) {
-                      final speedKmh = (marker.speed! * 3.6).round();
+                    if (topBadge == null) {
                       if (speedKmh > 20) {
                         displayText += '\n🚗 $speedKmh km/h';
                       } else if (speedKmh > 2) {
                         displayText += '\n🚶 $speedKmh km/h';
-                      } else {
+                      } else if (marker.speed != null) {
                         displayText += '\nĐứng yên';
                       }
-                    } else if (marker.speed != null) {
-                      displayText += '\nĐứng yên';
                     }
 
                     return Positioned(
                       bottom: markerHeight - 4,
-                      child: Container(
-                        constraints: const BoxConstraints(maxWidth: 140),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color:
-                              const Color(0xFF18191A).withValues(alpha: 0.94),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: marker.color.withValues(alpha: 0.22),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (topBadge != null) ...[
+                            topBadge,
+                            const SizedBox(height: 3),
+                          ],
+                          Container(
+                            constraints: const BoxConstraints(maxWidth: 140),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  const Color(0xFF18191A).withValues(alpha: 0.94),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: marker.color.withValues(alpha: 0.22),
+                              ),
+                            ),
+                            child: Text(
+                              displayText,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: SLTheme.quicksand(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                height: 1.2,
+                              ),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          displayText,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: SLTheme.quicksand(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            height: 1.2,
-                          ),
-                        ),
+                        ],
                       ),
                     );
                   }(),
@@ -1676,6 +1820,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             ? CachedNetworkImage(
                 imageUrl: avatarUrl,
                 fit: BoxFit.cover,
+                memCacheWidth: 200,
+                memCacheHeight: 200,
                 errorWidget: (context, url, error) => Icon(
                   icon,
                   color: Colors.white,
@@ -1954,6 +2100,11 @@ class _MapMarkerSpec {
   final int? battery;
   final bool? isCharging;
   final double? speed;
+  final bool isSleeping;
+  final String? musicTitle;
+  final bool isSpeeding;
+  final bool isTogether;
+  final String? togetherTime;
 
   const _MapMarkerSpec({
     required this.id,
@@ -1972,6 +2123,11 @@ class _MapMarkerSpec {
     this.battery,
     this.isCharging,
     this.speed,
+    this.isSleeping = false,
+    this.musicTitle,
+    this.isSpeeding = false,
+    this.isTogether = false,
+    this.togetherTime,
   });
 }
 
@@ -2101,30 +2257,87 @@ class _MapPinPainter extends CustomPainter {
   }
 }
 
-class _PulseGlowCircle extends StatelessWidget {
+class _PulseGlowCircle extends StatefulWidget {
   final double size;
   final Color color;
 
   const _PulseGlowCircle({
+    super.key,
     required this.size,
     required this.color,
   });
 
   @override
+  State<_PulseGlowCircle> createState() => _PulseGlowCircleState();
+}
+
+class _PulseGlowCircleState extends State<_PulseGlowCircle>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _animCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [
-            color.withValues(alpha: 0.28),
-            color.withValues(alpha: 0.08),
-            color.withValues(alpha: 0.0),
-          ],
-        ),
-      ),
+    return AnimatedBuilder(
+      animation: _animCtrl,
+      builder: (context, child) {
+        final progress = _animCtrl.value;
+        final waveSize = widget.size * (0.8 + 0.6 * progress);
+        final opacity = (1.0 - progress).clamp(0.0, 1.0) * 0.45;
+
+        return SizedBox(
+          width: widget.size * 1.5,
+          height: widget.size * 1.5,
+          child: Center(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Outer expanding radar ripple
+                Container(
+                  width: waveSize,
+                  height: waveSize,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: widget.color.withValues(alpha: opacity),
+                      width: 1.5,
+                    ),
+                    gradient: RadialGradient(
+                      colors: [
+                        widget.color.withValues(alpha: opacity * 0.5),
+                        widget.color.withValues(alpha: 0.0),
+                      ],
+                    ),
+                  ),
+                ),
+                // Inner solid glow core
+                Container(
+                  width: widget.size * 0.7,
+                  height: widget.size * 0.7,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: widget.color.withValues(alpha: 0.18),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

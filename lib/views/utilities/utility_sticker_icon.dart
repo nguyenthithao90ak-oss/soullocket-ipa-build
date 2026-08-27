@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:soullocket_app/core/constants/app_config.dart';
-import 'package:soullocket_app/utils/app_cache_manager.dart';
+
 
 const double _kUtilityStickerLogicalSize = 64;
 const Set<String> _kUtilityStickerIds = <String>{
+  'age_zodiac',
   'bucket',
   'calculator',
   'calendar',
@@ -33,15 +32,22 @@ const Set<String> _kUtilityStickerIds = <String>{
   'wish',
 };
 
+const Map<String, String> _kUtilityAliases = <String, String>{
+  'local_album': 'photo',
+  'local_photos': 'photo',
+  'soul_events': 'history',
+  'surprise_maker': 'love_card',
+  'sleep_tracker': 'age_zodiac',
+  'couple_connect': 'wish',
+};
+
 String? utilityStickerAssetForId(String utilityId) {
   final normalizedId = utilityId.trim().toLowerCase();
-  if (normalizedId == 'friendly_chat') {
-    return 'assets/images/anhtomau_stickers/sticker_28.gif';
-  }
-  if (!_kUtilityStickerIds.contains(normalizedId)) {
+  final resolvedId = _kUtilityAliases[normalizedId] ?? normalizedId;
+  if (!_kUtilityStickerIds.contains(resolvedId)) {
     return null;
   }
-  return 'assets/images/utility_stickers/$normalizedId.png';
+  return 'assets/images/utility_stickers/$resolvedId.webp';
 }
 
 bool hasUtilityStickerAsset(String utilityId) {
@@ -66,20 +72,15 @@ ImageProvider<Object>? utilityStickerImageProviderForId(
     return null;
   }
 
-  final String filename = assetPath.substring('assets/images/'.length);
-  final String r2Url = '${AppConfig.r2PublicDomain}/stickers/$filename';
-
   final cacheSize = _utilityStickerCacheSize(
     logicalSize: logicalSize,
     devicePixelRatio: devicePixelRatio,
   );
+  // Load from local asset bundle (updated icons)
   return ResizeImage.resizeIfNeeded(
     cacheSize,
     cacheSize,
-    CachedNetworkImageProvider(
-      r2Url,
-      cacheManager: AppCacheManager.instance,
-    ),
+    AssetImage(assetPath),
   );
 }
 

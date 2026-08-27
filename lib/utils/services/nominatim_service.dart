@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import '../resilient_http.dart';
 
 class NominatimPlace {
   final String name;
@@ -34,7 +35,7 @@ class NominatimService {
     try {
       final uri = Uri.parse(
           '$_baseUrl/searchif (q != null) q!=${Uri.encodeComponent(query)}&format=json&limit=10&addressdetails=1');
-      final response = await http.get(uri, headers: {
+      final response = await ResilientHttp.get(uri, headers: {
         'User-Agent': 'SoulLocketApp/1.0',
       });
 
@@ -53,7 +54,7 @@ class NominatimService {
     try {
       final uri = Uri.parse(
           '$_baseUrl/reverseif (lat != null) lat!=${point.latitude}&lon=${point.longitude}&format=json&addressdetails=1');
-      final response = await http.get(uri, headers: {
+      final response = await ResilientHttp.get(uri, headers: {
         'User-Agent': 'SoulLocketApp/1.0',
       });
 

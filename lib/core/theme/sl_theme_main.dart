@@ -63,6 +63,16 @@ class SLTheme {
           label: 'Lora',
           sampleText: L10nService().translate('core_theme_font_sample'),
         ),
+        SLFontOption(
+          key: 'plusJakarta',
+          label: 'Plus Jakarta Sans',
+          sampleText: L10nService().translate('core_theme_font_sample'),
+        ),
+        SLFontOption(
+          key: 'fraunces',
+          label: 'Fraunces',
+          sampleText: L10nService().translate('core_theme_font_sample'),
+        ),
       ];
 
   static List<SLFontOption> get cleanFontOptions => fontOptions;
@@ -96,6 +106,10 @@ class SLTheme {
         return GoogleFonts.playfairDisplayTextTheme(base);
       case 'beVietnam':
         return GoogleFonts.beVietnamProTextTheme(base);
+      case 'plusJakarta':
+        return GoogleFonts.plusJakartaSansTextTheme(base);
+      case 'fraunces':
+        return GoogleFonts.frauncesTextTheme(base);
       case defaultFontKey:
       default:
         return GoogleFonts.quicksandTextTheme(base);
@@ -162,6 +176,10 @@ class SLTheme {
         return GoogleFonts.playfairDisplay(textStyle: baseStyle);
       case 'beVietnam':
         return GoogleFonts.beVietnamPro(textStyle: baseStyle);
+      case 'plusJakarta':
+        return GoogleFonts.plusJakartaSans(textStyle: baseStyle);
+      case 'fraunces':
+        return GoogleFonts.fraunces(textStyle: baseStyle);
       case defaultFontKey:
       default:
         return GoogleFonts.quicksand(textStyle: baseStyle);
@@ -573,9 +591,9 @@ class SLTheme {
     required VoidCallback? onPressed,
     bool isLoading = false,
     List<Color> colors = const <Color>[
-      Color(0xFFFF4B91),
-      Color(0xFFFF69B4),
-      Color(0xFFFF4B91),
+      SLColors.auroraRoseDeep,
+      SLColors.auroraLavender,
+      SLColors.auroraRoseDeep,
     ],
   }) {
     final bool isDisabled = onPressed == null;
@@ -586,7 +604,10 @@ class SLTheme {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isDisabled
-                ? const [Color(0xFFFFB6C1), Color(0xFFFFC0CB)]
+                ? const [
+                    Color(0xFFFFB6C1),
+                    Color(0xFFFFC0CB),
+                  ]
                 : colors,
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -596,7 +617,7 @@ class SLTheme {
               ? []
               : [
                   BoxShadow(
-                    color: const Color(0xFFFF4B91).withValues(alpha: 0.38),
+                    color: SLColors.auroraRoseDeep.withValues(alpha: 0.38),
                     blurRadius: 20,
                     spreadRadius: 1,
                     offset: const Offset(0, 8),

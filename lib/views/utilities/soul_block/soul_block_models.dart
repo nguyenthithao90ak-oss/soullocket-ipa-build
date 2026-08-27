@@ -378,38 +378,38 @@ class _SoulBlockPerformanceProfile {
   );
 }
 
-const Color _kSoulStageTop = Color(0xFF0F172A);
-const Color _kSoulStageMid = Color(0xFF0B1120);
-const Color _kSoulStageBottom = Color(0xFF05080F);
-const Color _kSoulPanelTop = Color(0xFF1E293B);
-const Color _kSoulPanelMid = Color(0xFF141E2F);
-const Color _kSoulPanelBottom = Color(0xFF0B1120);
-const Color _kSoulBoardTop = Color(0xFF162032);
-const Color _kSoulBoardMid = Color(0xFF0F172A);
-const Color _kSoulBoardBottom = Color(0xFF0A0F1A);
-const Color _kSoulChrome = Color(0xFF80D4FF);
+const Color _kSoulStageTop = Color(0xFF0D1322);
+const Color _kSoulStageMid = Color(0xFF090D18);
+const Color _kSoulStageBottom = Color(0xFF05070D);
+const Color _kSoulPanelTop = Color(0xFF151D30);
+const Color _kSoulPanelMid = Color(0xFF0F1626);
+const Color _kSoulPanelBottom = Color(0xFF0A0E1A);
+const Color _kSoulBoardTop = Color(0xFF141C2E);
+const Color _kSoulBoardMid = Color(0xFF0D1322);
+const Color _kSoulBoardBottom = Color(0xFF080C16);
+const Color _kSoulChrome = Color(0xFF67E8F9);
 const Color _kSoulIvory = Color(0xFFFFFFFF);
 
 const List<Color> _kSoulTones = <Color>[
-  Color(0xFF00C3FF), // Cyan
-  Color(0xFFFF4E8B), // Pink
-  Color(0xFFB66BFF), // Purple
-  Color(0xFFFFD84E), // Yellow
-  Color(0xFF4EFF8B), // Green
-  Color(0xFFFF8B4E), // Orange
-  Color(0xFF4E8BFF), // Blue
-  Color(0xFFFF4E4E), // Red
+  Color(0xFF00E5FF), // Electric Cyan Gem
+  Color(0xFFFF2A85), // Vivid Ruby Magenta
+  Color(0xFF9D4EDD), // Royal Amethyst Purple
+  Color(0xFFFFB703), // Golden Amber Sun
+  Color(0xFF00E676), // Radiant Emerald
+  Color(0xFFFB8500), // Sunset Neon Orange
+  Color(0xFF3A86FF), // Electric Sapphire Blue
+  Color(0xFFFF0054), // Crimson Fire
 ];
 
 const List<Color> _kSoulBurstPalette = <Color>[
-  Color(0xFFFF80A2),
-  Color(0xFF80F2FF),
-  Color(0xFFD880FF),
-  Color(0xFFFFDB80),
-  Color(0xFF99FFB2),
-  Color(0xFFFFAEE2),
-  Color(0xFFB299FF),
-  Color(0xFF80FFE8),
+  Color(0xFFFF2A85),
+  Color(0xFF00E5FF),
+  Color(0xFF9D4EDD),
+  Color(0xFFFFB703),
+  Color(0xFF00E676),
+  Color(0xFFFF85A1),
+  Color(0xFFB5179E),
+  Color(0xFF4CC9F0),
 ];
 
 const List<_SoulPieceTemplate> _kSoulBlockTemplates = <_SoulPieceTemplate>[

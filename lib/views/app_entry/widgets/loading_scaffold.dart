@@ -311,7 +311,7 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
                             style: SLTheme.quicksand(
                               fontSize: 12.2,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFF1E293B),
+                              color: SLColors.darkNavy,
                               height: 1.3,
                             ),
                           ),

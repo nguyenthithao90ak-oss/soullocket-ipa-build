@@ -226,7 +226,7 @@ class LoginForm extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Center(
               child: Text(
-                '🩷 HOẶC ĐĂNG KÝ NHANH 🩷',
+                '🩷 ${l10n.translate('HOẶC ĐĂNG KÝ NHANH')} 🩷',
                 style: SLTheme.quicksand(
                   color: const Color(0xFFFF69B4),
                   fontSize: 13,
@@ -238,31 +238,14 @@ class LoginForm extends StatelessWidget {
           SocialAuthButtons(
             onProviderTap: onSocialLogin,
           ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Center(
-              child: Text(
-                l10n.translate('auth_encrypted_note'),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Color(0xFFBBBBBB),
-                  fontSize: 9,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 10),
           Center(
             child: Text(
-              l10n.translate(
-                'Đăng nhập/Đăng ký qua Google hoặc Apple nữa\nBạn xác nhận rằng bạn 13 tuổi và chấp nhận các điều kiện.',
-              ),
+              'Bằng việc tiếp tục, bạn đồng ý với Điều khoản & Chính sách bảo mật.',
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
-                color: const Color(0xFF999999),
-                fontSize: 10.5,
+                color: const Color(0xFF7A6A73),
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
             ),

@@ -13,6 +13,7 @@ import '../../../core/sl_theme.dart';
 import '../../../utils/services/location_service.dart';
 import '../../../utils/app_error_mapper.dart';
 import '../../../utils/services/love_wheel_service.dart';
+import 'package:soullocket_app/widgets/sl_toast.dart';
 
 class WheelScreen extends StatefulWidget {
   final String houseId;
@@ -233,21 +234,13 @@ class _WheelScreenState extends State<WheelScreen>
         });
         await _saveWheelData();
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Đã tìm thấy ${newItems.length} quán ăn gần bạn!'),
-          backgroundColor: Colors.green,
-        ));
+        SLToast.success(context, 'Đã tìm thấy ${newItems.length} quán ăn gần bạn!');
       } else {
         throw Exception(L10nService().translate('util_khngtmthyq_bdb7de'));
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-            L10nService().translate('util_khngtmcqun_717598'),
-          ),
-          backgroundColor: Colors.red,
-        ));
+        SLToast.error(context, L10nService().translate('util_khngtmcqun_717598'));
       }
     } finally {
       if (mounted) {

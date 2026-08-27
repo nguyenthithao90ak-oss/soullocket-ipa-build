@@ -78,6 +78,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                             CachedNetworkImage(
                               imageUrl: currentBackgroundUrl,
                               fit: BoxFit.cover,
+                              memCacheWidth: 600,
                               filterQuality: FilterQuality.medium,
                             ),
                             DecoratedBox(
@@ -776,7 +777,7 @@ extension _ChatDetailDialogsPart on _ChatDetailScreenState {
                   style: SLTheme.quicksand(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
-                    color: const Color(0xFF1E293B),
+                    color: SLColors.darkNavy,
                   ),
                 ),
                 SLSpacing.h4,

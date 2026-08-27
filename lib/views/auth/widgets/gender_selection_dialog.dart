@@ -142,11 +142,11 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
                                 right: -10, top: 30,
                                 child: Icon(Icons.favorite, size: 24, color: const Color(0xFFFF80AB).withValues(alpha: 0.8)),
                               ),
-                              Positioned(
+                              const Positioned(
                                 right: 10, top: -30,
                                 child: Icon(Icons.auto_awesome, size: 16, color: Colors.white),
                               ),
-                              Positioned(
+                              const Positioned(
                                 left: 30, top: 40,
                                 child: Icon(Icons.auto_awesome, size: 12, color: Colors.white),
                               ),
@@ -157,8 +157,8 @@ class _GenderSelectionDialogState extends State<GenderSelectionDialog>
                                   painter: _GenderDottedCurvePainter(),
                                 ),
                               ),
-                              Center(
-                                child: Icon(Icons.favorite, size: 24, color: const Color(0xFFFF80AB)),
+                              const Center(
+                                child: Icon(Icons.favorite, size: 24, color: Color(0xFFFF80AB)),
                               ),
 
                               // Avatars

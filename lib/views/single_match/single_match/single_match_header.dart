@@ -188,21 +188,14 @@ class _SingleMatchLoadErrorCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: <Color>[
-                Color(0xFFFFFEFF),
-                Color(0xFFF8F4FF),
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: const Color(0xFFFFD8E6)),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFFF0E5DF), width: 1.2),
             boxShadow: <BoxShadow>[
               BoxShadow(
-                color: const Color(0xFFFF4F87).withValues(alpha: 0.10),
-                blurRadius: 24,
-                offset: const Offset(0, 14),
+                color: const Color(0xFFFF5E7E).withValues(alpha: 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -210,39 +203,26 @@ class _SingleMatchLoadErrorCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Container(
-                width: 74,
-                height: 74,
+                width: 64,
+                height: 64,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: <Color>[
-                      Color(0xFFFF5A88),
-                      Color(0xFFFF7AA0),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: <BoxShadow>[
-                    BoxShadow(
-                      color: const Color(0xFFFF4F87).withValues(alpha: 0.22),
-                      blurRadius: 18,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
+                  color: const Color(0xFFFFF2F5),
+                  border: Border.all(color: const Color(0xFFFFD6E0)),
                 ),
                 child: const Icon(
                   Icons.error_outline_rounded,
-                  size: 40,
-                  color: Colors.white,
+                  size: 32,
+                  color: Color(0xFFFF5E7E),
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 context.tr('match_khngticsin_d7088f'),
                 style: SLTheme.quicksand(
-                  fontSize: 21,
+                  fontSize: 18,
                   fontWeight: FontWeight.w900,
-                  color: const Color(0xFF36243D),
+                  color: const Color(0xFF2E2427),
                 ),
               ),
               const SizedBox(height: 8),
@@ -252,14 +232,14 @@ class _SingleMatchLoadErrorCard extends StatelessWidget {
                 style: SLTheme.quicksand(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF7A687D),
+                  color: const Color(0xFF7A6B72),
                 ),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: onRetry,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF4F87),
+                  backgroundColor: const Color(0xFFFF5E7E),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding:

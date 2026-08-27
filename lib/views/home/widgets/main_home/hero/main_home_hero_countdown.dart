@@ -693,10 +693,10 @@ class _MainHomeHeroCountdownCircleState
     final int topMaxLines =
         (topLen > 12 || (topLen > 8 && topClean.contains(' '))) ? 2 : 1;
     final double topFontSize = topLen <= 8
-        ? (widget.circleSize * 0.135).clamp(20.0, 48.0)
+        ? (widget.circleSize * 0.14).clamp(22.0, 50.0)
         : topLen <= 14
-            ? (widget.circleSize * 0.105).clamp(16.0, 36.0)
-            : (widget.circleSize * 0.085).clamp(13.0, 26.0);
+            ? (widget.circleSize * 0.11).clamp(17.0, 38.0)
+            : (widget.circleSize * 0.09).clamp(14.0, 28.0);
 
     final bottomClean = widget.circleBottomLabel.trim();
     final bottomLen = bottomClean.length;
@@ -716,8 +716,8 @@ class _MainHomeHeroCountdownCircleState
         .toDouble();
     final numberHeight =
         (widget.circleSize * 0.44).clamp(70.0, 180.0).toDouble();
-    final topLabelWidth = widget.circleSize * 0.64;
-    final bottomLabelWidth = widget.circleSize * 0.64;
+    final topLabelWidth = widget.circleSize * 0.58;
+    final bottomLabelWidth = widget.circleSize * 0.58;
     final numberWidth = widget.circleSize * 0.82;
     final topGap = (widget.circleSize * 0.04).clamp(6.0, 20.0).toDouble();
     final bottomGap = (widget.circleSize * 0.03).clamp(4.0, 16.0).toDouble();
@@ -869,7 +869,7 @@ class _MainHomeHeroCountdownCircleState
                       children: [
                         Padding(
                           padding: EdgeInsets.symmetric(
-                              horizontal: widget.circleSize * 0.16),
+                              horizontal: widget.circleSize * 0.18),
                           child: _MainHomeHeroCountdownTapTarget(
                             circleSize: widget.circleSize,
                             onTap:
@@ -901,7 +901,7 @@ class _MainHomeHeroCountdownCircleState
                                           labelFont,
                                           fontSize: topFontSize,
                                           fontWeight: FontWeight.w900,
-                                          letterSpacing: topLen > 10 ? 0.4 : 1.0,
+                                          letterSpacing: topLen > 10 ? 0.4 : 0.8,
                                           color: Colors.white,
                                         ).copyWith(
                                           shadows: [
@@ -928,9 +928,9 @@ class _MainHomeHeroCountdownCircleState
                                         labelFont,
                                         fontSize: topFontSize,
                                         fontWeight: FontWeight.w900,
-                                        letterSpacing: topLen > 10 ? 0.4 : 1.0,
+                                        letterSpacing: topLen > 10 ? 0.4 : 0.8,
                                         color: customTextColor ??
-                                            countdownVisual.topLabelColor,
+                                            countdownVisual.bottomLabelColor,
                                       ).copyWith(
                                         shadows: [
                                           Shadow(
@@ -1121,12 +1121,12 @@ class _MainHomeHeroCountdownCircleState
                   onTap: () {
                     if (!_isProUser) {
                       SLNotice.showInfo(context,
-                          'Hiệu ứng bắn tim chỉ dành cho tài khoản Pro!');
+                          context.tr('Hiệu ứng bắn tim chỉ dành cho tài khoản Pro!'));
                       return;
                     }
                     if (_dailyExplosionCount >= 50) {
                       SLNotice.showInfo(
-                          context, 'Hôm nay bạn đã hết lượt thả tim rồi nhé!');
+                          context, context.tr('Hôm nay bạn đã hết lượt thả tim rồi nhé!'));
                       return;
                     }
                     _triggerExplosion(Offset(
@@ -1178,7 +1178,7 @@ class _MainHomeHeroCountdownCircleState
                               color: Colors.white, size: 16),
                           const SizedBox(width: 6),
                           Text(
-                            'Nhấn giữ để chỉnh sửa',
+                            context.tr('Nhấn giữ để chỉnh sửa'),
                             style: widget.state._uiTextStyle(
                               color: Colors.white,
                               fontSize: 13,

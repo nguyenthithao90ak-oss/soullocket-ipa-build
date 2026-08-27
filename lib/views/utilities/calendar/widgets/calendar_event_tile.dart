@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/utils/services/l10n_service.dart';
-import '../../../../core/sl_theme.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
 
 class CalendarEventTile extends StatelessWidget {
   final Color accent;
@@ -27,12 +26,12 @@ class CalendarEventTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.22),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+        border: Border.all(color: accent.withValues(alpha: 0.16)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -46,18 +45,11 @@ class CalendarEventTile extends StatelessWidget {
             height: 42,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [accent, accent.withValues(alpha: 0.85)],
+                colors: [accent.withValues(alpha: 0.9), accent],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: accent.withValues(alpha: 0.4),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
             ),
             alignment: Alignment.center,
             child: Text(
@@ -79,13 +71,11 @@ class CalendarEventTile extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        title.isEmpty
-                            ? context.tr('util_chactiu_3f4360')
-                            : title,
+                        title.isEmpty ? 'Chưa có tiêu đề' : title,
                         style: SLTheme.quicksand(
                           fontSize: 15,
                           fontWeight: FontWeight.w900,
-                          color: Colors.white,
+                          color: SLTheme.textMain,
                           height: 1.3,
                         ),
                       ),
@@ -97,17 +87,15 @@ class CalendarEventTile extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.2),
+                        color: accent.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                            color: accent.withValues(alpha: 0.4), width: 1),
                       ),
                       child: Text(
                         statusLabel,
                         style: SLTheme.quicksand(
-                          fontSize: 10.5,
+                          fontSize: 10,
                           fontWeight: FontWeight.w900,
-                          color: Colors.white,
+                          color: accent,
                         ),
                       ),
                     ),
@@ -122,7 +110,7 @@ class CalendarEventTile extends StatelessWidget {
                       icon: Icons.person_rounded,
                       label: author?.isNotEmpty == true
                           ? 'Tạo bởi $author'
-                          : context.tr('util_charngito_c3640d'),
+                          : 'Chưa rõ người tạo',
                     ),
                     _CalendarEventMetaChip(
                       icon: Icons.schedule_rounded,
@@ -141,15 +129,12 @@ class CalendarEventTile extends StatelessWidget {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFFFF5252).withValues(alpha: 0.2),
+                color: const Color(0xFFFFEFF2),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: const Color(0xFFFF5252).withValues(alpha: 0.35),
-                ),
               ),
               child: const Icon(
                 Icons.delete_outline_rounded,
-                color: Color(0xFFFF6B6B),
+                color: Color(0xFFE46A7A),
                 size: 20,
               ),
             ),
@@ -174,21 +159,20 @@ class _CalendarEventMetaChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.25),
+        color: const Color(0xFFF5F7FB),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: Colors.white70),
+          Icon(icon, size: 14, color: SLTheme.textMuted),
           const SizedBox(width: 6),
           Text(
             label,
             style: SLTheme.quicksand(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: Colors.white.withValues(alpha: 0.85),
+              color: SLTheme.textMuted,
             ),
           ),
         ],

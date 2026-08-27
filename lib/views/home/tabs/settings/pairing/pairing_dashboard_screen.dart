@@ -856,6 +856,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                           child: CachedNetworkImage(
                             imageUrl: url,
                             fit: BoxFit.cover,
+                            memCacheWidth: 300,
+                            memCacheHeight: 300,
                             placeholder: (context, url) => const Icon(
                                 Icons.person,
                                 color: Colors.grey,
@@ -1163,6 +1165,8 @@ class _PairingDashboardScreenState extends State<PairingDashboardScreen> {
                                 width: 52,
                                 height: 52,
                                 fit: BoxFit.cover,
+                                memCacheWidth: 300,
+                                memCacheHeight: 300,
                               ),
                             )
                           : const Icon(Icons.person_rounded,

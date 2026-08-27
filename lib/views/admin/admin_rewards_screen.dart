@@ -6,6 +6,7 @@ import '../../utils/services/auth_service.dart';
 import '../../utils/app_error_mapper.dart';
 import 'widgets/admin_shared_widgets.dart';
 import '../../core/sl_theme.dart';
+import 'package:soullocket_app/widgets/sl_toast.dart';
 
 class AdminRewardsScreen extends StatefulWidget {
   const AdminRewardsScreen({super.key, required this.user});
@@ -99,7 +100,7 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const SLColors.darkNavy,
+        backgroundColor: SLColors.darkNavy,
         title: Text(context.tr('admin_chnhsaimth_98fea8'),
             style: const TextStyle(color: Colors.white)),
         content: Column(
@@ -131,7 +132,7 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: const SLColors.brandPink),
+                backgroundColor: SLColors.brandPink),
             onPressed: () async {
               final newPoints = int.tryParse(pointsCtrl.text.trim());
               if (newPoints != null) {
@@ -150,8 +151,7 @@ class _AdminRewardsScreenState extends State<AdminRewardsScreen> {
                   if (!ctx.mounted) return;
                   Navigator.pop(ctx);
                   if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(context.tr('admin_cpnhtim_2675a2'))));
+                  SLToast.show(context, context.tr('admin_cpnhtim_2675a2'));
                   _loadData(refresh: true);
                 } catch (e) {
                   debugPrint(

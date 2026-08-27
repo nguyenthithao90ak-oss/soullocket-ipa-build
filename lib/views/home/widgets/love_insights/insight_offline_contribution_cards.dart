@@ -17,30 +17,17 @@ extension _InsightOfflineContributionCardsExt on _LoveInsightsScreenState {
 
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFFFFDCE8).withValues(alpha: 0.6),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF4F87).withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+      decoration: _softCardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildCardTitle(
-            icon: Icons.favorite_rounded,
+            icon: Icons.pie_chart_outline_rounded,
             title: L10nService().translate('home_nggpchotnh_b78922'),
             subtitle: L10nService().translate('home_tnhtheonht_08e94d'),
+            accent: const Color(0xFF6366F1),
           ),
-          SLSpacing.h16,
+          const SizedBox(height: 14),
           // ── Names + Percentages ──
           Row(
             children: [
@@ -54,23 +41,23 @@ extension _InsightOfflineContributionCardsExt on _LoveInsightsScreenState {
                       overflow: TextOverflow.ellipsis,
                       style: SLTheme.quicksand(
                         fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF332C35),
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF111827),
                       ),
                     ),
-                    SLSpacing.h4,
+                    const SizedBox(height: 2),
                     Text(
                       '$leftPercent%',
                       style: SLTheme.quicksand(
-                        fontSize: 22,
+                        fontSize: 20,
                         fontWeight: FontWeight.w900,
-                        color: const Color(0xFFFF4F87),
+                        color: const Color(0xFF3B82F6),
                       ),
                     ),
                   ],
                 ),
               ),
-              SLSpacing.w12,
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -81,17 +68,17 @@ extension _InsightOfflineContributionCardsExt on _LoveInsightsScreenState {
                       overflow: TextOverflow.ellipsis,
                       style: SLTheme.quicksand(
                         fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF332C35),
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF111827),
                       ),
                     ),
-                    SLSpacing.h4,
+                    const SizedBox(height: 2),
                     Text(
                       '$rightPercent%',
                       style: SLTheme.quicksand(
-                        fontSize: 22,
+                        fontSize: 20,
                         fontWeight: FontWeight.w900,
-                        color: const Color(0xFF9B7AE8),
+                        color: const Color(0xFFF43F5E),
                       ),
                     ),
                   ],
@@ -99,41 +86,33 @@ extension _InsightOfflineContributionCardsExt on _LoveInsightsScreenState {
               ),
             ],
           ),
-          SLSpacing.h12,
-          // ── Progress bar pink → purple ──
+          const SizedBox(height: 10),
+          // ── Progress bar Blue → Rose ──
           Container(
             clipBehavior: Clip.antiAlias,
-            height: 14,
+            height: 10,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: const Color(0xFFFFEEF4),
+              borderRadius: BorderRadius.circular(10),
+              color: const Color(0xFFF3F4F6),
             ),
             child: Row(
               children: [
                 Expanded(
                   flex: leftFlex,
                   child: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFFF85A2), Color(0xFFFF4F87)],
-                      ),
-                    ),
+                    color: const Color(0xFF3B82F6),
                   ),
                 ),
                 Expanded(
                   flex: rightFlex,
                   child: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFBFA8E8), Color(0xFF9B7AE8)],
-                      ),
-                    ),
+                    color: const Color(0xFFF43F5E),
                   ),
                 ),
               ],
             ),
           ),
-          SLSpacing.h12,
+          const SizedBox(height: 10),
           // ── Balance comment ──
           Text(
             L10nService().translate('home_numtbnangt_32b73c'),

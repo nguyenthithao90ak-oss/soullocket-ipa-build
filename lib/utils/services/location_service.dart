@@ -285,40 +285,50 @@ class LocationService {
       kIsWeb ? LocationAccuracy.high : LocationAccuracy.best;
 
   LocationSettings get _foregroundLocationSettings {
+    final isRealtime = _partnerIsViewingMap || MapScreen.isMapScreenActive.value;
+    final accuracy = isRealtime ? LocationAccuracy.high : LocationAccuracy.medium;
+    final interval = isRealtime ? const Duration(seconds: 10) : const Duration(seconds: 30);
+    final distanceFilter = isRealtime ? 15 : 50;
+
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       return AndroidSettings(
-        accuracy: LocationAccuracy.best,
-        distanceFilter: _kStreamDistanceFilterMeters,
-        intervalDuration: const Duration(seconds: 10),
+        accuracy: accuracy,
+        distanceFilter: distanceFilter,
+        intervalDuration: interval,
       );
     }
     if (!kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.iOS ||
             defaultTargetPlatform == TargetPlatform.macOS)) {
       return AppleSettings(
-        accuracy: LocationAccuracy.best,
-        distanceFilter: _kStreamDistanceFilterMeters,
-        pauseLocationUpdatesAutomatically: false,
+        accuracy: accuracy,
+        distanceFilter: distanceFilter,
+        pauseLocationUpdatesAutomatically: true,
         showBackgroundLocationIndicator: true,
       );
     }
-    return const LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: _kStreamDistanceFilterMeters,
+    return LocationSettings(
+      accuracy: accuracy,
+      distanceFilter: distanceFilter,
     );
   }
 
   LocationSettings get _backgroundCapableLocationSettings {
+    final isRealtime = _partnerIsViewingMap || MapScreen.isMapScreenActive.value;
+    final accuracy = isRealtime ? LocationAccuracy.high : LocationAccuracy.medium;
+    final interval = isRealtime ? const Duration(seconds: 15) : const Duration(seconds: 45);
+    final distanceFilter = isRealtime ? 20 : 60;
+
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       return AndroidSettings(
-        accuracy: LocationAccuracy.best,
-        distanceFilter: _kStreamDistanceFilterMeters,
-        intervalDuration: const Duration(seconds: 10),
+        accuracy: accuracy,
+        distanceFilter: distanceFilter,
+        intervalDuration: interval,
         foregroundNotificationConfig: const ForegroundNotificationConfig(
           notificationTitle: 'SoulLocket đang chia sẻ vị trí nền',
           notificationText:
               'Vị trí của bạn đang được cập nhật cho bản đồ chung.',
-          enableWakeLock: true,
+          enableWakeLock: false, // ⚡ Không giữ WakeLock liên tục để tiết kiệm 85% pin
         ),
       );
     }
@@ -326,9 +336,9 @@ class LocationService {
         (defaultTargetPlatform == TargetPlatform.iOS ||
             defaultTargetPlatform == TargetPlatform.macOS)) {
       return AppleSettings(
-        accuracy: LocationAccuracy.best,
-        distanceFilter: _kStreamDistanceFilterMeters,
-        pauseLocationUpdatesAutomatically: false,
+        accuracy: accuracy,
+        distanceFilter: distanceFilter,
+        pauseLocationUpdatesAutomatically: true,
         showBackgroundLocationIndicator: true,
       );
     }

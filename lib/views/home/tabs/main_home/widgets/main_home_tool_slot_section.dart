@@ -169,8 +169,9 @@ extension _MainHomeToolSlotSection on _MainHomeTabState {
   }
 
   double _homeToolPanelHeight(String toolId) {
-    final media = MediaQuery.of(context);
-    final viewportHeight = media.size.height - media.padding.top;
+    final size = MediaQuery.sizeOf(context);
+    final padding = MediaQuery.paddingOf(context);
+    final viewportHeight = size.height - padding.top;
     return viewportHeight.clamp(620.0, 980.0);
   }
 

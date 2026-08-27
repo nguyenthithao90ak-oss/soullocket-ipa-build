@@ -2,16 +2,10 @@ part of '../../main_home_tab.dart';
 
 extension _MainHomeTabQuickActions on _MainHomeTabState {
   void _onPinnedAppTap(UtilityApp app) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          L10nService().format(
-            'utilities_opening_app',
-            {'title': app.localizedTitle},
-          ),
-        ),
-      ),
-    );
+    final screen = _buildEmbeddedHomeTool(app.id);
+    if (screen != null) {
+      slPush(context, screen);
+    }
   }
 
   // ignore: unused_element

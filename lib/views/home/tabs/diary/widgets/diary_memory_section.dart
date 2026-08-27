@@ -152,7 +152,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Lọc theo tháng',
+            context.tr('Lọc theo tháng'),
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -172,7 +172,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                     ? _selectedMonth == null
                     : _selectedMonth == months[index - 1];
                 final label = isAll
-                    ? 'Tất cả'
+                    ? context.tr('Tất cả')
                     : DateFormat('MM/yyyy').format(months[index - 1]);
                 return ChoiceChip(
                   label: Text(
@@ -539,7 +539,7 @@ class _DiaryMemorySectionState extends State<DiaryMemorySection> {
                                         ],
                                       ),
                                       child: Text(
-                                        'Hết ảnh rồi nha bạn yêu !!!!',
+                                        context.tr('Hết ảnh rồi nha bạn yêu !!!!'),
                                         style: SLTheme.quicksand(
                                           fontSize: 20,
                                           fontWeight: FontWeight.w800,
@@ -1558,7 +1558,7 @@ class _DiaryMemoryHeroCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Lưu giữ khoảnh khắc yêu thương 💕',
+                      context.tr('Lưu giữ khoảnh khắc yêu thương 💕'),
                       style: SLTheme.quicksand(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -1808,7 +1808,7 @@ class _DiaryMemoryAddButton extends StatelessWidget {
                     ),
               const SizedBox(width: 8),
               Text(
-                'Lưu giữ kỷ niệm mới ✨',
+                context.tr('Lưu giữ kỷ niệm mới ✨'),
                 style: SLTheme.quicksand(
                   fontSize: 15,
                   fontWeight: FontWeight.w900,

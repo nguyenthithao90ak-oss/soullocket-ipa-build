@@ -383,15 +383,16 @@ class _SingleMatchCandidateCard extends StatelessWidget {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFEEF4),
+                              color: const Color(0xFFFFF2F5),
                               borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: const Color(0xFFFFD6E0)),
                             ),
                             child: Text(
                               '${scored.score.toStringAsFixed(0)}%',
                               style: SLTheme.quicksand(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w900,
-                                color: const Color(0xFFFF4F87),
+                                color: const Color(0xFFFF5E7E),
                               ),
                             ),
                           ),
@@ -496,7 +497,7 @@ class _SingleMatchCandidateCard extends StatelessWidget {
                   child: FilledButton.icon(
                     onPressed: onAudioCall,
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF4F87),
+                      backgroundColor: const Color(0xFFFF5E7E),
                     ),
                     icon: callingThisCard
                         ? const SizedBox(

@@ -1,8 +1,6 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../../core/sl_theme.dart';
-import '../../../core/fast_backdrop_filter.dart';
 import '../../../utils/services/l10n_service.dart';
 import 'auth_tab_switcher.dart';
 
@@ -59,7 +57,7 @@ class AuthPanelShell extends StatelessWidget {
                                 style: SLTheme.quicksand(
                                   fontSize: compact ? 34 : 38,
                                   fontWeight: FontWeight.w900,
-                                  color: const SLColors.brandPink,
+                                  color: SLColors.brandPink,
                                   letterSpacing: 1.0,
                                 ),
                               ),
@@ -72,14 +70,14 @@ class AuthPanelShell extends StatelessWidget {
                                     Icon(
                                   Icons.lock_person_rounded,
                                   size: compact ? 30 : 34,
-                                  color: const SLColors.brandPink,
+                                  color: SLColors.brandPink,
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            '❤️ Nơi lưu giữ những khoảnh khắc yêu thương ❤️',
+                            '❤️ ${l10n.translate('Nơi lưu giữ những khoảnh khắc yêu thương')} ❤️',
                             textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
                               fontSize: compact ? 13 : 14.5,
@@ -106,7 +104,7 @@ class AuthPanelShell extends StatelessWidget {
                         alignment: Alignment.topCenter,
                         children: [
                           ...previousChildren,
-                          if (currentChild != null) currentChild,
+                          ...?currentChild == null ? null : [currentChild],
                         ],
                       );
                     },
@@ -129,41 +127,18 @@ class AuthPanelShell extends StatelessWidget {
                     },
                     child: RepaintBoundary(child: authSection),
                   ),
-                  Container(
-                    margin: const EdgeInsets.only(top: 16),
-                    padding: EdgeInsets.fromLTRB(
-                      compact ? 12 : 14,
-                      12,
-                      compact ? 12 : 14,
-                      compact ? 10 : 12,
-                    ),
-                    decoration: const BoxDecoration(
-                      color: Colors.transparent,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.support_agent_rounded,
-                              size: 13,
-                              color: const SLColors.brandPink.withValues(alpha: 0.8),
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              l10n.translate('auth_sync_guide'),
-                              style: SLTheme.quicksand(
-                                fontSize: 12,
-                                color: const SLColors.brandPink.withValues(alpha: 0.9),
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        LayoutBuilder(
+                    Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      padding: EdgeInsets.fromLTRB(
+                        compact ? 12 : 14,
+                        8,
+                        compact ? 12 : 14,
+                        compact ? 8 : 10,
+                      ),
+                      decoration: const BoxDecoration(
+                        color: Colors.transparent,
+                      ),
+                      child: LayoutBuilder(
                           builder: (context, constraints) {
                             final stackButtons = compact ||
                                 textScale > 1.25 ||
@@ -207,14 +182,12 @@ class AuthPanelShell extends StatelessWidget {
                             );
                           },
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
-    );
+            );
   }
 }
 
@@ -237,7 +210,7 @@ class _AuthHelpButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final foreground = isGuide ? Colors.white : const SLColors.brandPink;
+    final foreground = isGuide ? Colors.white : SLColors.brandPink;
     final buttonChild = Container(
       decoration: BoxDecoration(
         gradient: isGuide
@@ -258,7 +231,7 @@ class _AuthHelpButton extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: const SLColors.brandPink
+            color: SLColors.brandPink
                 .withValues(alpha: isGuide ? 0.28 : 0.08),
             blurRadius: 16,
             offset: const Offset(0, 6),

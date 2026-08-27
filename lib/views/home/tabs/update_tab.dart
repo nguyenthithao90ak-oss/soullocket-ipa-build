@@ -87,7 +87,7 @@ class _UpdateTabState extends State<UpdateTab> {
             'Fixed the "ancestor path" issue when creating a new house in Firebase.',
           ),
           _tr(
-            'Gỡ bỏ thanh ${L10nService().translate('home_trltinch_918abe')} trong tab Tiện ích để giao diện thoáng hơn.',
+            'Gỡ bỏ thanh Trợ lý tiện ích trong tab Tiện ích để giao diện thoáng hơn.',
             'Removed the "Utility Assistant" bar from the Utilities tab for a cleaner layout.',
           ),
           _tr(
@@ -257,7 +257,7 @@ class _UpdateTabState extends State<UpdateTab> {
             child: const Text(
               'OK',
               style: TextStyle(
-                color: Color(0xFFFF4B91),
+                color: SLColors.brandPink,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -316,7 +316,7 @@ class _UpdateTabState extends State<UpdateTab> {
                     _tr(L10nService().translate('home_nhtkcpnht_028a74'),
                         'Update log'),
                     style: _titleStyle(
-                      color: const Color(0xFF1E293B),
+                      color: SLColors.darkNavy,
                     ),
                   ),
                   SLSpacing.h16,
@@ -522,10 +522,10 @@ class _UpdateTabState extends State<UpdateTab> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFFE4E6)),
+        border: Border.all(color: const Color(0xFFFFD6E0)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFE11D48).withValues(alpha: 0.03),
+            color: const Color(0xFFFF5E7E).withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -561,7 +561,7 @@ class _UpdateTabState extends State<UpdateTab> {
               'SoulLocket documents, updates, and support hub',
             ),
             style: _titleStyle(
-              color: const Color(0xFF1E293B),
+              color: SLColors.darkNavy,
               fontSize: 24,
               height: 1.25,
             ),
@@ -777,8 +777,8 @@ class _UpdateTabState extends State<UpdateTab> {
           _buildQuickCard(
             _tr(L10nService().translate('home_nhntinmi_fa749d'), 'Latest news'),
             Icons.favorite_rounded,
-            const Color(0xFFF43F5E),
-            const Color(0xFFE11D48),
+            const Color(0xFFFF85A1),
+            const Color(0xFFFF5E7E),
             Colors.white,
             () => _showNewsSheet(context),
           ),
@@ -1464,7 +1464,7 @@ class _UpdateTabState extends State<UpdateTab> {
             controller: _feedbackCtrl,
             maxLines: 4,
             maxLength: 500,
-            style: _bodyStyle(color: const Color(0xFF1E293B)),
+            style: _bodyStyle(color: SLColors.darkNavy),
             decoration: InputDecoration(
               hintText: _tr('Nhập ý kiến đóng góp của bạn ở đây...',
                   'Enter your feedback here...'),
@@ -1481,7 +1481,7 @@ class _UpdateTabState extends State<UpdateTab> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: SLRadius.lgAll,
-                borderSide: const BorderSide(color: Color(0xFFFF4B91)),
+                borderSide: const BorderSide(color: SLColors.brandPink),
               ),
               counterStyle: _bodyStyle(color: Colors.grey[500], fontSize: 11),
             ),
@@ -1493,7 +1493,7 @@ class _UpdateTabState extends State<UpdateTab> {
               onPressed:
                   _isSendingFeedback ? null : () => _sendFeedback(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF4B91),
+                backgroundColor: SLColors.brandPink,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(

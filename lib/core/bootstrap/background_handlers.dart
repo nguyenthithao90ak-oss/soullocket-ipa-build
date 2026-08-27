@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:soullocket_app/utils/shared_prefs_mmkv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/core/bootstrap/app_bootstrap.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';

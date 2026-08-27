@@ -419,6 +419,8 @@ class _ChatBubble extends StatelessWidget {
                         imageUrl: imageUrl,
                         fit: BoxFit.cover,
                         width: 200,
+                        memCacheWidth: 200,
+                        memCacheHeight: 200,
                         placeholder: (context, url) => Container(
                           width: 200,
                           height: 150,

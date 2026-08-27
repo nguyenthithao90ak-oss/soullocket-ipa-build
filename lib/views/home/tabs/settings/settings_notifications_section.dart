@@ -149,7 +149,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
               fontSize: 13.5,
               fontWeight: FontWeight.w700,
               height: 1.45,
-              color: const SLColors.textMedium,
+              color: SLColors.textMedium,
             ),
           ),
           actions: [
@@ -376,11 +376,11 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
           ),
           const SizedBox(height: 4),
           Text(
-            'Tên đang dùng: $displayName',
+            '${L10nService().translate('home_current_name_prefix')}: $displayName',
             style: SLTextStyles.quicksand(
               fontSize: 11.6,
               fontWeight: FontWeight.w700,
-              color: const SLColors.textMedium,
+              color: SLColors.textMedium,
             ),
           ),
           const SizedBox(height: 8),
@@ -781,7 +781,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
           ),
           const SizedBox(height: 4),
           Text(
-            'Gửi thông báo thử đến điện thoại người ấy để kiểm tra xem thông báo có hiện ra ngoài màn hình không.',
+            L10nService().translate('Gửi thông báo thử đến điện thoại người ấy để kiểm tra xem thông báo có hiện ra ngoài màn hình không.'),
             style: SLTextStyles.quicksand(
               fontWeight: FontWeight.w600,
               fontSize: 12.5,
@@ -794,25 +794,25 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             children: [
               Expanded(
                 child: _buildTestNotifBtn(
-                  label: '💬 Test chat',
+                  label: L10nService().translate('💬 Test chat'),
                   color: const Color(0xFF6366F1),
                   type: 'chat',
                   screen: 'chat',
-                  title: '💬 Nhắn tin mới!',
+                  title: L10nService().translate('💬 Nhắn tin mới!'),
                   body:
-                      'Đây là thông báo thử nghiệm loại Chat. Nếu bạn thấy tin này nghĩa là thông báo đang hoạt động! 🎉',
+                      L10nService().translate('Đây là thông báo thử nghiệm loại Chat. Nếu bạn thấy tin này nghĩa là thông báo đang hoạt động! 🎉'),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _buildTestNotifBtn(
-                  label: '💖 Test Soul Merge',
+                  label: L10nService().translate('💖 Test Soul Merge'),
                   color: const Color(0xFFD81B60),
                   type: 'soul_merge',
                   screen: 'soul_merge',
-                  title: '💖 Soul Merge đang gọi bạn!',
+                  title: L10nService().translate('💖 Soul Merge đang gọi bạn!'),
                   body:
-                      'Người ấy đang chờ bạn trong Soul Merge. Đây là thông báo thử nghiệm! 💕',
+                      L10nService().translate('Người ấy đang chờ bạn trong Soul Merge. Đây là thông báo thử nghiệm! 💕'),
                 ),
               ),
             ],
@@ -821,13 +821,13 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
           SizedBox(
             width: double.infinity,
             child: _buildTestNotifBtn(
-              label: '🔔 Test thông báo thường',
+              label: L10nService().translate('🔔 Test thông báo thường'),
               color: const Color(0xFF059669),
               type: 'home',
               screen: 'home',
-              title: '🔔 Thông báo thử nghiệm',
+              title: L10nService().translate('🔔 Thông báo thử nghiệm'),
               body:
-                  'Nếu bạn thấy tin này ngoài màn hình chính nghĩa là thông báo đang hoạt động bình thường! ✅',
+                  L10nService().translate('Nếu bạn thấy tin này ngoài màn hình chính nghĩa là thông báo đang hoạt động bình thường! ✅'),
             ),
           ),
         ],
@@ -847,7 +847,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       onTap: () async {
         final houseId = _houseId;
         if (houseId == null || houseId.isEmpty) {
-          _showToast('Chưa có thông tin nhà, thử lại sau.', success: false);
+          _showToast(L10nService().translate('Chưa có thông tin nhà, thử lại sau.'), success: false);
           return;
         }
         try {

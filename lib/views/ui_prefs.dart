@@ -41,6 +41,7 @@ class UiPrefsState {
   final String homeLayoutKey;
   final bool showAvatarFrameIcon;
   final String friendlyChatPersona;
+  final String uiVersion;
 
   const UiPrefsState({
     required this.themeKey,
@@ -74,6 +75,7 @@ class UiPrefsState {
     required this.homeLayoutKey,
     required this.showAvatarFrameIcon,
     required this.friendlyChatPersona,
+    required this.uiVersion,
   });
 
   UiPrefsState copyWith({
@@ -108,6 +110,7 @@ class UiPrefsState {
     String? homeLayoutKey,
     bool? showAvatarFrameIcon,
     String? friendlyChatPersona,
+    String? uiVersion,
   }) {
     return UiPrefsState(
       themeKey: themeKey ?? this.themeKey,
@@ -144,6 +147,7 @@ class UiPrefsState {
       homeLayoutKey: homeLayoutKey ?? this.homeLayoutKey,
       showAvatarFrameIcon: showAvatarFrameIcon ?? this.showAvatarFrameIcon,
       friendlyChatPersona: friendlyChatPersona ?? this.friendlyChatPersona,
+      uiVersion: uiVersion ?? this.uiVersion,
     );
   }
 
@@ -156,8 +160,8 @@ class UiPrefsState {
     countdownSizePx: 400,
     avatarFrameKey: 'off',
     countdownShapeKey: 'circle',
-    // Default countdown visual: floating_hearts (Tim bay)
-    countdownStyleKey: 'floating_hearts',
+    // Default countdown visual: balanced (Cân bằng)
+    countdownStyleKey: 'balanced',
     countdownTopLabel: '',
     countdownBottomLabel: '',
     countdownTextColor: '',
@@ -182,6 +186,7 @@ class UiPrefsState {
     homeLayoutKey: 'classic',
     showAvatarFrameIcon: true,
     friendlyChatPersona: "",
+    uiVersion: 'v1',
   );
 }
 
@@ -236,6 +241,7 @@ class UiPrefs {
   static const _kShowAvatarFrameIconKey = 'il_show_avatar_frame_icon';
   static const _kFriendlyChatPersonaKey = 'il_friendly_chat_persona';
   static const _kHomeLayoutKey = 'il_home_layout_key';
+  static const _kUiVersionKey = 'il_ui_version_key';
 
   static final ValueNotifier<UiPrefsState> notifier =
       ValueNotifier<UiPrefsState>(UiPrefsState.defaults);
@@ -457,6 +463,9 @@ class UiPrefs {
         friendlyChatPersona: (prefs.getString(_kFriendlyChatPersonaKey) ??
                 UiPrefsState.defaults.friendlyChatPersona)
             .trim(),
+        uiVersion: (prefs.getString(_kUiVersionKey) ??
+            UiPrefsState.defaults.uiVersion)
+            .trim(),
       ),
     );
   }
@@ -537,6 +546,7 @@ class UiPrefs {
     await prefs.setString(_kBrandMarkKey, normalized.brandMarkKey);
     await prefs.setStringList(_kHomeBlockOrderKey, normalized.homeBlockOrder);
     await prefs.setString(_kHomeLayoutKey, normalized.homeLayoutKey);
+    await prefs.setString(_kUiVersionKey, normalized.uiVersion);
 
     try {
       unawaited(SettingsSyncService().backupSettingsToCloud());
@@ -591,6 +601,7 @@ class UiPrefs {
       homeShowTimer: state.homeShowTimer,
       showAvatarFrameIcon: state.showAvatarFrameIcon,
       friendlyChatPersona: state.friendlyChatPersona.trim(),
+      uiVersion: _normalizeUiVersion(state.uiVersion),
     );
   }
 
@@ -623,5 +634,18 @@ class UiPrefs {
     await ensureLoaded();
     await saveState(
         notifier.value.copyWith(friendlyChatPersona: persona.trim()));
+  }
+
+  static String _normalizeUiVersion(String value) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'v2' || normalized == 'aurora') return 'v2';
+    return 'v1';
+  }
+
+  static Future<void> setUiVersion(String version) async {
+    await ensureLoaded();
+    final normalized = _normalizeUiVersion(version);
+    if (notifier.value.uiVersion == normalized) return;
+    await saveState(notifier.value.copyWith(uiVersion: normalized));
   }
 }

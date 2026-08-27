@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
+import '../resilient_http.dart';
 
 class AppUpdateInfo {
   final bool needsUpdate;
@@ -65,7 +66,7 @@ class UpdateCheckerService {
           '${r2Domain.replaceAll(RegExp(r'/+$'), '')}/app_config.json',
         );
         final response =
-            await http.get(cdnUrl).timeout(const Duration(seconds: 3));
+            await ResilientHttp.get(cdnUrl);
         if (response.statusCode == 200) {
           final decoded = jsonDecode(response.body);
           if (decoded is Map) {

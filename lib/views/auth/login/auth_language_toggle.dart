@@ -65,7 +65,7 @@ class AuthLanguageToggle extends StatelessWidget {
                       offset: const Offset(0, 10),
                     ),
                     BoxShadow(
-                      color: const SLColors.brandPink.withValues(alpha: 0.10),
+                      color: SLColors.brandPink.withValues(alpha: 0.10),
                       blurRadius: 14,
                       offset: const Offset(0, 4),
                     ),
@@ -121,8 +121,9 @@ class AuthLanguageToggle extends StatelessWidget {
                             _buildItem(
                               context: ctx,
                               icon: '🌐',
-                              title: 'Tự động (Hệ thống)',
-                              subtitle: 'Đang chọn theo máy: $systemCleanName',
+                              title: l10n.translate('Tự động (Hệ thống)'),
+                              subtitle:
+                                  '${l10n.translate('Đang chọn theo máy')}: $systemCleanName',
                               isSelected: isAuto,
                               onTap: () {
                                 onSelect('auto');
@@ -211,7 +212,7 @@ class AuthLanguageToggle extends StatelessWidget {
                       fontWeight:
                           isSelected ? FontWeight.w900 : FontWeight.w600,
                       color: isSelected
-                          ? const SLColors.brandPink
+                          ? SLColors.brandPink
                           : const Color(0xFF334155),
                     ),
                   ),
@@ -223,7 +224,7 @@ class AuthLanguageToggle extends StatelessWidget {
                         fontSize: 10.5,
                         fontWeight: FontWeight.w500,
                         color: isSelected
-                            ? const SLColors.brandPink.withValues(alpha: 0.8)
+                            ? SLColors.brandPink.withValues(alpha: 0.8)
                             : const Color(0xFF94A3B8),
                       ),
                     ),
@@ -259,7 +260,7 @@ class AuthLanguageToggle extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: const SLColors.brandPink.withValues(alpha: 0.10),
+              color: SLColors.brandPink.withValues(alpha: 0.10),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),

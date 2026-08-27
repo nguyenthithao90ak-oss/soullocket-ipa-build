@@ -491,7 +491,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
                               style: SLTheme.quicksand(
                                 fontWeight: FontWeight.w900,
                                 fontSize: 15,
-                                color: const Color(0xFF1E293B),
+                                color: SLColors.darkNavy,
                               ),
                             ),
                           ),
@@ -625,7 +625,7 @@ extension _MessengerRoomListPart on _MessengerScreenState {
                               style: SLTheme.quicksand(
                                 fontWeight: FontWeight.w900,
                                 fontSize: 15,
-                                color: const Color(0xFF1E293B),
+                                color: SLColors.darkNavy,
                               ),
                             ),
                           ),

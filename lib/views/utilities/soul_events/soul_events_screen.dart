@@ -5,6 +5,7 @@ import 'package:soullocket_app/utils/services/soul_event_service.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 
 import 'package:soullocket_app/utils/services/widget_service.dart';
+import '../../../utils/services/l10n_service.dart';
 
 import 'soul_event_detail_screen.dart';
 import 'soul_event_editor_sheet.dart';
@@ -126,7 +127,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text('Sự Kiện & Kỷ Niệm',
+        title: Text(L10nService().translate('Sự Kiện & Kỷ Niệm'),
             style: SLTypography.titleLarge.copyWith(
                 color: SLColors.primary, fontWeight: FontWeight.w900)),
         backgroundColor: Colors.transparent,
@@ -140,7 +141,7 @@ class _SoulEventsScreenState extends State<SoulEventsScreen> {
           IconButton(
             icon: const Icon(Icons.add_to_home_screen_rounded,
                 color: SLColors.secondary, size: 24),
-            tooltip: 'Thêm tiện ích ra màn hình',
+            tooltip: L10nService().translate('Thêm tiện ích ra màn hình'),
             onPressed: () async {
               try {
                 await WidgetService.requestPinSoulEventWidget();

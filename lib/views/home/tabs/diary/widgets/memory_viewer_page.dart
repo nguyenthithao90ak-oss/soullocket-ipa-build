@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../../../../../utils/services/private_media_url_service.dart';
 import '../../../../../utils/services/cloudflare_r2_service.dart';
+import '../../../../../utils/app_cache_manager.dart';
 class MemoryZoomDraggableWrapper extends StatefulWidget {
   final Widget child;
   final VoidCallback onDismiss;
@@ -278,8 +280,23 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
 
       playUrl = CloudflareR2Service.resolveVideoUrl(playUrl);
 
-      final uri = Uri.parse(playUrl);
-      final controller = VideoPlayerController.networkUrl(uri);
+      VideoPlayerController controller;
+      try {
+        File? cachedFile;
+        final fileInfo = await AppCacheManager.instance.getFileFromCache(playUrl);
+        if (fileInfo != null) {
+          cachedFile = fileInfo.file;
+        } else {
+          cachedFile = await AppCacheManager.instance.getSingleFile(playUrl);
+        }
+        if (cachedFile != null) {
+          controller = VideoPlayerController.file(cachedFile);
+        } else {
+          controller = VideoPlayerController.networkUrl(Uri.parse(playUrl));
+        }
+      } catch (_) {
+        controller = VideoPlayerController.networkUrl(Uri.parse(playUrl));
+      }
       _controller = controller;
       await controller.initialize();
       if (mounted) {
@@ -301,7 +318,23 @@ class _MemoryVideoWidgetState extends State<_MemoryVideoWidget> {
           );
           final freshPlayUrl = CloudflareR2Service.resolveVideoUrl(res.url);
           final freshUri = Uri.parse(freshPlayUrl);
-          final controller = VideoPlayerController.networkUrl(freshUri);
+          VideoPlayerController controller;
+          try {
+            File? cachedFile;
+            final fileInfo = await AppCacheManager.instance.getFileFromCache(freshPlayUrl);
+            if (fileInfo != null) {
+              cachedFile = fileInfo.file;
+            } else {
+              cachedFile = await AppCacheManager.instance.getSingleFile(freshPlayUrl);
+            }
+            if (cachedFile != null) {
+              controller = VideoPlayerController.file(cachedFile);
+            } else {
+              controller = VideoPlayerController.networkUrl(freshUri);
+            }
+          } catch (_) {
+            controller = VideoPlayerController.networkUrl(freshUri);
+          }
           _controller = controller;
           await controller.initialize();
           if (mounted) {

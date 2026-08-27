@@ -1365,6 +1365,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                                 ? CachedNetworkImage(
                                     imageUrl: avatarUrl,
                                     fit: BoxFit.cover,
+                                    memCacheWidth: 400,
                                     filterQuality: FilterQuality.medium,
                                     errorWidget: (_, __, ___) => Icon(
                                       icon,
@@ -1430,7 +1431,7 @@ class _ShareBottomSheetState extends State<ShareBottomSheet> {
                           screenWidth,
                         ),
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF1E293B),
+                        color: SLColors.darkNavy,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,

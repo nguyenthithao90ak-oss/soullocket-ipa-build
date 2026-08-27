@@ -40,9 +40,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
                               ? bottomInset / 2.5
                               : 0.0) // Hạ thấp trên iOS cho gọn
                           : (bottomInset > 0 ? bottomInset : 0.0);
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: extraBottomPadding),
-                        child: AnimatedSize(
+                      return AnimatedSize(
                           duration: effectProfile.performanceMode || isSwiping
                               ? Duration.zero
                               : const Duration(milliseconds: 180),
@@ -58,8 +56,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
                                   currentIndex: currentIndex,
                                   isSwiping: isSwiping,
                                 ),
-                        ),
-                      );
+                        );
                     },
                   );
                 },
@@ -88,25 +85,30 @@ extension _HomeScreenShellControls on _HomeScreenState {
 
     final navSurface = Container(
       key: _firstGuideBottomNavKey,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.fromLTRB(12, 12, 12, bottomInset > 0 ? bottomInset + 8 : 16),
       decoration: BoxDecoration(
         color: isDark
-            ? const Color(0xFF2D2D3A).withValues(alpha: 0.5)
-            : const Color(0xFFF3EEEA).withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.12)
-              : Colors.black.withValues(alpha: 0.08),
-          width: 1,
+            ? const Color(0xFF1E1E28).withValues(alpha: 0.85)
+            : Colors.white.withValues(alpha: 0.85),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(28),
+          topRight: Radius.circular(28),
+        ),
+        border: Border(
+          top: BorderSide(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.05),
+            width: 1,
+          ),
         ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(
-              alpha: isDark ? 0.25 : 0.06,
+              alpha: isDark ? 0.3 : 0.08,
             ),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
           ),
         ],
       ),
@@ -135,28 +137,30 @@ extension _HomeScreenShellControls on _HomeScreenState {
       },
       child: Padding(
         key: const ValueKey('expanded-nav'),
-        padding: EdgeInsets.fromLTRB(24, 0, 24, bottomInset > 0 ? 4 : 12),
+        padding: EdgeInsets.zero,
         child: Stack(
           alignment: Alignment.topCenter,
           clipBehavior: Clip.none,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: RepaintBoundary(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(32),
-                  child: !useBackdropBlur
-                      ? navSurface
-                        : FastBackdropFilter(
-                          filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                          fallbackColor: Colors.transparent,
-                          child: navSurface,
-                        ),
+            RepaintBoundary(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(28),
+                  topRight: Radius.circular(28),
                 ),
+                child: !useBackdropBlur
+                    ? navSurface
+                    : FastBackdropFilter(
+                        filter: ui.ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                        fallbackColor: isDark 
+                            ? const Color(0xFF1E1E28)
+                            : Colors.white,
+                        child: navSurface,
+                      ),
               ),
             ),
             Positioned(
-              top: 0, // Move up slightly so it doesn't overlap the icon
+              top: 0,
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -164,20 +168,22 @@ extension _HomeScreenShellControls on _HomeScreenState {
                   onLongPress: _hideBottomNavForSession,
                   borderRadius: SLRadius.pillAll,
                   child: Ink(
-                    width: 40,
-                    height: 20, // Slightly larger hit area
+                    width: 60,
+                    height: 20,
                     decoration: BoxDecoration(
                       color: Colors.transparent,
                       borderRadius: SLRadius.pillAll,
                     ),
                     child: Center(
-                      child: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        size:
-                            16, // Slightly larger to be visible without background
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.8)
-                            : accent.withValues(alpha: 0.9),
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.2)
+                              : Colors.black.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
                     ),
                   ),
@@ -285,8 +291,8 @@ extension _HomeScreenShellControls on _HomeScreenState {
           child: AnimatedContainer(
             duration: animationDuration,
             curve: Curves.easeOutCubic,
-            height: 40,
-            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.transparent,
               borderRadius: BorderRadius.circular(24),
@@ -302,9 +308,9 @@ extension _HomeScreenShellControls on _HomeScreenState {
                     curve: Curves.easeOutBack,
                     scale: isActive && !isPerformanceMode ? 1.1 : 1.0,
                     child: Icon(
-                      _getIconForTab(index),
+                      _getIconForTab(index, isActive: isActive),
                       color: isActive ? item.activeColor : inactiveColor,
-                      size: isActive ? 20 : 19,
+                      size: isActive ? 24 : 22,
                     ),
                   ),
                 ),

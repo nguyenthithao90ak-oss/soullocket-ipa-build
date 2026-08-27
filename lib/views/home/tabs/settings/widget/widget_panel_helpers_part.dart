@@ -246,7 +246,7 @@ extension _SettingsTabWidgetPanelHelpersPart on _SettingsTabState {
                       fontWeight: FontWeight.w900,
                       color: value
                           ? const Color(0xFF1A2332)
-                          : const SLColors.textMedium,
+                          : SLColors.textMedium,
                     ),
                   ),
                   if (subtitle != null && subtitle.trim().isNotEmpty) ...[

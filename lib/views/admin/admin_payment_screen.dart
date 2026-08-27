@@ -86,14 +86,14 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
         ),
         content: Text(
           'Bạn có chắc chắn muốn hoàn tiền thủ công cho giao dịch này không? Hành động này sẽ được ghi vào Audit Log.',
-          style: SLTheme.quicksand(color: const SLColors.textMuted),
+          style: SLTheme.quicksand(color: SLColors.textMuted),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               'Hủy',
-              style: SLTheme.quicksand(color: const SLColors.textMuted),
+              style: SLTheme.quicksand(color: SLColors.textMuted),
             ),
           ),
           TextButton(
@@ -101,7 +101,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
             child: Text(
               'Hoàn tiền',
               style: SLTheme.quicksand(
-                color: const SLColors.brandPink,
+                color: SLColors.brandPink,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -172,7 +172,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
           Text(
             'Quản lý các gói PRO, lịch sử giao dịch, và xử lý hoàn tiền thủ công.',
             style: SLTheme.quicksand(
-              color: const SLColors.textMuted,
+              color: SLColors.textMuted,
               fontSize: 14,
             ),
           ),
@@ -262,7 +262,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
           Text(
             price,
             style: SLTheme.quicksand(
-              color: const SLColors.brandPink,
+              color: SLColors.brandPink,
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
@@ -279,7 +279,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
                       child: Text(
                         b,
                         style: SLTheme.quicksand(
-                            color: const SLColors.textMuted, fontSize: 13),
+                            color: SLColors.textMuted, fontSize: 13),
                       ),
                     ),
                   ],
@@ -325,7 +325,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
             subtitle: Text(
               'ID: ${tx['id']} - ${tx['amount']}đ',
               style: SLTheme.quicksand(
-                  color: const SLColors.textMuted, fontSize: 13),
+                  color: SLColors.textMuted, fontSize: 13),
             ),
             trailing: isRefunded
                 ? Text(
@@ -336,7 +336,7 @@ class _AdminPaymentScreenState extends State<AdminPaymentScreen> {
                 : TextButton(
                     onPressed: () => _manualRefund(tx['id'], tx['uid']),
                     style: TextButton.styleFrom(
-                        foregroundColor: const SLColors.brandPink),
+                        foregroundColor: SLColors.brandPink),
                     child: const Text('Hoàn tiền'),
                   ),
           );

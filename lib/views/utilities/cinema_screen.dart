@@ -329,6 +329,7 @@ class _CinemaScreenState extends State<CinemaScreen> {
                         ? CachedNetworkImage(
                             imageUrl: reel.items.first.imageUrl,
                             fit: BoxFit.cover,
+                            memCacheWidth: 800,
                             errorWidget: (_, __, ___) =>
                                 Container(color: Colors.black),
                           )

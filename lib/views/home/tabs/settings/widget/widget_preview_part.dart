@@ -121,9 +121,9 @@ extension _SettingsTabWidgetPreviewPart on _SettingsTabState {
     switch (colorKey) {
       case 'ruby':
         return const [
-          Color(0xFFE11D48),
-          Color(0xFFFB7185),
-          Color(0xFFFFE4E6),
+          Color(0xFFFF5E7E),
+          Color(0xFFFF85A1),
+          Color(0xFFFFE3EA),
         ];
       case 'violet':
         return const [
@@ -1671,6 +1671,7 @@ class _WidgetDiaryPreviewStreamState extends State<_WidgetDiaryPreviewStream> {
                 filterQuality: FilterQuality.medium,
                 maxWidthDiskCache: tileWidth.ceil(),
                 maxHeightDiskCache: tileHeight.ceil(),
+                memCacheWidth: 400,
                 errorWidget: (_, __, ___) {
                   return Icon(
                     Icons.broken_image_rounded,

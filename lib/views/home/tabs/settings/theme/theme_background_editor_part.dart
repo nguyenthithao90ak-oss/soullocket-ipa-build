@@ -319,6 +319,7 @@ extension _SettingsTabThemeBackgroundEditorPart on _SettingsTabState {
       filterQuality: FilterQuality.medium,
       fadeInDuration: const Duration(milliseconds: 180),
       maxWidthDiskCache: 1080,
+      memCacheWidth: 1080,
       placeholder: (_, __) => const DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(

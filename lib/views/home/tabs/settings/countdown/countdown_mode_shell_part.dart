@@ -188,6 +188,7 @@ class _SettingsCountdownModeScreen extends StatelessWidget {
                       imageUrl: uiState.customBackgroundUrl,
                       fit: BoxFit.cover,
                       filterQuality: FilterQuality.medium,
+                      memCacheWidth: 1080,
                       errorWidget: (_, __, ___) => const SizedBox.shrink(),
                     ),
                   ),

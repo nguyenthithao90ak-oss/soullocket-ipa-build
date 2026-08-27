@@ -104,8 +104,8 @@ class _SingleMatchFindingScreenState extends State<SingleMatchFindingScreen>
   @override
   Widget build(BuildContext context) {
     final accentColor = widget.isChat
-        ? const Color(0xFFFF4F87)
-        : (widget.isVideo ? const Color(0xFF7C61FF) : const Color(0xFFFF4F87));
+        ? const Color(0xFFFF5E7E)
+        : (widget.isVideo ? const Color(0xFF6366F1) : const Color(0xFFFF5E7E));
 
     final size = MediaQuery.sizeOf(context);
 

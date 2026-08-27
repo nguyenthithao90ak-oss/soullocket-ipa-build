@@ -328,7 +328,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: const ColorScheme.light(
-            primary: Color(0xFFFF4F87),
+            primary: Color(0xFFFF5E7E),
             onPrimary: Colors.white,
           ),
         ),
@@ -895,7 +895,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                       child: _isLoading
                           ? const Center(
                               child: CircularProgressIndicator(
-                                color: Color(0xFFFF4F87),
+                                color: Color(0xFFFF5E7E),
                               ),
                             )
                           : _loadError != null
@@ -1235,7 +1235,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                   children: <Widget>[
                     const Icon(
                       Icons.cake_rounded,
-                      color: Color(0xFFFF4F87),
+                      color: Color(0xFFFF5E7E),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -1270,7 +1270,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
                 value: current.enabled,
-                activeThumbColor: const Color(0xFFFF4F87),
+                activeThumbColor: const Color(0xFFFF5E7E),
                 title: Text(
                   L10nService().translate('match_xuthintron_5ab706'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w800),
@@ -1291,7 +1291,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
                 value: current.allowAudioCalls,
-                activeThumbColor: const Color(0xFFFF4F87),
+                activeThumbColor: const Color(0xFFFF5E7E),
                 title: Text(
                   L10nService().translate('match_chophpgith_5a78ca'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w800),
@@ -1312,7 +1312,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
                 value: current.allowVideoCalls,
-                activeThumbColor: const Color(0xFFFF4F87),
+                activeThumbColor: const Color(0xFFFF5E7E),
                 title: Text(
                   L10nService().translate('match_chophpgivi_95d26f'),
                   style: SLTheme.quicksand(fontWeight: FontWeight.w800),
@@ -1354,8 +1354,8 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
                 ),
                 min: SingleMatchPreferences.minAgeFloor.toDouble(),
                 max: SingleMatchPreferences.maxAgeCeiling.toDouble(),
-                activeColor: const Color(0xFFFF4F87),
-                inactiveColor: const Color(0xFFFFDCE7),
+                activeColor: const Color(0xFFFF5E7E),
+                inactiveColor: const Color(0xFFFFE3EA),
                 labels: RangeLabels(
                   '${current.preferredAgeMin}',
                   '${current.preferredAgeMax}',
@@ -1519,7 +1519,7 @@ class _SingleMatchHubScreenState extends State<SingleMatchHubScreen>
             onPressed:
                 (_isSaving || !_hasUnsavedChanges) ? null : _savePreferences,
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFFF4F87),
+              backgroundColor: const Color(0xFFFF5E7E),
             ),
             icon: _isSaving
                 ? const SizedBox(

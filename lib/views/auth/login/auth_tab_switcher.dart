@@ -36,7 +36,7 @@ class AuthTabSwitcher extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: const SLColors.brandPink.withValues(alpha: 0.05),
+                color: SLColors.brandPink.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -60,7 +60,7 @@ class AuthTabSwitcher extends StatelessWidget {
                         borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
-                            color: const SLColors.brandPink.withValues(alpha: 0.15),
+                            color: SLColors.brandPink.withValues(alpha: 0.15),
                             blurRadius: 10,
                             offset: const Offset(0, 3),
                           ),
@@ -140,7 +140,7 @@ class _AuthTabButton extends StatelessWidget {
                   curve: Curves.easeOutCubic,
                   style: SLTheme.quicksand(
                     color: active
-                        ? const SLColors.brandPink // Romantic pink cho chữ đang chọn
+                        ? SLColors.brandPink // Romantic pink cho chữ đang chọn
                         : const Color(0xFF757575), // Xám nhạt cho chữ không chọn
                     fontWeight: active ? FontWeight.w900 : FontWeight.w700,
                     fontSize: fontSize,

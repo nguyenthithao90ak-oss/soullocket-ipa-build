@@ -162,7 +162,7 @@ class _CountdownVisualSpec {
           innerBorder: Border.all(
               color: Colors.white.withValues(alpha: 0.42), width: 1.2),
           numberGradient: const [Color(0xFF27B4FF), Color(0xFFD81B60)],
-          topLabelColor: const Color(0xFF2378A8),
+          topLabelColor: const Color(0xFF51606D),
           bottomLabelColor: const Color(0xFF51606D),
           labelShadows: [
             Shadow(color: Colors.white.withValues(alpha: 0.85), blurRadius: 8),
@@ -244,7 +244,7 @@ class _CountdownVisualSpec {
           innerBorder:
               Border.all(color: Colors.white.withValues(alpha: 0.58), width: 1),
           numberGradient: const [Color(0xFFFF3D9A), Color(0xFF36C9FF)],
-          topLabelColor: const Color(0xFFE6378D),
+          topLabelColor: const Color(0xFF4C6178),
           bottomLabelColor: const Color(0xFF4C6178),
           labelShadows: [
             Shadow(color: Colors.white.withValues(alpha: 0.85), blurRadius: 8),

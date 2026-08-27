@@ -577,6 +577,7 @@ class _LoveCardPublicViewerScreenState extends State<LoveCardPublicViewerScreen>
                                       CachedNetworkImage(
                                         imageUrl: imageUrl,
                                         fit: BoxFit.cover,
+                                        memCacheWidth: 800,
                                         filterQuality: FilterQuality.medium,
                                         errorWidget:
                                             (context, error, stackTrace) {

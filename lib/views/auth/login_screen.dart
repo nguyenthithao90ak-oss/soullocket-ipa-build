@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +30,8 @@ import 'login/auth_panel_shell.dart';
 import 'login/forgot_password_launcher.dart';
 import 'login/login_shell.dart';
 import 'login/social_auth_action_helper.dart';
+import 'login/aurora_login_screen.dart';
+import '../../views/ui_prefs.dart';
 import 'register/register_shell.dart';
 import 'widgets/gender_selection_dialog.dart';
 import 'widgets/relationship_mode_dialog.dart';
@@ -52,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
   static const String _pendingSignupAutoCreateHousePrefsKey =
       'il_pending_signup_auto_create_house';
 
-  bool _isLoginTab = false;
+  bool _isLoginTab = true;
   bool _obscurePassword = false;
   bool _isLoading = false;
   bool _isSuccessTransition = false;
@@ -926,7 +927,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
+    return ValueListenableBuilder<UiPrefsState>(
+      valueListenable: UiPrefs.notifier,
+      builder: (context, prefs, _) {
+        if (prefs.uiVersion == 'v2') {
+          return const AuroraLoginScreen();
+        }
+        return ListenableBuilder(
       listenable: L10nService(),
       builder: (context, _) {
         final l10n = L10nService();
@@ -947,12 +954,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: double.infinity,
                     ),
                   ),
-                  Positioned.fill(
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                      child: Container(color: Colors.transparent),
-                    ),
-                  ),
+                  // Note: Removed BackdropFilter(sigma=2) — background is
+                  // static so GPU blur is wasteful. Apply blur offline in
+                  // the source asset if a blurred look is desired.
                   LayoutBuilder(
                     builder: (context, constraints) {
                       final isDesktop = constraints.maxWidth >= 920;
@@ -1021,7 +1025,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: const SLColors.brandPink
+                                                color: SLColors.brandPink
                                                     .withValues(alpha: 0.08),
                                                 blurRadius: 10,
                                                 offset: const Offset(0, 3),
@@ -1051,7 +1055,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 style: SLTheme.quicksand(
                                                   fontSize: 12.5,
                                                   fontWeight: FontWeight.w900,
-                                                  color: const SLColors.brandPink,
+                                                  color: SLColors.brandPink,
                                                 ),
                                               ),
                                             ],
@@ -1213,6 +1217,8 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
       },
+      );
+      },
     );
   }
 
@@ -1242,6 +1248,7 @@ class _LoginScreenState extends State<LoginScreen> {
               });
             }
 
+            final l10n = L10nService();
             return PopScope(
               canPop: !enforceDelay || countdownMs == 0,
               child: Dialog(
@@ -1310,7 +1317,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Hướng dẫn đồng bộ dữ liệu',
+                                  l10n.translate('Hướng dẫn đồng bộ dữ liệu'),
                                   style: SLTheme.quicksand(
                                     fontSize: 16.5,
                                     fontWeight: FontWeight.w900,
@@ -1318,7 +1325,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                                 Text(
-                                  'Mô hình ghép đôi tài khoản riêng',
+                                  l10n.translate('Mô hình ghép đôi tài khoản riêng'),
                                   style: SLTheme.quicksand(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w700,
@@ -1332,7 +1339,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 14),
                       Text(
-                        'SoulLocket sử dụng hệ thống tài khoản riêng biệt để bảo vệ quyền riêng tư 100% cho từng người!',
+                        l10n.translate(
+                            'SoulLocket sử dụng hệ thống tài khoản riêng biệt để bảo vệ quyền riêng tư 100% cho từng người!'),
                         style: SLTheme.quicksand(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -1343,27 +1351,27 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 14),
                       _buildSyncStepCard(
                         stepNumber: '1',
-                        title: 'Tạo 2 tài khoản riêng biệt',
-                        description:
-                            'Mỗi người tự đăng ký tài khoản riêng (Email, Google, Apple) và đăng nhập vào ứng dụng trên máy mình.',
+                        title: l10n.translate('Tạo 2 tài khoản riêng biệt'),
+                        description: l10n.translate(
+                            'Mỗi người tự đăng ký tài khoản riêng (Email, Google, Apple) và đăng nhập vào ứng dụng trên máy mình.'),
                         icon: Icons.person_add_alt_1_rounded,
                         accentColor: const Color(0xFFFF5277),
                       ),
                       const SizedBox(height: 10),
                       _buildSyncStepCard(
                         stepNumber: '2',
-                        title: 'Tạo hoặc nhập Mã ghép đôi',
-                        description:
-                            'Vào Cài đặt ⚙️ → Ghép nối dữ liệu. Một người bấm "Tạo mã ghép nối" và gửi cho người kia nhập vào.',
+                        title: l10n.translate('Tạo hoặc nhập Mã ghép đôi'),
+                        description: l10n.translate(
+                            'Vào Cài đặt ⚙️ → Ghép nối dữ liệu. Một người bấm "Tạo mã ghép nối" và gửi cho người kia nhập vào.'),
                         icon: Icons.qr_code_rounded,
                         accentColor: const Color(0xFF7C4DFF),
                       ),
                       const SizedBox(height: 10),
                       _buildSyncStepCard(
                         stepNumber: '3',
-                        title: 'Đồng bộ dữ liệu thời gian thực',
-                        description:
-                            'Sau khi kết nối, mọi kỷ niệm, nhật ký, album ảnh và vị trí sẽ tự động đồng bộ tức thì giữa 2 máy!',
+                        title: l10n.translate('Đồng bộ dữ liệu thời gian thực'),
+                        description: l10n.translate(
+                            'Sau khi kết nối, mọi kỷ niệm, nhật ký, album ảnh và vị trí sẽ tự động đồng bộ tức thì giữa 2 máy!'),
                         icon: Icons.favorite_rounded,
                         accentColor: const Color(0xFF00BFA5),
                       ),
@@ -1389,7 +1397,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Mẹo: Dữ liệu được lưu an toàn trên đám mây. Đăng nhập lại trên máy mới dữ liệu tự động tải về đầy đủ.',
+                                l10n.translate(
+                                    'Mẹo: Dữ liệu được lưu an toàn trên đám mây. Đăng nhập lại trên máy mới dữ liệu tự động tải về đầy đủ.'),
                                 style: SLTheme.quicksand(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
@@ -1406,8 +1415,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: double.infinity,
                         child: SLTheme.authPrimaryButton(
                           label: countdownMs > 0
-                              ? 'Đã hiểu (${(countdownMs / 1000).ceil()})'
-                              : 'Đã hiểu',
+                              ? '${l10n.translate('Đã hiểu')} (${(countdownMs / 1000).ceil()})'
+                              : l10n.translate('Đã hiểu'),
                           onPressed: countdownMs > 0
                               ? null
                               : () {

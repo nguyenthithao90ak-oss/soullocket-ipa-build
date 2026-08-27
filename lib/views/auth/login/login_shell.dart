@@ -42,7 +42,7 @@ class LoginShell extends StatelessWidget {
       onLogin: onLogin,
       onForgotPassword: onForgotPassword,
       onSocialLogin: onSocialLogin,
-      accentRose: const SLColors.brandPink,
+      accentRose: SLColors.brandPink,
       accentBlush: const Color(0xFFFF69B4),
       accentLavender: const Color(0xFFFF85A2),
     );

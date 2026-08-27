@@ -417,6 +417,7 @@ extension CountdownSpacesGridExt on _CountdownModeIndependentScreenState {
                                 fadeInDuration:
                                     const Duration(milliseconds: 180),
                                 maxWidthDiskCache: 720,
+                                memCacheWidth: 400,
                                 placeholder: (_, __) => DecoratedBox(
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(

@@ -9,6 +9,8 @@ import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/core/app_router.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 
+import 'package:soullocket_app/core/fast_backdrop_filter.dart';
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -43,7 +45,17 @@ class MyApp extends StatelessWidget {
               data: mediaQuery.copyWith(textScaler: textScaler),
               child: L10nScope(
                 notifier: L10nService(),
-                child: child ?? const SizedBox.shrink(),
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification is ScrollStartNotification) {
+                      globalScrollingNotifier.value = true;
+                    } else if (notification is ScrollEndNotification) {
+                      globalScrollingNotifier.value = false;
+                    }
+                    return false; // let the notification bubble up further if needed
+                  },
+                  child: child ?? const SizedBox.shrink(),
+                ),
               ),
             );
 

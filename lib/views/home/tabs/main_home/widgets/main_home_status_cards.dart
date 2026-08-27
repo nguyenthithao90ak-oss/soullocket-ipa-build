@@ -5,57 +5,11 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     required Widget child,
     required bool showHint,
     required Future<void> Function() onTap,
-    double radius = 24,
   }) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => unawaited(onTap()),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          child,
-          if (showHint)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF94A3B8).withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(radius),
-                    border: null,
-),
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.94),
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                const Color(0xFF94A3B8).withValues(alpha: 0.2),
-                            blurRadius: 16,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        context.tr('home_nvo_b99c83'),
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF475569),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
+      child: child,
     );
   }
 
@@ -72,12 +26,12 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       return context.tr('home_cpnhtgnnht_d75b69');
     }
     if (diff.inHours < 1) {
-      return 'Cập nhật gần nhất ${diff.inMinutes} phút trước';
+      return L10nService().format('home_updated_minutes_ago', {'n': diff.inMinutes});
     }
     if (diff.inDays < 1) {
-      return 'Cập nhật gần nhất ${diff.inHours} giờ trước';
+      return L10nService().format('home_updated_hours_ago', {'n': diff.inHours});
     }
-    return 'Cập nhật gần nhất ${diff.inDays} ngày trước';
+    return L10nService().format('home_updated_days_ago', {'n': diff.inDays});
   }
 
   Widget _buildModernHighlightCard({
@@ -127,7 +81,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
           final milestoneDate =
               startDtMidnight.add(Duration(days: nextMilestone - 1));
           upcomingEvents.add(HomeUpcomingEvent(
-            title: 'Kỷ niệm $nextMilestone ngày yêu nhau 💖',
+            title: L10nService().format('home_anniversary_days', {'days': nextMilestone}),
             date: milestoneDate,
             type: 'anniversary',
           ));
@@ -142,7 +96,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
         final years = nextAnniversary.year - startDtMidnight.year;
         if (years > 0) {
           upcomingEvents.add(HomeUpcomingEvent(
-            title: 'Kỷ niệm $years năm yêu nhau 🎉',
+            title: L10nService().format('home_anniversary_years', {'years': years}),
             date: nextAnniversary,
             type: 'anniversary',
           ));
@@ -183,8 +137,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             : '';
         upcomingEvents.add(HomeUpcomingEvent(
           title: giftHint.isNotEmpty
-              ? 'Sinh nhật $name 🎂 $giftHint'
-              : 'Sinh nhật $name 🎂',
+              ? '${L10nService().format('home_birthday_title', {'name': name})} $giftHint'
+              : L10nService().format('home_birthday_title', {'name': name}),
           date: nextBday,
           type: 'birthday',
         ));
@@ -196,19 +150,19 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
 
     // 3. Ngày lễ lớn
     final holidaysList = [
-      {'month': 1, 'day': 1, 'name': 'Tết Dương Lịch 🎆'},
-      {'month': 2, 'day': 14, 'name': 'Lễ Tình Nhân (Valentine) 💝'},
-      {'month': 3, 'day': 8, 'name': 'Quốc tế Phụ nữ 💐'},
-      {'month': 3, 'day': 14, 'name': 'Valentine Trắng 🤍'},
-      {'month': 4, 'day': 1, 'name': 'Cá tháng Tư 🃏'},
-      {'month': 4, 'day': 14, 'name': 'Valentine Đen 🖤'},
-      {'month': 6, 'day': 1, 'name': 'Quốc tế Thiếu nhi 🧸'},
-      {'month': 6, 'day': 28, 'name': 'Ngày Gia đình Việt Nam 👨‍👩‍👧‍👦'},
-      {'month': 10, 'day': 20, 'name': 'Ngày Phụ nữ Việt Nam 🌸'},
-      {'month': 10, 'day': 31, 'name': 'Lễ Halloween 🎃'},
-      {'month': 12, 'day': 24, 'name': 'Đêm Giáng sinh 🎄'},
-      {'month': 12, 'day': 25, 'name': 'Lễ Giáng sinh ❄️'},
-      {'month': 12, 'day': 31, 'name': 'Đêm Giao thừa ✨'},
+      {'month': 1, 'day': 1, 'name': context.tr('Tết Dương Lịch 🎆')},
+      {'month': 2, 'day': 14, 'name': context.tr('Lễ Tình Nhân (Valentine) 💝')},
+      {'month': 3, 'day': 8, 'name': context.tr('Quốc tế Phụ nữ 💐')},
+      {'month': 3, 'day': 14, 'name': context.tr('Valentine Trắng 🤍')},
+      {'month': 4, 'day': 1, 'name': context.tr('Cá tháng Tư 🃏')},
+      {'month': 4, 'day': 14, 'name': context.tr('Valentine Đen 🖤')},
+      {'month': 6, 'day': 1, 'name': context.tr('Quốc tế Thiếu nhi 🧸')},
+      {'month': 6, 'day': 28, 'name': context.tr('Ngày Gia đình Việt Nam 👨‍👩‍👧‍👦')},
+      {'month': 10, 'day': 20, 'name': context.tr('Ngày Phụ nữ Việt Nam 🌸')},
+      {'month': 10, 'day': 31, 'name': context.tr('Lễ Halloween 🎃')},
+      {'month': 12, 'day': 24, 'name': context.tr('Đêm Giáng sinh 🎄')},
+      {'month': 12, 'day': 25, 'name': context.tr('Lễ Giáng sinh ❄️')},
+      {'month': 12, 'day': 31, 'name': context.tr('Đêm Giao thừa ✨')},
     ];
     for (final h in holidaysList) {
       DateTime nextH =
@@ -291,27 +245,25 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFFD7E6), Color(0xFFFFEEF5)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: Colors.white.withValues(alpha: 0.9),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFFD7E6).withValues(alpha: 0.5),
+                        color: const Color(0xFFFF758C).withValues(alpha: 0.2),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(4.0),
-                    child: AnimatedRabbitSticker(
-                        'assets/images/anhtomau_stickers/sticker_21.gif'),
+                  child: Padding(
+                    padding: const EdgeInsets.all(3.0),
+                    child: Image.asset(
+                      'assets/icons/cute_3d/icon_bubble_lol_cloud.png',
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
                 SLSpacing.w12,
@@ -362,49 +314,61 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 padding: const EdgeInsets.all(14),
                 child: Column(
                   children: [
-                  // Hàng 1: Số ngày + Số album ảnh
-                  Row(
-                    children: [
-                      _buildJourneyStat(
-                        emoji: '📅',
-                        value: totalDays > 0 ? '$totalDays' : '--',
-                        label: context.tr('home_love_days'),
-                        flex: 1,
-                      ),
-                      if (totalDays > 0)
+                    // Hàng 1: Số ngày + Số album ảnh
+                    Row(
+                      children: [
+                        _buildJourneyStat(
+                          emoji: '📅',
+                          imageAsset: 'assets/icons/cute_3d/card_ngay_yeu_calendar.png',
+                          value: totalDays > 0 ? '$totalDays' : '--',
+                          label: context.tr('home_love_days'),
+                          flex: 1,
+                          accentColor: const Color(0xFFFF5E7E),
+                          bgSubtleColor: const Color(0xFFFFF0F4),
+                        ),
+                        const SizedBox(width: 10),
                         _buildJourneyStat(
                           emoji: '📸',
+                          imageAsset: 'assets/icons/cute_3d/card_ky_niem_photos.png',
                           value: '${_albumHighlights.length}',
                           label: context.tr('home_anniversary_memories'),
                           flex: 1,
+                          accentColor: const Color(0xFFFF9E7A),
+                          bgSubtleColor: const Color(0xFFFFF7ED),
                         ),
-                    ],
-                  ),
-                  if (totalDays > 0) const SizedBox(height: 12),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
 
-                  // Hàng 2: Sinh nhật + MBTI
-                  Row(
-                    children: [
-                      _buildJourneyStat(
-                        emoji: '🎂',
-                        value: nameU1,
-                        label: myNameSetting,
-                        flex: 1,
-                        isSmall: true,
-                      ),
-                      _buildJourneyStat(
-                        emoji: '🎂',
-                        value: nameU2,
-                        label: partnerNameSetting,
-                        flex: 1,
-                        isSmall: true,
-                      ),
-                    ],
-                  ),
-                  // MBTI removed
-                ],
+                    // Hàng 2: Sinh nhật + Bạn Nam / Bạn Nữ
+                    Row(
+                      children: [
+                        _buildJourneyStat(
+                          emoji: '👦',
+                          imageAsset: 'assets/icons/cute_3d/card_ban_nam_boy.png',
+                          value: nameU1,
+                          label: myNameSetting,
+                          flex: 1,
+                          isSmall: true,
+                          accentColor: const Color(0xFF38BDF8),
+                          bgSubtleColor: const Color(0xFFF0F9FF),
+                        ),
+                        const SizedBox(width: 10),
+                        _buildJourneyStat(
+                          emoji: '👧',
+                          imageAsset: 'assets/icons/cute_3d/card_ban_nu_girl.png',
+                          value: nameU2,
+                          label: partnerNameSetting,
+                          flex: 1,
+                          isSmall: true,
+                          accentColor: const Color(0xFFFF758C),
+                          bgSubtleColor: const Color(0xFFFFF0F6),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
             ),
 
             const SizedBox(height: 14),
@@ -438,7 +402,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                         final daysUntil = e.date.difference(todayMidnight).inDays;
                         final String timeStr = daysUntil <= 0
                             ? context.tr('home_hmnay_d87b33')
-                            : (daysUntil == 1 ? context.tr('home_ngymai_a3d820') : '$daysUntil ngày nữa');
+                            : (daysUntil == 1 ? context.tr('home_ngymai_a3d820') : L10nService().format('home_days_later', {'n': daysUntil}));
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 6.0),
                           child: Row(
@@ -477,33 +441,75 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             if (uniqueEvents.isNotEmpty) const SizedBox(height: 14),
 
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFFF6D97), Color(0xFFFF9EBA)],
+                  colors: [Color(0xFFFF5E7E), Color(0xFFFF85A1)],
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 ),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFF6D97).withValues(alpha: 0.3),
-                    blurRadius: 8,
+                    color: const Color(0xFFFF5E7E).withValues(alpha: 0.25),
+                    blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: Center(
-                child: Text(
-                  _buildCountdownText(isSingle: isSingle, startDate: startDate),
-                  style: SLTheme.quicksand(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: 0.5,
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.calendar_today_rounded,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                        SizedBox(width: 3),
+                        Icon(
+                          Icons.access_time_filled_rounded,
+                          size: 13,
+                          color: Color(0xFFFFE082),
+                        ),
+                      ],
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _buildCountdownText(isSingle: isSingle, startDate: startDate),
+                      style: SLTheme.quicksand(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 0.3,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: Color(0xFFFF5E7E),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -514,40 +520,106 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
 
   Widget _buildJourneyStat({
     required String emoji,
+    String? imageAsset,
     required String value,
     required String label,
     int flex = 1,
     bool isSmall = false,
+    Color? accentColor,
+    Color? bgSubtleColor,
   }) {
+    final effectiveAccent = accentColor ?? const Color(0xFFFF5E7E);
+    final effectiveBg = bgSubtleColor ?? const Color(0xFFFFF0F4);
+
     return Expanded(
       flex: flex,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 14)),
-              const SizedBox(width: 4),
-              Text(
-                value,
-                style: SLTheme.quicksand(
-                  fontSize: isSmall ? 13 : 16,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF263242),
-                ),
-              ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(alpha: 0.96),
+              effectiveBg.withValues(alpha: 0.85),
             ],
           ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: SLTheme.quicksand(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: SLColors.textSecondary,
-            ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: Colors.white,
+            width: 1.6,
           ),
-        ],
+          boxShadow: [
+            BoxShadow(
+              color: effectiveAccent.withValues(alpha: 0.12),
+              blurRadius: 10,
+              spreadRadius: 0.5,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            if (imageAsset != null)
+              Container(
+                width: 38,
+                height: 38,
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: effectiveAccent.withValues(alpha: 0.16),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Image.asset(
+                  imageAsset,
+                  fit: BoxFit.contain,
+                ),
+              )
+            else
+              Text(emoji, style: const TextStyle(fontSize: 18)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      fontSize: isSmall ? 13 : 16,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF2E2427),
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF7A6B72),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -563,7 +635,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       onTap: _handleMapCardTap,
       child: SLTheme.glassCard(
         margin: EdgeInsets.zero,
-        padding: SLSpacing.all16,
+        padding: SLSpacing.all20,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -574,23 +646,25 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   height: 48,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF80DEEA), Color(0xFF26C6DA)],
+                      colors: [Color(0xFF38BDF8), Color(0xFF818CF8)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    shape: BoxShape.circle,
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF26C6DA).withValues(alpha: 0.35),
-                        blurRadius: 12,
-                        offset: const Offset(0, 5),
+                        color: const Color(0xFF38BDF8).withValues(alpha: 0.28),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Image.asset(
-                        'assets/images/anhtomau_stickers/sticker_16.gif'),
+                  child: const Center(
+                    child: Icon(
+                      Icons.explore_rounded,
+                      color: Colors.white,
+                      size: 26,
+                    ),
                   ),
                 ),
                 SLSpacing.w12,
@@ -603,11 +677,12 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                             ? context.tr('home_vtrhinti_f5956d')
                             : context.tr('home_bncahaia_12dcb1'),
                         style: SLTheme.quicksand(
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight: FontWeight.w900,
-                          color: SLColors.secondary,
+                          color: const Color(0xFF1E293B),
                         ),
                       ),
+                      const SizedBox(height: 2),
                       Text(
                         isSingle
                             ? context.tr('home_xemvtrhint_58d61b')
@@ -615,107 +690,171 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                         style: SLTheme.quicksand(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: SLColors.textSecondary,
+                          color: const Color(0xFF64748B),
                         ),
                       ),
                     ],
                   ),
                 ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF0F5),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFFFFD1DC),
+                      width: 1.0,
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.map_rounded,
+                        size: 16,
+                        color: Color(0xFF38BDF8),
+                      ),
+                      SizedBox(width: 3),
+                      Icon(
+                        Icons.favorite_rounded,
+                        size: 14,
+                        color: Color(0xFFFF5E7E),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 4),
                 ?dragHandle,
-                Icon(
+                const Icon(
                   Icons.chevron_right_rounded,
-                  color: SLColors.secondary.withValues(alpha: 0.5),
+                  color: Color(0xFF94A3B8),
+                  size: 22,
                 ),
               ],
             ),
             const SizedBox(height: 14),
-            ValueListenableBuilder<String>(
-              valueListenable: _homeDistanceTextNotifier,
-              builder: (context, distanceText, _) {
-                return ValueListenableBuilder<Map<String, dynamic>?>(
-                  valueListenable: _homePartnerBatteryNotifier,
-                  builder: (context, partnerBattery, _) {
-                    return ValueListenableBuilder<Map<String, dynamic>?>(
-                      valueListenable: _homeMyBatteryNotifier,
-                      builder: (context, myBattery, _) {
-                        String displayText = distanceText;
-                        if (!isSingle) {
-                          final List<String> batteryTexts = [];
+            AnimatedBuilder(
+              animation: Listenable.merge([
+                _homeDistanceTextNotifier,
+                _homePartnerBatteryNotifier,
+                _homeMyBatteryNotifier,
+              ]),
+              builder: (context, _) {
+                final distanceText = _homeDistanceTextNotifier.value;
+                final partnerBattery = _homePartnerBatteryNotifier.value;
+                final myBattery = _homeMyBatteryNotifier.value;
+                String displayText = distanceText;
+                if (!isSingle) {
+                  final List<String> batteryTexts = [];
 
-                          if (myBattery != null) {
-                            final pct = myBattery['level'] as int;
-                            final isCharging = myBattery['isCharging'] == true;
-                            final emoji =
-                                isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
-                            batteryTexts.add('Bạn $emoji $pct%');
-                          }
+                  if (myBattery != null) {
+                    final pct = myBattery['level'] as int;
+                    final isCharging = myBattery['isCharging'] == true;
+                    final emoji =
+                        isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                    batteryTexts.add('${context.tr('home_you_label')} $emoji $pct%');
+                  }
 
-                          if (partnerBattery != null) {
-                            final pct = partnerBattery['level'] as int;
-                            final isCharging =
-                                partnerBattery['isCharging'] == true;
-                            final emoji =
-                                isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
-                            batteryTexts.add('Người ấy $emoji $pct%');
-                          }
+                  if (partnerBattery != null) {
+                    final pct = partnerBattery['level'] as int;
+                    final isCharging =
+                        partnerBattery['isCharging'] == true;
+                    final emoji =
+                        isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                    batteryTexts.add('${context.tr('home_partner_label')} $emoji $pct%');
+                  }
 
-                          if (batteryTexts.isNotEmpty) {
-                            displayText =
-                                '$distanceText • ${batteryTexts.join(' • ')}';
-                          }
-                        }
-                        return Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 12),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFFE0FAFA),
-                                Color(0xFFF0FEFF),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                  if (batteryTexts.isNotEmpty) {
+                    displayText =
+                        '$distanceText • ${batteryTexts.join(' • ')}';
+                  }
+                }
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFFF0F9FF),
+                        Colors.white,
+                        Color(0xFFFFF0F5),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF38BDF8)
+                            .withValues(alpha: 0.10),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFE0F2FE),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.location_on_rounded,
+                          size: 14,
+                          color: Color(0xFF0284C7),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          displayText,
+                          style: SLTheme.quicksand(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF1E293B),
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                      SLSpacing.w12,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFF38BDF8),
+                              Color(0xFF0284C7),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF38BDF8)
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
                             ),
-                            borderRadius: BorderRadius.circular(14),
-                            border: null,
-boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF26C6DA)
-                                    .withValues(alpha: 0.08),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                          ],
+                        ),
+                        child: Text(
+                          context.tr('home_mngay_02e4c1'),
+                          style: SLTheme.quicksand(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
                           ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  displayText,
-                                  style: SLTheme.quicksand(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF2A5F6E),
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ),
-                              SLSpacing.w12,
-                              Text(
-                                context.tr('home_mngay_02e4c1'),
-                                style: SLTheme.quicksand(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF00ACC1),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    );
-                  },
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
@@ -830,7 +969,7 @@ boxShadow: [
                   ),
                   borderRadius: SLRadius.lgAll,
                   border: null,
-boxShadow: [
+                  boxShadow: [
                     BoxShadow(
                       color: const Color(0xFFFF9BBC).withValues(alpha: 0.08),
                       blurRadius: 18,
@@ -1040,7 +1179,7 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                               end: Alignment.bottomRight,
                             ),
                             border: null,
-boxShadow: [
+                            boxShadow: [
                               BoxShadow(
                                 color: widget.color.withValues(
                                   alpha: widget.emphasize ? 0.16 : 0.1,
@@ -1097,12 +1236,12 @@ boxShadow: [
                             ],
                           ),
                           border: null,
-),
+                        ),
                       ),
                       Text(
                         '$clampedValue',
                         style: SLTheme.quicksand(
-                          fontSize: widget.compact ? 13 : 14,
+                          fontSize: widget.compact ? 13 : 15,
                           fontWeight: FontWeight.w900,
                           color: widget.color,
                         ),
@@ -1160,7 +1299,7 @@ boxShadow: [
                 end: Alignment.bottomRight,
               ),
               border: null,
-boxShadow: [
+              boxShadow: [
                 BoxShadow(
                   color: widget.color.withValues(alpha: 0.16),
                   blurRadius: 18,

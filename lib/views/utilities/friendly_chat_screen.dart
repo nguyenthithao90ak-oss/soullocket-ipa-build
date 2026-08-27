@@ -524,7 +524,7 @@ Quy tắc:
 
     if (finalReply.trim().isEmpty) {
       finalReply = _aiService.lastErrorMessage ??
-          'Lỗi kết nối. Bạn đợi một lát rồi nói lại nhé!';
+          L10nService().translate('friendly_chat_connection_error');
     }
 
     int? navTarget;
@@ -628,11 +628,11 @@ Quy tắc:
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Làm mới trò chuyện',
+          L10nService().translate('friendly_chat_reset_title'),
           style: SLTheme.quicksand(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         content: Text(
-          'Bạn có chắc muốn xóa lịch sử trò chuyện hiện tại để bắt đầu chủ đề mới không?',
+          L10nService().translate('friendly_chat_reset_message'),
           style: SLTheme.quicksand(fontWeight: FontWeight.w600, fontSize: 15),
         ),
         actions: [
@@ -644,7 +644,7 @@ Quy tắc:
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Làm mới',
+            child: Text(L10nService().translate('friendly_chat_reset_confirm'),
                 style: SLTheme.quicksand(
                     color: const Color(0xFFD81B60),
                     fontWeight: FontWeight.bold)),

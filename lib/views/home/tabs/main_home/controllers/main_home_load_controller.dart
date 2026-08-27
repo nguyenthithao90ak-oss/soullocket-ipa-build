@@ -13,6 +13,9 @@ extension _MainHomeLoadController on _MainHomeTabState {
   }
 
   void _cancelLiveWorkBindingsImpl() {
+    _presenceBatchTimer?.cancel();
+    _presenceBatchTimer = null;
+    _pendingPresenceUpdates.clear();
     _weatherRefreshTimer?.cancel();
     _weatherRefreshTimer = null;
     _loveWidgetSyncDebounce?.cancel();
@@ -564,8 +567,19 @@ extension _MainHomeLoadController on _MainHomeTabState {
             .listen(
           (event) {
             if (isStale() || !_isTabActive) return;
-            _updatePresenceField(role, field, event.snapshot.value,
-                isStale: isStale);
+            _pendingPresenceUpdates['$role/$field'] = () {
+              _updatePresenceField(role, field, event.snapshot.value,
+                  isStale: isStale);
+            };
+            _presenceBatchTimer?.cancel();
+            _presenceBatchTimer = Timer(const Duration(milliseconds: 80), () {
+              final updates = Map<String, VoidCallback>.from(
+                  _pendingPresenceUpdates);
+              _pendingPresenceUpdates.clear();
+              for (final update in updates.values) {
+                update();
+              }
+            });
           },
           onError: (Object error) {
             debugPrint(

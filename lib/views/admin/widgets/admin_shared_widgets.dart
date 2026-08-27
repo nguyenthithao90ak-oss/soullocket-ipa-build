@@ -31,7 +31,7 @@ class AdminScaffold extends StatelessWidget {
               left: -40,
               child: _blurCircle(
                 size: 260,
-                color: const SLColors.brandPink.withValues(alpha: 0.26),
+                color: SLColors.brandPink.withValues(alpha: 0.26),
               ),
             ),
             Positioned(
@@ -122,7 +122,7 @@ class AdminTopBar extends StatelessWidget {
                   Text(
                     '${user.email ?? 'Admin'} · ${lastUpdatedAt == null ? context.tr('admin_changbdliu_d09b70') : 'Cập nhật ${formatDateTime(lastUpdatedAt!)}'}',
                     style: SLTheme.quicksand(
-                      color: const SLColors.textMuted,
+                      color: SLColors.textMuted,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
@@ -340,7 +340,7 @@ class AdminStatCard extends StatelessWidget {
             Text(
               title,
               style: SLTheme.quicksand(
-                color: const SLColors.textMuted,
+                color: SLColors.textMuted,
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
               ),
@@ -394,7 +394,7 @@ class OverviewListTile extends StatelessWidget {
             color: const Color(0x1AFFFFFF),
             borderRadius: SLRadius.mdAll,
           ),
-          child: Icon(icon, color: const SLColors.brandPink),
+          child: Icon(icon, color: SLColors.brandPink),
         ),
         SLSpacing.w12,
         Expanded(
@@ -413,7 +413,7 @@ class OverviewListTile extends StatelessWidget {
               Text(
                 subtitle,
                 style: SLTheme.quicksand(
-                  color: const SLColors.textMuted,
+                  color: SLColors.textMuted,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   height: 1.5,
@@ -486,7 +486,7 @@ class HighlightChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: const SLColors.brandPink),
+          Icon(icon, size: 16, color: SLColors.brandPink),
           SLSpacing.w8,
           Text(
             label,

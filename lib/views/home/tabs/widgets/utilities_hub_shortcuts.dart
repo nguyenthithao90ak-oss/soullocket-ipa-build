@@ -217,20 +217,21 @@ class _ShortcutChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
         onTap: onTap,
         child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                colors.first.withValues(alpha: 0.16),
-                colors.last.withValues(alpha: 0.10),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: Colors.white.withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: colors.last.withValues(alpha: 0.18),
+              color: Colors.white,
+              width: 1.2,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: colors.first.withValues(alpha: 0.12),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

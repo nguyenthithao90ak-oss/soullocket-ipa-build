@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 
 class FloatingActionBubble extends StatefulWidget {
   final Function(String type, String emoji)? onSelectInteraction;
@@ -23,10 +24,10 @@ class _FloatingActionBubbleState extends State<FloatingActionBubble>
 
   final List<({String type, String emoji, String label, Color color})>
       _actions = [
-    (type: 'kiss', emoji: '💋', label: 'Hôn', color: const Color(0xFFFF4D79)),
-    (type: 'hug', emoji: '🫂', label: 'Ôm', color: const Color(0xFFFF8FB1)),
-    (type: 'miss', emoji: '💖', label: 'Nhớ', color: const Color(0xFF9D50BB)),
-    (type: 'heart', emoji: '💓', label: 'Yêu', color: const Color(0xFF00C6FF)),
+    (type: 'kiss', emoji: '💋', label: L10nService().translate('home_hon_interaction'), color: const Color(0xFFFF4D79)),
+    (type: 'hug', emoji: '🫂', label: L10nService().translate('home_om_interaction'), color: const Color(0xFFFF8FB1)),
+    (type: 'miss', emoji: '💖', label: L10nService().translate('home_nho_interaction'), color: const Color(0xFF9D50BB)),
+    (type: 'heart', emoji: '💓', label: L10nService().translate('home_yeu_interaction'), color: const Color(0xFF00C6FF)),
   ];
 
   @override

@@ -10,6 +10,7 @@ import 'package:soullocket_app/models/single_match_models.dart';
 import 'package:soullocket_app/views/relationship/video_call_screen.dart';
 import 'package:soullocket_app/views/visitors/visitor_profile_screen.dart';
 import '../screens/single_match_finding_screen.dart';
+import '../screens/single_match_call_screen.dart';
 
 class SingleMatchCallsTab extends StatefulWidget {
   final String houseId;
@@ -55,7 +56,7 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
     super.dispose();
   }
 
-  Future<void> _startRandomCall({required bool isVideo}) async {
+  Future<void> _startRandomCall({required bool isVideo, required bool isBlind}) async {
     final excludeHouseIds =
         _history.where((e) => e.isCall).map((e) => e.peerHouseId).toSet();
 
@@ -79,12 +80,13 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
       return;
     }
 
-    await _launchCall(pick: result, isVideo: isVideo);
+    await _launchCall(pick: result, isVideo: isVideo, isBlind: isBlind);
   }
 
   Future<void> _launchCall({
     required SingleMatchCandidate pick,
     required bool isVideo,
+    bool isBlind = false,
     double compatScore = 50,
   }) async {
     if (_callingHouseId != null) return;
@@ -95,21 +97,12 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => VideoCallScreen(
-            houseId: widget.houseId,
-            targetHouseId: pick.houseId,
-            targetName: pick.displayName,
-            targetAvatarUrl: pick.avatarUrl,
+          builder: (_) => SingleMatchCallScreen(
+            peerName: pick.displayName,
+            peerAvatarUrl: pick.avatarUrl,
+            peerHouseId: pick.houseId,
             isVideo: isVideo,
-            onRoomCreated: (roomId) => _service.attachOutgoingCallMetadata(
-              roomId: roomId,
-              callerHouseId: widget.houseId,
-              targetHouseId: pick.houseId,
-              callerName: pick.displayName,
-              callerAvatar: pick.avatarUrl,
-              isVideo: isVideo,
-              source: 'single_match',
-            ),
+            isBlind: isBlind,
           ),
         ),
       );
@@ -208,39 +201,39 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                     color: const Color(0xFF8A798E),
                   )),
               const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () => _startRandomCall(isVideo: false),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF4F87),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () => _startRandomCall(isVideo: false, isBlind: true),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF3B3B58),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                        ),
+                        icon: const Text('🎭', style: TextStyle(fontSize: 18)),
+                        label: Text('Giấu mặt',
+                            style:
+                                SLTheme.quicksand(fontWeight: FontWeight.w900)),
                       ),
-                      icon: const Icon(Icons.call_rounded, size: 18),
-                      label: Text('Gọi audio',
-                          style:
-                              SLTheme.quicksand(fontWeight: FontWeight.w900)),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () => _startRandomCall(isVideo: true),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF7C61FF),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () => _startRandomCall(isVideo: true, isBlind: false),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFFFF5E7E),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                        ),
+                        icon: const Text('⚡', style: TextStyle(fontSize: 18)),
+                        label: Text('Gọi trực tiếp',
+                            style:
+                                SLTheme.quicksand(fontWeight: FontWeight.w900)),
                       ),
-                      icon: const Icon(Icons.videocam_rounded, size: 18),
-                      label: Text('Gọi video',
-                          style:
-                              SLTheme.quicksand(fontWeight: FontWeight.w900)),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
             ],
           ),
         ),
@@ -255,7 +248,7 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                   label: L10nService().translate('match_tngcucgi_8e041e'),
                   value: '${callEntries.length}',
                   icon: Icons.call_rounded,
-                  color: const Color(0xFFFF4F87),
+                  color: const Color(0xFFFF5E7E),
                 ),
               ),
               const SizedBox(width: 10),
@@ -264,7 +257,7 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                   label: L10nService().translate('match_phttrchuyn_b7d1cd'),
                   value: '$totalMinutes',
                   icon: Icons.schedule_rounded,
-                  color: const Color(0xFF7C61FF),
+                  color: const Color(0xFF6366F1),
                 ),
               ),
             ],
@@ -276,7 +269,7 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                   style: SLTheme.quicksand(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
-                    color: const Color(0xFF32203B),
+                    color: const Color(0xFF2E2427),
                   )),
             ],
           ),
@@ -291,6 +284,7 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFFF0E5DF), width: 1.2),
             ),
             child: Column(
               children: [
@@ -301,7 +295,7 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                     style: SLTheme.quicksand(
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
-                      color: SLColors.textSecondary,
+                      color: SLColors.textPrimary,
                     )),
                 const SizedBox(height: 6),
                 Text('Hãy bắt đầu ghép đôi và gọi cho người lạ.',
@@ -309,7 +303,7 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
                     style: SLTheme.quicksand(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: SLColors.textTertiary,
+                      color: SLColors.textSecondary,
                     )),
               ],
             ),
@@ -327,9 +321,9 @@ class _SingleMatchCallsTabState extends State<SingleMatchCallsTab> {
       _ => L10nService().translate('match_hotng_2c21bc'),
     };
     final accent = switch (entry.action) {
-      'audio_call' => const Color(0xFFFF4F87),
-      'video_call' => const Color(0xFF7C61FF),
-      _ => const Color(0xFF5B8DEF),
+      'audio_call' => const Color(0xFFFF5E7E),
+      'video_call' => const Color(0xFF6366F1),
+      _ => const Color(0xFF38BDF8),
     };
 
     return Padding(

@@ -369,7 +369,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
           if (_widgetPanelTabKey == 'soulevent') ...[
             _buildWidgetSectionCard(
               icon: Icons.info_outline_rounded,
-              title: 'Cấu hình Sự kiện',
+              title: L10nService().translate('Cấu hình Sự kiện'),
               subtitle: null,
               iconGradient: const [
                 Color(0xFF3B82F6),
@@ -377,8 +377,8 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
               ],
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  'Màu sắc và chủ đề của Tiện ích được lấy trực tiếp từ sự kiện bạn chọn ghim hoặc sự kiện gần nhất trong danh sách Sự Kiện & Kỷ Niệm.',
+                  child: Text(
+                    L10nService().translate('Màu sắc và chủ đề của Tiện ích được lấy trực tiếp từ sự kiện bạn chọn ghim hoặc sự kiện gần nhất trong danh sách Sự Kiện & Kỷ Niệm.'),
                   style: SLTheme.quicksand(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -471,7 +471,7 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
                 style: SLTheme.quicksand(
                   fontSize: 12.8,
                   fontWeight: FontWeight.w800,
-                  color: const SLColors.textMedium,
+                  color: SLColors.textMedium,
                   height: 1.45,
                 ),
               ),
@@ -481,18 +481,18 @@ extension _SettingsTabWidgetSection on _SettingsTabState {
             const SizedBox(height: 14),
             _buildWidgetSectionCard(
               icon: Icons.celebration_rounded,
-              title: 'Tiện ích Sự kiện & Kỷ niệm',
-              subtitle: 'Đếm ngược các sự kiện quan trọng của 2 bạn',
+              title: L10nService().translate('Tiện ích Sự kiện & Kỷ niệm'),
+              subtitle: L10nService().translate('Đếm ngược các sự kiện quan trọng của 2 bạn'),
               iconGradient: const [
                 Color(0xFFF472B6),
                 Color(0xFFEC4899),
               ],
               child: Text(
-                'Hiển thị sự kiện tiếp theo (ví dụ: ngày sinh nhật, chuyến đi, ngày kỷ niệm yêu...) trực tiếp trên màn hình chính.',
+                L10nService().translate('Hiển thị sự kiện tiếp theo (ví dụ: ngày sinh nhật, chuyến đi, ngày kỷ niệm yêu...) trực tiếp trên màn hình chính.'),
                 style: SLTheme.quicksand(
                   fontSize: 12.8,
                   fontWeight: FontWeight.w800,
-                  color: const SLColors.textMedium,
+                  color: SLColors.textMedium,
                   height: 1.45,
                 ),
               ),

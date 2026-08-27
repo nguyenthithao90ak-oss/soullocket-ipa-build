@@ -134,7 +134,7 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
     if (!_showStatus) return '';
     final data = _presenceForRole(role);
     if (PresenceService.isSleeping(data)) {
-      return 'Đang ngủ 💤';
+      return context.tr('Đang ngủ 💤');
     }
     if (_isCurrentForegroundRole(role)) {
       return context.tr('home_anghotng_cfaecd');
@@ -803,13 +803,13 @@ extension _MainHomePresenceMapController on _MainHomeTabState {
       context: null,
     );
     if (!started) {
+      final status = await Geolocator.checkPermission();
       if (mounted) {
-        final status = await Geolocator.checkPermission();
         if (status == LocationPermission.denied ||
             status == LocationPermission.deniedForever) {
           _updateHomeMapPreview(
-            distanceText: 'Chưa cấp quyền vị trí',
-            alertText: 'Vui lòng cấp quyền vị trí để xem bản đồ.',
+            distanceText: L10nService().translate('Chưa cấp quyền vị trí'),
+            alertText: L10nService().translate('Vui lòng cấp quyền vị trí để xem bản đồ.'),
           );
         }
       }

@@ -124,6 +124,8 @@ class _IncomingCallOverlayState extends State<IncomingCallOverlay>
                             maxWidthDiskCache: 250,
                             imageUrl: widget.callerAvatar,
                             fit: BoxFit.cover,
+                            memCacheWidth: 400,
+                            memCacheHeight: 400,
                             filterQuality: FilterQuality.medium,
                             placeholder: (context, url) =>
                                 Container(color: const Color(0xFF1F2937)),
@@ -489,6 +491,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                       maxWidthDiskCache: 250,
                       imageUrl: widget.partnerAvatar,
                       fit: BoxFit.cover,
+                      memCacheWidth: 1080,
                       filterQuality: FilterQuality.medium,
                       placeholder: (context, url) =>
                           Container(color: const Color(0xFF1F2937)),

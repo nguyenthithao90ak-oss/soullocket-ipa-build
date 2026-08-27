@@ -9,6 +9,7 @@ import '../../core/sl_theme.dart';
 import '../../widgets/skeleton_container.dart';
 import '../../utils/services/l10n_service.dart';
 import '../../utils/app_error_mapper.dart';
+import 'package:soullocket_app/widgets/sl_toast.dart';
 
 /// Finance Screen - Visual parity 100% với Web gốc hhaaluutru5h49
 /// Card trắng glass, màu #d81b60, gradient hồng, list-item CSS
@@ -199,13 +200,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     final amountText = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
     final amount = int.tryParse(amountText);
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(context.tr('util_nhpstinhpl_99919c'),
-            style: SLTheme.quicksand(fontWeight: FontWeight.w700)),
-        backgroundColor: SLTheme.primary,
-        shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
-        behavior: SnackBarBehavior.floating,
-      ));
+      SLToast.show(context, context.tr('util_nhpstinhpl_99919c'));
       return;
     }
 

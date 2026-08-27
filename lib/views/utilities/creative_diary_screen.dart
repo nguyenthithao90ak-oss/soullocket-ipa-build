@@ -774,6 +774,7 @@ class _DiaryAttachmentStrip extends StatelessWidget {
               CachedNetworkImage(
                 imageUrl: firstImage,
                 fit: BoxFit.cover,
+                memCacheWidth: 800,
                 filterQuality: FilterQuality.medium,
                 errorWidget: (_, __, ___) => Container(
                   color: page.surface,
@@ -840,6 +841,7 @@ class _DiaryAttachmentStrip extends StatelessWidget {
             child: CachedNetworkImage(
               imageUrl: imageUrl,
               fit: BoxFit.contain,
+              memCacheWidth: 600,
               filterQuality: FilterQuality.medium,
               errorWidget: (_, __, ___) => Container(
                 height: 260,

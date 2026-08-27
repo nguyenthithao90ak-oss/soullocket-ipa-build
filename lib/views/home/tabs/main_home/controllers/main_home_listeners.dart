@@ -89,60 +89,34 @@ extension _MainHomeListeners on _MainHomeTabState {
 
   void _listenInteractionSignals(String houseId) {
     _chatSignalSubscription?.cancel();
+    final partnerSenderId = _currentRole == 'user1' ? 'U2' : 'U1';
+    
+    // Use onChildAdded with limitToLast(12) to save bandwidth and prevent sorting a large map
     _chatSignalSubscription = _dbRef
         .child('houses/$houseId/chat_room/messages')
         .orderByChild('ts')
-        .limitToLast(30)
-        .onValue
+        .limitToLast(12)
+        .onChildAdded
         .listen((event) {
-      if (!event.snapshot.exists || event.snapshot.value == null) {
-        if (_recentChatSignals.isEmpty) {
-          return;
+      if (!event.snapshot.exists || event.snapshot.value == null) return;
+      
+      final item = _toStringDynamicMap(event.snapshot.value);
+      
+      if ((item['type'] ?? 'text').toString() == 'text' &&
+          item['senderId'] == partnerSenderId &&
+          item['isRead'] != true) {
+        
+        final text = (item['text'] ?? item['content'] ?? '').toString().trim();
+        if (text.isNotEmpty) {
+          if (!_recentChatSignals.contains(text)) {
+            _recentChatSignals.insert(0, text);
+            if (_recentChatSignals.length > 12) {
+              _recentChatSignals.removeLast();
+            }
+            _refreshSmartInteraction();
+          }
         }
-        _recentChatSignals = [];
-        _refreshSmartInteraction();
-        return;
       }
-      final snapshotValue = event.snapshot.value;
-      if (snapshotValue is! Map) {
-        if (_recentChatSignals.isEmpty) {
-          return;
-        }
-        _recentChatSignals = [];
-        _refreshSmartInteraction();
-        return;
-      }
-      final raw = Map<dynamic, dynamic>.from(snapshotValue);
-      final items = raw.values
-          .whereType<Map>()
-          .map((value) => Map<dynamic, dynamic>.from(value))
-          .toList()
-        ..sort((a, b) {
-          final left = (a['ts'] as num?)?.toInt() ?? 0;
-          final right = (b['ts'] as num?)?.toInt() ?? 0;
-          return right.compareTo(left);
-        });
-      // Cập nhật ts tin nhắn gần nhất (dùng để tính banner "lâu không nhắn")
-      final latestTs =
-          items.isNotEmpty ? (items.first['ts'] as num?)?.toInt() ?? 0 : 0;
-      if (latestTs > 0 && latestTs != _lastChatMessageTs) {
-        _safeSetState(() => _lastChatMessageTs = latestTs);
-      }
-      final partnerSenderId = _currentRole == 'user1' ? 'U2' : 'U1';
-      final nextSignals = items
-          .where((item) => (item['type'] ?? 'text').toString() == 'text')
-          .where((item) =>
-              item['senderId'] == partnerSenderId && item['isRead'] != true)
-          .map((item) => (item['text'] ?? item['content'] ?? '').toString())
-          .map((text) => text.trim())
-          .where((text) => text.isNotEmpty)
-          .take(12)
-          .toList(growable: false);
-      if (_sameStringList(_recentChatSignals, nextSignals)) {
-        return;
-      }
-      _recentChatSignals = nextSignals;
-      _refreshSmartInteraction();
     }, onError: (Object error) {
       debugPrint('[MainHomeListeners] Chat signal stream failed: $error');
     });

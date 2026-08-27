@@ -14,6 +14,7 @@ import 'core/cloud_functions_helper.dart';
 import 'offline_cache_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 import 'secure_storage_service.dart';
+import '../resilient_http.dart';
 
 class DeviceTrustState {
   static const Duration autoTrustDelay = Duration(hours: 12);
@@ -36,13 +37,9 @@ class DeviceTrustState {
     required this.isAdmin,
   });
 
-  bool get isTrusted =>
-      status == 'approved' ||
-      status == 'pending' ||
-      status == 'unknown' ||
-      status == 'blocked';
-  bool get isPendingApproval => false;
-  bool get isBlocked => false;
+  bool get isTrusted => status == 'approved' || status == 'auto_approved';
+  bool get isPendingApproval => status == 'pending';
+  bool get isBlocked => status == 'blocked';
 
   Duration? get remainingAutoApproval {
     if (!isPendingApproval || autoApproveAtMs <= 0) return null;
@@ -307,7 +304,7 @@ class DeviceManagerService {
         String url, String sourceName) async {
       try {
         final response =
-            await http.get(Uri.parse(url)).timeout(const Duration(seconds: 4));
+            await ResilientHttp.get(Uri.parse(url));
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
           data['source'] = sourceName;
@@ -602,7 +599,7 @@ class DeviceManagerService {
         String url, String sourceName) async {
       try {
         final response =
-            await http.get(Uri.parse(url)).timeout(const Duration(seconds: 4));
+            await ResilientHttp.get(Uri.parse(url));
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
           data['source'] = sourceName;

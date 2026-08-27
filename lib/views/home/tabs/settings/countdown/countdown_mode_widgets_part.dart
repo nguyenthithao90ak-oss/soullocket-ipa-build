@@ -828,6 +828,7 @@ class _CountdownModeAvatarFrame extends StatelessWidget {
         imageUrl: avatarUrl.trim(),
         fit: BoxFit.cover,
         filterQuality: FilterQuality.medium,
+        memCacheWidth: 400,
         errorWidget: (_, __, ___) => _buildFallback(),
       );
     }
@@ -955,10 +956,10 @@ class _CountdownModeCircle extends StatelessWidget {
                               style: SLTheme.textStyleForKey(
                                 fontKey,
                                 fontSize:
-                                    (resolvedSize * 0.075).clamp(16.0, 22.0),
+                                    (resolvedSize * 0.082).clamp(17.0, 24.0),
                                 fontWeight: FontWeight.w900,
-                                letterSpacing: 1.2,
-                                color: styleData.topColor,
+                                letterSpacing: 0.8,
+                                color: styleData.bottomColor,
                                 shadows: styleData.labelShadows,
                               ),
                             ),

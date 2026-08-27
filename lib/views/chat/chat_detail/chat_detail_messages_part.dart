@@ -177,6 +177,16 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
 
   Widget _buildMsgBubble(ChatMessage msg, bool isMe,
       {bool isLatestMe = false}) {
+    // Aurora Soft v2 — delegate to redesigned bubble widget
+    if (UiPrefs.notifier.value.uiVersion == 'v2') {
+      return AuroraChatBubbles.buildMessageBubble(
+        context: context,
+        message: msg,
+        isFromMe: isMe,
+        isLatestMe: isLatestMe,
+        onReact: () => _showReactionPicker(msg),
+      );
+    }
     if (msg.type == 'call_invite') {
       return _buildCallInviteBubble(msg, isMe);
     }
@@ -277,6 +287,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                                 width: effectiveImageSize,
                                 height: effectiveImageSize,
                                 fit: BoxFit.cover,
+                                memCacheWidth: 800,
                                 filterQuality: FilterQuality.medium,
                                 placeholder: (context, url) => SizedBox(
                                   width: effectiveImageSize,
@@ -353,7 +364,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
                       Text(
                         msg.text,
                         style: TextStyle(
-                          color: isMe ? Colors.white : const Color(0xFF1E293B),
+                          color: isMe ? Colors.white : SLColors.darkNavy,
                           fontSize: 15,
                           height: 1.4,
                         ),
@@ -670,7 +681,7 @@ extension _ChatDetailMessagesPart on _ChatDetailScreenState {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: SLTheme.quicksand(
-                color: const Color(0xFF1E293B),
+                color: SLColors.darkNavy,
                 fontSize: 14.2,
                 fontWeight: FontWeight.w900,
                 height: 1.3,

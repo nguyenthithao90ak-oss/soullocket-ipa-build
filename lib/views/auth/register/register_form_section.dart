@@ -236,7 +236,7 @@ class RegisterForm extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Center(
               child: Text(
-                '🩷 HOẶC ĐĂNG KÝ NHANH 🩷',
+                '🩷 ${l10n.translate('HOẶC ĐĂNG KÝ NHANH')} 🩷',
                 style: SLTheme.quicksand(
                   color: const Color(0xFFFF69B4),
                   fontSize: 13,

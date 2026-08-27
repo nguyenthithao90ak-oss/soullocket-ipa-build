@@ -26,6 +26,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:provider/provider.dart';
 import '../../ui_prefs.dart';
 import '../../../core/sl_theme.dart';
+import 'settings/theme/theme_preview_builder.dart';
 
 import 'dart:io';
 import '../../../utils/services/notification_service.dart';
@@ -34,7 +35,6 @@ import '../../../utils/services/core/presence_service.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:permission_handler/permission_handler.dart' as app_permission;
 import 'package:url_launcher/url_launcher.dart';
-import '../../../core/sl_theme.dart';
 import '../../../core/sl_route.dart';
 import '../../../utils/services/house_settings_service.dart';
 import '../../../utils/services/location_service.dart';
@@ -52,7 +52,6 @@ import '../../../models/data_export_result.dart';
 import '../../../utils/services/data_export_service.dart';
 import '../../../utils/services/friends_service.dart';
 import '../../relationship/couple_connect_screen.dart';
-import '../../ui_prefs.dart';
 import '../../premium/premium_store_screen.dart';
 
 import '../../utilities/bucket_list_screen.dart';

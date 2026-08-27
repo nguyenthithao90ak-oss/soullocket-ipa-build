@@ -104,10 +104,9 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF7FA),
-      extendBodyBehindAppBar: true,
+      backgroundColor: const Color(0xFFFAF7F5),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFFFAF7F5),
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: Padding(
@@ -117,19 +116,20 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.9),
+                color: Colors.white,
                 shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFF0E5DF), width: 1.2),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFF4F87).withValues(alpha: 0.10),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
               child: IconButton(
                 icon: const Icon(Icons.arrow_back_rounded, size: 20),
-                color: const Color(0xFF332C35),
+                color: const Color(0xFF2E2427),
                 onPressed: () => Navigator.of(context).pop(),
                 padding: EdgeInsets.zero,
               ),
@@ -143,70 +143,24 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
             const Icon(
               Icons.favorite_rounded,
               size: 18,
-              color: Color(0xFFFF4F87),
+              color: Color(0xFFFF5E7E),
             ),
             const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _isSingle
-                      ? L10nService().translate('insight_title_single')
-                      : L10nService().translate('insight_title_couple'),
-                  style: SLTheme.quicksand(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF332C35),
-                  ),
-                ),
-              ],
+            Text(
+              _isSingle
+                  ? L10nService().translate('insight_title_single')
+                  : L10nService().translate('insight_title_couple'),
+              style: SLTheme.quicksand(
+                fontSize: 17,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF2E2427),
+              ),
             ),
           ],
         ),
       ),
-      body: Stack(
-        children: [
-          // ── Background gradient ──
-          const Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFFFFF7FA),
-                    Color(0xFFFFEEF4),
-                    Color(0xFFF7EFFF),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: [0.0, 0.45, 1.0],
-                ),
-              ),
-            ),
-          ),
-          // ── Decorative orbs ──
-          Positioned(
-            top: -50,
-            right: -40,
-            child: _buildBackdropOrb(
-              size: 180,
-              colors: const [Color(0xFFFFB3D0), Color(0xFFE8CCFF)],
-            ),
-          ),
-          Positioned(
-            left: -50,
-            bottom: 200,
-            child: _buildBackdropOrb(
-              size: 140,
-              colors: const [Color(0xFFFFD1E3), Color(0xFFE9DDFF)],
-              delayItem: 1200,
-            ),
-          ),
-          // ── Content ──
-          SafeArea(
-            top: false,
-            child: _buildContent(),
-          ),
-        ],
+      body: SafeArea(
+        child: _buildContent(),
       ),
     );
   }
@@ -273,7 +227,7 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.fromLTRB(
           _contentHorizontalPadding,
-          MediaQuery.of(context).padding.top + kToolbarHeight + 8,
+          12,
           _contentHorizontalPadding,
           30,
         ),
@@ -315,15 +269,14 @@ class _LoveInsightsScreenState extends State<LoveInsightsScreen> {
 
   BoxDecoration _softCardDecoration() {
     return BoxDecoration(
-      color: Colors.white.withValues(alpha: 0.82),
-      borderRadius: BorderRadius.circular(24),
-      border:
-          Border.all(color: Colors.white.withValues(alpha: 0.7), width: 1),
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(22),
+      border: Border.all(color: const Color(0xFFF0E5DF), width: 1.2),
       boxShadow: [
         BoxShadow(
-          color: const Color(0xFFFF4F87).withValues(alpha: 0.08),
-          blurRadius: 20,
-          offset: const Offset(0, 8),
+          color: const Color(0xFFFF5E7E).withValues(alpha: 0.04),
+          blurRadius: 14,
+          offset: const Offset(0, 4),
         ),
       ],
     );

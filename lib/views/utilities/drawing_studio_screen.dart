@@ -914,6 +914,7 @@ class _DrawingStudioScreenState extends State<DrawingStudioScreen> {
       return CachedNetworkImage(
         imageUrl: item.remoteUrl!,
         fit: fit,
+        memCacheWidth: 800,
         filterQuality: FilterQuality.medium,
         imageBuilder: (context, imageProvider) => Container(
           decoration: BoxDecoration(

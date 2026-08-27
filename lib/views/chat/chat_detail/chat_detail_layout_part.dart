@@ -14,6 +14,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
           key: ValueKey<String>(normalizedUrl),
           imageUrl: normalizedUrl,
           fit: BoxFit.cover,
+          memCacheWidth: 800,
           filterQuality: FilterQuality.medium,
           placeholder: (context, url) =>
               const ColoredBox(color: Color(0xFFF8FAFC)),
@@ -111,6 +112,10 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
         }
 
         final itemCount = messages.length + (_isLoadingOlderMessages ? 1 : 0);
+        // Pre-compute once outside itemBuilder to avoid O(n²) indexWhere calls
+        final latestMeIndex = messages.indexWhere((m) => _isInternal
+            ? m.senderId == _currentRole
+            : m.senderId == widget.myHouseId);
         return ListView.builder(
           controller: _messagesScrollController,
           padding: const EdgeInsets.fromLTRB(15, 15, 15, 10),
@@ -136,14 +141,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
             final isMe = _isInternal
                 ? msg.senderId == _currentRole
                 : msg.senderId == widget.myHouseId;
-
-            bool isLatestMe = false;
-            if (isMe) {
-              final firstMeIndex = messages.indexWhere((m) => _isInternal
-                  ? m.senderId == _currentRole
-                  : m.senderId == widget.myHouseId);
-              isLatestMe = index == firstMeIndex;
-            }
+            final isLatestMe = isMe && index == latestMeIndex;
 
             return _buildMsgBubble(msg, isMe, isLatestMe: isLatestMe);
           },
@@ -274,7 +272,7 @@ extension _ChatDetailLayoutPart on _ChatDetailScreenState {
                           textInputAction: TextInputAction.send,
                           style: const TextStyle(
                             fontSize: 15,
-                            color: Color(0xFF1E293B),
+                            color: SLColors.darkNavy,
                           ),
                           decoration: InputDecoration(
                             hintText: 'Nhắn tin...',

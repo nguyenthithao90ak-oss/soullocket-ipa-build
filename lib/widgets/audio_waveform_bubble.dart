@@ -153,7 +153,7 @@ class _AudioWaveformBubbleState extends State<AudioWaveformBubble>
   @override
   Widget build(BuildContext context) {
     final isMe = widget.isMe;
-    final primaryColor = isMe ? Colors.white : const Color(0xFF1E293B);
+    final primaryColor = isMe ? Colors.white : SLColors.darkNavy;
     final secondaryColor =
         isMe ? Colors.white.withValues(alpha: 0.45) : const Color(0xFF94A3B8);
     final activeWaveColor = isMe ? Colors.white : const Color(0xFFD81B60);

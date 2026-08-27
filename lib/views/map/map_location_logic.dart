@@ -615,6 +615,34 @@ extension _MapLocationLogicExt on _MapScreenState {
         debugPrint('Map partner GPS listen failed: $message');
       },
     );
+
+    // Listen to Partner Sleep Mode State
+    _sleepModeSub?.cancel();
+    _sleepModeSub = SleepModeService.instance
+        .streamSleepMode(widget.houseId)
+        .listen((state) {
+      _partnerSleepState = state;
+      _scheduleLiveRefresh();
+    });
+
+    // Listen to Music playing state for house
+    _musicSub?.cancel();
+    _musicSub =
+        _dbRef.child('houses/${widget.houseId}/music').onValue.listen((event) {
+      if (event.snapshot.exists && event.snapshot.value is Map) {
+        final map = Map<String, dynamic>.from(event.snapshot.value as Map);
+        if (map['isPlaying'] == true) {
+          _currentMusicTitle =
+              map['trackTitle']?.toString() ?? map['title']?.toString();
+        } else {
+          _currentMusicTitle = null;
+        }
+        _scheduleLiveRefresh();
+      } else {
+        _currentMusicTitle = null;
+        _scheduleLiveRefresh();
+      }
+    });
   }
 
   void _listenMemoryNodes() {
@@ -1516,23 +1544,40 @@ extension _MapLocationLogicExt on _MapScreenState {
       partnerLatLng = partnerPoint.latLng;
     }
 
+    final isPartnerSleeping = _partnerSleepState?.isEffectivelyActive == true;
+    final partnerSpeedKmh =
+        partnerPoint?.speed != null ? (partnerPoint!.speed! * 3.6).round() : 0;
+    final mySpeedKmh =
+        myPoint?.speed != null ? (myPoint!.speed! * 3.6).round() : 0;
+
+    final distanceMeters = (myPoint != null && partnerPoint != null)
+        ? _distance.as(ll.LengthUnit.Meter, myPoint.latLng, partnerPoint.latLng)
+        : double.infinity;
+
     if (myPoint != null &&
         partnerPoint != null &&
         partnerLatLng != null &&
-        _distance.as(ll.LengthUnit.Meter, myPoint.latLng, partnerPoint.latLng) <
-            10) {
+        distanceMeters <= _kPartnerNearbyEnterMeters) {
       final accent = myLive ? _kMapBlue : const Color(0xFF64748B);
+      final centerPoint = ll.LatLng(
+        (myPoint.lat + partnerPoint.lat) / 2,
+        (myPoint.lng + partnerPoint.lng) / 2,
+      );
+      final togetherLabel = distanceMeters < 30
+          ? 'Đang bên nhau 💕'
+          : 'Cách nhau ${distanceMeters.round()}m 💕';
+
       liveMarkerSpecs.add(
         _MapMarkerSpec(
           id: 'couple_same_position',
-          point: myPoint.latLng,
+          point: centerPoint,
           icon: myLive
               ? Icons.person_pin_circle_rounded
               : Icons.history_toggle_off_rounded,
           color: accent,
           title: '${widget.myName} & ${widget.partnerName}',
           subtitle: _myAddressText,
-          pulse: myLive || partnerLive,
+          pulse: true,
           avatarUrl: widget.myAvatarUrl,
           secondaryAvatarUrl: widget.partnerAvatarUrl,
           secondaryIcon: partnerLive
@@ -1542,6 +1587,10 @@ extension _MapLocationLogicExt on _MapScreenState {
           battery: partnerPoint.battery,
           isCharging: partnerPoint.isCharging,
           speed: partnerPoint.speed,
+          isTogether: true,
+          togetherTime: togetherLabel,
+          isSleeping: isPartnerSleeping,
+          musicTitle: _currentMusicTitle,
           onTap: () => _showMapPointDialog(
             title: '${widget.myName} & ${widget.partnerName}',
             subtitle: _myAddressText,
@@ -1571,6 +1620,7 @@ extension _MapLocationLogicExt on _MapScreenState {
             battery: myPoint.battery,
             isCharging: myPoint.isCharging,
             speed: myPoint.speed,
+            isSpeeding: mySpeedKmh >= 40,
             onTap: () => _showMapPointDialog(
               title: widget.myName,
               subtitle: _myAddressText,
@@ -1603,6 +1653,9 @@ extension _MapLocationLogicExt on _MapScreenState {
             battery: partnerPoint.battery,
             isCharging: partnerPoint.isCharging,
             speed: partnerPoint.speed,
+            isSleeping: isPartnerSleeping,
+            musicTitle: _currentMusicTitle,
+            isSpeeding: partnerSpeedKmh >= 40,
             onTap: () => _showMapPointDialog(
               title: widget.partnerName,
               subtitle: _partnerAddressText,

@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:soullocket_app/utils/shared_prefs_mmkv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiCacheManager {
   static const String _prefix = 'api_cache_';

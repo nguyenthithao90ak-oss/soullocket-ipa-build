@@ -1137,6 +1137,7 @@ class _CountdownQuickCustomizeSheetContentState
                       width: 44,
                       height: 44,
                       fit: BoxFit.cover,
+                      memCacheWidth: 400,
                       placeholder: (context, url) => Container(
                         color: const Color(0xFFFDE8F0),
                         child: const Icon(Icons.image_outlined,
@@ -1286,14 +1287,14 @@ class _CountdownQuickCustomizeSheetContentState
           maxHeight: 3200,
           uiSettings: [
             AndroidUiSettings(
-              toolbarTitle: 'Chỉnh sửa ảnh nền',
+              toolbarTitle: L10nService().translate('home_cnhsanhhn_38c921'),
               toolbarColor: const Color(0xFFD81B60),
               toolbarWidgetColor: Colors.white,
               initAspectRatio: CropAspectRatioPreset.ratio16x9,
               lockAspectRatio: true,
             ),
             IOSUiSettings(
-              title: 'Chỉnh sửa ảnh nền',
+              title: L10nService().translate('home_cnhsanhhn_38c921'),
               // Using ratio16x9 since ratio9x16 was removed in image_cropper v7
               aspectRatioPresets: const [CropAspectRatioPreset.ratio16x9],
               aspectRatioLockEnabled: true,
@@ -1669,6 +1670,7 @@ class _CountdownQuickCustomizeSheetContentState
                       width: 44,
                       height: 44,
                       fit: BoxFit.cover,
+                      memCacheWidth: 400,
                       placeholder: (context, url) => Container(
                         color: const Color(0xFFFDE8F0),
                         child: const Icon(Icons.image_outlined,
@@ -1845,7 +1847,7 @@ class _CountdownQuickCustomizeSheetContentState
             children: [
               Expanded(
                 child: _buildLayoutOptionChip(
-                  label: 'Cổ điển',
+                  label: L10nService().translate('home_ccdien_layout'),
                   icon: Icons.grid_view_rounded,
                   selected: selectedLayout != 'fullscreen',
                   onTap: () => onSelect('classic'),
@@ -1856,7 +1858,7 @@ class _CountdownQuickCustomizeSheetContentState
               const SizedBox(width: 10),
               Expanded(
                 child: _buildLayoutOptionChip(
-                  label: 'Toàn màn hình',
+                  label: L10nService().translate('home_toanmnhanh_layout'),
                   icon: Icons.fullscreen_rounded,
                   selected: selectedLayout == 'fullscreen',
                   onTap: () => onSelect('fullscreen'),
@@ -2115,7 +2117,7 @@ class _CountdownQuickCustomizeSheetContentState
                 ),
                 const SizedBox(height: 12),
                 buildCollapsedSection(
-                  title: 'Giao diện vòng đếm',
+                  title: L10nService().translate('home_gdvangdem'),
                   description: 'Đổi phong cách hiển thị vòng đếm ngày.',
                   icon: Icons.change_circle_rounded,
                   options: widget.styleOptions,
@@ -2139,7 +2141,7 @@ class _CountdownQuickCustomizeSheetContentState
                 ),
                 const SizedBox(height: 12),
                 buildSizeSection(
-                  title: 'Kích thước vòng đếm',
+                  title: L10nService().translate('home_kthuocvongdem'),
                   description: 'Kéo để điều chỉnh độ lớn của vòng đếm ngày.',
                   icon: Icons.photo_size_select_large_rounded,
                   currentValue: uiState.countdownSizePx,
@@ -2183,45 +2185,45 @@ class _CountdownQuickCustomizeSheetContentState
                 const SizedBox(height: 12),
                 // --- Kiểu khung avatar ---
                 buildCollapsedSection(
-                  title: 'Kiểu khung avatar',
+                  title: L10nService().translate('home_kieukhungavatar'),
                   description: 'Đổi kiểu viền avatar hiển thị trên trang chủ.',
                   icon: Icons.account_circle_rounded,
                   options: [
-                    const _CountdownQuickOption(
-                      label: 'Không',
+                    _CountdownQuickOption(
+                      label: L10nService().translate('home_khong_avatar_frame'),
                       value: 'off',
                       icon: Icons.block_rounded,
-                      accent: Color(0xFFBDBDBD),
+                      accent: const Color(0xFFBDBDBD),
                     ),
-                    const _CountdownQuickOption(
-                      label: 'Tròn',
+                    _CountdownQuickOption(
+                      label: L10nService().translate('home_tron_avatar_frame'),
                       value: 'circle',
                       icon: Icons.circle_rounded,
-                      accent: Color(0xFF2563EB),
+                      accent: const Color(0xFF2563EB),
                     ),
-                    const _CountdownQuickOption(
-                      label: 'Bo góc',
+                    _CountdownQuickOption(
+                      label: L10nService().translate('home_bogoc_avatar_frame'),
                       value: 'rounded',
                       icon: Icons.rounded_corner_rounded,
-                      accent: Color(0xFFEC4899),
+                      accent: const Color(0xFFEC4899),
                     ),
-                    const _CountdownQuickOption(
-                      label: 'Squircle',
+                    _CountdownQuickOption(
+                      label: L10nService().translate('home_squircle_avatar_frame'),
                       value: 'squircle',
                       icon: Icons.crop_square_rounded,
-                      accent: Color(0xFF8B5CF6),
+                      accent: const Color(0xFF8B5CF6),
                     ),
-                    const _CountdownQuickOption(
-                      label: 'Ngọc trai',
+                    _CountdownQuickOption(
+                      label: L10nService().translate('home_ngoctrai_avatar_frame'),
                       value: 'pearl',
                       icon: Icons.blur_circular_rounded,
-                      accent: Color(0xFFD4A520),
+                      accent: const Color(0xFFD4A520),
                     ),
-                    const _CountdownQuickOption(
-                      label: 'Thủy tinh',
+                    _CountdownQuickOption(
+                      label: L10nService().translate('home_thuytinh_avatar_frame'),
                       value: 'glass',
                       icon: Icons.water_drop_rounded,
-                      accent: Color(0xFF06B6D4),
+                      accent: const Color(0xFF06B6D4),
                     ),
                   ],
                   selectedValue: uiState.avatarFrameKey.isEmpty
@@ -2244,34 +2246,34 @@ class _CountdownQuickCustomizeSheetContentState
                 const SizedBox(height: 12),
                 // --- Chất lượng đồ họa ---
                 buildCollapsedSection(
-                  title: 'Chất lượng đồ họa',
+                  title: L10nService().translate('home_chatluongdohoa'),
                   description:
                       'Tùy chỉnh chất lượng đồ họa và hiệu ứng hiển thị.',
                   icon: Icons.high_quality_rounded,
                   options: [
-                    const _CountdownQuickOption(
-                      label: 'Tự động',
+                    _CountdownQuickOption(
+                      label: L10nService().translate('home_tudong_quality'),
                       value: 'auto',
                       icon: Icons.brightness_auto_rounded,
-                      accent: Color(0xFF2563EB),
+                      accent: const Color(0xFF2563EB),
                     ),
-                    const _CountdownQuickOption(
-                      label: 'Thấp (Mượt)',
+                    _CountdownQuickOption(
+                      label: L10nService().translate('home_thapmuot_quality'),
                       value: 'low',
                       icon: Icons.battery_saver_rounded,
-                      accent: Color(0xFFE11D48),
+                      accent: const Color(0xFFFF5E7E),
                     ),
-                    const _CountdownQuickOption(
-                      label: 'Trung bình',
+                    _CountdownQuickOption(
+                      label: L10nService().translate('home_trungbinh_quality'),
                       value: 'balanced',
                       icon: Icons.balance_rounded,
-                      accent: Color(0xFFD97706),
+                      accent: const Color(0xFFD97706),
                     ),
-                    const _CountdownQuickOption(
-                      label: 'Cao (Đẹp)',
+                    _CountdownQuickOption(
+                      label: L10nService().translate('home_caodep_quality'),
                       value: 'high',
                       icon: Icons.bolt_rounded,
-                      accent: Color(0xFF059669),
+                      accent: const Color(0xFF059669),
                     ),
                   ],
                   selectedValue: uiState.graphicsQualityKey.isEmpty
@@ -2286,7 +2288,7 @@ class _CountdownQuickCustomizeSheetContentState
                 const SizedBox(height: 12),
                 // --- Ngôn ngữ ---
                 buildCollapsedSection(
-                  title: 'Ngôn ngữ',
+                  title: L10nService().translate('home_ngonngu'),
                   description: 'Đổi ngôn ngữ hiển thị của ứng dụng.',
                   icon: Icons.language_rounded,
                   options: [

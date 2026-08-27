@@ -1,4 +1,6 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
+// TODO: [TECH-DEBT] File này có 1700+ lines - cần refactor thành các widgets nhỏ hơn
+// TODO: [TECH-DEBT] Xóa ignore_for_file sau khi đã dọn dẹp unused code
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -22,6 +24,7 @@ import 'collage_limit_ui_helper.dart';
 import '../../utils/services/image_picker_recovery_service.dart';
 import '../../utils/app_error_mapper.dart';
 import '../../utils/services/app_lifecycle_presence_guard.dart';
+import 'package:soullocket_app/widgets/sl_toast.dart';
 
 
 part 'collage_maker/panels/collage_intro_panel.dart';
@@ -724,10 +727,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
     if (newCount < minPhotos && !silent) {
       final presets = _stylePresets.where((s) => s.id == _selectedStyle);
       final label = presets.isNotEmpty ? presets.first.label : _selectedStyle;
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
-        content: Text('$label cần tối thiểu $minPhotos ảnh.'),
-        backgroundColor: const Color(0xFFFF8A65),
-      ));
+      SLToast.show(context, '$label cần tối thiểu $minPhotos ảnh.');
       return false;
     }
 
@@ -735,10 +735,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
       if (!silent) {
         final presets = _stylePresets.where((s) => s.id == _selectedStyle);
         final label = presets.isNotEmpty ? presets.first.label : _selectedStyle;
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
-          content: Text('$label chỉ chứa tối đa $maxPhotos ảnh.'),
-          backgroundColor: const Color(0xFFFF8A65),
-        ));
+        SLToast.show(context, '$label chỉ chứa tối đa $maxPhotos ảnh.');
       }
       return false;
     }
@@ -1187,6 +1184,7 @@ class _CollageMakerScreenState extends State<CollageMakerScreen> {
               maxWidthDiskCache: 720,
               imageUrl: url,
               fit: BoxFit.contain,
+              memCacheWidth: 800,
               filterQuality: FilterQuality.medium,
               placeholder: (context, url) =>
                   const Center(child: CircularProgressIndicator()),

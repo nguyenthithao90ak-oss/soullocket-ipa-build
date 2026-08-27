@@ -3,6 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 
+/// A global notifier that any scrollable widget can set to true/false.
+/// When true, all FastBackdropFilter instances swap to a cheap ColoredBox.
+final ValueNotifier<bool> globalScrollingNotifier = ValueNotifier<bool>(false);
+
 class FastBackdropFilter extends StatelessWidget {
   final ImageFilter filter;
   final Widget? child;
@@ -35,10 +39,24 @@ class FastBackdropFilter extends StatelessWidget {
         child: child,
       );
     }
-    return BackdropFilter(
-      filter: filter,
-      blendMode: blendMode,
-      child: child,
+    // During scrolling, skip the expensive GPU blur and use a cheap fallback
+    return ValueListenableBuilder<bool>(
+      valueListenable: globalScrollingNotifier,
+      builder: (context, isScrolling, _) {
+        if (isScrolling) {
+          return ColoredBox(
+            color: fallbackColor ??
+                Colors.black.withValues(alpha: 0.06),
+            child: child,
+          );
+        }
+        return BackdropFilter(
+          filter: filter,
+          blendMode: blendMode,
+          child: child,
+        );
+      },
     );
   }
 }
+

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -317,7 +318,25 @@ class _DiaryItemVideoWidgetState extends State<_DiaryItemVideoWidget> {
       final String rawUrl = widget.url.trim();
       final playUrl = CloudflareR2Service.resolveVideoUrl(rawUrl);
       final uri = Uri.parse(playUrl);
-      final controller = VideoPlayerController.networkUrl(uri);
+      
+      VideoPlayerController controller;
+      try {
+        File? cachedFile;
+        final fileInfo = await AppCacheManager.instance.getFileFromCache(playUrl);
+        if (fileInfo != null) {
+          cachedFile = fileInfo.file;
+        } else {
+          cachedFile = await AppCacheManager.instance.getSingleFile(playUrl);
+        }
+        if (cachedFile != null) {
+          controller = VideoPlayerController.file(cachedFile);
+        } else {
+          controller = VideoPlayerController.networkUrl(uri);
+        }
+      } catch (_) {
+        controller = VideoPlayerController.networkUrl(uri);
+      }
+
       _controller = controller;
       await controller.initialize();
       if (mounted) {

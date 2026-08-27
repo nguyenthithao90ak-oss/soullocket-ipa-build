@@ -255,30 +255,44 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     final double radius = compact ? 18 : 20;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.02),
+        color: const Color(0xFF141C30).withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(
-          color: const Color(0xFF6366F1).withValues(alpha: 0.16),
-          width: 1.2,
+          color: const Color(0xFF818CF8).withValues(alpha: 0.35),
+          width: 1.4,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6366F1).withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Icon(
-              Icons.archive_rounded,
-              color: const Color(0xFF6366F1).withValues(alpha: 0.46),
-              size: compact ? 16 : 20,
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.archive_rounded,
+                color: const Color(0xFFA5B4FC),
+                size: compact ? 16 : 18,
+              ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 5),
             Text(
               'HOLD',
               style: SLTheme.quicksand(
-                fontSize: compact ? 8 : 10,
+                fontSize: compact ? 8.5 : 10,
                 fontWeight: FontWeight.w900,
-                color: const Color(0xFF6366F1).withValues(alpha: 0.46),
-                letterSpacing: 0.5,
+                color: const Color(0xFFA5B4FC),
+                letterSpacing: 0.8,
               ),
             ),
           ],
@@ -304,33 +318,37 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(
-        compact ? 9 : 12,
-        compact ? 7 : 10,
-        compact ? 9 : 12,
-        compact ? 9 : 13,
+        compact ? 10 : 14,
+        compact ? 8 : 12,
+        compact ? 10 : 14,
+        compact ? 10 : 14,
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(compact ? 24 : 28),
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: <Color>[
-            Color.lerp(_kSoulPanelTop, Colors.white, 0.10)!,
-            Color.lerp(_kSoulPanelMid, _kSoulChrome, 0.03)!,
-            Color.lerp(_kSoulPanelBottom, Colors.black, 0.10)!,
+            Color(0xFF162035),
+            Color(0xFF0F1728),
+            Color(0xFF080C16),
           ],
-          stops: const <double>[0, 0.50, 1],
+          stops: [0.0, 0.45, 1.0],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         border: Border.all(
-          color: _kSoulChrome.withValues(alpha: 0.32),
-          width: 1.0,
+          color: const Color(0xFF38BDF8).withValues(alpha: 0.35),
+          width: 1.2,
         ),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: const Color(0xFF071226).withValues(alpha: 0.16),
+            color: const Color(0xFF0284C7).withValues(alpha: 0.12),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black54,
             blurRadius: 12,
-            spreadRadius: -8,
-            offset: const Offset(0, 8),
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -476,28 +494,35 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     final bool isDragging = _draggingPiece?.id == piece.id;
     final bool isSnapBack = _snapBackPieceId == piece.id;
     final bool isRecommended = _recommendedMove?.pieceId == piece.id;
+    final Color pieceColor = piece.isGold
+        ? const Color(0xFFFFB703)
+        : (piece.isBomb
+            ? const Color(0xFFFF0054)
+            : _kSoulTones[piece.toneIndex % _kSoulTones.length]);
+
     final Widget pieceCardChild = Transform.scale(
       scale: isDragging ? 0.96 : 1.0,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.03),
+          color: const Color(0xFF131B2E).withValues(alpha: 0.75),
           borderRadius: BorderRadius.circular(compact ? 18 : 20),
           border: Border.all(
             color: isRecommended
-                ? const Color(0xFFFFD166).withValues(alpha: 0.32)
-                : Colors.white.withValues(alpha: 0.06),
+                ? const Color(0xFFFFD166).withValues(alpha: 0.55)
+                : pieceColor.withValues(alpha: 0.22),
             width: isRecommended ? 1.4 : 1.0,
           ),
           boxShadow: <BoxShadow>[
             if (isRecommended)
               BoxShadow(
-                color: const Color(0xFFFFD166).withValues(alpha: 0.08),
-                blurRadius: 10,
-                spreadRadius: -4,
+                color: const Color(0xFFFFD166).withValues(alpha: 0.18),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
               ),
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 6,
+              color: pieceColor.withValues(alpha: 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -515,8 +540,8 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                         decoration: BoxDecoration(
                           gradient: RadialGradient(
                             colors: <Color>[
-                              Colors.white.withValues(
-                                  alpha: isRecommended ? 0.10 : 0.05),
+                              pieceColor.withValues(
+                                  alpha: isRecommended ? 0.18 : 0.08),
                               Colors.transparent,
                             ],
                             radius: 0.88,
@@ -792,40 +817,40 @@ extension _SoulBlockBoard on _SoulBlockGameState {
     bool connectBottom = false,
     bool connectLeft = false,
   }) {
-    final bool isGold = tone == const Color(0xFFFFD700);
-    final bool isBomb = tone == const Color(0xFFFF4500);
+    final bool isGold = tone == const Color(0xFFFFD700) || tone == const Color(0xFFFFB703);
+    final bool isBomb = tone == const Color(0xFFFF4500) || tone == const Color(0xFFFF0054);
 
     final double shortSide = min(width, height);
-    final double outerRadius = shortSide * 0.14;
-    final double joinedRadius = max(1.6, shortSide * 0.045);
-    final double faceInset = max(0.9, shortSide * 0.075);
-    final double connectedInset = max(0.45, faceInset * 0.24);
+    final double outerRadius = shortSide * 0.22;
+    final double joinedRadius = max(2.5, shortSide * 0.08);
+    final double faceInset = max(1.2, shortSide * 0.085);
+    final double connectedInset = max(0.5, faceInset * 0.25);
     final double leftInset = connectLeft ? connectedInset : faceInset;
     final double rightInset = connectRight ? connectedInset : faceInset;
     final double topInset = connectTop ? connectedInset : faceInset;
     final double bottomInset = connectBottom ? connectedInset : faceInset;
+
     final Color shellTop = Color.lerp(
       tone,
       Colors.white,
-      isPreview ? 0.60 : 0.45,
+      isPreview ? 0.70 : 0.55,
     )!;
     final Color shellBottom = Color.lerp(
       tone,
-      const Color(0xFF0B1934),
-      isPreview ? 0.20 : 0.10,
+      const Color(0xFF030712),
+      isPreview ? 0.15 : 0.28,
     )!;
     final Color faceTop = Color.lerp(
       tone,
       Colors.white,
-      isPreview ? 0.65 : 0.55,
+      isPreview ? 0.75 : 0.62,
     )!;
     final Color faceBottom = Color.lerp(
       tone,
-      const Color(0xFF050B16),
-      isPreview ? 0.25 : 0.15,
+      const Color(0xFF02040A),
+      isPreview ? 0.20 : 0.18,
     )!;
-    final double previewGlow = isPreview ? 0.40 : 0.25;
-    final double clearingGlow = isClearing ? 0.45 : 0;
+
     final BorderRadius shellRadius = BorderRadius.only(
       topLeft: Radius.circular(
         _blockCornerRadius(connectTop, connectLeft, outerRadius, joinedRadius),
@@ -855,9 +880,10 @@ extension _SoulBlockBoard on _SoulBlockGameState {
         ),
       ),
     );
+
     final double faceRadiusBase = max(
       joinedRadius,
-      outerRadius - (faceInset * 0.48),
+      outerRadius - (faceInset * 0.5),
     );
     final BorderRadius faceRadius = BorderRadius.only(
       topLeft: Radius.circular(
@@ -894,93 +920,83 @@ extension _SoulBlockBoard on _SoulBlockGameState {
       ),
     );
 
-    return DecoratedBox(
+    return Container(
       decoration: BoxDecoration(
         borderRadius: shellRadius,
         gradient: LinearGradient(
           colors: <Color>[
-            shellTop.withValues(alpha: isPreview ? 0.85 : 0.92),
-            tone.withValues(alpha: isPreview ? 0.75 : 0.82),
-            shellBottom.withValues(alpha: 0.88),
+            shellTop.withValues(alpha: isPreview ? 0.88 : 0.98),
+            tone.withValues(alpha: isPreview ? 0.82 : 0.95),
+            shellBottom.withValues(alpha: 0.96),
           ],
-          stops: const <double>[0, 0.45, 1],
+          stops: const <double>[0, 0.40, 1],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         border: Border.all(
           color: isGold
-              ? const Color(0xFFFFE066).withValues(alpha: 0.8)
+              ? const Color(0xFFFFE066)
               : (isBomb
-                  ? const Color(0xFFFF7B50).withValues(alpha: 0.8)
-                  : Colors.white.withValues(alpha: isPreview ? 0.45 : 0.35)),
-          width: (isGold || isBomb) ? 1.2 : 0.8,
+                  ? const Color(0xFFFF5252)
+                  : Colors.white.withValues(alpha: isPreview ? 0.60 : 0.45)),
+          width: (isGold || isBomb) ? 1.4 : 0.9,
         ),
         boxShadow: <BoxShadow>[
-          if (isGold)
+          if (!_smoothGraphics) ...[
             BoxShadow(
-              color: const Color(0xFFFFD700).withValues(alpha: 0.4),
-              blurRadius: shortSide * 0.3,
-              spreadRadius: -shortSide * 0.01,
+              color: tone.withValues(alpha: isPreview ? 0.35 : (isClearing ? 0.65 : 0.22)),
+              blurRadius: isClearing ? shortSide * 0.6 : (isPreview ? shortSide * 0.35 : shortSide * 0.25),
+              offset: const Offset(0, 3),
             ),
-          if (isBomb)
-            BoxShadow(
-              color: const Color(0xFFFF4500).withValues(alpha: 0.4),
-              blurRadius: shortSide * 0.3,
-              spreadRadius: -shortSide * 0.01,
-            ),
-          if (previewGlow > 0)
-            BoxShadow(
-              color: tone.withValues(alpha: previewGlow),
-              blurRadius: shortSide * 0.4,
-              spreadRadius: 2,
-            ),
-          if (clearingGlow > 0)
-            BoxShadow(
-              color: Colors.white.withValues(alpha: clearingGlow),
-              blurRadius: shortSide * 0.5,
-              spreadRadius: 3,
-            ),
+          ],
         ],
       ),
       child: Padding(
         padding:
             EdgeInsets.fromLTRB(leftInset, topInset, rightInset, bottomInset),
-        child: DecoratedBox(
+        child: Container(
           decoration: BoxDecoration(
             borderRadius: faceRadius,
             gradient: LinearGradient(
               colors: <Color>[
-                faceTop.withValues(alpha: isPreview ? 0.85 : 0.95),
-                tone.withValues(alpha: isPreview ? 0.80 : 0.90),
-                faceBottom.withValues(alpha: 0.85),
+                faceTop.withValues(alpha: isPreview ? 0.90 : 0.98),
+                tone.withValues(alpha: isPreview ? 0.85 : 0.94),
+                faceBottom.withValues(alpha: 0.90),
               ],
-              stops: const <double>[0, 0.55, 1],
+              stops: const <double>[0, 0.50, 1],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             border: Border.all(
               color: Colors.white.withValues(
-                  alpha: isPreview ? 0.65 : (isClearing ? 0.45 : 0.25)),
-              width: isPreview ? 1.2 : 0.8,
+                  alpha: isPreview ? 0.70 : (isClearing ? 0.50 : 0.30)),
+              width: 0.8,
             ),
           ),
           child: Stack(
             fit: StackFit.expand,
             children: <Widget>[
+              // Top Specular Highlight Pill
               Align(
                 alignment: Alignment.topCenter,
                 child: Container(
                   margin: EdgeInsets.fromLTRB(
-                    shortSide * 0.22,
-                    max(0.8, shortSide * 0.08),
-                    shortSide * 0.22,
+                    shortSide * 0.16,
+                    max(1.0, shortSide * 0.08),
+                    shortSide * 0.16,
                     0,
                   ),
-                  height: max(0.9, shortSide * 0.055),
+                  height: max(1.2, shortSide * 0.09),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(shortSide),
-                    color:
-                        Colors.white.withValues(alpha: isPreview ? 0.18 : 0.10),
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withValues(alpha: isPreview ? 0.45 : 0.35),
+                        Colors.white.withValues(alpha: 0.05),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
                   ),
                 ),
               ),
@@ -988,16 +1004,22 @@ extension _SoulBlockBoard on _SoulBlockGameState {
                 Center(
                   child: Icon(
                     Icons.star_rounded,
-                    color: Colors.white.withValues(alpha: 0.78),
-                    size: shortSide * 0.52,
+                    color: Colors.white,
+                    size: shortSide * 0.55,
+                    shadows: const [
+                      Shadow(color: Color(0xFFFFD700), blurRadius: 8),
+                    ],
                   ),
                 ),
               if (isBomb)
                 Center(
                   child: Icon(
                     Icons.local_fire_department_rounded,
-                    color: Colors.white.withValues(alpha: 0.82),
-                    size: shortSide * 0.52,
+                    color: Colors.white,
+                    size: shortSide * 0.55,
+                    shadows: const [
+                      Shadow(color: Color(0xFFFF1744), blurRadius: 8),
+                    ],
                   ),
                 ),
             ],
@@ -1009,40 +1031,36 @@ extension _SoulBlockBoard on _SoulBlockGameState {
 
   Widget _buildSocketCell(double width, double height) {
     final double shortSide = min(width, height);
-    final BorderRadius radius = BorderRadius.circular(shortSide * 0.13);
-    return DecoratedBox(
+    final BorderRadius radius = BorderRadius.circular(shortSide * 0.20);
+    return Container(
       decoration: BoxDecoration(
         borderRadius: radius,
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: <Color>[
-            Color.lerp(_kSoulBoardTop, Colors.white, 0.03)!,
-            _kSoulBoardMid,
-            Color.lerp(_kSoulBoardBottom, Colors.black, 0.04)!,
+            Color(0xFF161F33),
+            Color(0xFF0F1626),
+            Color(0xFF0A0F1B),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.09),
-          width: 0.7,
+          color: const Color(0xFF263554).withValues(alpha: 0.6),
+          width: 0.8,
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.all(shortSide * 0.085),
-        child: DecoratedBox(
+        padding: EdgeInsets.all(shortSide * 0.08),
+        child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(shortSide * 0.13),
-            gradient: LinearGradient(
+            borderRadius: BorderRadius.circular(shortSide * 0.14),
+            gradient: const LinearGradient(
               colors: <Color>[
-                Color.lerp(_kSoulBoardBottom, Colors.white, 0.04)!,
-                Color.lerp(_kSoulBoardBottom, Colors.black, 0.10)!,
+                Color(0xFF090D18),
+                Color(0xFF060911),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-            ),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.04),
-              width: 0.6,
             ),
           ),
         ),

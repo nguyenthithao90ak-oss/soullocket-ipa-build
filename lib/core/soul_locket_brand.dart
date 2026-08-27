@@ -114,10 +114,10 @@ class SoulLocketBrand {
       backgroundColors: <Color>[Color(0xFFFFF1F2), Color(0xFFFDA4AF)],
       frameColor: Color(0xFFFECDD3),
       surfaceColor: Color(0xFFFFFBFB),
-      heartColor: Color(0xFFE11D48),
+      heartColor: Color(0xFFFF5E7E),
       heartOutlineColor: Color(0xFFFFFFFF),
-      glowColor: Color(0xFFFB7185),
-      sparkleColor: Color(0xFFFFE4E6),
+      glowColor: Color(0xFFFF85A1),
+      sparkleColor: Color(0xFFFFE3EA),
     ),
     SoulLocketBrandStyle(
       key: 'gold',

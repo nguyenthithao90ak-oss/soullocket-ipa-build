@@ -14,6 +14,7 @@ extension _CinemaReelPlayerWidgetsPart on _CinemaReelPlayerScreenState {
         child: isNetwork
             ? CachedNetworkImage(
                 maxWidthDiskCache: memCacheWidth,
+                memCacheWidth: memCacheWidth,
                 imageUrl: url,
                 fit: BoxFit.scaleDown,
                 filterQuality: FilterQuality.medium,

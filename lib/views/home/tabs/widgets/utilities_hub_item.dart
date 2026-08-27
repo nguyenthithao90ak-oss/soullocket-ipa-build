@@ -143,7 +143,6 @@ class _UtilitiesHubTileContent extends StatelessWidget {
     final Color startColor = colors.first;
     final Color endColor = colors.last;
     final dpr = MediaQuery.devicePixelRatioOf(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Material(
       color: Colors.transparent,
@@ -163,40 +162,72 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeOutCubic,
                   scale: isTarget ? 1.08 : 1.0,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(22),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          // Nền kính mờ pha trộn với màu đặc trưng của từng icon
-                          color: startColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.6),
-                            width: 1.5,
-                          ),
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      // Lớp nền ngọc trai sứ mềm mại, trong suốt cao cấp nổi bật trên mọi hình nền
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.94),
+                          startColor.withValues(alpha: 0.14),
+                          Colors.white.withValues(alpha: 0.86),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 2.0,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: startColor.withValues(alpha: 0.22),
+                          blurRadius: 12,
+                          spreadRadius: 1,
+                          offset: const Offset(0, 5),
                         ),
-                        child: Center(
-                          child: buildUtilityStickerIcon(
-                            utilityId: app.id,
-                            fallbackIcon: iconData,
-                            fallbackColor: startColor,
-                            fallbackSize: 34,
-                            padding: const EdgeInsets.all(6),
-                            devicePixelRatio: dpr,
-                          ),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         ),
+                      ],
+                    ),
+                    child: Center(
+                      child: buildUtilityStickerIcon(
+                        utilityId: app.id,
+                        fallbackIcon: iconData,
+                        fallbackColor: startColor,
+                        fallbackSize: 34,
+                        padding: const EdgeInsets.all(7),
+                        devicePixelRatio: dpr,
                       ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 34,
+              const SizedBox(height: 6),
+              // Khung nền viên nang mờ (Capsule Pill) bảo vệ chữ sắc nét, không bị chìm vào ảnh nền
+              Container(
+                constraints: const BoxConstraints(minHeight: 28),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.80),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    width: 1.0,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
                 child: Center(
                   child: Text(
                     app.localizedTitle,
@@ -204,10 +235,10 @@ class _UtilitiesHubTileContent extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF4A4A4A),
-                      letterSpacing: 0.2,
+                      fontSize: 10.8,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF2E2427),
+                      letterSpacing: 0.1,
                       height: 1.15,
                     ),
                   ),

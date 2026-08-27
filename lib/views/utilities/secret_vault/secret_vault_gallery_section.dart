@@ -582,18 +582,20 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A0A2E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: _vaultBg,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: _vaultBorder, width: 1)),
         title: Text(context.tr('util_xanhmt_9adda3'),
             style: SLTheme.quicksand(
-                fontWeight: FontWeight.bold, color: Colors.white)),
+                fontWeight: FontWeight.bold, color: _vaultTextPrimary)),
         content: Text(context.tr('util_nhnysbxakh_78fc2c'),
-            style: SLTheme.quicksand(color: Colors.white60)),
+            style: SLTheme.quicksand(color: _vaultTextSecondary)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: Text(context.tr('util_hy_1e4050'),
-                  style: SLTheme.quicksand(color: Colors.white38))),
+                  style: SLTheme.quicksand(color: _vaultTextHint))),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -601,7 +603,7 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
             },
             child: Text(context.tr('util_xa_4ed187'),
                 style: SLTheme.quicksand(
-                    color: const Color(0xFFFF5252),
+                    color: SLColors.danger,
                     fontWeight: FontWeight.bold)),
           ),
         ],

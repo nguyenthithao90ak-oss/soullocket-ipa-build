@@ -148,8 +148,10 @@ class _ModernHomeBody extends StatelessWidget {
               onNotification: (notification) {
                 if (notification is ScrollStartNotification) {
                   state._isScrollingNotifier.value = true;
+                  globalScrollingNotifier.value = true;
                 } else if (notification is ScrollEndNotification) {
                   state._isScrollingNotifier.value = false;
+                  globalScrollingNotifier.value = false;
                 }
                 return false;
               },

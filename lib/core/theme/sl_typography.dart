@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
 import '../sl_theme.dart';
 
@@ -106,6 +107,110 @@ class SLTypography {
         fontWeight: FontWeight.w800,
         color: SLColors.textSecond,
       );
+
+  // ─── Plus Jakarta Sans (Aurora primary font) ─────────────────────────────
+  // Font hiện đại, geometric, 8 weights — dùng làm primary font mới.
+  // Được trigger qua UiPrefs.fontKey = 'plusJakarta'.
+
+  static TextTheme plusJakartaSansTextTheme(TextTheme base) {
+    return GoogleFonts.plusJakartaSansTextTheme(base);
+  }
+
+  static TextStyle plusJakartaSans({
+    TextStyle? textStyle,
+    Color? color,
+    Color? backgroundColor,
+    double? fontSize,
+    FontWeight? fontWeight,
+    FontStyle? fontStyle,
+    double? letterSpacing,
+    double? wordSpacing,
+    TextBaseline? textBaseline,
+    double? height,
+    Locale? locale,
+    Paint? foreground,
+    Paint? background,
+    List<Shadow>? shadows,
+    List<FontFeature>? fontFeatures,
+    TextDecoration? decoration,
+    Color? decorationColor,
+    TextDecorationStyle? decorationStyle,
+    double? decorationThickness,
+  }) {
+    return GoogleFonts.plusJakartaSans(
+      textStyle: textStyle,
+      color: color,
+      backgroundColor: backgroundColor,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      fontStyle: fontStyle,
+      letterSpacing: letterSpacing,
+      wordSpacing: wordSpacing,
+      textBaseline: textBaseline,
+      height: height,
+      locale: locale,
+      foreground: foreground,
+      background: background,
+      shadows: shadows,
+      fontFeatures: fontFeatures,
+      decoration: decoration,
+      decorationColor: decorationColor,
+      decorationStyle: decorationStyle,
+      decorationThickness: decorationThickness,
+    );
+  }
+
+  // ─── Fraunces (Aurora editorial serif font) ─────────────────────────────
+  // Font serif có character, dùng cho headlines brand, milestone titles.
+  // Được trigger qua UiPrefs.fontKey = 'fraunces'.
+
+  static TextTheme frauncesTextTheme(TextTheme base) {
+    return GoogleFonts.frauncesTextTheme(base);
+  }
+
+  static TextStyle fraunces({
+    TextStyle? textStyle,
+    Color? color,
+    Color? backgroundColor,
+    double? fontSize,
+    FontWeight? fontWeight,
+    FontStyle? fontStyle,
+    double? letterSpacing,
+    double? wordSpacing,
+    TextBaseline? textBaseline,
+    double? height,
+    Locale? locale,
+    Paint? foreground,
+    Paint? background,
+    List<Shadow>? shadows,
+    List<FontFeature>? fontFeatures,
+    TextDecoration? decoration,
+    Color? decorationColor,
+    TextDecorationStyle? decorationStyle,
+    double? decorationThickness,
+  }) {
+    return GoogleFonts.fraunces(
+      textStyle: textStyle,
+      color: color,
+      backgroundColor: backgroundColor,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      fontStyle: fontStyle,
+      letterSpacing: letterSpacing,
+      wordSpacing: wordSpacing,
+      textBaseline: textBaseline,
+      height: height,
+      locale: locale,
+      foreground: foreground,
+      background: background,
+      shadows: shadows,
+      fontFeatures: fontFeatures,
+      decoration: decoration,
+      decorationColor: decorationColor,
+      decorationStyle: decorationStyle,
+      decorationThickness: decorationThickness,
+    );
+  }
 }
 
 class SLTextStyles {

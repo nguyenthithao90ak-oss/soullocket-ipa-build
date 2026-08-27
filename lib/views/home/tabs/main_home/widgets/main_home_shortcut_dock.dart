@@ -83,6 +83,7 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
       },
       child: SLBouncingButton(
         scaleFactor: 0.92,
+        onTap: () => _onPinnedAppTap(app),
         child: _buildShortcutItem(app),
       ),
     );

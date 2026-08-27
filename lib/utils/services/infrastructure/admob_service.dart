@@ -581,18 +581,20 @@ class AdMobService {
       },
     );
 
-    try {
-      await _appOpenAd!.show();
-    } catch (e) {
-      _appOpenAd?.dispose();
-      _appOpenAd = null;
-      _isShowingAppOpenAd = false;
-      AppLifecyclePresenceGuard.settle();
-      if (!completer.isCompleted) {
-        completer.complete(false);
+      try {
+        await _appOpenAd!.show();
+      } catch (e) {
+        // FIXME: Không thể hiển thị App Open ad - không ảnh hưởng trải nghiệm chính
+        debugPrint('AdMobService: App Open show failed: $e');
+        _appOpenAd?.dispose();
+        _appOpenAd = null;
+        _isShowingAppOpenAd = false;
+        AppLifecyclePresenceGuard.settle();
+        if (!completer.isCompleted) {
+          completer.complete(false);
+        }
+        unawaited(loadAppOpenAd());
       }
-      unawaited(loadAppOpenAd());
-    }
     return completer.future;
   }
 
@@ -627,7 +629,9 @@ class AdMobService {
         if (androidInfo.version.sdkInt < 33) {
           requiredHours = 4.0;
         }
-      } catch (_) {
+      } catch (e) {
+        // FIXME: Không lấy được SDK version, fallback an toàn
+        debugPrint('AdMobService: Không lấy được Android SDK version: $e, fallback 4h cooldown.');
         requiredHours = 4.0; // fallback an toàn nếu không lấy được info
       }
     }
@@ -881,23 +885,25 @@ class AdMobService {
       },
     );
 
-    try {
-      _soulGameRewardedAd!.setImmersiveMode(true);
-      _soulGameRewardedAd!.show(
-        onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-          didEarnReward = true;
-          if (!completer.isCompleted) {
-            completer.complete(true);
-          }
-        },
-      );
-    } catch (_) {
-      _soulGameRewardedAd?.dispose();
-      _soulGameRewardedAd = null;
-      _loadSoulGameRewardedAd();
-      AppLifecyclePresenceGuard.settle();
-      if (!completer.isCompleted) completer.complete(false);
-    }
+      try {
+        _soulGameRewardedAd!.setImmersiveMode(true);
+        _soulGameRewardedAd!.show(
+          onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
+            didEarnReward = true;
+            if (!completer.isCompleted) {
+              completer.complete(true);
+            }
+          },
+        );
+      } catch (e) {
+        // FIXME: Soul Game rewarded show failed
+        debugPrint('AdMobService: Soul Game rewarded show failed: $e');
+        _soulGameRewardedAd?.dispose();
+        _soulGameRewardedAd = null;
+        _loadSoulGameRewardedAd();
+        AppLifecyclePresenceGuard.settle();
+        if (!completer.isCompleted) completer.complete(false);
+      }
 
     return completer.future.timeout(
       const Duration(seconds: 60),
@@ -1023,8 +1029,9 @@ class AdMobService {
               'AdMobService: Interstitial ad suppressed due to active keyboard.');
           return false;
         }
-      } catch (_) {
-        // Ignored if MediaQuery is not accessible
+      } catch (e) {
+        // FIXME: Không truy cập được MediaQuery - vẫn hiển thị ad
+        debugPrint('AdMobService: Không truy cập được MediaQuery: $e');
       }
     }
 
@@ -1441,7 +1448,9 @@ class AdMobService {
       if (decoded is Map) {
         decodedMap = Map<String, dynamic>.from(decoded);
       }
-    } catch (_) {
+    } catch (e) {
+      // FIXME: Không decode được JSON response từ server
+      debugPrint('AdMobService: JSON decode failed: $e');
       decodedMap = null;
     }
 
@@ -1567,7 +1576,9 @@ class AdMobService {
     Map<String, dynamic>? response;
     try {
       response = await _claimRewardFromServer(source: 'daily_checkin');
-    } catch (_) {
+    } catch (e) {
+      // FIXME: Lỗi claim daily checkin lần đầu
+      debugPrint('AdMobService: Daily checkin initial claim failed: $e');
       response = null;
     }
     final firstResult = RewardClaimResult.fromResponse(response);
@@ -1584,7 +1595,9 @@ class AdMobService {
       Map<String, dynamic>? retryResponse;
       try {
         retryResponse = await _claimRewardFromServer(source: 'daily_checkin');
-      } catch (_) {
+      } catch (e) {
+        // FIXME: Lỗi retry claim daily checkin
+        debugPrint('AdMobService: Daily checkin retry claim failed: $e');
         retryResponse = null;
       }
       return RewardClaimResult.fromResponse(retryResponse);
@@ -1658,8 +1671,9 @@ class AdMobService {
         payload,
         requireAppCheck: false,
       ));
-    } catch (_) {
-      // Ping loi khong anh huong den trai nghiem nguoi dung
+    } catch (e) {
+      // FIXME: Ping lỗi không ảnh hưởng đến trải nghiệm người dùng
+      debugPrint('AdMobService: Ad impression ping failed: $e');
     }
   }
 }

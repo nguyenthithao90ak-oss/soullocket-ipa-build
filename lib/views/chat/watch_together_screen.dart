@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import '../../utils/app_cache_manager.dart';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
@@ -496,7 +498,26 @@ class _WatchTogetherScreenState extends State<WatchTogetherScreen> {
             '<html><body style="background: black;"></body></html>');
       }
       final oldController = _videoPlayerController;
-      _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(url));
+      
+      VideoPlayerController newController;
+      try {
+        File? cachedFile;
+        final fileInfo = await AppCacheManager.instance.getFileFromCache(url);
+        if (fileInfo != null) {
+          cachedFile = fileInfo.file;
+        } else {
+          cachedFile = await AppCacheManager.instance.getSingleFile(url);
+        }
+        if (cachedFile != null) {
+          newController = VideoPlayerController.file(cachedFile);
+        } else {
+          newController = VideoPlayerController.networkUrl(Uri.parse(url));
+        }
+      } catch (_) {
+        newController = VideoPlayerController.networkUrl(Uri.parse(url));
+      }
+
+      _videoPlayerController = newController;
       await _videoPlayerController!.initialize();
       _videoPlayerController!.addListener(_handleVideoPlayerSyncTick);
       oldController?.dispose();

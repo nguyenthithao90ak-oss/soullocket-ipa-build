@@ -190,10 +190,10 @@ class R2StickerImage extends StatelessWidget {
                 errorBuilder: (context, err, stack) => Container(
                   width: width,
                   height: height,
-                  color: Colors.grey.withOpacity(0.05),
+                  color: Colors.grey.withValues(alpha: 0.05),
                   child: Icon(
                     Icons.image_not_supported_outlined,
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withValues(alpha: 0.3),
                     size: width != null ? width! * 0.4 : 24,
                   ),
                 ),

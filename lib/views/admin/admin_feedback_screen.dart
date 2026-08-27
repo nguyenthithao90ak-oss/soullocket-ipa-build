@@ -99,7 +99,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                             child: Text(
                               'Chưa có đóng góp ý kiến nào.',
                               style: SLTheme.quicksand(
-                                  color: const SLColors.textMuted, fontSize: 16),
+                                  color: SLColors.textMuted, fontSize: 16),
                             ),
                           );
                         }
@@ -239,7 +239,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                                               'Bạn có chắc chắn muốn xoá đóng góp ý kiến này không?',
                                               style: SLTheme.quicksand(
                                                   color:
-                                                      const SLColors.textMuted),
+                                                      SLColors.textMuted),
                                             ),
                                             actions: [
                                               TextButton(

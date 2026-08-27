@@ -226,9 +226,9 @@ class _TabActivationHostState extends State<_TabActivationHost> {
     return Visibility(
       visible: _isVisible,
       maintainState: true,
-      maintainAnimation: true,
-      maintainSize: true,
-      maintainSemantics: true,
+      maintainAnimation: false,
+      maintainSize: false,
+      maintainSemantics: false,
       child: TickerMode(
         enabled: _isActiveNotifier.value,
         child: _cachedChild ?? widget.builder(_isActiveNotifier),
@@ -448,7 +448,7 @@ class _HomeScreenState extends State<HomeScreen>
   ];
 
   static const _navItems = [
-    _NavItem(labelKey: 'nav_home', activeColor: Color(0xFFFF4B91)),
+    _NavItem(labelKey: 'nav_home', activeColor: SLColors.brandPink),
     _NavItem(labelKey: 'nav_diary', activeColor: Color(0xFFFF4D79)),
     _NavItem(labelKey: 'nav_apps', activeColor: Color(0xFFB388FF)),
     _NavItem(labelKey: 'nav_fun', activeColor: Color(0xFFFFAB00)),
@@ -1211,24 +1211,7 @@ class _HomeScreenState extends State<HomeScreen>
         _setActiveTabIndex(nextIndex);
         return;
       }
-      final pageDistance = (currentPage - nextIndex).abs();
-      final duration = Duration(
-        milliseconds: pageDistance > 1.0 ? 200 : 140,
-      );
-      _isUserTabSwipingNotifier.value = true;
-      SLTheme.isTabSwiping.value = true;
-      final isJumping = pageDistance > 1.0;
-      if (isJumping) {
-        _jumpNotifier.value = (source: oldIndex, target: nextIndex);
-      }
-      await _pageController.animateToPage(
-        nextIndex,
-        duration: duration,
-        curve: Curves.easeOutQuart,
-      );
-      if (isJumping) {
-        _jumpNotifier.value = null;
-      }
+      _pageController.jumpToPage(nextIndex);
       _isUserTabSwipingNotifier.value = false;
       SLTheme.isTabSwiping.value = false;
       _setActiveTabIndex(nextIndex);
@@ -1630,18 +1613,18 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  IconData _getIconForTab(int index) {
+  IconData _getIconForTab(int index, {bool isActive = true}) {
     switch (index) {
       case 0:
-        return Icons.favorite_rounded;
+        return isActive ? Icons.favorite_rounded : Icons.favorite_outline_rounded;
       case 1:
-        return Icons.menu_book_rounded;
+        return isActive ? Icons.book_rounded : Icons.book_outlined;
       case 2:
-        return Icons.widgets_rounded;
+        return isActive ? Icons.grid_view_rounded : Icons.grid_view_outlined;
       case 3:
-        return Icons.sports_esports_rounded;
+        return isActive ? Icons.sports_esports_rounded : Icons.sports_esports_outlined;
       case 4:
-        return Icons.auto_awesome_rounded;
+        return isActive ? Icons.auto_awesome_rounded : Icons.auto_awesome_outlined;
       default:
         return Icons.circle;
     }

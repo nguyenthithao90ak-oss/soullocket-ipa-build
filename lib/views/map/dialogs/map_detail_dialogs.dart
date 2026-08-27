@@ -110,7 +110,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
                 SLSpacing.h12,
                 _buildMapIntroNoticeItem(
                   icon: Icons.celebration_rounded,
-                  color: const Color(0xFFE11D48),
+                  color: const Color(0xFFFF5E7E),
                   title: context.tr('map_chyuxemvui_26c6ff'),
                   message: context.tr('map_khngnndngm_a1ac9c'),
                 ),
@@ -305,6 +305,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
                   child: CachedNetworkImage(
                     imageUrl: checkin.imageUrl,
                     fit: BoxFit.cover,
+                    memCacheWidth: 600,
                     filterQuality: FilterQuality.medium,
                     errorWidget: (_, __, ___) => const SizedBox.shrink(),
                   ),
@@ -392,6 +393,7 @@ extension _MapDetailDialogsExt on _MapScreenState {
                   child: CachedNetworkImage(
                     imageUrl: memory.imageUrl,
                     fit: BoxFit.cover,
+                    memCacheWidth: 600,
                     filterQuality: FilterQuality.medium,
                     errorWidget: (_, __, ___) => const SizedBox.shrink(),
                   ),

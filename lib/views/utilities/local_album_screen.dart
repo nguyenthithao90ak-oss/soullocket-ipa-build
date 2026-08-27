@@ -315,11 +315,11 @@ class _LocalAlbumScreenState extends State<LocalAlbumScreen> {
     }
     int todayCount = await _getTodayVideoCount();
     // ignore: deprecated_member_use
-    final result = await FilePicker.pickFiles(
+    final files = await FilePicker.pickFiles(
         type: FileType.media, allowMultiple: true, withData: false);
-    if (result == null || result.files.isEmpty || !mounted) return;
+    if (files.isEmpty || !mounted) return;
     int videoAdded = 0;
-    for (final file in result.files) {
+    for (final file in files) {
       if (_items.length >= _maxItems) break;
       final ext = p.extension(file.name).toLowerCase();
       final isVideo =

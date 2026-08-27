@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/sl_theme.dart';
+import 'package:soullocket_app/core/sl_theme.dart';
 
 class CalendarEventStateCard extends StatelessWidget {
   final IconData icon;
@@ -39,7 +39,7 @@ class CalendarEventStateCard extends StatelessWidget {
               style: SLTheme.quicksand(
                 fontSize: 15,
                 fontWeight: FontWeight.w900,
-                color: Colors.white,
+                color: SLTheme.textMain,
               ),
             ),
             const SizedBox(height: 6),
@@ -49,7 +49,7 @@ class CalendarEventStateCard extends StatelessWidget {
               style: SLTheme.quicksand(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: Colors.white.withValues(alpha: 0.8),
+                color: SLTheme.textMuted,
                 height: 1.35,
               ),
             ),

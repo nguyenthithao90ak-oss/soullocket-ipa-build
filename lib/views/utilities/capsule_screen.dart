@@ -293,6 +293,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
             child: CachedNetworkImage(
               imageUrl: imageUrl,
               fit: BoxFit.contain,
+              memCacheWidth: 600,
               placeholder: (_, __) => const Center(
                 child: CircularProgressIndicator(color: Colors.white),
               ),
@@ -1175,6 +1176,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
                                         child: CachedNetworkImage(
                                           imageUrl: capsule['image_url'],
                                           fit: BoxFit.cover,
+                                          memCacheWidth: 600,
                                           placeholder: (_, __) =>
                                               const SkeletonContainer.rounded(
                                             width: double.infinity,

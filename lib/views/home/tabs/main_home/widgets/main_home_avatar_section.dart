@@ -66,7 +66,7 @@ part of '../../main_home_tab.dart';
 //                       children: [
 //                         Expanded(
 //                           child: Container(
-//                             color: const Color(0xFF1E293B),
+//                             color: const SLColors.darkNavy,
 //                             child: const Icon(Icons.favorite,
 //                                 color: Colors.white24, size: 40),
 //                           ),

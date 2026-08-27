@@ -107,9 +107,9 @@ class MathCaptchaDialog {
                           Container(
                             width: 85,
                             height: 85,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               shape: BoxShape.circle,
-                              color: const Color(0xFFFFEBF1),
+                              color: Color(0xFFFFEBF1),
                             ),
                           ),
                           // Khiên 3D
@@ -158,12 +158,12 @@ class MathCaptchaDialog {
                             child: Icon(Icons.favorite, size: 12, color: const Color(0xFFFF80AB).withValues(alpha: 0.9)),
                           ),
                           // Tia sáng (Stars)
-                          Positioned(
+                          const Positioned(
                             left: 50,
                             top: 10,
                             child: Icon(Icons.auto_awesome, size: 16, color: Colors.white),
                           ),
-                          Positioned(
+                          const Positioned(
                             right: 40,
                             top: 15,
                             child: Icon(Icons.auto_awesome, size: 14, color: Colors.white),

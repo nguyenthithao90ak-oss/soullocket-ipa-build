@@ -932,14 +932,27 @@ void _configureRenderingDefaults() {
   } else if (defaultTargetPlatform == TargetPlatform.iOS ||
       defaultTargetPlatform == TargetPlatform.macOS) {
     // iOS: giới hạn thấp để tránh bị hệ thống kill vì dùng quá nhiều RAM (tránh OOM Crash)
-    imageCache.maximumSize = 100;
-    imageCache.maximumSizeBytes = 50 << 20; // Giảm từ 150MB xuống 50MB
+    imageCache.maximumSize = 80;
+    imageCache.maximumSizeBytes = 40 << 20; // 40 MB
   } else {
-    // Android: Giảm từ 256MB xuống 80MB để tránh tràn RAM khi lướt nhiều ảnh
-    imageCache.maximumSize = 150;
-    imageCache.maximumSizeBytes = 80 << 20; // 80 MB
+    // Android: Giảm xuống 60MB để tránh tràn RAM khi lướt nhiều ảnh
+    imageCache.maximumSize = 100;
+    imageCache.maximumSizeBytes = 60 << 20; // 60 MB
   }
+
+  // 🧹 Lắng nghe tín hiệu cảnh báo RAM thấp từ hệ điều hành (Memory Pressure)
+  WidgetsBinding.instance.addObserver(_MemoryPressureObserver());
+
   SchedulerBinding.instance.scheduleWarmUpFrame();
+}
+
+class _MemoryPressureObserver with WidgetsBindingObserver {
+  @override
+  void didHaveMemoryPressure() {
+    debugPrint('[Memory] Low memory pressure detected from OS -> clearing transient image cache');
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
+  }
 }
 
 class _MissingBootstrapConfig implements Exception {

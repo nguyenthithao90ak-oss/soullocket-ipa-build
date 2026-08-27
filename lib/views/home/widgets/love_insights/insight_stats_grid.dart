@@ -7,14 +7,14 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
         title: context.tr('home_nhtk_d59e8b'),
         value: '${insight.diaryTotal}',
         subtitle: L10nService().translateThisMonth(insight.diaryMonth),
-        accent: const Color(0xFFFF4F87),
+        accent: const Color(0xFF3B82F6),
         icon: Icons.menu_book_rounded,
       ),
       _MetricCardData(
         title: context.tr('home_albumnh_9e1acf'),
         value: '${insight.albumTotal}',
         subtitle: L10nService().translateThisMonth(insight.albumMonth),
-        accent: const Color(0xFF9B7AE8),
+        accent: const Color(0xFF6366F1),
         icon: Icons.photo_library_rounded,
       ),
       _MetricCardData(
@@ -25,14 +25,14 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
         subtitle: _isSingle
             ? context.tr('home_cdliu_81b703')
             : context.tr('home_ngycdun_98fd1e'),
-        accent: const Color(0xFFFF6B9D),
+        accent: const Color(0xFFF59E0B),
         icon: Icons.auto_graph_rounded,
       ),
       _MetricCardData(
         title: context.tr('home_tchcc_f12429'),
         value: '${insight.positivity}%',
         subtitle: _positivityStatus(insight.positivity),
-        accent: const Color(0xFFFF4F87),
+        accent: const Color(0xFF10B981),
         icon: Icons.favorite_rounded,
       ),
     ];
@@ -52,13 +52,7 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
               width: itemWidth,
               child: _buildMetricCard(card)
                   .animate()
-                  .fade(duration: 500.ms, delay: (120 * index).ms)
-                  .slideY(
-                      begin: 0.12,
-                      end: 0,
-                      duration: 500.ms,
-                      delay: (120 * index).ms,
-                      curve: Curves.easeOut),
+                  .fade(duration: 400.ms),
             );
           }),
         );
@@ -67,21 +61,20 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
   }
 
   Widget _buildMetricCard(_MetricCardData card) {
-    final bgColor = card.accent.withValues(alpha: 0.06);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: card.accent.withValues(alpha: 0.10),
-          width: 1,
+          color: const Color(0xFFF0E5DF),
+          width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: card.accent.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: const Color(0xFFFF5E7E).withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -91,51 +84,49 @@ extension _InsightStatsGridExt on _LoveInsightsScreenState {
           Row(
             children: [
               Container(
-                width: 34,
-                height: 34,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: bgColor,
-                  shape: BoxShape.circle,
+                  color: card.accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(card.icon, size: 18, color: card.accent),
               ),
-              SLSpacing.w8,
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   card.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF8D8490),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF7A6B72),
                   ),
                 ),
               ),
             ],
           ),
-          SLSpacing.h12,
-          ShaderMask(
-            shaderCallback: (bounds) => LinearGradient(
-              colors: [card.accent, card.accent.withValues(alpha: 0.7)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ).createShader(bounds),
-            child: Text(
-              card.value,
-              style: SLTheme.quicksand(
-                fontSize: 30,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                height: 0.95,
-              ),
+          const SizedBox(height: 12),
+          Text(
+            card.value,
+            style: SLTheme.quicksand(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF2E2427),
+              height: 0.95,
+              letterSpacing: -0.5,
             ),
           ),
-          SLSpacing.h6,
+          const SizedBox(height: 6),
           Text(
             card.subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: SLTheme.quicksand(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: card.accent.withValues(alpha: 0.8),
+              color: const Color(0xFFA699A0),
             ),
           ),
         ],

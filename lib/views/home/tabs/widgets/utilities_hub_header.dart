@@ -36,7 +36,7 @@ class UtilitiesHubHeader extends StatelessWidget {
                   children: [
                     ShaderMask(
                       shaderCallback: (bounds) => const LinearGradient(
-                        colors: [Color(0xFFE91E63), Color(0xFFF48FB1)],
+                        colors: [Color(0xFFFF5E7E), Color(0xFFFF9E7A)],
                       ).createShader(bounds),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
@@ -60,7 +60,7 @@ class UtilitiesHubHeader extends StatelessWidget {
                       height: 3,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFFE91E63), Color(0xFFF48FB1)],
+                          colors: [Color(0xFFFF5E7E), Color(0xFFFF9E7A)],
                         ),
                         borderRadius: BorderRadius.circular(999),
                       ),
@@ -194,7 +194,7 @@ class _UtilitiesHubSegmentButton extends StatelessWidget {
           boxShadow: active
               ? [
                   BoxShadow(
-                    color: const Color(0xFF9D50BB).withValues(alpha: 0.15),
+                    color: const Color(0xFFFF5E7E).withValues(alpha: 0.15),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   )

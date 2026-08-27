@@ -1,4 +1,6 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
+// TODO: [TECH-DEBT] File này có 1700+ lines - cần refactor thành các widgets nhỏ hơn
+// TODO: [TECH-DEBT] Xóa ignore_for_file sau khi đã dọn dẹp unused code
 part of '../settings_tab.dart';
 
 const Color _settingsAccountAccentColor = Color(0xFFD81B60);
@@ -23,6 +25,10 @@ const List<({String code, String badge, String title})>
   (code: 'hi', badge: 'IN', title: 'हिन्दी'),
   (code: 'tr', badge: 'TR', title: 'Türkçe'),
   (code: 'ar', badge: 'SA', title: 'العربية'),
+  (code: 'ms', badge: 'MY', title: 'Bahasa Melayu'),
+  (code: 'tl', badge: 'PH', title: 'Tagalog'),
+  (code: 'nl', badge: 'NL', title: 'Nederlands'),
+  (code: 'pl', badge: 'PL', title: 'Polski'),
 ];
 
 extension _SettingsTabAccountSection on _SettingsTabState {
@@ -621,7 +627,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                           fontWeight: FontWeight.w800,
                           color: isPremium
                               ? const Color(0xFF7A5200)
-                              : const Color(0xFF1E293B),
+                              : SLColors.darkNavy,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -851,7 +857,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 maxLength: 30,
                 accentColor: panelAccent,
               ),
-              _buildLabel('Mã nhà (House ID)'),
+              _buildLabel(L10nService().translate('Mã nhà (House ID)')),
               Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding:
@@ -880,7 +886,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                           ),
                           if (_houseIdChanged)
                             Text(
-                              'Chỉ được thay đổi 1 lần duy nhất (Đã đổi)',
+                              L10nService().translate('Chỉ được thay đổi 1 lần duy nhất (Đã đổi)'),
                               style: SLTextStyles.quicksand(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
@@ -889,7 +895,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                             )
                           else
                             Text(
-                              'Được thay đổi 1 lần duy nhất (Chưa đổi)',
+                              L10nService().translate('Được thay đổi 1 lần duy nhất (Chưa đổi)'),
                               style: SLTextStyles.quicksand(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
@@ -909,7 +915,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                           foregroundColor: const Color(0xFFD81B60),
                         ),
                         child: Text(
-                          'Thay đổi',
+                          L10nService().translate('Thay đổi'),
                           style: SLTextStyles.quicksand(
                             fontWeight: FontWeight.w900,
                           ),
@@ -1106,7 +1112,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
     final lang = L10nService().localeCode;
     final hint = lang == 'vi'
         ? context.tr('home_pdngngaych_18f97b')
-        : 'Applies instantly to the whole app.';
+        : L10nService().translate('Áp dụng ngay lập tức cho toàn bộ ứng dụng.');
 
     return _buildPanel(
       hideBackButton: hideBackButton,
@@ -1328,8 +1334,8 @@ extension _SettingsTabAccountSection on _SettingsTabState {
 
               if (!RegExp(r'^[a-z0-9_]{3,20}$').hasMatch(clean)) {
                 setState(() {
-                  errorReason =
-                      'Mã chỉ gồm chữ thường, số, dấu gạch dưới (3-20 ký tự).';
+                    errorReason =
+                        L10nService().translate('Mã chỉ gồm chữ thường, số, dấu gạch dưới (3-20 ký tự).');
                 });
                 return;
               }
@@ -1350,7 +1356,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     isAvailable = res['available'] == true;
                     if (!isAvailable) {
                       errorReason = res['reason'] ??
-                          'Mã nhà đã tồn tại, vui lòng chọn mã khác.';
+                          L10nService().translate('Mã nhà đã tồn tại, vui lòng chọn mã khác.');
                       final suggs = res['suggestions'];
                       if (suggs is List) {
                         suggestions = suggs.map((e) => e.toString()).toList();
@@ -1361,7 +1367,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                   if (customId != clean) return;
                   setState(() {
                     isChecking = false;
-                    errorReason = 'Lỗi kết nối máy chủ.';
+                    errorReason = L10nService().translate('Lỗi kết nối máy chủ.');
                   });
                 }
               });
@@ -1386,7 +1392,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     });
                     Navigator.of(dialogContext).pop();
                     _showToast(
-                        'Đổi mã nhà thành công! Hệ thống đang tải lại...',
+                        L10nService().translate('Đổi mã nhà thành công! Hệ thống đang tải lại...'),
                         success: true);
                     Future.delayed(const Duration(seconds: 1), () {
                       if (!context.mounted) return;
@@ -1400,7 +1406,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                 } else {
                   setState(() {
                     isSaving = false;
-                    errorReason = 'Đổi mã nhà không thành công.';
+                    errorReason = L10nService().translate('Đổi mã nhà không thành công.');
                   });
                 }
               } catch (e) {
@@ -1426,7 +1432,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                             color: Colors.orange, size: 28),
                         const SizedBox(width: 8),
                         Text(
-                          'Xác nhận đổi',
+                          L10nService().translate('Xác nhận đổi'),
                           style: SLTextStyles.quicksand(
                             fontSize: 18,
                             fontWeight: FontWeight.w900,
@@ -1436,7 +1442,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       ],
                     ),
                     content: Text(
-                      'Bạn có chắc chắn muốn đổi sang "$customId"?\n\nHành động này chỉ được thực hiện MỘT LẦN DUY NHẤT và không thể hoàn tác.',
+                      L10nService().translate('Bạn có chắc chắn muốn đổi sang "$customId"?\n\nHành động này chỉ được thực hiện MỘT LẦN DUY NHẤT và không thể hoàn tác.'),
                       style: SLTextStyles.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -1448,7 +1454,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
                         child: Text(
-                          'Huỷ',
+                          L10nService().translate('Huỷ'),
                           style: SLTextStyles.quicksand(
                             fontWeight: FontWeight.w900,
                             color: const Color(0xFF8C7381),
@@ -1467,7 +1473,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                               borderRadius: BorderRadius.circular(12)),
                         ),
                         child: Text(
-                          'Đổi mã ngay',
+                          L10nService().translate('Đổi mã ngay'),
                           style: SLTextStyles.quicksand(
                               fontWeight: FontWeight.w900),
                         ),
@@ -1507,7 +1513,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Đổi mã nhà',
+                                L10nService().translate('Đổi mã nhà'),
                                 style: SLTextStyles.quicksand(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w900,
@@ -1515,7 +1521,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                                 ),
                               ),
                               Text(
-                                'Chỉ thực hiện 1 lần duy nhất',
+                                L10nService().translate('Chỉ thực hiện 1 lần duy nhất'),
                                 style: SLTextStyles.quicksand(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
@@ -1529,7 +1535,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      'Thiết bị của cả 2 bạn sẽ được tự động đồng bộ sang mã mới.',
+                      L10nService().translate('Thiết bị của cả 2 bạn sẽ được tự động đồng bộ sang mã mới.'),
                       style: SLTextStyles.quicksand(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -1576,7 +1582,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                           color: const Color(0xFF2C1B22),
                         ),
                         decoration: InputDecoration(
-                          labelText: 'Nhập mã nhà mới',
+                          labelText: L10nService().translate('Nhập mã nhà mới'),
                           labelStyle: SLTextStyles.quicksand(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
@@ -1619,7 +1625,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                               color: Colors.green, size: 16),
                           const SizedBox(width: 4),
                           Text(
-                            'Mã nhà khả dụng và hợp lệ!',
+                            L10nService().translate('Mã nhà khả dụng và hợp lệ!'),
                             style: SLTextStyles.quicksand(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
@@ -1654,7 +1660,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                     if (suggestions.isNotEmpty) ...[
                       const SizedBox(height: 16),
                       Text(
-                        'Gợi ý cho bạn:',
+                        L10nService().translate('Gợi ý cho bạn:'),
                         style: SLTextStyles.quicksand(
                           fontSize: 13,
                           fontWeight: FontWeight.w900,
@@ -1702,7 +1708,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                                   borderRadius: BorderRadius.circular(16)),
                             ),
                             child: Text(
-                              'Huỷ',
+                              L10nService().translate('Huỷ'),
                               style: SLTextStyles.quicksand(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w900,
@@ -1738,7 +1744,7 @@ extension _SettingsTabAccountSection on _SettingsTabState {
                                     ),
                                   )
                                 : Text(
-                                    'Tiếp tục',
+                                    L10nService().translate('Tiếp tục'),
                                     style: SLTextStyles.quicksand(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w900,

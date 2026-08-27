@@ -137,15 +137,15 @@ class _RichNotificationOverlayState extends State<RichNotificationOverlay>
   Color _accentColor(RichNotifType type) {
     switch (type) {
       case RichNotifType.message:
-        return const Color(0xFF7B61FF);
+        return const Color(0xFF6366F1);
       case RichNotifType.distance:
-        return const Color(0xFF4FC3F7);
+        return const Color(0xFF38BDF8);
       case RichNotifType.missYou:
-        return const Color(0xFFFF6B9D);
+        return const Color(0xFFFF5E7E);
       case RichNotifType.like:
-        return const Color(0xFFFF4081);
+        return const Color(0xFFFF5E7E);
       case RichNotifType.generic:
-        return const Color(0xFFFFB74D);
+        return const Color(0xFFFFB020);
     }
   }
 

@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/sl_theme.dart';
 
 class MainHomeHeaderButton extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? imageAsset;
   final Color color;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
 
   const MainHomeHeaderButton({
     super.key,
-    required this.icon,
+    this.icon,
+    this.imageAsset,
     required this.color,
     required this.onTap,
     this.onLongPress,
@@ -20,22 +21,13 @@ class MainHomeHeaderButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
-      child: Container(
+      child: SizedBox(
         width: 44,
         height: 44,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.7),
-          borderRadius: SLRadius.xlAll,
-          border: Border.all(color: const Color(0xCCE2E8F0), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
+        child: Image.asset(
+          imageAsset ?? 'assets/icons/cute_3d/btn_settings_3d_candy.png',
+          fit: BoxFit.contain,
         ),
-        child: Icon(icon, color: color, size: 22),
       ),
     );
   }

@@ -18,7 +18,7 @@ extension _MessengerSearchFilterPart on _MessengerScreenState {
               icon: const Icon(
                 Icons.arrow_back_ios_new,
                 size: 18,
-                color: Color(0xFF1E293B),
+                color: SLColors.darkNavy,
               ),
               onPressed: () => Navigator.pop(context),
               padding: EdgeInsets.zero,
@@ -67,7 +67,7 @@ extension _MessengerSearchFilterPart on _MessengerScreenState {
                 style: SLTheme.quicksand(
                   fontWeight: FontWeight.w800,
                   fontSize: 14,
-                  color: const Color(0xFF1E293B),
+                  color: SLColors.darkNavy,
                 ),
                 decoration: InputDecoration(
                   hintText: repairMojibakeText(

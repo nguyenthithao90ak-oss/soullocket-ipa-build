@@ -176,9 +176,9 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
         ),
         FirstSetupSpotlightStep(
           targetKey: _firstGuideEntertainmentTabKey,
-          title: 'Giải trí & Trò chơi',
+          title: L10nService().translate('home_giaitri tròchoi'),
           description:
-              'Khám phá các trò chơi cặp đôi, bói bài Tarot cùng nhiều tiện ích thú vị khác giúp hai bạn gắn kết hơn.',
+              L10nService().translate('home_khamphatroi_game_desc'),
           icon: Icons.sports_esports_rounded,
           color: const Color(0xFF00B0FF),
         ),
@@ -228,12 +228,12 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
                 Container(
                   padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFF4B91).withValues(alpha: 0.12),
+                    color: SLColors.brandPink.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.favorite_rounded,
-                    color: Color(0xFFFF4B91),
+                    color: SLColors.brandPink,
                     size: 21,
                   ),
                 ),
@@ -310,7 +310,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: const Color(0xFFFF4B91)),
+          Icon(icon, size: 18, color: SLColors.brandPink),
           SLSpacing.w8,
           Expanded(
             child: Text(
@@ -376,7 +376,7 @@ extension _HomeScreenShellNoticeFlows on _HomeScreenState {
               Container(
                 padding: SLSpacing.all8,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF4B91).withValues(alpha: 0.12),
+                  color: SLColors.brandPink.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -602,7 +602,7 @@ class _InactivityCountdownDialogState
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Row(
         children: [
-          const Icon(Icons.timer_outlined, color: Color(0xFFFF4B91)),
+          const Icon(Icons.timer_outlined, color: SLColors.brandPink),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -616,14 +616,14 @@ class _InactivityCountdownDialogState
         ],
       ),
       content: Text(
-        'App sẽ tự đóng sau $_remaining giây do không có thao tác.',
+        L10nService().format('home_autoclose_countdown', {'seconds': _remaining}),
         style: SLTheme.quicksand(fontSize: 14),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
           child: Text(
-            'Thoát',
+            L10nService().translate('home_thoat_inactivity'),
             style: SLTheme.quicksand(
               color: Colors.grey,
               fontWeight: FontWeight.w600,
@@ -632,13 +632,13 @@ class _InactivityCountdownDialogState
         ),
         FilledButton(
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFFFF4B91),
+            backgroundColor: SLColors.brandPink,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(
-            'Tiếp tục ($_remaining)',
+            L10nService().format('home_tieptuc_inactivity', {'seconds': _remaining}),
             style: SLTheme.quicksand(
               color: Colors.white,
               fontWeight: FontWeight.w700,
@@ -797,11 +797,11 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFFFF4B91).withValues(alpha: 0.12),
+                color: SLColors.brandPink.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.warning_amber_rounded,
-                  color: Color(0xFFFF4B91), size: 24),
+                  color: SLColors.brandPink, size: 24),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -838,7 +838,7 @@ extension _ExpiredProGraceNoticeFlows on _HomeScreenState {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFFF4B91),
+              backgroundColor: SLColors.brandPink,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),

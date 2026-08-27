@@ -228,6 +228,8 @@ class _MainHomeShootingGameState extends State<MainHomeShootingGame>
                 ? CachedNetworkImage(
                     imageUrl: b.avatarUrl,
                     fit: BoxFit.cover,
+                    memCacheWidth: 200,
+                    memCacheHeight: 200,
                     placeholder: (context, url) =>
                         Container(color: Colors.grey[300]),
                     errorWidget: (context, url, error) =>

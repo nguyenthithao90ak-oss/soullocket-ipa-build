@@ -100,12 +100,12 @@ extension _SettingsTabShell on _SettingsTabState {
 
     if (_relationshipMode == 'single') {
       _showToast(
-        'Chế độ độc thân không hỗ trợ đổi vai Nam/Nữ.',
+        L10nService().translate('Chế độ độc thân không hỗ trợ đổi vai Nam/Nữ.'),
         success: false,
       );
     } else {
       _showToast(
-        'Đã đổi thành công sang vai $roleTerm 🎉',
+        '${L10nService().translate('settings_role_swap_prefix')} $roleTerm 🎉',
         success: true,
       );
     }
@@ -707,7 +707,7 @@ extension _SettingsTabShell on _SettingsTabState {
           icon: Icons.admin_panel_settings_rounded,
           iconBgColor: const Color(0xFF9575CD),
           title: context.tr('theme_permission_center'),
-          subtitle: 'Quản lý cấp quyền hệ thống',
+          subtitle: L10nService().translate('Quản lý cấp quyền hệ thống'),
           isDark: isDark,
           onTap: _isGrantingPermissions ? () {} : _requestAllPermissions,
         ),
@@ -746,17 +746,17 @@ extension _SettingsTabShell on _SettingsTabState {
         _buildiOSRow(
           icon: Icons.display_settings_rounded,
           iconBgColor: const Color(0xFFBA68C8),
-          title: 'Cài đặt hiển thị',
+          title: L10nService().translate('Cài đặt hiển thị'),
           isDark: isDark,
           onTap: () {
-            _showToast('Tính năng đang phát triển nhé', success: true);
+            _showToast(L10nService().translate('Tính năng đang phát triển nhé'), success: true);
           },
         ),
         _buildDivider(isDark),
         _buildiOSRow(
           icon: Icons.history_rounded,
           iconBgColor: const Color(0xFF90CAF9),
-          title: 'Lịch sử hoạt động',
+          title: L10nService().translate('Lịch sử hoạt động'),
           isDark: isDark,
           onTap: () {
             final houseId = _houseId?.trim() ?? '';
@@ -823,7 +823,7 @@ extension _SettingsTabShell on _SettingsTabState {
           ),
           const SizedBox(height: 4),
           Text(
-            '© Bản quyền SoulLocket Hoàng & Tú',
+            L10nService().translate('© Bản quyền SoulLocket Hoàng & Tú'),
             textAlign: TextAlign.center,
             style: SLTheme.quicksand(
               fontSize: 10.5,
@@ -930,7 +930,7 @@ extension _SettingsTabShell on _SettingsTabState {
             ? _buildUnavailablePanel(
                 title: context.tr('home_screen_widget'),
                 message:
-                    'Tiện ích màn hình chỉ hỗ trợ trên thiết bị thật. Phần cấu hình này nên thao tác trên app cài đặt.',
+                    L10nService().translate('Tiện ích màn hình chỉ hỗ trợ trên thiết bị thật. Phần cấu hình này nên thao tác trên app cài đặt.'),
               )
             : _buildSectionStack([
                 _buildWidgetPanel(hideBackButton: false),
@@ -949,8 +949,8 @@ extension _SettingsTabShell on _SettingsTabState {
         return _buildDataHealthPanel(hideBackButton: false);
       default:
         return _buildUnavailablePanel(
-          title: 'Mục đang hoàn thiện',
-          message: 'Tính năng này đang được cập nhật trong phiên bản mới.',
+          title: L10nService().translate('Mục đang hoàn thiện'),
+          message: L10nService().translate('Tính năng này đang được cập nhật trong phiên bản mới.'),
         );
     }
   }
@@ -1072,12 +1072,12 @@ class _DraggableFloatingChatIconState
   String? _currentSpeech;
 
   final List<String> _randomSpeeches = [
-    'Hello bạn, mình là Chat Thân Thiện đây!',
-    'Bạn có tâm sự gì không? Kể mình nghe nhé!',
-    'Bấm vào mình để trò chuyện nha!',
-    'Hôm nay của bạn thế nào?',
-    'Mình luôn ở đây để lắng nghe bạn!',
-    'Bạn đang tìm gì trong cài đặt thế?',
+    L10nService().translate('Hello bạn, mình là Chat Thân Thiện đây!'),
+    L10nService().translate('Bạn có tâm sự gì không? Kể mình nghe nhé!'),
+    L10nService().translate('Bấm vào mình để trò chuyện nha!'),
+    L10nService().translate('Hôm nay của bạn thế nào?'),
+    L10nService().translate('Mình luôn ở đây để lắng nghe bạn!'),
+    L10nService().translate('Bạn đang tìm gì trong cài đặt thế?'),
   ];
 
   @override

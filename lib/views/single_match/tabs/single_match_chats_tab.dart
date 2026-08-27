@@ -165,19 +165,26 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0xFFFFDCE7)),
+              border: Border.all(color: const Color(0xFFF0E5DF), width: 1.2),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF5E7E).withValues(alpha: 0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: Column(
               children: [
                 const Icon(Icons.casino_rounded,
-                    size: 40, color: Color(0xFFFF4F87)),
+                    size: 40, color: Color(0xFFFF5E7E)),
                 const SizedBox(height: 8),
                 Text(
                   'Trò chuyện ngẫu nhiên',
                   style: SLTheme.quicksand(
                     fontSize: 17,
                     fontWeight: FontWeight.w900,
-                    color: const Color(0xFF32203B),
+                    color: const Color(0xFF2E2427),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -187,7 +194,7 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
                   style: SLTheme.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF8A798E),
+                    color: const Color(0xFF7A6B72),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -196,7 +203,7 @@ class _SingleMatchChatsTabState extends State<SingleMatchChatsTab> {
                   child: FilledButton.icon(
                     onPressed: _isCreating ? null : _startRandomChat,
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF4F87),
+                      backgroundColor: const Color(0xFFFF5E7E),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
                     ),

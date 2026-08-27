@@ -776,33 +776,34 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
   }) {
     return Container(
       padding: EdgeInsets.symmetric(
-        vertical: ultraCompact ? 6 : (compact ? 8 : 9),
+        vertical: ultraCompact ? 7 : (compact ? 9 : 10),
       ),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: <Color>[
-            const Color(0xFF00C3FF).withValues(alpha: 0.22),
-            const Color(0xFF00C3FF).withValues(alpha: 0.08),
-            _kSoulPanelBottom.withValues(alpha: 0.96),
+            Color(0xFF00E5FF),
+            Color(0xFF7C3AED),
+            Color(0xFF0F172A),
           ],
+          stops: [0.0, 0.45, 1.0],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(compact ? 16 : 18),
-        border:
-            Border.all(color: const Color(0xFF00C3FF).withValues(alpha: 0.26)),
+        borderRadius: BorderRadius.circular(compact ? 18 : 20),
+        border: Border.all(
+          color: const Color(0xFF00E5FF).withValues(alpha: 0.55),
+          width: 1.4,
+        ),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: const Color(0xFF00C3FF).withValues(alpha: 0.06),
-            blurRadius: 10,
-            spreadRadius: -9,
-            offset: const Offset(0, 6),
+            color: const Color(0xFF00E5FF).withValues(alpha: 0.20),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.14),
-            blurRadius: 10,
-            spreadRadius: -10,
-            offset: const Offset(0, 6),
+            color: Colors.black54,
+            blurRadius: 12,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -814,19 +815,19 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
             'SCORE',
             style: SLTheme.quicksand(
               fontSize: ultraCompact
-                  ? 7.8
+                  ? 8.5
                   : compact
-                      ? 8.4
-                      : 9.0,
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF00C3FF),
-              letterSpacing: 1.1,
+                      ? 9.5
+                      : 10.5,
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFFE0F7FF),
+              letterSpacing: 1.4,
             ),
           ),
           SizedBox(height: ultraCompact ? 1 : 2),
           ConstrainedBox(
             constraints: BoxConstraints(
-              maxWidth: ultraCompact ? 156 : 228,
+              maxWidth: ultraCompact ? 160 : 230,
             ),
             child: FittedBox(
               fit: BoxFit.scaleDown,
@@ -836,13 +837,16 @@ extension _SoulBlockRefinedPanels on _SoulBlockGameState {
                 overflow: TextOverflow.ellipsis,
                 style: SLTheme.quicksand(
                   fontSize: ultraCompact
-                      ? 18
+                      ? 22
                       : compact
-                          ? 22
-                          : 26,
+                          ? 26
+                          : 30,
                   fontWeight: FontWeight.w900,
                   color: Colors.white,
-                  letterSpacing: 0.15,
+                  letterSpacing: 0.4,
+                  shadows: const [
+                    Shadow(color: Color(0xFF00E5FF), blurRadius: 10),
+                  ],
                 ),
               ),
             ),

@@ -190,7 +190,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                       style: SLTheme.quicksand(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF1E293B),
+                        color: SLColors.darkNavy,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -289,7 +289,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                       style: SLTheme.quicksand(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF1E293B),
+                        color: SLColors.darkNavy,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -494,7 +494,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                       style: SLTheme.quicksand(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF1E293B),
+                        color: SLColors.darkNavy,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -701,7 +701,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                           style: SLTheme.quicksand(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
-                            color: const Color(0xFF1E293B),
+                            color: SLColors.darkNavy,
                           ),
                         ),
                         const SizedBox(height: 4),

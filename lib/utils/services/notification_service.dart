@@ -514,7 +514,7 @@ class NotificationService {
         importance: Importance.high,
         priority: Priority.high,
         icon: '@mipmap/ic_launcher',
-        color: const Color(0xFFFF6B9D),
+        color: const Color(0xFFFF5E7E),
         actions: isCinemaInvite
             ? <AndroidNotificationAction>[
                 const AndroidNotificationAction(

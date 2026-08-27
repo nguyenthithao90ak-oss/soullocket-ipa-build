@@ -1055,6 +1055,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
         var sound = _soundEnabled;
         var vibration = _vibrationEnabled;
         var smoothGraphics = _smoothGraphics;
+        final l10n = L10nService();
         return StatefulBuilder(
           builder: (context, setModalState) {
             return SafeArea(
@@ -1062,21 +1063,58 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF111827),
-                    borderRadius: BorderRadius.circular(18),
-                    border:
-                        Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF182238),
+                        Color(0xFF0F1728),
+                        Color(0xFF0A0F1D),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(
+                      color: const Color(0xFF38BDF8).withValues(alpha: 0.30),
+                      width: 1.2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF0284C7).withValues(alpha: 0.15),
+                        blurRadius: 28,
+                        offset: const Offset(0, 8),
+                      ),
+                      BoxShadow(
+                        color: Colors.black87,
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
                     child: SingleChildScrollView(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
                           Row(
                             children: <Widget>[
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFF00E5FF), Color(0xFF7C3AED)],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.tune_rounded,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
                               Text(
-                                'Settings',
+                                l10n.translate('Settings'),
                                 style: SLTheme.quicksand(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w900,
@@ -1084,76 +1122,89 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                                 ),
                               ),
                               const Spacer(),
-                              IconButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                icon: const Icon(
-                                  Icons.close_rounded,
-                                  color: Colors.white70,
+                              GestureDetector(
+                                onTap: () => Navigator.of(context).pop(),
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.08),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.12),
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.close_rounded,
+                                    color: Colors.white70,
+                                    size: 18,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 10),
                           Text(
-                            _view == _SoulGameView.gameplay
-                                ? context.tr('util_iuchnhnhan_a96b6c')
-                                : context.tr('util_iuchnhmtha_75b9a6'),
+                            l10n.translate('Tùy chỉnh âm thanh, độ mượt và lối tắt nhanh'),
                             textAlign: TextAlign.center,
                             style: SLTheme.quicksand(
-                              fontSize: 12.4,
+                              fontSize: 12.5,
                               fontWeight: FontWeight.w700,
                               color: Colors.white70,
                               height: 1.35,
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 18),
                           _SettingsSwitchTile(
                             icon: Icons.music_note_rounded,
-                            title: 'Sound',
+                            title: l10n.translate('Âm thanh'),
                             value: sound,
+                            accentColor: const Color(0xFF00E5FF),
                             onChanged: (value) async {
                               setModalState(() => sound = value);
                               await _setSoundEnabled(value);
                             },
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 10),
                           _SettingsSwitchTile(
                             icon: Icons.vibration_rounded,
-                            title: 'Vibration',
+                            title: l10n.translate('Rung'),
                             value: vibration,
+                            accentColor: const Color(0xFFFF2A85),
                             onChanged: (value) async {
                               setModalState(() => vibration = value);
                               await _setVibrationEnabled(value);
                             },
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 10),
                           _SettingsSwitchTile(
-                            icon: Icons.flash_on_rounded,
-                            title: 'Smooth Graphics (Reduce Lag)',
+                            icon: Icons.bolt_rounded,
+                            title: l10n.translate('Đồ họa mượt mà (Giảm lag)'),
                             value: smoothGraphics,
+                            accentColor: const Color(0xFF00E676),
                             onChanged: (value) async {
                               setModalState(() => smoothGraphics = value);
                               await _setSmoothGraphicsEnabled(value);
                             },
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
                           Wrap(
-                            spacing: 12,
-                            runSpacing: 12,
+                            spacing: 10,
+                            runSpacing: 10,
+                            alignment: WrapAlignment.center,
                             children: <Widget>[
                               _SettingsActionButton(
                                 icon: Icons.home_rounded,
-                                label: 'Home',
-                                accent: const Color(0xFF67E8FF),
+                                label: l10n.translate('Trang chủ'),
+                                accent: const Color(0xFF00E5FF),
                                 onTap: () async {
                                   Navigator.of(context).pop();
                                   await _exitToHomeFromSettings();
                                 },
                               ),
                               _SettingsActionButton(
-                                icon: Icons.leaderboard_rounded,
-                                label: 'Scores',
-                                accent: const Color(0xFFFFD166),
+                                icon: Icons.emoji_events_rounded,
+                                label: l10n.translate('Bảng điểm'),
+                                accent: const Color(0xFFFFB703),
                                 onTap: () async {
                                   Navigator.of(context).pop();
                                   await _openLeaderboardSheet();
@@ -1162,8 +1213,8 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                               if (AppConfig.isPurchaseEnabled)
                                 _SettingsActionButton(
                                   icon: Icons.workspace_premium_rounded,
-                                  label: 'No Ads',
-                                  accent: const Color(0xFFB794F4),
+                                  label: l10n.translate('Gỡ quảng cáo'),
+                                  accent: const Color(0xFF9D4EDD),
                                   onTap: () async {
                                     Navigator.of(context).pop();
                                     await _openPremiumStore();
@@ -1174,9 +1225,9 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                                     ? Icons.refresh_rounded
                                     : Icons.play_arrow_rounded,
                                 label: _view == _SoulGameView.gameplay
-                                    ? 'Restart'
-                                    : 'Play',
-                                accent: const Color(0xFF7CF29C),
+                                    ? l10n.translate('Chơi lại')
+                                    : l10n.translate('Tiếp tục'),
+                                accent: const Color(0xFF00E676),
                                 onTap: () {
                                   Navigator.of(context).pop();
                                   _restartCurrentRunFromSettings();
@@ -1184,8 +1235,8 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                               ),
                               _SettingsActionButton(
                                 icon: Icons.grid_view_rounded,
-                                label: 'Menu',
-                                accent: const Color(0xFF9FB3FF),
+                                label: l10n.translate('Menu'),
+                                accent: const Color(0xFF3A86FF),
                                 onTap: () {
                                   Navigator.of(context).pop();
                                   _returnToMenuFromSettings();
@@ -1538,6 +1589,7 @@ extension _SoulBlockPanels on _SoulBlockGameState {
                       imageUrl: snapshot.imageUrl,
                       maxWidthDiskCache: cacheSize.width,
                       maxHeightDiskCache: cacheSize.height,
+                      memCacheWidth: 400,
                       fadeInDuration: Duration.zero,
                       filterQuality: FilterQuality.medium,
                       imageBuilder: (context, imageProvider) {

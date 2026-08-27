@@ -275,7 +275,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF1E293B).withValues(alpha: 0.7),
+                  SLColors.darkNavy.withValues(alpha: 0.7),
                   const Color(0xFF0F172A).withValues(alpha: 0.8),
                 ],
                 begin: Alignment.topLeft,

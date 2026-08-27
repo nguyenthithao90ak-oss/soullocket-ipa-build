@@ -22,40 +22,41 @@ class _TopScoreCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: ultraCompact
-            ? 9
+            ? 10
             : dense
-                ? 11
-                : 12,
+                ? 12
+                : 14,
         vertical: ultraCompact
-            ? 6
+            ? 7
             : dense
-                ? 8
-                : 9,
+                ? 9
+                : 10,
       ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: <Color>[
-            accent.withValues(alpha: 0.22),
-            accent.withValues(alpha: 0.08),
-            _kSoulPanelBottom.withValues(alpha: 0.96),
+            accent.withValues(alpha: 0.28),
+            const Color(0xFF141C30).withValues(alpha: 0.95),
+            const Color(0xFF0A0F1D).withValues(alpha: 0.98),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(dense ? 16 : 18),
-        border: Border.all(color: accent.withValues(alpha: 0.26)),
+        borderRadius: BorderRadius.circular(dense ? 18 : 20),
+        border: Border.all(
+          color: accent.withValues(alpha: 0.45),
+          width: 1.2,
+        ),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: accent.withValues(alpha: 0.06),
-            blurRadius: 10,
-            spreadRadius: -9,
-            offset: const Offset(0, 6),
+            color: accent.withValues(alpha: 0.12),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.14),
+            color: Colors.black45,
             blurRadius: 10,
-            spreadRadius: -10,
-            offset: const Offset(0, 6),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -69,33 +70,29 @@ class _TopScoreCard extends StatelessWidget {
                 icon,
                 color: accent,
                 size: ultraCompact
-                    ? 12
+                    ? 13
                     : dense
-                        ? 13
-                        : 14,
+                        ? 15
+                        : 16,
               ),
               SizedBox(
                 width: ultraCompact
-                    ? 4
+                    ? 5
                     : dense
-                        ? 5
-                        : 6,
+                        ? 6
+                        : 7,
               ),
               Text(
                 label,
                 style: SLTheme.quicksand(
                   fontSize: ultraCompact
-                      ? 7.8
+                      ? 8.5
                       : dense
-                          ? 8.4
-                          : 9.0,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white70,
-                  letterSpacing: ultraCompact
-                      ? 0.45
-                      : dense
-                          ? 0.65
-                          : 0.75,
+                          ? 9.5
+                          : 10.5,
+                  fontWeight: FontWeight.w900,
+                  color: accent,
+                  letterSpacing: 0.8,
                 ),
               ),
             ],
@@ -104,8 +101,8 @@ class _TopScoreCard extends StatelessWidget {
             height: ultraCompact
                 ? 2
                 : dense
-                    ? 4
-                    : 5,
+                    ? 3
+                    : 4,
           ),
           Text(
             value,
@@ -113,13 +110,13 @@ class _TopScoreCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: SLTheme.quicksand(
               fontSize: ultraCompact
-                  ? 13.4
+                  ? 15
                   : dense
-                      ? 15.2
-                      : 17.2,
+                      ? 17
+                      : 19,
               fontWeight: FontWeight.w900,
               color: Colors.white,
-              letterSpacing: 0.15,
+              letterSpacing: 0.2,
             ),
           ),
         ],
@@ -146,50 +143,68 @@ class _SettingsActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 132,
-      child: InkWell(
-        onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(16),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              colors: <Color>[
-                accent.withValues(alpha: enabled ? 0.20 : 0.08),
-                const Color(0xFF162238)
-                    .withValues(alpha: enabled ? 0.98 : 0.82),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            border: Border.all(
-              color: enabled
-                  ? accent.withValues(alpha: 0.28)
-                  : Colors.white.withValues(alpha: 0.06),
-            ),
-          ),
-          child: Row(
-            children: <Widget>[
-              Icon(
-                icon,
-                size: 18,
-                color: enabled ? accent : Colors.white38,
+      width: 140,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: enabled ? onTap : null,
+          borderRadius: BorderRadius.circular(16),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                colors: <Color>[
+                  accent.withValues(alpha: enabled ? 0.22 : 0.06),
+                  const Color(0xFF131B2D).withValues(alpha: enabled ? 0.95 : 0.75),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: SLTheme.quicksand(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: enabled ? Colors.white : Colors.white38,
+              border: Border.all(
+                color: enabled
+                    ? accent.withValues(alpha: 0.40)
+                    : Colors.white.withValues(alpha: 0.06),
+                width: 1.2,
+              ),
+              boxShadow: [
+                if (enabled)
+                  BoxShadow(
+                    color: accent.withValues(alpha: 0.10),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+              ],
+            ),
+            child: Row(
+              children: <Widget>[
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: enabled ? 0.18 : 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 16,
+                    color: enabled ? accent : Colors.white38,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: enabled ? Colors.white : Colors.white38,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -458,12 +473,14 @@ class _SettingsSwitchTile extends StatelessWidget {
     required this.title,
     required this.value,
     required this.onChanged,
+    this.accentColor = const Color(0xFF00E5FF),
   });
 
   final IconData icon;
   final String title;
   final bool value;
   final ValueChanged<bool> onChanged;
+  final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
@@ -471,40 +488,58 @@ class _SettingsSwitchTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () => onChanged(!value),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(16),
         child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+            color: const Color(0xFF131B2D).withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: value
+                  ? accentColor.withValues(alpha: 0.35)
+                  : Colors.white.withValues(alpha: 0.07),
+              width: 1.2,
+            ),
+            boxShadow: [
+              if (value)
+                BoxShadow(
+                  color: accentColor.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 3),
+                ),
+            ],
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Icon(icon, color: Colors.white, size: 20),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: (value ? accentColor : Colors.white).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: value ? accentColor : Colors.white70,
+                  size: 18,
+                ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Text(
                   title,
                   style: SLTheme.quicksand(
-                    fontSize: 15,
+                    fontSize: 14.5,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
                   ),
                 ),
               ),
               const SizedBox(width: 12),
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Switch.adaptive(
-                  value: value,
-                  onChanged: onChanged,
-                  activeThumbColor: const Color(0xFF00C3FF),
-                ),
+              Switch.adaptive(
+                value: value,
+                onChanged: onChanged,
+                activeTrackColor: accentColor,
+                activeThumbColor: Colors.white,
               ),
             ],
           ),

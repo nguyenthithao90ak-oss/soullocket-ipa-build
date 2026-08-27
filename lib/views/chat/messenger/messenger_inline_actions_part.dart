@@ -62,7 +62,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w900,
                             fontSize: 18,
-                            color: const Color(0xFF1E293B),
+                            color: SLColors.darkNavy,
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -94,7 +94,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                           style: SLTheme.quicksand(
                             fontWeight: FontWeight.w900,
                             fontSize: 14,
-                            color: const Color(0xFF1E293B),
+                            color: SLColors.darkNavy,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -149,7 +149,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                                           overflow: TextOverflow.ellipsis,
                                           style: SLTheme.quicksand(
                                             fontWeight: FontWeight.w900,
-                                            color: const Color(0xFF1E293B),
+                                            color: SLColors.darkNavy,
                                           ),
                                         ),
                                       ),
@@ -328,7 +328,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w900,
                         fontSize: 18,
-                        color: const Color(0xFF1E293B),
+                        color: SLColors.darkNavy,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -379,7 +379,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                       style: SLTheme.quicksand(
                         fontWeight: FontWeight.w900,
                         fontSize: 14,
-                        color: const Color(0xFF1E293B),
+                        color: SLColors.darkNavy,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -431,7 +431,7 @@ extension _MessengerInlineActionsPart on _MessengerScreenState {
                                       overflow: TextOverflow.ellipsis,
                                       style: SLTheme.quicksand(
                                         fontWeight: FontWeight.w800,
-                                        color: const Color(0xFF1E293B),
+                                        color: SLColors.darkNavy,
                                       ),
                                     ),
                                   ),

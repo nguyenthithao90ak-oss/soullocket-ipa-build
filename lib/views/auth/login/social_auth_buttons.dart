@@ -73,7 +73,7 @@ class _SocialAuthButton extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: const SLColors.brandPink.withValues(alpha: 0.08),
+              color: SLColors.brandPink.withValues(alpha: 0.08),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),

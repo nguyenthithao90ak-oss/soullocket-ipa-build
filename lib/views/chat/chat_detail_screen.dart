@@ -35,6 +35,8 @@ import '../../core/fast_backdrop_filter.dart';
 import '../../core/sl_route.dart';
 import '../../utils/rapid_action_feedback_policy.dart';
 import '../../widgets/animated_rabbit_sticker.dart';
+import '../../views/ui_prefs.dart';
+import 'chat_detail/chat_detail_messages_aurora_part.dart';
 
 part 'chat_detail/chat_detail_helpers_part.dart';
 part 'chat_detail/chat_detail_actions_part.dart';
@@ -116,7 +118,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final StorageService _storageService = StorageService();
   final MilitaryLockService _militaryLockService = MilitaryLockService();
 
-  static const int _chatPageSize = 40;
+  static const int _chatPageSize = 25;
   static const List<String> _quickReactionOptions = <String>[
     '\u{1F44D}',
     '\u2764\uFE0F',
@@ -384,7 +386,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                             icon: const Icon(
                               Icons.arrow_back_ios_new,
                               size: 18,
-                              color: Color(0xFF1E293B),
+                              color: SLColors.darkNavy,
                             ),
                             onPressed: () => Navigator.pop(context),
                           ),
@@ -453,7 +455,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: SLTheme.quicksand(
-                                    color: const Color(0xFF1E293B),
+                                    color: SLColors.darkNavy,
                                     fontSize: compactHeader ? 15 : 16,
                                     fontWeight: FontWeight.w900,
                                     height: 1.1,

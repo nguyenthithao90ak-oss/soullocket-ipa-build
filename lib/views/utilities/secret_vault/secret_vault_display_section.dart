@@ -41,6 +41,7 @@ extension _SecretVaultDisplayPart on SecretVaultScreenState {
                                 filterQuality: FilterQuality.medium,
                                 width: double.infinity,
                                 height: imageMaxHeight,
+                                memCacheWidth: 800,
                                 placeholder: (context, url) => const Center(
                                     child: CircularProgressIndicator()),
                                 errorWidget: (context, url, error) =>

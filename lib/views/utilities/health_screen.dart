@@ -10,6 +10,7 @@ import '../../core/sl_theme.dart';
 import '../../utils/services/health_period_service.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/utils/services/widget_service.dart';
+import '../../utils/services/l10n_service.dart';
 
 class HealthScreen extends StatefulWidget {
   final String houseId;
@@ -193,7 +194,7 @@ class _HealthScreenState extends State<HealthScreen> {
             .toList(growable: false);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã lưu cài đặt sức khỏe! ✨')),
+        SnackBar(content: Text(L10nService().translate('Đã lưu cài đặt sức khỏe! ✨'))),
       );
     }
   }
@@ -642,7 +643,7 @@ class _HealthScreenState extends State<HealthScreen> {
         ),
         SLSpacing.h12,
         _buildListTile(
-          title: 'Ngày bắt đầu kỳ gần nhất',
+          title: L10nService().translate('Ngày bắt đầu kỳ gần nhất'),
           subtitle: _lastDate == null
               ? 'Chưa chọn'
               : DateFormat('dd/MM/yyyy').format(_lastDate!),
@@ -653,8 +654,8 @@ class _HealthScreenState extends State<HealthScreen> {
         ),
         SLSpacing.h12,
         _buildListTile(
-          title: 'Đánh dấu hôm nay là ngày bắt đầu kỳ',
-          subtitle: 'Chạm nhanh để lưu mốc hôm nay',
+          title: L10nService().translate('Đánh dấu hôm nay là ngày bắt đầu kỳ'),
+          subtitle: L10nService().translate('Chạm nhanh để lưu mốc hôm nay'),
           icon: Icons.bolt_rounded,
           iconColor: const Color(0xFF9C27B0),
           iconBgColor: const Color(0xFFF3E5F5),

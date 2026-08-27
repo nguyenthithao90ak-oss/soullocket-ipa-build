@@ -41,6 +41,7 @@ import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart';
 import 'package:soullocket_app/views/home/screens/interaction_sticker_editor_screen.dart';
 import 'package:soullocket_app/widgets/animated_rabbit_sticker.dart';
 import 'package:soullocket_app/utils/services/soul_merge_service.dart';
+import 'package:soullocket_app/views/home/widgets/seasonal_particle_overlay.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -66,6 +67,7 @@ import 'package:soullocket_app/models/utilities/shared_note.dart';
 import 'package:soullocket_app/views/home/tabs/settings_tab.dart'
     show SettingsTab, FloatingHeartsRingOverlay;
 import 'package:soullocket_app/views/ui_prefs.dart';
+import 'package:soullocket_app/views/home/tabs/settings/theme/theme_preview_builder.dart';
 // import 'package:soullocket_app/views/utilities/age_zodiac_screen.dart';
 import 'package:soullocket_app/views/utilities/bucket_list_screen.dart';
 import 'package:soullocket_app/views/utilities/calendar_screen.dart';
@@ -200,6 +202,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   ];
 
   bool _hideSettingsButtonUntilRestart = false;
+  int _lastChatMessageTs = 0;
 
   void _hideSettingsButtonForSession() {
     if (!mounted) return;
@@ -430,6 +433,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   StreamSubscription? _settingsSubscription;
   StreamSubscription? _presenceSubscription;
   final List<StreamSubscription> _presenceSubList = [];
+  final Map<String, VoidCallback> _pendingPresenceUpdates = {};
+  Timer? _presenceBatchTimer;
   StreamSubscription? _missInteractionSubscription;
   StreamSubscription<DatabaseEvent>? _alertSubscription;
   StreamSubscription<DatabaseEvent>? _newDeviceNotificationSubscription;
@@ -476,7 +481,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   int _liveWorkSessionId = 0;
   List<String> _cachedWidgetDiaryImageUrls = const <String>[];
   List<String> _recentChatSignals = [];
-  int _lastChatMessageTs = 0; // timestamp ms của tin nhắn chat cuối cùng
+
   late final ValueNotifier<_PartnerInteractionPreset>
       _smartInteractionPresetNotifier;
   _PartnerInteractionPreset get _smartInteractionPreset =>
@@ -1035,22 +1040,25 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     } catch (_) {}
   }
 
+  static final _accentRegexMap = {
+    RegExp(r'[àáạảãâầấậẩẫăằắặẲẵ]'): 'a',
+    RegExp(r'[èéẹẻẽêềếệểễ]'): 'e',
+    RegExp(r'[ìíịỉĩ]'): 'i',
+    RegExp(r'[òóọỏõôồốộổỗơờớợởỡ]'): 'o',
+    RegExp(r'[ùúụủũưừứựửữ]'): 'u',
+    RegExp(r'[ỳýỵỷỹ]'): 'y',
+    RegExp(r'[đ]'): 'd',
+  };
+  static final _nonAccentRegex = RegExp(r'[^a-z0-9\s]');
+  static final _multiSpaceRegex = RegExp(r'\s+');
+
   String _normalizeInteractionSignal(String input) {
     var normalized = input.toLowerCase();
-    const accentGroups = {
-      r'[àáạảãâầấậẩẫăằắặẳẵ]': 'a',
-      r'[èéẹẻẽêềếệểễ]': 'e',
-      r'[ìíịỉĩ]': 'i',
-      r'[òóọỏõôồốộổỗơờớợởỡ]': 'o',
-      r'[ùúụủũưừứựửữ]': 'u',
-      r'[ỳýỵỷỹ]': 'y',
-      r'[đ]': 'd',
-    };
-    accentGroups.forEach((pattern, replacement) {
-      normalized = normalized.replaceAll(RegExp(pattern), replacement);
+    _accentRegexMap.forEach((pattern, replacement) {
+      normalized = normalized.replaceAll(pattern, replacement);
     });
-    return normalized.replaceAll(RegExp(r'[^a-z0-9\s]'), ' ').replaceAll(
-          RegExp(r'\s+'),
+    return normalized.replaceAll(_nonAccentRegex, ' ').replaceAll(
+          _multiSpaceRegex,
           ' ',
         );
   }
@@ -1291,8 +1299,10 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
                   return const SizedBox.shrink();
                 },
               ),
-              _buildMainContent(
-                customBackgroundUrl: uiState.customBackgroundUrl,
+              SeasonalParticleOverlay(
+                child: _buildMainContent(
+                  customBackgroundUrl: uiState.customBackgroundUrl,
+                ),
               ),
               const SizedBox.shrink(),
             ],
@@ -1310,8 +1320,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       customBackgroundUrl: customBackgroundUrl,
     );
   }
-
-
 }
 
 class _ThemeBackgroundAspectRatioPreset implements CropAspectRatioPresetData {

@@ -184,6 +184,8 @@ class VisitorProfileHeaderSection extends StatelessWidget {
                                       maxWidthDiskCache: 720,
                                       imageUrl: trimmedAvatar,
                                       fit: BoxFit.cover,
+                                      memCacheWidth: 400,
+                                      memCacheHeight: 400,
                                       filterQuality: FilterQuality.medium,
                                       errorWidget: (_, __, ___) =>
                                           SLTheme.avatarPlaceholder(
@@ -336,6 +338,8 @@ class _VisitorProfileSmallHouseAvatarBadge extends StatelessWidget {
                 maxWidthDiskCache: 720,
                 imageUrl: avatarUrl,
                 fit: BoxFit.cover,
+                memCacheWidth: 200,
+                memCacheHeight: 200,
                 filterQuality: FilterQuality.medium,
                 errorWidget: (_, __, ___) =>
                     SLTheme.avatarPlaceholder(fallbackLabel, size: 32),
