@@ -2,6 +2,8 @@
 part of '../../home_screen.dart';
 
 extension _HomeScreenShellControls on _HomeScreenState {
+  static final L10nService _l10nService = L10nService();
+
   Widget _buildBottomNav({required bool isDark}) {
     return ValueListenableBuilder<bool>(
       valueListenable: _isBottomNavVisibleNotifier,
@@ -13,23 +15,23 @@ extension _HomeScreenShellControls on _HomeScreenState {
           child: child,
         );
       },
-      child: ValueListenableBuilder<bool>(
-        valueListenable: _navCollapsedNotifier,
-        builder: (context, navCollapsed, _) {
+      child: ValueListenableBuilder<int>(
+        valueListenable: _backgroundTabIndexNotifier,
+        builder: (context, currentIndex, _) {
           return ValueListenableBuilder<bool>(
-            valueListenable: UiPrefs.captureModeNotifier,
-            builder: (context, captureMode, _) {
-              if (_navHiddenUntilRestart ||
-                  _hideNavForDiarySelection ||
-                  captureMode) {
-                return const SizedBox.shrink();
-              }
+            valueListenable: _navCollapsedNotifier,
+            builder: (context, navCollapsed, _) {
               return ValueListenableBuilder<bool>(
-                valueListenable: _isUserTabSwipingNotifier,
-                builder: (context, isSwiping, _) {
-                  return ValueListenableBuilder<int>(
-                    valueListenable: _backgroundTabIndexNotifier,
-                    builder: (context, currentIndex, _) {
+                valueListenable: UiPrefs.captureModeNotifier,
+                builder: (context, captureMode, _) {
+                  if (_navHiddenUntilRestart ||
+                      _hideNavForDiarySelection ||
+                      captureMode) {
+                    return const SizedBox.shrink();
+                  }
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: _isUserTabSwipingNotifier,
+                    builder: (context, isSwiping, _) {
                       final effectProfile = _resolveHomeEffectProfile(
                         UiPrefs.notifier.value,
                         pauseAnimations: isSwiping,
@@ -38,7 +40,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
                       final extraBottomPadding = Platform.isIOS
                           ? (bottomInset > 0
                               ? bottomInset / 2.5
-                              : 0.0) // Hạ thấp trên iOS cho gọn
+                              : 0.0)
                           : (bottomInset > 0 ? bottomInset : 0.0);
                       return AnimatedSize(
                           duration: effectProfile.performanceMode || isSwiping
@@ -265,7 +267,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
     final animationDuration =
         isPerformanceMode ? Duration.zero : const Duration(milliseconds: 200);
     final inactiveColor =
-        isDark ? Colors.white.withValues(alpha: 0.5) : const Color(0xFF94A3B8);
+        isDark ? const Color(0x80FFFFFF) : const Color(0xFF94A3B8);
 
     GlobalKey? targetKey;
     if (index == 1) {
@@ -316,7 +318,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  L10nService().translate(item.labelKey),
+                  _l10nService.translate(item.labelKey),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: SLTheme.quicksand(
@@ -326,14 +328,7 @@ extension _HomeScreenShellControls on _HomeScreenState {
                   ),
                 ),
               ],
-            )
-                .animate(target: isActive ? 1 : 0)
-                .shimmer(duration: 400.ms)
-                .scaleXY(
-                    begin: 0.95,
-                    end: 1.0,
-                    duration: 200.ms,
-                    curve: Curves.easeOutBack),
+            ),
           ),
         ),
       ),

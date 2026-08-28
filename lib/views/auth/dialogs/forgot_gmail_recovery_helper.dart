@@ -226,7 +226,7 @@ class ForgotGmailRecoveryHelper {
     });
     if (isFamiliarDevice) {
       promptMessage += L10nService().translate(
-        '\\n\\n[Thiết bị quen] Nếu bạn quên cả mã PIN, nhập "RESET" để yêu cầu đổi mới (xử lý sau 3 ngày).',
+        'auth_recovery_reset_device_hint',
       );
     }
 

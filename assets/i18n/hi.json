@@ -6586,7 +6586,7 @@
   "home_ngymai_a3d820": "Tomorrow",
   "home_nho_interaction": "Miss you",
   "home_om_interaction": "Send hug",
-  "home_thoat_inactivity": "Exited",
+  "home_thoat_inactivity": "बाहर निकलें",
   "home_yeu_interaction": "Send love",
   "auth_err_empty_credentials": "Please enter your login details",
   "auth_err_missing_house_code": "Please enter house ID",
@@ -6758,5 +6758,18 @@
   "Nếu bạn thấy tin này ngoài màn hình chính nghĩa là thông báo đang hoạt động bình thường! ✅": "If you see this on your home screen, notifications are working properly! ✅",
   "Tiện ích màn hình chỉ hỗ trợ trên thiết bị thật. Phần cấu hình này nên thao tác trên app cài đặt.": "Home widgets are only supported on physical devices.",
   "Màu sắc và chủ đề của Tiện ích được lấy trực tiếp từ sự kiện bạn chọn ghim hoặc sự kiện gần nhất trong danh sách Sự Kiện & Kỷ Niệm.": "Widget colors and theme are synced directly from your pinned event or upcoming anniversary.",
-  "Hiển thị sự kiện tiếp theo (ví dụ: ngày sinh nhật, chuyến đi, ngày kỷ niệm yêu...) trực tiếp trên màn hình chính.": "Show next event (birthday, trip, love anniversary...) directly on home screen."
+  "Hiển thị sự kiện tiếp theo (ví dụ: ngày sinh nhật, chuyến đi, ngày kỷ niệm yêu...) trực tiếp trên màn hình chính.": "Show next event (birthday, trip, love anniversary...) directly on home screen.",
+  "home_activity_restored": "{label} पुनर्स्थापित किया गया",
+  "home_send_otp_failed": "ओटीपी भेजने में विफल: {error}",
+  "home_otp_invalid_or_expired": "ओटीपी अमान्य है या समाप्त हो गया है: {error}",
+  "home_otp_sent_to_email": "ओटीपी {email} पर भेज दिया गया है",
+  "home_sending_reset_password_email": "{email} पर पासवर्ड रीसेट ईमेल भेजा जा रहा है...",
+  "home_reset_password_failed": "पासवर्ड रीसेट विफल: {error}",
+  "home_reset_otp_sent": "पासवर्ड रीसेट कोड {email} पर भेज दिया गया है",
+  "home_days_count": "{days} दिन",
+  "home_autoclose_countdown": "निष्क्रियता के कारण ऐप {seconds} सेकंड में अपने आप बंद हो जाएगा।",
+  "home_tieptuc_inactivity": "जारी रखें ({seconds}s)",
+  "home_memory_remaining_upload": "शेष {count} यादों को अपलोड करने की प्रतीक्षा है",
+  "home_sending_otp_email": "{email} पर ओटीपी कोड भेजा जा रहा है...",
+  "auth_recovery_reset_device_hint": "\n\n[पहचाना हुआ डिवाइस] यदि आप अपना पिन भी भूल गए हैं, तो \"RESET\" दर्ज करें (3 दिनों में प्रोसेस किया जाएगा)।"
 }

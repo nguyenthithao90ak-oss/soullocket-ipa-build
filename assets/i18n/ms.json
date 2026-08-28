@@ -6586,7 +6586,7 @@
   "home_ngymai_a3d820": "Tomorrow",
   "home_nho_interaction": "Miss you",
   "home_om_interaction": "Send hug",
-  "home_thoat_inactivity": "Exited",
+  "home_thoat_inactivity": "Keluar",
   "home_yeu_interaction": "Send love",
   "auth_err_empty_credentials": "Please enter your login details",
   "auth_err_missing_house_code": "Please enter house ID",
@@ -6758,5 +6758,18 @@
   "Nếu bạn thấy tin này ngoài màn hình chính nghĩa là thông báo đang hoạt động bình thường! ✅": "If you see this on your home screen, notifications are working properly! ✅",
   "Tiện ích màn hình chỉ hỗ trợ trên thiết bị thật. Phần cấu hình này nên thao tác trên app cài đặt.": "Home widgets are only supported on physical devices.",
   "Màu sắc và chủ đề của Tiện ích được lấy trực tiếp từ sự kiện bạn chọn ghim hoặc sự kiện gần nhất trong danh sách Sự Kiện & Kỷ Niệm.": "Widget colors and theme are synced directly from your pinned event or upcoming anniversary.",
-  "Hiển thị sự kiện tiếp theo (ví dụ: ngày sinh nhật, chuyến đi, ngày kỷ niệm yêu...) trực tiếp trên màn hình chính.": "Show next event (birthday, trip, love anniversary...) directly on home screen."
+  "Hiển thị sự kiện tiếp theo (ví dụ: ngày sinh nhật, chuyến đi, ngày kỷ niệm yêu...) trực tiếp trên màn hình chính.": "Show next event (birthday, trip, love anniversary...) directly on home screen.",
+  "home_activity_restored": "Dipulihkan {label}",
+  "home_send_otp_failed": "Gagal menghantar OTP: {error}",
+  "home_otp_invalid_or_expired": "OTP tidak sah atau telah tamat tempoh: {error}",
+  "home_otp_sent_to_email": "OTP telah dihantar ke {email}",
+  "home_sending_reset_password_email": "Menghantar e-mel set semula kata laluan ke {email}...",
+  "home_reset_password_failed": "Gagal mengeset semula kata laluan: {error}",
+  "home_reset_otp_sent": "Kod set semula kata laluan telah dihantar ke {email}",
+  "home_days_count": "{days} hari",
+  "home_autoclose_countdown": "Aplikasi akan ditutup secara automatik dalam {seconds} saat kerana tidak aktif.",
+  "home_tieptuc_inactivity": "Teruskan ({seconds}s)",
+  "home_memory_remaining_upload": "Menunggu muat naik untuk {count} memori yang tinggal",
+  "home_sending_otp_email": "Menghantar kod OTP ke {email}...",
+  "auth_recovery_reset_device_hint": "\n\n[Peranti Dikenali] Jika anda juga terlupa PIN, taip \"RESET\" untuk memohon yang baharu (diproses dalam 3 hari)."
 }

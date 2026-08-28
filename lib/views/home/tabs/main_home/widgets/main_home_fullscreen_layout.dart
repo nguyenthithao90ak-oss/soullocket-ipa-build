@@ -496,7 +496,6 @@ class _FullscreenFallingHeartsOverlayState
         for (var p in particles) {
           p.update();
         }
-        setState(() {});
       });
 
     _controller.repeat();
@@ -510,9 +509,12 @@ class _FullscreenFallingHeartsOverlayState
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _HeartPainter(particles),
-      size: Size.infinite,
+    return RepaintBoundary(
+      child: CustomPaint(
+        painter: _HeartPainter(particles),
+        size: Size.infinite,
+        isComplex: true,
+      ),
     );
   }
 }

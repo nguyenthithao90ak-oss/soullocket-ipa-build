@@ -39,6 +39,16 @@ class _LegacyFallingEffectState extends State<LegacyFallingEffect>
   void initState() {
     super.initState();
     _seedParticles(reset: true);
+    _controller = AnimationController(
+      vsync: this,
+      duration: _animationLoopDuration,
+    )..addListener(_onAnimationTick);
+  }
+
+  void _onAnimationTick() {
+    if (_shouldAnimate) {
+      _tickParticles();
+    }
   }
 
   @override
@@ -63,21 +73,16 @@ class _LegacyFallingEffectState extends State<LegacyFallingEffect>
   void _syncAnimationState() {
     final shouldAnimateNow = _shouldAnimate;
     if (shouldAnimateNow) {
-      final controller = _controller ??= AnimationController(
-        vsync: this,
-        duration: _animationLoopDuration,
-      );
-      if (!controller.isAnimating) {
-        // Delay animation start to reduce initial app startup lag
+      if (!_controller!.isAnimating) {
         if (!_startupDelayApplied) {
           _startupDelayApplied = true;
           Future.delayed(_initialAnimationDelay, () {
             if (mounted && _shouldAnimate) {
-              controller.repeat();
+              _controller!.repeat();
             }
           });
         } else {
-          controller.repeat();
+          _controller!.repeat();
         }
       }
       return;
@@ -304,10 +309,6 @@ class _LegacyFallingEffectState extends State<LegacyFallingEffect>
       child: AnimatedBuilder(
         animation: controller,
         builder: (context, child) {
-          final shouldAnimateNow = _shouldAnimate;
-          if (shouldAnimateNow) {
-            _tickParticles();
-          }
           return CustomPaint(
             painter: _LegacyFallingPainter(
               particles: _particles,

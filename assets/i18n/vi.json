@@ -6586,7 +6586,7 @@
   "home_ngymai_a3d820": "Ngày mai",
   "home_nho_interaction": "Bấm nhớ nhung",
   "home_om_interaction": "Gửi cái ôm",
-  "home_thoat_inactivity": "Đã thoát",
+  "home_thoat_inactivity": "Thoát",
   "home_yeu_interaction": "Gửi yêu thương",
   "auth_err_empty_credentials": "Vui lòng nhập đầy đủ thông tin đăng nhập",
   "auth_err_missing_house_code": "Vui lòng nhập mã nhà",
@@ -6758,5 +6758,18 @@
   "Nếu bạn thấy tin này ngoài màn hình chính nghĩa là thông báo đang hoạt động bình thường! ✅": "Nếu bạn thấy tin này ngoài màn hình chính nghĩa là thông báo đang hoạt động bình thường! ✅",
   "Tiện ích màn hình chỉ hỗ trợ trên thiết bị thật. Phần cấu hình này nên thao tác trên app cài đặt.": "Tiện ích màn hình chỉ hỗ trợ trên thiết bị thật. Phần cấu hình này nên thao tác trên app cài đặt.",
   "Màu sắc và chủ đề của Tiện ích được lấy trực tiếp từ sự kiện bạn chọn ghim hoặc sự kiện gần nhất trong danh sách Sự Kiện & Kỷ Niệm.": "Màu sắc và chủ đề của Tiện ích được lấy trực tiếp từ sự kiện bạn chọn ghim hoặc sự kiện gần nhất trong danh sách Sự Kiện & Kỷ Niệm.",
-  "Hiển thị sự kiện tiếp theo (ví dụ: ngày sinh nhật, chuyến đi, ngày kỷ niệm yêu...) trực tiếp trên màn hình chính.": "Hiển thị sự kiện tiếp theo (ví dụ: ngày sinh nhật, chuyến đi, ngày kỷ niệm yêu...) trực tiếp trên màn hình chính."
+  "Hiển thị sự kiện tiếp theo (ví dụ: ngày sinh nhật, chuyến đi, ngày kỷ niệm yêu...) trực tiếp trên màn hình chính.": "Hiển thị sự kiện tiếp theo (ví dụ: ngày sinh nhật, chuyến đi, ngày kỷ niệm yêu...) trực tiếp trên màn hình chính.",
+  "home_activity_restored": "Đã khôi phục {label}",
+  "home_send_otp_failed": "Gửi mã OTP thất bại: {error}",
+  "home_otp_invalid_or_expired": "Mã OTP không hợp lệ hoặc đã hết hạn: {error}",
+  "home_otp_sent_to_email": "Mã OTP đã được gửi đến {email}",
+  "home_sending_reset_password_email": "Đang gửi email đặt lại mật khẩu đến {email}...",
+  "home_reset_password_failed": "Đặt lại mật khẩu thất bại: {error}",
+  "home_reset_otp_sent": "Mã xác thực đặt lại mật khẩu đã được gửi đến {email}",
+  "home_days_count": "{days} ngày",
+  "home_autoclose_countdown": "Ứng dụng sẽ tự động đóng sau {seconds} giây do không có hoạt động.",
+  "home_tieptuc_inactivity": "Tiếp tục ({seconds}s)",
+  "home_memory_remaining_upload": "Đang chờ tải lên {count} kỷ niệm còn lại",
+  "home_sending_otp_email": "Đang gửi mã OTP đến {email}...",
+  "auth_recovery_reset_device_hint": "\n\n[Thiết bị quen] Nếu bạn quên cả mã PIN, nhập \"RESET\" để yêu cầu đổi mới (xử lý sau 3 ngày)."
 }

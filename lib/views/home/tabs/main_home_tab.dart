@@ -3,10 +3,6 @@ import 'package:lottie/lottie.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
 import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
-import 'package:provider/provider.dart';
-import 'package:soullocket_app/views/home/tabs/main_home/providers/home_data_controller.dart';
-import 'package:soullocket_app/views/home/tabs/main_home/providers/home_presence_controller.dart';
-import 'package:soullocket_app/views/home/tabs/main_home/providers/home_interaction_controller.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/map_tilt_card.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/hero/heartbeat_thread_painter.dart';
 import 'package:flutter/material.dart';
@@ -1279,34 +1275,27 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => HomeDataController()),
-        ChangeNotifierProvider(create: (_) => HomePresenceController()),
-        ChangeNotifierProvider(create: (_) => HomeInteractionController()),
-      ],
-      child: _MainHomeStateView(
-        isLoading: _isLoading,
-        hasVisibleContent: _houseSettings != null,
-        child: ValueListenableBuilder<UiPrefsState>(
-          valueListenable: UiPrefs.notifier,
-          builder: (context, uiState, _) => Stack(
-            children: [
-              ValueListenableBuilder<bool>(
-                valueListenable: widget.isActiveListenable,
-                builder: (context, isActive, _) {
-                  if (!isActive) return const SizedBox.shrink();
-                  return const SizedBox.shrink();
-                },
+    return _MainHomeStateView(
+      isLoading: _isLoading,
+      hasVisibleContent: _houseSettings != null,
+      child: ValueListenableBuilder<UiPrefsState>(
+        valueListenable: UiPrefs.notifier,
+        builder: (context, uiState, _) => Stack(
+          children: [
+            ValueListenableBuilder<bool>(
+              valueListenable: widget.isActiveListenable,
+              builder: (context, isActive, _) {
+                if (!isActive) return const SizedBox.shrink();
+                return const SizedBox.shrink();
+              },
+            ),
+            SeasonalParticleOverlay(
+              child: _buildMainContent(
+                customBackgroundUrl: uiState.customBackgroundUrl,
               ),
-              SeasonalParticleOverlay(
-                child: _buildMainContent(
-                  customBackgroundUrl: uiState.customBackgroundUrl,
-                ),
-              ),
-              const SizedBox.shrink(),
-            ],
-          ),
+            ),
+            const SizedBox.shrink(),
+          ],
         ),
       ),
     );

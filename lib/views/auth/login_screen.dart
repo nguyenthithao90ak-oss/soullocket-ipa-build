@@ -53,6 +53,10 @@ class _LoginScreenState extends State<LoginScreen> {
   static const String _pendingSignupAutoCreateHousePrefsKey =
       'il_pending_signup_auto_create_house';
 
+  static final int _copyrightYear = DateTime.now().year;
+
+  SharedPreferences? _prefs;
+
   bool _isLoginTab = true;
   bool _obscurePassword = false;
   bool _isLoading = false;
@@ -88,17 +92,22 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _selectedSecurityQuestion = _cleanSecurityQuestions.first;
-    _loadRememberedEmail();
+    unawaited(_initPrefs().then((_) => _loadRememberedEmail()));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkKickReason();
       _checkFirstTimeSyncGuide();
     });
   }
 
+  Future<void> _initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
+
   Future<void> _checkFirstTimeSyncGuide() async {
     await Future<void>.delayed(const Duration(milliseconds: 1200));
     if (!mounted || _isLoading) return;
-    final prefs = await SharedPreferences.getInstance();
+    _prefs ??= await SharedPreferences.getInstance();
+    final prefs = _prefs!;
     final hasSeen = prefs.getBool('il_has_seen_sync_guide_v2') ?? false;
     if (!hasSeen) {
       await prefs.setBool('il_has_seen_sync_guide_v2', true);
@@ -108,7 +117,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _checkKickReason() async {
-    final prefs = await SharedPreferences.getInstance();
+    _prefs ??= await SharedPreferences.getInstance();
+    final prefs = _prefs!;
     final reason = prefs.getString('il_kick_reason');
     if (reason == null || reason.isEmpty || !mounted) return;
 
@@ -130,7 +140,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _loadRememberedEmail() async {
-    final prefs = await SharedPreferences.getInstance();
+    _prefs ??= await SharedPreferences.getInstance();
+    final prefs = _prefs!;
     final savedEmail = prefs.getString('il_remembered_email');
     if (savedEmail == null || savedEmail.isEmpty || !mounted) return;
 
@@ -224,7 +235,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<String?> _readSavedGender([String? accountKey]) async {
-    final prefs = await SharedPreferences.getInstance();
+    _prefs ??= await SharedPreferences.getInstance();
+    final prefs = _prefs!;
     if (accountKey != null && accountKey.trim().isNotEmpty) {
       final normalizedAccountKey = accountKey.trim().toLowerCase();
       final savedPerAccount =
@@ -272,7 +284,8 @@ class _LoginScreenState extends State<LoginScreen> {
     }
     if (!mounted) return null;
 
-    final prefs = await SharedPreferences.getInstance();
+    _prefs ??= await SharedPreferences.getInstance();
+    final prefs = _prefs!;
     if (!mounted) return null;
     final role = await showDialog<String>(
       context: context,
@@ -300,7 +313,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _persistPendingHouseSetupDraft({
     required String? role,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
+    _prefs ??= await SharedPreferences.getInstance();
+    final prefs = _prefs!;
 
     if (role == 'user1' || role == 'user2') {
       await prefs.setString('il_role', role!);
@@ -336,7 +350,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _clearPendingHouseSetupDraft() async {
-    final prefs = await SharedPreferences.getInstance();
+    _prefs ??= await SharedPreferences.getInstance();
+    final prefs = _prefs!;
     await prefs.remove(_pendingSignupRecoveryQuestionPrefsKey);
     await prefs.remove(_pendingSignupRecoveryAnswerPrefsKey);
     await prefs.remove(_pendingSignupAutoCreateHousePrefsKey);
@@ -480,7 +495,8 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     if (sessionRole != null) {
-      final prefs = await SharedPreferences.getInstance();
+      _prefs ??= await SharedPreferences.getInstance();
+      final prefs = _prefs!;
       await prefs.setString('il_role', sessionRole);
       await SecureStorageService.instance
           .write(SecureStorageService.keyRole, sessionRole);
@@ -521,7 +537,8 @@ class _LoginScreenState extends State<LoginScreen> {
           await _authService.signInWithEmailPassword(email, password);
         }
 
-        final prefs = await SharedPreferences.getInstance();
+        _prefs ??= await SharedPreferences.getInstance();
+        final prefs = _prefs!;
         if (_rememberMe) {
           await prefs.setString('il_remembered_email', email);
         } else {
@@ -635,7 +652,8 @@ class _LoginScreenState extends State<LoginScreen> {
       var displayMessage = errorInfo.message;
       if (!mounted) return;
       if (isAccountNotFound) {
-        final prefs = await SharedPreferences.getInstance();
+        _prefs ??= await SharedPreferences.getInstance();
+        final prefs = _prefs!;
         final savedEmail = prefs.getString('il_remembered_email');
         if (savedEmail != null && savedEmail.isNotEmpty) {
           final currentEmail = _emailController.text.trim().toLowerCase();
@@ -764,7 +782,8 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     // Lưu ngay vai trò vào SharedPreferences và SecureStorage trước khi gọi API đăng nhập
-    final prefs = await SharedPreferences.getInstance();
+    _prefs ??= await SharedPreferences.getInstance();
+    final prefs = _prefs!;
     await prefs.setString('il_role', selectedRole);
     await SecureStorageService.instance
         .write(SecureStorageService.keyRole, selectedRole);
@@ -794,7 +813,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final email = (result.user?.email ?? '').trim().toLowerCase();
       var storedRole = selectedRole;
-      final prefs = await SharedPreferences.getInstance();
       if (email.isNotEmpty) {
         await prefs.setString('il_saved_gender_$email', storedRole);
       }
@@ -1201,7 +1219,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ? 8
                                 : 16),
                         child: Text(
-                          'SoulLocket © ${DateTime.now().year} — Tame Trương Việt Hoàng',
+                          'SoulLocket © $_copyrightYear — Tame Trương Việt Hoàng',
                           style: SLTheme.quicksand(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -1223,223 +1241,252 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _showSyncGuideDialog(BuildContext context, {bool enforceDelay = false}) {
-    Timer? timer;
-    showDialog(
+    showDialog<void>(
       context: context,
       barrierDismissible:
-          !enforceDelay, // Prevent dismissing by tapping outside if enforced
-      builder: (dialogContext) {
-        int countdownMs = enforceDelay ? (kDebugMode ? 500 : 3000) : 0;
+          !enforceDelay,
+      builder: (dialogContext) => _SyncGuideDialogContent(
+        enforceDelay: enforceDelay,
+      ),
+    );
+  }
+}
 
-        return StatefulBuilder(
-          builder: (stateContext, setState) {
-            if (enforceDelay && timer == null && countdownMs > 0) {
-              timer = Timer.periodic(const Duration(milliseconds: 100), (t) {
-                if (!stateContext.mounted) {
-                  t.cancel();
-                  return;
-                }
-                if (countdownMs > 100) {
-                  setState(() => countdownMs -= 100);
-                } else {
-                  t.cancel();
-                  setState(() => countdownMs = 0);
-                }
-              });
-            }
+class _SyncGuideDialogContent extends StatefulWidget {
+  final bool enforceDelay;
 
-            final l10n = L10nService();
-            return PopScope(
-              canPop: !enforceDelay || countdownMs == 0,
-              child: Dialog(
-                backgroundColor: Colors.transparent,
-                insetPadding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFFFFFDFE),
-                        Color(0xFFFFF2F8),
-                        Color(0xFFFCF4FF),
+  const _SyncGuideDialogContent({required this.enforceDelay});
+
+  @override
+  State<_SyncGuideDialogContent> createState() => _SyncGuideDialogContentState();
+}
+
+class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _countdownController;
+  final L10nService _l10n = L10nService();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.enforceDelay) {
+      const countdownMs = kDebugMode ? 500 : 3000;
+      _countdownController = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: countdownMs),
+      )..addListener(_onCountdownTick);
+      _countdownController.forward();
+    } else {
+      _countdownController = AnimationController(
+        vsync: this,
+        duration: Duration.zero,
+        value: 1.0,
+      );
+    }
+  }
+
+  void _onCountdownTick() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    _countdownController.dispose();
+    super.dispose();
+  }
+
+  int get _remainingSeconds {
+    if (!widget.enforceDelay) return 0;
+    const totalSeconds = kDebugMode ? 1 : 3;
+    final remaining = (totalSeconds * (1.0 - _countdownController.value)).ceil();
+    return remaining.clamp(0, totalSeconds);
+  }
+
+  bool get _isCountdownActive => _countdownController.isAnimating;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: !widget.enforceDelay || !_isCountdownActive,
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 420),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFFFFFDFE),
+                Color(0xFFFFF2F8),
+                Color(0xFFFCF4FF),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(
+              color: const Color(0xFFFF85A2).withValues(alpha: 0.55),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFF5277).withValues(alpha: 0.20),
+                blurRadius: 40,
+                offset: const Offset(0, 20),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF7597), Color(0xFFFF5277)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF5277)
+                              .withValues(alpha: 0.35),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
                       ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(32),
-                    border: Border.all(
-                      color: const Color(0xFFFF85A2).withValues(alpha: 0.55),
-                      width: 1.5,
+                    child: const Icon(
+                      Icons.sync_rounded,
+                      color: Colors.white,
+                      size: 24,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFF5277).withValues(alpha: 0.20),
-                        blurRadius: 40,
-                        offset: const Offset(0, 20),
-                      ),
-                    ],
                   ),
-                  padding: const EdgeInsets.all(22),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFFF7597), Color(0xFFFF5277)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFFF5277)
-                                      .withValues(alpha: 0.35),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.sync_rounded,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.translate('Hướng dẫn đồng bộ dữ liệu'),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 16.5,
-                                    fontWeight: FontWeight.w900,
-                                    color: SLColors.textPrimary,
-                                  ),
-                                ),
-                                Text(
-                                  l10n.translate('Mô hình ghép đôi tài khoản riêng'),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFFFF5277),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        l10n.translate(
-                            'SoulLocket sử dụng hệ thống tài khoản riêng biệt để bảo vệ quyền riêng tư 100% cho từng người!'),
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: SLColors.textSecond,
-                          height: 1.35,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      _buildSyncStepCard(
-                        stepNumber: '1',
-                        title: l10n.translate('Tạo 2 tài khoản riêng biệt'),
-                        description: l10n.translate(
-                            'Mỗi người tự đăng ký tài khoản riêng (Email, Google, Apple) và đăng nhập vào ứng dụng trên máy mình.'),
-                        icon: Icons.person_add_alt_1_rounded,
-                        accentColor: const Color(0xFFFF5277),
-                      ),
-                      const SizedBox(height: 10),
-                      _buildSyncStepCard(
-                        stepNumber: '2',
-                        title: l10n.translate('Tạo hoặc nhập Mã ghép đôi'),
-                        description: l10n.translate(
-                            'Vào Cài đặt ⚙️ → Ghép nối dữ liệu. Một người bấm "Tạo mã ghép nối" và gửi cho người kia nhập vào.'),
-                        icon: Icons.qr_code_rounded,
-                        accentColor: const Color(0xFF7C4DFF),
-                      ),
-                      const SizedBox(height: 10),
-                      _buildSyncStepCard(
-                        stepNumber: '3',
-                        title: l10n.translate('Đồng bộ dữ liệu thời gian thực'),
-                        description: l10n.translate(
-                            'Sau khi kết nối, mọi kỷ niệm, nhật ký, album ảnh và vị trí sẽ tự động đồng bộ tức thì giữa 2 máy!'),
-                        icon: Icons.favorite_rounded,
-                        accentColor: const Color(0xFF00BFA5),
-                      ),
-                      const SizedBox(height: 14),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF3E0),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color:
-                                const Color(0xFFFFB74D).withValues(alpha: 0.5),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _l10n.translate('Hướng dẫn đồng bộ dữ liệu'),
+                          style: SLTheme.quicksand(
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w900,
+                            color: SLColors.textPrimary,
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.lightbulb_rounded,
-                              color: Color(0xFFF57C00),
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                l10n.translate(
-                                    'Mẹo: Dữ liệu được lưu an toàn trên đám mây. Đăng nhập lại trên máy mới dữ liệu tự động tải về đầy đủ.'),
-                                style: SLTheme.quicksand(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFE65100),
-                                  height: 1.3,
-                                ),
-                              ),
-                            ),
-                          ],
+                        Text(
+                          _l10n.translate('Mô hình ghép đôi tài khoản riêng'),
+                          style: SLTheme.quicksand(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFFFF5277),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 18),
-                      SizedBox(
-                        width: double.infinity,
-                        child: SLTheme.authPrimaryButton(
-                          label: countdownMs > 0
-                              ? '${l10n.translate('Đã hiểu')} (${(countdownMs / 1000).ceil()})'
-                              : l10n.translate('Đã hiểu'),
-                          onPressed: countdownMs > 0
-                              ? null
-                              : () {
-                                  timer?.cancel();
-                                  Navigator.pop(stateContext);
-                                },
-                          colors: const [
-                            Color(0xFFFF5277),
-                            Color(0xFFFF7597),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                _l10n.translate(
+                    'SoulLocket sử dụng hệ thống tài khoản riêng biệt để bảo vệ quyền riêng tư 100% cho từng người!'),
+                style: SLTheme.quicksand(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: SLColors.textSecond,
+                  height: 1.35,
                 ),
               ),
-            );
-          },
-        );
-      },
-    ).then((_) {
-      timer?.cancel();
-    });
+              const SizedBox(height: 14),
+              _buildSyncStepCard(
+                stepNumber: '1',
+                title: _l10n.translate('Tạo 2 tài khoản riêng biệt'),
+                description: _l10n.translate(
+                    'Mỗi người tự đăng ký tài khoản riêng (Email, Google, Apple) và đăng nhập vào ứng dụng trên máy mình.'),
+                icon: Icons.person_add_alt_1_rounded,
+                accentColor: const Color(0xFFFF5277),
+              ),
+              const SizedBox(height: 10),
+              _buildSyncStepCard(
+                stepNumber: '2',
+                title: _l10n.translate('Tạo hoặc nhập Mã ghép đôi'),
+                description: _l10n.translate(
+                    'Vào Cài đặt ⚙️ → Ghép nối dữ liệu. Một người bấm "Tạo mã ghép nối" và gửi cho người kia nhập vào.'),
+                icon: Icons.qr_code_rounded,
+                accentColor: const Color(0xFF7C4DFF),
+              ),
+              const SizedBox(height: 10),
+              _buildSyncStepCard(
+                stepNumber: '3',
+                title: _l10n.translate('Đồng bộ dữ liệu thời gian thực'),
+                description: _l10n.translate(
+                    'Sau khi kết nối, mọi kỷ niệm, nhật ký, album ảnh và vị trí sẽ tự động đồng bộ tức thì giữa 2 máy!'),
+                icon: Icons.favorite_rounded,
+                accentColor: const Color(0xFF00BFA5),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3E0),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: const Color(0xFFFFB74D).withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.lightbulb_rounded,
+                      color: Color(0xFFF57C00),
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _l10n.translate(
+                            'Mẹo: Dữ liệu được lưu an toàn trên đám mây. Đăng nhập lại trên máy mới dữ liệu tự động tải về đầy đủ.'),
+                        style: SLTheme.quicksand(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFFE65100),
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: SLTheme.authPrimaryButton(
+                  label: _isCountdownActive
+                      ? '${_l10n.translate('Đã hiểu')} ($_remainingSeconds)'
+                      : _l10n.translate('Đã hiểu'),
+                  onPressed: _isCountdownActive
+                      ? null
+                      : () => Navigator.pop(context),
+                  colors: const [
+                    Color(0xFFFF5277),
+                    Color(0xFFFF7597),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildSyncStepCard({

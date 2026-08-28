@@ -6586,7 +6586,7 @@
   "home_ngymai_a3d820": "Tomorrow",
   "home_nho_interaction": "Miss you",
   "home_om_interaction": "Send hug",
-  "home_thoat_inactivity": "Exited",
+  "home_thoat_inactivity": "Beenden",
   "home_yeu_interaction": "Send love",
   "auth_err_empty_credentials": "Please enter your login details",
   "auth_err_missing_house_code": "Please enter house ID",
@@ -6758,5 +6758,18 @@
   "Nếu bạn thấy tin này ngoài màn hình chính nghĩa là thông báo đang hoạt động bình thường! ✅": "If you see this on your home screen, notifications are working properly! ✅",
   "Tiện ích màn hình chỉ hỗ trợ trên thiết bị thật. Phần cấu hình này nên thao tác trên app cài đặt.": "Home widgets are only supported on physical devices.",
   "Màu sắc và chủ đề của Tiện ích được lấy trực tiếp từ sự kiện bạn chọn ghim hoặc sự kiện gần nhất trong danh sách Sự Kiện & Kỷ Niệm.": "Widget colors and theme are synced directly from your pinned event or upcoming anniversary.",
-  "Hiển thị sự kiện tiếp theo (ví dụ: ngày sinh nhật, chuyến đi, ngày kỷ niệm yêu...) trực tiếp trên màn hình chính.": "Show next event (birthday, trip, love anniversary...) directly on home screen."
+  "Hiển thị sự kiện tiếp theo (ví dụ: ngày sinh nhật, chuyến đi, ngày kỷ niệm yêu...) trực tiếp trên màn hình chính.": "Show next event (birthday, trip, love anniversary...) directly on home screen.",
+  "home_activity_restored": "{label} wiederhergestellt",
+  "home_send_otp_failed": "OTP-Senden fehlgeschlagen: {error}",
+  "home_otp_invalid_or_expired": "OTP ist ungültig oder abgelaufen: {error}",
+  "home_otp_sent_to_email": "OTP wurde an {email} gesendet",
+  "home_sending_reset_password_email": "Passwort-Zurücksetzungs-E-Mail wird an {email} gesendet...",
+  "home_reset_password_failed": "Passwort-Zurücksetzung fehlgeschlagen: {error}",
+  "home_reset_otp_sent": "Passwort-Zurücksetzungscode wurde an {email} gesendet",
+  "home_days_count": "{days} Tage",
+  "home_autoclose_countdown": "Die App wird in {seconds} Sekunden wegen Inaktivität automatisch geschlossen.",
+  "home_tieptuc_inactivity": "Fortfahren ({seconds}s)",
+  "home_memory_remaining_upload": "Ausstehender Upload für {count} verbleibende Erinnerungen",
+  "home_sending_otp_email": "OTP-Code wird an {email} gesendet...",
+  "auth_recovery_reset_device_hint": "\n\n[Bekanntes Gerät] Wenn Sie Ihre PIN vergessen haben, geben Sie \"RESET\" ein (Bearbeitung nach 3 Tagen)."
 }

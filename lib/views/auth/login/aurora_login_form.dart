@@ -266,9 +266,7 @@ class AuroraLoginForm extends StatelessWidget {
 
           Center(
             child: Text(
-              l10n.translate(
-                'Đăng nhập/Đăng ký qua Google hoặc Apple nữa\nBạn xác nhận rằng bạn 13 tuổi và chấp nhận các điều kiện.',
-              ),
+              l10n.translate('auth_social_login_notice'),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: 'Quicksand',

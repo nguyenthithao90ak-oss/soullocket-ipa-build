@@ -369,6 +369,20 @@ abstract final class _L10nStaticData {
         'Root làm mất đi lớp bảo vệ bảo mật của hệ điều hành, cho phép bất kỳ ứng dụng nào cũng có thể đọc trộm dữ liệu nhạy cảm.',
     'sec_faq_root_support_a':
         'Không, để đảm bảo an toàn tuyệt đối cho nhật ký của bạn, ứng dụng từ chối hoạt động trên mọi thiết bị thiếu tính toàn vẹn.',
+    'home_activity_restored': 'Đã khôi phục {label}',
+    'home_send_otp_failed': 'Gửi mã OTP thất bại: {error}',
+    'home_otp_invalid_or_expired': 'Mã OTP không hợp lệ hoặc đã hết hạn: {error}',
+    'home_otp_sent_to_email': 'Mã OTP đã được gửi đến {email}',
+    'home_sending_reset_password_email': 'Đang gửi email đặt lại mật khẩu đến {email}...',
+    'home_reset_password_failed': 'Đặt lại mật khẩu thất bại: {error}',
+    'home_reset_otp_sent': 'Mã xác thực đặt lại mật khẩu đã được gửi đến {email}',
+    'home_days_count': '{days} ngày',
+    'home_autoclose_countdown': 'Ứng dụng sẽ tự động đóng sau {seconds} giây do không có hoạt động.',
+    'home_tieptuc_inactivity': 'Tiếp tục ({seconds}s)',
+    'home_thoat_inactivity': 'Thoát',
+    'home_memory_remaining_upload': 'Đang chờ tải lên {count} kỷ niệm còn lại',
+    'home_sending_otp_email': 'Đang gửi mã OTP đến {email}...',
+    'auth_recovery_reset_device_hint': '\n\n[Thiết bị quen] Nếu bạn quên cả mã PIN, nhập "RESET" để yêu cầu đổi mới (xử lý sau 3 ngày).',
   };
 
   static const Map<String, String> _en = {
@@ -924,6 +938,20 @@ abstract final class _L10nStaticData {
         'Rooting removes the operating system\'s built-in security layers, allowing any app to read your sensitive data.',
     'sec_faq_root_support_a':
         'No, to ensure absolute security for your diary, the app refuses to run on any device lacking integrity.',
+    'home_activity_restored': 'Restored {label}',
+    'home_send_otp_failed': 'Failed to send OTP: {error}',
+    'home_otp_invalid_or_expired': 'OTP is invalid or has expired: {error}',
+    'home_otp_sent_to_email': 'OTP has been sent to {email}',
+    'home_sending_reset_password_email': 'Sending password reset email to {email}...',
+    'home_reset_password_failed': 'Password reset failed: {error}',
+    'home_reset_otp_sent': 'Password reset code has been sent to {email}',
+    'home_days_count': '{days} days',
+    'home_autoclose_countdown': 'The app will automatically close in {seconds} seconds due to inactivity.',
+    'home_tieptuc_inactivity': 'Continue ({seconds}s)',
+    'home_thoat_inactivity': 'Exit',
+    'home_memory_remaining_upload': 'Pending upload for {count} remaining memories',
+    'home_sending_otp_email': 'Sending OTP code to {email}...',
+    'auth_recovery_reset_device_hint': '\n\n[Familiar Device] If you also forgot your PIN, enter "RESET" to request a new one (processed in 3 days).',
   };
 
   static const Map<String, String> _viWebParity = _L10nWebParityTranslations.vi;

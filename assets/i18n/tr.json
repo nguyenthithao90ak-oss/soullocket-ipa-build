@@ -6586,7 +6586,7 @@
   "home_ngymai_a3d820": "Tomorrow",
   "home_nho_interaction": "Miss you",
   "home_om_interaction": "Send hug",
-  "home_thoat_inactivity": "Exited",
+  "home_thoat_inactivity": "Çıkış",
   "home_yeu_interaction": "Send love",
   "auth_err_empty_credentials": "Please enter your login details",
   "auth_err_missing_house_code": "Please enter house ID",
@@ -6758,5 +6758,18 @@
   "Nếu bạn thấy tin này ngoài màn hình chính nghĩa là thông báo đang hoạt động bình thường! ✅": "If you see this on your home screen, notifications are working properly! ✅",
   "Tiện ích màn hình chỉ hỗ trợ trên thiết bị thật. Phần cấu hình này nên thao tác trên app cài đặt.": "Home widgets are only supported on physical devices.",
   "Màu sắc và chủ đề của Tiện ích được lấy trực tiếp từ sự kiện bạn chọn ghim hoặc sự kiện gần nhất trong danh sách Sự Kiện & Kỷ Niệm.": "Widget colors and theme are synced directly from your pinned event or upcoming anniversary.",
-  "Hiển thị sự kiện tiếp theo (ví dụ: ngày sinh nhật, chuyến đi, ngày kỷ niệm yêu...) trực tiếp trên màn hình chính.": "Show next event (birthday, trip, love anniversary...) directly on home screen."
+  "Hiển thị sự kiện tiếp theo (ví dụ: ngày sinh nhật, chuyến đi, ngày kỷ niệm yêu...) trực tiếp trên màn hình chính.": "Show next event (birthday, trip, love anniversary...) directly on home screen.",
+  "home_activity_restored": "{label} geri yüklendi",
+  "home_send_otp_failed": "OTP gönderilemedi: {error}",
+  "home_otp_invalid_or_expired": "OTP geçersiz veya süresi dolmuş: {error}",
+  "home_otp_sent_to_email": "OTP {email} adresine gönderildi",
+  "home_sending_reset_password_email": "{email} adresine şifre sıfırlama e-postası gönderiliyor...",
+  "home_reset_password_failed": "Şifre sıfırlama başarısız oldu: {error}",
+  "home_reset_otp_sent": "Şifre sıfırlama kodu {email} adresine gönderildi",
+  "home_days_count": "{days} gün",
+  "home_autoclose_countdown": "Uygulama hareketsizlik nedeniyle {seconds} saniye içinde otomatik olarak kapanacaktır.",
+  "home_tieptuc_inactivity": "Devam et ({seconds}s)",
+  "home_memory_remaining_upload": "Kalan {count} anı için yükleme bekleniyor",
+  "home_sending_otp_email": "OTP kodu {email} adresine gönderiliyor...",
+  "auth_recovery_reset_device_hint": "\n\n[Tanıdık Cihaz] PIN kodunuzu da unuttuysanız, yeni talep etmek için \"RESET\" yazın (3 gün sonra işlenir)."
 }
