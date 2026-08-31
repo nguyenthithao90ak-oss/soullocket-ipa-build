@@ -1,8 +1,10 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 part of '../settings_tab.dart';
 
-const CropAspectRatio _themeBackgroundAspectRatio =
-    CropAspectRatio(ratioX: 9, ratioY: 16);
+const CropAspectRatio _themeBackgroundAspectRatio = CropAspectRatio(
+  ratioX: 9,
+  ratioY: 16,
+);
 const CropAspectRatioPresetData _themeBackgroundAspectRatioPreset =
     _ThemeBackgroundAspectRatioPreset();
 
@@ -114,10 +116,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
 
   void _handleAvatarFrameSelection(String frameKey) {
     if (_isVipFrameLocked(frameKey)) {
-      _showToast(
-        context.tr('home_lachnnyang_d9f089'),
-        success: false,
-      );
+      _showToast(context.tr('home_lachnnyang_d9f089'), success: false);
       return;
     }
     _updateThemeDraft(
@@ -161,7 +160,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
             _isVipActive
                 ? context.tr('frame_vip')
                 : '${context.tr('frame_vip')} 🔒',
-            'vip'
+            'vip',
           ),
       ],
       countdownStyles: [
@@ -213,40 +212,52 @@ extension _SettingsTabThemeSection on _SettingsTabState {
   ) {
     final themeKey =
         config.themes.any((item) => item.$2 == (_draftThemeKey ?? ui.themeKey))
-            ? (_draftThemeKey ?? ui.themeKey)
-            : config.themes.first.$2;
-    final effectKey = config.effects
-            .any((item) => item.$2 == (_draftEffectKey ?? ui.fallingEffectKey))
+        ? (_draftThemeKey ?? ui.themeKey)
+        : config.themes.first.$2;
+    final effectKey =
+        config.effects.any(
+          (item) => item.$2 == (_draftEffectKey ?? ui.fallingEffectKey),
+        )
         ? (_draftEffectKey ?? ui.fallingEffectKey)
         : config.effects.first.$2;
     final currentFrameKey = _draftAvatarFrameKey ?? ui.avatarFrameKey;
     final rawAvatarFrameKey =
         (config.avatarFrames.any((item) => item.$2 == currentFrameKey) ||
-                currentFrameKey.startsWith('sticker_'))
-            ? currentFrameKey
-            : config.avatarFrames.first.$2;
-    final countdownStyleKey = config.countdownStyles.any((item) =>
-            item.$2 == (_draftCountdownStyleKey ?? ui.countdownStyleKey))
+            currentFrameKey.startsWith('sticker_'))
+        ? currentFrameKey
+        : config.avatarFrames.first.$2;
+    final countdownStyleKey =
+        config.countdownStyles.any(
+          (item) =>
+              item.$2 == (_draftCountdownStyleKey ?? ui.countdownStyleKey),
+        )
         ? (_draftCountdownStyleKey ?? ui.countdownStyleKey)
         : config.countdownStyles.first.$2;
     final fontKey =
         config.fonts.any((item) => item.key == (_draftFontKey ?? ui.fontKey))
-            ? (_draftFontKey ?? ui.fontKey)
-            : config.fonts.first.key;
+        ? (_draftFontKey ?? ui.fontKey)
+        : config.fonts.first.key;
     final languageKey =
         config.languages.any((item) => item.$2 == L10nService().localeCode)
-            ? L10nService().localeCode
-            : config.languages.first.$2;
-    final homeToneKey = config.homeTones.any((item) =>
-            item.$2 == (_draftHomeBlockToneKey ?? ui.homeBlockToneKey))
+        ? L10nService().localeCode
+        : config.languages.first.$2;
+    final homeToneKey =
+        config.homeTones.any(
+          (item) => item.$2 == (_draftHomeBlockToneKey ?? ui.homeBlockToneKey),
+        )
         ? (_draftHomeBlockToneKey ?? ui.homeBlockToneKey)
         : config.homeTones.first.$2;
-    final graphicsKey = config.graphicsOptions.any((item) =>
-            item.$2 == (_draftGraphicsQualityKey ?? ui.graphicsQualityKey))
+    final graphicsKey =
+        config.graphicsOptions.any(
+          (item) =>
+              item.$2 == (_draftGraphicsQualityKey ?? ui.graphicsQualityKey),
+        )
         ? (_draftGraphicsQualityKey ?? ui.graphicsQualityKey)
         : UiPrefs.getAutoGraphicsQuality();
-    final widgetThemeKey = config.widgetThemes
-            .any((item) => item.$2 == (_draftWidgetThemeKey ?? 'pink'))
+    final widgetThemeKey =
+        config.widgetThemes.any(
+          (item) => item.$2 == (_draftWidgetThemeKey ?? 'pink'),
+        )
         ? (_draftWidgetThemeKey ?? 'pink')
         : config.widgetThemes.first.$2;
 
@@ -264,8 +275,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
       countdownSize: (_draftCountdownSizePx ?? ui.countdownSizePx)
           .clamp(200.0, UiPrefs.maxCountdownSizePx)
           .toDouble(),
-      previewBackground:
-          (_draftCustomBackgroundUrl ?? ui.customBackgroundUrl).trim(),
+      previewBackground: (_draftCustomBackgroundUrl ?? ui.customBackgroundUrl)
+          .trim(),
     );
   }
 
@@ -275,19 +286,10 @@ extension _SettingsTabThemeSection on _SettingsTabState {
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: borderColor.withValues(alpha: 0.25),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: borderColor.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: SLColors.paper.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: SLColors.border, width: 1.1),
+        boxShadow: SLShadow.paper,
       ),
       child: Row(
         children: [
@@ -295,40 +297,17 @@ extension _SettingsTabThemeSection on _SettingsTabState {
             GestureDetector(
               onTap: () => Navigator.pop(context),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFF85A7), Color(0xFFFF5281)],
-                  ),
+                  color: SLColors.primarySoft,
                   borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFF5281).withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+                  border: Border.all(color: SLColors.border),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.arrow_back_rounded,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      context.tr('home_quayli_69043b'),
-                      style: SLTheme.quicksand(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
+                child: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 15,
+                  color: SLColors.primaryActive,
                 ),
               ),
             ),
@@ -336,12 +315,12 @@ extension _SettingsTabThemeSection on _SettingsTabState {
           ],
           Expanded(
             child: Text(
-              '🎨 ${context.tr('theme_ui').toUpperCase()}',
-              style: SLTheme.quicksand(
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFFD81B60),
-                letterSpacing: 0.8,
+              context.tr('theme_ui'),
+              style: SLTheme.textStyleForKey(
+                'dancingScript',
+                fontSize: 23,
+                fontWeight: FontWeight.w700,
+                color: SLColors.ink,
               ),
             ),
           ),
@@ -384,14 +363,16 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildLabel('Màu nền trang chủ'),
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 12),
+                    _buildLabel(L10nService().translate('Màu nền trang chủ')),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: Text(
-                        'Đã đặt hình nền hình ảnh mặc định. Màu nền chuyển sắc đã được xoá hoàn toàn.',
-                        style: TextStyle(
+                        L10nService().translate(
+                          'Đã đặt hình nền hình ảnh mặc định. Màu nền chuyển sắc đã được xoá hoàn toàn.',
+                        ),
+                        style: const TextStyle(
                           fontSize: 13,
-                          color: Color(0xFFD81B60),
+                          color: SLColors.primaryActive,
                           fontStyle: FontStyle.italic,
                         ),
                       ),
@@ -411,18 +392,19 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                           child: _buildGradientBtn(
                             label: _isUploadingThemeBackground
                                 ? (_themeUploadProgress != null
-                                    ? context
-                                        .tr('theme_uploading_pct')
-                                        .replaceAll(
-                                            '{pct}',
-                                            (_themeUploadProgress! * 100)
-                                                .toInt()
-                                                .toString())
-                                    : context.tr('theme_uploading_img'))
+                                      ? context
+                                            .tr('theme_uploading_pct')
+                                            .replaceAll(
+                                              '{pct}',
+                                              (_themeUploadProgress! * 100)
+                                                  .toInt()
+                                                  .toString(),
+                                            )
+                                      : context.tr('theme_uploading_img'))
                                 : context.tr('theme_upload_web_bg'),
                             gradient: const [
                               Color(0xFFFF7EA8),
-                              Color(0xFFFF5E92)
+                              Color(0xFFFF5E92),
                             ],
                             onTap: _isUploadingThemeBackground
                                 ? () {}
@@ -435,7 +417,7 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                             label: context.tr('theme_remove_bg'),
                             gradient: const [
                               Color(0xFFFF5B6A),
-                              Color(0xFFFF4343)
+                              Color(0xFFFF4343),
                             ],
                             onTap: _clearThemeBackgroundImage,
                           ),
@@ -455,7 +437,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _SliderWithLabel(
-                      initialValue: _localCountdownSize ??
+                      initialValue:
+                          _localCountdownSize ??
                           UiPrefs.notifier.value.countdownSizePx,
                       min: 200,
                       max: UiPrefs.maxCountdownSizePx,
@@ -463,8 +446,10 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                         _draftCountdownSizePx = value;
                       },
                       onChangeEnd: (value) {
-                        _updateThemeDraft(() => _draftCountdownSizePx = value,
-                            syncPreview: true);
+                        _updateThemeDraft(
+                          () => _draftCountdownSizePx = value,
+                          syncPreview: true,
+                        );
                       },
                     ),
                     const SizedBox(height: 8),
@@ -476,7 +461,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                     _buildThemeDropdownField(
                       value: selection.countdownStyleKey,
                       options: config.countdownStyles.map((s) {
-                        final locked = s.$3 &&
+                        final locked =
+                            s.$3 &&
                             !_isVipActive &&
                             !selection.hasCountdownAdPass;
                         final label = locked
@@ -487,8 +473,10 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       onChanged: (value) => _handleCountdownStyleChange(value),
                     ),
                     const SizedBox(height: 10),
-                    _buildCountdownStyleStrip(selection.countdownStyleKey,
-                        selection.hasCountdownAdPass),
+                    _buildCountdownStyleStrip(
+                      selection.countdownStyleKey,
+                      selection.hasCountdownAdPass,
+                    ),
                     const SizedBox(height: 12),
                     _buildLabel(context.tr('theme_home_block_tone')),
                     const SizedBox(height: 8),
@@ -518,12 +506,14 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       options: config.languages,
                       onChanged: (value) {
                         // Tránh khựng UI: Đợi menu dropdown đóng mượt mà xong (300ms) rồi mới load tệp JSON ngôn ngữ nặng
-                        Future.delayed(const Duration(milliseconds: 300),
-                            () async {
-                          await L10nService().setLocale(value);
-                          if (!mounted) return;
-                          setState(() {});
-                        });
+                        Future.delayed(
+                          const Duration(milliseconds: 300),
+                          () async {
+                            await L10nService().setLocale(value);
+                            if (!mounted) return;
+                            setState(() {});
+                          },
+                        );
                       },
                     ),
                     const SizedBox(height: 12),
@@ -541,8 +531,10 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       decoration: BoxDecoration(
                         color: Colors.transparent,
                         border: Border(
-                            bottom: BorderSide(
-                                color: Colors.black.withValues(alpha: 0.05))),
+                          bottom: BorderSide(
+                            color: Colors.black.withValues(alpha: 0.05),
+                          ),
+                        ),
                       ),
                       child: Text(
                         context.tr('theme_font_desc'),
@@ -590,10 +582,10 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                   onChanged: (value) {
                                     _draftAnniversaryDate =
                                         DateInputUtils.parse(
-                                      value,
-                                      firstYear: 2020,
-                                      lastYear: 2100,
-                                    );
+                                          value,
+                                          firstYear: 2020,
+                                          lastYear: 2100,
+                                        );
                                     if (_anniversaryDateErrorText != null) {
                                       setState(() {
                                         _anniversaryDateErrorText = null;
@@ -603,10 +595,10 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                   onEditingComplete: () {
                                     final validationError =
                                         DateInputUtils.validationError(
-                                      _anniversaryDateCtrl.text,
-                                      firstYear: 2020,
-                                      lastYear: 2100,
-                                    );
+                                          _anniversaryDateCtrl.text,
+                                          firstYear: 2020,
+                                          lastYear: 2100,
+                                        );
                                     if (validationError != null) {
                                       setState(() {
                                         _anniversaryDateErrorText =
@@ -624,35 +616,41 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                     _anniversaryDateErrorText = null;
                                     _anniversaryDateCtrl.text =
                                         DateInputUtils.formatDisplayDate(
-                                            parsed);
-                                    _anniversaryDateCtrl.selection =
-                                        TextSelection.collapsed(
+                                          parsed,
+                                        );
+                                    _anniversaryDateCtrl
+                                        .selection = TextSelection.collapsed(
                                       offset: _anniversaryDateCtrl.text.length,
                                     );
                                   },
-                                  decoration: LegacyWebUi.softInputDecoration(
-                                    hintText:
-                                        context.tr('home_ngythngnm_a697d0'),
-                                  ).copyWith(
-                                    errorText: _anniversaryDateErrorText,
-                                    isDense: true,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 12,
-                                    ),
-                                    prefixIcon: const Icon(
-                                      Icons.calendar_month_rounded,
-                                      color: Color(0xFFD81B60),
-                                      size: 18,
-                                    ),
-                                    suffixIcon: IconButton(
-                                      icon: const Icon(Icons.event_rounded,
-                                          size: 18),
-                                      color: const Color(0xFFD81B60),
-                                      padding: EdgeInsets.zero,
-                                      onPressed: _pickAnniversaryDate,
-                                    ),
-                                  ),
+                                  decoration:
+                                      LegacyWebUi.softInputDecoration(
+                                        hintText: context.tr(
+                                          'home_ngythngnm_a697d0',
+                                        ),
+                                      ).copyWith(
+                                        errorText: _anniversaryDateErrorText,
+                                        isDense: true,
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 12,
+                                            ),
+                                        prefixIcon: const Icon(
+                                          Icons.calendar_month_rounded,
+                                          color: Color(0xFFD81B60),
+                                          size: 18,
+                                        ),
+                                        suffixIcon: IconButton(
+                                          icon: const Icon(
+                                            Icons.event_rounded,
+                                            size: 18,
+                                          ),
+                                          color: const Color(0xFFD81B60),
+                                          padding: EdgeInsets.zero,
+                                          onPressed: _pickAnniversaryDate,
+                                        ),
+                                      ),
                                   style: SLTheme.quicksand(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w800,
@@ -666,19 +664,21 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                 child: Container(
                                   height: 48,
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 16),
+                                    horizontal: 16,
+                                  ),
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(
                                       colors: [
                                         Color(0xFFFF5E92),
-                                        Color(0xFFD81B60)
+                                        Color(0xFFD81B60),
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(14),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(0xFFD81B60)
-                                            .withValues(alpha: 0.22),
+                                        color: const Color(
+                                          0xFFD81B60,
+                                        ).withValues(alpha: 0.22),
                                         blurRadius: 10,
                                         offset: const Offset(0, 4),
                                       ),
@@ -687,8 +687,11 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(Icons.add_rounded,
-                                          color: Colors.white, size: 18),
+                                      const Icon(
+                                        Icons.add_rounded,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
                                       const SizedBox(width: 4),
                                       Text(
                                         context.tr('home_thm_d9cb42'),
@@ -729,7 +732,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                       useCheckbox: true,
                       checkValue: _draftTransparentMode ?? ui.transparentMode,
                       onCheckChanged: (v) => _updateThemeDraft(
-                          () => _draftTransparentMode = v ?? false),
+                        () => _draftTransparentMode = v ?? false,
+                      ),
                     ),
                     const Divider(height: 1, color: Color(0xFFF1F5F9)),
                     // Chế độ đơn giản hóa
@@ -746,8 +750,11 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                     // Chất lượng đồ họa
                     Row(
                       children: [
-                        const Icon(Icons.tune_rounded,
-                            size: 16, color: Color(0xFF64748B)),
+                        const Icon(
+                          Icons.tune_rounded,
+                          size: 16,
+                          color: Color(0xFF64748B),
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           context.tr('theme_graphics_quality'),
@@ -764,9 +771,12 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                           ),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: (_draftGraphicsQualityKey ??
+                              color:
+                                  (_draftGraphicsQualityKey ??
                                           ui.graphicsQualityKey) ==
                                       'auto'
                                   ? const Color(0xFF2877FF)
@@ -778,7 +788,8 @@ extension _SettingsTabThemeSection on _SettingsTabState {
                               style: SLTheme.quicksand(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
-                                color: (_draftGraphicsQualityKey ??
+                                color:
+                                    (_draftGraphicsQualityKey ??
                                             ui.graphicsQualityKey) ==
                                         'auto'
                                     ? Colors.white
@@ -868,93 +879,73 @@ class _ThemeSectionCardState extends State<_ThemeSectionCard>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.97),
-        borderRadius: BorderRadius.circular(24),
+        color: SLColors.paper.withValues(alpha: 0.98),
+        borderRadius: BorderRadius.circular(23),
         border: Border.all(
-          color: const Color(0xFFFFCEE0).withValues(alpha: 0.60),
-          width: 1.2,
+          color: widget.themeColor.withValues(alpha: 0.22),
+          width: 1.1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF89B6).withValues(alpha: 0.12),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: SLShadow.subtle,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: Material(
-            type: MaterialType.transparency,
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                dividerColor: Colors.transparent,
-                splashColor: Colors.transparent,
-                highlightColor: Colors.transparent,
+          type: MaterialType.transparency,
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              dividerColor: Colors.transparent,
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+            ),
+            child: ExpansionTile(
+              onExpansionChanged: (expanded) {
+                setState(() {
+                  _isExpanded = expanded;
+                });
+              },
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: widget.themeColor.withValues(alpha: 0.11),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: widget.themeColor.withValues(alpha: 0.22),
+                  ),
+                ),
+                child: Icon(widget.icon, color: widget.themeColor, size: 18),
               ),
-              child: ExpansionTile(
-                onExpansionChanged: (expanded) {
-                  setState(() {
-                    _isExpanded = expanded;
-                  });
-                },
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        widget.themeColor,
-                        widget.themeColor.withValues(alpha: 0.65),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: widget.themeColor.withValues(alpha: 0.35),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    widget.icon,
-                    color: Colors.white,
-                    size: 18,
-                  ),
+              title: Text(
+                widget.title,
+                style: SLTheme.quicksand(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: SLColors.ink,
                 ),
-                title: Text(
-                  widget.title,
-                  style: SLTheme.quicksand(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                    color: SLColors.darkNavy,
-                  ),
-                ),
-                subtitle: Text(
-                  widget.description,
-                  style: SLTheme.quicksand(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF64748B),
-                  ),
-                ),
-                trailing: Icon(
-                  _isExpanded
-                      ? Icons.keyboard_arrow_up_rounded
-                      : Icons.keyboard_arrow_down_rounded,
-                  color: const Color(0xFF94A3B8),
-                  size: 24,
-                ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: widget.child,
-                  ),
-                ],
               ),
-            )),
+              subtitle: Text(
+                widget.description,
+                style: SLTheme.quicksand(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: SLColors.textSecond,
+                ),
+              ),
+              trailing: Icon(
+                _isExpanded
+                    ? Icons.keyboard_arrow_up_rounded
+                    : Icons.keyboard_arrow_down_rounded,
+                color: widget.themeColor,
+                size: 24,
+              ),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: widget.child,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -1029,9 +1020,7 @@ class _SliderWithLabelState extends State<_SliderWithLabel> {
             icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
             label: Text(
               context.tr('theme_save_size'),
-              style: SLTheme.quicksand(
-                fontWeight: FontWeight.w800,
-              ),
+              style: SLTheme.quicksand(fontWeight: FontWeight.w800),
             ),
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFFD81B60),

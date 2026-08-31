@@ -22,23 +22,33 @@ extension SLCurves on Curves {
 }
 
 class SLColors {
-  // ─── Primary Brand (Cute Strawberry Coral & Warm Peach) ─────────────
-  static const primary = Color(0xFFFF5E7E);
-  static const primaryHover = Color(0xFFF44D6F);
-  static const primaryActive = Color(0xFFE5395D);
-  static const primaryLight = Color(0xFFFFF2F5);
-  static const secondary = Color(0xFFFF9E7A);
-  static const primarySoft = Color(0xFFFFE3EA);
-  static const secondarySoft = Color(0xFFFFF3ED);
-  static const tertiarySoft = Color(0xFFF3EFFF);
-  static const surfaceWarm = Color(0xFFFFF8F3);
+  // ─── Primary Brand (Love Journal: berry ink & warm peach) ──────────
+  static const primary = Color(0xFFE65372);
+  static const primaryHover = Color(0xFFD94766);
+  static const primaryActive = Color(0xFFC93B59);
+  static const primaryLight = Color(0xFFFFF3F5);
+  static const secondary = Color(0xFFF4A37A);
+  static const primarySoft = Color(0xFFFFE4E9);
+  static const secondarySoft = Color(0xFFFFEBDD);
+  static const tertiarySoft = Color(0xFFF0EAFB);
+  static const surfaceWarm = Color(0xFFFFF8F0);
   static const textInverse = Color(0xFFFCFCFD);
 
+  // Love Journal surfaces. These tokens intentionally avoid the blue-white
+  // glass palette that makes many generated interfaces look interchangeable.
+  static const paperCanvas = Color(0xFFF8EEE3);
+  static const paper = Color(0xFFFFFDF8);
+  static const paperBlush = Color(0xFFFFF1F1);
+  static const paperPeach = Color(0xFFFFE9D7);
+  static const ink = Color(0xFF3B2830);
+  static const thread = Color(0xFFD96B7C);
+  static const washi = Color(0xFFFFD2B8);
+
   // Cute accent palette
-  static const accentPink = Color(0xFFFF8FA3);
-  static const accentPurple = Color(0xFFC4B5FD);
-  static const accentPurpleDark = Color(0xFF8B5CF6);
-  static const accentBlueSoft = Color(0xFFBAE6FD);
+  static const accentPink = Color(0xFFED7F93);
+  static const accentPurple = Color(0xFFB7A1E6);
+  static const accentPurpleDark = Color(0xFF8066B8);
+  static const accentBlueSoft = Color(0xFFC7E4EA);
   static const accent = accentPink;
 
   // ─── Semantic (Pastel Cute) ───────────────────────────────────
@@ -53,17 +63,17 @@ class SLColors {
   static const infoLight = Color(0xFFF0F9FF);
 
   // ─── Neutral (Cute Warm Milk Tone) ────────────────────────────
-  static const bgMain = Color(0xFFFAF7F5);
-  static const bgCard = Color(0xFFFFFFFF);
-  static const bgElevated = Color(0xFFFFFFFF);
-  static const bgMuted = Color(0xFFF5EFEA);
-  static const bgSubtle = Color(0xFFFAF5F0);
-  static const textPrimary = Color(0xFF2E2427);
-  static const textSecond = Color(0xFF7A6B72);
+  static const bgMain = surfaceWarm;
+  static const bgCard = paper;
+  static const bgElevated = paper;
+  static const bgMuted = Color(0xFFF3E9DF);
+  static const bgSubtle = Color(0xFFFBF4EC);
+  static const textPrimary = ink;
+  static const textSecond = Color(0xFF79646D);
   static const textSecondary = textSecond;
-  static const textTertiary = Color(0xFFA699A0);
-  static const border = Color(0xFFF0E5DF);
-  static const borderLight = Color(0xFFF8EFEA);
+  static const textTertiary = Color(0xFFA28F96);
+  static const border = Color(0xFFE8D7CE);
+  static const borderLight = Color(0xFFF2E7DF);
 
   // ─── Dark Mode ────────────────────────────────────────────────
   static const darkBgMain = Color(0xFF1E1A22);
@@ -74,7 +84,7 @@ class SLColors {
   static const darkBorder = Color(0xFF403648);
 
   // ─── Brand Legacy ──
-  static const brandPink = Color(0xFFFF5E7E);
+  static const brandPink = primary;
   static const darkNavy = Color(0xFF1E1A22);
   static const textMuted = Color(0xFFB5A8B2);
   static const textMedium = Color(0xFF5E5056);
@@ -149,22 +159,11 @@ class SLSpacing {
     double right = 0,
     double bottom = 0,
   }) {
-    return EdgeInsets.only(
-      left: left,
-      top: top,
-      right: right,
-      bottom: bottom,
-    );
+    return EdgeInsets.only(left: left, top: top, right: right, bottom: bottom);
   }
 
-  static EdgeInsets symmetric({
-    double horizontal = 0,
-    double vertical = 0,
-  }) {
-    return EdgeInsets.symmetric(
-      horizontal: horizontal,
-      vertical: vertical,
-    );
+  static EdgeInsets symmetric({double horizontal = 0, double vertical = 0}) {
+    return EdgeInsets.symmetric(horizontal: horizontal, vertical: vertical);
   }
 
   static EdgeInsets fromLTRB(
@@ -312,8 +311,10 @@ class SLFontOption {
 
 class SLTypography {
   static TextTheme textTheme(TextTheme base) {
-    final themed =
-        SLTheme.textThemeForKey(UiPrefs.notifier.value.fontKey, base);
+    final themed = SLTheme.textThemeForKey(
+      UiPrefs.notifier.value.fontKey,
+      base,
+    );
     return themed.copyWith(
       displayLarge: displayLarge,
       displayMedium: displayMedium,
@@ -331,88 +332,88 @@ class SLTypography {
   }
 
   static TextStyle get displayLarge => SLTheme.quicksand(
-        fontSize: 32,
-        height: 1.2,
-        fontWeight: FontWeight.w900,
-        color: SLColors.textPrimary,
-      );
+    fontSize: 32,
+    height: 1.2,
+    fontWeight: FontWeight.w900,
+    color: SLColors.textPrimary,
+  );
 
   static TextStyle get displayMedium => SLTheme.quicksand(
-        fontSize: 28,
-        height: 1.22,
-        fontWeight: FontWeight.w800,
-        color: SLColors.textPrimary,
-      );
+    fontSize: 28,
+    height: 1.22,
+    fontWeight: FontWeight.w800,
+    color: SLColors.textPrimary,
+  );
 
   static TextStyle get headlineLarge => SLTheme.quicksand(
-        fontSize: 24,
-        height: 1.25,
-        fontWeight: FontWeight.w900,
-        color: SLColors.textPrimary,
-      );
+    fontSize: 24,
+    height: 1.25,
+    fontWeight: FontWeight.w900,
+    color: SLColors.textPrimary,
+  );
 
   static TextStyle get titleLarge => SLTheme.quicksand(
-        fontSize: 20,
-        height: 1.3,
-        fontWeight: FontWeight.w900,
-        color: SLColors.textPrimary,
-      );
+    fontSize: 20,
+    height: 1.3,
+    fontWeight: FontWeight.w900,
+    color: SLColors.textPrimary,
+  );
 
   static TextStyle get titleMedium => SLTheme.quicksand(
-        fontSize: 18,
-        height: 1.3,
-        fontWeight: FontWeight.w800,
-        color: SLColors.textPrimary,
-      );
+    fontSize: 18,
+    height: 1.3,
+    fontWeight: FontWeight.w800,
+    color: SLColors.textPrimary,
+  );
 
   static TextStyle get titleSmall => SLTheme.quicksand(
-        fontSize: 16,
-        height: 1.35,
-        fontWeight: FontWeight.w800,
-        color: SLColors.textPrimary,
-      );
+    fontSize: 16,
+    height: 1.35,
+    fontWeight: FontWeight.w800,
+    color: SLColors.textPrimary,
+  );
 
   static TextStyle get bodyLarge => SLTheme.quicksand(
-        fontSize: 15,
-        height: 1.55,
-        fontWeight: FontWeight.w700,
-        color: SLColors.textPrimary,
-      );
+    fontSize: 15,
+    height: 1.55,
+    fontWeight: FontWeight.w700,
+    color: SLColors.textPrimary,
+  );
 
   static TextStyle get bodyMedium => SLTheme.quicksand(
-        fontSize: 13,
-        height: 1.55,
-        fontWeight: FontWeight.w700,
-        color: SLColors.textSecond,
-      );
+    fontSize: 13,
+    height: 1.55,
+    fontWeight: FontWeight.w700,
+    color: SLColors.textSecond,
+  );
 
   static TextStyle get bodySmall => SLTheme.quicksand(
-        fontSize: 12,
-        height: 1.5,
-        fontWeight: FontWeight.w700,
-        color: SLColors.textSecond,
-      );
+    fontSize: 12,
+    height: 1.5,
+    fontWeight: FontWeight.w700,
+    color: SLColors.textSecond,
+  );
 
   static TextStyle get labelLarge => SLTheme.quicksand(
-        fontSize: 14,
-        height: 1.35,
-        fontWeight: FontWeight.w900,
-        color: SLColors.textPrimary,
-      );
+    fontSize: 14,
+    height: 1.35,
+    fontWeight: FontWeight.w900,
+    color: SLColors.textPrimary,
+  );
 
   static TextStyle get labelMedium => SLTheme.quicksand(
-        fontSize: 12,
-        height: 1.35,
-        fontWeight: FontWeight.w800,
-        color: SLColors.textSecond,
-      );
+    fontSize: 12,
+    height: 1.35,
+    fontWeight: FontWeight.w800,
+    color: SLColors.textSecond,
+  );
 
   static TextStyle get labelSmall => SLTheme.quicksand(
-        fontSize: 11,
-        height: 1.35,
-        fontWeight: FontWeight.w800,
-        color: SLColors.textSecond,
-      );
+    fontSize: 11,
+    height: 1.35,
+    fontWeight: FontWeight.w800,
+    color: SLColors.textSecond,
+  );
 }
 
 class SLShadow {
@@ -474,6 +475,20 @@ class SLShadow {
     ),
   ];
 
+  static List<BoxShadow> paper = [
+    BoxShadow(
+      color: const Color(0xFF6E3E45).withValues(alpha: 0.08),
+      blurRadius: 22,
+      spreadRadius: -8,
+      offset: const Offset(0, 12),
+    ),
+    BoxShadow(
+      color: Colors.white.withValues(alpha: 0.84),
+      blurRadius: 0,
+      offset: const Offset(0, 1),
+    ),
+  ];
+
   static List<BoxShadow> gold = [
     BoxShadow(
       color: SLColors.warningGold.withValues(alpha: 0.35),
@@ -490,52 +505,52 @@ class SLTheme {
   static final ValueNotifier<int?> globalTabRequest = ValueNotifier<int?>(null);
   static const String defaultFontKey = 'quicksand';
   static List<SLFontOption> get fontOptions => [
-        SLFontOption(
-          key: defaultFontKey,
-          label: L10nService().translate('core_theme_font_quicksand'),
-          sampleText: L10nService().translate('core_theme_font_sample'),
-        ),
-        SLFontOption(
-          key: 'nunito',
-          label: 'Nunito',
-          sampleText: L10nService().translate('core_theme_font_sample'),
-        ),
-        SLFontOption(
-          key: 'comfortaa',
-          label: 'Comfortaa',
-          sampleText: L10nService().translate('core_theme_font_sample'),
-        ),
-        SLFontOption(
-          key: 'playfair',
-          label: 'Playfair Display',
-          sampleText: L10nService().translate('core_theme_font_sample'),
-        ),
-        SLFontOption(
-          key: 'beVietnam',
-          label: 'Be Vietnam Pro',
-          sampleText: L10nService().translate('core_theme_font_sample'),
-        ),
-        SLFontOption(
-          key: 'patrickHand',
-          label: 'Patrick Hand',
-          sampleText: L10nService().translate('core_theme_font_sample'),
-        ),
-        SLFontOption(
-          key: 'dancingScript',
-          label: 'Dancing Script',
-          sampleText: L10nService().translate('core_theme_font_sample'),
-        ),
-        SLFontOption(
-          key: 'caveat',
-          label: 'Caveat',
-          sampleText: L10nService().translate('core_theme_font_sample'),
-        ),
-        SLFontOption(
-          key: 'lora',
-          label: 'Lora',
-          sampleText: L10nService().translate('core_theme_font_sample'),
-        ),
-      ];
+    SLFontOption(
+      key: defaultFontKey,
+      label: L10nService().translate('core_theme_font_quicksand'),
+      sampleText: L10nService().translate('core_theme_font_sample'),
+    ),
+    SLFontOption(
+      key: 'nunito',
+      label: 'Nunito',
+      sampleText: L10nService().translate('core_theme_font_sample'),
+    ),
+    SLFontOption(
+      key: 'comfortaa',
+      label: 'Comfortaa',
+      sampleText: L10nService().translate('core_theme_font_sample'),
+    ),
+    SLFontOption(
+      key: 'playfair',
+      label: 'Playfair Display',
+      sampleText: L10nService().translate('core_theme_font_sample'),
+    ),
+    SLFontOption(
+      key: 'beVietnam',
+      label: 'Be Vietnam Pro',
+      sampleText: L10nService().translate('core_theme_font_sample'),
+    ),
+    SLFontOption(
+      key: 'patrickHand',
+      label: 'Patrick Hand',
+      sampleText: L10nService().translate('core_theme_font_sample'),
+    ),
+    SLFontOption(
+      key: 'dancingScript',
+      label: 'Dancing Script',
+      sampleText: L10nService().translate('core_theme_font_sample'),
+    ),
+    SLFontOption(
+      key: 'caveat',
+      label: 'Caveat',
+      sampleText: L10nService().translate('core_theme_font_sample'),
+    ),
+    SLFontOption(
+      key: 'lora',
+      label: 'Lora',
+      sampleText: L10nService().translate('core_theme_font_sample'),
+    ),
+  ];
 
   static List<SLFontOption> get cleanFontOptions => fontOptions;
 
@@ -719,9 +734,7 @@ class SLTheme {
   // ─── Background Mesh Pattern ──────────────────────────────────
   static Widget meshPattern() {
     return const RepaintBoundary(
-      child: CustomPaint(
-        painter: _CuteMeshPatternPainter(),
-      ),
+      child: CustomPaint(painter: _CuteMeshPatternPainter()),
     );
   }
 
@@ -747,8 +760,11 @@ class SLTheme {
         color: SLColors.bgElevated.withValues(alpha: 0.94),
       ),
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new,
-            color: SLColors.primary, size: 20),
+        icon: const Icon(
+          Icons.arrow_back_ios_new,
+          color: SLColors.primary,
+          size: 20,
+        ),
         onPressed: () => Navigator.pop(context),
       ),
       actions: actions,
@@ -764,22 +780,13 @@ class SLTheme {
     final customBackgroundUrl = ui.customBackgroundUrl.trim();
 
     if (themeKey == 'theme-true-black') {
-      return Container(
-        color: Colors.black,
-        child: child,
-      );
+      return Container(color: Colors.black, child: child);
     }
     if (themeKey == 'theme-dark' || themeKey == 'theme-mystic-dark') {
-      return Container(
-        color: SLColors.darkBgMain,
-        child: child,
-      );
+      return Container(color: SLColors.darkBgMain, child: child);
     }
     if (themeKey == 'off') {
-      return Container(
-        color: SLColors.bgMain,
-        child: child,
-      );
+      return Container(color: SLColors.bgMain, child: child);
     }
 
     // If custom background exists, apply it globally
@@ -816,10 +823,7 @@ class SLTheme {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [
-                        Color(0xFF1A1035),
-                        Color(0xFF0D0B1A),
-                      ],
+                      colors: [Color(0xFF1A1035), Color(0xFF0D0B1A)],
                     ),
                   ),
                 ),
@@ -838,9 +842,7 @@ class SLTheme {
         fit: StackFit.passthrough,
         children: [
           Positioned.fill(
-            child: IgnorePointer(
-              child: CustomPaint(painter: _SLBgPainter()),
-            ),
+            child: IgnorePointer(child: CustomPaint(painter: _SLBgPainter())),
           ),
           child,
         ],
@@ -914,6 +916,85 @@ class SLTheme {
     );
   }
 
+  /// Thẻ giấy chủ đạo của SoulLocket. Lớp giấy lệch, đường chỉ may và băng
+  /// dính tạo cảm giác sổ kỷ niệm mà không cần thêm asset hay package mới.
+  static Widget paperCard({
+    required Widget child,
+    EdgeInsets? padding,
+    EdgeInsets? margin,
+    Color color = SLColors.paper,
+    Color accentColor = SLColors.thread,
+    double radius = 26,
+    bool showTape = true,
+  }) {
+    final ui = UiPrefs.notifier.value;
+    final surfaceColor = ui.transparentMode
+        ? color.withValues(alpha: 0.86)
+        : color;
+
+    return Container(
+      margin: margin,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: <Widget>[
+          Positioned.fill(
+            left: 5,
+            top: 7,
+            right: -4,
+            bottom: -5,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(radius),
+              ),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(radius),
+              border: Border.all(color: SLColors.border, width: 1.15),
+              boxShadow: SLShadow.paper,
+            ),
+            child: CustomPaint(
+              foregroundPainter: _SLPaperStitchPainter(
+                radius: radius,
+                accentColor: accentColor,
+              ),
+              child: Padding(padding: padding ?? SLSpacing.all20, child: child),
+            ),
+          ),
+          if (showTape)
+            Positioned(
+              top: -7,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
+                child: Center(
+                  child: Transform.rotate(
+                    angle: -0.035,
+                    child: Container(
+                      width: 58,
+                      height: 15,
+                      decoration: BoxDecoration(
+                        color: SLColors.washi.withValues(alpha: 0.78),
+                        borderRadius: BorderRadius.circular(3),
+                        border: Border.all(
+                          color: const Color(
+                            0xFFF0B996,
+                          ).withValues(alpha: 0.42),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   static BoxDecoration authFieldDecoration({
     Color fillColor = const Color(0xFFFFF8F4),
     Color borderColor = const Color(0xFFE8DDD6),
@@ -969,10 +1050,8 @@ class SLTheme {
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       filled: true,
       fillColor: Colors.white.withValues(alpha: 0.55),
-      enabledBorder:
-          border(const Color(0xFFF0E5DF), 1.2),
-      focusedBorder:
-          border(const Color(0xFFFF5E7E), 1.6),
+      enabledBorder: border(const Color(0xFFF0E5DF), 1.2),
+      focusedBorder: border(const Color(0xFFFF5E7E), 1.6),
       errorBorder: border(SLColors.danger, 1.2),
       focusedErrorBorder: border(SLColors.danger, 1.5),
     );
@@ -982,10 +1061,7 @@ class SLTheme {
     required String label,
     required VoidCallback? onPressed,
     bool isLoading = false,
-    List<Color> colors = const <Color>[
-      Color(0xFFFF5E7E),
-      Color(0xFFFF85A1),
-    ],
+    List<Color> colors = const <Color>[Color(0xFFFF5E7E), Color(0xFFFF85A1)],
   }) {
     final bool isDisabled = onPressed == null;
     return Opacity(
@@ -1044,10 +1120,7 @@ class SLTheme {
     );
   }
 
-  static Widget authHintCard({
-    required Widget child,
-    EdgeInsets? padding,
-  }) {
+  static Widget authHintCard({required Widget child, EdgeInsets? padding}) {
     return Container(
       padding:
           padding ?? const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
@@ -1114,10 +1187,7 @@ class SLTheme {
     );
   }
 
-  static Widget authToggleCard({
-    required Widget child,
-    bool selected = false,
-  }) {
+  static Widget authToggleCard({required Widget child, bool selected = false}) {
     return Container(
       decoration: BoxDecoration(
         color: selected
@@ -1244,34 +1314,55 @@ class SLTheme {
           isWeb: kIsWeb,
         );
         final useLiteGlass = !effectProfile.premiumEffects || isSwiping;
-        Color baseColor = color ?? glassCardColor;
+        final useJournalSurface = color == null && !ui.transparentMode;
+        Color baseColor =
+            color ?? (useJournalSurface ? SLColors.paper : glassCardColor);
         if (ui.transparentMode) {
           baseColor = baseColor.withValues(alpha: 0.8);
         }
-        final effectiveColor = useLiteGlass
+        final effectiveColor = useJournalSurface
+            ? baseColor
+            : useLiteGlass
             ? Color.alphaBlend(
                 Colors.white.withValues(alpha: kIsWeb ? 0.20 : 0.12),
                 baseColor.withValues(alpha: 0.92),
               )
             : baseColor;
-        final effectiveBorder =
-            useLiteGlass ? glassBorder.withValues(alpha: 0.72) : glassBorder;
-        final effectiveShadow = useLiteGlass ? SLShadow.sm : SLShadow.glass;
+        final effectiveBorder = useJournalSurface
+            ? SLColors.border
+            : useLiteGlass
+            ? glassBorder.withValues(alpha: 0.72)
+            : glassBorder;
+        final effectiveShadow = useJournalSurface
+            ? SLShadow.paper
+            : useLiteGlass
+            ? SLShadow.sm
+            : SLShadow.glass;
 
         final decoratedChild = Container(
-          padding: padding ?? SLSpacing.all20,
           decoration: BoxDecoration(
             color: effectiveColor,
             borderRadius: BorderRadius.circular(radius),
-            border: Border.all(color: effectiveBorder, width: 0.5),
+            border: Border.all(
+              color: effectiveBorder,
+              width: useJournalSurface ? 1.1 : 0.5,
+            ),
             boxShadow: effectiveShadow,
           ),
-          child: child,
+          child: CustomPaint(
+            foregroundPainter: useJournalSurface
+                ? _SLPaperStitchPainter(
+                    radius: radius,
+                    accentColor: SLColors.thread,
+                  )
+                : null,
+            child: Padding(padding: padding ?? SLSpacing.all20, child: child),
+          ),
         );
 
         return Container(
           margin: margin ?? const EdgeInsets.fromLTRB(15, 0, 15, 20),
-          child: useLiteGlass
+          child: useLiteGlass || useJournalSurface
               ? decoratedChild
               : ClipRRect(
                   borderRadius: BorderRadius.circular(radius),
@@ -1397,8 +1488,11 @@ class SLTheme {
           fontWeight: FontWeight.w600,
         ),
         prefixIcon: icon != null
-            ? Icon(icon,
-                color: SLColors.primary.withValues(alpha: 0.6), size: 20)
+            ? Icon(
+                icon,
+                color: SLColors.primary.withValues(alpha: 0.6),
+                size: 20,
+              )
             : null,
         filled: true,
         fillColor: SLColors.bgElevated,
@@ -1410,15 +1504,21 @@ class SLTheme {
           borderRadius: BorderRadius.circular(SLRadius.lg),
           borderSide: const BorderSide(color: SLColors.primary, width: 1.8),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
     );
   }
 
   // ─── Chip ─────────────────────────────────────────────────────
-  static Widget chip(String label, Color color,
-      {bool isGold = false, Color? textColor}) {
+  static Widget chip(
+    String label,
+    Color color, {
+    bool isGold = false,
+    Color? textColor,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
       decoration: BoxDecoration(
@@ -1431,8 +1531,9 @@ class SLTheme {
         boxShadow: isGold
             ? [
                 BoxShadow(
-                    color: SLColors.warningGold.withValues(alpha: 0.2),
-                    blurRadius: 8)
+                  color: SLColors.warningGold.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                ),
               ]
             : null,
       ),
@@ -1483,7 +1584,9 @@ class SLTheme {
         borderRadius: BorderRadius.circular(SLRadius.pill),
         boxShadow: [
           BoxShadow(
-              color: SLColors.primary.withValues(alpha: 0.12), blurRadius: 8),
+            color: SLColors.primary.withValues(alpha: 0.12),
+            blurRadius: 8,
+          ),
         ],
       ),
       child: Text(
@@ -1518,11 +1621,74 @@ class SLTheme {
   }
 }
 
-enum SLCanvasBackdropMotif {
-  sparkles,
-  notes,
-  safety,
+class _SLPaperStitchPainter extends CustomPainter {
+  const _SLPaperStitchPainter({
+    required this.radius,
+    required this.accentColor,
+  });
+
+  final double radius;
+  final Color accentColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width < 28 || size.height < 28) return;
+
+    final path = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(7, 7, size.width - 14, size.height - 14),
+          Radius.circular(math.max(6, radius - 7)),
+        ),
+      );
+    final paint = Paint()
+      ..color = accentColor.withValues(alpha: 0.22)
+      ..strokeWidth = 1
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    for (final metric in path.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        final end = math.min(distance + 4.5, metric.length);
+        canvas.drawPath(metric.extractPath(distance, end), paint);
+        distance += 8.5;
+      }
+    }
+
+    final heartPaint = Paint()
+      ..color = accentColor.withValues(alpha: 0.16)
+      ..style = PaintingStyle.fill;
+    final center = Offset(size.width - 24, size.height - 22);
+    final heart = Path()
+      ..moveTo(center.dx, center.dy + 6)
+      ..cubicTo(
+        center.dx - 13,
+        center.dy - 2,
+        center.dx - 7,
+        center.dy - 10,
+        center.dx,
+        center.dy - 4,
+      )
+      ..cubicTo(
+        center.dx + 7,
+        center.dy - 10,
+        center.dx + 13,
+        center.dy - 2,
+        center.dx,
+        center.dy + 6,
+      );
+    canvas.drawPath(heart, heartPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SLPaperStitchPainter oldDelegate) {
+    return oldDelegate.radius != radius ||
+        oldDelegate.accentColor != accentColor;
+  }
 }
+
+enum SLCanvasBackdropMotif { sparkles, notes, safety, journal }
 
 class _SLSoftCanvasBackdropPainter extends CustomPainter {
   const _SLSoftCanvasBackdropPainter({
@@ -1553,12 +1719,21 @@ class _SLSoftCanvasBackdropPainter extends CustomPainter {
       canvas.drawRect(rect, paint);
     }
 
-    radial(const Alignment(-0.95, -0.82), 0.72,
-        accentColor.withValues(alpha: 0.18));
-    radial(const Alignment(0.88, -0.36), 0.68,
-        secondaryAccent.withValues(alpha: 0.14));
-    radial(const Alignment(0.16, 1.08), 0.82,
-        Colors.white.withValues(alpha: 0.42));
+    radial(
+      const Alignment(-0.95, -0.82),
+      0.72,
+      accentColor.withValues(alpha: 0.18),
+    );
+    radial(
+      const Alignment(0.88, -0.36),
+      0.68,
+      secondaryAccent.withValues(alpha: 0.14),
+    );
+    radial(
+      const Alignment(0.16, 1.08),
+      0.82,
+      Colors.white.withValues(alpha: 0.42),
+    );
 
     final Paint linePaint = Paint()
       ..color = accentColor.withValues(alpha: 0.08)
@@ -1568,6 +1743,58 @@ class _SLSoftCanvasBackdropPainter extends CustomPainter {
       ..color = secondaryAccent.withValues(alpha: 0.13);
 
     switch (motif) {
+      case SLCanvasBackdropMotif.journal:
+        final Paint paperLinePaint = Paint()
+          ..color = const Color(0xFFD8BFB2).withValues(alpha: 0.16)
+          ..strokeWidth = 0.9;
+        for (double y = 38; y < size.height; y += 34) {
+          canvas.drawLine(
+            Offset(18, y),
+            Offset(size.width - 18, y + ((y ~/ 34).isEven ? 0.8 : -0.6)),
+            paperLinePaint,
+          );
+        }
+        canvas.drawLine(
+          const Offset(34, 0),
+          Offset(34, size.height),
+          Paint()
+            ..color = accentColor.withValues(alpha: 0.09)
+            ..strokeWidth = 1.1,
+        );
+
+        final Path doodleHeart = Path()
+          ..moveTo(size.width - 48, 62)
+          ..cubicTo(
+            size.width - 72,
+            44,
+            size.width - 84,
+            76,
+            size.width - 48,
+            102,
+          )
+          ..cubicTo(
+            size.width - 12,
+            76,
+            size.width - 24,
+            44,
+            size.width - 48,
+            62,
+          );
+        canvas.drawPath(
+          doodleHeart,
+          Paint()
+            ..color = accentColor.withValues(alpha: 0.12)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2.2
+            ..strokeCap = StrokeCap.round,
+        );
+
+        for (int i = 0; i < 10; i++) {
+          final double x = 22 + (i * 47) % math.max(72, size.width - 28);
+          final double y = 24 + (i * 83) % math.max(100, size.height - 22);
+          canvas.drawCircle(Offset(x, y), i.isEven ? 2.1 : 1.4, dotPaint);
+        }
+        break;
       case SLCanvasBackdropMotif.notes:
         for (double y = 96; y < size.height; y += 42) {
           canvas.drawLine(Offset(20, y), Offset(size.width - 20, y), linePaint);
@@ -1600,7 +1827,9 @@ class _SLSoftCanvasBackdropPainter extends CustomPainter {
           ..quadraticBezierTo(size.width - 126, 184, size.width - 132, 144)
           ..quadraticBezierTo(size.width - 138, 96, size.width - 96, 78);
         canvas.drawPath(
-            shield, Paint()..color = accentColor.withValues(alpha: 0.06));
+          shield,
+          Paint()..color = accentColor.withValues(alpha: 0.06),
+        );
         break;
       case SLCanvasBackdropMotif.sparkles:
         for (int i = 0; i < 16; i++) {
@@ -1627,16 +1856,27 @@ class _SLBgPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (size.width <= 0 || size.height <= 0) return;
 
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    canvas.drawRect(rect, Paint()..color = SLColors.surfaceWarm);
+
+    final paperLine = Paint()
+      ..color = const Color(0xFFD8BFB2).withValues(alpha: 0.11)
+      ..strokeWidth = 0.8;
+    for (double y = 44; y < size.height; y += 38) {
+      canvas.drawLine(
+        Offset(18, y),
+        Offset(size.width - 18, y + ((y ~/ 38).isEven ? 0.7 : -0.5)),
+        paperLine,
+      );
+    }
+
     final paint1 = Paint()
       ..shader = RadialGradient(
         center: const Alignment(0.0, -1.2),
         radius: 0.65,
-        colors: [
-          SLColors.primary.withValues(alpha: 0.18),
-          Colors.transparent,
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint1);
+        colors: [SLColors.primary.withValues(alpha: 0.18), Colors.transparent],
+      ).createShader(rect);
+    canvas.drawRect(rect, paint1);
 
     final paint2 = Paint()
       ..shader = RadialGradient(
@@ -1646,8 +1886,8 @@ class _SLBgPainter extends CustomPainter {
           const Color(0xFFF1D1C5).withValues(alpha: 0.20),
           Colors.transparent,
         ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint2);
+      ).createShader(rect);
+    canvas.drawRect(rect, paint2);
 
     final paint3 = Paint()
       ..shader = RadialGradient(
@@ -1657,8 +1897,8 @@ class _SLBgPainter extends CustomPainter {
           SLColors.secondary.withValues(alpha: 0.14),
           Colors.transparent,
         ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint3);
+      ).createShader(rect);
+    canvas.drawRect(rect, paint3);
   }
 
   @override
@@ -1747,9 +1987,7 @@ class _CuteMeshPatternPainter extends CustomPainter {
     }
 
     // 2. Vẽ các icon dễ thương rải rác cố định vị trí (deterministic pseudo-random)
-    final textPainter = TextPainter(
-      textDirection: TextDirection.ltr,
-    );
+    final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
     final List<Map<String, dynamic>> icons = [
       {'text': '✨', 'color': const Color(0xFFFFD54F)},
@@ -1780,8 +2018,10 @@ class _CuteMeshPatternPainter extends CustomPainter {
         ),
       );
       textPainter.layout();
-      textPainter.paint(canvas,
-          Offset(x - textPainter.width / 2, y - textPainter.height / 2));
+      textPainter.paint(
+        canvas,
+        Offset(x - textPainter.width / 2, y - textPainter.height / 2),
+      );
     }
   }
 
@@ -1812,10 +2052,10 @@ class _HeroPrimaryButtonState extends State<_HeroPrimaryButton>
     vsync: this,
     duration: const Duration(milliseconds: 150),
   );
-  late final Animation<double> _scaleAnim =
-      Tween<double>(begin: 1.0, end: 0.95).animate(
-    CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic),
-  );
+  late final Animation<double> _scaleAnim = Tween<double>(
+    begin: 1.0,
+    end: 0.95,
+  ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic));
 
   @override
   void dispose() {
@@ -1855,8 +2095,9 @@ class _HeroPrimaryButtonState extends State<_HeroPrimaryButton>
                   ? []
                   : [
                       BoxShadow(
-                        color: widget.colors.first
-                            .withValues(alpha: 0.4), // Glow shadow
+                        color: widget.colors.first.withValues(
+                          alpha: 0.4,
+                        ), // Glow shadow
                         blurRadius: 24,
                         spreadRadius: 2,
                         offset: const Offset(0, 10),
@@ -1897,28 +2138,28 @@ class _HeroPrimaryButtonState extends State<_HeroPrimaryButton>
 
 class SLShadows {
   static List<BoxShadow> get glowingPrimary => [
-        BoxShadow(
-          color: SLColors.primary.withValues(alpha: 0.4),
-          blurRadius: 24,
-          spreadRadius: 2,
-          offset: const Offset(0, 8),
-        ),
-      ];
+    BoxShadow(
+      color: SLColors.primary.withValues(alpha: 0.4),
+      blurRadius: 24,
+      spreadRadius: 2,
+      offset: const Offset(0, 8),
+    ),
+  ];
 
   static List<BoxShadow> get softCard => [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.05),
-          blurRadius: 16,
-          spreadRadius: 0,
-          offset: const Offset(0, 4),
-        ),
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.03),
-          blurRadius: 4,
-          spreadRadius: -1,
-          offset: const Offset(0, 2),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.05),
+      blurRadius: 16,
+      spreadRadius: 0,
+      offset: const Offset(0, 4),
+    ),
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.03),
+      blurRadius: 4,
+      spreadRadius: -1,
+      offset: const Offset(0, 2),
+    ),
+  ];
 }
 
 class SLGlassmorphism {
@@ -1938,7 +2179,8 @@ class SLGlassmorphism {
           decoration: BoxDecoration(
             color: color ?? SLColors.bgElevated.withValues(alpha: opacity),
             borderRadius: borderRadius,
-            border: border ??
+            border:
+                border ??
                 Border.all(
                   color: Colors.white.withValues(alpha: 0.4),
                   width: 1.0,

@@ -5,8 +5,9 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
   Widget _buildSecurityPanel({bool hideBackButton = false}) {
     final activeName = _displayNameForRole(_activeRoleKey);
     final isSingleMode = _relationshipMode == 'single';
-    final showSecretVault =
-        UtilityService.isUtilityVisibleInCurrentBuild('vault');
+    final showSecretVault = UtilityService.isUtilityVisibleInCurrentBuild(
+      'vault',
+    );
     void openDeviceManager() {
       if (_houseId == null || _houseId!.trim().isEmpty) {
         _showToast(context.tr('home_vuilngtovo_6d854c'));
@@ -14,9 +15,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
       }
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => const DeviceManagerScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const DeviceManagerScreen()),
       );
     }
 
@@ -44,8 +43,11 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.person_pin_rounded,
-                          color: Color(0xFFE57373), size: 16),
+                      const Icon(
+                        Icons.person_pin_rounded,
+                        color: Color(0xFFE57373),
+                        size: 16,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         context.tr('home_angngnhp_af3562'),
@@ -76,7 +78,9 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                         : () => _showChangeHouseIdDialog(),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.grey.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
@@ -114,8 +118,10 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
           if (isSingleMode) ...[
             Center(
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFDEEF4),
                   borderRadius: BorderRadius.circular(14),
@@ -135,9 +141,11 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
                       onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const PairingDashboardScreen())),
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PairingDashboardScreen(),
+                        ),
+                      ),
                       icon: const Icon(Icons.link_rounded, size: 18),
                       label: Text(
                         'Ghép nối ngay',
@@ -183,8 +191,9 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 actionLabel: _emailVerifyWaitSeconds > 0
                     ? 'Thử lại sau ${_emailVerifyWaitSeconds}s'
                     : context.tr('home_xcthc_7e8a1b'),
-                onSecondaryAction:
-                    !_isMainEmailVerified ? _changePrimaryEmailV2 : null,
+                onSecondaryAction: !_isMainEmailVerified
+                    ? _changePrimaryEmailV2
+                    : null,
                 secondaryActionLabel: context.tr('home_iemail_3dfe1f'),
               ),
               SLSpacing.h12,
@@ -212,8 +221,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 label: context.tr('home_tikhongoog_fba9e3'),
                 value: _googleLinked
                     ? (_googleLinkedEmail.isNotEmpty
-                        ? _authService.maskEmail(_googleLinkedEmail)
-                        : context.tr('home_linkt_708640'))
+                          ? _authService.maskEmail(_googleLinkedEmail)
+                          : context.tr('home_linkt_708640'))
                     : context.tr('home_chalinkt_1f9e3b'),
                 isVerified: _googleLinked,
                 onAction: _googleLinked ? null : _linkGoogleAccount,
@@ -250,11 +259,11 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
               _buildSecurityInlineButton(
                 label: _showPasswordEditor
                     ? (_passwordLinked
-                        ? context.tr('home_nphnimtkhu_53ea3e')
-                        : context.tr('home_nphntomtkh_5483e8'))
+                          ? context.tr('home_nphnimtkhu_53ea3e')
+                          : context.tr('home_nphntomtkh_5483e8'))
                     : (_passwordLinked
-                        ? context.tr('home_mphnimtkhu_fb2c60')
-                        : context.tr('home_tomtkhulnu_2b399b')),
+                          ? context.tr('home_mphnimtkhu_fb2c60')
+                          : context.tr('home_tomtkhulnu_2b399b')),
                 gradient: const [Color(0xFFFFC107), Color(0xFFFF9800)],
                 textColor: Colors.black87,
                 onTap: () =>
@@ -266,19 +275,24 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFF9C4).withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color:
-                              const Color(0xFFFBC02D).withValues(alpha: 0.3)),
+                        color: const Color(0xFFFBC02D).withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.info_outline_rounded,
-                            color: Color(0xFFF57F17), size: 20),
+                        const Icon(
+                          Icons.info_outline_rounded,
+                          color: Color(0xFFF57F17),
+                          size: 20,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -306,17 +320,21 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     ),
                     decoration: InputDecoration(
                       hintText: context.tr('home_mtkhuhinti_d94873'),
-                      prefixIcon: const Icon(Icons.lock_outline_rounded,
-                          color: Colors.grey),
+                      prefixIcon: const Icon(
+                        Icons.lock_outline_rounded,
+                        color: Colors.grey,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide(
-                            color: Colors.grey.withValues(alpha: 0.2)),
+                          color: Colors.grey.withValues(alpha: 0.2),
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide(
-                            color: Colors.grey.withValues(alpha: 0.2)),
+                          color: Colors.grey.withValues(alpha: 0.2),
+                        ),
                       ),
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: 0.8),
@@ -334,11 +352,11 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     hintText: _passwordLinked
                         ? context.tr('home_mtkhumitit_9da358')
                         : context.tr('home_tomtkhungn_3e6b26'),
-                    prefixIcon:
-                        const Icon(Icons.lock, color: Color(0xFFD81B60)),
-                    border: OutlineInputBorder(
-                      borderRadius: SLRadius.mdAll,
+                    prefixIcon: const Icon(
+                      Icons.lock,
+                      color: Color(0xFFD81B60),
                     ),
+                    border: OutlineInputBorder(borderRadius: SLRadius.mdAll),
                     filled: true,
                     fillColor: Colors.white,
                   ),
@@ -399,12 +417,11 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 ),
                 decoration: InputDecoration(
                   hintText: context.tr('home_chncuhibom_0eba13'),
-                  border: OutlineInputBorder(
-                    borderRadius: SLRadius.mdAll,
-                  ),
+                  border: OutlineInputBorder(borderRadius: SLRadius.mdAll),
                   filled: true,
-                  fillColor:
-                      recoveryLocked ? const Color(0xFFF9F3F6) : Colors.white,
+                  fillColor: recoveryLocked
+                      ? const Color(0xFFF9F3F6)
+                      : Colors.white,
                 ),
                 items: questionItems
                     .map(
@@ -485,14 +502,15 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     hintText: recoveryLocked
                         ? '********'
                         : context.tr('enter_answer'),
-                    prefixIcon:
-                        const Icon(Icons.key_rounded, color: Color(0xFFD81B60)),
-                    border: OutlineInputBorder(
-                      borderRadius: SLRadius.mdAll,
+                    prefixIcon: const Icon(
+                      Icons.key_rounded,
+                      color: Color(0xFFD81B60),
                     ),
+                    border: OutlineInputBorder(borderRadius: SLRadius.mdAll),
                     filled: true,
-                    fillColor:
-                        recoveryLocked ? const Color(0xFFF9F3F6) : Colors.white,
+                    fillColor: recoveryLocked
+                        ? const Color(0xFFF9F3F6)
+                        : Colors.white,
                   ),
                 ),
               SLSpacing.h8,
@@ -505,9 +523,9 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     : const [Color(0xFFFF6F91), Color(0xFFD81B60)],
                 onTap: recoveryLocked
                     ? () => _showToast(
-                          context.tr('security_q_locked_msg'),
-                          success: false,
-                        )
+                        context.tr('security_q_locked_msg'),
+                        success: false,
+                      )
                     : () async {
                         if (!await _ensureCanModifySecurityInfo()) return;
                         _saveRecoveryInfo();
@@ -538,9 +556,11 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 trailing: TextButton(
                   onPressed: () =>
                       setState(() => _showHousePin = !_showHousePin),
-                  child: Text(_showHousePin
-                      ? context.tr('home_n_f7bc96')
-                      : context.tr('home_hin_726cac')),
+                  child: Text(
+                    _showHousePin
+                        ? context.tr('home_n_f7bc96')
+                        : context.tr('home_hin_726cac'),
+                  ),
                 ),
               ),
               SLSpacing.h8,
@@ -553,9 +573,7 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 decoration: InputDecoration(
                   hintText: context.tr('backup_pin_hint'),
                   prefixIcon: const Icon(Icons.pin_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: SLRadius.mdAll,
-                  ),
+                  border: OutlineInputBorder(borderRadius: SLRadius.mdAll),
                   filled: true,
                   fillColor: Colors.white,
                 ),
@@ -579,8 +597,9 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
   }
 
   Widget _buildLockPanel({bool hideBackButton = false}) {
-    final showSecretVault =
-        UtilityService.isUtilityVisibleInCurrentBuild('vault');
+    final showSecretVault = UtilityService.isUtilityVisibleInCurrentBuild(
+      'vault',
+    );
     return _buildPanel(
       hideBackButton: hideBackButton,
       id: 'lock',
@@ -591,20 +610,25 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
           Container(
             padding: SLSpacing.all16,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF0F5),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFFFC1D1), width: 1),
+              color: SLColors.paperBlush,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: SLColors.border, width: 1.1),
+              boxShadow: SLShadow.subtle,
             ),
             child: Row(
               children: [
                 Container(
                   padding: SLSpacing.all8,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
+                  decoration: BoxDecoration(
+                    color: SLColors.paper,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: SLColors.borderLight),
                   ),
-                  child: const Icon(Icons.security_rounded,
-                      color: Color(0xFFD81B60), size: 24),
+                  child: const Icon(
+                    Icons.security_rounded,
+                    color: Color(0xFFD81B60),
+                    size: 24,
+                  ),
                 ),
                 SLSpacing.w12,
                 Expanded(
@@ -679,8 +703,10 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 if (!await _ensureCanModifySecurityInfo()) return;
                 _handlePinChangeRequested();
               },
-              trailing: const Icon(Icons.chevron_right_rounded,
-                  color: Color(0xFFD81B60)),
+              trailing: const Icon(
+                Icons.chevron_right_rounded,
+                color: Color(0xFFD81B60),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.only(left: 44, right: 16, bottom: 8),
@@ -701,8 +727,9 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                 value: _useBiometrics,
                 activeThumbColor: const Color(0xFFD81B60),
                 onChanged: (v) async {
-                  final msgBioNotSupported =
-                      context.tr('home_thitbkhngh_75b1e3');
+                  final msgBioNotSupported = context.tr(
+                    'home_thitbkhngh_75b1e3',
+                  );
                   final msgBioFailed = context.tr('home_xcthcsinht_2fd95b');
                   final requiresExistingLock =
                       _isAppLockEnabled && _storedLockSecret.trim().isNotEmpty;
@@ -713,8 +740,8 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
                     }
                   }
                   if (v) {
-                    final canBio =
-                        await _militaryLockService.canUseBiometrics();
+                    final canBio = await _militaryLockService
+                        .canUseBiometrics();
                     if (!canBio) {
                       _showToast(msgBioNotSupported, success: false);
                       return;
@@ -787,9 +814,10 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
             Text(
               context.tr('lock_scopes'),
               style: SLTextStyles.quicksand(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF8A5B76)),
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF8A5B76),
+              ),
             ),
             SLSpacing.h8,
             Row(
@@ -828,61 +856,63 @@ extension _SettingsTabSecuritySection on _SettingsTabState {
               ],
             ),
             SLSpacing.h12,
-            ..._lockScopes.entries.where((e) {
-              if (e.key == 'app') return false;
-              if (!showSecretVault && e.key == 'private') return false;
-              return true;
-            }).map((e) {
-              String label = '';
-              switch (e.key) {
-                case 'security':
-                  label = context.tr('security_settings');
-                  break;
-                case 'diary':
-                  label = context.tr('home_nhtktnhyu_84a6e2');
-                  break;
-                case 'chat':
-                  label = context.tr('home_linhnyuthn_d28cd1');
-                  break;
-                case 'private':
-                  label = context.tr('secret_vault');
-                  break;
-              }
-              return Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Row(
-                  children: [
-                    SLSpacing.w8,
-                    Expanded(
-                      child: Text(
-                        label,
-                        style: SLTextStyles.quicksand(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF7A6B82),
+            ..._lockScopes.entries
+                .where((e) {
+                  if (e.key == 'app') return false;
+                  if (!showSecretVault && e.key == 'private') return false;
+                  return true;
+                })
+                .map((e) {
+                  String label = '';
+                  switch (e.key) {
+                    case 'security':
+                      label = context.tr('security_settings');
+                      break;
+                    case 'diary':
+                      label = context.tr('home_nhtktnhyu_84a6e2');
+                      break;
+                    case 'chat':
+                      label = context.tr('home_linhnyuthn_d28cd1');
+                      break;
+                    case 'private':
+                      label = context.tr('secret_vault');
+                      break;
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Row(
+                      children: [
+                        SLSpacing.w8,
+                        Expanded(
+                          child: Text(
+                            label,
+                            style: SLTextStyles.quicksand(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF7A6B82),
+                            ),
+                          ),
                         ),
-                      ),
+                        Transform.scale(
+                          scale: 0.8,
+                          child: Switch.adaptive(
+                            value: e.value,
+                            activeThumbColor: const Color(0xFFD81B60),
+                            onChanged: (v) async {
+                              final authSuccess =
+                                  await _authenticateLockSettingsChange();
+                              if (!authSuccess) {
+                                return;
+                              }
+                              setState(() => _lockScopes[e.key] = v);
+                              _saveAppLockSettings();
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                    Transform.scale(
-                      scale: 0.8,
-                      child: Switch.adaptive(
-                        value: e.value,
-                        activeThumbColor: const Color(0xFFD81B60),
-                        onChanged: (v) async {
-                          final authSuccess =
-                              await _authenticateLockSettingsChange();
-                          if (!authSuccess) {
-                            return;
-                          }
-                          setState(() => _lockScopes[e.key] = v);
-                          _saveAppLockSettings();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
+                  );
+                }),
           ],
         ],
       ),

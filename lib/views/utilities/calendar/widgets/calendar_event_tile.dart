@@ -26,14 +26,21 @@ class CalendarEventTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accent.withValues(alpha: 0.16)),
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            accent.withValues(alpha: 0.04),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: accent.withValues(alpha: 0.14)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: accent.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -41,24 +48,31 @@ class CalendarEventTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [accent.withValues(alpha: 0.9), accent],
+                colors: [
+                  accent.withValues(alpha: 0.92),
+                  accent,
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.22),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             alignment: Alignment.center,
-            child: Text(
-              '${index + 1}',
-              style: SLTheme.quicksand(
-                fontSize: 15,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
+            child: Icon(
+              index == 0 ? Icons.favorite_rounded : Icons.event_note_rounded,
+              color: Colors.white,
+              size: 20,
             ),
           ),
           SLSpacing.w12,
@@ -71,9 +85,9 @@ class CalendarEventTile extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        title.isEmpty ? 'Chưa có tiêu đề' : title,
+                        title.isEmpty ? 'Chưa có nội dung kế hoạch' : title,
                         style: SLTheme.quicksand(
-                          fontSize: 15,
+                          fontSize: 14.5,
                           fontWeight: FontWeight.w900,
                           color: SLTheme.textMain,
                           height: 1.3,
@@ -116,6 +130,10 @@ class CalendarEventTile extends StatelessWidget {
                       icon: Icons.schedule_rounded,
                       label: timestampLabel,
                     ),
+                    _CalendarEventMetaChip(
+                      icon: Icons.tag_faces_rounded,
+                      label: 'Mục ${index + 1}',
+                    ),
                   ],
                 ),
               ],
@@ -129,8 +147,11 @@ class CalendarEventTile extends StatelessWidget {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFFFFEFF2),
+                color: const Color(0xFFFFEFF4),
                 borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: const Color(0xFFFFC6D6),
+                ),
               ),
               child: const Icon(
                 Icons.delete_outline_rounded,
@@ -159,8 +180,9 @@ class _CalendarEventMetaChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F7FB),
+        color: const Color(0xFFF8F4FB),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0xFFEADFF6)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

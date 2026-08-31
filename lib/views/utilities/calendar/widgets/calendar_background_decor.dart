@@ -9,12 +9,12 @@ class CalendarBackgroundDecor extends StatelessWidget {
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Color(0xFF11224E),
-            Color(0xFF1F5FCB),
-            Color(0xFF6EC6FF),
-            Color(0xFFF7A6B9),
+            Color(0xFF1A3F9F),
+            Color(0xFF3C74E8),
+            Color(0xFF8EC6FF),
+            Color(0xFFF9B8CA),
           ],
-          stops: [0, 0.38, 0.72, 1],
+          stops: [0, 0.35, 0.74, 1],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -23,56 +23,76 @@ class CalendarBackgroundDecor extends StatelessWidget {
         children: [
           Positioned(
             top: -90,
-            left: -50,
-            child: Container(
-              width: 220,
-              height: 220,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    Colors.white.withValues(alpha: 0.28),
-                    Colors.white.withValues(alpha: 0.02),
-                  ],
-                ),
-              ),
+            left: -40,
+            child: _bubble(
+              size: 220,
+              colors: [
+                Colors.white.withValues(alpha: 0.26),
+                Colors.white.withValues(alpha: 0.02),
+              ],
             ),
           ),
           Positioned(
-            top: 160,
+            top: 150,
             right: -70,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFFFFF2E8).withValues(alpha: 0.24),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
+            child: _bubble(
+              size: 260,
+              colors: [
+                const Color(0xFFFFF0F6).withValues(alpha: 0.24),
+                Colors.transparent,
+              ],
             ),
           ),
           Positioned(
-            bottom: -80,
-            left: 20,
-            child: Container(
-              width: 260,
-              height: 260,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFFB8F2E6).withValues(alpha: 0.18),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
+            bottom: -70,
+            left: -20,
+            child: _bubble(
+              size: 260,
+              colors: [
+                const Color(0xFFE0F4FF).withValues(alpha: 0.22),
+                Colors.transparent,
+              ],
+            ),
+          ),
+          Positioned(
+            top: 120,
+            left: 26,
+            child: Icon(
+              Icons.favorite_rounded,
+              color: Colors.white.withValues(alpha: 0.12),
+              size: 24,
+            ),
+          ),
+          Positioned(
+            top: 280,
+            right: 32,
+            child: Icon(
+              Icons.favorite_rounded,
+              color: Colors.white.withValues(alpha: 0.12),
+              size: 18,
+            ),
+          ),
+          Positioned(
+            bottom: 170,
+            right: 60,
+            child: Icon(
+              Icons.star_rounded,
+              color: Colors.white.withValues(alpha: 0.1),
+              size: 20,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _bubble({required double size, required List<Color> colors}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(colors: colors),
       ),
     );
   }

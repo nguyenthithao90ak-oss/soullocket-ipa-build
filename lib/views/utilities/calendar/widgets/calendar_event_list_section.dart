@@ -1,15 +1,14 @@
-import 'dart:ui' as ui;
-
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 
 import 'calendar_event_state_card.dart';
 import 'calendar_event_tile.dart';
 
 class CalendarEventListSection extends StatelessWidget {
-  final Stream<DatabaseEvent> stream;
+  final List<Map<String, dynamic>> items;
+  final bool isLoading;
+  final String? errorMessage;
+  final VoidCallback? onRetry;
   final double horizontalInset;
   final bool compact;
   final Color accent;
@@ -21,7 +20,10 @@ class CalendarEventListSection extends StatelessWidget {
 
   const CalendarEventListSection({
     super.key,
-    required this.stream,
+    required this.items,
+    required this.isLoading,
+    required this.errorMessage,
+    required this.onRetry,
     required this.horizontalInset,
     required this.compact,
     required this.accent,
@@ -41,203 +43,159 @@ class CalendarEventListSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sortedItems = List<Map<String, dynamic>>.from(items)
+      ..sort(
+        (a, b) => _parseTimestamp(a['ts']).compareTo(_parseTimestamp(b['ts'])),
+      );
+
     return Padding(
       padding: EdgeInsets.fromLTRB(horizontalInset, 0, horizontalInset, 20),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(26),
-        child: FastBackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: EdgeInsets.fromLTRB(
-              compact ? 16 : 18,
-              compact ? 16 : 18,
-              compact ? 16 : 18,
-              10,
+      child: Container(
+        padding: EdgeInsets.fromLTRB(
+          compact ? 16 : 18,
+          compact ? 16 : 18,
+          compact ? 16 : 18,
+          10,
+        ),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFFFFFCFF),
+              Color(0xFFF8FBFF),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: const Color(0xFFE6EAF9)),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withValues(alpha: 0.08),
+              blurRadius: 22,
+              offset: const Offset(0, 10),
             ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withValues(alpha: 0.92),
-                  Colors.white.withValues(alpha: 0.74),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(26),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.34)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: compact ? 40 : 44,
-                      height: compact ? 40 : 44,
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(compact ? 14 : 15),
-                      ),
-                      child: Icon(
-                        Icons.view_timeline_rounded,
-                        color: accent,
-                        size: compact ? 20 : 22,
-                      ),
+                Container(
+                  width: compact ? 40 : 44,
+                  height: compact ? 40 : 44,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        accent.withValues(alpha: 0.14),
+                        accent.withValues(alpha: 0.08),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    SLSpacing.w12,
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Chi tiết trong ngày',
-                            style: SLTheme.quicksand(
-                              fontSize: compact ? 15 : 16,
-                              fontWeight: FontWeight.w900,
-                              color: SLTheme.textMain,
-                            ),
-                          ),
-                          SLSpacing.h4,
-                          Text(
-                            'Toàn bộ kế hoạch cho $selectedDateLabel sẽ hiển thị ở đây theo thứ tự tạo.',
-                            style: SLTheme.quicksand(
-                              fontSize: compact ? 11.5 : 12,
-                              fontWeight: FontWeight.w700,
-                              color: SLTheme.textMuted,
-                              height: 1.35,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: compact ? 9 : 10,
-                        vertical: compact ? 7 : 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        '$itemCount mục',
-                        style: SLTheme.quicksand(
-                          fontSize: compact ? 10 : 11,
-                          fontWeight: FontWeight.w900,
-                          color: accent,
-                        ),
-                      ),
-                    ),
-                  ],
+                    borderRadius: BorderRadius.circular(compact ? 14 : 15),
+                  ),
+                  child: Icon(
+                    Icons.favorite_border_rounded,
+                    color: accent,
+                    size: compact ? 20 : 22,
+                  ),
                 ),
-                SizedBox(height: compact ? 12 : 16),
-                StreamBuilder<DatabaseEvent>(
-                  stream: stream,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        child: Center(
-                          child: CircularProgressIndicator(color: accent),
+                SLSpacing.w12,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Những điều hai bạn đã lên lịch',
+                        style: SLTheme.quicksand(
+                          fontSize: compact ? 15 : 16,
+                          fontWeight: FontWeight.w900,
+                          color: SLTheme.textMain,
                         ),
-                      );
-                    }
-
-                    if (snapshot.hasError) {
-                      return CalendarEventStateCard(
-                        icon: Icons.error_outline_rounded,
-                        title: 'Không tải được lịch của ngày này',
-                        description: '${snapshot.error}',
-                        color: const Color(0xFFE46A7A),
-                      );
-                    }
-
-                    if (!snapshot.hasData ||
-                        snapshot.data?.snapshot.value == null) {
-                      return CalendarEventStateCard(
-                        icon: Icons.event_busy_rounded,
-                        title: 'Ngày này chưa có kế hoạch nào',
-                        description:
-                            'Thử thêm một lịch hẹn, việc cần làm hoặc mốc quan trọng để cả hai dễ theo dõi hơn.',
-                        color: accent,
-                      );
-                    }
-
-                    try {
-                      final raw = snapshot.data!.snapshot.value;
-                      if (raw is! Map) {
-                        return CalendarEventStateCard(
-                          icon: Icons.event_busy_rounded,
-                          title: 'Ngày này chưa có kế hoạch nào',
-                          description:
-                              'Thử thêm một lịch hẹn, việc cần làm hoặc mốc quan trọng để cả hai dễ theo dõi hơn.',
-                          color: accent,
-                        );
-                      }
-                      final data = Map<dynamic, dynamic>.from(raw);
-                      final items = data.entries
-                          .where((entry) => entry.value is Map)
-                          .map(
-                            (entry) => {
-                              'key': entry.key,
-                              ...Map<String, dynamic>.from(entry.value as Map),
-                            },
-                          )
-                          .toList()
-                        ..sort(
-                          (a, b) {
-                            final tsA = _parseTimestamp(a['ts']);
-                            final tsB = _parseTimestamp(b['ts']);
-                            return tsA.compareTo(tsB);
-                          },
-                        );
-
-                      if (items.isEmpty) {
-                        return CalendarEventStateCard(
-                          icon: Icons.event_busy_rounded,
-                          title: 'Ngày này chưa có kế hoạch nào',
-                          description:
-                              'Thử thêm một lịch hẹn, việc cần làm hoặc mốc quan trọng để cả hai dễ theo dõi hơn.',
-                          color: accent,
-                        );
-                      }
-
-                      return ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        padding: const EdgeInsets.only(bottom: 10),
-                        itemCount: items.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final item = items[index];
-                          final eventKey = item['key']?.toString() ?? '';
-                          return CalendarEventTile(
-                            accent: accent,
-                            title: item['title']?.toString().trim() ?? '',
-                            author: item['author']?.toString().trim(),
-                            timestampLabel: formatCreatedTime(
-                                _parseTimestamp(item['ts'])),
-                            index: index,
-                            statusLabel: statusLabel,
-                            onDelete: eventKey.isEmpty
-                                ? null
-                                : () => onDelete(eventKey),
-                          );
-                        },
-                      );
-                    } catch (e) {
-                      return CalendarEventStateCard(
-                        icon: Icons.error_outline_rounded,
-                        title: 'Không tải được lịch của ngày này',
-                        description: '$e',
-                        color: const Color(0xFFE46A7A),
-                      );
-                    }
-                  },
+                      ),
+                      SLSpacing.h4,
+                      Text(
+                        'Tất cả kế hoạch của $selectedDateLabel sẽ nằm ở đây để dễ xem lại.',
+                        style: SLTheme.quicksand(
+                          fontSize: compact ? 11.5 : 12,
+                          fontWeight: FontWeight.w700,
+                          color: SLTheme.textMuted,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: compact ? 9 : 10,
+                    vertical: compact ? 7 : 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    '$itemCount mục',
+                    style: SLTheme.quicksand(
+                      fontSize: compact ? 10 : 11,
+                      fontWeight: FontWeight.w900,
+                      color: accent,
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
+            SizedBox(height: compact ? 12 : 16),
+            if (isLoading)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                child: Center(
+                  child: CircularProgressIndicator(color: accent),
+                ),
+              )
+            else if (errorMessage != null && errorMessage!.trim().isNotEmpty)
+              CalendarEventStateCard(
+                icon: Icons.cloud_off_rounded,
+                title: 'Có lỗi nhỏ khi tải lịch',
+                description:
+                    'Ứng dụng chưa đọc được dữ liệu mới nhất. Bạn có thể thử tải lại để đồng bộ tiếp.\n$errorMessage',
+                color: const Color(0xFFE46A7A),
+                actionLabel: 'Thử tải lại',
+                onAction: onRetry,
+              )
+            else if (sortedItems.isEmpty)
+              CalendarEventStateCard(
+                icon: Icons.event_available_rounded,
+                title: 'Ngày này chưa có kế hoạch nào',
+                description:
+                    'Hãy thêm một lịch hẹn, việc cần làm hoặc mốc đáng yêu để cả hai cùng theo dõi nhé.',
+                color: accent,
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 10),
+                itemCount: sortedItems.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final item = sortedItems[index];
+                  final eventKey = item['key']?.toString() ?? '';
+                  return CalendarEventTile(
+                    accent: accent,
+                    title: item['title']?.toString().trim() ?? '',
+                    author: item['author']?.toString().trim(),
+                    timestampLabel:
+                        formatCreatedTime(_parseTimestamp(item['ts'])),
+                    index: index,
+                    statusLabel: statusLabel,
+                    onDelete: eventKey.isEmpty ? null : () => onDelete(eventKey),
+                  );
+                },
+              ),
+          ],
         ),
       ),
     );

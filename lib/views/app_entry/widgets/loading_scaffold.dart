@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 
-
 import '../../../core/sl_theme.dart';
 
 class _LoadingMessage {
@@ -37,7 +36,8 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
       icon: Icons.shield_rounded,
       badge: 'Bảo mật 100%',
       text: 'Dữ liệu được mã hóa an toàn tuyệt đối & bảo mật nghiêm ngặt',
-      subText: 'Kỷ niệm của hai bạn luôn được bảo vệ, không bao giờ lo mất dữ liệu',
+      subText:
+          'Kỷ niệm của hai bạn luôn được bảo vệ, không bao giờ lo mất dữ liệu',
     ),
     _LoadingMessage(
       icon: Icons.cloud_done_rounded,
@@ -86,12 +86,15 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
     )..repeat();
 
     // Chọn ngẫu nhiên câu đầu tiên khi mở app
-    final random = (DateTime.now().millisecondsSinceEpoch ~/ 100) %
+    final random =
+        (DateTime.now().millisecondsSinceEpoch ~/ 100) %
         _kLoadingMessages.length;
     _currentMessageIndex = random;
 
     // Xoay tua thông điệp nhẹ nhàng mỗi 2.8s nếu tải lâu
-    _messageRotationTimer = Timer.periodic(const Duration(milliseconds: 2800), (_) {
+    _messageRotationTimer = Timer.periodic(const Duration(milliseconds: 2800), (
+      _,
+    ) {
       if (mounted) {
         setState(() {
           _currentMessageIndex =
@@ -113,11 +116,12 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
     final currentMsg = _kLoadingMessages[_currentMessageIndex];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFBF8),
+      backgroundColor: SLColors.surfaceWarm,
       body: SLTheme.softCanvasBackdrop(
-        baseColor: const Color(0xFFFFFBF8),
-        accentColor: SLColors.primary,
-        secondaryAccent: SLColors.accentPurple,
+        baseColor: SLColors.surfaceWarm,
+        accentColor: SLColors.thread,
+        secondaryAccent: SLColors.secondary,
+        motif: SLCanvasBackdropMotif.journal,
         child: SafeArea(
           child: Stack(
             children: [
@@ -147,23 +151,20 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
                         AnimatedBuilder(
                           animation: _loadingController,
                           builder: (context, child) {
-                            final pulse = 1 +
+                            final pulse =
+                                1 +
                                 (_loadingController.value < 0.5 ? 1 : -1) *
                                     0.02;
-                            return Transform.scale(
-                              scale: pulse,
-                              child: child,
-                            );
+                            return Transform.scale(scale: pulse, child: child);
                           },
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(28),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFD81B60)
-                                      .withValues(alpha: 0.22),
-                                  blurRadius: 28,
-                                  spreadRadius: 2,
+                                  color: SLColors.ink.withValues(alpha: 0.14),
+                                  blurRadius: 24,
+                                  spreadRadius: -7,
                                   offset: const Offset(0, 10),
                                 ),
                                 BoxShadow(
@@ -188,10 +189,11 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
                         const SizedBox(height: 22),
                         Text(
                           'SoulLocket',
-                          style: SLTheme.quicksand(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w900,
-                            color: SLColors.textPrimary,
+                          style: SLTheme.textStyleForKey(
+                            'dancingScript',
+                            fontSize: 34,
+                            fontWeight: FontWeight.w800,
+                            color: SLColors.primary,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -221,10 +223,8 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
                   tween: Tween<double>(begin: 0, end: 1),
                   duration: const Duration(milliseconds: 1000),
                   curve: Curves.easeOutCubic,
-                  builder: (context, value, child) => Opacity(
-                    opacity: value,
-                    child: child,
-                  ),
+                  builder: (context, value, child) =>
+                      Opacity(opacity: value, child: child),
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
                     switchInCurve: Curves.easeOutCubic,
@@ -248,24 +248,15 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.white.withValues(alpha: 0.92),
-                            const Color(0xFFFFF4F8).withValues(alpha: 0.92),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        color: SLColors.paper.withValues(alpha: 0.96),
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: const Color(0xFFFFD1E3).withValues(alpha: 0.65),
-                          width: 1,
-                        ),
+                        border: Border.all(color: SLColors.border, width: 1.1),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFD81B60).withValues(alpha: 0.08),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
+                            color: SLColors.ink.withValues(alpha: 0.08),
+                            blurRadius: 18,
+                            spreadRadius: -7,
+                            offset: const Offset(0, 10),
                           ),
                         ],
                       ),
@@ -345,9 +336,7 @@ class _LoadingScaffoldState extends State<LoadingScaffold>
 class _SoftLoadingBar extends StatelessWidget {
   final Animation<double> controller;
 
-  const _SoftLoadingBar({
-    required this.controller,
-  });
+  const _SoftLoadingBar({required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -388,9 +377,7 @@ class _SoftLoadingBar extends StatelessWidget {
 class _LoadingDots extends StatelessWidget {
   final Animation<double> controller;
 
-  const _LoadingDots({
-    required this.controller,
-  });
+  const _LoadingDots({required this.controller});
 
   @override
   Widget build(BuildContext context) {

@@ -77,16 +77,17 @@ class _LoginScreenState extends State<LoginScreen> {
   final AntiSpamRateLimitService _authRateLimiter = AntiSpamRateLimitService();
   final SecurityFlowGuard _securityFlowGuard = SecurityFlowGuard.instance;
 
-  String _selectedSecurityQuestion =
-      L10nService().translate('Ngày sinh của bạn?');
+  String _selectedSecurityQuestion = L10nService().translate(
+    'Ngày sinh của bạn?',
+  );
 
   List<String> get _cleanSecurityQuestions => const [
-        'Ngày sinh của bạn?',
-        'Con vật đầu tiên bạn nuôi?',
-        'Tên giáo viên chủ nhiệm lớp 1?',
-        'Nơi lần đầu tiên hai bạn gặp nhau?',
-        'Món ăn yêu thích nhất của bạn?',
-      ];
+    'Ngày sinh của bạn?',
+    'Con vật đầu tiên bạn nuôi?',
+    'Tên giáo viên chủ nhiệm lớp 1?',
+    'Nơi lần đầu tiên hai bạn gặp nhau?',
+    'Món ăn yêu thích nhất của bạn?',
+  ];
 
   @override
   void initState() {
@@ -154,9 +155,9 @@ class _LoginScreenState extends State<LoginScreen> {
   void _rememberProxyStateAtLogin() {
     unawaited(
       SecurityService().isProxyOrVpnActive().then(
-            SecurityService().setProxyAtLogin,
-            onError: (_) {},
-          ),
+        SecurityService().setProxyAtLogin,
+        onError: (_) {},
+      ),
     );
   }
 
@@ -166,15 +167,17 @@ class _LoginScreenState extends State<LoginScreen> {
       return null;
     }
 
-    final cachedMode = await _authService
-        .getCachedRelationshipModeForEmail(normalizedAccountKey);
+    final cachedMode = await _authService.getCachedRelationshipModeForEmail(
+      normalizedAccountKey,
+    );
     if (cachedMode != null) {
       return cachedMode;
     }
 
     try {
-      final existingHouseId =
-          await _houseService.getCurrentHouseId(preferFresh: false);
+      final existingHouseId = await _houseService.getCurrentHouseId(
+        preferFresh: false,
+      );
       if (existingHouseId != null && existingHouseId.isNotEmpty) {
         const defaultMode = 'couple';
         await _authService.cacheRelationshipModeForEmail(
@@ -225,8 +228,9 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content:
-              Text('Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.'),
+          content: Text(
+            'Bạn thao tác hơi nhanh. Vui lòng chờ một lát rồi thử lại.',
+          ),
           duration: Duration(seconds: 2),
         ),
       );
@@ -239,8 +243,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final prefs = _prefs!;
     if (accountKey != null && accountKey.trim().isNotEmpty) {
       final normalizedAccountKey = accountKey.trim().toLowerCase();
-      final savedPerAccount =
-          prefs.getString('il_saved_gender_$normalizedAccountKey')?.trim();
+      final savedPerAccount = prefs
+          .getString('il_saved_gender_$normalizedAccountKey')
+          ?.trim();
       if (savedPerAccount == 'user1' || savedPerAccount == 'user2') {
         return savedPerAccount;
       }
@@ -254,8 +259,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
-        final houseId =
-            await _houseService.getCurrentHouseId(preferFresh: false);
+        final houseId = await _houseService.getCurrentHouseId(
+          preferFresh: false,
+        );
         if (houseId != null && houseId.isNotEmpty) {
           final snap = await FirebaseDatabase.instance
               .ref('houses/$houseId/members/${user.uid}/role')
@@ -266,7 +272,9 @@ class _LoginScreenState extends State<LoginScreen> {
             if (accountKey != null && accountKey.isNotEmpty) {
               final normalizedAccountKey = accountKey.trim().toLowerCase();
               await prefs.setString(
-                  'il_saved_gender_$normalizedAccountKey', roleInDb!);
+                'il_saved_gender_$normalizedAccountKey',
+                roleInDb!,
+              );
             }
             return roleInDb;
           }
@@ -310,19 +318,20 @@ class _LoginScreenState extends State<LoginScreen> {
     return role;
   }
 
-  Future<void> _persistPendingHouseSetupDraft({
-    required String? role,
-  }) async {
+  Future<void> _persistPendingHouseSetupDraft({required String? role}) async {
     _prefs ??= await SharedPreferences.getInstance();
     final prefs = _prefs!;
 
     if (role == 'user1' || role == 'user2') {
       await prefs.setString('il_role', role!);
-      await SecureStorageService.instance
-          .write(SecureStorageService.keyRole, role);
+      await SecureStorageService.instance.write(
+        SecureStorageService.keyRole,
+        role,
+      );
     }
 
-    final shouldSaveRecovery = _showSecurityQuestion &&
+    final shouldSaveRecovery =
+        _showSecurityQuestion &&
         _selectedSecurityQuestion.trim().isNotEmpty &&
         _securityAnswerController.text.trim().isNotEmpty;
 
@@ -332,10 +341,10 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       final normalizedAnswer =
           DateInputUtils.looksLikeBirthQuestion(_selectedSecurityQuestion)
-              ? DateInputUtils.canonicalRecoveryAnswer(
-                  _securityAnswerController.text,
-                )
-              : _securityAnswerController.text.trim();
+          ? DateInputUtils.canonicalRecoveryAnswer(
+              _securityAnswerController.text,
+            )
+          : _securityAnswerController.text.trim();
       await prefs.setString(
         _pendingSignupRecoveryQuestionPrefsKey,
         _selectedSecurityQuestion.trim(),
@@ -375,9 +384,7 @@ class _LoginScreenState extends State<LoginScreen> {
     bool didAutoLogin = false;
 
     if (email.isEmpty || password.isEmpty) {
-      _showErrorDialog(
-        L10nService().translate('auth_err_empty_credentials'),
-      );
+      _showErrorDialog(L10nService().translate('auth_err_empty_credentials'));
       return;
     }
 
@@ -396,8 +403,9 @@ class _LoginScreenState extends State<LoginScreen> {
       '@icloud.com',
       '@yahoo.com',
     ];
-    final isDomainAllowed =
-        allowedDomains.any((domain) => emailLower.endsWith(domain));
+    final isDomainAllowed = allowedDomains.any(
+      (domain) => emailLower.endsWith(domain),
+    );
 
     if (!isDomainAllowed) {
       _showErrorDialog(
@@ -417,9 +425,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!_isLoginTab) {
       if (!_acceptTerms) {
-        _showErrorDialog(
-          L10nService().translate('auth_err_must_agree_terms'),
-        );
+        _showErrorDialog(L10nService().translate('auth_err_must_agree_terms'));
         return;
       }
 
@@ -498,8 +504,10 @@ class _LoginScreenState extends State<LoginScreen> {
       _prefs ??= await SharedPreferences.getInstance();
       final prefs = _prefs!;
       await prefs.setString('il_role', sessionRole);
-      await SecureStorageService.instance
-          .write(SecureStorageService.keyRole, sessionRole);
+      await SecureStorageService.instance.write(
+        SecureStorageService.keyRole,
+        sessionRole,
+      );
     }
 
     if (!mounted) return;
@@ -547,28 +555,35 @@ class _LoginScreenState extends State<LoginScreen> {
 
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
-          final cachedAuthUid = (await SecureStorageService.instance
-                      .read(SecureStorageService.keyAuthUid))
-                  ?.trim() ??
+          final cachedAuthUid =
+              (await SecureStorageService.instance.read(
+                SecureStorageService.keyAuthUid,
+              ))?.trim() ??
               prefs.getString('il_auth_uid')?.trim() ??
               '';
           if (cachedAuthUid.isNotEmpty && cachedAuthUid != user.uid) {
-            await SecureStorageService.instance
-                .delete(SecureStorageService.keyHouseId);
-            await SecureStorageService.instance
-                .delete(SecureStorageService.keyRole);
+            await SecureStorageService.instance.delete(
+              SecureStorageService.keyHouseId,
+            );
+            await SecureStorageService.instance.delete(
+              SecureStorageService.keyRole,
+            );
             await prefs.remove('il_house_id');
             await prefs.remove('il_role');
           }
           await prefs.setString('il_auth_uid', user.uid);
-          await SecureStorageService.instance
-              .write(SecureStorageService.keyAuthUid, user.uid);
+          await SecureStorageService.instance.write(
+            SecureStorageService.keyAuthUid,
+            user.uid,
+          );
         }
 
         if (sessionRole == 'user1' || sessionRole == 'user2') {
           await prefs.setString('il_role', sessionRole!);
-          await SecureStorageService.instance
-              .write(SecureStorageService.keyRole, sessionRole);
+          await SecureStorageService.instance.write(
+            SecureStorageService.keyRole,
+            sessionRole,
+          );
         }
 
         if (user != null) {
@@ -578,8 +593,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 .timeout(const Duration(seconds: 15));
             if (houseId != null && houseId.isNotEmpty) {
               await prefs.setString('il_house_id', houseId);
-              await SecureStorageService.instance
-                  .write(SecureStorageService.keyHouseId, houseId);
+              await SecureStorageService.instance.write(
+                SecureStorageService.keyHouseId,
+                houseId,
+              );
             }
           } catch (e) {
             debugPrint('[Auth][LoginScreen] Error fetching houseId: $e');
@@ -595,11 +612,12 @@ class _LoginScreenState extends State<LoginScreen> {
           _isSuccessTransition = true;
         });
         await Future<void>.delayed(
-            const Duration(milliseconds: 600)); // wait for transition
+          const Duration(milliseconds: 600),
+        ); // wait for transition
         if (!mounted) return;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const AppEntry()),
-        );
+        Navigator.of(
+          context,
+        ).pushReplacement(MaterialPageRoute(builder: (_) => const AppEntry()));
         return;
       } else {
         _rememberProxyStateAtLogin();
@@ -624,11 +642,12 @@ class _LoginScreenState extends State<LoginScreen> {
           _isSuccessTransition = true;
         });
         await Future<void>.delayed(
-            const Duration(milliseconds: 600)); // wait for transition
+          const Duration(milliseconds: 600),
+        ); // wait for transition
         if (!mounted) return;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const AppEntry()),
-        );
+        Navigator.of(
+          context,
+        ).pushReplacement(MaterialPageRoute(builder: (_) => const AppEntry()));
         return;
       }
     } catch (e) {
@@ -645,7 +664,8 @@ class _LoginScreenState extends State<LoginScreen> {
             : l10n.translate('auth_signup_unavailable'),
       );
 
-      final isAccountNotFound = _isLoginTab &&
+      final isAccountNotFound =
+          _isLoginTab &&
           (errorInfo.message.contains('Tài khoản không tồn tại') ||
               errorInfo.message.contains('Account does not exist'));
 
@@ -670,7 +690,8 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
 
-      final showRecovery = !isAccountNotFound &&
+      final showRecovery =
+          !isAccountNotFound &&
           _isLoginTab &&
           (AppErrorMapper.shouldOfferPasswordRecovery(e) ||
               AppErrorMapper.shouldOfferPasswordRecovery(errorInfo.message));
@@ -785,8 +806,10 @@ class _LoginScreenState extends State<LoginScreen> {
     _prefs ??= await SharedPreferences.getInstance();
     final prefs = _prefs!;
     await prefs.setString('il_role', selectedRole);
-    await SecureStorageService.instance
-        .write(SecureStorageService.keyRole, selectedRole);
+    await SecureStorageService.instance.write(
+      SecureStorageService.keyRole,
+      selectedRole,
+    );
 
     if (mounted) {
       setState(() => _isLoading = true);
@@ -803,9 +826,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (result == null || result.user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              SocialAuthActionHelper.cancelledMessage(provider),
-            ),
+            content: Text(SocialAuthActionHelper.cancelledMessage(provider)),
           ),
         );
         return;
@@ -818,28 +839,35 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       final user = result.user;
       if (user != null) {
-        final cachedAuthUid = (await SecureStorageService.instance
-                    .read(SecureStorageService.keyAuthUid))
-                ?.trim() ??
+        final cachedAuthUid =
+            (await SecureStorageService.instance.read(
+              SecureStorageService.keyAuthUid,
+            ))?.trim() ??
             prefs.getString('il_auth_uid')?.trim() ??
             '';
         if (cachedAuthUid.isNotEmpty && cachedAuthUid != user.uid) {
-          await SecureStorageService.instance
-              .delete(SecureStorageService.keyHouseId);
-          await SecureStorageService.instance
-              .delete(SecureStorageService.keyRole);
+          await SecureStorageService.instance.delete(
+            SecureStorageService.keyHouseId,
+          );
+          await SecureStorageService.instance.delete(
+            SecureStorageService.keyRole,
+          );
           await prefs.remove('il_house_id');
           await prefs.remove('il_role');
         }
         await prefs.setString('il_auth_uid', user.uid);
-        await SecureStorageService.instance
-            .write(SecureStorageService.keyAuthUid, user.uid);
+        await SecureStorageService.instance.write(
+          SecureStorageService.keyAuthUid,
+          user.uid,
+        );
       }
 
       if (storedRole == 'user1' || storedRole == 'user2') {
         await prefs.setString('il_role', storedRole);
-        await SecureStorageService.instance
-            .write(SecureStorageService.keyRole, storedRole);
+        await SecureStorageService.instance.write(
+          SecureStorageService.keyRole,
+          storedRole,
+        );
       }
 
       if (user != null) {
@@ -849,8 +877,10 @@ class _LoginScreenState extends State<LoginScreen> {
               .timeout(const Duration(seconds: 15));
           if (houseId != null && houseId.isNotEmpty) {
             await prefs.setString('il_house_id', houseId);
-            await SecureStorageService.instance
-                .write(SecureStorageService.keyHouseId, houseId);
+            await SecureStorageService.instance.write(
+              SecureStorageService.keyHouseId,
+              houseId,
+            );
           }
         } catch (e) {
           debugPrint('[Auth][LoginScreen] Error fetching houseId (Social): $e');
@@ -860,14 +890,15 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       _failedAuthAttempts = 0; // Reset on success
       debugPrint(
-          '[Auth][LoginScreen] social login success -> navigate AppEntry');
+        '[Auth][LoginScreen] social login success -> navigate AppEntry',
+      );
       handedOffToAppEntry = true;
       setState(() => _isLoading = false);
       await Future<void>.delayed(const Duration(milliseconds: 120));
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const AppEntry()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const AppEntry()));
       return;
     } catch (e) {
       _failedAuthAttempts++;
@@ -876,7 +907,8 @@ class _LoginScreenState extends State<LoginScreen> {
         fallbackMessage: L10nService().translate('auth_login_unavailable'),
       ).message;
       debugPrint(
-          '[Auth][LoginScreen] social login failed ($provider): $resolvedMessage');
+        '[Auth][LoginScreen] social login failed ($provider): $resolvedMessage',
+      );
       if (!mounted) return;
       _showErrorDialog(
         resolvedMessage.isEmpty
@@ -952,290 +984,331 @@ class _LoginScreenState extends State<LoginScreen> {
           return const AuroraLoginScreen();
         }
         return ListenableBuilder(
-      listenable: L10nService(),
-      builder: (context, _) {
-        final l10n = L10nService();
-        return SensitiveContentGuard(
-          child: Scaffold(
-            resizeToAvoidBottomInset: false,
-            backgroundColor: Colors.white,
-            body: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Image.asset(
-                      'assets/images/default_auth_bg.jpg',
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
-                  ),
-                  // Note: Removed BackdropFilter(sigma=2) — background is
-                  // static so GPU blur is wasteful. Apply blur offline in
-                  // the source asset if a blurred look is desired.
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final isDesktop = constraints.maxWidth >= 920;
-                      final isTablet = constraints.maxWidth >= 680 &&
-                          constraints.maxWidth < 920;
-                      final isCompact = constraints.maxWidth < 450;
-                      final horizontalPadding =
-                          SLResponsive.horizontalPaddingForWidth(
-                        constraints.maxWidth,
-                        compactPadding: 10,
-                        handsetPadding: 18,
-                        tabletPadding: 24,
-                      );
-                      final contentMaxWidth = isDesktop
-                          ? 1080.0
-                          : isTablet
+          listenable: L10nService(),
+          builder: (context, _) {
+            final l10n = L10nService();
+            return SensitiveContentGuard(
+              child: Scaffold(
+                resizeToAvoidBottomInset: false,
+                backgroundColor: SLColors.surfaceWarm,
+                body: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Image.asset(
+                          'assets/images/default_auth_bg.jpg',
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          color: SLColors.surfaceWarm.withValues(alpha: 0.16),
+                          colorBlendMode: BlendMode.softLight,
+                        ),
+                      ),
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: SLTheme.softCanvasBackdrop(
+                            baseColor: SLColors.surfaceWarm.withValues(
+                              alpha: 0.58,
+                            ),
+                            accentColor: SLColors.thread,
+                            secondaryAccent: SLColors.secondary,
+                            motif: SLCanvasBackdropMotif.journal,
+                            child: const SizedBox.expand(),
+                          ),
+                        ),
+                      ),
+                      // Note: Removed BackdropFilter(sigma=2) — background is
+                      // static so GPU blur is wasteful. Apply blur offline in
+                      // the source asset if a blurred look is desired.
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isDesktop = constraints.maxWidth >= 920;
+                          final isTablet =
+                              constraints.maxWidth >= 680 &&
+                              constraints.maxWidth < 920;
+                          final isCompact = constraints.maxWidth < 450;
+                          final horizontalPadding =
+                              SLResponsive.horizontalPaddingForWidth(
+                                constraints.maxWidth,
+                                compactPadding: 10,
+                                handsetPadding: 18,
+                                tabletPadding: 24,
+                              );
+                          final contentMaxWidth = isDesktop
+                              ? 1080.0
+                              : isTablet
                               ? 560.0
                               : 460.0;
-                      final authPanelWidth = isDesktop
-                          ? 408.0
-                          : min(
-                              520.0,
-                              constraints.maxWidth - (isCompact ? 20 : 32),
-                            );
+                          final authPanelWidth = isDesktop
+                              ? 408.0
+                              : min(
+                                  520.0,
+                                  constraints.maxWidth - (isCompact ? 20 : 32),
+                                );
 
-                      return Center(
-                        child: SingleChildScrollView(
-                          keyboardDismissBehavior:
-                              ScrollViewKeyboardDismissBehavior.onDrag,
-                          physics: const BouncingScrollPhysics(),
-                          padding: EdgeInsets.only(
-                            left: horizontalPadding,
-                            right: horizontalPadding,
-                            top: 10,
-                            bottom:
-                                10 + MediaQuery.of(context).viewInsets.bottom,
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              SafeArea(
-                                bottom: false,
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                    bottom: isCompact ? 12 : 16,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      GestureDetector(
-                                        onTap: () =>
-                                            _showSyncGuideDialog(context),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 14, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white
-                                                .withValues(alpha: 0.65),
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                            border: Border.all(
-                                              color: const Color(0xFFFFD6E0),
-                                              width: 1.2,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: SLColors.brandPink
-                                                    .withValues(alpha: 0.08),
-                                                blurRadius: 10,
-                                                offset: const Offset(0, 3),
-                                              ),
-                                            ],
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              ShaderMask(
-                                                shaderCallback: (bounds) =>
-                                                    const LinearGradient(
-                                                  colors: [
-                                                    Color(0xFFFF9E00),
-                                                    Color(0xFFFF6B00)
-                                                  ],
-                                                ).createShader(bounds),
-                                                child: const Icon(
-                                                  Icons.lightbulb_rounded,
-                                                  size: 16,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                l10n.translate('auth_sync_guide'),
-                                                style: SLTheme.quicksand(
-                                                  fontSize: 12.5,
-                                                  fontWeight: FontWeight.w900,
-                                                  color: SLColors.brandPink,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      AuthLanguageToggle(
-                                        currentLocale: l10n.localeCode,
-                                        onSelect: (code) {
-                                          l10n.setLocale(code);
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                          return Center(
+                            child: SingleChildScrollView(
+                              keyboardDismissBehavior:
+                                  ScrollViewKeyboardDismissBehavior.onDrag,
+                              physics: const BouncingScrollPhysics(),
+                              padding: EdgeInsets.only(
+                                left: horizontalPadding,
+                                right: horizontalPadding,
+                                top: 10,
+                                bottom:
+                                    10 +
+                                    MediaQuery.of(context).viewInsets.bottom,
                               ),
-                              AnimatedPadding(
-                                duration: const Duration(milliseconds: 280),
-                                curve: Curves.easeOutCubic,
-                                padding: EdgeInsets.only(
-                                  top: _isLoginTab ? 0 : 4,
-                                ),
-                                child: AnimatedOpacity(
-                                  duration: const Duration(milliseconds: 500),
-                                  curve: Curves.easeOutCubic,
-                                  opacity: _isSuccessTransition ? 0.0 : 1.0,
-                                  child: AnimatedScale(
-                                    duration: const Duration(milliseconds: 500),
-                                    curve: Curves.easeOutCubic,
-                                    scale: _isSuccessTransition ? 1.1 : 1.0,
-                                    child: ConstrainedBox(
-                                      constraints: BoxConstraints(
-                                          maxWidth: contentMaxWidth),
-                                      child: Center(
-                                        child: SizedBox(
-                                          width: authPanelWidth,
-                                          child: AuthPanelShell(
-                                            compact: !isDesktop &&
-                                                (isCompact || isTablet),
-                                            isLoginTab: _isLoginTab,
-                                            onSelectLogin: () =>
-                                                _setAuthTab(true),
-                                            onSelectRegister: () =>
-                                                _setAuthTab(false),
-                                            authSection: _isLoginTab
-                                                ? LoginShell(
-                                                    emailController:
-                                                        _emailController,
-                                                    passwordController:
-                                                        _passwordController,
-                                                    obscurePassword:
-                                                        _obscurePassword,
-                                                    isLoading: _isLoading,
-                                                    rememberMe: _rememberMe,
-                                                    onToggleObscure: () =>
-                                                        setState(
-                                                      () => _obscurePassword =
-                                                          !_obscurePassword,
-                                                    ),
-                                                    onRememberMeChanged:
-                                                        (value) => setState(
-                                                      () => _rememberMe =
-                                                          value ?? true,
-                                                    ),
-                                                    onLogin: _handleAuthAction,
-                                                    onForgotPassword:
-                                                        _handleForgotPasswordAction,
-                                                    onSocialLogin:
-                                                        _handleSocialLogin,
-                                                  )
-                                                : RegisterShell(
-                                                    emailController:
-                                                        _emailController,
-                                                    passwordController:
-                                                        _passwordController,
-                                                    obscurePassword:
-                                                        _obscurePassword,
-                                                    isLoading: _isLoading,
-                                                    acceptTerms: _acceptTerms,
-                                                    showSecurityQuestion:
-                                                        _showSecurityQuestion,
-                                                    selectedSecurityQuestion:
-                                                        _selectedSecurityQuestion,
-                                                    securityQuestions:
-                                                        _cleanSecurityQuestions,
-                                                    securityAnswerController:
-                                                        _securityAnswerController,
-                                                    onToggleObscure: () =>
-                                                        setState(
-                                                      () => _obscurePassword =
-                                                          !_obscurePassword,
-                                                    ),
-                                                    onAcceptTermsChanged:
-                                                        (value) => setState(
-                                                      () => _acceptTerms =
-                                                          value ?? false,
-                                                    ),
-                                                    onToggleSecurityQuestion:
-                                                        () => setState(
-                                                      () => _showSecurityQuestion =
-                                                          !_showSecurityQuestion,
-                                                    ),
-                                                    onSecurityQuestionChanged:
-                                                        (value) {
-                                                      if (value == null) return;
-                                                      setState(
-                                                        () =>
-                                                            _selectedSecurityQuestion =
-                                                                value,
-                                                      );
-                                                    },
-                                                    onRegister:
-                                                        _handleAuthAction,
-                                                    onSocialLogin:
-                                                        _handleSocialLogin,
-                                                    onTermsTap:
-                                                        _openTermsDocument,
-                                                    onPrivacyTap:
-                                                        _openPrivacyDocument,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  SafeArea(
+                                    bottom: false,
+                                    child: Padding(
+                                      padding: EdgeInsets.only(
+                                        bottom: isCompact ? 12 : 16,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          GestureDetector(
+                                            onTap: () =>
+                                                _showSyncGuideDialog(context),
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 14,
+                                                    vertical: 8,
                                                   ),
-                                            onOpenGuide: _openGuideDocument,
-                                            onOpenContact: _showContactDialog,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.65,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                border: Border.all(
+                                                  color: const Color(
+                                                    0xFFFFD6E0,
+                                                  ),
+                                                  width: 1.2,
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: SLColors.brandPink
+                                                        .withValues(
+                                                          alpha: 0.08,
+                                                        ),
+                                                    blurRadius: 10,
+                                                    offset: const Offset(0, 3),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  ShaderMask(
+                                                    shaderCallback: (bounds) =>
+                                                        const LinearGradient(
+                                                          colors: [
+                                                            Color(0xFFFF9E00),
+                                                            Color(0xFFFF6B00),
+                                                          ],
+                                                        ).createShader(bounds),
+                                                    child: const Icon(
+                                                      Icons.lightbulb_rounded,
+                                                      size: 16,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 6),
+                                                  Text(
+                                                    l10n.translate(
+                                                      'auth_sync_guide',
+                                                    ),
+                                                    style: SLTheme.quicksand(
+                                                      fontSize: 12.5,
+                                                      fontWeight:
+                                                          FontWeight.w900,
+                                                      color: SLColors.brandPink,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          AuthLanguageToggle(
+                                            currentLocale: l10n.localeCode,
+                                            onSelect: (code) {
+                                              l10n.setLocale(code);
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  AnimatedPadding(
+                                    duration: const Duration(milliseconds: 280),
+                                    curve: Curves.easeOutCubic,
+                                    padding: EdgeInsets.only(
+                                      top: _isLoginTab ? 0 : 4,
+                                    ),
+                                    child: AnimatedOpacity(
+                                      duration: const Duration(
+                                        milliseconds: 500,
+                                      ),
+                                      curve: Curves.easeOutCubic,
+                                      opacity: _isSuccessTransition ? 0.0 : 1.0,
+                                      child: AnimatedScale(
+                                        duration: const Duration(
+                                          milliseconds: 500,
+                                        ),
+                                        curve: Curves.easeOutCubic,
+                                        scale: _isSuccessTransition ? 1.1 : 1.0,
+                                        child: ConstrainedBox(
+                                          constraints: BoxConstraints(
+                                            maxWidth: contentMaxWidth,
+                                          ),
+                                          child: Center(
+                                            child: SizedBox(
+                                              width: authPanelWidth,
+                                              child: AuthPanelShell(
+                                                compact:
+                                                    !isDesktop &&
+                                                    (isCompact || isTablet),
+                                                isLoginTab: _isLoginTab,
+                                                onSelectLogin: () =>
+                                                    _setAuthTab(true),
+                                                onSelectRegister: () =>
+                                                    _setAuthTab(false),
+                                                authSection: _isLoginTab
+                                                    ? LoginShell(
+                                                        emailController:
+                                                            _emailController,
+                                                        passwordController:
+                                                            _passwordController,
+                                                        obscurePassword:
+                                                            _obscurePassword,
+                                                        isLoading: _isLoading,
+                                                        rememberMe: _rememberMe,
+                                                        onToggleObscure: () => setState(
+                                                          () => _obscurePassword =
+                                                              !_obscurePassword,
+                                                        ),
+                                                        onRememberMeChanged:
+                                                            (value) => setState(
+                                                              () =>
+                                                                  _rememberMe =
+                                                                      value ??
+                                                                      true,
+                                                            ),
+                                                        onLogin:
+                                                            _handleAuthAction,
+                                                        onForgotPassword:
+                                                            _handleForgotPasswordAction,
+                                                        onSocialLogin:
+                                                            _handleSocialLogin,
+                                                      )
+                                                    : RegisterShell(
+                                                        emailController:
+                                                            _emailController,
+                                                        passwordController:
+                                                            _passwordController,
+                                                        obscurePassword:
+                                                            _obscurePassword,
+                                                        isLoading: _isLoading,
+                                                        acceptTerms:
+                                                            _acceptTerms,
+                                                        showSecurityQuestion:
+                                                            _showSecurityQuestion,
+                                                        selectedSecurityQuestion:
+                                                            _selectedSecurityQuestion,
+                                                        securityQuestions:
+                                                            _cleanSecurityQuestions,
+                                                        securityAnswerController:
+                                                            _securityAnswerController,
+                                                        onToggleObscure: () => setState(
+                                                          () => _obscurePassword =
+                                                              !_obscurePassword,
+                                                        ),
+                                                        onAcceptTermsChanged:
+                                                            (value) => setState(
+                                                              () =>
+                                                                  _acceptTerms =
+                                                                      value ??
+                                                                      false,
+                                                            ),
+                                                        onToggleSecurityQuestion:
+                                                            () => setState(
+                                                              () => _showSecurityQuestion =
+                                                                  !_showSecurityQuestion,
+                                                            ),
+                                                        onSecurityQuestionChanged:
+                                                            (value) {
+                                                              if (value == null)
+                                                                return;
+                                                              setState(
+                                                                () =>
+                                                                    _selectedSecurityQuestion =
+                                                                        value,
+                                                              );
+                                                            },
+                                                        onRegister:
+                                                            _handleAuthAction,
+                                                        onSocialLogin:
+                                                            _handleSocialLogin,
+                                                        onTermsTap:
+                                                            _openTermsDocument,
+                                                        onPrivacyTap:
+                                                            _openPrivacyDocument,
+                                                      ),
+                                                onOpenGuide: _openGuideDocument,
+                                                onOpenContact:
+                                                    _showContactDialog,
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  // Copyright watermark
-                  SafeArea(
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                            bottom: MediaQuery.of(context).padding.bottom > 0
-                                ? 8
-                                : 16),
-                        child: Text(
-                          'SoulLocket © $_copyrightYear — Tame Trương Việt Hoàng',
-                          style: SLTheme.quicksand(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white.withValues(alpha: 0.50),
+                            ),
+                          );
+                        },
+                      ),
+                      // Copyright watermark
+                      SafeArea(
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              bottom: MediaQuery.of(context).padding.bottom > 0
+                                  ? 8
+                                  : 16,
+                            ),
+                            child: Text(
+                              'SoulLocket © $_copyrightYear — Tame Trương Việt Hoàng',
+                              style: SLTheme.quicksand(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white.withValues(alpha: 0.50),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
-      },
-      );
       },
     );
   }
@@ -1243,11 +1316,9 @@ class _LoginScreenState extends State<LoginScreen> {
   void _showSyncGuideDialog(BuildContext context, {bool enforceDelay = false}) {
     showDialog<void>(
       context: context,
-      barrierDismissible:
-          !enforceDelay,
-      builder: (dialogContext) => _SyncGuideDialogContent(
-        enforceDelay: enforceDelay,
-      ),
+      barrierDismissible: !enforceDelay,
+      builder: (dialogContext) =>
+          _SyncGuideDialogContent(enforceDelay: enforceDelay),
     );
   }
 }
@@ -1258,7 +1329,8 @@ class _SyncGuideDialogContent extends StatefulWidget {
   const _SyncGuideDialogContent({required this.enforceDelay});
 
   @override
-  State<_SyncGuideDialogContent> createState() => _SyncGuideDialogContentState();
+  State<_SyncGuideDialogContent> createState() =>
+      _SyncGuideDialogContentState();
 }
 
 class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
@@ -1300,7 +1372,8 @@ class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
   int get _remainingSeconds {
     if (!widget.enforceDelay) return 0;
     const totalSeconds = kDebugMode ? 1 : 3;
-    final remaining = (totalSeconds * (1.0 - _countdownController.value)).ceil();
+    final remaining = (totalSeconds * (1.0 - _countdownController.value))
+        .ceil();
     return remaining.clamp(0, totalSeconds);
   }
 
@@ -1312,177 +1385,302 @@ class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
       canPop: !widget.enforceDelay || !_isCountdownActive,
       child: Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 420),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [
-                Color(0xFFFFFDFE),
-                Color(0xFFFFF2F8),
-                Color(0xFFFCF4FF),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(32),
-            border: Border.all(
-              color: const Color(0xFFFF85A2).withValues(alpha: 0.55),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFFF5277).withValues(alpha: 0.20),
-                blurRadius: 40,
-                offset: const Offset(0, 20),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFF7597), Color(0xFFFF5277)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFF5277)
-                              .withValues(alpha: 0.35),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.sync_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _l10n.translate('Hướng dẫn đồng bộ dữ liệu'),
-                          style: SLTheme.quicksand(
-                            fontSize: 16.5,
-                            fontWeight: FontWeight.w900,
-                            color: SLColors.textPrimary,
-                          ),
-                        ),
-                        Text(
-                          _l10n.translate('Mô hình ghép đôi tài khoản riêng'),
-                          style: SLTheme.quicksand(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFFFF5277),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
+        child: SingleChildScrollView(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 420),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFFFFFDF9),
+                  Color(0xFFFFEFF4),
+                  Color(0xFFF4EEFF),
                 ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              const SizedBox(height: 14),
-              Text(
-                _l10n.translate(
-                    'SoulLocket sử dụng hệ thống tài khoản riêng biệt để bảo vệ quyền riêng tư 100% cho từng người!'),
-                style: SLTheme.quicksand(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: SLColors.textSecond,
-                  height: 1.35,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.94),
+                width: 1.8,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFE65372).withValues(alpha: 0.16),
+                  blurRadius: 38,
+                  offset: const Offset(0, 18),
                 ),
-              ),
-              const SizedBox(height: 14),
-              _buildSyncStepCard(
-                stepNumber: '1',
-                title: _l10n.translate('Tạo 2 tài khoản riêng biệt'),
-                description: _l10n.translate(
-                    'Mỗi người tự đăng ký tài khoản riêng (Email, Google, Apple) và đăng nhập vào ứng dụng trên máy mình.'),
-                icon: Icons.person_add_alt_1_rounded,
-                accentColor: const Color(0xFFFF5277),
-              ),
-              const SizedBox(height: 10),
-              _buildSyncStepCard(
-                stepNumber: '2',
-                title: _l10n.translate('Tạo hoặc nhập Mã ghép đôi'),
-                description: _l10n.translate(
-                    'Vào Cài đặt ⚙️ → Ghép nối dữ liệu. Một người bấm "Tạo mã ghép nối" và gửi cho người kia nhập vào.'),
-                icon: Icons.qr_code_rounded,
-                accentColor: const Color(0xFF7C4DFF),
-              ),
-              const SizedBox(height: 10),
-              _buildSyncStepCard(
-                stepNumber: '3',
-                title: _l10n.translate('Đồng bộ dữ liệu thời gian thực'),
-                description: _l10n.translate(
-                    'Sau khi kết nối, mọi kỷ niệm, nhật ký, album ảnh và vị trí sẽ tự động đồng bộ tức thì giữa 2 máy!'),
-                icon: Icons.favorite_rounded,
-                accentColor: const Color(0xFF00BFA5),
-              ),
-              const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF3E0),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: const Color(0xFFFFB74D).withValues(alpha: 0.5),
+              ],
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  right: 20,
+                  top: 18,
+                  child: Icon(
+                    Icons.favorite_rounded,
+                    size: 24,
+                    color: const Color(0xFFE65372).withValues(alpha: 0.10),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.lightbulb_rounded,
-                      color: Color(0xFFF57C00),
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _l10n.translate(
-                            'Mẹo: Dữ liệu được lưu an toàn trên đám mây. Đăng nhập lại trên máy mới dữ liệu tự động tải về đầy đủ.'),
-                        style: SLTheme.quicksand(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFFE65100),
-                          height: 1.3,
+                Positioned(
+                  left: 24,
+                  top: 88,
+                  child: Icon(
+                    Icons.auto_awesome_rounded,
+                    size: 15,
+                    color: const Color(0xFF8F72D8).withValues(alpha: 0.20),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 54,
+                            height: 54,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFFFF7597),
+                                  Color(0xFFE65372),
+                                  Color(0xFF9A78E6),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(19),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFE65372)
+                                      .withValues(alpha: 0.24),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 7),
+                                ),
+                              ],
+                            ),
+                            child: const Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Icon(
+                                  Icons.sync_alt_rounded,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                                Positioned(
+                                  right: 7,
+                                  top: 7,
+                                  child: Icon(
+                                    Icons.favorite_rounded,
+                                    color: Colors.white,
+                                    size: 10,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 9,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFEAF0),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    _l10n.translate('Kết nối hai thiết bị'),
+                                    style: SLTheme.quicksand(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFFE65372),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  _l10n.translate('Hướng dẫn đồng bộ dữ liệu'),
+                                  style: SLTheme.quicksand(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w900,
+                                    color: SLColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _l10n.translate(
+                                    'Mỗi người một tài khoản, cùng chung một không gian kỷ niệm.',
+                                  ),
+                                  style: SLTheme.quicksand(
+                                    fontSize: 11.5,
+                                    height: 1.35,
+                                    fontWeight: FontWeight.w700,
+                                    color: SLColors.textSecond,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.70),
+                          borderRadius: BorderRadius.circular(17),
+                          border: Border.all(
+                            color: const Color(0xFFFFD3DE),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 30,
+                              height: 30,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFFFEAF0),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.lock_rounded,
+                                size: 16,
+                                color: Color(0xFFE65372),
+                              ),
+                            ),
+                            const SizedBox(width: 9),
+                            Expanded(
+                              child: Text(
+                                _l10n.translate(
+                                  'Tài khoản vẫn riêng tư; chỉ dữ liệu bạn chọn cho không gian đôi mới được đồng bộ.',
+                                ),
+                                style: SLTheme.quicksand(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: SLColors.textSecond,
+                                  height: 1.35,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 13),
+                      _buildSyncStepCard(
+                        stepNumber: '1',
+                        title: _l10n.translate('Mỗi người dùng tài khoản riêng'),
+                        description: _l10n.translate(
+                          'Đăng ký và đăng nhập trên thiết bị của mình bằng Email, Google hoặc Apple.',
+                        ),
+                        icon: Icons.person_rounded,
+                        accentColor: const Color(0xFFE65372),
+                      ),
+                      const SizedBox(height: 9),
+                      _buildSyncStepCard(
+                        stepNumber: '2',
+                        title: _l10n.translate('Ghép đôi bằng mã kết nối'),
+                        description: _l10n.translate(
+                          'Vào Cài đặt → Ghép nối dữ liệu. Một người tạo mã, người còn lại nhập mã để xác nhận.',
+                        ),
+                        icon: Icons.qr_code_2_rounded,
+                        accentColor: const Color(0xFF8F72D8),
+                      ),
+                      const SizedBox(height: 9),
+                      _buildSyncStepCard(
+                        stepNumber: '3',
+                        title: _l10n.translate('Tự đồng bộ sau khi kết nối'),
+                        description: _l10n.translate(
+                          'Kỷ niệm, nhật ký, album và dữ liệu đôi được cập nhật giữa hai thiết bị khi có kết nối.',
+                        ),
+                        icon: Icons.favorite_rounded,
+                        accentColor: const Color(0xFF2C9B86),
+                      ),
+                      const SizedBox(height: 13),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF6E6),
+                          borderRadius: BorderRadius.circular(17),
+                          border: Border.all(
+                            color: const Color(0xFFF4C978).withValues(alpha: 0.62),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.lightbulb_rounded,
+                              color: Color(0xFFD58A24),
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _l10n.translate(
+                                  'Mẹo: khi đổi điện thoại, chỉ cần đăng nhập lại đúng tài khoản để khôi phục phần dữ liệu đã được lưu trên cloud.',
+                                ),
+                                style: SLTheme.quicksand(
+                                  fontSize: 10.8,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF9A651B),
+                                  height: 1.35,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: SLTheme.authPrimaryButton(
+                          label: _isCountdownActive
+                              ? '${_l10n.translate('Đã hiểu')} ($_remainingSeconds)'
+                              : _l10n.translate('Đã hiểu'),
+                          onPressed: _isCountdownActive
+                              ? null
+                              : () => Navigator.pop(context),
+                          colors: const [
+                            Color(0xFFE65372),
+                            Color(0xFFFF7597),
+                            Color(0xFF9A78E6),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Center(
+                        child: Text(
+                          _l10n.translate('SoulLocket • riêng tư trước, đồng bộ sau'),
+                          style: SLTheme.quicksand(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            color: SLColors.textTertiary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                child: SLTheme.authPrimaryButton(
-                  label: _isCountdownActive
-                      ? '${_l10n.translate('Đã hiểu')} ($_remainingSeconds)'
-                      : _l10n.translate('Đã hiểu'),
-                  onPressed: _isCountdownActive
-                      ? null
-                      : () => Navigator.pop(context),
-                  colors: const [
-                    Color(0xFFFF5277),
-                    Color(0xFFFF7597),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -1499,17 +1697,17 @@ class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white.withValues(alpha: 0.78),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: accentColor.withValues(alpha: 0.28),
-          width: 1.2,
+          color: accentColor.withValues(alpha: 0.18),
+          width: 1.1,
         ),
         boxShadow: [
           BoxShadow(
-            color: accentColor.withValues(alpha: 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: accentColor.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -1517,31 +1715,39 @@ class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 28,
-            height: 28,
-            alignment: Alignment.center,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [accentColor, accentColor.withValues(alpha: 0.8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: accentColor.withValues(alpha: 0.35),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
+              color: accentColor.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(icon, size: 19, color: accentColor),
+                Positioned(
+                  right: 2,
+                  top: 2,
+                  child: Container(
+                    width: 15,
+                    height: 15,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: accentColor,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
+                    ),
+                    child: Text(
+                      stepNumber,
+                      style: SLTheme.quicksand(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
               ],
-            ),
-            child: Text(
-              stepNumber,
-              style: SLTheme.quicksand(
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -1549,34 +1755,32 @@ class _SyncGuideDialogContentState extends State<_SyncGuideDialogContent>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Icon(icon, size: 16, color: accentColor),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: SLTheme.quicksand(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          color: SLColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  title,
+                  style: SLTheme.quicksand(
+                    fontSize: 12.8,
+                    fontWeight: FontWeight.w900,
+                    color: SLColors.textPrimary,
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   description,
                   style: SLTheme.quicksand(
-                    fontSize: 11.5,
+                    fontSize: 10.8,
                     fontWeight: FontWeight.w600,
                     color: SLColors.textSecond,
-                    height: 1.35,
+                    height: 1.38,
                   ),
                 ),
               ],
             ),
+          ),
+          const SizedBox(width: 4),
+          Icon(
+            Icons.check_circle_rounded,
+            size: 17,
+            color: accentColor.withValues(alpha: 0.72),
           ),
         ],
       ),

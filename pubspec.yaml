@@ -203,6 +203,7 @@ flutter:
     - assets/images/default_auth_bg.jpg
     - assets/images/default_home_bg.jpg
     - assets/images/anhtomau_stickers/
+    - assets/images/soullocket_stickers/
 
     # Home screen bundled interaction stickers
     - assets/images/utility_stickers/

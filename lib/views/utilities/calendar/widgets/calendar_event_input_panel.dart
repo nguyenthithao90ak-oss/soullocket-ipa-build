@@ -1,7 +1,4 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
-import 'package:soullocket_app/core/fast_backdrop_filter.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 
 import 'calendar_info_pill.dart';
@@ -13,6 +10,7 @@ class CalendarEventInputPanel extends StatelessWidget {
   final int eventCount;
   final TextEditingController controller;
   final VoidCallback onAdd;
+  final bool isSaving;
 
   const CalendarEventInputPanel({
     super.key,
@@ -22,153 +20,185 @@ class CalendarEventInputPanel extends StatelessWidget {
     required this.eventCount,
     required this.controller,
     required this.onAdd,
+    this.isSaving = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: horizontalInset),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: FastBackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: EdgeInsets.all(compact ? 16 : 18),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withValues(alpha: 0.9),
-                  Colors.white.withValues(alpha: 0.74),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.34)),
+      child: Container(
+        padding: EdgeInsets.all(compact ? 16 : 18),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFFF9FCFF),
+              Color(0xFFF7F3FF),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: const Color(0xFFE6EAF9)),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withValues(alpha: 0.08),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: compact ? 40 : 44,
-                      height: compact ? 40 : 44,
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(compact ? 14 : 15),
-                      ),
-                      child: Icon(
-                        Icons.edit_calendar_rounded,
-                        color: accent,
-                        size: compact ? 20 : 22,
-                      ),
-                    ),
-                    SLSpacing.w12,
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Thêm kế hoạch mới',
-                            style: SLTheme.quicksand(
-                              fontSize: compact ? 15 : 16,
-                              fontWeight: FontWeight.w900,
-                              color: SLTheme.textMain,
-                            ),
-                          ),
-                          SLSpacing.h4,
-                          Text(
-                            'Viết rõ giờ hẹn, việc cần chuẩn bị hoặc điều cả hai cần nhớ cho ngày này.',
-                            style: SLTheme.quicksand(
-                              fontSize: compact ? 11.5 : 12,
-                              fontWeight: FontWeight.w700,
-                              color: SLTheme.textMuted,
-                              height: 1.35,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: compact ? 12 : 14),
                 Container(
+                  width: compact ? 42 : 46,
+                  height: compact ? 42 : 46,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.72),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+                    gradient: LinearGradient(
+                      colors: [
+                        accent.withValues(alpha: 0.16),
+                        accent.withValues(alpha: 0.08),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(compact ? 14 : 16),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 16),
-                  child: TextField(
-                    controller: controller,
-                    minLines: 1,
-                    maxLines: 3,
-                    textInputAction: TextInputAction.done,
-                    style: SLTheme.quicksand(
-                      color: SLTheme.textMain,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    decoration: InputDecoration(
-                      hintText:
-                          'Ví dụ: 19:30 gọi video, mua bánh nhỏ, chuẩn bị quà và viết lời nhắn...',
-                      hintStyle: SLTheme.quicksand(
-                        color: SLTheme.textMuted,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      border: InputBorder.none,
-                    ),
-                    onSubmitted: (_) => onAdd(),
+                  child: Icon(
+                    Icons.edit_note_rounded,
+                    color: accent,
+                    size: compact ? 20 : 22,
                   ),
                 ),
-                SizedBox(height: compact ? 10 : 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    CalendarInfoPill(
-                      icon: Icons.notifications_none_rounded,
-                      label: 'Nhắc trước 1 ngày',
-                      accent: accent,
-                      compact: compact,
-                    ),
-                    CalendarInfoPill(
-                      icon: Icons.schedule_rounded,
-                      label: '$eventCount mục trong ngày',
-                      accent: accent,
-                      compact: compact,
-                    ),
-                  ],
-                ),
-                SizedBox(height: compact ? 12 : 14),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: onAdd,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: accent,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding:
-                          EdgeInsets.symmetric(vertical: compact ? 13 : 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
+                SLSpacing.w12,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Thêm kế hoạch mới',
+                        style: SLTheme.quicksand(
+                          fontSize: compact ? 15 : 16,
+                          fontWeight: FontWeight.w900,
+                          color: SLTheme.textMain,
+                        ),
                       ),
-                    ),
-                    icon: const Icon(Icons.add_task_rounded, size: 20),
-                    label: Text(
-                      'Thêm vào lịch đi chơi',
-                      style: SLTheme.quicksand(
-                        fontWeight: FontWeight.w900,
-                        fontSize: compact ? 13 : 14,
-                        color: Colors.white,
+                      SLSpacing.h4,
+                      Text(
+                        'Ghi rõ giờ hẹn, điều cần chuẩn bị hoặc một việc nhỏ hai bạn muốn nhớ.',
+                        style: SLTheme.quicksand(
+                          fontSize: compact ? 11.5 : 12,
+                          fontWeight: FontWeight.w700,
+                          color: SLTheme.textMuted,
+                          height: 1.35,
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
+            SizedBox(height: compact ? 12 : 14),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFE9D8D3)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 16),
+              child: TextField(
+                controller: controller,
+                minLines: 1,
+                maxLines: 3,
+                textInputAction: TextInputAction.done,
+                style: SLTheme.quicksand(
+                  color: SLTheme.textMain,
+                  fontWeight: FontWeight.w700,
+                ),
+                decoration: InputDecoration(
+                  hintText:
+                      'Ví dụ: 19:30 gọi video, mua bánh nhỏ, chuẩn bị quà và viết lời nhắn...',
+                  hintStyle: SLTheme.quicksand(
+                    color: SLTheme.textMuted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  border: InputBorder.none,
+                ),
+                onSubmitted: (_) => onAdd(),
+              ),
+            ),
+            SizedBox(height: compact ? 10 : 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                CalendarInfoPill(
+                  icon: Icons.notifications_none_rounded,
+                  label: 'Nhắc trước 1 ngày',
+                  accent: accent,
+                  compact: compact,
+                ),
+                CalendarInfoPill(
+                  icon: Icons.schedule_rounded,
+                  label: '$eventCount mục trong ngày',
+                  accent: accent,
+                  compact: compact,
+                ),
+                CalendarInfoPill(
+                  icon: Icons.favorite_outline_rounded,
+                  label: 'Ghi chú đáng yêu',
+                  accent: accent,
+                  compact: compact,
+                ),
+              ],
+            ),
+            SizedBox(height: compact ? 12 : 14),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: isSaving ? null : onAdd,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: accent,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: accent.withValues(alpha: 0.5),
+                  elevation: 0,
+                  padding: EdgeInsets.symmetric(vertical: compact ? 13 : 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                icon: isSaving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.add_task_rounded, size: 20),
+                label: Text(
+                  isSaving ? 'Đang lưu kế hoạch...' : 'Thêm vào lịch của hai bạn',
+                  style: SLTheme.quicksand(
+                    fontWeight: FontWeight.w900,
+                    fontSize: compact ? 13 : 14,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

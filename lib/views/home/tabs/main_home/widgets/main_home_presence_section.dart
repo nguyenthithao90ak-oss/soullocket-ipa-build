@@ -18,111 +18,129 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
         final z2 = ZodiacUtils.getZodiac(dobU2);
         final ageDaysU1 = _extractAgeDays(dobU1);
         final ageDaysU2 = _extractAgeDays(dobU2);
-
-
         return Padding(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            compactMetaLayout ? 18 : 24,
-            20,
-            compactMetaLayout ? 14 : 20,
-          ),
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-
-
-              Row(
-                mainAxisAlignment: compactMetaLayout
-                    ? MainAxisAlignment.spaceEvenly
-                    : MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: _HomeScrapbookCard(
+            padding: EdgeInsets.zero,
+            radius: 28,
+            accentColor: SLColors.thread,
+            adornment: _HomeCardAdornment.photoCorners,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                20,
+                compactMetaLayout ? 18 : 24,
+                20,
+                compactMetaLayout ? 14 : 20,
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
                 children: [
-                  Flexible(
-                    child: _buildModernUserColumn(
-                      name: nameU1,
-                      avatarUrl: avtUser1,
-                      zodiacEmoji: z1?['emoji'] ?? '',
-                      zodiacName: z1?['name'] ?? '',
-                      ageDays: ageDaysU1,
-                      role: 'user1',
-                      isUser1: true,
-                      hideMeta: isSingle,
-                      customOnTap: () => _changeAvatar(isUser1: true),
-                      customOnLongPress: () => _changeAvatar(isUser1: true),
+                  if (!isSingle)
+                    const Positioned(
+                      top: 40,
+                      left: 42,
+                      right: 42,
+                      height: 54,
+                      child: IgnorePointer(
+                        child: CustomPaint(painter: _CoupleThreadPainter()),
+                      ),
                     ),
+                  Row(
+                    mainAxisAlignment: compactMetaLayout
+                        ? MainAxisAlignment.spaceEvenly
+                        : MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Flexible(
+                        child: _buildModernUserColumn(
+                          name: nameU1,
+                          avatarUrl: avtUser1,
+                          zodiacEmoji: z1?['emoji'] ?? '',
+                          zodiacName: z1?['name'] ?? '',
+                          ageDays: ageDaysU1,
+                          role: 'user1',
+                          isUser1: true,
+                          hideMeta: isSingle,
+                          customOnTap: () => _changeAvatar(isUser1: true),
+                          customOnLongPress: () => _changeAvatar(isUser1: true),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: compactMetaLayout ? 8 : 10,
+                          vertical: compactMetaLayout ? 12 : 20,
+                        ),
+                        child: _buildModernRelationshipAction(
+                          isSingle: isSingle,
+                        ),
+                      ),
+                      Flexible(
+                        child: isSingle
+                            ? _buildModernUserColumn(
+                                name: '',
+                                avatarUrl:
+                                    '', // Will fall back to placeholder or empty
+                                zodiacEmoji: '',
+                                zodiacName: '',
+                                ageDays: '--',
+                                role: 'user2',
+                                isUser1: false,
+                                hideMeta: true,
+                                isGreyedOut: true,
+                                customOnTap: _openSingleMatchHub,
+                              )
+                            : _buildModernUserColumn(
+                                name: nameU2,
+                                avatarUrl: avtUser2,
+                                zodiacEmoji: z2?['emoji'] ?? '',
+                                zodiacName: z2?['name'] ?? '',
+                                ageDays: ageDaysU2,
+                                role: 'user2',
+                                isUser1: false,
+                                hideMeta: false,
+                                customOnTap: () =>
+                                    _changeAvatar(isUser1: false),
+                                customOnLongPress: () =>
+                                    _changeAvatar(isUser1: false),
+                              ),
+                      ),
+                    ],
                   ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: compactMetaLayout ? 8 : 10,
-                      vertical: compactMetaLayout ? 12 : 20,
+                  Positioned.fill(
+                    child: ValueListenableBuilder<List<_HomeReactionFlight>>(
+                      valueListenable: _reactionFlightsNotifier,
+                      builder: (context, flights, _) {
+                        final hasLeft = flights.any((f) => f.shootToRight);
+                        final hasRight = flights.any((f) => !f.shootToRight);
+                        final hasCollision = hasLeft && hasRight;
+
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            for (final flight in flights)
+                              Positioned.fill(
+                                key: ValueKey('reaction-flight-${flight.id}'),
+                                child: IgnorePointer(
+                                  child: ShootingHeartEffect(
+                                    shootToRight: flight.shootToRight,
+                                    emoji: flight.emoji,
+                                    assetPath: flight.assetPath,
+                                    imageUrl: flight.imageUrl,
+                                    hasCollision: hasCollision,
+                                    onComplete: () =>
+                                        _removeReactionFlight(flight.id),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
                     ),
-                    child: _buildModernRelationshipAction(isSingle: isSingle),
-                  ),
-                  Flexible(
-                    child: isSingle
-                        ? _buildModernUserColumn(
-                            name: '',
-                            avatarUrl:
-                                '', // Will fall back to placeholder or empty
-                            zodiacEmoji: '',
-                            zodiacName: '',
-                            ageDays: '--',
-                            role: 'user2',
-                            isUser1: false,
-                            hideMeta: true,
-                            isGreyedOut: true,
-                            customOnTap: _openSingleMatchHub,
-                          )
-                        : _buildModernUserColumn(
-                            name: nameU2,
-                            avatarUrl: avtUser2,
-                            zodiacEmoji: z2?['emoji'] ?? '',
-                            zodiacName: z2?['name'] ?? '',
-                            ageDays: ageDaysU2,
-                            role: 'user2',
-                            isUser1: false,
-                            hideMeta: false,
-                            customOnTap: () => _changeAvatar(isUser1: false),
-                            customOnLongPress: () =>
-                                _changeAvatar(isUser1: false),
-                          ),
                   ),
                 ],
               ),
-              Positioned.fill(
-                child: ValueListenableBuilder<List<_HomeReactionFlight>>(
-                  valueListenable: _reactionFlightsNotifier,
-                  builder: (context, flights, _) {
-                    final hasLeft = flights.any((f) => f.shootToRight);
-                    final hasRight = flights.any((f) => !f.shootToRight);
-                    final hasCollision = hasLeft && hasRight;
-
-                    return Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        for (final flight in flights)
-                          Positioned.fill(
-                            key: ValueKey('reaction-flight-${flight.id}'),
-                            child: IgnorePointer(
-                              child: ShootingHeartEffect(
-                                shootToRight: flight.shootToRight,
-                                emoji: flight.emoji,
-                                assetPath: flight.assetPath,
-                                imageUrl: flight.imageUrl,
-                                hasCollision: hasCollision,
-                                onComplete: () =>
-                                    _removeReactionFlight(flight.id),
-                              ),
-                            ),
-                          ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -197,8 +215,11 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
               color: const Color(0xFF6366F1).withValues(alpha: 0.8),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.nights_stay_rounded,
-                color: Colors.white, size: 24),
+            child: const Icon(
+              Icons.nights_stay_rounded,
+              color: Colors.white,
+              size: 24,
+            ),
           ),
         ],
       );
@@ -210,11 +231,12 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
         SizedBox(height: compactMeta ? 8 : 12),
         GestureDetector(
           onTap: () async {
-            DateTime initial =
-                DateTime.now().subtract(const Duration(days: 365 * 20));
+            DateTime initial = DateTime.now().subtract(
+              const Duration(days: 365 * 20),
+            );
             final currentDob =
                 _houseSettings?['dob${isUser1 ? 'U1' : 'U2'}']?.toString() ??
-                    '';
+                '';
             if (currentDob.isNotEmpty) {
               try {
                 initial = DateTime.parse(currentDob);
@@ -238,9 +260,9 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
             if (!mounted) return;
             if (picked != null && _houseId != null) {
               final newDobStr = picked.toIso8601String().split('T')[0];
-              await _dbRef
-                  .child('houses/$_houseId/settings')
-                  .update({'dob${isUser1 ? 'U1' : 'U2'}': newDobStr});
+              await _dbRef.child('houses/$_houseId/settings').update({
+                'dob${isUser1 ? 'U1' : 'U2'}': newDobStr,
+              });
             }
           },
           behavior: HitTestBehavior.opaque,
@@ -348,10 +370,7 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (hasZodiac) ...[
-            Text(
-              zodiacEmoji,
-              style: const TextStyle(fontSize: 16, height: 1),
-            ),
+            Text(zodiacEmoji, style: const TextStyle(fontSize: 16, height: 1)),
             if (hasAge) const SizedBox(width: 4),
           ],
           if (hasAge)
@@ -368,4 +387,67 @@ extension _MainHomeTabPresenceSection on _MainHomeTabState {
       ),
     );
   }
+}
+
+class _CoupleThreadPainter extends CustomPainter {
+  const _CoupleThreadPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width < 40 || size.height < 20) return;
+
+    final path = Path()
+      ..moveTo(0, size.height * 0.52)
+      ..cubicTo(
+        size.width * 0.22,
+        size.height * 0.04,
+        size.width * 0.36,
+        size.height * 0.94,
+        size.width * 0.5,
+        size.height * 0.50,
+      )
+      ..cubicTo(
+        size.width * 0.64,
+        size.height * 0.06,
+        size.width * 0.78,
+        size.height * 0.96,
+        size.width,
+        size.height * 0.48,
+      );
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = SLColors.thread.withValues(alpha: 0.28)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.8
+        ..strokeCap = StrokeCap.round,
+    );
+
+    final center = Offset(size.width * 0.5, size.height * 0.48);
+    final heart = Path()
+      ..moveTo(center.dx, center.dy + 6)
+      ..cubicTo(
+        center.dx - 12,
+        center.dy - 2,
+        center.dx - 7,
+        center.dy - 10,
+        center.dx,
+        center.dy - 4,
+      )
+      ..cubicTo(
+        center.dx + 7,
+        center.dy - 10,
+        center.dx + 12,
+        center.dy - 2,
+        center.dx,
+        center.dy + 6,
+      );
+    canvas.drawPath(
+      heart,
+      Paint()..color = SLColors.primary.withValues(alpha: 0.20),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _CoupleThreadPainter oldDelegate) => false;
 }

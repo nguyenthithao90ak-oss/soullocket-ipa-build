@@ -1,4 +1,3 @@
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -313,15 +312,13 @@ class ForgotGmailRecoveryHelper {
     }
 
     if (isFamiliarDevice && result == 'reset') {
-      AuthFeedbackDialogs.showError(
-        context,
-        L10nService().translate('auth_msg_recovery_requested'),
+      await _sendPasswordResetOtp(
+        context: context,
+        authService: authService,
+        fullEmail: fullEmail,
+        maskedEmail: maskedEmail,
+        onGuardPasswordReset: onGuardPasswordReset,
       );
-      await FirebaseDatabase.instance.ref('reset_requests/$houseId').set({
-        'requestTs': ServerValue.timestamp,
-        'platform': 'flutter',
-        'status': 'pending',
-      });
       return;
     }
 

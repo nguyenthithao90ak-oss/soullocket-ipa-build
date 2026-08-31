@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
+import 'package:soullocket_app/widgets/milestone_embedded_sticker.dart';
 import '../../core/sl_theme.dart';
 import '../../utils/services/l10n_service.dart';
 import '../utilities/calendar_screen.dart';
@@ -564,10 +565,15 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                                   ],
                                 ),
                                 child: const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(5.0),
-                                    child: R2StickerImage(
-                                        'assets/images/anhtomau_stickers/sticker_2.gif'),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(4.0),
+                                    child: MilestoneEmbeddedSticker(
+                                      'fireworks_couple',
+                                      width: 40,
+                                      height: 40,
+                                      fallbackAssetPath:
+                                          'assets/images/anhtomau_stickers/sticker_2.gif',
+                                    ),
                                   ),
                                 ),
                               ),
@@ -701,6 +707,97 @@ class _MilestonesScreenState extends State<MilestonesScreen>
         ],
       ),
     );
+  }
+
+  int? _extractMilestoneDays(String title) {
+    final match = RegExp(r'(\d{1,5})').firstMatch(title);
+    return match == null ? null : int.tryParse(match.group(1)!);
+  }
+
+  String _resolveMilestoneStickerKey(MilestoneEvent event) {
+    final title = event.title.toLowerCase();
+    final month = event.date.month;
+    final day = event.date.day;
+
+    if (event.type == 'birthday') {
+      return 'birthday_cupcake';
+    }
+
+    if (event.type == 'anniversary') {
+      final days = _extractMilestoneDays(title);
+      switch (days) {
+        case 30:
+          return 'days_30';
+        case 50:
+          return 'days_50';
+        case 100:
+          return 'days_100';
+        case 365:
+          return 'days_365';
+        case 500:
+          return 'days_500';
+        case 730:
+          return 'days_730';
+        case 1000:
+          return 'days_1000';
+      }
+
+      if (title.contains('month') || title.contains('tháng')) {
+        return 'first_date';
+      }
+      if (title.contains('year') || title.contains('năm')) {
+        return 'heart_lock';
+      }
+      return 'fireworks_couple';
+    }
+
+    if (event.type == 'holiday') {
+      if ((month == 3 && day == 8) || (month == 10 && day == 20)) {
+        return 'womens_day';
+      }
+      if (month == 2 && day == 14) {
+        return 'chocolate';
+      }
+      if ((month == 3 && day == 14) || (month == 4 && day == 14)) {
+        return 'chocolate';
+      }
+      if (month == 4 && day == 1) {
+        return 'april';
+      }
+      if (month == 10 && day == 31) {
+        return 'halloween';
+      }
+      if (month == 12 && day == 24) {
+        return 'christmas_tree';
+      }
+      if (month == 12 && day == 25) {
+        return 'christmas_stocking';
+      }
+      if ((month == 12 && day == 31) || (month == 1 && day == 1)) {
+        return 'fireworks_couple';
+      }
+      if (month == 6 && day == 1) {
+        return 'beach';
+      }
+      if (month == 6 && day == 28) {
+        return 'picnic';
+      }
+      return 'heart_lock';
+    }
+
+    if (event.type == 'calendar') {
+      if (title.contains('movie')) return 'movie_date';
+      if (title.contains('trip') || title.contains('travel') || title.contains('du lịch') || title.contains('chuyến đi')) {
+        return 'travel';
+      }
+      if (title.contains('cafe') || title.contains('coffee') || title.contains('date')) {
+        return 'coffee';
+      }
+      if (title.contains('picnic')) return 'picnic';
+      return 'april';
+    }
+
+    return 'heart_lock';
   }
 
   Widget _buildEventsList(List<MilestoneEvent> list,
@@ -839,6 +936,7 @@ class _MilestonesScreenState extends State<MilestonesScreen>
           const [Color(0xFFBAE6FD), Color(0xFF7DD3FC)]
         ),
     };
+    final stickerKey = _resolveMilestoneStickerKey(event);
 
     final weekdays = [
       L10nService().translate('milestone_weekday_1'),
@@ -909,8 +1007,13 @@ class _MilestonesScreenState extends State<MilestonesScreen>
                     ],
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: R2StickerImage(stickerPath),
+                    padding: const EdgeInsets.all(6.0),
+                    child: MilestoneEmbeddedSticker(
+                      stickerKey,
+                      width: 40,
+                      height: 40,
+                      fallbackAssetPath: stickerPath,
+                    ),
                   ),
                 ),
               ),

@@ -13,10 +13,7 @@ import '../../../../utils/sl_notice.dart';
 class SettingsLinksManagerScreen extends StatefulWidget {
   final String houseId;
 
-  const SettingsLinksManagerScreen({
-    super.key,
-    required this.houseId,
-  });
+  const SettingsLinksManagerScreen({super.key, required this.houseId});
 
   @override
   State<SettingsLinksManagerScreen> createState() =>
@@ -40,22 +37,24 @@ class _SettingsLinksManagerScreenState
     final houseId = widget.houseId.trim();
     if (houseId.isEmpty) {
       return Stream<List<_MemoryShareLinkData>>.value(
-          const <_MemoryShareLinkData>[]);
+        const <_MemoryShareLinkData>[],
+      );
     }
     return _db
         .ref('houses/$houseId/memoryShares')
         .orderByChild('createdAt')
         .onValue
         .map((event) {
-      if (!event.snapshot.exists || event.snapshot.value is! Map) {
-        return <_MemoryShareLinkData>[];
-      }
-      final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
-      return data.entries.where((entry) => entry.value is Map).map((entry) {
-        final map = Map<dynamic, dynamic>.from(entry.value as Map);
-        return _MemoryShareLinkData.fromMap(entry.key.toString(), map);
-      }).toList();
-    }).asBroadcastStream();
+          if (!event.snapshot.exists || event.snapshot.value is! Map) {
+            return <_MemoryShareLinkData>[];
+          }
+          final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
+          return data.entries.where((entry) => entry.value is Map).map((entry) {
+            final map = Map<dynamic, dynamic>.from(entry.value as Map);
+            return _MemoryShareLinkData.fromMap(entry.key.toString(), map);
+          }).toList();
+        })
+        .asBroadcastStream();
   }
 
   Future<void> _deleteMemoryLink(_MemoryShareLinkData link) async {
@@ -78,10 +77,9 @@ class _SettingsLinksManagerScreenState
     } catch (e) {
       debugPrint('Revoke API error: $e');
       try {
-        await _db.ref('houses/${widget.houseId}/memoryShares/${link.token}').update({
-          'revoked': true,
-          'revokedAt': ServerValue.timestamp,
-        });
+        await _db
+            .ref('houses/${widget.houseId}/memoryShares/${link.token}')
+            .update({'revoked': true, 'revokedAt': ServerValue.timestamp});
         if (!mounted) return;
         SLNotice.showInfo(context, context.tr('home_thuhilinkt_39edd6'));
       } catch (fallbackErr) {
@@ -95,20 +93,26 @@ class _SettingsLinksManagerScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: SLColors.paperCanvas,
       appBar: AppBar(
         title: Text(
           context.tr('home_qunllinkt_df5d77'),
-          style: SLTheme.quicksand(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFF243041),
+          style: SLTheme.textStyleForKey(
+            'dancingScript',
+            fontSize: 23,
+            fontWeight: FontWeight.w700,
+            color: SLColors.ink,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: SLColors.paper,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: Color(0xFF1565C0)),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: SLColors.primaryActive,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -116,9 +120,7 @@ class _SettingsLinksManagerScreenState
         stream: _memoryStream,
         builder: (context, memorySnapshot) {
           if (memorySnapshot.hasError) {
-            return Center(
-              child: Text(context.tr('home_khngticdan_123cc6')),
-            );
+            return Center(child: Text(context.tr('home_khngticdan_123cc6')));
           }
 
           final items = memorySnapshot.data ?? <_MemoryShareLinkData>[];
@@ -128,13 +130,20 @@ class _SettingsLinksManagerScreenState
             return _buildEmptyState();
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: items.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              return _buildMemoryItem(items[index]);
-            },
+          return Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: items.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  return _buildMemoryItem(items[index]);
+                },
+              ),
+            ),
           );
         },
       ),
@@ -143,39 +152,45 @@ class _SettingsLinksManagerScreenState
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.link_off_rounded, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            context.tr('home_chaclinktn_e88a82'),
-            style: SLTheme.quicksand(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Colors.grey[600],
+      child: SLTheme.paperCard(
+        showTape: true,
+        margin: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.link_off_rounded,
+              size: 48,
+              color: SLColors.primary,
             ),
-          ),
-        ],
+            const SizedBox(height: 14),
+            Text(
+              context.tr('home_chaclinktn_e88a82'),
+              textAlign: TextAlign.center,
+              style: SLTheme.quicksand(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: SLColors.textSecond,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildMemoryItem(_MemoryShareLinkData link) {
-    final dateStr = DateFormat('dd/MM/yyyy HH:mm')
-        .format(DateTime.fromMillisecondsSinceEpoch(link.ts));
+    final dateStr = DateFormat(
+      'dd/MM/yyyy HH:mm',
+    ).format(DateTime.fromMillisecondsSinceEpoch(link.ts));
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: SLColors.paper,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: SLColors.border),
+        boxShadow: SLShadow.paper,
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -187,12 +202,15 @@ class _SettingsLinksManagerScreenState
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE3F2FD),
-                  borderRadius: BorderRadius.circular(12),
+                  color: SLColors.paperBlush,
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: SLColors.borderLight),
                 ),
                 alignment: Alignment.center,
-                child: const Icon(Icons.photo_library_rounded,
-                    color: Color(0xFF1E88E5)),
+                child: const Icon(
+                  Icons.photo_library_rounded,
+                  color: SLColors.primary,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -204,7 +222,7 @@ class _SettingsLinksManagerScreenState
                       style: SLTheme.quicksand(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF243041),
+                        color: SLColors.ink,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -225,9 +243,9 @@ class _SettingsLinksManagerScreenState
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: link.isRevoked ? const Color(0xFFF1F5F9) : const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey[200]!),
+              color: link.isRevoked ? SLColors.bgMuted : SLColors.bgSubtle,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: SLColors.border),
             ),
             child: Row(
               children: [
@@ -237,8 +255,12 @@ class _SettingsLinksManagerScreenState
                     style: SLTheme.quicksand(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: link.isRevoked ? Colors.grey[400] : const Color(0xFF1E88E5),
-                      decoration: link.isRevoked ? TextDecoration.lineThrough : null,
+                      color: link.isRevoked
+                          ? SLColors.textTertiary
+                          : SLColors.primaryActive,
+                      decoration: link.isRevoked
+                          ? TextDecoration.lineThrough
+                          : null,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -249,13 +271,19 @@ class _SettingsLinksManagerScreenState
                   InkWell(
                     onTap: () async {
                       await Clipboard.setData(
-                          ClipboardData(text: _getMemoryDisplayUrl(link.token)));
+                        ClipboardData(text: _getMemoryDisplayUrl(link.token)),
+                      );
                       if (!mounted) return;
                       SLNotice.showInfo(
-                          context, context.tr('home_copylinkme_7f75af'));
+                        context,
+                        context.tr('home_copylinkme_7f75af'),
+                      );
                     },
-                    child: Icon(Icons.copy_rounded,
-                        size: 20, color: Colors.grey[400]),
+                    child: Icon(
+                      Icons.copy_rounded,
+                      size: 20,
+                      color: Colors.grey[400],
+                    ),
                   ),
               ],
             ),
@@ -265,9 +293,12 @@ class _SettingsLinksManagerScreenState
             alignment: Alignment.centerRight,
             child: link.isRevoked
                 ? Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     child: Text(
-                      'Đã thu hồi',
+                      context.tr('home_thuhi_b8c669'),
                       style: SLTheme.quicksand(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -279,7 +310,10 @@ class _SettingsLinksManagerScreenState
                     onTap: () => _deleteMemoryLink(link),
                     borderRadius: BorderRadius.circular(20),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       child: Text(
                         context.tr('home_thuhi_b8c669'),
                         style: SLTheme.quicksand(
@@ -297,8 +331,10 @@ class _SettingsLinksManagerScreenState
   }
 
   String _getMemoryDisplayUrl(String token) {
-    return AppConfig.webUri('/album', queryParameters: {'token': token})
-        .toString();
+    return AppConfig.webUri(
+      '/album',
+      queryParameters: {'token': token},
+    ).toString();
   }
 }
 

@@ -7,32 +7,17 @@ extension _SettingsTabWidgetPanelHelpersPart on _SettingsTabState {
     required String title,
     String? subtitle,
     required Widget child,
-    List<Color> iconGradient = const [
-      Color(0xFFFF93AE),
-      Color(0xFF57D9E9),
-    ],
+    List<Color> iconGradient = const [Color(0xFFFF93AE), Color(0xFF57D9E9)],
   }) {
     final accentColor = iconGradient.first;
     final secondaryAccent = iconGradient.last;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: SLColors.paper,
         borderRadius: BorderRadius.circular(22),
-        border:
-            Border.all(color: accentColor.withValues(alpha: 0.15), width: 1.4),
-        boxShadow: [
-          BoxShadow(
-            color: accentColor.withValues(alpha: 0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 7),
-          ),
-          BoxShadow(
-            color: secondaryAccent.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        border: Border.all(color: SLColors.border, width: 1.1),
+        boxShadow: SLShadow.subtle,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22),
@@ -101,19 +86,11 @@ extension _SettingsTabWidgetPanelHelpersPart on _SettingsTabState {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: iconGradient,
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+                          color: accentColor.withValues(alpha: 0.11),
                           borderRadius: BorderRadius.circular(13),
-                          boxShadow: [
-                            BoxShadow(
-                              color: iconGradient.first.withValues(alpha: 0.32),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                          border: Border.all(
+                            color: secondaryAccent.withValues(alpha: 0.26),
+                          ),
                         ),
                         child: useBrandMarkIcon
                             ? Center(
@@ -121,12 +98,12 @@ extension _SettingsTabWidgetPanelHelpersPart on _SettingsTabState {
                                   valueListenable: UiPrefs.notifier,
                                   builder: (context, ui, _) =>
                                       SoulLocketBrandMark(
-                                    styleKey: ui.brandMarkKey,
-                                    size: 22,
-                                  ),
+                                        styleKey: ui.brandMarkKey,
+                                        size: 22,
+                                      ),
                                 ),
                               )
-                            : Icon(icon, color: Colors.white, size: 20),
+                            : Icon(icon, color: accentColor, size: 20),
                       ),
                       const SizedBox(width: 11),
                       Expanded(
@@ -138,7 +115,7 @@ extension _SettingsTabWidgetPanelHelpersPart on _SettingsTabState {
                               style: SLTheme.quicksand(
                                 fontSize: 14.2,
                                 fontWeight: FontWeight.w900,
-                                color: const Color(0xFF1A2332),
+                                color: SLColors.ink,
                               ),
                             ),
                             if (subtitle != null &&
@@ -149,7 +126,7 @@ extension _SettingsTabWidgetPanelHelpersPart on _SettingsTabState {
                                 style: SLTheme.quicksand(
                                   fontSize: 11.6,
                                   fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF667085),
+                                  color: SLColors.textSecond,
                                   height: 1.38,
                                 ),
                               ),

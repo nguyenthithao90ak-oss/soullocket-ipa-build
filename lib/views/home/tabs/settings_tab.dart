@@ -173,13 +173,11 @@ part 'settings/settings_support_legal_section.dart';
 part 'settings/settings_data_health_section.dart';
 part 'settings/settings_shell.dart';
 
-const Color _kSettingsBgTop = Color(0xFFEAF0F6);
-const Color _kSettingsBgMid = Color(0xFFDCE4EE);
-const Color _kSettingsBgBottom = Color(0xFFCDD8E6);
+const Color _kSettingsBgTop = SLColors.paperCanvas;
 
-const Color _kSettingsHeaderSurface = Color(0xFFF9FBFD);
-const Color _kSettingsHeaderBorder = Color(0xFFBEC9D7);
-const Color _kSettingsActionTileText = Color(0xFF243041);
+const Color _kSettingsHeaderSurface = SLColors.paper;
+const Color _kSettingsHeaderBorder = SLColors.border;
+const Color _kSettingsActionTileText = SLColors.ink;
 const List<String> _widgetHeartStyleKeys = <String>[
   '❤️',
   '🧡',
@@ -217,11 +215,7 @@ const List<String> _widgetPreviewSizeKeys = <String>[
   'medium',
   'large',
 ];
-const List<String> _widgetDiaryLayoutKeys = <String>[
-  'single',
-  'duo',
-  'grid',
-];
+const List<String> _widgetDiaryLayoutKeys = <String>['single', 'duo', 'grid'];
 const List<String> _widgetSeasonModeKeys = <String>[
   'auto',
   'none',
@@ -303,51 +297,12 @@ class _SettingsBackgroundLayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [_kSettingsBgTop, _kSettingsBgMid, _kSettingsBgBottom],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
-          Positioned(
-            top: -76,
-            left: -42,
-            child: IgnorePointer(
-              child: Container(
-                width: 210,
-                height: 210,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [Color(0x52FFFFFF), Color(0x00FFFFFF)],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            right: -88,
-            bottom: 92,
-            child: IgnorePointer(
-              child: Container(
-                width: 250,
-                height: 250,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [Color(0x14FF78A8), Color(0x00FF78A8)],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+      child: SLTheme.softCanvasBackdrop(
+        baseColor: _kSettingsBgTop,
+        accentColor: SLColors.thread,
+        secondaryAccent: SLColors.secondary,
+        motif: SLCanvasBackdropMotif.journal,
+        child: const SizedBox.expand(),
       ),
     );
   }
@@ -483,8 +438,9 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   String _securityQuestion = '';
   String _activeRoleKey =
       RoleUtils.roleNotifier.value ?? RoleUtils.currentRoleSync();
-  String _selectedSecurityQuestion =
-      L10nService().translate('home_ngysinhcab_82062b');
+  String _selectedSecurityQuestion = L10nService().translate(
+    'home_ngysinhcab_82062b',
+  );
   String _housePin = '';
   List<MusicTrack> _playlist = [];
   bool _isSavingTheme = false;
@@ -637,10 +593,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
         child: Center(
           child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 8,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: SLColors.bgElevated.withValues(alpha: 0.72),
               borderRadius: SLRadius.lgAll,
@@ -697,10 +650,12 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       if (!mounted) return;
       unawaited(_checkSecurityScopeLockReal());
       unawaited(_restorePendingEmailVerificationState());
-      unawaited(_fetchSettingsData().then((_) async {
-        await _maybeShowSettingsGuideOnOpen();
-        await _maybeAutoOpenCountdownMode();
-      }));
+      unawaited(
+        _fetchSettingsData().then((_) async {
+          await _maybeShowSettingsGuideOnOpen();
+          await _maybeAutoOpenCountdownMode();
+        }),
+      );
       unawaited(_loadAppLockSettings());
       unawaited(_loadLocalSettings());
       unawaited(_initVipServices());
@@ -819,10 +774,12 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      unawaited(_refreshMainEmailVerificationStatus(
-        showSuccessToast: false,
-        showPendingToast: false,
-      ));
+      unawaited(
+        _refreshMainEmailVerificationStatus(
+          showSuccessToast: false,
+          showPendingToast: false,
+        ),
+      );
     }
   }
 
@@ -880,9 +837,7 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
         fit: StackFit.expand,
         children: [
           _SettingsBackgroundLayer(),
-          Center(
-            child: CircularProgressIndicator(color: Color(0xFFFF78A8)),
-          ),
+          Center(child: CircularProgressIndicator(color: Color(0xFFFF78A8))),
         ],
       );
     }
@@ -893,13 +848,17 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
   Future<void> _addCustomAnniversary() async {
     final eventName = _anniversaryNameCtrl.text.trim();
     if (_houseId == null || _houseId!.trim().isEmpty) {
-      _showToast(L10nService().translate('home_hyvonhtrck_f42333'),
-          success: false);
+      _showToast(
+        L10nService().translate('home_hyvonhtrck_f42333'),
+        success: false,
+      );
       return;
     }
     if (eventName.isEmpty) {
-      _showToast(L10nService().translate('err_enter_event_name'),
-          success: false);
+      _showToast(
+        L10nService().translate('err_enter_event_name'),
+        success: false,
+      );
       return;
     }
     final dateValidationError = DateInputUtils.validationError(
@@ -912,15 +871,18 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
       _showToast(dateValidationError, success: false);
       return;
     }
-    final typedAnniversaryDate = _draftAnniversaryDate ??
+    final typedAnniversaryDate =
+        _draftAnniversaryDate ??
         DateInputUtils.parse(
           _anniversaryDateCtrl.text,
           firstYear: 2020,
           lastYear: 2100,
         );
     if (typedAnniversaryDate == null) {
-      _showToast(L10nService().translate('err_select_event_date'),
-          success: false);
+      _showToast(
+        L10nService().translate('err_select_event_date'),
+        success: false,
+      );
       return;
     }
 
@@ -968,10 +930,9 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     final confirmed = await SLNotice.showConfirmDialog(
       context,
       title: L10nService().translate('theme_event_delete_title'),
-      message: L10nService().format(
-        'theme_event_delete_message',
-        {'name': event.title},
-      ),
+      message: L10nService().format('theme_event_delete_message', {
+        'name': event.title,
+      }),
       confirmText: L10nService().translate('home_xa_4ed187'),
       cancelText: L10nService().translate('home_hy_1e4050'),
       isDanger: true,
@@ -986,8 +947,10 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
     try {
       await _scheduleNotifService.deleteCustomEvent(_houseId!, eventId);
       if (!mounted) return;
-      _showToast(L10nService().translate('event_deleted_success'),
-          success: true);
+      _showToast(
+        L10nService().translate('event_deleted_success'),
+        success: true,
+      );
     } catch (e) {
       if (!mounted) return;
       _showToast(
@@ -1118,22 +1081,24 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(children: [
-                    const Icon(
-                      Icons.info_outline_rounded,
-                      size: 16,
-                      color: Color(0xFFD81B60),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      L10nService().translate('home_hngdncduyt_35af24'),
-                      style: SLTheme.quicksand(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFFD81B60),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.info_outline_rounded,
+                        size: 16,
+                        color: Color(0xFFD81B60),
                       ),
-                    ),
-                  ]),
+                      const SizedBox(width: 6),
+                      Text(
+                        L10nService().translate('home_hngdncduyt_35af24'),
+                        style: SLTheme.quicksand(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFFD81B60),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 10),
                   _buildStepRow(
                     '1',
@@ -1152,8 +1117,9 @@ class _SettingsTabState extends State<SettingsTab> with WidgetsBindingObserver {
                   const SizedBox(height: 6),
                   _buildStepRow(
                     '4',
-                    _formatManagedPendingUnlockDate(_devicePendingUnlockAtMs)
-                            .isNotEmpty
+                    _formatManagedPendingUnlockDate(
+                          _devicePendingUnlockAtMs,
+                        ).isNotEmpty
                         ? 'Nếu không có thiết bị cũ, hãy đợi đến ${_formatManagedPendingUnlockDate(_devicePendingUnlockAtMs)} để thiết bị tự được tin cậy và có thể đăng nhập/chỉnh sửa bình thường.'
                         : L10nService().translate('home_nukhngcthi_6bcda1'),
                   ),
@@ -1261,9 +1227,7 @@ class _PromptEmailDialogWidgetState extends State<_PromptEmailDialogWidget> {
         autofocus: true,
         decoration: InputDecoration(
           hintText: widget.hint,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
       actions: [

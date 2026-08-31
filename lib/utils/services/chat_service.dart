@@ -229,8 +229,15 @@ class ChatService {
     }
   }
 
+  Future<void> _syncFirestoreChatAccess(String roomId) async {
+    await _functions.httpsCallable('syncExternalChatAccess').call<void>(
+      <String, dynamic>{'roomId': roomId},
+    );
+  }
+
   Future<bool> _ensureViewerRoomIndex(String houseId, String roomId) async {
     if (await _hasRoomIndex(houseId, roomId)) {
+      await _syncFirestoreChatAccess(roomId);
       return true;
     }
 
@@ -243,6 +250,7 @@ class ChatService {
         return false;
       }
       await _dbRef.child(_roomIndexPath(houseId, roomId)).set(true);
+      await _syncFirestoreChatAccess(roomId);
       return true;
     } on TimeoutException {
       return false;
@@ -284,6 +292,7 @@ class ChatService {
       'chats/$roomId/houseB': ids[1],
       'chats/$roomId/updatedAt': ServerValue.timestamp,
     });
+    await _syncFirestoreChatAccess(roomId);
   }
 
   Future<void> _ensureChatRoomIndex(
@@ -944,6 +953,9 @@ class ChatService {
         await _assertNotBlocked(myHouseId, targetHouseId);
         await _assertChatRoomOpen(myHouseId, targetHouseId);
         final roomId = _getRoomId(myHouseId, targetHouseId);
+        if (!await _ensureViewerRoomIndex(myHouseId, roomId)) {
+          throw Exception('Không thể xác minh quyền truy cập đoạn chat.');
+        }
 
         final docRef = FirebaseFirestore.instance
             .collection('chats')
@@ -1019,24 +1031,28 @@ class ChatService {
     final roomId = _getRoomId(myHouseId, targetHouseId);
     final tsFilter = afterTs ?? 0;
 
-    return FirebaseFirestore.instance
-        .collection('chats')
-        .doc(roomId)
-        .collection('messages')
-        .where('ts', isGreaterThan: tsFilter)
-        .orderBy('ts')
-        .snapshots()
-        .expand((snapshot) => snapshot.docChanges
-                .where((change) =>
-                    change.type == DocumentChangeType.added ||
-                    change.type == DocumentChangeType.modified)
-                .map((change) {
-              try {
-                return ChatMessage.fromMap(change.doc.id, change.doc.data()!);
-              } catch (_) {
-                return null;
-              }
-            }).whereType<ChatMessage>());
+    return Stream.fromFuture(_ensureViewerRoomIndex(myHouseId, roomId))
+        .asyncExpand((allowed) {
+      if (!allowed) return const Stream<ChatMessage>.empty();
+      return FirebaseFirestore.instance
+          .collection('chats')
+          .doc(roomId)
+          .collection('messages')
+          .where('ts', isGreaterThan: tsFilter)
+          .orderBy('ts')
+          .snapshots()
+          .expand((snapshot) => snapshot.docChanges
+              .where((change) =>
+                  change.type == DocumentChangeType.added ||
+                  change.type == DocumentChangeType.modified)
+              .map((change) {
+            try {
+              return ChatMessage.fromMap(change.doc.id, change.doc.data()!);
+            } catch (_) {
+              return null;
+            }
+          }).whereType<ChatMessage>());
+    });
   }
 
   Stream<ChatMessage> streamNewInternalMessages(

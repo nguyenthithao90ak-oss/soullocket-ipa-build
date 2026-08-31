@@ -4,21 +4,21 @@ part of '../../main_home_tab.dart';
 const Color _mainHomeAccentColor = Color(0xFFD81B60);
 const Color _mainHomeErrorTextColor = Color(0xFF6B7280);
 const List<Color> _mainHomeLoadingGradient = [
-  Color(0xFF231B4A),
-  Color(0xFF1A1740),
-  Color(0xFF171538),
+  Color(0xFFFFF9F3),
+  Color(0xFFFFEDF3),
+  Color(0xFFF2ECFF),
 ];
-const Color _mainHomeLoadingSpinnerTrack = Color(0x33FFFFFF);
-const Color _mainHomeLoadingSpinnerColor = Color(0xFFFFA7C8);
-const Color _mainHomeLoadingDotColor = Color(0x40FFFFFF);
-const Color _mainHomeLoadingDotAccent = Color(0x80FF7FB0);
-const Color _mainHomeLoadingGlow = Color(0x33FF7FB0);
-const Color _mainHomeLoadingOverlayColor = Color(0x14000000);
-const Color _mainHomeLoadingOverlaySpinner = Color(0xFFFF9FC3);
-const Color _mainHomeLoadingOverlayTrack = Color(0x2AFFFFFF);
-const Color _mainHomeLoadingOverlayBadge = Color(0x18000000);
-const Color _mainHomeLoadingOverlayBadgeBorder = Color(0x26FFFFFF);
-const Color _mainHomeLoadingOverlayBadgeText = Color(0xDFFFFFFF);
+const Color _mainHomeLoadingSpinnerTrack = Color(0x28D96B7C);
+const Color _mainHomeLoadingSpinnerColor = Color(0xFFD94D78);
+const Color _mainHomeLoadingDotColor = Color(0x42D96B7C);
+const Color _mainHomeLoadingDotAccent = Color(0xFFD94D78);
+const Color _mainHomeLoadingGlow = Color(0x2ED94D78);
+const Color _mainHomeLoadingOverlayColor = Color(0x0A3F2430);
+const Color _mainHomeLoadingOverlaySpinner = Color(0xFFD94D78);
+const Color _mainHomeLoadingOverlayTrack = Color(0x24D96B7C);
+const Color _mainHomeLoadingOverlayBadge = Color(0xF7FFF9F5);
+const Color _mainHomeLoadingOverlayBadgeBorder = Color(0x66E8D8D1);
+const Color _mainHomeLoadingOverlayBadgeText = Color(0xFF6E4D5A);
 
 class _MainHomeStateView extends StatelessWidget {
   final bool isLoading;
@@ -41,10 +41,7 @@ class _MainHomeStateView extends StatelessWidget {
     if (isLoading && child != null) {
       return Stack(
         fit: StackFit.expand,
-        children: [
-          child!,
-          const _MainHomeLoadingOverlay(),
-        ],
+        children: [child!, const _MainHomeLoadingOverlay()],
       );
     }
     // Đã có dữ liệu, không load → show content
@@ -61,53 +58,116 @@ class _MainHomeLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: _mainHomeLoadingGradient,
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 74,
-              height: 74,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: _mainHomeLoadingGlow,
-                    blurRadius: 26,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: const CircularProgressIndicator.adaptive(
-                strokeWidth: 3,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  _mainHomeLoadingSpinnerColor,
-                ),
-                backgroundColor: _mainHomeLoadingSpinnerTrack,
+    return Stack(
+      children: [
+        const Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: _mainHomeLoadingGradient,
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
             ),
-            const SizedBox(height: 20),
-            Row(
+          ),
+        ),
+        const Positioned.fill(
+          child: _HomeScrapbookBackdrop(hasCustomBackground: false),
+        ),
+        Semantics(
+          liveRegion: true,
+          label: context.tr('Đang tải...'),
+          child: Center(
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _loadingDot(),
-                const SizedBox(width: 6),
-                _loadingDot(isAccent: true),
-                const SizedBox(width: 6),
-                _loadingDot(),
+                SizedBox(
+                  width: 98,
+                  height: 98,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Transform.rotate(
+                        angle: -0.09,
+                        child: Container(
+                          width: 74,
+                          height: 74,
+                          decoration: BoxDecoration(
+                            color: SLColors.paper,
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(color: SLColors.border),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: _mainHomeLoadingGlow,
+                                blurRadius: 26,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: SLColors.paperBlush,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: SLColors.borderLight),
+                        ),
+                        child: const Icon(
+                          Icons.favorite_rounded,
+                          size: 28,
+                          color: _mainHomeLoadingSpinnerColor,
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 88,
+                        height: 88,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.4,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            _mainHomeLoadingSpinnerColor,
+                          ),
+                          backgroundColor: _mainHomeLoadingSpinnerTrack,
+                        ),
+                      ),
+                      const Positioned(
+                        right: 1,
+                        top: 9,
+                        child: Icon(
+                          Icons.auto_awesome_rounded,
+                          color: SLColors.warningGold,
+                          size: 18,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'SoulLocket',
+                  style: GoogleFonts.dancingScript(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w700,
+                    color: SLColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _loadingDot(),
+                    const SizedBox(width: 6),
+                    _loadingDot(isAccent: true),
+                    const SizedBox(width: 6),
+                    _loadingDot(),
+                  ],
+                ),
               ],
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -155,7 +215,7 @@ class _MainHomeLoadingOverlay extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  'Đang tải...',
+                  context.tr('Đang tải...'),
                   style: SLTheme.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -183,9 +243,7 @@ class _MainHomeEmptyView extends StatelessWidget {
 class _MainHomeErrorView extends StatelessWidget {
   final String message;
 
-  const _MainHomeErrorView({
-    required this.message,
-  });
+  const _MainHomeErrorView({required this.message});
 
   @override
   Widget build(BuildContext context) {

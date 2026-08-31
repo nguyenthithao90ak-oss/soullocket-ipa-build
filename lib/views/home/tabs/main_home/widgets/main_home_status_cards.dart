@@ -6,10 +6,13 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     required bool showHint,
     required Future<void> Function() onTap,
   }) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => unawaited(onTap()),
-      child: child,
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => unawaited(onTap()),
+        child: child,
+      ),
     );
   }
 
@@ -26,10 +29,14 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       return context.tr('home_cpnhtgnnht_d75b69');
     }
     if (diff.inHours < 1) {
-      return L10nService().format('home_updated_minutes_ago', {'n': diff.inMinutes});
+      return L10nService().format('home_updated_minutes_ago', {
+        'n': diff.inMinutes,
+      });
     }
     if (diff.inDays < 1) {
-      return L10nService().format('home_updated_hours_ago', {'n': diff.inHours});
+      return L10nService().format('home_updated_hours_ago', {
+        'n': diff.inHours,
+      });
     }
     return L10nService().format('home_updated_days_ago', {'n': diff.inDays});
   }
@@ -48,8 +55,11 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     if (startDate != null && startDate.isNotEmpty) {
       try {
         final startDt = DateTime.parse(startDate);
-        final startDtMidnight =
-            DateTime(startDt.year, startDt.month, startDt.day);
+        final startDtMidnight = DateTime(
+          startDt.year,
+          startDt.month,
+          startDt.day,
+        );
         final daysToday = todayMidnight.difference(startDtMidnight).inDays + 1;
         totalDays = daysToday;
 
@@ -70,7 +80,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
           2500,
           3000,
           4000,
-          5000
+          5000,
         ]) {
           if (m >= daysToday) {
             nextMilestone = m;
@@ -78,28 +88,43 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
           }
         }
         if (nextMilestone != null) {
-          final milestoneDate =
-              startDtMidnight.add(Duration(days: nextMilestone - 1));
-          upcomingEvents.add(HomeUpcomingEvent(
-            title: L10nService().format('home_anniversary_days', {'days': nextMilestone}),
-            date: milestoneDate,
-            type: 'anniversary',
-          ));
+          final milestoneDate = startDtMidnight.add(
+            Duration(days: nextMilestone - 1),
+          );
+          upcomingEvents.add(
+            HomeUpcomingEvent(
+              title: L10nService().format('home_anniversary_days', {
+                'days': nextMilestone,
+              }),
+              date: milestoneDate,
+              type: 'anniversary',
+            ),
+          );
         }
 
         DateTime nextAnniversary = DateTime(
-            todayMidnight.year, startDtMidnight.month, startDtMidnight.day);
+          todayMidnight.year,
+          startDtMidnight.month,
+          startDtMidnight.day,
+        );
         if (nextAnniversary.isBefore(todayMidnight)) {
-          nextAnniversary = DateTime(todayMidnight.year + 1,
-              startDtMidnight.month, startDtMidnight.day);
+          nextAnniversary = DateTime(
+            todayMidnight.year + 1,
+            startDtMidnight.month,
+            startDtMidnight.day,
+          );
         }
         final years = nextAnniversary.year - startDtMidnight.year;
         if (years > 0) {
-          upcomingEvents.add(HomeUpcomingEvent(
-            title: L10nService().format('home_anniversary_years', {'years': years}),
-            date: nextAnniversary,
-            type: 'anniversary',
-          ));
+          upcomingEvents.add(
+            HomeUpcomingEvent(
+              title: L10nService().format('home_anniversary_years', {
+                'years': years,
+              }),
+              date: nextAnniversary,
+              type: 'anniversary',
+            ),
+          );
         }
       } catch (_) {}
     }
@@ -133,15 +158,19 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
         final daysUntil = nextBday.difference(todayMidnight).inDays;
         final giftHint = daysUntil <= 7 && daysUntil >= 0
             ? _MainHomeTabState._giftSuggestionsForBirthday(
-                bday.month, bday.day)
+                bday.month,
+                bday.day,
+              )
             : '';
-        upcomingEvents.add(HomeUpcomingEvent(
-          title: giftHint.isNotEmpty
-              ? '${L10nService().format('home_birthday_title', {'name': name})} $giftHint'
-              : L10nService().format('home_birthday_title', {'name': name}),
-          date: nextBday,
-          type: 'birthday',
-        ));
+        upcomingEvents.add(
+          HomeUpcomingEvent(
+            title: giftHint.isNotEmpty
+                ? '${L10nService().format('home_birthday_title', {'name': name})} $giftHint'
+                : L10nService().format('home_birthday_title', {'name': name}),
+            date: nextBday,
+            type: 'birthday',
+          ),
+        );
       } catch (_) {}
     }
 
@@ -151,13 +180,21 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     // 3. Ngày lễ lớn
     final holidaysList = [
       {'month': 1, 'day': 1, 'name': context.tr('Tết Dương Lịch 🎆')},
-      {'month': 2, 'day': 14, 'name': context.tr('Lễ Tình Nhân (Valentine) 💝')},
+      {
+        'month': 2,
+        'day': 14,
+        'name': context.tr('Lễ Tình Nhân (Valentine) 💝'),
+      },
       {'month': 3, 'day': 8, 'name': context.tr('Quốc tế Phụ nữ 💐')},
       {'month': 3, 'day': 14, 'name': context.tr('Valentine Trắng 🤍')},
       {'month': 4, 'day': 1, 'name': context.tr('Cá tháng Tư 🃏')},
       {'month': 4, 'day': 14, 'name': context.tr('Valentine Đen 🖤')},
       {'month': 6, 'day': 1, 'name': context.tr('Quốc tế Thiếu nhi 🧸')},
-      {'month': 6, 'day': 28, 'name': context.tr('Ngày Gia đình Việt Nam 👨‍👩‍👧‍👦')},
+      {
+        'month': 6,
+        'day': 28,
+        'name': context.tr('Ngày Gia đình Việt Nam 👨‍👩‍👧‍👦'),
+      },
       {'month': 10, 'day': 20, 'name': context.tr('Ngày Phụ nữ Việt Nam 🌸')},
       {'month': 10, 'day': 31, 'name': context.tr('Lễ Halloween 🎃')},
       {'month': 12, 'day': 24, 'name': context.tr('Đêm Giáng sinh 🎄')},
@@ -165,17 +202,25 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       {'month': 12, 'day': 31, 'name': context.tr('Đêm Giao thừa ✨')},
     ];
     for (final h in holidaysList) {
-      DateTime nextH =
-          DateTime(todayMidnight.year, h['month'] as int, h['day'] as int);
+      DateTime nextH = DateTime(
+        todayMidnight.year,
+        h['month'] as int,
+        h['day'] as int,
+      );
       if (nextH.isBefore(todayMidnight)) {
         nextH = DateTime(
-            todayMidnight.year + 1, h['month'] as int, h['day'] as int);
+          todayMidnight.year + 1,
+          h['month'] as int,
+          h['day'] as int,
+        );
       }
-      upcomingEvents.add(HomeUpcomingEvent(
-        title: h['name'] as String,
-        date: nextH,
-        type: 'holiday',
-      ));
+      upcomingEvents.add(
+        HomeUpcomingEvent(
+          title: h['name'] as String,
+          date: nextH,
+          type: 'holiday',
+        ),
+      );
     }
 
     // 4. Lịch trình chuyến đi
@@ -194,11 +239,9 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       final eventDate = DateTime(year, month, day);
       if (eventDate.isBefore(todayMidnight)) continue;
 
-      upcomingEvents.add(HomeUpcomingEvent(
-        title: evTitle,
-        date: eventDate,
-        type: 'calendar',
-      ));
+      upcomingEvents.add(
+        HomeUpcomingEvent(title: evTitle, date: eventDate, type: 'calendar'),
+      );
     }
 
     // Sắp xếp tăng dần & lọc trùng (chỉ lấy sự kiện trong 7 ngày tới)
@@ -235,8 +278,9 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
       onTap: () async {
         _openMilestonesDetail();
       },
-      child: SLTheme.glassCard(
-        margin: EdgeInsets.zero,
+      child: _HomeScrapbookCard(
+        accentColor: SLColors.thread,
+        adornment: _HomeCardAdornment.postageStamp,
         padding: SLSpacing.all20,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,12 +317,14 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                     children: [
                       Text(
                         context.tr('home_khonhkhcni_903ef3'),
-                        style: SLTheme.quicksand(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
+                        style: GoogleFonts.dancingScript(
+                          fontSize: 21,
+                          height: 1.05,
+                          fontWeight: FontWeight.w700,
                           color: const Color(0xFF263242),
                         ),
                       ),
+                      const SizedBox(height: 2),
                       Text(
                         context.tr('home_nhngiungtn_061ab5'),
                         style: SLTheme.quicksand(
@@ -301,13 +347,11 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             const SizedBox(height: 14),
 
             // ── Hành trình đã đi qua ──
-            SLGlassmorphism.apply(
-              blur: 16,
-              opacity: 0.45,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.6),
-                width: 1.5,
+            Container(
+              decoration: BoxDecoration(
+                color: SLColors.paperBlush.withValues(alpha: 0.64),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: SLColors.borderLight, width: 1.1),
               ),
               child: Container(
                 width: double.infinity,
@@ -319,7 +363,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                       children: [
                         _buildJourneyStat(
                           emoji: '📅',
-                          imageAsset: 'assets/icons/cute_3d/card_ngay_yeu_calendar.png',
+                          imageAsset:
+                              'assets/icons/cute_3d/card_ngay_yeu_calendar.png',
                           value: totalDays > 0 ? '$totalDays' : '--',
                           label: context.tr('home_love_days'),
                           flex: 1,
@@ -329,7 +374,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                         const SizedBox(width: 10),
                         _buildJourneyStat(
                           emoji: '📸',
-                          imageAsset: 'assets/icons/cute_3d/card_ky_niem_photos.png',
+                          imageAsset:
+                              'assets/icons/cute_3d/card_ky_niem_photos.png',
                           value: '${_albumHighlights.length}',
                           label: context.tr('home_anniversary_memories'),
                           flex: 1,
@@ -345,7 +391,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                       children: [
                         _buildJourneyStat(
                           emoji: '👦',
-                          imageAsset: 'assets/icons/cute_3d/card_ban_nam_boy.png',
+                          imageAsset:
+                              'assets/icons/cute_3d/card_ban_nam_boy.png',
                           value: nameU1,
                           label: myNameSetting,
                           flex: 1,
@@ -356,7 +403,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                         const SizedBox(width: 10),
                         _buildJourneyStat(
                           emoji: '👧',
-                          imageAsset: 'assets/icons/cute_3d/card_ban_nu_girl.png',
+                          imageAsset:
+                              'assets/icons/cute_3d/card_ban_nu_girl.png',
                           value: nameU2,
                           label: partnerNameSetting,
                           flex: 1,
@@ -372,16 +420,14 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             ),
 
             const SizedBox(height: 14),
-            
+
             // Sắp tới có sự kiện gì
             if (uniqueEvents.isNotEmpty)
-              SLGlassmorphism.apply(
-                blur: 16,
-                opacity: 0.45,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  width: 1.5,
+              Container(
+                decoration: BoxDecoration(
+                  color: SLColors.paperPeach.withValues(alpha: 0.42),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: SLColors.borderLight, width: 1.1),
                 ),
                 child: Container(
                   width: double.infinity,
@@ -399,15 +445,25 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                       ),
                       const SizedBox(height: 8),
                       ...uniqueEvents.take(5).map((e) {
-                        final daysUntil = e.date.difference(todayMidnight).inDays;
+                        final daysUntil = e.date
+                            .difference(todayMidnight)
+                            .inDays;
                         final String timeStr = daysUntil <= 0
                             ? context.tr('home_hmnay_d87b33')
-                            : (daysUntil == 1 ? context.tr('home_ngymai_a3d820') : L10nService().format('home_days_later', {'n': daysUntil}));
+                            : (daysUntil == 1
+                                  ? context.tr('home_ngymai_a3d820')
+                                  : L10nService().format('home_days_later', {
+                                      'n': daysUntil,
+                                    }));
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 6.0),
                           child: Row(
                             children: [
-                              const Icon(Icons.circle, size: 6, color: Color(0xFFFF6D97)),
+                              const Icon(
+                                Icons.circle,
+                                size: 6,
+                                color: Color(0xFFFF6D97),
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -460,7 +516,10 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(10),
@@ -485,7 +544,10 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      _buildCountdownText(isSingle: isSingle, startDate: startDate),
+                      _buildCountdownText(
+                        isSingle: isSingle,
+                        startDate: startDate,
+                      ),
                       style: SLTheme.quicksand(
                         fontSize: 13,
                         fontWeight: FontWeight.w900,
@@ -545,10 +607,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
             ],
           ),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: Colors.white,
-            width: 1.6,
-          ),
+          border: Border.all(color: Colors.white, width: 1.6),
           boxShadow: [
             BoxShadow(
               color: effectiveAccent.withValues(alpha: 0.12),
@@ -581,10 +640,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                     ),
                   ],
                 ),
-                child: Image.asset(
-                  imageAsset,
-                  fit: BoxFit.contain,
-                ),
+                child: Image.asset(imageAsset, fit: BoxFit.contain),
               )
             else
               Text(emoji, style: const TextStyle(fontSize: 18)),
@@ -633,8 +689,9 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     return _buildHomeCardFirstTapWrapper(
       showHint: _showMapCardFirstTapHint,
       onTap: _handleMapCardTap,
-      child: SLTheme.glassCard(
-        margin: EdgeInsets.zero,
+      child: _HomeScrapbookCard(
+        accentColor: SLColors.secondary,
+        adornment: _HomeCardAdornment.threadKnot,
         padding: SLSpacing.all20,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -676,9 +733,12 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                         isSingle
                             ? context.tr('home_vtrhinti_f5956d')
                             : context.tr('home_bncahaia_12dcb1'),
-                        style: SLTheme.quicksand(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.dancingScript(
+                          fontSize: 21,
+                          height: 1.05,
+                          fontWeight: FontWeight.w700,
                           color: const Color(0xFF1E293B),
                         ),
                       ),
@@ -697,7 +757,10 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFF0F5),
                     borderRadius: BorderRadius.circular(12),
@@ -750,29 +813,31 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   if (myBattery != null) {
                     final pct = myBattery['level'] as int;
                     final isCharging = myBattery['isCharging'] == true;
-                    final emoji =
-                        isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
-                    batteryTexts.add('${context.tr('home_you_label')} $emoji $pct%');
+                    final emoji = isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                    batteryTexts.add(
+                      '${context.tr('home_you_label')} $emoji $pct%',
+                    );
                   }
 
                   if (partnerBattery != null) {
                     final pct = partnerBattery['level'] as int;
-                    final isCharging =
-                        partnerBattery['isCharging'] == true;
-                    final emoji =
-                        isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
-                    batteryTexts.add('${context.tr('home_partner_label')} $emoji $pct%');
+                    final isCharging = partnerBattery['isCharging'] == true;
+                    final emoji = isCharging ? '⚡' : (pct > 20 ? '🔋' : '🪫');
+                    batteryTexts.add(
+                      '${context.tr('home_partner_label')} $emoji $pct%',
+                    );
                   }
 
                   if (batteryTexts.isNotEmpty) {
-                    displayText =
-                        '$distanceText • ${batteryTexts.join(' • ')}';
+                    displayText = '$distanceText • ${batteryTexts.join(' • ')}';
                   }
                 }
                 return Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 12),
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [
@@ -784,14 +849,10 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 1.5,
-                    ),
+                    border: Border.all(color: Colors.white, width: 1.5),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF38BDF8)
-                            .withValues(alpha: 0.10),
+                        color: const Color(0xFF38BDF8).withValues(alpha: 0.10),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -826,19 +887,19 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                       SLSpacing.w12,
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF38BDF8),
-                              Color(0xFF0284C7),
-                            ],
+                            colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
                           ),
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF38BDF8)
-                                  .withValues(alpha: 0.3),
+                              color: const Color(
+                                0xFF38BDF8,
+                              ).withValues(alpha: 0.3),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -901,8 +962,9 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
     return _buildHomeCardFirstTapWrapper(
       showHint: _showInsightCardFirstTapHint,
       onTap: _handleInsightCardTap,
-      child: SLTheme.glassCard(
-        margin: EdgeInsets.zero,
+      child: _HomeScrapbookCard(
+        accentColor: SLColors.accentPurple,
+        adornment: _HomeCardAdornment.heartPin,
         padding: SLSpacing.all20,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -913,7 +975,8 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   width: 24,
                   height: 24,
                   child: Image.asset(
-                      'assets/images/anhtomau_stickers/sticker_24.gif'),
+                    'assets/images/anhtomau_stickers/sticker_24.gif',
+                  ),
                 ),
                 SLSpacing.w8,
                 Flexible(
@@ -923,11 +986,11 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                         : context.tr('home_hnhtrnhiqu_cbcf59'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 13,
-                      letterSpacing: 1,
-                      color: SLColors.accent,
+                    style: GoogleFonts.dancingScript(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 21,
+                      height: 1.05,
+                      color: SLColors.textPrimary,
                     ),
                   ),
                 ),
@@ -937,10 +1000,7 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                   size: 16,
                   color: SLColors.accent.withValues(alpha: 0.5),
                 ),
-                if (dragHandle != null) ...[
-                  const Spacer(),
-                  dragHandle,
-                ],
+                if (dragHandle != null) ...[const Spacer(), dragHandle],
               ],
             ),
             SLSpacing.h20,
@@ -953,8 +1013,11 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 ),
               )
             else ...[
-              _buildInsightBubbleWrap(metrics,
-                  compact: false, enableMotion: enableMotion),
+              _buildInsightBubbleWrap(
+                metrics,
+                compact: false,
+                enableMotion: enableMotion,
+              ),
               SLSpacing.h20,
               Container(
                 padding: const EdgeInsets.fromLTRB(14, 13, 14, 14),
@@ -1220,8 +1283,9 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
                           value: progress,
                           strokeWidth: widget.compact ? 4.2 : 4.6,
                           backgroundColor: widget.color.withValues(alpha: 0.09),
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(widget.color),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            widget.color,
+                          ),
                         ),
                       ),
                       Container(
@@ -1386,4 +1450,3 @@ class _FloatingInsightBubbleState extends State<_FloatingInsightBubble>
     );
   }
 }
-

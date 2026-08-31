@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/foundation.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
+import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 import 'push_notification_helper.dart';
 import 'chat_service.dart';
 
@@ -49,9 +48,6 @@ class FriendsService {
   }) async {
     final normalizedFromHouseId = fromHouseId.trim();
     final normalizedToHouseId = _normalizeHouseId(toHouseId);
-    final normalizedFromHouseName = fromHouseName.trim().isEmpty
-        ? normalizedFromHouseId
-        : fromHouseName.trim();
     if (normalizedFromHouseId.isEmpty) {
       return FriendRequestResult.error(
         'Không xác định được mã nhà hiện tại để gửi yêu cầu.',
@@ -69,176 +65,32 @@ class FriendsService {
     }
 
     try {
-      final targetChecks = await Future.wait([
-        _db.ref('houses_public/$normalizedToHouseId/updatedAt').get(),
-        _db.ref('friends/$normalizedFromHouseId/$normalizedToHouseId').get(),
-        _db
-            .ref('friend_requests')
-            .orderByChild('from')
-            .equalTo(normalizedFromHouseId)
-            .get(),
-        _db
-            .ref('friend_requests')
-            .orderByChild('to')
-            .equalTo(normalizedFromHouseId)
-            .get(),
-        _db
-            .ref(
-              'houses/$normalizedFromHouseId/blocked_users/$normalizedToHouseId',
-            )
-            .get(),
-      ]);
-
-      final targetPublicSnap = targetChecks[0];
-      final existingFriendOutSnap = targetChecks[1];
-      final outgoingRequestSnap = targetChecks[2];
-      final incomingRequestSnap = targetChecks[3];
-      final blockedByMeSnap = targetChecks[4];
-
-      if (!targetPublicSnap.exists) {
-        return FriendRequestResult.error(
-          'Không tìm thấy mã nhà "$normalizedToHouseId". Hãy kiểm tra lại chữ, số và dấu "_" trong mã nhà.',
-        );
-      }
-
-      if (existingFriendOutSnap.exists) {
-        return FriendRequestResult.error(
-          'Hai nhà này đã kết nối bạn bè rồi, không cần gửi thêm yêu cầu.',
-        );
-      }
-
-      if (_hasPendingRequest(
-        outgoingRequestSnap,
-        fromHouseId: normalizedFromHouseId,
-        toHouseId: normalizedToHouseId,
-      )) {
-        return FriendRequestResult.error(
-          'Bạn đã gửi yêu cầu tới mã nhà "$normalizedToHouseId" rồi. Hãy chờ người kia chấp nhận.',
-        );
-      }
-
-      if (_hasPendingRequest(
-        incomingRequestSnap,
-        fromHouseId: normalizedToHouseId,
-        toHouseId: normalizedFromHouseId,
-      )) {
-        return FriendRequestResult.error(
-          'Mã nhà "$normalizedToHouseId" đã gửi lời mời cho bạn trước đó. Hãy vào mục Lời mời để chấp nhận.',
-        );
-      }
-      if (blockedByMeSnap.value == true) {
-        return FriendRequestResult.error(
-          'Bạn đã chặn mã nhà này. Hãy bỏ chặn trước khi gửi lời mời.',
-        );
-      }
-
-      // Đọc 2 field cần thiết từ settings thay vì load toàn bộ node
-      final settingsSnaps = await Future.wait([
-        _db
-            .ref(
-                'houses_public/$normalizedToHouseId/settings/friendRequestPolicy')
-            .get(),
-        _db
-            .ref(
-                'houses_public/$normalizedToHouseId/settings/friendRequestLimit')
-            .get(),
-      ]);
-      final settings = <String, dynamic>{
-        if (settingsSnaps[0].exists)
-          'friendRequestPolicy': settingsSnaps[0].value,
-        if (settingsSnaps[1].exists)
-          'friendRequestLimit': settingsSnaps[1].value,
-      };
-
-      final policyStr = settings['friendRequestPolicy']?.toString() ?? 'all';
-      final limit = _readInt(settings['friendRequestLimit']) ?? 30;
-
-      // 2. Chặn theo policy
-      if (policyStr == 'none') {
-        return FriendRequestResult.error(
-            'Nhà này đang tắt nhận lời mời kết bạn.');
-      }
-      if (policyStr == 'mutual') {
-        final mutualCount = await _countMutualFriendsBestEffort(
-          normalizedFromHouseId,
-          normalizedToHouseId,
-        );
-        if (mutualCount == null) {
-          return FriendRequestResult.error(
-            'Nhà này chỉ nhận lời mời từ người có bạn chung. Hiện tại app chưa thể kiểm tra điều kiện này.',
-          );
-        }
-        if (mutualCount < 1) {
-          return FriendRequestResult.error(
-              'Nhà này chỉ nhận lời mời từ người có bạn chung.');
-        }
-      }
-
-      // 3. Chặn theo giới hạn đang chờ
-      final pendingCount =
-          await _countPendingRequestsForTarget(normalizedToHouseId);
-      if (pendingCount >= limit) {
-        return FriendRequestResult.error(
-            'Nhà này đã đạt giới hạn lời mời đang chờ.');
-      }
-
-      // 4. Gửi request
-      await _db.ref('friend_requests').push().set({
-        'from': normalizedFromHouseId,
-        'fromName': normalizedFromHouseName,
-        'to': normalizedToHouseId,
-        'ts': ServerValue.timestamp,
-        'status': 'pending',
-      });
-
-      // Gửi push notification cho người nhận
-      await PushNotificationHelper.friendRequest(
-        toHouseId: normalizedToHouseId,
-        fromHouseId: normalizedFromHouseId,
-        fromName: normalizedFromHouseName,
+      final response = await CloudFunctionsHelper.callSecure<dynamic>(
+        'sendFriendRequestSecure',
+        payload: <String, dynamic>{'toHouseId': normalizedToHouseId},
+        fallbackErrorMessage: 'Không thể gửi lời mời lúc này.',
       );
-
-      return FriendRequestResult.success('Đã gửi lời mời! 📨');
-    } on FirebaseException catch (error) {
-      return FriendRequestResult.error(_mapSendRequestFirebaseError(error));
-    } catch (e) {
-      return FriendRequestResult.error(_mapSendRequestFallbackError(e));
+      final result = _asStringDynamicMap(response.data) ?? const {};
+      final message = result['message']?.toString().trim();
+      if (result['success'] == true) {
+        return FriendRequestResult.success(
+          message?.isNotEmpty == true ? message! : 'Đã gửi lời mời!',
+        );
+      }
+      return FriendRequestResult.error(
+        message?.isNotEmpty == true
+            ? message!
+            : 'Không thể gửi lời mời lúc này.',
+      );
+    } catch (error) {
+      return FriendRequestResult.error(
+        _callableErrorMessage(error, 'Không thể gửi lời mời lúc này.'),
+      );
     }
   }
 
   String _normalizeHouseId(String value) {
     return value.trim().replaceAll(RegExp(r'\s+'), '').toUpperCase();
-  }
-
-  bool _hasPendingRequest(
-    DataSnapshot snapshot, {
-    required String fromHouseId,
-    required String toHouseId,
-  }) {
-    if (!snapshot.exists || snapshot.value is! Map) {
-      return false;
-    }
-
-    final entries = _asStringDynamicMap(snapshot.value);
-    if (entries == null) {
-      return false;
-    }
-    for (final value in entries.values) {
-      final request = _asStringDynamicMap(value);
-      if (request == null) {
-        continue;
-      }
-      final requestFrom = request['from']?.toString().trim() ?? '';
-      final requestTo = request['to']?.toString().trim() ?? '';
-      final status = request['status']?.toString().trim() ?? '';
-      if (requestFrom == fromHouseId &&
-          requestTo == toHouseId &&
-          status == 'pending') {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -259,60 +111,22 @@ class FriendsService {
           normalizedFromHouseId.isEmpty) {
         return false;
       }
-      final reqRef = _db.ref('friend_requests/$normalizedRequestId');
-
-      // 1. Giới hạn 1000 bạn bè
-      final myFriendsSnap =
-          await _db.ref('friends/$normalizedCurrentHouseId').get();
-      if (myFriendsSnap.exists) {
-        final friends = _asStringDynamicMap(myFriendsSnap.value);
-        if ((friends?.length ?? 0) >= 1000) return false;
-      }
-
-      // 2. Cập nhật trạng thái request
-      await reqRef.child('status').set('accepted');
-
-      // 3. Thêm list bạn bè 2 chiều
-      await _db
-          .ref('friends/$normalizedCurrentHouseId/$normalizedFromHouseId')
-          .set(true);
-
-      // Try to set for the other user.
-      // It might fail due to Firebase security rules (only the user can write to their own friends list),
-      // so we catch the error to prevent the whole function from failing.
-      try {
-        await _db
-            .ref('friends/$normalizedFromHouseId/$normalizedCurrentHouseId')
-            .set(true);
-      } catch (_) {}
-
-      // 4. Tạo conversation tự động (DM)
-      final convId =
-          _getConversationId(normalizedCurrentHouseId, normalizedFromHouseId);
-      final convRef = _db.ref('conversations/$convId');
-
-      await convRef.update({
-        'ts': ServerValue.timestamp,
-        'members/$normalizedCurrentHouseId': true,
-        'members/$normalizedFromHouseId': true,
-        'participants/$normalizedCurrentHouseId': true,
-        'participants/$normalizedFromHouseId': true,
-        'type': 'dm',
-      });
-
-      await convRef.child('messages').push().set({
-        'from': 'system',
-        'senderId': 'system',
-        'text': 'Hai bạn đã trở thành bạn bè. Hãy bắt đầu trò chuyện nhé! 👋',
-        'ts': ServerValue.timestamp,
-        'type': 'system',
-      });
-
-      await ChatService().seedFriendWelcomeIfEmpty(
-        normalizedCurrentHouseId,
-        normalizedFromHouseId,
+      final response = await CloudFunctionsHelper.callSecure<dynamic>(
+        'respondFriendRequestSecure',
+        payload: <String, dynamic>{
+          'requestId': normalizedRequestId,
+          'accept': true,
+        },
+        fallbackErrorMessage: 'Không thể chấp nhận lời mời.',
       );
-
+      final result = _asStringDynamicMap(response.data) ?? const {};
+      if (result['success'] != true) return false;
+      try {
+        await ChatService().seedFriendWelcomeIfEmpty(
+          normalizedCurrentHouseId,
+          normalizedFromHouseId,
+        );
+      } catch (_) {}
       return true;
     } catch (_) {
       return false;
@@ -323,34 +137,36 @@ class FriendsService {
     final normalizedRequestId = requestId.trim();
     final normalizedHouseId = houseId.trim();
     if (normalizedRequestId.isEmpty || normalizedHouseId.isEmpty) return;
-    await _db.ref('friend_requests/$normalizedRequestId').update({
-      'status': 'declined',
-      'declinedBy': normalizedHouseId,
-      'declinedAt': ServerValue.timestamp,
-    });
+    await CloudFunctionsHelper.callSecure<dynamic>(
+      'respondFriendRequestSecure',
+      payload: <String, dynamic>{
+        'requestId': normalizedRequestId,
+        'accept': false,
+      },
+      fallbackErrorMessage: 'Không thể từ chối lời mời.',
+    );
   }
 
   Future<void> cancelSentFriendRequest(String requestId, String houseId) async {
     final normalizedRequestId = requestId.trim();
     final normalizedHouseId = houseId.trim();
     if (normalizedRequestId.isEmpty || normalizedHouseId.isEmpty) return;
-    await _db.ref('friend_requests/$normalizedRequestId').update({
-      'status': 'declined',
-      'canceledBy': normalizedHouseId,
-      'canceledAt': ServerValue.timestamp,
-    });
+    await CloudFunctionsHelper.callSecure<dynamic>(
+      'cancelFriendRequestSecure',
+      payload: <String, dynamic>{'requestId': normalizedRequestId},
+      fallbackErrorMessage: 'Không thể hủy lời mời.',
+    );
   }
 
   Future<void> removeFriend(String myHouseId, String friendHouseId) async {
     final normalizedMyHouseId = myHouseId.trim();
     final normalizedFriendHouseId = friendHouseId.trim();
     if (normalizedMyHouseId.isEmpty || normalizedFriendHouseId.isEmpty) return;
-    await _db
-        .ref('friends/$normalizedMyHouseId/$normalizedFriendHouseId')
-        .remove();
-    await _db
-        .ref('friends/$normalizedFriendHouseId/$normalizedMyHouseId')
-        .remove();
+    await CloudFunctionsHelper.callSecure<dynamic>(
+      'removeFriendSecure',
+      payload: <String, dynamic>{'friendHouseId': normalizedFriendHouseId},
+      fallbackErrorMessage: 'Không thể hủy kết bạn.',
+    );
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -376,17 +192,12 @@ class FriendsService {
   // 4. STREAM DỮ LIỆU
   // ─────────────────────────────────────────────────────────────
 
-  String? _syncingHouseId;
-
   /// Stream danh sách ID bạn bè
   Stream<List<String>> streamFriends(String houseId) {
     final normalizedHouseId = houseId.trim();
     if (normalizedHouseId.isEmpty) {
       return Stream<List<String>>.value(const <String>[]);
     }
-    // Khởi chạy đồng bộ ngầm các lời mời mình gửi đã được người khác chấp nhận
-    _startAcceptedRequestsSync(normalizedHouseId);
-
     return _db.ref('friends/$normalizedHouseId').onValue.map((event) {
       final raw = event.snapshot.value;
       if (!event.snapshot.exists || raw is! Map) return <String>[];
@@ -395,53 +206,10 @@ class FriendsService {
     }).asBroadcastStream();
   }
 
-  void _startAcceptedRequestsSync(String houseId) {
-    final normalizedHouseId = houseId.trim();
-    if (normalizedHouseId.isEmpty || _syncingHouseId == normalizedHouseId) {
-      return;
-    }
-    _syncingHouseId = normalizedHouseId;
-
-    // Lắng nghe các thay đổi trên friend_requests mà mình gửi đi
-    _db
-        .ref('friend_requests')
-        .orderByChild('from')
-        .equalTo(normalizedHouseId)
-        .onValue
-        .listen((event) async {
-      final raw = event.snapshot.value;
-      if (!event.snapshot.exists || raw is! Map) return;
-
-      final map = Map<dynamic, dynamic>.from(raw);
-      for (final entry in map.entries) {
-        if (entry.value is! Map) continue;
-        final req = Map<String, dynamic>.from(entry.value);
-        if (req['status'] == 'accepted') {
-          final toHouseId = req['to']?.toString().trim() ?? '';
-          if (toHouseId.isNotEmpty) {
-            // Thêm vào danh sách bạn bè của mình
-            try {
-              await _db.ref('friends/$normalizedHouseId/$toHouseId').set(true);
-              await ChatService().seedFriendWelcomeIfEmpty(
-                normalizedHouseId,
-                toHouseId,
-              );
-              // Xoá request sau khi đã đồng bộ
-              await _db.ref('friend_requests/${entry.key}').remove();
-            } catch (_) {}
-          }
-        }
-      }
-    }, onError: (Object error) {
-      debugPrint('[FriendsService] accepted requests sync error: $error');
-    });
-  }
-
-  /// Gọi hàm này khi khởi động app hoặc ở HomeScreen để đảm bảo luôn đồng bộ bạn bè
+  /// Quan hệ hai chiều được máy chủ ghi nguyên tử; giữ API này để tương thích
+  /// với các màn hình cũ đang gọi khi khởi động.
   void initGlobalSync(String houseId) {
-    final normalizedHouseId = houseId.trim();
-    if (normalizedHouseId.isEmpty) return;
-    _startAcceptedRequestsSync(normalizedHouseId);
+    if (houseId.trim().isEmpty) return;
   }
 
   /// Stream danh sách lời mời (đến & đi)
@@ -542,84 +310,9 @@ class FriendsService {
   // HELPERS
   // ─────────────────────────────────────────────────────────────
 
-  Future<int> _countPendingRequestsForTarget(String targetId) async {
-    final snap = await _db
-        .ref('friend_requests')
-        .orderByChild('to')
-        .equalTo(targetId)
-        .once();
-    final raw = snap.snapshot.value;
-    if (!snap.snapshot.exists || raw is! Map) return 0;
-
-    final map = Map<dynamic, dynamic>.from(raw);
-    return map.values.where((v) => v is Map && v['status'] == 'pending').length;
-  }
-
-  Future<int?> _countMutualFriendsBestEffort(String fromId, String toId) async {
-    final fromSnap = await _db.ref('friends/$fromId').get();
-    try {
-      final toSnap = await _db.ref('friends/$toId').get();
-
-      final fromRaw = fromSnap.value;
-      final toRaw = toSnap.value;
-      if (!fromSnap.exists ||
-          !toSnap.exists ||
-          fromRaw is! Map ||
-          toRaw is! Map) {
-        return 0;
-      }
-
-      final fromSet = Map<dynamic, dynamic>.from(fromRaw).keys.toSet();
-      final toSet = Map<dynamic, dynamic>.from(toRaw).keys.toSet();
-
-      return fromSet.intersection(toSet).length;
-    } on FirebaseException catch (error) {
-      if (error.code.toLowerCase() == 'permission-denied') {
-        return null;
-      }
-      rethrow;
-    }
-  }
-
-  int? _readInt(dynamic value) {
-    if (value is int) return value;
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '');
-  }
-
-  String _mapSendRequestFirebaseError(FirebaseException error) {
-    final code = error.code.toLowerCase();
-    final raw = (error.message ?? '').toLowerCase();
-
-    if (code == 'permission-denied' ||
-        raw.contains('permission-denied') ||
-        raw.contains('permission_denied')) {
-      return 'Không thể gửi lời mời lúc này. Mã nhà này có thể đã chặn bạn, tắt nhận lời mời, hoặc dữ liệu công khai chưa sẵn sàng.';
-    }
-    if (code == 'network-request-failed' ||
-        code == 'unavailable' ||
-        raw.contains('network') ||
-        raw.contains('timeout')) {
-      return 'Kết nối mạng không ổn định. Hãy kiểm tra mạng rồi thử lại.';
-    }
-    return 'Không thể gửi lời mời lúc này. Thử lại sau.';
-  }
-
-  String _mapSendRequestFallbackError(Object error) {
-    final raw = error.toString().toLowerCase();
-    if (raw.contains('permission-denied') ||
-        raw.contains('permission_denied')) {
-      return 'Không thể gửi lời mời lúc này. Mã nhà này có thể đã chặn bạn, tắt nhận lời mời, hoặc dữ liệu công khai chưa sẵn sàng.';
-    }
-    if (raw.contains('network') || raw.contains('timeout')) {
-      return 'Kết nối mạng không ổn định. Hãy kiểm tra mạng rồi thử lại.';
-    }
-    return 'Không thể gửi lời mời lúc này. Thử lại sau.';
-  }
-
-  String _getConversationId(String id1, String id2) {
-    final list = [id1, id2]..sort();
-    return '${list[0]}_${list[1]}';
+  String _callableErrorMessage(Object error, String fallback) {
+    final message = error.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+    return message.trim().isEmpty ? fallback : message.trim();
   }
 
   // ─────────────────────────────────────────────────────────────

@@ -100,14 +100,43 @@ Widget _buildHeaderIcon(
   required IconData icon,
 }) {
   return Container(
-    width: 40,
-    height: 40,
+    width: 46,
+    height: 46,
     decoration: BoxDecoration(
-      color: accent.withValues(alpha: 0.10),
-      borderRadius: BorderRadius.circular(12),
+      gradient: LinearGradient(
+        colors: [
+          accent.withValues(alpha: 0.98),
+          Color.lerp(accent, const Color(0xFF9A78E6), 0.36) ?? accent,
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.76)),
+      boxShadow: [
+        BoxShadow(
+          color: accent.withValues(alpha: 0.20),
+          blurRadius: 14,
+          offset: const Offset(0, 6),
+        ),
+      ],
     ),
     alignment: Alignment.center,
-    child: Icon(icon, color: accent, size: 21),
+    child: Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Icon(icon, color: Colors.white, size: 23),
+        const Positioned(
+          right: -5,
+          top: -5,
+          child: Icon(
+            Icons.favorite_rounded,
+            color: Colors.white,
+            size: 9,
+          ),
+        ),
+      ],
+    ),
   );
 }
 

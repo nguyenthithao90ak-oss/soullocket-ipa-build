@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/pairing_service.dart';
 
 class PairingCreateCodeSheet extends StatefulWidget {
@@ -33,8 +34,9 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
       _errorMsg = null;
     });
     try {
-      final active =
-          await PairingService.instance.getActivePairingCode(widget.myHouseId);
+      final active = await PairingService.instance.getActivePairingCode(
+        widget.myHouseId,
+      );
       if (mounted && active != null) {
         final code = active['code']?.toString();
         final expiresAt = active['expiresAt'] as int? ?? 0;
@@ -99,9 +101,11 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
     });
 
     try {
-      final code =
-          await PairingService.instance.createPairingCode(_durationMinutes);
-      final expiresAt = DateTime.now().millisecondsSinceEpoch +
+      final code = await PairingService.instance.createPairingCode(
+        _durationMinutes,
+      );
+      final expiresAt =
+          DateTime.now().millisecondsSinceEpoch +
           (_durationMinutes * 60 * 1000);
       if (mounted) {
         setState(() {
@@ -149,8 +153,9 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        color: SLColors.paper,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        border: Border(top: BorderSide(color: SLColors.border, width: 1.2)),
       ),
       padding: const EdgeInsets.all(24),
       child: SafeArea(
@@ -163,48 +168,59 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: SLColors.thread.withValues(alpha: 0.38),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             SLSpacing.h24,
             Text(
-              'Tạo Mã Ghép Nối',
+              L10nService().translate('Tạo mã ghép nối'),
               textAlign: TextAlign.center,
-              style: SLTheme.quicksand(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFFD81B60),
+              style: SLTheme.textStyleForKey(
+                'dancingScript',
+                fontSize: 25,
+                fontWeight: FontWeight.w700,
+                color: SLColors.ink,
               ),
             ),
             SLSpacing.h8,
             Text(
-              'Gửi mã này cho nửa kia để họ nhập vào máy của mình. Mã dùng 1 lần.',
+              L10nService().translate(
+                'Gửi mã này cho nửa kia để họ nhập vào máy của mình. Mã dùng 1 lần.',
+              ),
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: Colors.grey.shade600,
+                color: SLColors.textSecond,
               ),
             ),
             SLSpacing.h16,
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFEBEE),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFEF5350), width: 1.5),
+                color: SLColors.dangerLight,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: SLColors.danger.withValues(alpha: 0.32),
+                  width: 1.1,
+                ),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.warning_amber_rounded,
-                      color: Color(0xFFC62828), size: 20),
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Color(0xFFC62828),
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Lưu ý: Bạn là NGƯỜI TẠO MÃ. Toàn bộ hình ảnh, nhật ký và dữ liệu của bạn sẽ được GIỮ NGUYÊN. Tuy nhiên, toàn bộ dữ liệu hiện tại của NGƯỜI NHẬP MÃ SẼ BỊ XÓA HOÀN TOÀN trước khi liên kết vào tài khoản này để dùng chung dữ liệu.',
+                      L10nService().translate(
+                        'Lưu ý: Bạn là NGƯỜI TẠO MÃ. Toàn bộ hình ảnh, nhật ký và dữ liệu của bạn sẽ được GIỮ NGUYÊN. Tuy nhiên, toàn bộ dữ liệu hiện tại của NGƯỜI NHẬP MÃ SẼ BỊ XÓA HOÀN TOÀN trước khi liên kết vào tài khoản này để dùng chung dữ liệu.',
+                      ),
                       style: SLTheme.quicksand(
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
@@ -221,36 +237,47 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
               DropdownButtonFormField<int>(
                 initialValue: _durationMinutes,
                 decoration: InputDecoration(
-                  labelText: 'Thời hạn mã',
+                  labelText: L10nService().translate('Thời hạn mã'),
                   labelStyle: SLTheme.quicksand(
-                      fontSize: 14, fontWeight: FontWeight.w700),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(17),
+                    borderSide: const BorderSide(color: SLColors.border),
                   ),
                   filled: true,
-                  fillColor: Colors.grey.shade50,
+                  fillColor: SLColors.bgSubtle,
                 ),
                 items: [
                   DropdownMenuItem(
-                      value: 5,
-                      child: Text('5 phút',
-                          style:
-                              SLTheme.quicksand(fontWeight: FontWeight.w700))),
+                    value: 5,
+                    child: Text(
+                      '5 phút',
+                      style: SLTheme.quicksand(fontWeight: FontWeight.w700),
+                    ),
+                  ),
                   DropdownMenuItem(
-                      value: 15,
-                      child: Text('15 phút',
-                          style:
-                              SLTheme.quicksand(fontWeight: FontWeight.w700))),
+                    value: 15,
+                    child: Text(
+                      '15 phút',
+                      style: SLTheme.quicksand(fontWeight: FontWeight.w700),
+                    ),
+                  ),
                   DropdownMenuItem(
-                      value: 60,
-                      child: Text('1 giờ',
-                          style:
-                              SLTheme.quicksand(fontWeight: FontWeight.w700))),
+                    value: 60,
+                    child: Text(
+                      '1 giờ',
+                      style: SLTheme.quicksand(fontWeight: FontWeight.w700),
+                    ),
+                  ),
                   DropdownMenuItem(
-                      value: 1440,
-                      child: Text('1 ngày',
-                          style:
-                              SLTheme.quicksand(fontWeight: FontWeight.w700))),
+                    value: 1440,
+                    child: Text(
+                      '1 ngày',
+                      style: SLTheme.quicksand(fontWeight: FontWeight.w700),
+                    ),
+                  ),
                 ],
                 onChanged: (val) {
                   if (val != null) setState(() => _durationMinutes = val);
@@ -261,9 +288,10 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
                 Text(
                   _errorMsg!,
                   style: SLTheme.quicksand(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.red),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.red,
+                  ),
                 ),
               ],
               SLSpacing.h24,
@@ -274,7 +302,8 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   elevation: 0,
                 ),
                 child: _isLoading
@@ -282,20 +311,26 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
                     : Text(
-                        'Tạo Mã Ngay',
+                        L10nService().translate('Tạo mã ngay'),
                         style: SLTheme.quicksand(
-                            fontSize: 16, fontWeight: FontWeight.w800),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
               ),
             ] else ...[
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFF0F5),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFF8BBD0)),
+                  color: SLColors.paperBlush,
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: SLColors.border),
+                  boxShadow: SLShadow.subtle,
                 ),
                 child: Column(
                   children: [
@@ -312,8 +347,11 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.timer_outlined,
-                            size: 16, color: Color(0xFFE91E63)),
+                        const Icon(
+                          Icons.timer_outlined,
+                          size: 16,
+                          color: Color(0xFFE91E63),
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           _timeLeftStr.isNotEmpty
@@ -338,16 +376,19 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
                       onPressed: _deleteCode,
                       icon: const Icon(Icons.close_rounded, size: 18),
                       label: Text(
-                        'Hủy Mã',
+                        L10nService().translate('Hủy mã'),
                         style: SLTheme.quicksand(
-                            fontSize: 14, fontWeight: FontWeight.w800),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.grey.shade600,
                         side: BorderSide(color: Colors.grey.shade300),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                     ),
                   ),
@@ -358,22 +399,30 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
                         Clipboard.setData(ClipboardData(text: _pairingCode!));
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                              content: Text('Đã sao chép mã ghép nối.',
-                                  style: SLTheme.quicksand())),
+                            content: Text(
+                              L10nService().translate(
+                                'Đã sao chép mã ghép nối.',
+                              ),
+                              style: SLTheme.quicksand(),
+                            ),
+                          ),
                         );
                       },
                       icon: const Icon(Icons.copy_rounded, size: 18),
                       label: Text(
-                        'Sao Chép',
+                        L10nService().translate('Sao chép'),
                         style: SLTheme.quicksand(
-                            fontSize: 14, fontWeight: FontWeight.w800),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFD81B60),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         elevation: 0,
                       ),
                     ),
@@ -383,7 +432,7 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
               SLSpacing.h16,
               Center(
                 child: Text(
-                  'Đang chờ người ấy nhập mã...',
+                  L10nService().translate('Đang chờ người ấy nhập mã...'),
                   style: SLTheme.quicksand(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
@@ -397,14 +446,16 @@ class _PairingCreateCodeSheetState extends State<PairingCreateCodeSheet> {
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Color(0xFFF48FB1)),
+                    strokeWidth: 2,
+                    color: Color(0xFFF48FB1),
+                  ),
                 ),
               ),
               SLSpacing.h16,
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: Text(
-                  'Để sau',
+                  L10nService().translate('Để sau'),
                   style: SLTheme.quicksand(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,

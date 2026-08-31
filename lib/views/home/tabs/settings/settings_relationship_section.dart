@@ -109,9 +109,7 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white,
-            ),
+            style: ElevatedButton.styleFrom(foregroundColor: Colors.white),
             child: Text(confirmLabel),
           ),
         ],
@@ -141,8 +139,9 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
     final confirmed = await _confirmRelationshipAction(
       title: _isSingleRelationship ? confirmSingleTitle : confirmCoupleTitle,
       message: _isSingleRelationship ? confirmSingleMsg : confirmCoupleMsg,
-      confirmLabel:
-          _isSingleRelationship ? confirmSingleLabel : confirmCoupleLabel,
+      confirmLabel: _isSingleRelationship
+          ? confirmSingleLabel
+          : confirmCoupleLabel,
     );
     if (!confirmed || !mounted) return;
 
@@ -162,10 +161,7 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
     } catch (e) {
       if (!mounted) return;
       _showToast(
-        AppErrorMapper.resolve(
-          e,
-          fallbackMessage: fallbackErrMsg,
-        ).message,
+        AppErrorMapper.resolve(e, fallbackMessage: fallbackErrMsg).message,
         success: false,
       );
     } finally {
@@ -207,10 +203,7 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
     } catch (e) {
       if (!mounted) return;
       _showToast(
-        AppErrorMapper.resolve(
-          e,
-          fallbackMessage: fallbackErrMsg,
-        ).message,
+        AppErrorMapper.resolve(e, fallbackMessage: fallbackErrMsg).message,
         success: false,
       );
     } finally {
@@ -221,7 +214,8 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
   }
 
   Widget _buildRelationshipStatusCard(
-      SettingsRelationshipPanelState panelState) {
+    SettingsRelationshipPanelState panelState,
+  ) {
     if (!panelState.hasActiveBreakupRequest) {
       return const SizedBox.shrink();
     }
@@ -231,9 +225,10 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF5F8),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFFC2D3)),
+        color: SLColors.paperBlush,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: SLColors.primary.withValues(alpha: 0.25)),
+        boxShadow: SLShadow.subtle,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,8 +264,10 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFFD81B60),
                 side: const BorderSide(color: Color(0xFFFFA8BF)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -286,7 +283,8 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
     final panelState = _buildRelationshipPanelState();
     final isSingle = panelState.isSingle;
     final panelDescription = _relationshipPanelDescription(isSingle);
-    final showQrConnect = _canShowRelationshipQrConnect(isSingle) &&
+    final showQrConnect =
+        _canShowRelationshipQrConnect(isSingle) &&
         !panelState.hasActiveBreakupRequest;
     final panelNote = _relationshipPanelNote(isSingle);
 
@@ -305,23 +303,23 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: isSingle
-                    ? [const Color(0xFF1E2030), const Color(0xFF2B2D42)]
-                    : [const Color(0xFFFFF0F5), const Color(0xFFFFE4EE)],
+                    ? [SLColors.tertiarySoft, Color(0xFFE7DEF8)]
+                    : [SLColors.paperBlush, SLColors.primarySoft],
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(22),
               border: Border.all(
                 color: isSingle
                     ? const Color(0xFF8B5CF6).withValues(alpha: 0.3)
                     : const Color(0xFFFF6BA7).withValues(alpha: 0.3),
-                width: 1.5,
+                width: 1.1,
               ),
               boxShadow: [
                 BoxShadow(
                   color: isSingle
                       ? const Color(0xFF4F46E5).withValues(alpha: 0.15)
                       : const Color(0xFFFF6BA7).withValues(alpha: 0.15),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
+                  blurRadius: 18,
+                  offset: const Offset(0, 7),
                 ),
               ],
             ),
@@ -341,11 +339,15 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isSingle ? 'Chế độ Độc thân ✨' : 'Chế độ Có người yêu 💖',
+                        isSingle
+                            ? L10nService().translate('Chế độ Độc thân ✨')
+                            : L10nService().translate('Chế độ Có người yêu 💖'),
                         style: SLTheme.quicksand(
                           fontSize: 15,
                           fontWeight: FontWeight.w900,
-                          color: isSingle ? Colors.white : const Color(0xFFD81B60),
+                          color: isSingle
+                              ? SLColors.accentPurpleDark
+                              : SLColors.primaryActive,
                         ),
                       ),
                       const SizedBox(height: 3),
@@ -355,8 +357,10 @@ extension _SettingsTabRelationshipSection on _SettingsTabState {
                           fontSize: 11.5,
                           fontWeight: FontWeight.w600,
                           color: isSingle
-                              ? Colors.white.withValues(alpha: 0.6)
-                              : const Color(0xFF6F5A62),
+                              ? SLColors.accentPurpleDark.withValues(
+                                  alpha: 0.78,
+                                )
+                              : SLColors.textSecond,
                           height: 1.35,
                         ),
                       ),

@@ -60,12 +60,17 @@ class MyApp extends StatelessWidget {
             );
 
             if (kIsWeb) {
-              final maxWidth =
-                  SLResponsive.maxContentWidthForWidth(screenWidth);
-              final outerPadding =
-                  SLResponsive.horizontalPaddingForWidth(screenWidth);
-              return Container(
-                color: const Color(0xFFFDFDFD),
+              final maxWidth = SLResponsive.maxContentWidthForWidth(
+                screenWidth,
+              );
+              final outerPadding = SLResponsive.horizontalPaddingForWidth(
+                screenWidth,
+              );
+              return SLTheme.softCanvasBackdrop(
+                baseColor: SLColors.paperCanvas,
+                accentColor: SLColors.thread,
+                secondaryAccent: SLColors.secondary,
+                motif: SLCanvasBackdropMotif.journal,
                 child: Center(
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: outerPadding),
@@ -73,26 +78,33 @@ class MyApp extends StatelessWidget {
                       constraints: BoxConstraints(maxWidth: maxWidth),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: SLColors.surfaceWarm,
+                          border: const Border.symmetric(
+                            vertical: BorderSide(
+                              color: SLColors.border,
+                              width: 1,
+                            ),
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 30,
+                              color: SLColors.ink.withValues(alpha: 0.08),
+                              blurRadius: 34,
                               offset: const Offset(0, 0),
                             ),
                           ],
                         ),
-                        child: RepaintBoundary(
-                          child: ClipRect(child: content),
-                        ),
+                        child: RepaintBoundary(child: ClipRect(child: content)),
                       ),
                     ),
                   ),
                 ),
               );
             }
-            return ColoredBox(
-              color: SLColors.bgMain,
+            return SLTheme.softCanvasBackdrop(
+              baseColor: SLColors.bgMain,
+              accentColor: SLColors.thread,
+              secondaryAccent: SLColors.secondary,
+              motif: SLCanvasBackdropMotif.journal,
               child: content,
             );
           },
@@ -184,9 +196,7 @@ class MyApp extends StatelessWidget {
             ),
             dialogTheme: DialogThemeData(
               backgroundColor: SLColors.bgElevated,
-              shape: RoundedRectangleBorder(
-                borderRadius: SLRadius.xlAll,
-              ),
+              shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
             ),
             bottomSheetTheme: const BottomSheetThemeData(
               backgroundColor: SLColors.bgElevated,
@@ -216,8 +226,10 @@ class MyApp extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: SLRadius.lgAll,
-                borderSide:
-                    const BorderSide(color: SLColors.primary, width: 1.6),
+                borderSide: const BorderSide(
+                  color: SLColors.primary,
+                  width: 1.6,
+                ),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: SLRadius.lgAll,
@@ -225,18 +237,22 @@ class MyApp extends StatelessWidget {
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: SLRadius.lgAll,
-                borderSide:
-                    const BorderSide(color: SLColors.danger, width: 1.6),
+                borderSide: const BorderSide(
+                  color: SLColors.danger,
+                  width: 1.6,
+                ),
               ),
             ),
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
                 foregroundColor: SLColors.textInverse,
                 backgroundColor: SLColors.primary,
-                disabledForegroundColor:
-                    SLColors.textInverse.withValues(alpha: 0.7),
-                disabledBackgroundColor:
-                    SLColors.primary.withValues(alpha: 0.45),
+                disabledForegroundColor: SLColors.textInverse.withValues(
+                  alpha: 0.7,
+                ),
+                disabledBackgroundColor: SLColors.primary.withValues(
+                  alpha: 0.45,
+                ),
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 18,
@@ -246,9 +262,7 @@ class MyApp extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                   fontSize: 14,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: SLRadius.pillAll,
-                ),
+                shape: RoundedRectangleBorder(borderRadius: SLRadius.pillAll),
               ),
             ),
             outlinedButtonTheme: OutlinedButtonThemeData(
@@ -263,9 +277,7 @@ class MyApp extends StatelessWidget {
                   fontWeight: FontWeight.w800,
                   fontSize: 14,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: SLRadius.pillAll,
-                ),
+                shape: RoundedRectangleBorder(borderRadius: SLRadius.pillAll),
               ),
             ),
             textButtonTheme: TextButtonThemeData(
@@ -425,8 +437,8 @@ class StartupErrorApp extends StatelessWidget {
                         color: const Color(0xFFFFF0F0),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color:
-                                const Color(0xFFE53935).withValues(alpha: 0.2)),
+                          color: const Color(0xFFE53935).withValues(alpha: 0.2),
+                        ),
                       ),
                       child: Text(
                         'SoulLocket © ${DateTime.now().year} — Tame Trương Việt Hoàng.\nMọi hành vi crack, mod, can thiệp trái phép đều vi phạm bản quyền.',
@@ -454,12 +466,12 @@ class SoulLocketScrollBehavior extends MaterialScrollBehavior {
 
   @override
   Set<PointerDeviceKind> get dragDevices => const {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.stylus,
-        PointerDeviceKind.trackpad,
-        PointerDeviceKind.unknown,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.unknown,
+  };
 
   @override
   Widget buildOverscrollIndicator(

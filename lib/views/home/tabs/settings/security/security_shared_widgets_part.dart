@@ -63,28 +63,29 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     required List<Widget> children,
   }) {
     final uiState = UiPrefs.notifier.value;
-    final isDark = uiState.themeKey == 'theme-night' ||
+    final isDark =
+        uiState.themeKey == 'theme-night' ||
         uiState.themeKey == 'theme-dark' ||
         uiState.themeKey == 'theme-true-black';
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 24),
+      margin: const EdgeInsets.only(bottom: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 16, bottom: 8),
+            padding: const EdgeInsets.only(left: 4, bottom: 9),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title.toUpperCase(),
+                  title,
                   style: SLTheme.quicksand(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white60 : const Color(0xFF64748B),
-                    letterSpacing: 0.5,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: isDark ? Colors.white : SLColors.ink,
+                    letterSpacing: 0.1,
                   ),
                 ),
                 if (subtitle != null && subtitle.trim().isNotEmpty) ...[
@@ -94,7 +95,7 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
                     style: SLTheme.quicksand(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                      color: isDark ? Colors.white54 : SLColors.textSecond,
                     ),
                   ),
                 ],
@@ -103,14 +104,15 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
           ),
           Container(
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              color: isDark ? const Color(0xFF2C252D) : SLColors.bgSubtle,
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : const Color(0xFFE2E8F0),
-                width: 0.5,
+                    ? Colors.white.withValues(alpha: 0.10)
+                    : SLColors.border,
+                width: 1,
               ),
+              boxShadow: isDark ? null : SLShadow.subtle,
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -140,21 +142,38 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
     String? secondaryActionLabel,
     bool showDivider = true,
   }) {
-    final statusText = statusLabel ??
+    final uiState = UiPrefs.notifier.value;
+    final isDark =
+        uiState.themeKey == 'theme-night' ||
+        uiState.themeKey == 'theme-dark' ||
+        uiState.themeKey == 'theme-true-black';
+    final statusText =
+        statusLabel ??
         (isVerified
             ? context.tr('home_xcthc_a8bcec')
             : context.tr('home_chaxcthc_54490d'));
-    final statusBg =
-        isVerified ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2);
-    final statusFg =
-        isVerified ? const Color(0xFF059669) : const Color(0xFFDC2626);
+    final statusBg = isVerified
+        ? const Color(0xFFECFDF5)
+        : const Color(0xFFFEF2F2);
+    final statusFg = isVerified
+        ? const Color(0xFF059669)
+        : const Color(0xFFDC2626);
 
     return Column(
       children: [
         Row(
           children: [
-            Icon(icon, color: const Color(0xFF64748B), size: 24),
-            const SizedBox(width: 16),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: accentColor.withValues(alpha: 0.18)),
+              ),
+              child: Icon(icon, color: accentColor, size: 20),
+            ),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,8 +182,8 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
                     label,
                     style: SLTheme.quicksand(
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF0F172A),
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? SLColors.darkTextPrimary : SLColors.ink,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -173,7 +192,9 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
                     style: SLTheme.quicksand(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF64748B),
+                      color: isDark
+                          ? SLColors.darkTextSecond
+                          : SLColors.textSecond,
                     ),
                   ),
                 ],
@@ -221,7 +242,7 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
         if (showDivider)
           const Padding(
             padding: EdgeInsets.only(top: 16),
-            child: Divider(height: 1, color: Color(0xFFF1F5F9)),
+            child: Divider(height: 1, color: SLColors.borderLight),
           ),
       ],
     );
@@ -240,16 +261,16 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
         opacity: onTap == null ? 0.5 : 1.0,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             color: isPrimary
                 ? accentColor.withValues(alpha: 0.1)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: isPrimary
                   ? accentColor.withValues(alpha: 0.2)
-                  : const Color(0xFFE2E8F0),
+                  : SLColors.border,
             ),
           ),
           child: Text(
@@ -258,7 +279,7 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
             style: SLTheme.quicksand(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: isPrimary ? accentColor : const Color(0xFF475569),
+              color: isPrimary ? accentColor : SLColors.textSecond,
             ),
           ),
         ),
@@ -273,7 +294,11 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: EdgeInsets.fromLTRB(
-            24, 24, 24, MediaQuery.viewInsetsOf(context).bottom + 24),
+          24,
+          24,
+          24,
+          MediaQuery.viewInsetsOf(context).bottom + 24,
+        ),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -313,7 +338,9 @@ extension _SettingsTabSecuritySharedWidgetsPart on _SettingsTabState {
             ),
             const SizedBox(height: 24),
             _buildInput(
-                _secondaryEmailCtrl, context.tr('home_nhpemailph_9c0bf7')),
+              _secondaryEmailCtrl,
+              context.tr('home_nhpemailph_9c0bf7'),
+            ),
             const SizedBox(height: 24),
             _buildGradientBtn(
               label: _secondaryEmail.isEmpty

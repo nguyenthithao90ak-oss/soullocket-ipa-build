@@ -193,10 +193,6 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
           .collection('comments')
           .doc(commentId)
           .delete();
-      await FirebaseFirestore.instance
-          .collection('social_posts')
-          .doc(postId)
-          .update({'commentCount': FieldValue.increment(-1)});
 
       await FirebaseFirestore.instance
           .collection('reports')

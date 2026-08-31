@@ -40,7 +40,8 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
                         borderRadius: SLRadius.lgAll,
                         boxShadow: SLShadow.subtle,
                         border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.5)),
+                          color: Colors.white.withValues(alpha: 0.5),
+                        ),
                       ),
                       child: Center(
                         child: Icon(
@@ -82,51 +83,56 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
       valueListenable: _smartInteractionPresetNotifier,
       builder: (context, preset, _) {
         final displayPreset = _displayInteractionPreset;
-        final showDefaultHeart = canSendMissYou &&
+        final showDefaultHeart =
+            canSendMissYou &&
             _showDefaultHeartSuggestion &&
             _manualInteractionPresetType == null;
 
         return GestureDetector(
-          behavior: HitTestBehavior.deferToChild,
+          behavior: HitTestBehavior.opaque,
           excludeFromSemantics: true,
           onTap: canSendMissYou ? _sendSuggestedInteraction : null,
-          onLongPressStart:
-              canSendMissYou ? _handleInteractionLongPressStart : null,
-          onLongPressMoveUpdate:
-              canSendMissYou ? _handleInteractionLongPressMoveUpdate : null,
-          onLongPressEnd:
-              canSendMissYou ? _handleInteractionLongPressEnd : null,
-          onLongPressCancel:
-              canSendMissYou ? _handleInteractionLongPressCancel : null,
+          onLongPressStart: canSendMissYou
+              ? _handleInteractionLongPressStart
+              : null,
+          onLongPressMoveUpdate: canSendMissYou
+              ? _handleInteractionLongPressMoveUpdate
+              : null,
+          onLongPressEnd: canSendMissYou
+              ? _handleInteractionLongPressEnd
+              : null,
+          onLongPressCancel: canSendMissYou
+              ? _handleInteractionLongPressCancel
+              : null,
           child: _HeartbeatWidget(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
-                  width: canSendMissYou ? 112 : 74,
-                  height: canSendMissYou ? 112 : 74,
+                  width: canSendMissYou ? 76 : 64,
+                  height: canSendMissYou ? 76 : 64,
                   child: Center(
                     child: canSendMissYou
                         ? (showDefaultHeart
-                            ? _buildInteractionVisual(
-                                visual: '\u{1F496}',
-                                assetPath:
-                                    'assets/images/anhtomau_stickers/sticker_20.gif',
-                                size: 84,
-                                emojiSize: 72,
-                                preferAsset: true,
-                              )
-                            : _buildInteractionVisual(
-                                visual: displayPreset.emoji,
-                                assetPath: displayPreset.assetPath,
-                                size: 52,
-                                emojiSize: 44,
-                                preferAsset: true,
-                              ))
+                              ? _buildInteractionVisual(
+                                  visual: '\u{1F496}',
+                                  assetPath:
+                                      'assets/images/anhtomau_stickers/sticker_20.gif',
+                                  size: 58,
+                                  emojiSize: 50,
+                                  preferAsset: true,
+                                )
+                              : _buildInteractionVisual(
+                                  visual: displayPreset.emoji,
+                                  assetPath: displayPreset.assetPath,
+                                  size: 46,
+                                  emojiSize: 40,
+                                  preferAsset: true,
+                                ))
                         : const Icon(
                             Icons.favorite_rounded,
                             color: Color(0xFFFF4D79),
-                            size: 54,
+                            size: 38,
                           ),
                   ),
                 ),
@@ -153,4 +159,3 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
     );
   }
 }
-

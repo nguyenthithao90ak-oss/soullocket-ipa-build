@@ -38,27 +38,25 @@ extension _HomeScreenShellControls on _HomeScreenState {
                       );
                       final bottomInset = MediaQuery.paddingOf(context).bottom;
                       final extraBottomPadding = Platform.isIOS
-                          ? (bottomInset > 0
-                              ? bottomInset / 2.5
-                              : 0.0)
+                          ? (bottomInset > 0 ? bottomInset / 2.5 : 0.0)
                           : (bottomInset > 0 ? bottomInset : 0.0);
                       return AnimatedSize(
-                          duration: effectProfile.performanceMode || isSwiping
-                              ? Duration.zero
-                              : const Duration(milliseconds: 180),
-                          curve: Curves.easeOutCubic,
-                          alignment: Alignment.bottomCenter,
-                          child: navCollapsed
-                              ? _buildCollapsedNavHandle(
-                                  isDark: isDark,
-                                  currentIndex: currentIndex,
-                                )
-                              : _buildExpandedBottomNav(
-                                  isDark: isDark,
-                                  currentIndex: currentIndex,
-                                  isSwiping: isSwiping,
-                                ),
-                        );
+                        duration: effectProfile.performanceMode || isSwiping
+                            ? Duration.zero
+                            : const Duration(milliseconds: 180),
+                        curve: Curves.easeOutCubic,
+                        alignment: Alignment.bottomCenter,
+                        child: navCollapsed
+                            ? _buildCollapsedNavHandle(
+                                isDark: isDark,
+                                currentIndex: currentIndex,
+                              )
+                            : _buildExpandedBottomNav(
+                                isDark: isDark,
+                                currentIndex: currentIndex,
+                                isSwiping: isSwiping,
+                              ),
+                      );
                     },
                   );
                 },
@@ -76,41 +74,36 @@ extension _HomeScreenShellControls on _HomeScreenState {
     required bool isSwiping,
   }) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final accent = _HomeScreenState._navItems[currentIndex].activeColor;
     final uiState = UiPrefs.notifier.value;
     final effectProfile = _resolveHomeEffectProfile(
       uiState,
       pauseAnimations: isSwiping,
     );
     final isPerformanceMode = effectProfile.performanceMode;
-    const useBackdropBlur = true;
+    const useBackdropBlur = false;
 
     final navSurface = Container(
       key: _firstGuideBottomNavKey,
-      padding: EdgeInsets.fromLTRB(12, 12, 12, bottomInset > 0 ? bottomInset + 8 : 16),
+      padding: const EdgeInsets.fromLTRB(8, 10, 8, 9),
       decoration: BoxDecoration(
         color: isDark
-            ? const Color(0xFF1E1E28).withValues(alpha: 0.85)
-            : Colors.white.withValues(alpha: 0.85),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(28),
-          topRight: Radius.circular(28),
-        ),
-        border: Border(
-          top: BorderSide(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.1)
-                : Colors.black.withValues(alpha: 0.05),
-            width: 1,
-          ),
+            ? const Color(0xFF2A2430).withValues(alpha: 0.96)
+            : SLColors.paper.withValues(alpha: 0.97),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.12)
+              : SLColors.border,
+          width: 1.1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(
-              alpha: isDark ? 0.3 : 0.08,
-            ),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.34)
+                : SLColors.ink.withValues(alpha: 0.12),
+            blurRadius: 24,
+            spreadRadius: -8,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -139,22 +132,24 @@ extension _HomeScreenShellControls on _HomeScreenState {
       },
       child: Padding(
         key: const ValueKey('expanded-nav'),
-        padding: EdgeInsets.zero,
+        padding: EdgeInsets.fromLTRB(
+          12,
+          0,
+          12,
+          bottomInset > 0 ? bottomInset + 5 : 10,
+        ),
         child: Stack(
           alignment: Alignment.topCenter,
           clipBehavior: Clip.none,
           children: [
             RepaintBoundary(
               child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(28),
-                  topRight: Radius.circular(28),
-                ),
+                borderRadius: BorderRadius.circular(28),
                 child: !useBackdropBlur
                     ? navSurface
                     : FastBackdropFilter(
                         filter: ui.ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-                        fallbackColor: isDark 
+                        fallbackColor: isDark
                             ? const Color(0xFF1E1E28)
                             : Colors.white,
                         child: navSurface,
@@ -264,10 +259,12 @@ extension _HomeScreenShellControls on _HomeScreenState {
   }) {
     final item = _HomeScreenState._navItems[index];
     final isActive = currentIndex == index;
-    final animationDuration =
-        isPerformanceMode ? Duration.zero : const Duration(milliseconds: 200);
-    final inactiveColor =
-        isDark ? const Color(0x80FFFFFF) : const Color(0xFF94A3B8);
+    final animationDuration = isPerformanceMode
+        ? Duration.zero
+        : const Duration(milliseconds: 200);
+    final inactiveColor = isDark
+        ? const Color(0x99FFFFFF)
+        : SLColors.textTertiary;
 
     GlobalKey? targetKey;
     if (index == 1) {
@@ -305,25 +302,37 @@ extension _HomeScreenShellControls on _HomeScreenState {
               children: [
                 KeyedSubtree(
                   key: targetKey,
-                  child: AnimatedScale(
+                  child: AnimatedContainer(
                     duration: animationDuration,
                     curve: Curves.easeOutBack,
-                    scale: isActive && !isPerformanceMode ? 1.1 : 1.0,
+                    width: isActive ? 34 : 30,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? item.activeColor.withValues(alpha: 0.13)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(11),
+                      border: isActive
+                          ? Border.all(
+                              color: item.activeColor.withValues(alpha: 0.22),
+                            )
+                          : null,
+                    ),
                     child: Icon(
                       _getIconForTab(index, isActive: isActive),
                       color: isActive ? item.activeColor : inactiveColor,
-                      size: isActive ? 24 : 22,
+                      size: isActive ? 21 : 20,
                     ),
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   _l10nService.translate(item.labelKey),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: SLTheme.quicksand(
-                    fontSize: 8.0,
-                    fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
+                    fontSize: 9.2,
+                    fontWeight: isActive ? FontWeight.w900 : FontWeight.w700,
                     color: isActive ? item.activeColor : inactiveColor,
                   ),
                 ),

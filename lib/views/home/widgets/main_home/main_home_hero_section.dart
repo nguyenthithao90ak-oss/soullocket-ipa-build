@@ -65,6 +65,7 @@ class _ModernHomeBody extends StatelessWidget {
         state: state,
         isSingle: isSingle,
         houseName: houseName,
+        showHouseName: homeShowHouseName,
         circleValue: circleValue,
         circleTopLabel: circleTopLabel,
         circleBottomLabel: circleBottomLabel,
@@ -78,31 +79,46 @@ class _ModernHomeBody extends StatelessWidget {
 
     return Stack(
       children: [
+        Positioned.fill(
+          child: _HomeScrapbookBackdrop(
+            hasCustomBackground: customBackgroundUrl.trim().isNotEmpty,
+          ),
+        ),
         LayoutBuilder(
           builder: (context, constraints) {
             final horizontalPadding = SLResponsive.horizontalPaddingForWidth(
               constraints.maxWidth,
-              compactPadding: 12,
-              handsetPadding: 16,
-              tabletPadding: 24,
+              compactPadding: 13,
+              handsetPadding: 17,
+              tabletPadding: 28,
             );
             final contentWidth = SLResponsive.maxContentWidthForWidth(
               constraints.maxWidth,
-              handsetMax: 520,
-              tabletMax: 620,
-              desktopMax: 680,
+              handsetMax: 540,
+              tabletMax: 700,
+              desktopMax: 760,
             );
+            final availableContentWidth = min(
+              contentWidth,
+              max(0, constraints.maxWidth - (horizontalPadding * 2)),
+            );
+            final responsiveCircleSize = min(
+              circleSize,
+              max(200, availableContentWidth - 4),
+            ).toDouble();
             Widget buildCountdown(bool isSwiping) {
               final int currentDays = int.tryParse(circleValue) ?? 0;
-              final bool isMilestone = currentDays > 0 &&
+              final bool isMilestone =
+                  currentDays > 0 &&
                   (currentDays % 100 == 0 ||
                       currentDays % 30 == 0 ||
                       currentDays % 365 == 0);
-              final bool enableMotionBase = effectProfile.animationEnabled &&
+              final bool enableMotionBase =
+                  effectProfile.animationEnabled &&
                   !state._deferHeavyHomeMotion &&
                   !isSwiping;
 
-              return RepaintBoundary(
+              final countdown = RepaintBoundary(
                 child: _MainHomeHeroCountdownSection(
                   state: state,
                   isSingle: isSingle,
@@ -112,7 +128,7 @@ class _ModernHomeBody extends StatelessWidget {
                   circleTopLabel: circleTopLabel,
                   circleBottomLabel: circleBottomLabel,
                   startDate: startDate,
-                  circleSize: circleSize,
+                  circleSize: responsiveCircleSize,
                   homeShowHouseName: homeShowHouseName,
                   showDayCounter: showDayCounter,
                   showLoveTimeDetail: showLoveTimeDetail,
@@ -127,10 +143,13 @@ class _ModernHomeBody extends StatelessWidget {
                   firstGuideHeroKey: state.widget.firstGuideHeroKey,
                 ),
               );
+              if (!showDayCounter) return countdown;
+              return _HomeHeroStage(isSingle: isSingle, child: countdown);
             }
 
             Widget buildInsight(bool isSwiping) {
-              final bool enableMotionBase = effectProfile.animationEnabled &&
+              final bool enableMotionBase =
+                  effectProfile.animationEnabled &&
                   !state._deferHeavyHomeMotion &&
                   !isSwiping;
 
@@ -165,7 +184,15 @@ class _ModernHomeBody extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         SizedBox(
-                            height: MediaQuery.paddingOf(context).top + 36),
+                          height: MediaQuery.paddingOf(context).top + 62,
+                        ),
+                        _HomeStoryLetterhead(
+                          smartGreeting: smartGreeting,
+                          houseName: houseName,
+                          showHouseName: homeShowHouseName,
+                          isSingle: isSingle,
+                        ),
+                        SLSpacing.h24,
                         state.widget.isSwipingListenable == null
                             ? buildCountdown(false)
                             : ValueListenableBuilder<bool>(
@@ -174,7 +201,7 @@ class _ModernHomeBody extends StatelessWidget {
                                 builder: (context, isSwiping, _) =>
                                     buildCountdown(isSwiping),
                               ),
-                        SLSpacing.h8,
+                        SLSpacing.h12,
                         RepaintBoundary(
                           child: state._buildModernAvatarSection(
                             isSingle: isSingle,
@@ -190,10 +217,20 @@ class _ModernHomeBody extends StatelessWidget {
                         // SLSpacing.h12,
                         RepaintBoundary(
                           child: _ChatReminderBanner(
-                              state: state, isSingle: isSingle),
+                            state: state,
+                            isSingle: isSingle,
+                          ),
                         ),
+                        if (state._pinnedApps.isNotEmpty) ...[
+                          const _HomeScrapbookDivider(
+                            color: SLColors.secondary,
+                          ),
+                          RepaintBoundary(
+                            child: state._buildShortcutDock(state._pinnedApps),
+                          ),
+                        ],
                         if (!isSingle) ...[
-                          SLSpacing.h20,
+                          const _HomeScrapbookDivider(),
                           RepaintBoundary(
                             child: state._buildModernHighlightCard(
                               startDate: startDate,
@@ -202,7 +239,9 @@ class _ModernHomeBody extends StatelessWidget {
                           ),
                         ],
                         if (!isSingle) ...[
-                          SLSpacing.h20,
+                          const _HomeScrapbookDivider(
+                            color: SLColors.secondary,
+                          ),
                           RepaintBoundary(
                             child: state._buildModernMapCard(
                               nameU1: nameU1,
@@ -210,7 +249,9 @@ class _ModernHomeBody extends StatelessWidget {
                             ),
                           ),
                         ],
-                        SLSpacing.h20,
+                        const _HomeScrapbookDivider(
+                          color: SLColors.accentPurple,
+                        ),
                         state.widget.isSwipingListenable == null
                             ? buildInsight(false)
                             : ValueListenableBuilder<bool>(
@@ -219,11 +260,10 @@ class _ModernHomeBody extends StatelessWidget {
                                 builder: (context, isSwiping, _) =>
                                     buildInsight(isSwiping),
                               ),
-                        SLSpacing.h20,
                         RepaintBoundary(
                           child: state._buildHomeToolSlotSection(),
                         ),
-                        SLSpacing.gapH(72),
+                        SLSpacing.gapH(86),
                       ],
                     ),
                   ),
@@ -266,57 +306,72 @@ class _ChatReminderBanner extends StatelessWidget {
 
     final days = (diffMs / oneDayMs).floor();
     final label = days == 1
-        ? 'Hôm nay chưa nhắn tin cho nhau 💌'
-        : '$days ngày chưa nhắn tin cho nhau 💌';
+        ? context.tr('Hôm nay chưa nhắn tin cho nhau 💌')
+        : context.tr('$days ngày chưa nhắn tin cho nhau 💌');
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              SLColors.primary.withValues(alpha: 0.18),
-              SLColors.secondary.withValues(alpha: 0.14),
-            ],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          borderRadius: SLRadius.lgAll,
-          border: Border.all(
-            color: SLColors.primary.withValues(alpha: 0.28),
-            width: 1,
-          ),
-        ),
+      padding: const EdgeInsets.only(bottom: 12),
+      child: _HomeScrapbookCard(
+        accentColor: SLColors.thread,
+        color: SLColors.paperPeach,
+        radius: 22,
+        padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
         child: Row(
           children: [
-            const Text('💬', style: TextStyle(fontSize: 20)),
-            const SizedBox(width: 10),
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: SLColors.paper,
+                borderRadius: BorderRadius.circular(13),
+                border: Border.all(color: SLColors.borderLight),
+              ),
+              child: const Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(Icons.mail_rounded, size: 20, color: SLColors.thread),
+                  Positioned(
+                    right: 5,
+                    top: 5,
+                    child: Icon(
+                      Icons.favorite_rounded,
+                      size: 8,
+                      color: SLColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 11),
             Expanded(
               child: Text(
                 label,
                 style: SLTheme.quicksand(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 12.5,
+                  height: 1.35,
+                  fontWeight: FontWeight.w800,
                   color: SLColors.textPrimary,
                 ),
               ),
             ),
-            GestureDetector(
-              onTap: () => state._openDirectChat(),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: SLColors.primary.withValues(alpha: 0.22),
-                  borderRadius: SLRadius.pillAll,
-                ),
-                child: Text(
-                  'Nhắn ngay',
-                  style: SLTheme.quicksand(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: SLColors.primary,
+            const SizedBox(width: 8),
+            Semantics(
+              button: true,
+              label: context.tr('Nhắn ngay'),
+              child: Material(
+                color: SLColors.primary,
+                borderRadius: BorderRadius.circular(999),
+                child: InkWell(
+                  onTap: state._openDirectChat,
+                  borderRadius: BorderRadius.circular(999),
+                  child: const SizedBox(
+                    width: 42,
+                    height: 42,
+                    child: Icon(
+                      Icons.arrow_outward_rounded,
+                      size: 18,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -327,5 +382,3 @@ class _ChatReminderBanner extends StatelessWidget {
     );
   }
 }
-
-

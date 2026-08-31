@@ -9,6 +9,7 @@ import '../../../core/constants/app_config.dart';
 import '../../../core/sl_theme.dart';
 import 'package:soullocket_app/core/sl_route.dart';
 import '../../../utils/services/auth_service.dart';
+import '../../../utils/services/core/cloud_functions_helper.dart';
 import '../../../utils/services/l10n_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
@@ -1554,113 +1555,30 @@ class _UpdateTabState extends State<UpdateTab> {
     setState(() => _isSendingFeedback = true);
 
     try {
-      final houseId = await HouseService().getCurrentHouseId();
-      if (houseId == null || houseId.trim().isEmpty) {
+      final response = await CloudFunctionsHelper.callSecure<dynamic>(
+        'submitFeedbackSecure',
+        payload: <String, dynamic>{'content': content},
+        fallbackErrorMessage: _tr(
+          'Không thể gửi ý kiến. Vui lòng thử lại sau!',
+          'Could not send feedback. Please try again later!',
+        ),
+      );
+      final rawResult = response.data;
+      final result = rawResult is Map
+          ? Map<String, dynamic>.from(Map<dynamic, dynamic>.from(rawResult))
+          : const <String, dynamic>{};
+      if (result['success'] != true) {
         if (!mounted || !context.mounted) return;
         _showToast(
-            context,
-            _tr('Không thể xác định thông tin nhà. Vui lòng thử lại sau!',
-                'Could not determine house information. Please try again later!'));
-        setState(() => _isSendingFeedback = false);
+          context,
+          result['message']?.toString() ??
+              _tr(
+                'Không thể gửi ý kiến. Vui lòng thử lại sau!',
+                'Could not send feedback. Please try again later!',
+              ),
+        );
         return;
       }
-
-      // Kiểm tra chặn User UID hoặc House ID
-      final blockedUidSnap = await FirebaseDatabase.instance
-          .ref('sys_settings/blocked_feedbacks/uids/${user.uid}')
-          .get();
-      if (blockedUidSnap.exists && blockedUidSnap.value == true) {
-        if (!mounted || !context.mounted) return;
-        _showToast(
-            context,
-            _tr('Tài khoản của bạn đã bị chặn gửi ý kiến đóng góp.',
-                'Your account has been blocked from sending feedback.'));
-        setState(() => _isSendingFeedback = false);
-        return;
-      }
-
-      final blockedHouseSnap = await FirebaseDatabase.instance
-          .ref('sys_settings/blocked_feedbacks/houses/$houseId')
-          .get();
-      if (blockedHouseSnap.exists && blockedHouseSnap.value == true) {
-        if (!mounted || !context.mounted) return;
-        _showToast(
-            context,
-            _tr('Nhà của bạn đã bị chặn gửi ý kiến đóng góp.',
-                'Your house has been blocked from sending feedback.'));
-        setState(() => _isSendingFeedback = false);
-        return;
-      }
-
-      final dbRef = FirebaseDatabase.instance.ref('house_feedbacks/$houseId');
-      final snap = await dbRef.get();
-
-      Map<String, dynamic> slots = {};
-      if (snap.exists) {
-        final val = snap.value;
-        if (val is Map) {
-          slots = val.map((k, v) =>
-              MapEntry(k.toString(), Map<String, dynamic>.from(v as Map)));
-        } else if (val is List) {
-          for (int i = 0; i < val.length; i++) {
-            final item = val[i];
-            if (item is Map) {
-              slots['slot_$i'] = Map<String, dynamic>.from(item);
-            }
-          }
-        }
-      }
-
-      String? targetSlot;
-      for (final s in ['slot_1', 'slot_2', 'slot_3']) {
-        if (!slots.containsKey(s)) {
-          targetSlot = s;
-          break;
-        }
-      }
-
-      final nowMs = DateTime.now().millisecondsSinceEpoch;
-
-      if (targetSlot == null) {
-        // Cả 3 slot đều đã có dữ liệu, tìm slot cũ nhất
-        String oldestSlot = 'slot_1';
-        num oldestTime = slots['slot_1']?['createdAt'] ?? 0;
-
-        for (final s in ['slot_2', 'slot_3']) {
-          final time = slots[s]?['createdAt'] ?? 0;
-          if (time < oldestTime) {
-            oldestSlot = s;
-            oldestTime = time;
-          }
-        }
-
-        final diff = nowMs - oldestTime;
-        if (diff < 86400000) {
-          final remainingMs = 86400000 - diff;
-          final hours = remainingMs ~/ 3600000;
-          final mins = (remainingMs % 3600000) ~/ 60000;
-          if (!mounted || !context.mounted) return;
-          _showToast(
-            context,
-            _tr(
-              'Nhà của bạn đã gửi tối đa 3 ý kiến trong 24 giờ. Vui lòng đợi $hours giờ $mins phút!',
-              'Your house has submitted max 3 feedbacks in 24 hours. Please wait $hours hours $mins minutes!',
-            ),
-          );
-          setState(() => _isSendingFeedback = false);
-          return;
-        }
-
-        targetSlot = oldestSlot;
-      }
-
-      // Ghi dữ liệu lên slot đã chọn
-      await dbRef.child(targetSlot).set({
-        'uid': user.uid,
-        'email': user.email ?? 'anonymous',
-        'content': content,
-        'createdAt': ServerValue.timestamp,
-      });
 
       _feedbackCtrl.clear();
       _lastFeedbackSentAt = DateTime.now();

@@ -4,20 +4,14 @@ class _MainHomeHeroCounters extends StatelessWidget {
   final _MainHomeTabState state;
   final String? startDate;
 
-  const _MainHomeHeroCounters({
-    required this.state,
-    required this.startDate,
-  });
+  const _MainHomeHeroCounters({required this.state, required this.startDate});
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: state._secondStream,
       builder: (context, snapshot) {
-        return _CountersBody(
-          state: state,
-          startDate: startDate,
-        );
+        return _CountersBody(state: state, startDate: startDate);
       },
     );
   }
@@ -27,10 +21,7 @@ class _CountersBody extends StatelessWidget {
   final _MainHomeTabState state;
   final String? startDate;
 
-  const _CountersBody({
-    required this.state,
-    required this.startDate,
-  });
+  const _CountersBody({required this.state, required this.startDate});
 
   @override
   Widget build(BuildContext context) {
@@ -45,15 +36,19 @@ class _CountersBody extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _TimeCell(
-                  value: timeDetail['h']!, label: context.tr('home_gi_770f40')),
+                value: timeDetail['h']!,
+                label: context.tr('home_gi_770f40'),
+              ),
               const SizedBox(width: 8),
               _TimeCell(
-                  value: timeDetail['m']!,
-                  label: context.tr('home_pht_06b001')),
+                value: timeDetail['m']!,
+                label: context.tr('home_pht_06b001'),
+              ),
               const SizedBox(width: 8),
               _TimeCell(
-                  value: timeDetail['s']!,
-                  label: context.tr('home_giy_392758')),
+                value: timeDetail['s']!,
+                label: context.tr('home_giy_392758'),
+              ),
             ],
           ),
         ),
@@ -67,15 +62,19 @@ class _CountersBody extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _TimeCell(
-                  value: ymdDetail['y']!,
-                  label: context.tr('util_nm_923e10').toUpperCase()),
+                value: ymdDetail['y']!,
+                label: context.tr('util_nm_923e10').toUpperCase(),
+              ),
               const SizedBox(width: 8),
               _TimeCell(
-                  value: ymdDetail['M']!,
-                  label: context.tr('util_thng_59900e').toUpperCase()),
+                value: ymdDetail['M']!,
+                label: context.tr('util_thng_59900e').toUpperCase(),
+              ),
               const SizedBox(width: 8),
               _TimeCell(
-                  value: ymdDetail['d']!, label: context.tr('home_ngy_48e4b0')),
+                value: ymdDetail['d']!,
+                label: context.tr('home_ngy_48e4b0'),
+              ),
             ],
           ),
         ),
@@ -88,39 +87,55 @@ class _TimeCell extends StatelessWidget {
   final String value;
   final String label;
 
-  const _TimeCell({
-    required this.value,
-    required this.label,
-  });
+  const _TimeCell({required this.value, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      constraints: const BoxConstraints(minWidth: 72),
+      padding: const EdgeInsets.fromLTRB(12, 9, 12, 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(16),
+        color: SLColors.paper.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: SLColors.border, width: 1.1),
+        boxShadow: [
+          BoxShadow(
+            color: SLColors.thread.withValues(alpha: 0.10),
+            blurRadius: 12,
+            spreadRadius: -5,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Container(
+            width: 18,
+            height: 2,
+            decoration: BoxDecoration(
+              color: SLColors.thread.withValues(alpha: 0.48),
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+          const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
-              fontFamily: 'Quicksand',
+            style: SLTheme.quicksand(
               fontWeight: FontWeight.w900,
               fontSize: 22,
-              color: Colors.white,
+              color: SLColors.textPrimary,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(
-              fontFamily: 'Quicksand',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: SLTheme.quicksand(
               fontWeight: FontWeight.w700,
-              fontSize: 11,
-              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 10,
+              color: SLColors.textSecond,
             ),
           ),
         ],

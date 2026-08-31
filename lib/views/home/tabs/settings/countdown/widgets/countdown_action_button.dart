@@ -13,21 +13,21 @@ extension CountdownActionButtonExt on _CountdownModeIndependentScreenState {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(15),
         child: Ink(
           width: 48,
           height: 48,
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: isDark ? 0.14 : 0.82),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(15),
             border: Border.all(
               color: Colors.white.withValues(alpha: isDark ? 0.22 : 0.94),
             ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.08),
-                blurRadius: 18,
-                offset: const Offset(0, 10),
+                blurRadius: 14,
+                offset: const Offset(0, 7),
               ),
             ],
           ),
@@ -35,10 +35,6 @@ extension CountdownActionButtonExt on _CountdownModeIndependentScreenState {
         ),
       ),
     );
-    return Semantics(
-      button: true,
-      label: tooltip,
-      child: child,
-    );
+    return Semantics(button: true, label: tooltip, child: child);
   }
 }

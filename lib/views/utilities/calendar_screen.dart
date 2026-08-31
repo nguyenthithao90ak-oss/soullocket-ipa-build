@@ -38,8 +38,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Map<DateTime, List<dynamic>> _events = {};
   StreamSubscription<DatabaseEvent>? _calendarSubscription;
-  Stream<DatabaseEvent>? _selectedDayStream;
   bool _isQuickAddSheetOpen = false;
+  bool _isCalendarLoading = true;
+  bool _isSavingEvent = false;
+  String? _calendarErrorMessage;
 
   static int _parseTimestamp(dynamic value) {
     if (value is int) return value;
@@ -48,22 +50,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return 0;
   }
 
-  void _updateSelectedDayStream(DateTime? day) {
-    if (day == null) {
-      _selectedDayStream = null;
-      return;
+  void _reloadCalendar() {
+    _calendarSubscription?.cancel();
+    if (mounted) {
+      setState(() {
+        _isCalendarLoading = true;
+        _calendarErrorMessage = null;
+      });
     }
-    final dateKey = _getDateKey(day);
-    _selectedDayStream = _dbRef
-        .child('houses/${widget.houseId}/calendar/$dateKey')
-        .onValue;
+    _loadEvents();
   }
 
   @override
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
-    _updateSelectedDayStream(_selectedDay);
     _loadEvents();
   }
 
@@ -71,44 +72,89 @@ class _CalendarScreenState extends State<CalendarScreen> {
     _calendarSubscription = _dbRef
         .child('houses/${widget.houseId}/calendar')
         .onValue
-        .listen((event) {
-      if (event.snapshot.value == null) {
-        if (mounted) {
-          setState(() {
-            _events = {};
-          });
+        .listen(
+      (event) {
+        final snapshotValue = event.snapshot.value;
+        if (snapshotValue == null) {
+          if (mounted) {
+            setState(() {
+              _events = {};
+              _isCalendarLoading = false;
+              _calendarErrorMessage = null;
+            });
+          }
+          return;
         }
-        return;
-      }
 
-      final data = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
-      final Map<DateTime, List<dynamic>> newEvents = {};
+        try {
+          if (snapshotValue is! Map) {
+            if (mounted) {
+              setState(() {
+                _events = {};
+                _isCalendarLoading = false;
+                _calendarErrorMessage =
+                    'Dữ liệu lịch không đúng định dạng mong đợi.';
+              });
+            }
+            return;
+          }
 
-      data.forEach((dateKey, dateEvents) {
-        final parts = dateKey.toString().split('-');
-        if (parts.length == 3) {
-          final year = int.tryParse(parts[0]);
-          final month = int.tryParse(parts[1]);
-          final day = int.tryParse(parts[2]);
-          if (year != null && month != null && day != null) {
+          final data = Map<dynamic, dynamic>.from(snapshotValue);
+          final Map<DateTime, List<dynamic>> newEvents = {};
+
+          data.forEach((dateKey, dateEvents) {
+            final parts = dateKey.toString().split('-');
+            if (parts.length != 3) {
+              return;
+            }
+            final year = int.tryParse(parts[0]);
+            final month = int.tryParse(parts[1]);
+            final day = int.tryParse(parts[2]);
+            if (year == null || month == null || day == null) {
+              return;
+            }
+
             final date = DateTime.utc(year, month, day);
-            final eventsMap = Map<dynamic, dynamic>.from(dateEvents as Map);
+            if (dateEvents is! Map) {
+              newEvents[date] = const [];
+              return;
+            }
+
+            final eventsMap = Map<dynamic, dynamic>.from(dateEvents);
             newEvents[date] = eventsMap.entries
+                .where((e) => e.value is Map)
                 .map((e) => {
                       'key': e.key,
-                      ...Map<String, dynamic>.from(e.value as Map)
+                      ...Map<String, dynamic>.from(e.value as Map),
                     })
                 .toList();
+          });
+
+          if (mounted) {
+            setState(() {
+              _events = newEvents;
+              _isCalendarLoading = false;
+              _calendarErrorMessage = null;
+            });
+          }
+        } catch (e) {
+          if (mounted) {
+            setState(() {
+              _isCalendarLoading = false;
+              _calendarErrorMessage = 'Không thể xử lý dữ liệu lịch: $e';
+            });
           }
         }
-      });
-
-      if (mounted) {
-        setState(() {
-          _events = newEvents;
-        });
-      }
-    });
+      },
+      onError: (error) {
+        if (mounted) {
+          setState(() {
+            _isCalendarLoading = false;
+            _calendarErrorMessage = error.toString();
+          });
+        }
+      },
+    );
   }
 
   String _getDateKey(DateTime d) {
@@ -274,21 +320,39 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Future<void> _addEvent() async {
     final selectedDay = _selectedDay;
-    if (selectedDay == null) return;
+    if (selectedDay == null || _isSavingEvent) return;
 
-    final added = await _saveEventForDay(
-      day: selectedDay,
-      text: _eventController.text,
-    );
-    if (!added) {
-      return;
-    }
+    setState(() => _isSavingEvent = true);
+    try {
+      final added = await _saveEventForDay(
+        day: selectedDay,
+        text: _eventController.text,
+      );
+      if (!added) {
+        return;
+      }
 
-    // Cài đặt thông báo cục bộ
-
-    _eventController.clear();
-    if (mounted) {
-      FocusScope.of(context).unfocus();
+      _eventController.clear();
+      if (mounted) {
+        FocusScope.of(context).unfocus();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đã thêm kế hoạch cho ${_formatShortDate(selectedDay)}'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Không thể lưu kế hoạch: $e'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingEvent = false);
+      }
     }
   }
 
@@ -329,7 +393,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     setState(() {
       _selectedDay = selected;
       _focusedDay = focused;
-      _updateSelectedDayStream(selected);
     });
   }
 
@@ -762,7 +825,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          'Lịch Chung 🗓️',
+          'Lịch Chung 💗',
           style: SLTheme.quicksand(
             fontWeight: FontWeight.w900,
             fontSize: 19,
@@ -773,11 +836,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        flexibleSpace: ClipRect(
-          child: FastBackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.2),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF163E99), Color(0xFF3B73E7)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
         ),
@@ -806,12 +870,78 @@ class _CalendarScreenState extends State<CalendarScreen> {
         children: [
           const Positioned.fill(child: CalendarBackgroundDecor()),
           SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.only(bottom: 20),
-              child: Column(
-                children: [
-                  CalendarHeaderSection(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                _reloadCalendar();
+                await Future<void>.delayed(const Duration(milliseconds: 350));
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                padding: const EdgeInsets.only(bottom: 20),
+                child: Column(
+                  children: [
+                    if (_calendarErrorMessage != null && _calendarErrorMessage!.trim().isNotEmpty)
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(horizontalInset, 10, horizontalInset, 4),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.95),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: const Color(0xFFFFD4DE)),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(
+                                Icons.wifi_tethering_error_rounded,
+                                color: Color(0xFFE45B87),
+                                size: 20,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Đồng bộ lịch đang gặp trục trặc nhỏ',
+                                      style: SLTheme.quicksand(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w900,
+                                        color: SLTheme.textMain,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Bạn có thể kéo xuống để tải lại hoặc chạm thử lại. Dữ liệu cũ vẫn được giữ nếu đã tải trước đó.',
+                                      style: SLTheme.quicksand(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: SLTheme.textMuted,
+                                        height: 1.35,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: _reloadCalendar,
+                                child: Text(
+                                  'Thử lại',
+                                  style: SLTheme.quicksand(
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFFE45B87),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    CalendarHeaderSection(
                     horizontalInset: horizontalInset,
                     compact: compact,
                     calendarFormat: _calendarFormat,
@@ -861,15 +991,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       eventCount: eventCount,
                       controller: _eventController,
                       onAdd: _addEvent,
+                      isSaving: _isSavingEvent,
                     ),
                     SizedBox(height: compact ? 12 : 16),
                     CalendarEventListSection(
-                      stream: _selectedDayStream ??
-                          _dbRef
-                              .child(
-                                'houses/${widget.houseId}/calendar/${_getDateKey(selectedDay)}',
-                              )
-                              .onValue,
+                      items: _eventsForDay(selectedDay),
+                      isLoading: _isCalendarLoading,
+                      errorMessage: _calendarErrorMessage,
+                      onRetry: _reloadCalendar,
                       horizontalInset: horizontalInset,
                       compact: compact,
                       accent: _selectedAccent(selectedDay),
@@ -885,8 +1014,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 }

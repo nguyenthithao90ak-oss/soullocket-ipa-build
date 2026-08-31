@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "uriPrefix": "soullocket://sticker/",
+  "packs": [
+    {
+      "id": "couple_motion",
+      "asset": "assets/images/soullocket_stickers/motion_couple_atlas_v1.png",
+      "columns": 3,
+      "rows": 3,
+      "stickers": [
+        "motion_missing",
+        "motion_cuddle",
+        "motion_kiss",
+        "motion_tease",
+        "motion_comfort",
+        "motion_celebrate",
+        "motion_sleep",
+        "motion_send_love",
+        "motion_dance"
+      ]
+    },
+    {
+      "id": "hearts",
+      "asset": "assets/images/soullocket_stickers/heart_atlas_v1.png",
+      "columns": 4,
+      "rows": 3,
+      "stickers": [
+        "heart_scrapbook",
+        "heart_plush",
+        "heart_glass",
+        "heart_letter",
+        "heart_locket",
+        "heart_healing",
+        "heart_sleep",
+        "heart_celebrate",
+        "heart_thread",
+        "heart_calendar",
+        "heart_heartbeat",
+        "heart_gift"
+      ]
+    }
+  ]
+}

@@ -99,6 +99,9 @@ class GroupChatService {
     if (!isHouseMemberOfGroup(room, viewerHouseId)) {
       throw Exception('Bạn không còn là thành viên của nhóm này.');
     }
+    await _functions.httpsCallable('syncGroupChatAccess').call<void>(
+      <String, dynamic>{'groupId': groupId.trim()},
+    );
     return room;
   }
 
@@ -343,12 +346,21 @@ class GroupChatService {
   }) {
     late final StreamController<ChatMessage> controller;
     StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? firestoreSub;
-    late final StreamSubscription<DatabaseEvent> membershipSub;
+    StreamSubscription<DatabaseEvent>? membershipSub;
 
     final tsFilter = afterTs ?? 0;
 
     controller = StreamController<ChatMessage>(
-      onListen: () {
+      onListen: () async {
+        try {
+          await requireMemberRoom(
+            groupId: groupId,
+            viewerHouseId: viewerHouseId,
+          );
+        } catch (error) {
+          controller.addError(error);
+          return;
+        }
         firestoreSub = FirebaseFirestore.instance
             .collection('group_chats')
             .doc(groupId)
@@ -424,7 +436,7 @@ class GroupChatService {
       },
       onCancel: () async {
         await firestoreSub?.cancel();
-        await membershipSub.cancel();
+        await membershipSub?.cancel();
       },
     );
 

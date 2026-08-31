@@ -110,18 +110,22 @@ Widget _buildPrimaryButton(
     child: Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFF7597), Color(0xFFFF5277)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        gradient: LinearGradient(
+          colors: [
+            accent,
+            Color.lerp(accent, const Color(0xFFFF7597), 0.40) ?? accent,
+            Color.lerp(accent, const Color(0xFF9A78E6), 0.34) ?? accent,
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(18),
         boxShadow: enabled
             ? [
                 BoxShadow(
-                  color: const Color(0xFFFF5277).withValues(alpha: 0.35),
+                  color: accent.withValues(alpha: 0.24),
                   blurRadius: 14,
-                  offset: const Offset(0, 5),
+                  offset: const Offset(0, 6),
                 ),
               ]
             : null,

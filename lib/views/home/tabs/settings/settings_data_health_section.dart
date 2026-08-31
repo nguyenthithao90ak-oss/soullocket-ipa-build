@@ -18,9 +18,9 @@ extension _SettingsDataHealthSection on _SettingsTabState {
       _showToast(context.tr('settings_cloud_checking_in_progress'));
     }
     try {
-      final status = await SettingsSyncService()
-          .getBackupStatus()
-          .timeout(const Duration(seconds: 8));
+      final status = await SettingsSyncService().getBackupStatus().timeout(
+        const Duration(seconds: 8),
+      );
       if (!mounted) return;
       setState(() {
         _hasSettingsCloudBackup = status.hasCloudBackup;
@@ -146,17 +146,17 @@ extension _SettingsDataHealthSection on _SettingsTabState {
     final statusLabel = _isCheckingBackupStatus
         ? context.tr('settings_cloud_checking')
         : hasError
-            ? context.tr('settings_sync_error_short')
-            : _hasSettingsCloudBackup
-                ? context.tr('settings_cloud_backup_found')
-                : context.tr('settings_cloud_backup_missing');
+        ? context.tr('settings_sync_error_short')
+        : _hasSettingsCloudBackup
+        ? context.tr('settings_cloud_backup_found')
+        : context.tr('settings_cloud_backup_missing');
     final statusColor = _isCheckingBackupStatus
         ? const Color(0xFF1565C0)
         : hasError
-            ? const Color(0xFFC62828)
-            : _hasSettingsCloudBackup
-                ? const Color(0xFF2E7D32)
-                : const Color(0xFFEF6C00);
+        ? const Color(0xFFC62828)
+        : _hasSettingsCloudBackup
+        ? const Color(0xFF2E7D32)
+        : const Color(0xFFEF6C00);
 
     return _buildCompactCard(
       child: Column(
@@ -174,8 +174,8 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                   _isCheckingBackupStatus
                       ? Icons.sync_rounded
                       : hasError
-                          ? Icons.error_outline_rounded
-                          : Icons.cloud_done_rounded,
+                      ? Icons.error_outline_rounded
+                      : Icons.cloud_done_rounded,
                   color: statusColor,
                   size: 20,
                 ),
@@ -228,8 +228,9 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                   label: _isManualBackupSyncing
                       ? context.tr('settings_syncing_short')
                       : context.tr('settings_sync_now'),
-                  onTap:
-                      _isManualBackupSyncing ? () {} : _syncSettingsBackupNow,
+                  onTap: _isManualBackupSyncing
+                      ? () {}
+                      : _syncSettingsBackupNow,
                 ),
               ),
             ],
@@ -254,8 +255,8 @@ extension _SettingsDataHealthSection on _SettingsTabState {
     final cloudStatus = _isCheckingBackupStatus
         ? context.tr('settings_data_status_checking')
         : _hasSettingsCloudBackup
-            ? context.tr('settings_data_status_cloud_found')
-            : context.tr('settings_data_status_cloud_not_found');
+        ? context.tr('settings_data_status_cloud_found')
+        : context.tr('settings_data_status_cloud_not_found');
     final houseStatus = (_houseId ?? '').trim().isNotEmpty
         ? context.tr('settings_data_status_linked')
         : context.tr('settings_data_status_no_house');
@@ -410,8 +411,9 @@ extension _SettingsDataHealthSection on _SettingsTabState {
   }
 
   Widget _buildRestoreDataGroupDetail(_RestoreDataGroupInfo group) {
-    final color =
-        group.isReady ? const Color(0xFF2E7D32) : const Color(0xFFEF6C00);
+    final color = group.isReady
+        ? const Color(0xFF2E7D32)
+        : const Color(0xFFEF6C00);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -649,10 +651,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
     await UiPrefs.ensureLoaded();
     final ui = UiPrefs.notifier.value;
     await UiPrefs.saveState(
-      ui.copyWith(
-        liteMode: liteMode,
-        graphicsQualityKey: graphicsQualityKey,
-      ),
+      ui.copyWith(liteMode: liteMode, graphicsQualityKey: graphicsQualityKey),
     );
     if (!mounted) return;
     setState(() {
@@ -720,10 +719,12 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                         const SizedBox(height: 4),
                         Text(
                           isPerformanceMode
-                              ? context
-                                  .tr('settings_performance_mode_desc_smooth')
+                              ? context.tr(
+                                  'settings_performance_mode_desc_smooth',
+                                )
                               : context.tr(
-                                  'settings_performance_mode_desc_balanced'),
+                                  'settings_performance_mode_desc_balanced',
+                                ),
                           style: SLTheme.quicksand(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -807,8 +808,9 @@ extension _SettingsDataHealthSection on _SettingsTabState {
       'Đang tạo bản tải xuống dữ liệu ${_dataExportRangeLabel(rangeDays).toLowerCase()}...',
     );
     try {
-      final result =
-          await DataExportService().requestUserDataExport(rangeDays: rangeDays);
+      final result = await DataExportService().requestUserDataExport(
+        rangeDays: rangeDays,
+      );
       if (!mounted) return;
       await _showDataExportReadyDialog(result, rangeDays);
     } on DataExportException catch (error) {
@@ -816,10 +818,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
       SLNotice.showError(context, error.message);
     } catch (_) {
       if (!mounted) return;
-      SLNotice.showError(
-        context,
-        context.tr('home_khngtocbnt_c89050'),
-      );
+      SLNotice.showError(context, context.tr('home_khngtocbnt_c89050'));
     }
   }
 
@@ -833,10 +832,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
       return _showDataExportPasswordDialog();
     }
 
-    _showToast(
-      context.tr('home_hybtmpinkh_55adfc'),
-      success: false,
-    );
+    _showToast(context.tr('home_hybtmpinkh_55adfc'), success: false);
     return false;
   }
 
@@ -943,10 +939,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: Color(0xFF7A8AA0),
-            ),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xFF7A8AA0)),
           ],
         ),
       ),
@@ -975,8 +968,9 @@ extension _SettingsDataHealthSection on _SettingsTabState {
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           backgroundColor: Colors.white,
           title: Text(
             context.tr('home_xcminhmtkh_dc8bdc'),
@@ -1073,10 +1067,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                 color: const Color(0xFF1565C0),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Icon(
-                Icons.download_rounded,
-                color: Colors.white,
-              ),
+              child: const Icon(Icons.download_rounded, color: Colors.white),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -1258,10 +1249,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                   ),
                 ),
               ),
-              const Icon(
-                Icons.hub_rounded,
-                color: SLColors.primaryActive,
-              ),
+              const Icon(Icons.hub_rounded, color: SLColors.primaryActive),
             ],
           ),
           const SizedBox(height: 14),
@@ -1434,20 +1422,27 @@ extension _SettingsDataHealthSection on _SettingsTabState {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
-          color: isPrimary ? const Color(0xFFEF6C00) : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(10),
+          color: isPrimary ? SLColors.primary : SLColors.paperBlush,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isPrimary
+                ? SLColors.primary
+                : SLColors.primary.withValues(alpha: 0.16),
+          ),
         ),
         alignment: Alignment.center,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon,
-                size: 16,
-                color: isPrimary ? Colors.white : const Color(0xFF334155)),
+            Icon(
+              icon,
+              size: 16,
+              color: isPrimary ? Colors.white : SLColors.primary,
+            ),
             const SizedBox(width: 6),
             Flexible(
               child: Text(
@@ -1455,7 +1450,7 @@ extension _SettingsDataHealthSection on _SettingsTabState {
                 style: SLTheme.quicksand(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
-                  color: isPrimary ? Colors.white : const Color(0xFF334155),
+                  color: isPrimary ? Colors.white : SLColors.ink,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -1471,16 +1466,10 @@ extension _SettingsDataHealthSection on _SettingsTabState {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF0F4F8)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF101828).withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: SLColors.bgSubtle,
+        borderRadius: BorderRadius.circular(21),
+        border: Border.all(color: SLColors.border),
+        boxShadow: SLShadow.subtle,
       ),
       child: child,
     );

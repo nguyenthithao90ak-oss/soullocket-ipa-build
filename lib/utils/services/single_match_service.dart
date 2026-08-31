@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:soullocket_app/models/single_match_models.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'house_service.dart';
 
@@ -31,6 +32,7 @@ class SingleMatchService {
   // Cache active pool (chỉ user đang bật single match)
   Map<String, Map<dynamic, dynamic>>? _activePoolCache;
   DateTime? _activePoolCachedAt;
+  final Map<String, String> _secretMatchIds = <String, String>{};
 
   static String profileIndexPath(String houseId) =>
       '$_profileIndexRoot/$houseId';
@@ -55,7 +57,9 @@ class SingleMatchService {
     if (avatarUrl != null) updates['$path/avatarUrl'] = avatarUrl;
     if (bio != null) updates['$path/bio'] = bio;
     if (dobU1 != null) updates['$path/dobU1'] = dobU1;
-    if (relationshipMode != null) updates['$path/relationshipMode'] = relationshipMode;
+    if (relationshipMode != null) {
+      updates['$path/relationshipMode'] = relationshipMode;
+    }
     if (privacy != null) updates['$path/privacy'] = privacy;
     if (searchPrivacy != null) updates['$path/searchPrivacy'] = searchPrivacy;
     if (singleMatch != null) updates['$path/singleMatch'] = singleMatch;
@@ -121,20 +125,21 @@ class SingleMatchService {
       onListen: () {
         controller.add(const <SingleMatchCandidate>[]);
         // Dùng cache thay vì listen realtime toàn bộ single_match_profiles
-        unawaited(_fetchProfileIndexWithCache().then((profiles) {
-          if (!controller.isClosed) {
-            indexedProfiles = profiles;
-            emitMergedCandidates();
-          }
-        }).catchError((Object error) {
-          debugPrint(
-              '[SingleMatch] profile index fetch failed: ${AppErrorMapper.resolve(
-            error,
-            fallbackMessage: L10nService()
-                .translate('err_single_match_profile_index_stream_failed'),
-          ).message}');
-          emitMergedCandidates();
-        }));
+        unawaited(
+          _fetchProfileIndexWithCache()
+              .then((profiles) {
+                if (!controller.isClosed) {
+                  indexedProfiles = profiles;
+                  emitMergedCandidates();
+                }
+              })
+              .catchError((Object error) {
+                debugPrint(
+                  '[SingleMatch] profile index fetch failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('err_single_match_profile_index_stream_failed')).message}',
+                );
+                emitMergedCandidates();
+              }),
+        );
       },
     );
 
@@ -164,11 +169,7 @@ class SingleMatchService {
     String avatarUrl = '',
   }) async {
     final nowMs = DateTime.now().millisecondsSinceEpoch;
-    final baseMap = preferences
-        .copyWith(
-          updatedAt: nowMs,
-        )
-        .toMap();
+    final baseMap = preferences.copyWith(updatedAt: nowMs).toMap();
 
     final updates = <String, dynamic>{
       'houses/$houseId/settings/singleMatch': baseMap,
@@ -244,41 +245,41 @@ class SingleMatchService {
             .limitToLast(50)
             .onValue
             .listen(
-          (event) {
-            if (!event.snapshot.exists || event.snapshot.value is! Map) {
-              controller.add(const <SingleMatchHistoryEntry>[]);
-              return;
-            }
+              (event) {
+                if (!event.snapshot.exists || event.snapshot.value is! Map) {
+                  controller.add(const <SingleMatchHistoryEntry>[]);
+                  return;
+                }
 
-            final raw = Map<dynamic, dynamic>.from(event.snapshot.value as Map);
-            final entries = <SingleMatchHistoryEntry>[];
-            raw.forEach((key, value) {
-              if (value is! Map) {
-                return;
-              }
-              entries.add(
-                SingleMatchHistoryEntry.fromMap(
-                  key.toString(),
-                  Map<dynamic, dynamic>.from(value),
-                ),
-              );
-            });
-            entries.sort(
-                (left, right) => right.startedAt.compareTo(left.startedAt));
-            controller.add(entries);
-          },
-          onError: (Object error) {
-            debugPrint(
-                '[SingleMatch] history stream failed: ${AppErrorMapper.resolve(
-              error,
-              fallbackMessage: L10nService()
-                  .translate('err_single_match_history_stream_failed'),
-            ).message}');
-            if (!controller.isClosed) {
-              controller.add(const <SingleMatchHistoryEntry>[]);
-            }
-          },
-        );
+                final raw = Map<dynamic, dynamic>.from(
+                  event.snapshot.value as Map,
+                );
+                final entries = <SingleMatchHistoryEntry>[];
+                raw.forEach((key, value) {
+                  if (value is! Map) {
+                    return;
+                  }
+                  entries.add(
+                    SingleMatchHistoryEntry.fromMap(
+                      key.toString(),
+                      Map<dynamic, dynamic>.from(value),
+                    ),
+                  );
+                });
+                entries.sort(
+                  (left, right) => right.startedAt.compareTo(left.startedAt),
+                );
+                controller.add(entries);
+              },
+              onError: (Object error) {
+                debugPrint(
+                  '[SingleMatch] history stream failed: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('err_single_match_history_stream_failed')).message}',
+                );
+                if (!controller.isClosed) {
+                  controller.add(const <SingleMatchHistoryEntry>[]);
+                }
+              },
+            );
       },
       onCancel: () async {
         await historySub?.cancel();
@@ -344,7 +345,8 @@ class SingleMatchService {
     }
     final now = DateTime.now();
     var age = now.year - parsed.year;
-    final hadBirthday = now.month > parsed.month ||
+    final hadBirthday =
+        now.month > parsed.month ||
         (now.month == parsed.month && now.day >= parsed.day);
     if (!hadBirthday) {
       age -= 1;
@@ -390,8 +392,9 @@ class SingleMatchService {
 
   /// Fetch active pool (cached 15 phút).
   /// Chỉ chứa user đang bật single match — nhỏ hơn nhiều so với profile index.
-  Future<Map<String, Map<dynamic, dynamic>>> _fetchActivePoolWithCache(
-      {bool forceFetch = false}) async {
+  Future<Map<String, Map<dynamic, dynamic>>> _fetchActivePoolWithCache({
+    bool forceFetch = false,
+  }) async {
     final now = DateTime.now();
     if (!forceFetch &&
         _activePoolCache != null &&
@@ -409,7 +412,7 @@ class SingleMatchService {
   // ===== Profile Index (legacy) =====
 
   Future<Map<String, Map<dynamic, dynamic>>>
-      _fetchProfileIndexWithCache() async {
+  _fetchProfileIndexWithCache() async {
     final now = DateTime.now();
     if (_profileIndexCache != null &&
         _profileIndexCachedAt != null &&
@@ -484,8 +487,8 @@ class SingleMatchService {
     final singleMatch = profile['singleMatch'] is Map
         ? Map<dynamic, dynamic>.from(profile['singleMatch'] as Map)
         : (settings['singleMatch'] is Map
-            ? Map<dynamic, dynamic>.from(settings['singleMatch'] as Map)
-            : <dynamic, dynamic>{});
+              ? Map<dynamic, dynamic>.from(settings['singleMatch'] as Map)
+              : <dynamic, dynamic>{});
 
     final relationshipMode =
         (profile['relationshipMode'] ?? settings['relationshipMode'] ?? '')
@@ -511,23 +514,26 @@ class SingleMatchService {
     }
 
     final prefs = SingleMatchPreferences.fromMap(singleMatch);
-    final avatarUrl = (profile['avatarUrl'] ??
-            profile['houseAvatar'] ??
-            settings['houseAvatar'] ??
-            profile['avatar'] ??
-            '')
+    final avatarUrl =
+        (profile['avatarUrl'] ??
+                profile['houseAvatar'] ??
+                settings['houseAvatar'] ??
+                profile['avatar'] ??
+                '')
+            .toString()
+            .trim();
+    final displayName =
+        (profile['displayName'] ??
+                profile['nameU1'] ??
+                settings['nameU1'] ??
+                profile['houseName'] ??
+                settings['houseName'] ??
+                '')
+            .toString()
+            .trim();
+    final houseName = (profile['houseName'] ?? settings['houseName'] ?? '')
         .toString()
         .trim();
-    final displayName = (profile['displayName'] ??
-            profile['nameU1'] ??
-            settings['nameU1'] ??
-            profile['houseName'] ??
-            settings['houseName'] ??
-            '')
-        .toString()
-        .trim();
-    final houseName =
-        (profile['houseName'] ?? settings['houseName'] ?? '').toString().trim();
     final bio = (profile['bio'] ?? settings['bio'] ?? '').toString().trim();
     final updatedAt = _readInt(
       profile['updatedAt'] ??
@@ -577,61 +583,47 @@ class SingleMatchService {
     required String secretCode,
     required String myHouseId,
   }) async {
-    final codeRef = _db.child('single_match_secret_codes').child(secretCode);
-    final snapshot = await codeRef.get();
-
-    if (!snapshot.exists || snapshot.value == null) {
-      await codeRef.set({
-        'creatorHouseId': myHouseId,
-        'createdAt': ServerValue.timestamp,
-      });
-      return null;
+    final normalizedCode = secretCode.trim().toUpperCase().replaceAll(
+      RegExp(r'[\s-]+'),
+      '',
+    );
+    final response = await CloudFunctionsHelper.callSecure<dynamic>(
+      'pairSingleMatchSecretCode',
+      payload: <String, dynamic>{'secretCode': normalizedCode},
+      fallbackErrorMessage: L10nService().translate('core_err_general'),
+    );
+    final raw = response.data;
+    if (raw is! Map) return null;
+    final data = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(raw));
+    final matchId = data['matchId']?.toString().trim() ?? '';
+    if (matchId.isNotEmpty) {
+      _secretMatchIds[normalizedCode] = matchId;
     }
-
-    final data = Map<String, dynamic>.from(snapshot.value as Map);
-    final creatorHouseId = data['creatorHouseId']?.toString();
-    final chatRoomId = data['chatRoomId']?.toString();
-
-    if (creatorHouseId == myHouseId) {
-      return null;
-    }
-
-    if (chatRoomId != null && chatRoomId.isNotEmpty) {
-      if (data['joinedHouseId'] == myHouseId) return chatRoomId;
-      throw Exception(L10nService().translate('core_err_general'));
-    }
-
-    final newRoomId = _db.child('chat_rooms').push().key!;
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-
-    await _db.child('chat_rooms').child(newRoomId).set({
-      'type': 'single_match_secret',
-      'createdAt': nowMs,
-      'members': {
-        creatorHouseId: true,
-        myHouseId: true,
-      },
-      'status': 'active',
-    });
-
-    await codeRef.update({
-      'joinedHouseId': myHouseId,
-      'chatRoomId': newRoomId,
-    });
-
-    return newRoomId;
+    final peerHouseId = data['peerHouseId']?.toString().trim() ?? '';
+    return peerHouseId.isEmpty ? null : peerHouseId;
   }
 
   Stream<String?> watchSecretCodeMatch(String secretCode) {
+    final normalizedCode = secretCode.trim().toUpperCase().replaceAll(
+      RegExp(r'[\s-]+'),
+      '',
+    );
+    final matchId = _secretMatchIds[normalizedCode] ?? '';
+    final user = _houseService.currentUser;
+    if (matchId.isEmpty || user == null) {
+      return Stream<String?>.value(null);
+    }
     return _db
-        .child('single_match_secret_codes/$secretCode/chatRoomId')
+        .child(
+          'single_match_secure/match_views/${user.uid}/$matchId/peerHouseId',
+        )
         .onValue
         .map((event) {
-      if (event.snapshot.exists && event.snapshot.value != null) {
-        return event.snapshot.value.toString();
-      }
-      return null;
-    });
+          if (event.snapshot.exists && event.snapshot.value != null) {
+            return event.snapshot.value.toString();
+          }
+          return null;
+        });
   }
 
   // ===== Chat Room =====
@@ -642,41 +634,27 @@ class SingleMatchService {
     required String peerName,
     required String peerAvatarUrl,
   }) async {
-    final mappingRef =
-        _db.child('houses/$myHouseId/singleMatch/chatMappings/$peerHouseId');
-    final existing = await mappingRef.child('roomId').get();
-    if (existing.exists && existing.value != null) {
-      return existing.value.toString();
+    final response = await CloudFunctionsHelper.callSecure<dynamic>(
+      'createSingleMatchChatMapping',
+      payload: <String, dynamic>{'peerHouseId': peerHouseId},
+      fallbackErrorMessage: L10nService().translate('core_err_general'),
+    );
+    final raw = response.data;
+    if (raw is! Map) {
+      throw Exception(L10nService().translate('core_err_general'));
     }
-
-    final roomId = _db.child('chat_rooms').push().key!;
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-
-    await _db.child('chat_rooms/$roomId').set({
-      'type': 'single_match',
-      'createdAt': nowMs,
-      'members': {
-        myHouseId: true,
-        peerHouseId: true,
-      },
-      'status': 'active',
-    });
-
-    await mappingRef.set({
-      'roomId': roomId,
-      'peerName': peerName,
-      'peerAvatarUrl': peerAvatarUrl,
-      'createdAt': nowMs,
-    });
-
+    final data = Map<String, dynamic>.from(Map<dynamic, dynamic>.from(raw));
+    final roomId = data['roomId']?.toString().trim() ?? '';
+    if (roomId.isEmpty) {
+      throw Exception(L10nService().translate('core_err_general'));
+    }
     return roomId;
   }
 
   Stream<List<Map<String, dynamic>>> streamChatMappings(String houseId) {
-    return _db
-        .child('houses/$houseId/singleMatch/chatMappings')
-        .onValue
-        .map((event) {
+    return _db.child('single_match_secure/chat_mappings/$houseId').onValue.map((
+      event,
+    ) {
       if (!event.snapshot.exists || event.snapshot.value is! Map) {
         return const <Map<String, dynamic>>[];
       }
@@ -725,17 +703,18 @@ class SingleMatchService {
       final result = await FirebaseFunctions.instance
           .httpsCallable('singleMatchPick')
           .call({
-        'currentHouseId': currentHouseId,
-        'excludeHouseIds': excludeHouseIds.toList(),
-        'goal': goal,
-        'voiceStyle': voiceStyle,
-        'myTags': myTags,
-        'myAge': myAge,
-        'preferredAgeMin': preferredAgeMin,
-        'preferredAgeMax': preferredAgeMax,
-        'needAudio': needAudio,
-        'needVideo': needVideo,
-      }).timeout(const Duration(seconds: 10));
+            'currentHouseId': currentHouseId,
+            'excludeHouseIds': excludeHouseIds.toList(),
+            'goal': goal,
+            'voiceStyle': voiceStyle,
+            'myTags': myTags,
+            'myAge': myAge,
+            'preferredAgeMin': preferredAgeMin,
+            'preferredAgeMax': preferredAgeMax,
+            'needAudio': needAudio,
+            'needVideo': needVideo,
+          })
+          .timeout(const Duration(seconds: 10));
 
       final data = result.data as Map<String, dynamic>?;
       if (data != null && data['match'] is Map) {
@@ -750,7 +729,8 @@ class SingleMatchService {
             intro: (match['intro'] ?? '').toString().trim(),
             goal: (match['goal'] ?? '').toString().trim(),
             voiceStyle: (match['voiceStyle'] ?? '').toString().trim(),
-            tags: (match['tags'] as List?)?.map((e) => e.toString()).toList() ??
+            tags:
+                (match['tags'] as List?)?.map((e) => e.toString()).toList() ??
                 const [],
             allowAudioCalls: match['allowAudioCalls'] == true,
             allowVideoCalls: match['allowVideoCalls'] == true,
@@ -797,6 +777,23 @@ class SingleMatchService {
   }) async {
     var pool = await _fetchActivePoolWithCache();
     var scored = _scorePool(
+      pool,
+      currentHouseId,
+      excludeHouseIds,
+      goal,
+      voiceStyle,
+      myTags,
+      myAge,
+      preferredAgeMin,
+      preferredAgeMax,
+      needAudio,
+      needVideo,
+    );
+
+    if (scored.isEmpty) {
+      // Force fetch nếu cache không tìm thấy ai phù hợp
+      pool = await _fetchActivePoolWithCache(forceFetch: true);
+      scored = _scorePool(
         pool,
         currentHouseId,
         excludeHouseIds,
@@ -807,23 +804,8 @@ class SingleMatchService {
         preferredAgeMin,
         preferredAgeMax,
         needAudio,
-        needVideo);
-
-    if (scored.isEmpty) {
-      // Force fetch nếu cache không tìm thấy ai phù hợp
-      pool = await _fetchActivePoolWithCache(forceFetch: true);
-      scored = _scorePool(
-          pool,
-          currentHouseId,
-          excludeHouseIds,
-          goal,
-          voiceStyle,
-          myTags,
-          myAge,
-          preferredAgeMin,
-          preferredAgeMax,
-          needAudio,
-          needVideo);
+        needVideo,
+      );
     }
 
     if (scored.isEmpty) return null;

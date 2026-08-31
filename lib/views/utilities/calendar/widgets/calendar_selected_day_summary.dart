@@ -35,19 +35,19 @@ class CalendarSelectedDaySummary extends StatelessWidget {
         duration: const Duration(milliseconds: 220),
         padding: EdgeInsets.all(compact ? 16 : 18),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             colors: [
-              Colors.white.withValues(alpha: 0.94),
-              Colors.white.withValues(alpha: 0.8),
+              Color(0xFFFFFEFF),
+              Color(0xFFF7FBFF),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.36)),
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: const Color(0xFFE6EAF9)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: accent.withValues(alpha: 0.08),
               blurRadius: 18,
               offset: const Offset(0, 8),
             ),
@@ -59,19 +59,22 @@ class CalendarSelectedDaySummary extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  width: compact ? 44 : 48,
-                  height: compact ? 44 : 48,
+                  width: compact ? 46 : 50,
+                  height: compact ? 46 : 50,
                   decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(compact ? 14 : 16),
+                    gradient: LinearGradient(
+                      colors: [
+                        accent.withValues(alpha: 0.16),
+                        accent.withValues(alpha: 0.08),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(
-                    leadingIcon,
-                    color: accent,
-                    size: compact ? 22 : 24,
-                  ),
+                  child: Icon(leadingIcon, color: accent, size: 24),
                 ),
-                SLSpacing.w12,
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,31 +82,31 @@ class CalendarSelectedDaySummary extends StatelessWidget {
                       Text(
                         displayDate,
                         style: SLTheme.quicksand(
-                          fontSize: compact ? 15.5 : 17,
+                          fontSize: compact ? 15.5 : 16.5,
                           fontWeight: FontWeight.w900,
                           color: SLTheme.textMain,
                         ),
                       ),
-                      SLSpacing.h4,
+                      const SizedBox(height: 4),
                       Text(
                         description,
                         style: SLTheme.quicksand(
                           fontSize: compact ? 11.5 : 12,
                           fontWeight: FontWeight.w700,
                           color: SLTheme.textMuted,
-                          height: 1.35,
+                          height: 1.4,
                         ),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: compact ? 10 : 12,
-                    vertical: compact ? 7 : 8,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.12),
+                    color: accent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(

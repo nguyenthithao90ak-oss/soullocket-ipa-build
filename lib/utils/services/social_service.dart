@@ -7,10 +7,10 @@ import 'push_notification_helper.dart';
 import 'local_database_service.dart';
 
 /// SocialService — Quản lý social feed cộng đồng
-/// Hybrid model:
-///   Firestore: `social_posts/{postId}` — bài đăng, comments (subcollection), phân trang
-///   RTDB:      `social_feed/{postId}` — stream realtime (chỉ listen bài mới nhất)
-///              `post_likes`, `house_likes`, `houses/...` — metadata nhẹ
+/// Mô hình dữ liệu:
+///   Firestore: `social_posts/{postId}` — bài đăng, bình luận và lượt thích.
+///   Firestore: `house_likes/{houseId}/posts/{postId}` — chỉ mục bài đã thích.
+///   RTDB:      `houses/...`, `friends/...` — quan hệ và quyền tương tác.
 ///
 /// Tối ưu: dùng read-through cache (LocalDatabaseService) cho các GET
 /// nhiều lần như check block, profile lookup — giảm tới 50% reads.
@@ -131,7 +131,7 @@ class SocialService {
     'boobs',
   ];
 
-  /// Tải bài đăng từ Firestore trước, fallback sang RTDB nếu không có
+  /// Tải bài đăng từ nguồn dữ liệu chính là Firestore.
   Future<Map<String, dynamic>?> _loadPostHybrid(String postId) async {
     try {
       final doc = await _getDocWithCacheFallback(
@@ -503,8 +503,10 @@ class SocialService {
 
   // ── STREAM feed global (mới nhất) bằng onChildAdded ──────────────────
   Stream<SocialPost> streamNewGlobalFeed({int? afterTs}) {
-    var query =
-        _firestore.collection('social_posts').orderBy('ts', descending: false);
+    var query = _firestore
+        .collection('social_posts')
+        .where('privacy', isEqualTo: 'public')
+        .orderBy('ts', descending: false);
     if (afterTs != null) {
       query = query.startAfter([afterTs]);
     } else {
@@ -534,13 +536,19 @@ class SocialService {
   }
 
   // ── STREAM feed của 1 nhà ─────────────────────────────────────────────
-  Future<List<SocialPost>> fetchHouseFeedPage(String houseId,
-      {int limit = 10, int? endBeforeTs}) async {
+  Future<List<SocialPost>> fetchHouseFeedPage(
+    String houseId, {
+    int limit = 10,
+    int? endBeforeTs,
+    bool includePrivate = false,
+  }) async {
     var query = _firestore
         .collection('social_posts')
-        .where('houseId', isEqualTo: houseId)
-        .orderBy('ts', descending: true)
-        .limit(limit);
+        .where('houseId', isEqualTo: houseId);
+    if (!includePrivate) {
+      query = query.where('privacy', isEqualTo: 'public');
+    }
+    query = query.orderBy('ts', descending: true).limit(limit);
     if (endBeforeTs != null) {
       query = query.where('ts', isLessThan: endBeforeTs);
     }
@@ -554,6 +562,7 @@ class SocialService {
   Future<List<SocialPost>> fetchGlobalFeed({int limit = 10}) async {
     final snap = await _getQueryWithCacheFallback(_firestore
         .collection('social_posts')
+        .where('privacy', isEqualTo: 'public')
         .orderBy('ts', descending: true)
         .limit(limit));
     return snap.docs
@@ -567,6 +576,7 @@ class SocialService {
   }) async {
     var query = _firestore
         .collection('social_posts')
+        .where('privacy', isEqualTo: 'public')
         .orderBy('ts', descending: true)
         .limit(limit);
     if (endBeforeTs != null) {
@@ -694,35 +704,14 @@ class SocialService {
       throw 'Bạn không có quyền xóa bài viết này.';
     }
 
-    final cleanupHouseIds = <String>{
-      ..._readMapField(data['likes_map']).keys.map((key) => key.trim()),
-    }..removeWhere((houseId) => houseId.isEmpty);
-
-    final legacyPostLikesSnap =
-        await _dbRef.child('post_likes/$normalizedPostId').get();
-    if (legacyPostLikesSnap.value is Map) {
-      cleanupHouseIds.addAll(
-        Map<String, dynamic>.from(
-          Map<dynamic, dynamic>.from(legacyPostLikesSnap.value as Map),
-        ).keys.map((key) => key.trim()).where((houseId) => houseId.isNotEmpty),
-      );
-    }
     if (!skipLegacyDeleteCheck &&
         data['houseId']?.toString() != requestingHouseId) {
       throw 'Bạn không có quyền xóa bài viết này.';
     }
 
-    // Xóa khỏi Firestore
+    // Chỉ mục lượt thích cũ sẽ được người dùng dọn khi tải danh sách đã thích.
+    // Không cho client của chủ bài xóa dữ liệu riêng của các nhà khác.
     await _firestore.collection('social_posts').doc(normalizedPostId).delete();
-
-    // Xóa khỏi RTDB
-    final updates = <String, Object?>{
-      'post_likes/$normalizedPostId': null,
-    };
-    for (final houseId in cleanupHouseIds) {
-      updates['house_likes/$houseId/$normalizedPostId'] = null;
-    }
-    await _dbRef.update(updates);
   }
 
   // ── TOGGLE LIKE (atomic) ──────────────────────────────────────────────
@@ -731,51 +720,45 @@ class SocialService {
     required String myHouseId,
   }) async {
     await assertCanInteractWithPost(myHouseId: myHouseId, postId: postId);
-    final postData = await _loadPostHybrid(postId);
-    if (postData == null) {
-      throw 'Bài viết không tồn tại.';
-    }
+    final docRef = _firestore.collection('social_posts').doc(postId);
+    final likeRef = _firestore
+        .collection('house_likes')
+        .doc(myHouseId)
+        .collection('posts')
+        .doc(postId);
+    var addedLike = false;
 
-    final likesMap = _readMapField(postData['likes_map']);
-    final legacyLikeSnaps = await Future.wait([
-      _dbRef.child('post_likes/$postId/$myHouseId').get(),
-      _dbRef.child('house_likes/$myHouseId/$postId').get(),
-    ]);
-    final liked = likesMap.containsKey(myHouseId) ||
-        legacyLikeSnaps.any((snap) => snap.exists);
-    final updates = <String, Object?>{
-      'post_likes/$postId/$myHouseId': liked ? null : true,
-      'house_likes/$myHouseId/$postId': liked ? null : ServerValue.timestamp,
-    };
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+      if (!snapshot.exists) {
+        throw 'Bài viết không tồn tại.';
+      }
 
-    await _dbRef.update(updates);
+      final data = snapshot.data() ?? <String, dynamic>{};
+      final currentLikesMap = _readMapField(data['likes_map']);
+      final liked = currentLikesMap.containsKey(myHouseId);
+      final now = DateTime.now().millisecondsSinceEpoch;
 
-    // Update Firestore likes and likes_map
-    try {
-      final docRef = _firestore.collection('social_posts').doc(postId);
-      await _firestore.runTransaction((transaction) async {
-        final snapshot = await transaction.get(docRef);
-        if (snapshot.exists) {
-          final data = snapshot.data() ?? <String, dynamic>{};
-          final currentLikesMap = Map<String, dynamic>.from(
-              data['likes_map'] ?? <String, dynamic>{});
-          if (liked) {
-            currentLikesMap.remove(myHouseId);
-          } else {
-            currentLikesMap[myHouseId] = {
-              'by': myHouseId,
-              'ts': DateTime.now().millisecondsSinceEpoch,
-            };
-          }
-          transaction.update(docRef, {
-            'likes_map': currentLikesMap,
-            'likes': currentLikesMap.length,
-          });
-        }
+      if (liked) {
+        currentLikesMap.remove(myHouseId);
+        transaction.delete(likeRef);
+      } else {
+        currentLikesMap[myHouseId] = {'by': myHouseId, 'ts': now};
+        transaction.set(likeRef, {
+          'houseId': myHouseId,
+          'postId': postId,
+          'likedAt': now,
+        });
+        addedLike = true;
+      }
+
+      transaction.update(docRef, {
+        'likes_map': currentLikesMap,
+        'likes': currentLikesMap.length,
       });
-    } catch (_) {}
+    });
 
-    if (!liked) {
+    if (addedLike) {
       try {
         await notifyPostLiked(postId: postId, actorHouseId: myHouseId);
       } catch (_) {}
@@ -785,23 +768,19 @@ class SocialService {
   // ── CHECK đã like chưa ───────────────────────────────────────────────
   Future<bool> hasLiked(String postId, String myHouseId) async {
     final postData = await _loadPostHybrid(postId);
-    if (postData != null &&
-        _readMapField(postData['likes_map']).containsKey(myHouseId)) {
-      return true;
-    }
-
-    final snaps = await Future.wait([
-      _dbRef.child('post_likes/$postId/$myHouseId').get(),
-      _dbRef.child('house_likes/$myHouseId/$postId').get(),
-    ]);
-    return snaps.any((snap) => snap.exists);
+    return postData != null &&
+        _readMapField(postData['likes_map']).containsKey(myHouseId);
   }
 
   // ── STREAM like status realtime ───────────────────────────────────────
   Stream<bool> streamLikeStatus(String postId, String myHouseId) {
-    return _dbRef.child('post_likes/$postId/$myHouseId').onValue.map(
-          (event) => event.snapshot.exists,
-        );
+    return _firestore
+        .collection('social_posts')
+        .doc(postId)
+        .snapshots()
+        .map((snapshot) => snapshot.exists &&
+            _readMapField(snapshot.data()?['likes_map'])
+                .containsKey(myHouseId));
   }
 
   // ── Unified Post Creation (Firebase only) ─────────────────────
@@ -865,6 +844,7 @@ class SocialService {
         'imageUrl': imageUrl,
         'videoUrl': videoUrl,
         'likes': 0,
+        'likes_map': <String, dynamic>{},
         'commentCount': 0,
         'shareCount': 0,
         'hotScore': 0,
@@ -885,16 +865,6 @@ class SocialService {
 
       // Ghi nhận vào Firestore
       await docRef.set(postData);
-
-      // Ghi nhận hashtag
-      final exp = RegExp(r'\B#(\w+)');
-      final matches = exp.allMatches(trimmedContent);
-      final uniqueTags = matches.map((m) => m.group(1)!.toLowerCase()).toSet();
-      for (final tag in uniqueTags) {
-        if (tag.isNotEmpty) {
-          _dbRef.child('hashtags/$tag/count').set(ServerValue.increment(1));
-        }
-      }
 
       return postId;
     } catch (e) {
@@ -933,10 +903,6 @@ class SocialService {
         }
       }
       await docRef.delete();
-      await _firestore
-          .collection('social_posts')
-          .doc(postId)
-          .update({'commentCount': FieldValue.increment(-1)});
     }
   }
 
@@ -1005,12 +971,6 @@ class SocialService {
     // Write to Firestore subcollection
     await docRef.set(payload);
 
-    // Update commentCount on Firestore
-    await _firestore
-        .collection('social_posts')
-        .doc(postId)
-        .update({'commentCount': FieldValue.increment(1)});
-
     if (!hasViolations) {
       try {
         await notifyPostCommented(
@@ -1050,7 +1010,10 @@ class SocialService {
               'by': myHouseId,
             };
           }
-          transaction.update(docRef, {'likes_map': likesMap});
+          transaction.update(docRef, {
+            'likes_map': likesMap,
+            'reacts': likesMap.length,
+          });
         }
       });
     } catch (_) {}
@@ -1173,39 +1136,42 @@ class SocialService {
   // ── FETCH feed đã LIKE (Phân trang) ──────────────────────────────────
   Future<List<SocialPost>> fetchLikedFeedPage(String houseId,
       {int limit = 10, int? endBeforeTs}) async {
-    final snap = await _dbRef.child('house_likes/$houseId').get();
-    if (!snap.exists || snap.value is! Map) return [];
-
-    final data = snap.value as Map;
-    final likedItems = data.entries
-        .map((e) => {
-              'postId': e.key.toString(),
-              'ts': (e.value is num) ? (e.value as num).toInt() : 0,
-            })
-        .toList();
-
-    likedItems.sort((a, b) => (b['ts'] as int).compareTo(a['ts'] as int));
-
+    var query = _firestore
+        .collection('house_likes')
+        .doc(houseId)
+        .collection('posts')
+        .orderBy('likedAt', descending: true)
+        .limit(limit);
     if (endBeforeTs != null) {
-      likedItems.removeWhere((item) => (item['ts'] as int) >= endBeforeTs);
+      query = query.where('likedAt', isLessThan: endBeforeTs);
     }
-
-    final pageItems = likedItems.take(limit).toList();
-    if (pageItems.isEmpty) return [];
+    final likedDocs = await _getQueryWithCacheFallback(query);
+    if (likedDocs.docs.isEmpty) return [];
 
     final posts = <SocialPost>[];
-    final futures = pageItems.map((item) => _firestore
+    final futures = likedDocs.docs.map((likeDoc) => _firestore
         .collection('social_posts')
-        .doc(item['postId'] as String)
+        .doc(likeDoc.id)
         .get());
     final docSnaps = await Future.wait(futures);
 
-    for (var doc in docSnaps) {
+    final staleLikeRefs = <DocumentReference<Map<String, dynamic>>>[];
+    for (var index = 0; index < docSnaps.length; index += 1) {
+      final doc = docSnaps[index];
       if (doc.exists && doc.data() != null) {
         try {
           posts.add(SocialPost.fromJson(doc.id, doc.data()!));
         } catch (_) {}
+      } else {
+        staleLikeRefs.add(likedDocs.docs[index].reference);
       }
+    }
+    if (staleLikeRefs.isNotEmpty) {
+      final batch = _firestore.batch();
+      for (final reference in staleLikeRefs) {
+        batch.delete(reference);
+      }
+      await batch.commit();
     }
     posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return posts;
@@ -1223,7 +1189,7 @@ class SocialService {
   Future<List<SocialPost>> fetchPrivateFeedPage(String houseId,
       {int limit = 10, int? endBeforeTs}) async {
     final posts = await fetchHouseFeedPage(houseId,
-        limit: limit * 3, endBeforeTs: endBeforeTs);
+        limit: limit * 3, endBeforeTs: endBeforeTs, includePrivate: true);
     return posts.where((p) => p.privacy == 'private').take(limit).toList();
   }
 
@@ -1232,6 +1198,8 @@ class SocialService {
       {int limit = 10, int? endBeforeTs}) async {
     var query = _firestore
         .collection('social_posts')
+        .where('houseId', isEqualTo: houseId)
+        .where('privacy', isEqualTo: 'public')
         .where('isLocket', isEqualTo: true)
         .orderBy('ts', descending: true)
         .limit(limit);
@@ -1275,6 +1243,7 @@ class SocialService {
       case 'hot':
         var query = _firestore
             .collection('social_posts')
+            .where('privacy', isEqualTo: 'public')
             .orderBy('hotScore', descending: true)
             .limit(100);
         final snap = await _getQueryWithCacheFallback(query);

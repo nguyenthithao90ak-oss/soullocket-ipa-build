@@ -86,12 +86,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       Future<void>.delayed(const Duration(milliseconds: 50), () async {
         try {
           await SharePlus.instance
-              .share(
-                ShareParams(
-                  text: message,
-                  subject: subject,
-                ),
-              )
+              .share(ShareParams(text: message, subject: subject))
               .timeout(const Duration(seconds: 3));
         } catch (_) {
           // Đã có fallback copy clipboard ở trên.
@@ -104,9 +99,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     try {
       final InAppReview inAppReview = InAppReview.instance;
       // Trong mif (i != null) i! tr?if (ng != null) ng! Debug, dialog th?if (ng != null) ng! khif (ng != null) ng! hiif (n != null) n! ra. Ta gif (i != null) i! m? thif (ng != null) ng! Store.
-      await inAppReview.openStoreListing(
-        appStoreId: AppConfig.appStoreId,
-      );
+      await inAppReview.openStoreListing(appStoreId: AppConfig.appStoreId);
     } catch (e) {
       debugPrint('Lif (i != null) i! khi m? ?if (nh != null) nh! gi?: $e');
       if (!mounted) return;
@@ -119,9 +112,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
     try {
       await Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => const UserSupportChatScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const UserSupportChatScreen()),
       );
     } catch (_) {
       if (!mounted) return;
@@ -158,8 +149,10 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
   void _openDeleteAccountRequestPage() {
     final uri = Uri.parse(AppConfig.deleteAccountPageUrl);
     unawaited(
-      launchUrl(uri, mode: LaunchMode.externalApplication)
-          .catchError((_) => false),
+      launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      ).catchError((_) => false),
     );
   }
 
@@ -170,8 +163,9 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       confirm = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           backgroundColor: Colors.white,
           title: Row(
             children: [
@@ -252,9 +246,8 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => const Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        ),
+        builder: (_) =>
+            const Center(child: CircularProgressIndicator(color: Colors.white)),
       );
 
       try {
@@ -281,10 +274,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         }
         debugPrint('[LOGOUT] signOut error: $e\n$st');
         if (!mounted) return;
-        SLNotice.showError(
-          context,
-          context.tr('home_chathngxut_9630af'),
-        );
+        SLNotice.showError(context, context.tr('home_chathngxut_9630af'));
         return;
       }
     }
@@ -314,10 +304,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         _openDeleteAccountRequestPage();
         return;
       }
-      SLNotice.showError(
-        context,
-        context.tr('home_chathkimtr_01f860'),
-      );
+      SLNotice.showError(context, context.tr('home_chathkimtr_01f860'));
       return;
     }
 
@@ -327,13 +314,17 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
       confirm = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           backgroundColor: Colors.white,
           title: Row(
             children: [
-              const Icon(Icons.warning_amber_rounded,
-                  color: Colors.red, size: 32),
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.red,
+                size: 32,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -426,13 +417,17 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         finalConfirm = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
             backgroundColor: Colors.red.shade50,
             title: Row(
               children: [
-                const Icon(Icons.dangerous_rounded,
-                    color: Colors.red, size: 32),
+                const Icon(
+                  Icons.dangerous_rounded,
+                  color: Colors.red,
+                  size: 32,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -549,17 +544,11 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
         } catch (e) {
           if (!mounted) return;
           if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
-            SLNotice.showInfo(
-              context,
-              context.tr('home_chathgitrc_22cb40'),
-            );
+            SLNotice.showInfo(context, context.tr('home_chathgitrc_22cb40'));
             _openDeleteAccountRequestPage();
             return;
           }
-          SLNotice.showError(
-            context,
-            context.tr('home_chathhontt_de09e4'),
-          );
+          SLNotice.showError(context, context.tr('home_chathhontt_de09e4'));
         }
       }
     }
@@ -625,7 +614,7 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           ),
           _buildLegalBtn(
             icon: Icons.verified_user_rounded,
-            label: 'Bản quyền và cảnh báo',
+            label: L10nService().translate('Bản quyền và cảnh báo'),
             color: const Color(0xFFC62828),
             onTap: _openAboutDocument,
           ),
@@ -633,21 +622,29 @@ extension _SettingsTabSupportLegalSection on _SettingsTabState {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF0F0),
-              borderRadius: BorderRadius.circular(16),
+              color: SLColors.dangerLight,
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                  color: const Color(0xFFE53935).withValues(alpha: 0.2)),
+                color: const Color(0xFFE53935).withValues(alpha: 0.2),
+              ),
+              boxShadow: SLShadow.subtle,
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.copyright_rounded,
-                    size: 16, color: Color(0xFFC62828)),
+                const Icon(
+                  Icons.copyright_rounded,
+                  size: 16,
+                  color: Color(0xFFC62828),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'SoulLocket © ${DateTime.now().year} Tame Trương Việt Hoàng. '
-                    'Mọi hành vi crack, mod, can thiệp trái phép đều vi phạm bản quyền và sẽ bị xử lý.',
+                    L10nService()
+                        .translate(
+                          'SoulLocket © {year} Tame Trương Việt Hoàng. Mọi hành vi crack, mod, can thiệp trái phép đều vi phạm bản quyền và sẽ bị xử lý.',
+                        )
+                        .replaceAll('{year}', DateTime.now().year.toString()),
                     style: SLTheme.quicksand(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,

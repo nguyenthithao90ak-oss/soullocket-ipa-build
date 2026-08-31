@@ -82,10 +82,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             _smartSleepReminder = false;
           });
           await _persistNotificationPrefs();
-          _showToast(
-            permissionRequiredMessage,
-            success: false,
-          );
+          _showToast(permissionRequiredMessage, success: false);
           _showDisableNotificationsOutsideAppNotice();
           return;
         }
@@ -114,10 +111,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       });
       await _persistNotificationPrefs();
       _showToast(
-        AppErrorMapper.resolve(
-          e,
-          fallbackMessage: updateFailedMessage,
-        ).message,
+        AppErrorMapper.resolve(e, fallbackMessage: updateFailedMessage).message,
         success: false,
       );
     }
@@ -164,14 +158,13 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
               ),
             ),
             FilledButton(
-              style: FilledButton.styleFrom(
-                foregroundColor: Colors.white,
-              ),
+              style: FilledButton.styleFrom(foregroundColor: Colors.white),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
                 unawaited(
                   AppLifecyclePresenceGuard.guard(
-                      app_permission.openAppSettings),
+                    app_permission.openAppSettings,
+                  ),
                 );
               },
               child: Text(
@@ -546,13 +539,16 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                   (v) {
                     setState(() => _smartSleepReminder = v);
                     SoundService().playClick();
-                    unawaited(_persistNotificationPrefs().then((_) async {
-                      if (v) {
-                        await NotificationService().syncDailySleepReminder();
-                      } else {
-                        await NotificationService().cancelDailySleepReminder();
-                      }
-                    }));
+                    unawaited(
+                      _persistNotificationPrefs().then((_) async {
+                        if (v) {
+                          await NotificationService().syncDailySleepReminder();
+                        } else {
+                          await NotificationService()
+                              .cancelDailySleepReminder();
+                        }
+                      }),
+                    );
                   },
                   helperText: context.tr('smart_reminders_sleep_desc'),
                 ),
@@ -569,9 +565,11 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     (newTime) {
                       setState(() => _goodMorningTime = newTime);
                       SoundService().playClick();
-                      unawaited(_persistNotificationPrefs().then((_) async {
-                        await NotificationService().syncDailySleepReminder();
-                      }));
+                      unawaited(
+                        _persistNotificationPrefs().then((_) async {
+                          await NotificationService().syncDailySleepReminder();
+                        }),
+                      );
                     },
                   ),
                   _buildTimePickerRow(
@@ -580,9 +578,11 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     (newTime) {
                       setState(() => _goodNightTime = newTime);
                       SoundService().playClick();
-                      unawaited(_persistNotificationPrefs().then((_) async {
-                        await NotificationService().syncDailySleepReminder();
-                      }));
+                      unawaited(
+                        _persistNotificationPrefs().then((_) async {
+                          await NotificationService().syncDailySleepReminder();
+                        }),
+                      );
                     },
                   ),
                 ],
@@ -593,8 +593,11 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8F7FF),
-              borderRadius: SLRadius.lgAll,
+              color: SLColors.tertiarySoft.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: SLColors.accentPurple.withValues(alpha: 0.18),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -623,8 +626,9 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     PresenceService().hidePresence();
                   }
                 }),
-                _buildSwitchRow(context.tr('show_timer_home'), _homeShowTimer,
-                    (v) {
+                _buildSwitchRow(context.tr('show_timer_home'), _homeShowTimer, (
+                  v,
+                ) {
                   setState(() => _homeShowTimer = v);
                   SoundService().playClick();
                   unawaited(_persistHomeDisplayPrefsQuickly());
@@ -662,16 +666,14 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                 }
                 if (!mounted) return;
                 _showToast(
-                    context
-                        .tr('cleared_cache_msg')
-                        .replaceAll('{count}', cleared.toString()),
-                    success: true);
+                  context
+                      .tr('cleared_cache_msg')
+                      .replaceAll('{count}', cleared.toString()),
+                  success: true,
+                );
               },
             ),
-            if (kDebugMode) ...[
-              SLSpacing.h8,
-              _buildTestNotificationButton(),
-            ],
+            if (kDebugMode) ...[SLSpacing.h8, _buildTestNotificationButton()],
           ],
         ],
       ),
@@ -700,16 +702,14 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
             onChanged(formatted);
           }
         },
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(18),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: const Color(0xFFE2E8F0),
-              width: 1.2,
-            ),
+            color: SLColors.paper,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: SLColors.border, width: 1),
+            boxShadow: SLShadow.subtle,
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -720,7 +720,7 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                   style: SLTextStyles.quicksand(
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
-                    color: const Color(0xFF1A1A2E),
+                    color: SLColors.ink,
                   ),
                 ),
               ),
@@ -732,14 +732,14 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                     style: SLTextStyles.quicksand(
                       fontWeight: FontWeight.w900,
                       fontSize: 14.5,
-                      color: const Color(0xFFD81B60),
+                      color: SLColors.primary,
                     ),
                   ),
                   const SizedBox(width: 6),
                   const Icon(
                     Icons.access_time_filled_rounded,
                     size: 18,
-                    color: Color(0xFFD81B60),
+                    color: SLColors.primary,
                   ),
                 ],
               ),
@@ -755,10 +755,10 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: const Color(0xFFD81B60).withAlpha(100), width: 1.5),
-        color: const Color(0xFFFFF0F5),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: SLColors.primary.withAlpha(90), width: 1.2),
+        color: SLColors.paperBlush,
+        boxShadow: SLShadow.subtle,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
@@ -766,8 +766,11 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
         children: [
           Row(
             children: [
-              const Icon(Icons.notifications_active_rounded,
-                  color: Color(0xFFD81B60), size: 20),
+              const Icon(
+                Icons.notifications_active_rounded,
+                color: Color(0xFFD81B60),
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 '🧪 Kiểm tra thông báo',
@@ -781,7 +784,9 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
           ),
           const SizedBox(height: 4),
           Text(
-            L10nService().translate('Gửi thông báo thử đến điện thoại người ấy để kiểm tra xem thông báo có hiện ra ngoài màn hình không.'),
+            L10nService().translate(
+              'Gửi thông báo thử đến điện thoại người ấy để kiểm tra xem thông báo có hiện ra ngoài màn hình không.',
+            ),
             style: SLTextStyles.quicksand(
               fontWeight: FontWeight.w600,
               fontSize: 12.5,
@@ -799,8 +804,9 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                   type: 'chat',
                   screen: 'chat',
                   title: L10nService().translate('💬 Nhắn tin mới!'),
-                  body:
-                      L10nService().translate('Đây là thông báo thử nghiệm loại Chat. Nếu bạn thấy tin này nghĩa là thông báo đang hoạt động! 🎉'),
+                  body: L10nService().translate(
+                    'Đây là thông báo thử nghiệm loại Chat. Nếu bạn thấy tin này nghĩa là thông báo đang hoạt động! 🎉',
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -811,8 +817,9 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
                   type: 'soul_merge',
                   screen: 'soul_merge',
                   title: L10nService().translate('💖 Soul Merge đang gọi bạn!'),
-                  body:
-                      L10nService().translate('Người ấy đang chờ bạn trong Soul Merge. Đây là thông báo thử nghiệm! 💕'),
+                  body: L10nService().translate(
+                    'Người ấy đang chờ bạn trong Soul Merge. Đây là thông báo thử nghiệm! 💕',
+                  ),
                 ),
               ),
             ],
@@ -826,8 +833,9 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
               type: 'home',
               screen: 'home',
               title: L10nService().translate('🔔 Thông báo thử nghiệm'),
-              body:
-                  L10nService().translate('Nếu bạn thấy tin này ngoài màn hình chính nghĩa là thông báo đang hoạt động bình thường! ✅'),
+              body: L10nService().translate(
+                'Nếu bạn thấy tin này ngoài màn hình chính nghĩa là thông báo đang hoạt động bình thường! ✅',
+              ),
             ),
           ),
         ],
@@ -847,7 +855,10 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
       onTap: () async {
         final houseId = _houseId;
         if (houseId == null || houseId.isEmpty) {
-          _showToast(L10nService().translate('Chưa có thông tin nhà, thử lại sau.'), success: false);
+          _showToast(
+            L10nService().translate('Chưa có thông tin nhà, thử lại sau.'),
+            success: false,
+          );
           return;
         }
         try {
@@ -861,8 +872,10 @@ extension _SettingsTabNotificationsSection on _SettingsTabState {
           _showToast('✅ Đã gửi thông báo test đến người ấy!', success: true);
         } catch (e) {
           if (!mounted) return;
-          _showToast('❌ Gửi thất bại: ${AppErrorMapper.resolve(e).message}',
-              success: false);
+          _showToast(
+            '❌ Gửi thất bại: ${AppErrorMapper.resolve(e).message}',
+            success: false,
+          );
         }
       },
       child: Container(

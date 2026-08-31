@@ -4,353 +4,353 @@ part of '../../settings_tab.dart';
 extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
   // _buildThemeSectionHeader removed because it was unused
 
-//   Widget _buildThemeLivePreview({
-//     required String themeKey,
-//     required String effectKey,
-//     required String avatarFrameKey,
-//     required String countdownStyleKey,
-//     required String fontKey,
-//     required String homeToneKey,
-//     required String backgroundUrl,
-//     required double avatarSize,
-//     required double countdownSize,
-//     required bool isDark,
-//     required bool liteMode,
-//     required String graphicsKey,
-//   }) {
-//     final accent = _previewThemeAccent(themeKey);
-//     final gradient = _previewThemeGradient(themeKey, isDark);
-//     final avatarPreviewSize = (avatarSize * 0.6).toDouble();
-//     final countdownPreviewSize = (countdownSize * 0.4).toDouble();
-//
-//     return ClipRRect(
-//       borderRadius: BorderRadius.circular(12),
-//       child: AspectRatio(
-//         aspectRatio: 1.0,
-//         child: Container(
-//           width: double.infinity,
-//           decoration: BoxDecoration(
-//             gradient: LinearGradient(
-//               colors: gradient,
-//               begin: Alignment.topLeft,
-//               end: Alignment.bottomRight,
-//             ),
-//             boxShadow: [
-//               BoxShadow(
-//                 color: accent.withValues(alpha: 0.22),
-//                 blurRadius: 28,
-//                 offset: const Offset(0, 14),
-//               ),
-//             ],
-//           ),
-//           child: Stack(
-//             children: [
-//               if (backgroundUrl.isNotEmpty)
-//                 Positioned.fill(
-//                   child: Opacity(
-//                     opacity: liteMode ? 0.16 : 0.24,
-//                     child: Image.network(
-//                       backgroundUrl,
-//                       fit: BoxFit.cover,
-//                       errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-//                     ),
-//                   ),
-//                 ),
-//               Positioned(
-//                 top: -24,
-//                 right: -10,
-//                 child: Container(
-//                   width: 130,
-//                   height: 130,
-//                   decoration: BoxDecoration(
-//                     shape: BoxShape.circle,
-//                     color: Colors.white.withValues(alpha: isDark ? 0.08 : 0.18),
-//                   ),
-//                 ),
-//               ),
-//               Positioned(
-//                 bottom: -20,
-//                 left: -18,
-//                 child: Container(
-//                   width: 110,
-//                   height: 110,
-//                   decoration: BoxDecoration(
-//                     shape: BoxShape.circle,
-//                     color: accent.withValues(alpha: isDark ? 0.16 : 0.12),
-//                   ),
-//                 ),
-//               ),
-//               if (effectKey != 'off' && !liteMode && graphicsKey != 'low')
-//                 Positioned.fill(
-//                   child: IgnorePointer(
-//                     child: LegacyFallingEffect(
-//                       type: effectKey,
-//                       isDark: isDark,
-//                       density: graphicsKey == 'low'
-//                           ? 'low'
-//                           : graphicsKey == 'high'
-//                               ? 'high'
-//                               : 'balanced',
-//                       opacity: 0.88,
-//                     ),
-//                   ),
-//                 ),
-//               Positioned.fill(
-//                 child: DecoratedBox(
-//                   decoration: BoxDecoration(
-//                     gradient: LinearGradient(
-//                       colors: [
-//                         Colors.white.withValues(alpha: isDark ? 0.05 : 0.16),
-//                         Colors.white.withValues(alpha: isDark ? 0.01 : 0.06),
-//                         Colors.black.withValues(alpha: isDark ? 0.16 : 0.05),
-//                       ],
-//                       begin: Alignment.topCenter,
-//                       end: Alignment.bottomCenter,
-//                     ),
-//                   ),
-//                 ),
-//               ),
-//               Padding(
-//                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-//                 child: Column(
-//                   children: [
-//                     Row(
-//                       children: [
-//                         Container(
-//                           padding: const EdgeInsets.symmetric(
-//                             horizontal: 12,
-//                             vertical: 7,
-//                           ),
-//                           decoration: BoxDecoration(
-//                             color:
-//                                 Colors.white.withValues(alpha: isDark ? 0.14 : 0.22),
-//                             borderRadius: BorderRadius.circular(999),
-//                             border: Border.all(
-//                               color:
-//                                   Colors.white.withValues(alpha: isDark ? 0.2 : 0.34),
-//                             ),
-//                           ),
-//                           child: Text(
-//                             'Xem trước ${_themeTitleForKey(themeKey)}',
-//                             style: _themeFontStyle(
-//                               fontKey,
-//                               fontSize: 11.5,
-//                               fontWeight: FontWeight.w900,
-//                               color: Colors.white,
-//                             ),
-//                           ),
-//                         ),
-//                         const Spacer(),
-//                         Container(
-//                           padding: const EdgeInsets.symmetric(
-//                             horizontal: 10,
-//                             vertical: 7,
-//                           ),
-//                           decoration: BoxDecoration(
-//                             color:
-//                                 Colors.white.withValues(alpha: isDark ? 0.14 : 0.2),
-//                             borderRadius: BorderRadius.circular(999),
-//                           ),
-//                           child: Text(
-//                             liteMode
-//                                 ? context.tr('theme_preview_lite')
-//                                 : _effectLabelForKey(effectKey),
-//                             style: SLTheme.quicksand(
-//                               fontSize: 10.5,
-//                               fontWeight: FontWeight.w900,
-//                               color: Colors.white,
-//                             ),
-//                           ),
-//                         ),
-//                       ],
-//                     ),
-//                     const Spacer(),
-//                     Row(
-//                       crossAxisAlignment: CrossAxisAlignment.center,
-//                       children: [
-//                         Container(
-//                           width: avatarPreviewSize,
-//                           height: avatarPreviewSize,
-//                           decoration: LegacyWebUi.avatarFrameDecoration(
-//                             avatarFrameKey,
-//                             avatarPreviewSize,
-//                             accentColor: accent,
-//                           ),
-//                           child: Padding(
-//                             padding: LegacyWebUi.avatarFramePaddingForKey(
-//                               avatarFrameKey,
-//                               avatarPreviewSize,
-//                             ),
-//                             child: ClipRRect(
-//                               borderRadius:
-//                                   LegacyWebUi.avatarBorderRadiusForKey(
-//                                 avatarFrameKey,
-//                                 avatarPreviewSize,
-//                               ),
-//                               child: Container(
-//                                 decoration: const BoxDecoration(
-//                                   gradient: LinearGradient(
-//                                     colors: [
-//                                       Color(0xFFFFC8DA),
-//                                       Color(0xFFB8DBFF),
-//                                     ],
-//                                     begin: Alignment.topLeft,
-//                                     end: Alignment.bottomRight,
-//                                   ),
-//                                 ),
-//                                 child: Icon(
-//                                   Icons.favorite_rounded,
-//                                   color: Colors.white,
-//                                   size: avatarPreviewSize * 0.4,
-//                                 ),
-//                               ),
-//                             ),
-//                           ),
-//                         ),
-//                         const SizedBox(width: 12),
-//                         Container(
-//                           width: countdownPreviewSize,
-//                           height: countdownPreviewSize,
-//                           decoration:
-//                               _previewCountdownDecoration(countdownStyleKey),
-//                           child: Column(
-//                             mainAxisAlignment: MainAxisAlignment.center,
-//                             children: [
-//                               Text(
-//                                 '240',
-//                                 style: _themeFontStyle(
-//                                   fontKey,
-//                                   fontSize: countdownPreviewSize * 0.3,
-//                                   fontWeight: FontWeight.w900,
-//                                   color: const Color(0xFFD81B60),
-//                                 ),
-//                               ),
-//                               Text(
-//                                 context.tr('theme_preview_love_days'),
-//                                 style: SLTheme.quicksand(
-//                                   fontSize: countdownPreviewSize * 0.12,
-//                                   fontWeight: FontWeight.w900,
-//                                   color: const Color(0xFF7B6070),
-//                                   letterSpacing: 0.8,
-//                                 ),
-//                               ),
-//                             ],
-//                           ),
-//                         ),
-//                         const SizedBox(width: 12),
-//                         Expanded(
-//                           child: Column(
-//                             crossAxisAlignment: CrossAxisAlignment.end,
-//                             children: [
-//                               Text(
-//                                 'SoulLocket Home',
-//                                 textAlign: TextAlign.right,
-//                                 style: _themeFontStyle(
-//                                   fontKey,
-//                                   fontSize: 16,
-//                                   fontWeight: FontWeight.w900,
-//                                   color: Colors.white,
-//                                 ),
-//                               ),
-//                               const SizedBox(height: 4),
-//                               Text(
-//                                 context.tr('theme_preview_desc'),
-//                                 textAlign: TextAlign.right,
-//                                 style: SLTheme.quicksand(
-//                                   fontSize: 10,
-//                                   fontWeight: FontWeight.w700,
-//                                   color: Colors.white.withValues(alpha: 0.92),
-//                                   height: 1.35,
-//                                 ),
-//                               ),
-//                             ],
-//                           ),
-//                         ),
-//                       ],
-//                     ),
-//                     const SizedBox(height: 16),
-//                     Row(
-//                       children: [
-//                         Expanded(
-//                           child: Container(
-//                             constraints: const BoxConstraints(minHeight: 74),
-//                             padding: const EdgeInsets.all(12),
-//                             decoration:
-//                                 _previewHomeCardDecoration(homeToneKey, isDark),
-//                             child: Column(
-//                               crossAxisAlignment: CrossAxisAlignment.start,
-//                               mainAxisAlignment: MainAxisAlignment.center,
-//                               children: [
-//                                 Text(
-//                                   context.tr('theme_preview_home_block'),
-//                                   style: SLTheme.quicksand(
-//                                     fontSize: 10.5,
-//                                     fontWeight: FontWeight.w900,
-//                                     color: const Color(0xFFD81B60),
-//                                   ),
-//                                 ),
-//                                 const SizedBox(height: 4),
-//                                 Text(
-//                                   'Tone ${_homeToneLabelForKey(homeToneKey)}',
-//                                   maxLines: 1,
-//                                   overflow: TextOverflow.ellipsis,
-//                                   style: _themeFontStyle(
-//                                     fontKey,
-//                                     fontSize: 13,
-//                                     fontWeight: FontWeight.w900,
-//                                     color: const Color(0xFF4C3D47),
-//                                   ),
-//                                 ),
-//                               ],
-//                             ),
-//                           ),
-//                         ),
-//                         const SizedBox(width: 10),
-//                         Expanded(
-//                           child: Container(
-//                             constraints: const BoxConstraints(minHeight: 74),
-//                             padding: const EdgeInsets.all(12),
-//                             decoration:
-//                                 _previewHomeCardDecoration(homeToneKey, isDark),
-//                             child: Column(
-//                               crossAxisAlignment: CrossAxisAlignment.start,
-//                               mainAxisAlignment: MainAxisAlignment.center,
-//                               children: [
-//                                 Text(
-//                                   context.tr('theme_preview_graphics'),
-//                                   style: SLTheme.quicksand(
-//                                     fontSize: 10.5,
-//                                     fontWeight: FontWeight.w900,
-//                                     color: const Color(0xFFD81B60),
-//                                   ),
-//                                 ),
-//                                 const SizedBox(height: 4),
-//                                 Text(
-//                                   _graphicsLabelForKey(graphicsKey),
-//                                   maxLines: 1,
-//                                   overflow: TextOverflow.ellipsis,
-//                                   style: _themeFontStyle(
-//                                     fontKey,
-//                                     fontSize: 13,
-//                                     fontWeight: FontWeight.w900,
-//                                     color: const Color(0xFF4C3D47),
-//                                   ),
-//                                 ),
-//                               ],
-//                             ),
-//                           ),
-//                         ),
-//                       ],
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
+  //   Widget _buildThemeLivePreview({
+  //     required String themeKey,
+  //     required String effectKey,
+  //     required String avatarFrameKey,
+  //     required String countdownStyleKey,
+  //     required String fontKey,
+  //     required String homeToneKey,
+  //     required String backgroundUrl,
+  //     required double avatarSize,
+  //     required double countdownSize,
+  //     required bool isDark,
+  //     required bool liteMode,
+  //     required String graphicsKey,
+  //   }) {
+  //     final accent = _previewThemeAccent(themeKey);
+  //     final gradient = _previewThemeGradient(themeKey, isDark);
+  //     final avatarPreviewSize = (avatarSize * 0.6).toDouble();
+  //     final countdownPreviewSize = (countdownSize * 0.4).toDouble();
+  //
+  //     return ClipRRect(
+  //       borderRadius: BorderRadius.circular(12),
+  //       child: AspectRatio(
+  //         aspectRatio: 1.0,
+  //         child: Container(
+  //           width: double.infinity,
+  //           decoration: BoxDecoration(
+  //             gradient: LinearGradient(
+  //               colors: gradient,
+  //               begin: Alignment.topLeft,
+  //               end: Alignment.bottomRight,
+  //             ),
+  //             boxShadow: [
+  //               BoxShadow(
+  //                 color: accent.withValues(alpha: 0.22),
+  //                 blurRadius: 28,
+  //                 offset: const Offset(0, 14),
+  //               ),
+  //             ],
+  //           ),
+  //           child: Stack(
+  //             children: [
+  //               if (backgroundUrl.isNotEmpty)
+  //                 Positioned.fill(
+  //                   child: Opacity(
+  //                     opacity: liteMode ? 0.16 : 0.24,
+  //                     child: Image.network(
+  //                       backgroundUrl,
+  //                       fit: BoxFit.cover,
+  //                       errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+  //                     ),
+  //                   ),
+  //                 ),
+  //               Positioned(
+  //                 top: -24,
+  //                 right: -10,
+  //                 child: Container(
+  //                   width: 130,
+  //                   height: 130,
+  //                   decoration: BoxDecoration(
+  //                     shape: BoxShape.circle,
+  //                     color: Colors.white.withValues(alpha: isDark ? 0.08 : 0.18),
+  //                   ),
+  //                 ),
+  //               ),
+  //               Positioned(
+  //                 bottom: -20,
+  //                 left: -18,
+  //                 child: Container(
+  //                   width: 110,
+  //                   height: 110,
+  //                   decoration: BoxDecoration(
+  //                     shape: BoxShape.circle,
+  //                     color: accent.withValues(alpha: isDark ? 0.16 : 0.12),
+  //                   ),
+  //                 ),
+  //               ),
+  //               if (effectKey != 'off' && !liteMode && graphicsKey != 'low')
+  //                 Positioned.fill(
+  //                   child: IgnorePointer(
+  //                     child: LegacyFallingEffect(
+  //                       type: effectKey,
+  //                       isDark: isDark,
+  //                       density: graphicsKey == 'low'
+  //                           ? 'low'
+  //                           : graphicsKey == 'high'
+  //                               ? 'high'
+  //                               : 'balanced',
+  //                       opacity: 0.88,
+  //                     ),
+  //                   ),
+  //                 ),
+  //               Positioned.fill(
+  //                 child: DecoratedBox(
+  //                   decoration: BoxDecoration(
+  //                     gradient: LinearGradient(
+  //                       colors: [
+  //                         Colors.white.withValues(alpha: isDark ? 0.05 : 0.16),
+  //                         Colors.white.withValues(alpha: isDark ? 0.01 : 0.06),
+  //                         Colors.black.withValues(alpha: isDark ? 0.16 : 0.05),
+  //                       ],
+  //                       begin: Alignment.topCenter,
+  //                       end: Alignment.bottomCenter,
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ),
+  //               Padding(
+  //                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+  //                 child: Column(
+  //                   children: [
+  //                     Row(
+  //                       children: [
+  //                         Container(
+  //                           padding: const EdgeInsets.symmetric(
+  //                             horizontal: 12,
+  //                             vertical: 7,
+  //                           ),
+  //                           decoration: BoxDecoration(
+  //                             color:
+  //                                 Colors.white.withValues(alpha: isDark ? 0.14 : 0.22),
+  //                             borderRadius: BorderRadius.circular(999),
+  //                             border: Border.all(
+  //                               color:
+  //                                   Colors.white.withValues(alpha: isDark ? 0.2 : 0.34),
+  //                             ),
+  //                           ),
+  //                           child: Text(
+  //                             'Xem trước ${_themeTitleForKey(themeKey)}',
+  //                             style: _themeFontStyle(
+  //                               fontKey,
+  //                               fontSize: 11.5,
+  //                               fontWeight: FontWeight.w900,
+  //                               color: Colors.white,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                         const Spacer(),
+  //                         Container(
+  //                           padding: const EdgeInsets.symmetric(
+  //                             horizontal: 10,
+  //                             vertical: 7,
+  //                           ),
+  //                           decoration: BoxDecoration(
+  //                             color:
+  //                                 Colors.white.withValues(alpha: isDark ? 0.14 : 0.2),
+  //                             borderRadius: BorderRadius.circular(999),
+  //                           ),
+  //                           child: Text(
+  //                             liteMode
+  //                                 ? context.tr('theme_preview_lite')
+  //                                 : _effectLabelForKey(effectKey),
+  //                             style: SLTheme.quicksand(
+  //                               fontSize: 10.5,
+  //                               fontWeight: FontWeight.w900,
+  //                               color: Colors.white,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                     const Spacer(),
+  //                     Row(
+  //                       crossAxisAlignment: CrossAxisAlignment.center,
+  //                       children: [
+  //                         Container(
+  //                           width: avatarPreviewSize,
+  //                           height: avatarPreviewSize,
+  //                           decoration: LegacyWebUi.avatarFrameDecoration(
+  //                             avatarFrameKey,
+  //                             avatarPreviewSize,
+  //                             accentColor: accent,
+  //                           ),
+  //                           child: Padding(
+  //                             padding: LegacyWebUi.avatarFramePaddingForKey(
+  //                               avatarFrameKey,
+  //                               avatarPreviewSize,
+  //                             ),
+  //                             child: ClipRRect(
+  //                               borderRadius:
+  //                                   LegacyWebUi.avatarBorderRadiusForKey(
+  //                                 avatarFrameKey,
+  //                                 avatarPreviewSize,
+  //                               ),
+  //                               child: Container(
+  //                                 decoration: const BoxDecoration(
+  //                                   gradient: LinearGradient(
+  //                                     colors: [
+  //                                       Color(0xFFFFC8DA),
+  //                                       Color(0xFFB8DBFF),
+  //                                     ],
+  //                                     begin: Alignment.topLeft,
+  //                                     end: Alignment.bottomRight,
+  //                                   ),
+  //                                 ),
+  //                                 child: Icon(
+  //                                   Icons.favorite_rounded,
+  //                                   color: Colors.white,
+  //                                   size: avatarPreviewSize * 0.4,
+  //                                 ),
+  //                               ),
+  //                             ),
+  //                           ),
+  //                         ),
+  //                         const SizedBox(width: 12),
+  //                         Container(
+  //                           width: countdownPreviewSize,
+  //                           height: countdownPreviewSize,
+  //                           decoration:
+  //                               _previewCountdownDecoration(countdownStyleKey),
+  //                           child: Column(
+  //                             mainAxisAlignment: MainAxisAlignment.center,
+  //                             children: [
+  //                               Text(
+  //                                 '240',
+  //                                 style: _themeFontStyle(
+  //                                   fontKey,
+  //                                   fontSize: countdownPreviewSize * 0.3,
+  //                                   fontWeight: FontWeight.w900,
+  //                                   color: const Color(0xFFD81B60),
+  //                                 ),
+  //                               ),
+  //                               Text(
+  //                                 context.tr('theme_preview_love_days'),
+  //                                 style: SLTheme.quicksand(
+  //                                   fontSize: countdownPreviewSize * 0.12,
+  //                                   fontWeight: FontWeight.w900,
+  //                                   color: const Color(0xFF7B6070),
+  //                                   letterSpacing: 0.8,
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                         ),
+  //                         const SizedBox(width: 12),
+  //                         Expanded(
+  //                           child: Column(
+  //                             crossAxisAlignment: CrossAxisAlignment.end,
+  //                             children: [
+  //                               Text(
+  //                                 'SoulLocket Home',
+  //                                 textAlign: TextAlign.right,
+  //                                 style: _themeFontStyle(
+  //                                   fontKey,
+  //                                   fontSize: 16,
+  //                                   fontWeight: FontWeight.w900,
+  //                                   color: Colors.white,
+  //                                 ),
+  //                               ),
+  //                               const SizedBox(height: 4),
+  //                               Text(
+  //                                 context.tr('theme_preview_desc'),
+  //                                 textAlign: TextAlign.right,
+  //                                 style: SLTheme.quicksand(
+  //                                   fontSize: 10,
+  //                                   fontWeight: FontWeight.w700,
+  //                                   color: Colors.white.withValues(alpha: 0.92),
+  //                                   height: 1.35,
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                     const SizedBox(height: 16),
+  //                     Row(
+  //                       children: [
+  //                         Expanded(
+  //                           child: Container(
+  //                             constraints: const BoxConstraints(minHeight: 74),
+  //                             padding: const EdgeInsets.all(12),
+  //                             decoration:
+  //                                 _previewHomeCardDecoration(homeToneKey, isDark),
+  //                             child: Column(
+  //                               crossAxisAlignment: CrossAxisAlignment.start,
+  //                               mainAxisAlignment: MainAxisAlignment.center,
+  //                               children: [
+  //                                 Text(
+  //                                   context.tr('theme_preview_home_block'),
+  //                                   style: SLTheme.quicksand(
+  //                                     fontSize: 10.5,
+  //                                     fontWeight: FontWeight.w900,
+  //                                     color: const Color(0xFFD81B60),
+  //                                   ),
+  //                                 ),
+  //                                 const SizedBox(height: 4),
+  //                                 Text(
+  //                                   'Tone ${_homeToneLabelForKey(homeToneKey)}',
+  //                                   maxLines: 1,
+  //                                   overflow: TextOverflow.ellipsis,
+  //                                   style: _themeFontStyle(
+  //                                     fontKey,
+  //                                     fontSize: 13,
+  //                                     fontWeight: FontWeight.w900,
+  //                                     color: const Color(0xFF4C3D47),
+  //                                   ),
+  //                                 ),
+  //                               ],
+  //                             ),
+  //                           ),
+  //                         ),
+  //                         const SizedBox(width: 10),
+  //                         Expanded(
+  //                           child: Container(
+  //                             constraints: const BoxConstraints(minHeight: 74),
+  //                             padding: const EdgeInsets.all(12),
+  //                             decoration:
+  //                                 _previewHomeCardDecoration(homeToneKey, isDark),
+  //                             child: Column(
+  //                               crossAxisAlignment: CrossAxisAlignment.start,
+  //                               mainAxisAlignment: MainAxisAlignment.center,
+  //                               children: [
+  //                                 Text(
+  //                                   context.tr('theme_preview_graphics'),
+  //                                   style: SLTheme.quicksand(
+  //                                     fontSize: 10.5,
+  //                                     fontWeight: FontWeight.w900,
+  //                                     color: const Color(0xFFD81B60),
+  //                                   ),
+  //                                 ),
+  //                                 const SizedBox(height: 4),
+  //                                 Text(
+  //                                   _graphicsLabelForKey(graphicsKey),
+  //                                   maxLines: 1,
+  //                                   overflow: TextOverflow.ellipsis,
+  //                                   style: _themeFontStyle(
+  //                                     fontKey,
+  //                                     fontSize: 13,
+  //                                     fontWeight: FontWeight.w900,
+  //                                     color: const Color(0xFF4C3D47),
+  //                                   ),
+  //                                 ),
+  //                               ],
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //     );
+  //   }
 
   Widget _buildCountdownStyleStrip(String selectedKey, bool hasAdPass) {
     final items = [
@@ -441,7 +441,8 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
                     ? LinearGradient(
                         colors: item.$3
                             .map((c) => c.withValues(alpha: 0.50))
-                            .toList())
+                            .toList(),
+                      )
                     : LinearGradient(colors: item.$3),
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
@@ -453,8 +454,9 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
                 boxShadow: selected
                     ? [
                         BoxShadow(
-                          color:
-                              const Color(0xFFD81B60).withValues(alpha: 0.28),
+                          color: const Color(
+                            0xFFD81B60,
+                          ).withValues(alpha: 0.28),
                           blurRadius: 20,
                           spreadRadius: 1,
                           offset: const Offset(0, 6),
@@ -473,14 +475,17 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
                       color: locked
                           ? const Color(0xFF9E9E9E)
                           : selected
-                              ? const Color(0xFFD81B60)
-                              : const Color(0xFF5C4B58),
+                          ? const Color(0xFFD81B60)
+                          : const Color(0xFF5C4B58),
                     ),
                   ),
                   if (locked) ...[
                     const SizedBox(width: 4),
-                    const Icon(Icons.play_circle_fill_rounded,
-                        size: 14, color: Color(0xFFD81B60)),
+                    const Icon(
+                      Icons.play_circle_fill_rounded,
+                      size: 14,
+                      color: Color(0xFFD81B60),
+                    ),
                   ],
                 ],
               ),
@@ -498,7 +503,7 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
         context.tr('effect_sparkles'),
         'sparkles',
         Icons.auto_fix_high_rounded,
-        const Color(0xFFFFC857)
+        const Color(0xFFFFC857),
       ),
       ('Sao', 'stars', Icons.star_rounded, const Color(0xFFFFD54F)),
       ('Tim', 'hearts', Icons.favorite_rounded, const Color(0xFFFF5E92)),
@@ -507,7 +512,7 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
         context.tr('effect_bubbles'),
         'bubbles',
         Icons.bubble_chart_rounded,
-        const Color(0xFF4DD0E1)
+        const Color(0xFF4DD0E1),
       ),
       ('Tuyết', 'snow', Icons.ac_unit_rounded, const Color(0xFF90CAF9)),
       ('Lá', 'leaves', Icons.park_rounded, const Color(0xFFFFA726)),
@@ -571,65 +576,67 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
     );
   }
 
-//   BoxDecoration _previewCountdownDecoration(String styleKey) {
-//     switch (styleKey) {
-//       case 'glass':
-//         return BoxDecoration(
-//           shape: BoxShape.circle,
-//           color: Colors.white.withValues(alpha: 0.7),
-//           border: Border.all(color: Colors.white.withValues(alpha: 0.92), width: 4),
-//           boxShadow: [
-//             BoxShadow(
-//               color: const Color(0xFF8EC5FC).withValues(alpha: 0.24),
-//               blurRadius: 30,
-//               offset: const Offset(0, 14),
-//             ),
-//           ],
-//         );
-//       case 'glow':
-//         return BoxDecoration(
-//           shape: BoxShape.circle,
-//           gradient: const LinearGradient(
-//             colors: [Color(0xFFFFF5FA), Color(0xFFFFD9E8)],
-//             begin: Alignment.topLeft,
-//             end: Alignment.bottomRight,
-//           ),
-//           border: Border.all(color: Colors.white.withValues(alpha: 0.92), width: 5),
-//           boxShadow: [
-//             BoxShadow(
-//               color: const Color(0xFFFF5E92).withValues(alpha: 0.34),
-//               blurRadius: 34,
-//             ),
-//           ],
-//         );
-//       default:
-//         return BoxDecoration(
-//           shape: BoxShape.circle,
-//           color: Colors.white.withValues(alpha: 0.9),
-//           border: Border.all(color: Colors.white.withValues(alpha: 0.94), width: 6),
-//           boxShadow: [
-//             BoxShadow(
-//               color: const Color(0xFFFF69B4).withValues(alpha: 0.34),
-//               blurRadius: 34,
-//             ),
-//           ],
-//         );
-//     }
-//   }
+  //   BoxDecoration _previewCountdownDecoration(String styleKey) {
+  //     switch (styleKey) {
+  //       case 'glass':
+  //         return BoxDecoration(
+  //           shape: BoxShape.circle,
+  //           color: Colors.white.withValues(alpha: 0.7),
+  //           border: Border.all(color: Colors.white.withValues(alpha: 0.92), width: 4),
+  //           boxShadow: [
+  //             BoxShadow(
+  //               color: const Color(0xFF8EC5FC).withValues(alpha: 0.24),
+  //               blurRadius: 30,
+  //               offset: const Offset(0, 14),
+  //             ),
+  //           ],
+  //         );
+  //       case 'glow':
+  //         return BoxDecoration(
+  //           shape: BoxShape.circle,
+  //           gradient: const LinearGradient(
+  //             colors: [Color(0xFFFFF5FA), Color(0xFFFFD9E8)],
+  //             begin: Alignment.topLeft,
+  //             end: Alignment.bottomRight,
+  //           ),
+  //           border: Border.all(color: Colors.white.withValues(alpha: 0.92), width: 5),
+  //           boxShadow: [
+  //             BoxShadow(
+  //               color: const Color(0xFFFF5E92).withValues(alpha: 0.34),
+  //               blurRadius: 34,
+  //             ),
+  //           ],
+  //         );
+  //       default:
+  //         return BoxDecoration(
+  //           shape: BoxShape.circle,
+  //           color: Colors.white.withValues(alpha: 0.9),
+  //           border: Border.all(color: Colors.white.withValues(alpha: 0.94), width: 6),
+  //           boxShadow: [
+  //             BoxShadow(
+  //               color: const Color(0xFFFF69B4).withValues(alpha: 0.34),
+  //               blurRadius: 34,
+  //             ),
+  //           ],
+  //         );
+  //     }
+  //   }
 
   Widget _buildThemeDropdownField({
     required String value,
     required List<(String, String)> options,
     required ValueChanged<String> onChanged,
   }) {
-    final safeValue =
-        options.any((item) => item.$2 == value) ? value : options.first.$2;
+    final safeValue = options.any((item) => item.$2 == value)
+        ? value
+        : options.first.$2;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: LegacyWebUi.softPanelDecoration(
-        accent: const Color(0xFFF48FB1),
-        radius: 22,
-        colors: const [Color(0xFFFFFFFF), Color(0xFFFFFBFD), Color(0xFFFFFFFF)],
+      decoration: BoxDecoration(
+        color: SLColors.paper,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: SLColors.border),
+        boxShadow: SLShadow.subtle,
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -645,7 +652,7 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
                     style: SLTheme.quicksand(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF575757),
+                      color: SLColors.ink,
                     ),
                   ),
                 ),
@@ -664,14 +671,16 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
     required List<SLFontOption> fonts,
     required ValueChanged<String> onChanged,
   }) {
-    final safeValue =
-        fonts.any((font) => font.key == value) ? value : fonts.first.key;
+    final safeValue = fonts.any((font) => font.key == value)
+        ? value
+        : fonts.first.key;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: LegacyWebUi.softPanelDecoration(
-        accent: const Color(0xFFF48FB1),
-        radius: 22,
-        colors: const [Color(0xFFFFFFFF), Color(0xFFFFFBFD), Color(0xFFFFFFFF)],
+      decoration: BoxDecoration(
+        color: SLColors.paper,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: SLColors.border),
+        boxShadow: SLShadow.subtle,
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -728,8 +737,12 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(font.label,
-            maxLines: 1, overflow: TextOverflow.ellipsis, style: titleStyle),
+        Text(
+          font.label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: titleStyle,
+        ),
         SizedBox(height: compact ? 1 : 3),
         Text(
           font.sampleText,
@@ -771,19 +784,19 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
         'Bo góc',
         'rounded',
         Icons.rounded_corner_rounded,
-        const Color(0xFFEC4899)
+        const Color(0xFFEC4899),
       ),
       (
         'Squircle',
         'squircle',
         Icons.crop_square_rounded,
-        const Color(0xFF8B5CF6)
+        const Color(0xFF8B5CF6),
       ),
       (
         'Ngọc trai',
         'pearl',
         Icons.blur_circular_rounded,
-        const Color(0xFFD4A520)
+        const Color(0xFFD4A520),
       ),
       ('Thủy tinh', 'glass', Icons.water_drop_rounded, const Color(0xFF06B6D4)),
       if (AppConfig.isPurchaseEnabled)
@@ -853,8 +866,8 @@ extension _SettingsTabThemePanelControlsPart on _SettingsTabState {
                         accentColor: selected
                             ? color
                             : (locked
-                                ? const Color(0xFFE2E8F0)
-                                : const Color(0xFF94A3B8)),
+                                  ? const Color(0xFFE2E8F0)
+                                  : const Color(0xFF94A3B8)),
                         child: Container(
                           decoration: const BoxDecoration(
                             color: Color(0xFFF1F5F9),

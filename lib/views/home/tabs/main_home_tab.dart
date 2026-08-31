@@ -115,6 +115,7 @@ part 'main_home/widgets/main_home_dialogs.dart';
 part 'main_home/widgets/main_home_soul_merge_sticker.dart';
 part 'main_home/widgets/main_home_countdown_quick_customize_sheet.dart';
 part '../widgets/main_home/main_home_hero_section.dart';
+part '../widgets/main_home/main_home_scrapbook_chrome.dart';
 part 'main_home/widgets/main_home_quick_actions.dart';
 part 'main_home/widgets/main_home_presence_section.dart';
 part 'main_home/widgets/main_home_status_cards.dart';
@@ -175,8 +176,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       ValueNotifier(false);
   final ValueNotifier<bool> _showInsightCardFirstTapHintNotifier =
       ValueNotifier(false);
-  final ValueNotifier<double> _avatarUploadProgressNotifier =
-      ValueNotifier(-1.0);
+  final ValueNotifier<double> _avatarUploadProgressNotifier = ValueNotifier(
+    -1.0,
+  );
   static const String _pendingAvatarUploadKeyPrefix = 'main_home_avatar_';
   static const String _mapCardFirstTapSeenPrefsKey =
       'il_home_map_card_first_tap_seen_v1';
@@ -331,8 +333,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     );
   }
 
-  static final List<String> _kHomeStickerAssets =
-      List<String>.generate(99, (i) {
+  static final List<String> _kHomeStickerAssets = List<String>.generate(99, (
+    i,
+  ) {
     final num = (i + 1).toString().padLeft(3, '0');
     return 'assets/images/interaction_stickers/custom/numbered/sticker_$num.png';
   });
@@ -403,10 +406,12 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   ).asBroadcastStream();
   String? _uploadingAvatarRole;
   bool _didPromptPendingAvatarRetry = false;
-  final ValueNotifier<String> _homeDistanceTextNotifier =
-      ValueNotifier<String>('Đang định vị...');
-  final ValueNotifier<String?> _homeMapAlertNotifier =
-      ValueNotifier<String?>(null);
+  final ValueNotifier<String> _homeDistanceTextNotifier = ValueNotifier<String>(
+    'Đang định vị...',
+  );
+  final ValueNotifier<String?> _homeMapAlertNotifier = ValueNotifier<String?>(
+    null,
+  );
   final ValueNotifier<Map<String, dynamic>?> _homePartnerBatteryNotifier =
       ValueNotifier<Map<String, dynamic>?>(null);
   final ValueNotifier<Map<String, dynamic>?> _homeMyBatteryNotifier =
@@ -479,7 +484,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   List<String> _recentChatSignals = [];
 
   late final ValueNotifier<_PartnerInteractionPreset>
-      _smartInteractionPresetNotifier;
+  _smartInteractionPresetNotifier;
   _PartnerInteractionPreset get _smartInteractionPreset =>
       _smartInteractionPresetNotifier.value;
   set _smartInteractionPreset(_PartnerInteractionPreset v) =>
@@ -502,12 +507,16 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       ValueNotifier<String?>(null);
   Offset? _interactionDragPointerGlobal;
   bool _isTabActive = false;
-  bool _showMapCardFirstTapHint = !(OfflineCacheService.getPrefsSync()
-          ?.getBool(_mapCardFirstTapSeenPrefsKey) ??
-      false);
-  bool _showInsightCardFirstTapHint = !(OfflineCacheService.getPrefsSync()
-          ?.getBool(_insightCardFirstTapSeenPrefsKey) ??
-      false);
+  bool _showMapCardFirstTapHint =
+      !(OfflineCacheService.getPrefsSync()?.getBool(
+            _mapCardFirstTapSeenPrefsKey,
+          ) ??
+          false);
+  bool _showInsightCardFirstTapHint =
+      !(OfflineCacheService.getPrefsSync()?.getBool(
+            _insightCardFirstTapSeenPrefsKey,
+          ) ??
+          false);
   String _lastHomeSettingsPayloadSignature = '';
   String _lastWidgetSettingsSyncKey = '';
   final ValueNotifier<String> _fallingEffectTypeNotifier =
@@ -576,7 +585,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     widget.isActiveListenable.addListener(_onActiveChanged);
     _reactionFlightsNotifier = ValueNotifier<List<_HomeReactionFlight>>([]);
     _smartInteractionPresetNotifier = ValueNotifier<_PartnerInteractionPreset>(
-        _defaultSmartInteractionPreset());
+      _defaultSmartInteractionPreset(),
+    );
     unawaited(() async {
       try {
         final selectedUiFont = SLTheme.textStyleForKey(
@@ -602,10 +612,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     });
     unawaited(_syncHomeCardFirstTapHintState());
     _restoreWarmHomeCache();
-    _warmHomeMedia(
-      delayMotion: true,
-      force: _hasWarmHomeSnapshot,
-    );
+    _warmHomeMedia(delayMotion: true, force: _hasWarmHomeSnapshot);
 
     unawaited(
       _fetchHouseData(
@@ -614,8 +621,11 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       ),
     );
     unawaited(_promptPendingAvatarRetryIfNeeded());
-    unawaited(PurchaseService().getVipAccessInfo().catchError((_) =>
-        const VipAccessInfo(isVip: false, planId: '', expiresAtMs: null)));
+    unawaited(
+      PurchaseService().getVipAccessInfo().catchError(
+        (_) => const VipAccessInfo(isVip: false, planId: '', expiresAtMs: null),
+      ),
+    );
   }
 
   void _onActiveChanged() {
@@ -697,21 +707,20 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       _deferHeavyHomeMotion = true;
       _warmHomeMedia(delayMotion: true);
       // ⚡ Skip re-fetch if data is still fresh (< 30s old)
-      final dataIsFresh = _lastFetchTime != null &&
+      final dataIsFresh =
+          _lastFetchTime != null &&
           DateTime.now().difference(_lastFetchTime!) <= _fetchCacheDuration;
       if (dataIsFresh) return;
       // ⚡ Debounce fetch until after swipe animation (~300ms) + warmup settle (650ms).
       //    700ms gives enough breathing room so the UI thread is free during animation.
       _fetchHouseDataDebounceTimer?.cancel();
-      _fetchHouseDataDebounceTimer =
-          Timer(const Duration(milliseconds: 700), () {
-        if (!mounted || !_isTabActive) return;
-        unawaited(
-          _fetchHouseData(
-            preserveVisibleState: true,
-          ),
-        );
-      });
+      _fetchHouseDataDebounceTimer = Timer(
+        const Duration(milliseconds: 700),
+        () {
+          if (!mounted || !_isTabActive) return;
+          unawaited(_fetchHouseData(preserveVisibleState: true));
+        },
+      );
       return;
     }
     // Do not cancel Firebase RTDB bindings here (keep them connected to avoid tearing down and re-fetching on tab switch).
@@ -731,7 +740,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   }
 
   Future<void> _syncHomeCardFirstTapHintState() async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final nextMapVisible =
         !(prefs.getBool(_mapCardFirstTapSeenPrefsKey) ?? false);
@@ -756,7 +766,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   }
 
   Future<void> _markHomeCardFirstTapSeen({required bool isMapCard}) async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final prefsKey = isMapCard
         ? _mapCardFirstTapSeenPrefsKey
@@ -802,11 +813,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   Future<void> _openSearchResultDestination(dynamic result) async {
     final action = result.actionId as String;
     if (action == 'history') {
-      await Navigator.of(context).push(
-        SLRoute(
-          builder: (_) => HistoryScreen(houseId: _houseId ?? ''),
-        ),
-      );
+      await Navigator.of(
+        context,
+      ).push(SLRoute(builder: (_) => HistoryScreen(houseId: _houseId ?? '')));
       return;
     }
 
@@ -816,9 +825,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       if (tool == null) {
         return;
       }
-      await Navigator.of(context).push(
-        SLRoute(builder: (_) => tool),
-      );
+      await Navigator.of(context).push(SLRoute(builder: (_) => tool));
     }
   }
 
@@ -838,12 +845,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     messenger
       ..clearSnackBars()
       ..removeCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          duration: duration,
-        ),
-      );
+      ..showSnackBar(SnackBar(content: Text(message), duration: duration));
   }
 
   String _presenceRoleUiSignature(Map<String, dynamic>? data) {
@@ -889,10 +891,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     required String distanceText,
     required String? alertText,
   }) {
-    _updateHomeMapPreviewImpl(
-      distanceText: distanceText,
-      alertText: alertText,
-    );
+    _updateHomeMapPreviewImpl(distanceText: distanceText, alertText: alertText);
   }
 
   dynamic _normalizeInsightSignatureValue(dynamic value) {
@@ -920,7 +919,8 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   }
 
   String _buildCanonicalSettingsPayloadSignature(
-      Map<String, dynamic> settings) {
+    Map<String, dynamic> settings,
+  ) {
     return _buildCanonicalSettingsPayloadSignatureImpl(settings);
   }
 
@@ -952,11 +952,14 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
       preloadOnly: preloadOnly,
     );
     _activeFetchFuture = future;
-    return future.then((_) {
-      _activeFetchFuture = null;
-    }, onError: (_) {
-      _activeFetchFuture = null;
-    });
+    return future.then(
+      (_) {
+        _activeFetchFuture = null;
+      },
+      onError: (_) {
+        _activeFetchFuture = null;
+      },
+    );
   }
 
   String _zodiacAndAgeForRole(String role) {
@@ -976,16 +979,18 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   }
 
   Future<
-      ({
-        String bgTheme,
-        bool showDiaryOnWidget,
-        bool heartAnimated,
-        String heartStyleKey,
-        String heartColorKey,
-        String diaryLayoutKey,
-        String seasonModeKey,
-        String widgetStyleKey,
-      })> _loadWidgetAppearancePrefs(String houseId) {
+    ({
+      String bgTheme,
+      bool showDiaryOnWidget,
+      bool heartAnimated,
+      String heartStyleKey,
+      String heartColorKey,
+      String diaryLayoutKey,
+      String seasonModeKey,
+      String widgetStyleKey,
+    })
+  >
+  _loadWidgetAppearancePrefs(String houseId) {
     return _loadWidgetAppearancePrefsImpl(houseId);
   }
 
@@ -997,25 +1002,20 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     Map<String, dynamic> settings, {
     required bool includeDiaryMedia,
   }) {
-    _scheduleLoveWidgetSyncImpl(
-      settings,
-      includeDiaryMedia: includeDiaryMedia,
-    );
+    _scheduleLoveWidgetSyncImpl(settings, includeDiaryMedia: includeDiaryMedia);
   }
 
   Future<void> _syncLoveWidget(
     Map<String, dynamic> settings, {
     bool includeDiaryMedia = false,
   }) {
-    return _syncLoveWidgetImpl(
-      settings,
-      includeDiaryMedia: includeDiaryMedia,
-    );
+    return _syncLoveWidgetImpl(settings, includeDiaryMedia: includeDiaryMedia);
   }
 
   Future<void> _cleanupOldReactionFlights(String houseId) async {
     try {
-      final cutoff = DateTime.now().millisecondsSinceEpoch -
+      final cutoff =
+          DateTime.now().millisecondsSinceEpoch -
           const Duration(minutes: 2).inMilliseconds;
       final snapshot = await _dbRef
           .child('houses/$houseId/reaction_flights')
@@ -1053,10 +1053,9 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     _accentRegexMap.forEach((pattern, replacement) {
       normalized = normalized.replaceAll(pattern, replacement);
     });
-    return normalized.replaceAll(_nonAccentRegex, ' ').replaceAll(
-          _multiSpaceRegex,
-          ' ',
-        );
+    return normalized
+        .replaceAll(_nonAccentRegex, ' ')
+        .replaceAll(_multiSpaceRegex, ' ');
   }
 
   int _signalMatches(String haystack, List<String> keywords) {
@@ -1074,12 +1073,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   }) {
     final signalParts = <String>[
       ..._recentChatSignals,
-      ..._noteHighlights.take(6).expand(
-            (item) => [
-              item.title,
-              item.content,
-            ],
-          ),
+      ..._noteHighlights.take(6).expand((item) => [item.title, item.content]),
     ];
     final haystack = _normalizeInteractionSignal(signalParts.join(' '));
     final weights = <String, double>{
@@ -1230,9 +1224,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
   Map<String, dynamic> _toStringDynamicMap(dynamic raw) {
     if (raw is Map<String, dynamic>) return raw;
     if (raw is Map) {
-      return raw.map(
-        (key, value) => MapEntry(key.toString(), value),
-      );
+      return raw.map((key, value) => MapEntry(key.toString(), value));
     }
     return {};
   }
@@ -1267,12 +1259,6 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     return role == 'user1' ? 'Nam' : 'Nữ';
   }
 
-
-
-
-
-
-
   @override
   Widget build(BuildContext context) {
     return _MainHomeStateView(
@@ -1301,9 +1287,7 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildMainContent({
-    required String customBackgroundUrl,
-  }) {
+  Widget _buildMainContent({required String customBackgroundUrl}) {
     return _buildMainContentSection(
       context,
       customBackgroundUrl: customBackgroundUrl,

@@ -3,7 +3,9 @@ part of '../../../settings_tab.dart';
 
 extension HeaderEditorExt on _CountdownModeEditorScreenState {
   List<Widget> _buildEditorHeader(
-      BuildContext context, _CountdownModeThemeData themeData) {
+    BuildContext context,
+    _CountdownModeThemeData themeData,
+  ) {
     return [
       Row(
         children: [
@@ -11,7 +13,7 @@ extension HeaderEditorExt on _CountdownModeEditorScreenState {
             color: Colors.transparent,
             child: InkWell(
               onTap: () => Navigator.of(context).pop(),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(15),
               child: Ink(
                 width: 48,
                 height: 48,
@@ -19,7 +21,7 @@ extension HeaderEditorExt on _CountdownModeEditorScreenState {
                   color: Colors.white.withValues(
                     alpha: themeData.isDark ? 0.14 : 0.82,
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(15),
                   border: Border.all(
                     color: Colors.white.withValues(
                       alpha: themeData.isDark ? 0.22 : 0.94,
@@ -41,9 +43,10 @@ extension HeaderEditorExt on _CountdownModeEditorScreenState {
               children: [
                 Text(
                   context.tr('home_citkhnggia_09f866'),
-                  style: SLTheme.quicksand(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
+                  style: SLTheme.textStyleForKey(
+                    'dancingScript',
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
                     color: themeData.foreground,
                   ),
                 ),

@@ -39,8 +39,10 @@ extension _SettingsTabShell on _SettingsTabState {
   Future<void> _togglePanel(String id) async {
     final sectionId = _sectionIdForPanel(id);
     if (_isBootstrappingSettings) {
-      _showToast(L10nService().translate('settings_loading_data'),
-          success: false);
+      _showToast(
+        L10nService().translate('settings_loading_data'),
+        success: false,
+      );
       return;
     }
     if (_shouldShowPendingDeviceGate(sectionId)) {
@@ -62,10 +64,7 @@ extension _SettingsTabShell on _SettingsTabState {
       unawaited(_refreshSettingsBackupStatus());
     }
     try {
-      await slPush(
-        context,
-        _buildStandalonePanelPage(sectionId),
-      );
+      await slPush(context, _buildStandalonePanelPage(sectionId));
     } finally {
       if (shouldAnimateWidgetPreview) {
         _stopWidgetPreviewTicker();
@@ -120,10 +119,7 @@ extension _SettingsTabShell on _SettingsTabState {
         );
       } catch (e) {
         debugPrint(
-          'swap role presence cleanup failed: ${AppErrorMapper.resolve(
-            e,
-            fallbackMessage: fallbackErrMsg,
-          ).message}',
+          'swap role presence cleanup failed: ${AppErrorMapper.resolve(e, fallbackMessage: fallbackErrMsg).message}',
         );
       }
       unawaited(
@@ -133,10 +129,7 @@ extension _SettingsTabShell on _SettingsTabState {
           title: roleChangeTitle,
           content:
               'Thiết bị này vừa chuyển từ ${_displayNameForRole(previousRole)} sang ${_displayNameForRole(nextRole)} trong phần Cài đặt.',
-          extra: {
-            'previousRole': previousRole,
-            'role': nextRole,
-          },
+          extra: {'previousRole': previousRole, 'role': nextRole},
         ),
       );
     }
@@ -149,9 +142,7 @@ extension _SettingsTabShell on _SettingsTabState {
   Set<String> _settingsSearchableUtilityIds() {
     final houseId = (_houseId ?? '').trim();
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
-    final ids = <String>{
-      'store',
-    };
+    final ids = <String>{'store'};
 
     if (houseId.isEmpty) {
       return ids;
@@ -189,10 +180,7 @@ extension _SettingsTabShell on _SettingsTabState {
   Future<void> _openSearchResultFromSettings(dynamic result) async {
     final action = result.actionId as String;
     if (action == 'history') {
-      await slPush(
-        context,
-        HistoryScreen(houseId: _houseId ?? ''),
-      );
+      await slPush(context, HistoryScreen(houseId: _houseId ?? ''));
       return;
     }
 
@@ -277,10 +265,7 @@ extension _SettingsTabShell on _SettingsTabState {
       case 'surprise_maker':
         screen = houseId.isEmpty
             ? null
-            : LoveCardScreen(
-                houseId: houseId,
-                myUid: currentUid ?? '',
-              );
+            : LoveCardScreen(houseId: houseId, myUid: currentUid ?? '');
         break;
       case 'giftcode':
         screen = houseId.isEmpty
@@ -299,7 +284,8 @@ extension _SettingsTabShell on _SettingsTabState {
             : TarotScreen(
                 houseId: houseId,
                 relationshipMode: _relationshipMode,
-                myName: myName);
+                myName: myName,
+              );
         break;
       case 'collage':
         screen = houseId.isEmpty ? null : CollageMakerScreen(houseId: houseId);
@@ -308,10 +294,7 @@ extension _SettingsTabShell on _SettingsTabState {
       case 'love_card':
         screen = houseId.isEmpty || currentUid == null || currentUid.isEmpty
             ? null
-            : LoveCardScreen(
-                houseId: houseId,
-                myUid: _auth.currentUser!.uid,
-              );
+            : LoveCardScreen(houseId: houseId, myUid: _auth.currentUser!.uid);
         break;
       case 'creative_diary':
         screen = houseId.isEmpty ? null : CreativeDiaryScreen(houseId: houseId);
@@ -322,10 +305,7 @@ extension _SettingsTabShell on _SettingsTabState {
       return;
     }
 
-    await slPush(
-      context,
-      screen,
-    );
+    await slPush(context, screen);
   }
 
   Widget _buildSettingsScaffold() {
@@ -334,19 +314,20 @@ extension _SettingsTabShell on _SettingsTabState {
 
   Widget _buildResponsiveSettingsScaffold() {
     final uiState = UiPrefs.notifier.value;
-    final isDark = uiState.themeKey == 'theme-night' ||
+    final isDark =
+        uiState.themeKey == 'theme-night' ||
         uiState.themeKey == 'theme-dark' ||
         uiState.themeKey == 'theme-true-black';
 
-    final double headerHeight = MediaQuery.paddingOf(context).top + 52;
+    final double headerHeight = MediaQuery.paddingOf(context).top + 66;
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF000000) : const Color(0xFFF2F2F7),
+      backgroundColor: isDark ? const Color(0xFF120F11) : SLColors.paperCanvas,
       body: SafeArea(
         top: false,
         bottom: false,
         child: Stack(
           children: [
+            const Positioned.fill(child: _SettingsBackgroundLayer()),
             Positioned.fill(
               child: Material(
                 color: Colors.transparent,
@@ -372,7 +353,7 @@ extension _SettingsTabShell on _SettingsTabState {
                           children: [
                             _buildSettingsSyncBanner(),
                             ..._buildNewSettingsList(isDark),
-                            const SizedBox(height: 18),
+                            const SizedBox(height: 26),
                             _buildSettingsFooter(),
                           ],
                         ),
@@ -388,15 +369,6 @@ extension _SettingsTabShell on _SettingsTabState {
               right: 0,
               child: _buildSettingsHeader(),
             ),
-            const Positioned(
-              bottom: 120,
-              right: 20,
-              child: _AnimatedMusicButton(),
-            ),
-            _DraggableFloatingChatIcon(
-              houseId: (_houseId ?? '').trim(),
-              myName: _resolveSettingsMyName(),
-            ),
           ],
         ),
       ),
@@ -405,72 +377,109 @@ extension _SettingsTabShell on _SettingsTabState {
 
   Widget _buildSettingsHeader() {
     final uiState = UiPrefs.notifier.value;
-    final isDark = uiState.themeKey == 'theme-night' ||
+    final isDark =
+        uiState.themeKey == 'theme-night' ||
         uiState.themeKey == 'theme-dark' ||
         uiState.themeKey == 'theme-true-black';
 
-    // Optimize: Remove BackdropFilter to prevent lag during scroll.
+    // Bề mặt giấy đặc giúp cuộn mượt mà nhưng vẫn giữ cá tính Love Journal.
     final headerBgColor = isDark
-        ? Colors.black.withValues(alpha: 0.98)
-        : const Color(0xFFF2F2F7).withValues(alpha: 0.98);
+        ? const Color(0xFF211A1E).withValues(alpha: 0.98)
+        : SLColors.paper.withValues(alpha: 0.98);
 
     return RepaintBoundary(
       child: Container(
         width: double.infinity,
         padding: EdgeInsets.fromLTRB(
-          14,
-          MediaQuery.paddingOf(context).top + 4,
-          14,
-          8,
+          16,
+          MediaQuery.paddingOf(context).top + 8,
+          16,
+          12,
         ),
         decoration: BoxDecoration(
           color: headerBgColor,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+              color: SLColors.ink.withValues(alpha: isDark ? 0.28 : 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
             ),
           ],
           border: Border(
             bottom: BorderSide(
-              color: Colors.grey.withValues(alpha: isDark ? 0.2 : 0.3),
-              width: 0.5,
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : SLColors.border,
+              width: 1,
             ),
           ),
         ),
         child: Row(
           children: [
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: _kSettingsHeaderSurface,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: _kSettingsHeaderBorder,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+            if (!widget.embedded)
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : _kSettingsHeaderSurface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.12)
+                          : _kSettingsHeaderBorder,
                     ),
-                  ],
+                    boxShadow: SLShadow.subtle,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: SLColors.primaryActive,
+                    size: 15,
+                  ),
+                ),
+              )
+            else
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: SLColors.primarySoft,
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(
-                  Icons.arrow_back_ios_new,
-                  color: SLColors.primaryActive,
-                  size: 15,
+                  Icons.favorite_rounded,
+                  color: SLColors.primary,
+                  size: 20,
                 ),
               ),
-            ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             Expanded(
-              child:
-                  SLTheme.titleGradient(context.tr('settings'), fontSize: 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    context.tr('settings'),
+                    style: SLTheme.textStyleForKey(
+                      'dancingScript',
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : SLColors.ink,
+                    ),
+                  ),
+                  Text(
+                    context.tr('settings_footer_tagline'),
+                    style: SLTheme.quicksand(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white60 : SLColors.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
             ),
             _buildHeaderAction(
               icon: Icons.search_rounded,
@@ -505,12 +514,13 @@ extension _SettingsTabShell on _SettingsTabState {
 
   Widget _buildiOSSectionCard(List<Widget> children, bool isDark) {
     return RepaintBoundary(
-      child: Container(
+      child: SLTheme.paperCard(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-          borderRadius: BorderRadius.circular(10),
-        ),
+        padding: EdgeInsets.zero,
+        radius: 22,
+        showTape: false,
+        color: isDark ? const Color(0xFF261F23) : SLColors.paper,
+        accentColor: SLColors.thread,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: children,
@@ -530,35 +540,46 @@ extension _SettingsTabShell on _SettingsTabState {
     bool isDestructive = false,
   }) {
     final textColor = isDestructive
-        ? const Color(0xFFD32F2F)
-        : (isDark ? Colors.white : const Color(0xFF243041));
+        ? SLColors.danger
+        : (isDark ? Colors.white : SLColors.ink);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(22),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
           child: Row(
             children: [
               Container(
-                width: 30,
-                height: 30,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
                   color: isDestructive
-                      ? const Color(0xFFFFEBEE)
-                      : (iconGradient == null ? iconBgColor : null),
+                      ? SLColors.danger.withValues(alpha: 0.1)
+                      : (iconGradient == null
+                            ? iconBgColor.withValues(
+                                alpha: isDark ? 0.22 : 0.13,
+                              )
+                            : null),
                   gradient: isDestructive ? null : iconGradient,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(
+                    color: isDestructive
+                        ? SLColors.danger.withValues(alpha: 0.2)
+                        : iconBgColor.withValues(alpha: 0.2),
+                  ),
                 ),
                 child: Icon(
                   icon,
-                  size: 18,
-                  color: isDestructive ? const Color(0xFFD32F2F) : Colors.white,
+                  size: 20,
+                  color: isDestructive
+                      ? SLColors.danger
+                      : (iconGradient == null ? iconBgColor : Colors.white),
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 13),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -566,8 +587,8 @@ extension _SettingsTabShell on _SettingsTabState {
                     Text(
                       title,
                       style: SLTheme.quicksand(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w800,
                         color: textColor,
                       ),
                     ),
@@ -576,11 +597,12 @@ extension _SettingsTabShell on _SettingsTabState {
                       Text(
                         subtitle,
                         style: SLTheme.quicksand(
-                          fontSize: 12,
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w600,
                           color: isDark
                               ? Colors.grey[500]
-                              : const Color(0xFF7B8794),
+                              : SLColors.textTertiary,
+                          height: 1.35,
                         ),
                       ),
                     ],
@@ -589,9 +611,11 @@ extension _SettingsTabShell on _SettingsTabState {
               ),
               if (!isDestructive)
                 Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 14,
-                  color: isDark ? Colors.grey[700] : const Color(0xFFCFD8DC),
+                  Icons.arrow_forward_rounded,
+                  size: 18,
+                  color: isDark
+                      ? Colors.white38
+                      : SLColors.thread.withValues(alpha: 0.72),
                 ),
             ],
           ),
@@ -602,123 +626,257 @@ extension _SettingsTabShell on _SettingsTabState {
 
   Widget _buildDivider(bool isDark) {
     return Padding(
-      padding: const EdgeInsets.only(left: 60),
+      padding: const EdgeInsets.only(left: 67, right: 16),
       child: Divider(
-        height: 0.5,
-        thickness: 0.5,
-        color: isDark ? Colors.grey[800] : Colors.grey.shade200,
+        height: 1,
+        thickness: 1,
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.07)
+            : SLColors.borderLight,
+      ),
+    );
+  }
+
+  Widget _buildSettingsAccountHero(bool isDark) {
+    final avatarUrl = (_activeRoleKey == 'user2' ? _avatarUrl2 : _avatarUrl1)
+        .trim();
+    final avatarProvider = avatarUrl.startsWith('http')
+        ? CachedNetworkImageProvider(avatarUrl)
+        : null;
+    final displayName = _resolveSettingsMyName().trim();
+    final email = FirebaseAuth.instance.currentUser?.email?.trim() ?? '';
+
+    return SLTheme.paperCard(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+      padding: const EdgeInsets.fromLTRB(18, 22, 16, 18),
+      radius: 28,
+      showTape: true,
+      color: isDark ? const Color(0xFF261F23) : SLColors.paper,
+      accentColor: SLColors.primary,
+      child: InkWell(
+        onTap: () => _togglePanel('account'),
+        borderRadius: BorderRadius.circular(22),
+        child: Row(
+          children: [
+            Container(
+              width: 62,
+              height: 62,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: SLColors.paperBlush,
+                border: Border.all(color: SLColors.thread, width: 1.6),
+              ),
+              child: CircleAvatar(
+                backgroundColor: SLColors.primarySoft,
+                backgroundImage: avatarProvider,
+                child: avatarProvider == null
+                    ? const Icon(
+                        Icons.favorite_rounded,
+                        color: SLColors.primary,
+                        size: 27,
+                      )
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          displayName.isEmpty
+                              ? context.tr('settings_account_label')
+                              : displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: SLTheme.quicksand(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                            color: isDark ? Colors.white : SLColors.ink,
+                          ),
+                        ),
+                      ),
+                      if (_isVipActive) ...[
+                        const SizedBox(width: 7),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: SLColors.washi,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: SLColors.secondary.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          child: Text(
+                            'PRO',
+                            style: SLTheme.quicksand(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              color: SLColors.ink,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    email.isEmpty ? context.tr('settings_account_desc') : email,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: SLTheme.quicksand(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white60 : SLColors.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: SLColors.primarySoft,
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: const Icon(
+                Icons.edit_rounded,
+                color: SLColors.primary,
+                size: 18,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsQuickActions(bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildSettingsQuickAction(
+              icon: Icons.favorite_border_rounded,
+              color: SLColors.primary,
+              title: context.tr('settings_partner_connect'),
+              isDark: isDark,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const PairingDashboardScreen(),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _buildSettingsQuickAction(
+              icon: Icons.timelapse_rounded,
+              color: SLColors.secondary,
+              title: context.tr('settings_countdown_space_label'),
+              isDark: isDark,
+              onTap: () => _togglePanel('countdownMode'),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _buildSettingsQuickAction(
+              icon: Icons.palette_outlined,
+              color: SLColors.accentPurple,
+              title: context.tr('theme'),
+              isDark: isDark,
+              onTap: () => _togglePanel('theme'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsQuickAction({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 112),
+          padding: const EdgeInsets.fromLTRB(10, 14, 10, 12),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF261F23) : SLColors.paper,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : SLColors.border,
+            ),
+            boxShadow: SLShadow.subtle,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: isDark ? 0.2 : 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 22),
+              ),
+              const SizedBox(height: 9),
+              Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: SLTheme.quicksand(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? Colors.white : SLColors.ink,
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   List<Widget> _buildNewSettingsList(bool isDark) {
     return [
-      _buildiOSSectionCard([
-        _buildiOSRow(
-          icon: _isVipActive
-              ? Icons.workspace_premium_rounded
-              : Icons.manage_accounts_rounded,
-          iconBgColor: const Color(0xFFF6CB63),
-          iconGradient: _isVipActive
-              ? const LinearGradient(
-                  colors: [Color(0xFFFFD700), Color(0xFFFF9800)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          title: context.tr('settings_account_label') +
-              (_isVipActive ? ' (PRO)' : ''),
-          subtitle: context.tr('settings_account_desc'),
-          isDark: isDark,
-          onTap: () => _togglePanel('account'),
-        ),
-        _buildDivider(isDark),
-        _buildiOSRow(
-          icon: Icons.link_rounded,
-          iconBgColor: const Color(0xFFD81B60),
-          title: context.tr('settings_partner_connect'),
-          subtitle: context.tr('settings_partner_connect_desc'),
-          isDark: isDark,
-          onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const PairingDashboardScreen())),
-        ),
-        _buildDivider(isDark),
-        _buildiOSRow(
-          icon: Icons.palette_rounded,
-          iconBgColor: const Color(0xFF8ABAF5),
-          title: context.tr('theme'),
-          subtitle: context.tr('settings_theme_desc'),
-          isDark: isDark,
-          onTap: () => _togglePanel('theme'),
-        ),
-        _buildDivider(isDark),
-        _buildiOSRow(
-          icon: Icons.widgets_rounded,
-          iconBgColor: const Color(0xFF73D5CC),
-          title: context.tr('settings_widget_label'),
-          subtitle: kIsWeb
-              ? context.tr('settings_widget_desc_web')
-              : context.tr('settings_widget_desc_mobile'),
-          isDark: isDark,
-          onTap: () => _togglePanel('widget'),
-        ),
-        _buildDivider(isDark),
-        _buildiOSRow(
-          icon: Icons.timelapse_rounded,
-          iconBgColor: const Color(0xFFF1B58E),
-          title: context.tr('settings_countdown_space_label'),
-          subtitle: context.tr('settings_countdown_space_desc'),
-          isDark: isDark,
-          onTap: () => _togglePanel('countdownMode'),
-        ),
-      ], isDark),
-      _buildSectionTitle(context.tr('settings_security_label'), topPadding: 16),
-      _buildiOSSectionCard([
-        _buildiOSRow(
-          icon: Icons.shield_rounded,
-          iconBgColor: const Color(0xFFFFA8BF),
-          title: context.tr('settings_security_label'),
-          subtitle: context.tr('settings_security_desc'),
-          isDark: isDark,
-          onTap: () => _togglePanel('security'),
-        ),
-        _buildDivider(isDark),
-        _buildiOSRow(
-          icon: Icons.notifications_active_rounded,
-          iconBgColor: const Color(0xFFA4D7A9),
-          title: context.tr('settings_notifications_interactions'),
-          subtitle: context.tr('settings_notifications_interactions_desc'),
-          isDark: isDark,
-          onTap: () => _togglePanel('notifications'),
-        ),
-        _buildDivider(isDark),
-        _buildiOSRow(
-          icon: Icons.hub_rounded,
-          iconBgColor: const Color(0xFF90CAF9),
-          title: context.tr('settings_data_system_label'),
-          subtitle: context.tr('settings_data_system_desc'),
-          isDark: isDark,
-          onTap: () => _togglePanel('dataHealth'),
-        ),
-        _buildDivider(isDark),
-        _buildiOSRow(
-          icon: Icons.admin_panel_settings_rounded,
-          iconBgColor: const Color(0xFF9575CD),
-          title: context.tr('theme_permission_center'),
-          subtitle: L10nService().translate('Quản lý cấp quyền hệ thống'),
-          isDark: isDark,
-          onTap: _isGrantingPermissions ? () {} : _requestAllPermissions,
-        ),
-      ], isDark),
-      _buildSectionTitle(context.tr('settings_other_features_title'),
-          topPadding: 16),
+      _buildSettingsAccountHero(isDark),
+      _buildSectionTitle(
+        context.tr('settings_categories_title'),
+        topPadding: 18,
+      ),
+      _buildSettingsQuickActions(isDark),
+      _buildSectionTitle(
+        context.tr('settings_group_config_title'),
+        topPadding: 22,
+      ),
       _buildiOSSectionCard([
         if (_relationshipMode != 'single') ...[
           _buildiOSRow(
             icon: Icons.swap_horiz_rounded,
-            iconBgColor: const Color(0xFF42A5F5),
+            iconBgColor: SLColors.info,
             title: _activeRoleKey == 'user1'
                 ? context.tr('settings_swap_role_to_female')
                 : context.tr('settings_swap_role_to_male'),
@@ -728,34 +886,62 @@ extension _SettingsTabShell on _SettingsTabState {
           _buildDivider(isDark),
         ],
         _buildiOSRow(
-          icon: Icons.support_agent_rounded,
-          iconBgColor: const Color(0xFF4FC3F7),
-          title: context.tr('support_center'),
+          icon: Icons.widgets_outlined,
+          iconBgColor: SLColors.success,
+          title: context.tr('settings_widget_label'),
+          subtitle: kIsWeb
+              ? context.tr('settings_widget_desc_web')
+              : context.tr('settings_widget_desc_mobile'),
           isDark: isDark,
-          onTap: _openSupportContact,
+          onTap: () => _togglePanel('widget'),
         ),
         _buildDivider(isDark),
         _buildiOSRow(
-          icon: Icons.star_rate_rounded,
-          iconBgColor: const Color(0xFFFFD54F),
-          title: context.tr('rate_app'),
+          icon: Icons.notifications_none_rounded,
+          iconBgColor: SLColors.success,
+          title: context.tr('settings_notifications_interactions'),
+          subtitle: context.tr('settings_notifications_interactions_desc'),
           isDark: isDark,
-          onTap: _rateApp,
+          onTap: () => _togglePanel('notifications'),
+        ),
+      ], isDark),
+      _buildSectionTitle(context.tr('settings_security_label'), topPadding: 22),
+      _buildiOSSectionCard([
+        _buildiOSRow(
+          icon: Icons.shield_outlined,
+          iconBgColor: SLColors.primary,
+          title: context.tr('settings_security_label'),
+          subtitle: context.tr('settings_security_desc'),
+          isDark: isDark,
+          onTap: () => _togglePanel('security'),
         ),
         _buildDivider(isDark),
         _buildiOSRow(
-          icon: Icons.display_settings_rounded,
-          iconBgColor: const Color(0xFFBA68C8),
-          title: L10nService().translate('Cài đặt hiển thị'),
+          icon: Icons.cloud_sync_outlined,
+          iconBgColor: SLColors.info,
+          title: context.tr('settings_data_system_label'),
+          subtitle: context.tr('settings_data_system_desc'),
           isDark: isDark,
-          onTap: () {
-            _showToast(L10nService().translate('Tính năng đang phát triển nhé'), success: true);
-          },
+          onTap: () => _togglePanel('dataHealth'),
         ),
         _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.admin_panel_settings_outlined,
+          iconBgColor: SLColors.accentPurple,
+          title: context.tr('theme_permission_center'),
+          subtitle: L10nService().translate('Quản lý cấp quyền hệ thống'),
+          isDark: isDark,
+          onTap: _isGrantingPermissions ? () {} : _requestAllPermissions,
+        ),
+      ], isDark),
+      _buildSectionTitle(
+        context.tr('settings_support_legal_label'),
+        topPadding: 22,
+      ),
+      _buildiOSSectionCard([
         _buildiOSRow(
           icon: Icons.history_rounded,
-          iconBgColor: const Color(0xFF90CAF9),
+          iconBgColor: SLColors.info,
           title: L10nService().translate('Lịch sử hoạt động'),
           isDark: isDark,
           onTap: () {
@@ -765,12 +951,28 @@ extension _SettingsTabShell on _SettingsTabState {
             }
           },
         ),
-        if (kDebugMode) _buildDivider(isDark),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.support_agent_rounded,
+          iconBgColor: SLColors.success,
+          title: context.tr('support_center'),
+          isDark: isDark,
+          onTap: _openSupportContact,
+        ),
+        _buildDivider(isDark),
+        _buildiOSRow(
+          icon: Icons.star_outline_rounded,
+          iconBgColor: SLColors.warning,
+          title: context.tr('rate_app'),
+          isDark: isDark,
+          onTap: _rateApp,
+        ),
       ], isDark),
+      const SizedBox(height: 8),
       _buildiOSSectionCard([
         _buildiOSRow(
           icon: Icons.logout_rounded,
-          iconBgColor: const Color(0xFFFF8A65),
+          iconBgColor: SLColors.danger,
           title: context.tr('logout'),
           isDark: isDark,
           isDestructive: true,
@@ -778,8 +980,8 @@ extension _SettingsTabShell on _SettingsTabState {
         ),
         _buildDivider(isDark),
         _buildiOSRow(
-          icon: Icons.delete_forever_rounded,
-          iconBgColor: const Color(0xFFB71C1C),
+          icon: Icons.delete_forever_outlined,
+          iconBgColor: SLColors.danger,
           title: context.tr('settings_delete_account_data'),
           isDark: isDark,
           isDestructive: true,
@@ -790,49 +992,61 @@ extension _SettingsTabShell on _SettingsTabState {
   }
 
   Widget _buildSettingsFooter() {
-    return Center(
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.asset(
-              'assets/icon.png',
-              width: 44,
-              height: 44,
-              fit: BoxFit.cover,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 4, 24, 28),
+      child: Center(
+        child: Column(
+          children: [
+            Transform.rotate(
+              angle: -0.035,
+              child: Container(
+                width: 52,
+                height: 52,
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: SLColors.paper,
+                  borderRadius: BorderRadius.circular(17),
+                  border: Border.all(color: SLColors.border),
+                  boxShadow: SLShadow.subtle,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(13),
+                  child: Image.asset('assets/icon.png', fit: BoxFit.cover),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'SoulLocket',
-            style: SLTheme.quicksand(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF526071),
+            const SizedBox(height: 12),
+            Text(
+              'SoulLocket',
+              style: SLTheme.textStyleForKey(
+                'dancingScript',
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: SLColors.ink,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            context.tr('settings_footer_tagline'),
-            textAlign: TextAlign.center,
-            style: SLTheme.quicksand(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF7B8794),
+            const SizedBox(height: 4),
+            Text(
+              context.tr('settings_footer_tagline'),
+              textAlign: TextAlign.center,
+              style: SLTheme.quicksand(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                color: SLColors.textSecond,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            L10nService().translate('© Bản quyền SoulLocket Hoàng & Tú'),
-            textAlign: TextAlign.center,
-            style: SLTheme.quicksand(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF9AA5B1),
+            const SizedBox(height: 4),
+            Text(
+              L10nService().translate('© Bản quyền SoulLocket Hoàng & Tú'),
+              textAlign: TextAlign.center,
+              style: SLTheme.quicksand(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+                color: SLColors.textTertiary,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          /*
+            const SizedBox(height: 8),
+            /*
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 24),
             padding: const EdgeInsets.all(10),
@@ -855,50 +1069,86 @@ extension _SettingsTabShell on _SettingsTabState {
             ),
           ),
           */
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildStandalonePanelPage(String id) {
     final sectionId = _sectionIdForPanel(id);
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        const _SettingsBackgroundLayer(),
-        ValueListenableBuilder<int>(
-          valueListenable: _panelRebuildNotifier,
-          builder: (context, _, __) {
-            return Scaffold(
-              backgroundColor: Colors.transparent,
-              body: SafeArea(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Align(
-                      alignment: Alignment.topCenter,
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: SLResponsive.maxContentWidthForWidth(
-                            constraints.maxWidth,
-                            handsetMax: 560,
-                            tabletMax: 980,
-                            desktopMax: 1080,
+    final baseTheme = Theme.of(context);
+    final settingsTheme = baseTheme.copyWith(
+      scaffoldBackgroundColor: Colors.transparent,
+      dialogTheme: DialogThemeData(
+        backgroundColor: SLColors.paper,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: SLColors.border),
+        ),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: SLColors.paper,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          side: BorderSide(color: SLColors.border),
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? Colors.white
+              : SLColors.textTertiary,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? SLColors.primary
+              : SLColors.bgMuted,
+        ),
+      ),
+    );
+    return Theme(
+      data: settingsTheme,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          const _SettingsBackgroundLayer(),
+          ValueListenableBuilder<int>(
+            valueListenable: _panelRebuildNotifier,
+            builder: (context, _, _) {
+              return Scaffold(
+                backgroundColor: Colors.transparent,
+                body: SafeArea(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return Align(
+                        alignment: Alignment.topCenter,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: SLResponsive.maxContentWidthForWidth(
+                              constraints.maxWidth,
+                              handsetMax: 560,
+                              tabletMax: 760,
+                              desktopMax: 840,
+                            ),
+                          ),
+                          child: SingleChildScrollView(
+                            physics: const ClampingScrollPhysics(),
+                            padding: const EdgeInsets.only(top: 4, bottom: 32),
+                            child: _buildStandalonePanelContent(sectionId),
                           ),
                         ),
-                        child: SingleChildScrollView(
-                          physics: const ClampingScrollPhysics(),
-                          padding: const EdgeInsets.only(top: 0, bottom: 24),
-                          child: _buildStandalonePanelContent(sectionId),
-                        ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
-              ),
-            );
-          },
-        ),
-      ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -929,16 +1179,13 @@ extension _SettingsTabShell on _SettingsTabState {
         return kIsWeb
             ? _buildUnavailablePanel(
                 title: context.tr('home_screen_widget'),
-                message:
-                    L10nService().translate('Tiện ích màn hình chỉ hỗ trợ trên thiết bị thật. Phần cấu hình này nên thao tác trên app cài đặt.'),
+                message: L10nService().translate(
+                  'Tiện ích màn hình chỉ hỗ trợ trên thiết bị thật. Phần cấu hình này nên thao tác trên app cài đặt.',
+                ),
               )
-            : _buildSectionStack([
-                _buildWidgetPanel(hideBackButton: false),
-              ]);
+            : _buildSectionStack([_buildWidgetPanel(hideBackButton: false)]);
       case 'notifications':
-        return _buildSectionStack([
-          _buildAdvancedPanel(hideBackButton: false),
-        ]);
+        return _buildSectionStack([_buildAdvancedPanel(hideBackButton: false)]);
       case 'relationship':
         return _buildSectionStack([
           _buildRelationshipPanelV2(hideBackButton: false),
@@ -950,7 +1197,9 @@ extension _SettingsTabShell on _SettingsTabState {
       default:
         return _buildUnavailablePanel(
           title: L10nService().translate('Mục đang hoàn thiện'),
-          message: L10nService().translate('Tính năng này đang được cập nhật trong phiên bản mới.'),
+          message: L10nService().translate(
+            'Tính năng này đang được cập nhật trong phiên bản mới.',
+          ),
         );
     }
   }
@@ -1004,8 +1253,10 @@ extension _SettingsTabShell on _SettingsTabState {
                 onTap: () => Navigator.pop(context),
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: SLColors.primarySoft,
                     borderRadius: BorderRadius.circular(12),
@@ -1162,7 +1413,9 @@ class _DraggableFloatingChatIconState
             slPush(
               context,
               FriendlyChatScreen(
-                  houseId: widget.houseId, myName: widget.myName),
+                houseId: widget.houseId,
+                myName: widget.myName,
+              ),
             );
           } else {
             // fallback silently if no house ID
@@ -1202,8 +1455,10 @@ class _DraggableFloatingChatIconState
                   bottom: 64, // Positioned above the icon
                   child: Container(
                     width: 140,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -1212,7 +1467,7 @@ class _DraggableFloatingChatIconState
                           color: Colors.black.withValues(alpha: 0.12),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
-                        )
+                        ),
                       ],
                     ),
                     child: Text(
@@ -1233,4 +1488,3 @@ class _DraggableFloatingChatIconState
     );
   }
 }
-

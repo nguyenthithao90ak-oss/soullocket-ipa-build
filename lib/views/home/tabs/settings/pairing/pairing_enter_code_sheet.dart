@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
 import 'package:soullocket_app/utils/services/pairing_service.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
 
@@ -80,9 +81,10 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMsg =
-              AppErrorMapper.resolve(e, fallbackMessage: 'Mã không hợp lệ.')
-                  .message;
+          _errorMsg = AppErrorMapper.resolve(
+            e,
+            fallbackMessage: 'Mã không hợp lệ.',
+          ).message;
           _isLoading = false;
         });
       }
@@ -95,9 +97,9 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
 
   void _listenToStatusBase({String? code, String? houseId}) {
     _statusSub?.cancel();
-    _statusSub = PairingService.instance
-        .listenToMyRequestStatus()
-        .listen((status) async {
+    _statusSub = PairingService.instance.listenToMyRequestStatus().listen((
+      status,
+    ) async {
       if (!mounted) return;
       if (status == 'accepted') {
         _handleAcceptedState(code: code, houseId: houseId);
@@ -118,8 +120,10 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
       _status = 'accepted';
     });
     try {
-      await PairingService.instance
-          .finalizeMerge(code: code, targetHouseId: houseId);
+      await PairingService.instance.finalizeMerge(
+        code: code,
+        targetHouseId: houseId,
+      );
       if (mounted) {
         setState(() {
           _status = 'success_animation';
@@ -132,8 +136,10 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMsg = AppErrorMapper.resolve(e, fallbackMessage: 'Lỗi đồng bộ.')
-              .message;
+          _errorMsg = AppErrorMapper.resolve(
+            e,
+            fallbackMessage: 'Lỗi đồng bộ.',
+          ).message;
           _status = 'input';
         });
       }
@@ -144,8 +150,9 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        color: SLColors.paper,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        border: Border(top: BorderSide(color: SLColors.border, width: 1.2)),
       ),
       padding: EdgeInsets.only(
         left: 24,
@@ -163,7 +170,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: SLColors.thread.withValues(alpha: 0.38),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -185,41 +192,52 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Nhập Mã Ghép Nối',
+          L10nService().translate('Nhập mã ghép nối'),
           textAlign: TextAlign.center,
-          style: SLTheme.quicksand(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFFD81B60),
+          style: SLTheme.textStyleForKey(
+            'dancingScript',
+            fontSize: 25,
+            fontWeight: FontWeight.w700,
+            color: SLColors.ink,
           ),
         ),
         SLSpacing.h8,
         Text(
-          'Nhập mã 12 số mà người ấy đã tạo để tiến hành ghép nối dữ liệu.',
+          L10nService().translate(
+            'Nhập mã 12 số mà người ấy đã tạo để tiến hành ghép nối dữ liệu.',
+          ),
           textAlign: TextAlign.center,
           style: SLTheme.quicksand(
             fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: Colors.grey.shade600,
+            color: SLColors.textSecond,
           ),
         ),
         SLSpacing.h16,
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFF4E5),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFFFB74D), width: 1.5),
+            color: SLColors.warningLight,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: SLColors.warning.withValues(alpha: 0.38),
+              width: 1.1,
+            ),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.warning_amber_rounded,
-                  color: Color(0xFFE65100), size: 20),
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: Color(0xFFE65100),
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'CẢNH BÁO: Bạn là NGƯỜI NHẬP MÃ. Khi quá trình liên kết hoàn tất, toàn bộ hình ảnh và dữ liệu ở tài khoản hiện tại của bạn sẽ bị thay thế hoàn toàn bởi dữ liệu của người tạo mã.',
+                  L10nService().translate(
+                    'CẢNH BÁO: Bạn là NGƯỜI NHẬP MÃ. Khi quá trình liên kết hoàn tất, toàn bộ hình ảnh và dữ liệu ở tài khoản hiện tại của bạn sẽ bị thay thế hoàn toàn bởi dữ liệu của người tạo mã.',
+                  ),
                   style: SLTheme.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -236,9 +254,7 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
           controller: _codeCtrl,
           autofocus: true,
           keyboardType: TextInputType.number,
-          inputFormatters: [
-            _PairingCodeInputFormatter(),
-          ],
+          inputFormatters: [_PairingCodeInputFormatter()],
           style: SLTheme.quicksand(
             fontSize: 24,
             fontWeight: FontWeight.w900,
@@ -255,12 +271,14 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
               letterSpacing: 4,
             ),
             filled: true,
-            fillColor: const Color(0xFFFFF0F5),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            fillColor: SLColors.paperBlush,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 20,
+            ),
             border: OutlineInputBorder(
-              borderRadius: SLRadius.lgAll,
-              borderSide: BorderSide.none,
+              borderRadius: BorderRadius.circular(18),
+              borderSide: const BorderSide(color: SLColors.border),
             ),
           ),
         ),
@@ -293,12 +311,16 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2.5, color: Colors.white),
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
                 )
               : Text(
-                  'Gửi Yêu Cầu',
+                  L10nService().translate('Gửi yêu cầu'),
                   style: SLTheme.quicksand(
-                      fontSize: 16, fontWeight: FontWeight.w800),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
         ),
       ],
@@ -333,7 +355,9 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
           width: 32,
           height: 32,
           child: CircularProgressIndicator(
-              strokeWidth: 3, color: Color(0xFF4CAF50)),
+            strokeWidth: 3,
+            color: Color(0xFF4CAF50),
+          ),
         ),
         SLSpacing.h24,
         Row(
@@ -344,16 +368,24 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
                 PairingService.instance.cancelMyRequest();
                 setState(() => _status = 'input');
               },
-              child: Text('Hủy yêu cầu',
-                  style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w800, color: Colors.red)),
+              child: Text(
+                'Hủy yêu cầu',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w800,
+                  color: Colors.red,
+                ),
+              ),
             ),
             const SizedBox(width: 24),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Đóng',
-                  style: SLTheme.quicksand(
-                      fontWeight: FontWeight.w800, color: Colors.grey)),
+              child: Text(
+                'Đóng',
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w800,
+                  color: Colors.grey,
+                ),
+              ),
             ),
           ],
         ),
@@ -364,8 +396,11 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
   Widget _buildAcceptedState() {
     return Column(
       children: [
-        const Icon(Icons.check_circle_rounded,
-            size: 48, color: Color(0xFF4CAF50)),
+        const Icon(
+          Icons.check_circle_rounded,
+          size: 48,
+          color: Color(0xFF4CAF50),
+        ),
         SLSpacing.h16,
         Text(
           'Yêu cầu được chấp nhận!',
@@ -390,7 +425,9 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
           width: 32,
           height: 32,
           child: CircularProgressIndicator(
-              strokeWidth: 3, color: Color(0xFF4CAF50)),
+            strokeWidth: 3,
+            color: Color(0xFF4CAF50),
+          ),
         ),
       ],
     );
@@ -431,13 +468,16 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
             backgroundColor: Colors.grey.shade200,
             foregroundColor: Colors.black87,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             elevation: 0,
           ),
-          child: Text('Thử lại',
-              style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
-        )
+          child: Text(
+            'Thử lại',
+            style: SLTheme.quicksand(fontWeight: FontWeight.w800),
+          ),
+        ),
       ],
     );
   }
@@ -458,8 +498,11 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
                   color: const Color(0xFFE91E63).withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.favorite_rounded,
-                    size: 64, color: Color(0xFFE91E63)),
+                child: const Icon(
+                  Icons.favorite_rounded,
+                  size: 64,
+                  color: Color(0xFFE91E63),
+                ),
               ),
               SLSpacing.h24,
               Text(
@@ -492,7 +535,9 @@ class _PairingEnterCodeSheetState extends State<PairingEnterCodeSheet> {
 class _PairingCodeInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     var text = newValue.text.replaceAll(RegExp(r'\D'), '');
     if (text.length > 12) text = text.substring(0, 12);
 

@@ -28,17 +28,15 @@ class AuthTabSwitcher extends StatelessWidget {
           height: compact ? 50 : 54,
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFF0F5).withValues(alpha: 0.50),
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(
-              color: const Color(0xFFFFD6E0).withValues(alpha: 0.7),
-              width: 1.2,
-            ),
+            color: SLColors.paperPeach.withValues(alpha: 0.62),
+            borderRadius: BorderRadius.circular(17),
+            border: Border.all(color: SLColors.border, width: 1.1),
             boxShadow: [
               BoxShadow(
-                color: SLColors.brandPink.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
+                color: SLColors.ink.withValues(alpha: 0.05),
+                blurRadius: 12,
+                spreadRadius: -5,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -56,13 +54,17 @@ class AuthTabSwitcher extends StatelessWidget {
                     child: Container(
                       width: indicatorWidth,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        borderRadius: BorderRadius.circular(22),
+                        color: SLColors.paper,
+                        borderRadius: BorderRadius.circular(13),
+                        border: Border.all(
+                          color: SLColors.thread.withValues(alpha: 0.28),
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: SLColors.brandPink.withValues(alpha: 0.15),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
+                            color: SLColors.thread.withValues(alpha: 0.10),
+                            blurRadius: 9,
+                            spreadRadius: -3,
+                            offset: const Offset(0, 5),
                           ),
                         ],
                       ),
@@ -71,14 +73,14 @@ class AuthTabSwitcher extends StatelessWidget {
                   Row(
                     children: [
                       _AuthTabButton(
-                        label: l10n.translate('login').toUpperCase(),
+                        label: l10n.translate('login'),
                         active: isLoginTab,
                         onTap: onSelectLogin,
                         compact: compact,
                         dense: dense,
                       ),
                       _AuthTabButton(
-                        label: l10n.translate('signup').toUpperCase(),
+                        label: l10n.translate('signup'),
                         active: !isLoginTab,
                         onTap: onSelectRegister,
                         compact: compact,
@@ -116,19 +118,19 @@ class _AuthTabButton extends StatelessWidget {
     final fontSize = dense
         ? (active ? 11.6 : 11.2)
         : compact
-            ? (active ? 12.4 : 12.0)
-            : (active ? 13.8 : 13.2);
+        ? (active ? 12.4 : 12.0)
+        : (active ? 13.8 : 13.2);
     final letterSpacing = dense
         ? (active ? 0.24 : 0.18)
         : compact
-            ? (active ? 0.42 : 0.3)
-            : (active ? 0.7 : 0.45);
+        ? (active ? 0.42 : 0.3)
+        : (active ? 0.7 : 0.45);
 
     return Expanded(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(13),
           onTap: onTap,
           child: Center(
             child: Padding(
@@ -140,11 +142,14 @@ class _AuthTabButton extends StatelessWidget {
                   curve: Curves.easeOutCubic,
                   style: SLTheme.quicksand(
                     color: active
-                        ? SLColors.brandPink // Romantic pink cho chữ đang chọn
-                        : const Color(0xFF757575), // Xám nhạt cho chữ không chọn
+                        ? SLColors
+                              .brandPink // Romantic pink cho chữ đang chọn
+                        : const Color(
+                            0xFF757575,
+                          ), // Xám nhạt cho chữ không chọn
                     fontWeight: active ? FontWeight.w900 : FontWeight.w700,
                     fontSize: fontSize,
-                    letterSpacing: letterSpacing,
+                    letterSpacing: letterSpacing * 0.55,
                   ),
                   child: Text(
                     label,

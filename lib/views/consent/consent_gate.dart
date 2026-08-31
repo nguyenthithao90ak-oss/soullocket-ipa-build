@@ -30,18 +30,18 @@ class ConsentGate extends StatefulWidget {
   State<ConsentGate> createState() => _ConsentGateState();
 }
 
-const Color _accentRose = Color(0xFFD81B60);
-const Color _accentLavender = Color(0xFF7C4DFF);
-const Color _accentBlue = Color(0xFF2563EB);
-const Color _accentGreen = Color(0xFF0F766E);
-const Color _ink = Color(0xFF1C1E21);
-const Color _muted = Color(0xFF65676B);
-const Color _panelBorder = Color(0xFFE4E6EA);
-const Color _dialogBg = Color(0xFFFFFFFF);
-const Color _surfaceBg = Color(0xFFF5F5F5);
-const Color _dialogBackgroundTop = Color(0xFFFFFFFF);
-const Color _dialogBackgroundBottom = Color(0xFFFFFFFF);
-const Color _cardBackground = Color(0xFFFFFFFF);
+const Color _accentRose = Color(0xFFE65372);
+const Color _accentLavender = Color(0xFF8F72D8);
+const Color _accentBlue = Color(0xFF5D8DE8);
+const Color _accentGreen = Color(0xFF2C9B86);
+const Color _ink = Color(0xFF3B2830);
+const Color _muted = Color(0xFF79646D);
+const Color _panelBorder = Color(0xFFF0DDE3);
+const Color _dialogBg = Color(0xFFFFFDF9);
+const Color _surfaceBg = Color(0xFFFFF5F7);
+const Color _dialogBackgroundTop = Color(0xFFFFFDF9);
+const Color _dialogBackgroundBottom = Color(0xFFF4EEFF);
+const Color _cardBackground = Color(0xFFFFFEFC);
 
 Future<void> _openDoc(
     BuildContext context, String title, String assetPath) async {
@@ -365,14 +365,14 @@ class _ConsentGateState extends State<ConsentGate> {
           insetPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 500),
+            constraints: const BoxConstraints(maxWidth: 440),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [_dialogBackgroundTop, _dialogBackgroundBottom],
               ),
-              borderRadius: SLRadius.xlAll,
+              borderRadius: BorderRadius.circular(30),
               border: Border.all(color: _panelBorder, width: 1.2),
               boxShadow: [
                 BoxShadow(
@@ -558,26 +558,26 @@ class _ConsentGateState extends State<ConsentGate> {
                 vertical: 20,
               ),
               child: Container(
-                constraints: const BoxConstraints(maxWidth: 500),
+                constraints: const BoxConstraints(maxWidth: 440),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [_dialogBackgroundTop, _dialogBackgroundBottom],
                   ),
-                  borderRadius: SLRadius.xlAll,
+                  borderRadius: BorderRadius.circular(30),
                   border: Border.all(
                     color: _panelBorder,
                     width: 1.2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: accent.withValues(alpha: 0.12),
-                      blurRadius: 28,
-                      offset: const Offset(0, 14),
+                      color: accent.withValues(alpha: 0.16),
+                      blurRadius: 34,
+                      offset: const Offset(0, 16),
                     ),
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
+                      color: const Color(0xFF3B2830).withValues(alpha: 0.05),
                       blurRadius: 18,
                       offset: const Offset(0, 8),
                     ),
@@ -775,7 +775,7 @@ class _ConsentGateState extends State<ConsentGate> {
                       end: Alignment.bottomRight,
                       colors: [_dialogBackgroundTop, _dialogBackgroundBottom],
                     ),
-                    borderRadius: SLRadius.xlAll,
+                    borderRadius: BorderRadius.circular(30),
                     border: Border.all(
                       color: _panelBorder,
                       width: 1.2,

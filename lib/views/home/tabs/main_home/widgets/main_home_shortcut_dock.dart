@@ -5,7 +5,10 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
   Widget _buildShortcutDock(List<UtilityApp> visiblePinnedApps) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
-      child: SLTheme.glassCard(
+      child: _HomeScrapbookCard(
+        accentColor: SLColors.secondary,
+        adornment: _HomeCardAdornment.paperClip,
+        padding: EdgeInsets.zero,
         radius: 20,
         child: Container(
           padding: const EdgeInsets.all(10),
@@ -45,8 +48,8 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
                     final crossAxisCount = availableWidth < 280
                         ? 2
                         : availableWidth < 420
-                            ? 3
-                            : 4;
+                        ? 3
+                        : 4;
                     return GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -61,7 +64,9 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
                       ),
                       itemBuilder: (context, index) =>
                           _buildAnimatedShortcutItem(
-                              visiblePinnedApps[index], index),
+                            visiblePinnedApps[index],
+                            index,
+                          ),
                     );
                   },
                 ),
@@ -90,29 +95,35 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
   }
 
   Widget _buildShortcutItem(UtilityApp app) {
-    return SLGlassmorphism.apply(
-      blur: 24.0,
-      opacity: 0.75,
-      borderRadius: SLRadius.mdAll,
-      border: Border.all(
-        color: Colors.white.withValues(alpha: 0.8),
-        width: 1.0,
+    final accent = app.colors.isEmpty ? SLColors.primary : app.colors.last;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      decoration: BoxDecoration(
+        color: SLColors.paperBlush.withValues(alpha: 0.74),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.10),
+            blurRadius: 12,
+            spreadRadius: -5,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        child: Stack(
+      child: Stack(
         children: [
           Positioned.fill(
             child: IgnorePointer(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  borderRadius: SLRadius.mdAll,
+                  borderRadius: BorderRadius.circular(18),
                   gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.center,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                     colors: [
-                      Colors.white.withValues(alpha: 0.28),
-                      Colors.white.withValues(alpha: 0.0),
+                      Colors.white.withValues(alpha: 0.58),
+                      accent.withValues(alpha: 0.04),
                     ],
                   ),
                 ),
@@ -126,7 +137,7 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
               width: 10,
               height: 10,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.55),
+                color: accent.withValues(alpha: 0.16),
                 shape: BoxShape.circle,
               ),
             ),
@@ -184,7 +195,6 @@ extension _MainHomeShortcutDockExt on _MainHomeTabState {
             ],
           ),
         ],
-      ),
       ),
     );
   }

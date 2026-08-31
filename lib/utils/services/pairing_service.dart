@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
+import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 import 'package:soullocket_app/utils/services/house_service.dart';
 
 class PairingRequest {
@@ -50,13 +50,9 @@ class PairingService {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  String _generate12DigitCode() {
-    final rand = Random.secure();
-    final buffer = StringBuffer();
-    for (int i = 0; i < 12; i++) {
-      buffer.write(rand.nextInt(10));
-    }
-    return buffer.toString();
+  Map<String, dynamic> _asMap(dynamic value) {
+    if (value is! Map) return const <String, dynamic>{};
+    return Map<String, dynamic>.from(Map<dynamic, dynamic>.from(value));
   }
 
   /// Creates a new pairing code with a given duration in minutes
@@ -64,20 +60,13 @@ class PairingService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Chưa đăng nhập');
 
-    final houseId = await HouseService().getCurrentHouseId();
-    if (houseId == null || houseId.isEmpty) throw Exception('Chưa có nhà');
-
-    final code = _generate12DigitCode();
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final expiresAt = now + (durationMinutes * 60 * 1000);
-
-    await _dbRef.child('pairing_codes/$code').set({
-      'houseId': houseId,
-      'creatorUid': user.uid,
-      'createdAt': now,
-      'expiresAt': expiresAt,
-    });
-
+    final response = await CloudFunctionsHelper.callSecure<dynamic>(
+      'createPairingInvite',
+      payload: <String, dynamic>{'durationMinutes': durationMinutes},
+      fallbackErrorMessage: 'Không thể tạo mã ghép nối lúc này.',
+    );
+    final code = _asMap(response.data)['code']?.toString().trim() ?? '';
+    if (code.isEmpty) throw Exception('Máy chủ không trả về mã ghép nối.');
     return code;
   }
 
@@ -85,43 +74,11 @@ class PairingService {
   Future<void> sendPairingRequest(String code) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Chưa đăng nhập');
-
-    final codeSnap = await _dbRef.child('pairing_codes/$code').get();
-    if (!codeSnap.exists) {
-      throw Exception('Mã ghép nối không tồn tại hoặc đã hết hạn.');
-    }
-
-    final data = codeSnap.value as Map<dynamic, dynamic>;
-    final rawExpiresAt = data['expiresAt'];
-    final expiresAt = rawExpiresAt is num ? rawExpiresAt.toInt() : 0;
-    if (DateTime.now().millisecondsSinceEpoch > expiresAt) {
-      throw Exception('Mã ghép nối đã hết hạn.');
-    }
-
-    final houseId = data['houseId']?.toString();
-    if (houseId == null) {
-      throw Exception('Mã ghép nối bị lỗi (không tìm thấy houseId).');
-    }
-
-    final myHouseId = await HouseService().getCurrentHouseId();
-    if (myHouseId != null && houseId == myHouseId) {
-      throw Exception('Bạn không thể nhập mã của chính mình.');
-    }
-
-    // Get current user's profile info
-    final guestName = user.displayName ?? 'Khách';
-    final guestAvatar = user.photoURL ?? '';
-    final guestEmail = user.email ?? '';
-
-    await _dbRef.child('pairing_requests/${user.uid}').set({
-      'houseId': houseId,
-      'guestUid': user.uid,
-      'guestName': guestName,
-      'guestAvatar': guestAvatar,
-      'guestEmail': guestEmail,
-      'timestamp': ServerValue.timestamp,
-      'status': 'pending',
-    });
+    await CloudFunctionsHelper.callSecure<dynamic>(
+      'requestPairingInvite',
+      payload: <String, dynamic>{'code': code},
+      fallbackErrorMessage: 'Mã ghép nối không hợp lệ hoặc đã hết hạn.',
+    );
   }
 
   /// Listens to the status of a request sent by the current user.
@@ -131,7 +88,9 @@ class PairingService {
     final user = _auth.currentUser;
     if (user == null) return const Stream.empty();
 
-    return _dbRef.child('pairing_requests/${user.uid}').onValue.map((event) {
+    return _dbRef.child('pairing_secure/guest_views/${user.uid}').onValue.map((
+      event,
+    ) {
       final snap = event.snapshot;
       // Node bị xóa → coi như bị từ chối
       if (!snap.exists || snap.value == null) return 'rejected';
@@ -145,15 +104,14 @@ class PairingService {
     final user = _auth.currentUser;
     if (user == null) return null;
 
-    final snap = await _dbRef.child('pairing_requests/${user.uid}').get();
+    final snap = await _dbRef
+        .child('pairing_secure/guest_views/${user.uid}')
+        .get();
     if (snap.exists) {
       final data = snap.value as Map<dynamic, dynamic>;
       final status = data['status']?.toString();
       if (status == 'pending' || status == 'accepted') {
-        return {
-          'houseId': data['houseId']?.toString(),
-          'status': status,
-        };
+        return {'houseId': data['houseId']?.toString(), 'status': status};
       }
     }
     return null;
@@ -163,57 +121,28 @@ class PairingService {
   Future<void> finalizeMerge({String? code, String? targetHouseId}) async {
     final user = _auth.currentUser;
     if (user == null) return;
+    await HouseService().joinHouseByAcceptedInvite();
 
-    String? houseId = targetHouseId;
-    if (houseId == null && code != null) {
-      final codeSnap = await _dbRef.child('pairing_codes/$code').get();
-      if (codeSnap.exists) {
-        final data = codeSnap.value as Map<dynamic, dynamic>;
-        houseId = data['houseId']?.toString();
-      }
-    }
-    if (houseId == null) return;
-
-    await HouseService().joinHouseWithCoupleCode(houseId);
-
-    // Bắt buộc phải refresh token để Cloud Functions cấp quyền ghi vào houseId mới trước khi đánh cờ isPaired
+    // Refresh token để các rules nhận house mới ngay sau khi server hoàn tất.
     await user.getIdToken(true);
-
-    await _dbRef.child('houses/$houseId/settings/isPaired').set(true);
-    await _dbRef
-        .child('houses/$houseId/settings/relationshipMode')
-        .set('couple');
-
-    // Tắt tính năng Single Match cho nhà mới vì đã ghép đôi
-    try {
-      await _dbRef.child('single_match_active_pool/$houseId').remove();
-      await _dbRef
-          .child('houses/$houseId/settings/singleMatch/enabled')
-          .set(false);
-    } catch (_) {}
-
-    // Xoá dữ liệu rác sau khi ghép nối thành công
-    await _dbRef.child('pairing_requests/${user.uid}').remove();
-    if (code != null) {
-      await _dbRef.child('pairing_codes/$code').remove();
-    }
   }
 
   /// Guest cancels their own pending request
   Future<void> cancelMyRequest() async {
     final user = _auth.currentUser;
     if (user == null) return;
-    await _dbRef.child('pairing_requests/${user.uid}').remove();
+    await CloudFunctionsHelper.callSecure<dynamic>(
+      'cancelPairingRequest',
+      payload: const <String, dynamic>{},
+      fallbackErrorMessage: 'Không thể hủy yêu cầu ghép nối.',
+    );
   }
 
   /// Listens to incoming requests for my house
   Stream<List<PairingRequest>> listenToIncomingRequests(String myHouseId) {
-    return _dbRef
-        .child('pairing_requests')
-        .orderByChild('houseId')
-        .equalTo(myHouseId)
-        .onValue
-        .map((event) {
+    return _dbRef.child('pairing_secure/house_requests/$myHouseId').onValue.map((
+      event,
+    ) {
       final val = event.snapshot.value;
       if (val == null) return [];
 
@@ -233,44 +162,51 @@ class PairingService {
 
   /// Accept a request
   Future<void> acceptRequest(String requestId) async {
-    await _dbRef.child('pairing_requests/$requestId/status').set('accepted');
+    await CloudFunctionsHelper.callSecure<dynamic>(
+      'respondPairingRequest',
+      payload: <String, dynamic>{'requestId': requestId, 'accept': true},
+      fallbackErrorMessage: 'Không thể chấp nhận yêu cầu ghép nối.',
+    );
   }
 
   /// Reject a request — xóa luôn để tránh rác dữ liệu trong stream
   Future<void> rejectRequest(String requestId) async {
-    await _dbRef.child('pairing_requests/$requestId').remove();
+    await CloudFunctionsHelper.callSecure<dynamic>(
+      'respondPairingRequest',
+      payload: <String, dynamic>{'requestId': requestId, 'accept': false},
+      fallbackErrorMessage: 'Không thể từ chối yêu cầu ghép nối.',
+    );
   }
 
   /// Retrieves the active pairing code for a given houseId
   Future<Map<String, dynamic>?> getActivePairingCode(String houseId) async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
     final snap = await _dbRef
-        .child('pairing_codes')
-        .orderByChild('houseId')
-        .equalTo(houseId)
+        .child('pairing_secure/creator_views/${user.uid}')
         .get();
-
-    if (snap.exists && snap.value is Map) {
-      final map = snap.value as Map<dynamic, dynamic>;
-      final now = DateTime.now().millisecondsSinceEpoch;
-      for (final entry in map.entries) {
-        final data = entry.value as Map<dynamic, dynamic>;
-        final expiresAt = data['expiresAt'] as int? ?? 0;
-        if (expiresAt > now) {
-          return {
-            'code': entry.key.toString(),
-            'houseId': data['houseId']?.toString(),
-            'creatorUid': data['creatorUid']?.toString(),
-            'createdAt': data['createdAt'] as int? ?? 0,
-            'expiresAt': expiresAt,
-          };
-        }
-      }
+    if (!snap.exists || snap.value is! Map) return null;
+    final data = _asMap(snap.value);
+    final expiresAt = (data['expiresAt'] as num?)?.toInt() ?? 0;
+    if (data['houseId']?.toString() == houseId &&
+        data['status']?.toString() == 'active' &&
+        expiresAt > DateTime.now().millisecondsSinceEpoch) {
+      return {
+        'code': data['code']?.toString(),
+        'houseId': data['houseId']?.toString(),
+        'createdAt': (data['createdAt'] as num?)?.toInt() ?? 0,
+        'expiresAt': expiresAt,
+      };
     }
     return null;
   }
 
   /// Delete a code
   Future<void> deleteCode(String code) async {
-    await _dbRef.child('pairing_codes/$code').remove();
+    await CloudFunctionsHelper.callSecure<dynamic>(
+      'revokePairingInvite',
+      payload: <String, dynamic>{'code': code},
+      fallbackErrorMessage: 'Không thể hủy mã ghép nối.',
+    );
   }
 }

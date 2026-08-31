@@ -80,12 +80,19 @@ class UpdateCheckerService {
 
     // Fallback về Firebase Realtime Database nếu R2 CDN chưa có file hoặc lỗi mạng
     final dbRef = FirebaseDatabase.instance.ref('app_config');
-    final event = await dbRef.once().timeout(const Duration(seconds: 5));
-    final rawData = event.snapshot.value;
-    if (rawData is Map) {
-      return Map<dynamic, dynamic>.from(rawData);
-    }
-    return null;
+    final snapshots = await Future.wait([
+      dbRef.child('latest_version').get(),
+      dbRef.child('force_update').get(),
+      dbRef.child('android_url').get(),
+      dbRef.child('ios_url').get(),
+    ]).timeout(const Duration(seconds: 5));
+    final data = <dynamic, dynamic>{
+      if (snapshots[0].exists) 'latest_version': snapshots[0].value,
+      if (snapshots[1].exists) 'force_update': snapshots[1].value,
+      if (snapshots[2].exists) 'android_url': snapshots[2].value,
+      if (snapshots[3].exists) 'ios_url': snapshots[3].value,
+    };
+    return data.isEmpty ? null : data;
   }
 
   static bool _shouldUpdate(String current, String latest) {

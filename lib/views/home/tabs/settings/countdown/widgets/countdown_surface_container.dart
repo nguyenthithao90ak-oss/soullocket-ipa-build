@@ -68,16 +68,13 @@ class _CountdownSurfaceContainer extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: _surfaceFillColor(themeData),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: _surfaceBorderColor(themeData),
-          width: 1.4,
-        ),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: _surfaceBorderColor(themeData), width: 1.1),
         boxShadow: [
           BoxShadow(
             color: _surfaceShadowColor(themeData),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
