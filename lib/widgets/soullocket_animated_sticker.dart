@@ -43,6 +43,130 @@ abstract final class SoulLocketStickerCatalog {
       'assets/images/soullocket_stickers/motion_couple_atlas_v1.png';
   static const String heartAtlas =
       'assets/images/soullocket_stickers/heart_atlas_v1.png';
+  static const String noveltyAtlas =
+      'assets/images/soullocket_stickers/novelty_atlas_v1.png';
+  static const String diaryMoodAtlas =
+      'assets/images/diary_mood_stickers/diary_mood_atlas_v1.png';
+
+  /// Bộ sticker đồ vật và nhân vật tưởng tượng, tránh lặp lại gấu/thỏ.
+  static const List<SoulLocketStickerSpec> noveltyStickers = [
+    SoulLocketStickerSpec(
+      id: 'novelty_star_love',
+      assetPath: noveltyAtlas,
+      column: 0,
+      row: 0,
+      columns: 4,
+      rows: 3,
+      motion: SoulLocketStickerMotion.drift,
+    ),
+    SoulLocketStickerSpec(
+      id: 'novelty_planet_crush',
+      assetPath: noveltyAtlas,
+      column: 1,
+      row: 0,
+      columns: 4,
+      rows: 3,
+      motion: SoulLocketStickerMotion.sway,
+    ),
+    SoulLocketStickerSpec(
+      id: 'novelty_robot_laugh',
+      assetPath: noveltyAtlas,
+      column: 2,
+      row: 0,
+      columns: 4,
+      rows: 3,
+      motion: SoulLocketStickerMotion.bounce,
+      duration: Duration(milliseconds: 2200),
+    ),
+    SoulLocketStickerSpec(
+      id: 'novelty_moon_kiss',
+      assetPath: noveltyAtlas,
+      column: 3,
+      row: 0,
+      columns: 4,
+      rows: 3,
+      motion: SoulLocketStickerMotion.pulse,
+    ),
+    SoulLocketStickerSpec(
+      id: 'novelty_ghost_tease',
+      assetPath: noveltyAtlas,
+      column: 0,
+      row: 1,
+      columns: 4,
+      rows: 3,
+      motion: SoulLocketStickerMotion.wobble,
+      duration: Duration(milliseconds: 2100),
+    ),
+    SoulLocketStickerSpec(
+      id: 'novelty_cloud_hug',
+      assetPath: noveltyAtlas,
+      column: 1,
+      row: 1,
+      columns: 4,
+      rows: 3,
+      motion: SoulLocketStickerMotion.breathe,
+      duration: Duration(milliseconds: 3200),
+    ),
+    SoulLocketStickerSpec(
+      id: 'novelty_raindrop_comfort',
+      assetPath: noveltyAtlas,
+      column: 2,
+      row: 1,
+      columns: 4,
+      rows: 3,
+      motion: SoulLocketStickerMotion.gentleFloat,
+      duration: Duration(milliseconds: 3000),
+    ),
+    SoulLocketStickerSpec(
+      id: 'novelty_game_party',
+      assetPath: noveltyAtlas,
+      column: 3,
+      row: 1,
+      columns: 4,
+      rows: 3,
+      motion: SoulLocketStickerMotion.bounce,
+      duration: Duration(milliseconds: 1900),
+    ),
+    SoulLocketStickerSpec(
+      id: 'novelty_coffee_date',
+      assetPath: noveltyAtlas,
+      column: 0,
+      row: 2,
+      columns: 4,
+      rows: 3,
+      motion: SoulLocketStickerMotion.gentleFloat,
+    ),
+    SoulLocketStickerSpec(
+      id: 'novelty_music_mix',
+      assetPath: noveltyAtlas,
+      column: 1,
+      row: 2,
+      columns: 4,
+      rows: 3,
+      motion: SoulLocketStickerMotion.sway,
+      duration: Duration(milliseconds: 2300),
+    ),
+    SoulLocketStickerSpec(
+      id: 'novelty_mushroom_cuddle',
+      assetPath: noveltyAtlas,
+      column: 2,
+      row: 2,
+      columns: 4,
+      rows: 3,
+      motion: SoulLocketStickerMotion.breathe,
+      duration: Duration(milliseconds: 3400),
+    ),
+    SoulLocketStickerSpec(
+      id: 'novelty_love_plane',
+      assetPath: noveltyAtlas,
+      column: 3,
+      row: 2,
+      columns: 4,
+      rows: 3,
+      motion: SoulLocketStickerMotion.drift,
+      duration: Duration(milliseconds: 2400),
+    ),
+  ];
 
   static const List<SoulLocketStickerSpec> motionStickers = [
     SoulLocketStickerSpec(
@@ -246,9 +370,97 @@ abstract final class SoulLocketStickerCatalog {
     ),
   ];
 
+  static const List<SoulLocketStickerSpec> diaryMoodStickers = [
+    SoulLocketStickerSpec(
+      id: 'diary_reflective',
+      assetPath: diaryMoodAtlas,
+      column: 0,
+      row: 0,
+      columns: 3,
+      rows: 3,
+      motion: SoulLocketStickerMotion.gentleFloat,
+    ),
+    SoulLocketStickerSpec(
+      id: 'diary_shy',
+      assetPath: diaryMoodAtlas,
+      column: 1,
+      row: 0,
+      columns: 3,
+      rows: 3,
+      motion: SoulLocketStickerMotion.breathe,
+    ),
+    SoulLocketStickerSpec(
+      id: 'diary_missing',
+      assetPath: diaryMoodAtlas,
+      column: 2,
+      row: 0,
+      columns: 3,
+      rows: 3,
+      motion: SoulLocketStickerMotion.sway,
+    ),
+    SoulLocketStickerSpec(
+      id: 'diary_proud',
+      assetPath: diaryMoodAtlas,
+      column: 0,
+      row: 1,
+      columns: 3,
+      rows: 3,
+      motion: SoulLocketStickerMotion.bounce,
+    ),
+    SoulLocketStickerSpec(
+      id: 'diary_sleepy',
+      assetPath: diaryMoodAtlas,
+      column: 1,
+      row: 1,
+      columns: 3,
+      rows: 3,
+      motion: SoulLocketStickerMotion.breathe,
+      duration: Duration(milliseconds: 3400),
+    ),
+    SoulLocketStickerSpec(
+      id: 'diary_anxious',
+      assetPath: diaryMoodAtlas,
+      column: 2,
+      row: 1,
+      columns: 3,
+      rows: 3,
+      motion: SoulLocketStickerMotion.wobble,
+    ),
+    SoulLocketStickerSpec(
+      id: 'diary_grumpy',
+      assetPath: diaryMoodAtlas,
+      column: 0,
+      row: 2,
+      columns: 3,
+      rows: 3,
+      motion: SoulLocketStickerMotion.wobble,
+      duration: Duration(milliseconds: 2100),
+    ),
+    SoulLocketStickerSpec(
+      id: 'diary_playful',
+      assetPath: diaryMoodAtlas,
+      column: 1,
+      row: 2,
+      columns: 3,
+      rows: 3,
+      motion: SoulLocketStickerMotion.bounce,
+    ),
+    SoulLocketStickerSpec(
+      id: 'diary_healing',
+      assetPath: diaryMoodAtlas,
+      column: 2,
+      row: 2,
+      columns: 3,
+      rows: 3,
+      motion: SoulLocketStickerMotion.heartbeat,
+    ),
+  ];
+
   static const List<SoulLocketStickerSpec> all = [
+    ...noveltyStickers,
     ...motionStickers,
     ...heartStickers,
+    ...diaryMoodStickers,
   ];
 
   static String referenceFor(String id) => '$uriPrefix$id';
@@ -356,29 +568,39 @@ class _SoulLocketAnimatedStickerState extends State<SoulLocketAnimatedSticker>
                 case SoulLocketStickerMotion.gentleFloat:
                   offset = Offset(math.cos(phase) * 0.8, math.sin(phase) * 2.4);
                   rotation = math.sin(phase) * 0.018;
+                  break;
                 case SoulLocketStickerMotion.pulse:
                   scale = 1 + ((math.sin(phase) + 1) * 0.022);
+                  break;
                 case SoulLocketStickerMotion.bounce:
                   offset = Offset(0, -math.max(0, math.sin(phase)) * 4.2);
                   rotation = math.sin(phase) * 0.018;
+                  break;
                 case SoulLocketStickerMotion.sway:
                   rotation = math.sin(phase) * 0.045;
                   offset = Offset(0, math.cos(phase) * 1.0);
+                  break;
                 case SoulLocketStickerMotion.heartbeat:
-                  final beat = math.pow(
-                    math.max(0, math.sin(phase * 2)),
-                    7,
-                  ).toDouble();
+                  final beat = math
+                      .pow(math.max(0, math.sin(phase * 2)), 7)
+                      .toDouble();
                   scale = 1 + beat * 0.075;
+                  break;
                 case SoulLocketStickerMotion.breathe:
                   scale = 1 + ((math.sin(phase) + 1) * 0.012);
                   offset = Offset(0, math.sin(phase) * 1.1);
+                  break;
                 case SoulLocketStickerMotion.drift:
-                  offset = Offset(math.sin(phase) * 3.0, -math.cos(phase) * 1.7);
+                  offset = Offset(
+                    math.sin(phase) * 3.0,
+                    -math.cos(phase) * 1.7,
+                  );
                   rotation = math.sin(phase) * 0.026;
+                  break;
                 case SoulLocketStickerMotion.wobble:
                   rotation = math.sin(phase * 2) * 0.055;
                   scale = 1 + math.max(0, math.sin(phase)) * 0.018;
+                  break;
               }
 
               return Transform.translate(
@@ -431,10 +653,7 @@ class _SoulLocketAtlasCell extends StatelessWidget {
                 gaplessPlayback: true,
                 filterQuality: filterQuality,
                 errorBuilder: (context, error, stackTrace) => const Center(
-                  child: Icon(
-                    Icons.favorite_rounded,
-                    color: Color(0xFFFF6F91),
-                  ),
+                  child: Icon(Icons.favorite_rounded, color: Color(0xFFFF6F91)),
                 ),
               ),
             ),

@@ -50,7 +50,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     type: 'miss',
     label: L10nService().translate('home_nh_dbe2a3'),
     emoji: '\u{1F496}',
-    assetPath: 'assets/images/anhtomau_stickers/sticker_20.gif',
+    assetPath: SoulLocketStickerCatalog.referenceFor('novelty_star_love'),
     weight: 42,
     gradient: [const Color(0xFFFFD8E6), const Color(0xFFFFF3F7)],
     accent: const Color(0xFFD94C86),
@@ -71,7 +71,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     type: 'angry',
     label: L10nService().translate('home_gin_6a4c8c'),
     emoji: '\u{1F63E}',
-    assetPath: 'assets/images/anhtomau_stickers/sticker_12.gif',
+    assetPath: SoulLocketStickerCatalog.referenceFor('heart_healing'),
     weight: 12,
     gradient: [const Color(0xFFFFE6DC), const Color(0xFFFFF6F2)],
     accent: const Color(0xFFE26A3A),
@@ -92,7 +92,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     type: 'furious',
     label: L10nService().translate('home_tc_b95b66'),
     emoji: '\u{1F621}',
-    assetPath: 'assets/images/anhtomau_stickers/sticker_3.gif',
+    assetPath: SoulLocketStickerCatalog.referenceFor('heart_heartbeat'),
     weight: 7,
     showInSmartSuggestion: false,
     gradient: [const Color(0xFFFFD7DC), const Color(0xFFFFF1F3)],
@@ -114,7 +114,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     type: 'kiss',
     label: L10nService().translate('home_hn_fac010'),
     emoji: '\u{1F48B}',
-    assetPath: 'assets/images/anhtomau_stickers/sticker_14.gif',
+    assetPath: SoulLocketStickerCatalog.referenceFor('novelty_moon_kiss'),
     weight: 18,
     gradient: [const Color(0xFFFFE1EC), const Color(0xFFFFF7FA)],
     accent: const Color(0xFFE14A8B),
@@ -135,7 +135,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     type: 'tease',
     label: L10nService().translate('home_tru_d66cdf'),
     emoji: '\u{1F921}',
-    assetPath: 'assets/images/anhtomau_stickers/sticker_15.gif',
+    assetPath: SoulLocketStickerCatalog.referenceFor('novelty_ghost_tease'),
     weight: 9,
     showInSmartSuggestion: false,
     gradient: [const Color(0xFFE8E1FF), const Color(0xFFF8F5FF)],
@@ -157,7 +157,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     type: 'hug',
     label: L10nService().translate('home_m_07a3b7'),
     emoji: '\u{1F428}',
-    assetPath: 'assets/images/anhtomau_stickers/sticker_6.gif',
+    assetPath: SoulLocketStickerCatalog.referenceFor('novelty_cloud_hug'),
     weight: 17,
     gradient: [const Color(0xFFDDF3FF), const Color(0xFFF5FBFF)],
     accent: const Color(0xFF2D8FE3),
@@ -178,7 +178,9 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     type: 'cry',
     label: L10nService().translate('home_khc_92394f'),
     emoji: '\u{1F62D}',
-    assetPath: 'assets/images/anhtomau_stickers/sticker_7.gif',
+    assetPath: SoulLocketStickerCatalog.referenceFor(
+      'novelty_raindrop_comfort',
+    ),
     weight: 8,
     showInSmartSuggestion: false,
     gradient: [const Color(0xFFDDEBFF), const Color(0xFFF4F8FF)],
@@ -200,7 +202,7 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     type: 'poop',
     label: 'Troll',
     emoji: '\u{1F4A9}',
-    assetPath: 'assets/images/anhtomau_stickers/sticker_8.gif',
+    assetPath: SoulLocketStickerCatalog.referenceFor('novelty_game_party'),
     weight: 6,
     showInSmartSuggestion: false,
     gradient: [const Color(0xFFFFE1B9), const Color(0xFFFFF4E6)],
@@ -219,6 +221,20 @@ final List<_PartnerInteractionPreset> _kPartnerInteractionPresets = [
     ],
   ),
 ];
+
+String _defaultStickerReferenceForInteractionType(String type) {
+  final stickerId = switch (type) {
+    'angry' => 'heart_healing',
+    'furious' => 'heart_heartbeat',
+    'kiss' => 'novelty_moon_kiss',
+    'tease' => 'novelty_ghost_tease',
+    'hug' => 'novelty_cloud_hug',
+    'cry' => 'novelty_raindrop_comfort',
+    'poop' => 'novelty_game_party',
+    _ => 'novelty_star_love',
+  };
+  return SoulLocketStickerCatalog.referenceFor(stickerId);
+}
 
 const Duration _kInteractionSuggestionRefreshInterval = Duration(minutes: 1);
 const int _kReactionThrowBurstLimit = 30;
@@ -255,14 +271,13 @@ Widget _buildInteractionVisual({
       : (visual is String && visual.startsWith('assets/') ? visual : null);
 
   if (preferAsset && resolvedAssetPath != null) {
-    return Image.asset(
+    return R2StickerImage(
       resolvedAssetPath,
       width: size,
       height: size,
       fit: fit,
-      isAntiAlias: true,
-      filterQuality: FilterQuality.medium,
-      errorBuilder: (_, __, ___) => _buildInteractionVisual(
+      animateLocalSticker: true,
+      errorWidget: _buildInteractionVisual(
         visual: visual,
         size: size,
         emojiSize: emojiSize,
@@ -275,11 +290,7 @@ Widget _buildInteractionVisual({
   }
 
   if (visual is IconData) {
-    return Icon(
-      visual,
-      size: 55,
-      color: iconColor ?? Colors.white,
-    );
+    return Icon(visual, size: 55, color: iconColor ?? Colors.white);
   }
 
   return Center(

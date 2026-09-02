@@ -82,11 +82,7 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
                                   color: SLTheme.primary,
                                 ),
                               )
-                            : Icon(
-                                step.icon,
-                                size: 44,
-                                color: SLTheme.primary,
-                              ),
+                            : Icon(step.icon, size: 44, color: SLTheme.primary),
                       ),
                     ),
                   ),
@@ -212,8 +208,11 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.video_chat_rounded,
-                  size: 64, color: SLTheme.primary),
+              const Icon(
+                Icons.video_chat_rounded,
+                size: 64,
+                color: SLTheme.primary,
+              ),
               SLSpacing.h16,
               Text(
                 context.tr('home_hthngghpig_fe040c'),
@@ -244,11 +243,11 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               style: ElevatedButton.styleFrom(
                 backgroundColor: SLTheme.primary,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: SLRadius.lgAll,
+                shape: RoundedRectangleBorder(borderRadius: SLRadius.lgAll),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
                 ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: Text(
                 context.tr('home_hiu_93c4c0'),
@@ -273,9 +272,9 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
 
   void _handleInteractionLongPressEnd(LongPressEndDetails details) {
     final selectedType = _interactionDragHoveredType;
-    _hideInteractionDragOverlay();
 
     if (selectedType == 'edit_stickers') {
+      _hideInteractionDragOverlay();
       _openStickerCustomization();
       return;
     }
@@ -284,24 +283,37 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
         ? null
         : _maybePresetForInteractionType(selectedType);
     if (preset != null) {
-      _setManualInteractionPreset(preset.type);
-      _handleSendInteraction(preset.type, preset.emoji);
+      _commitInteractionSelection(preset);
+      return;
     }
+
+    _hideInteractionDragOverlay();
+  }
+
+  void _commitInteractionSelection(_PartnerInteractionPreset preset) {
+    _setManualInteractionPreset(preset.type);
+    _hideInteractionDragOverlay();
+
+    // Đợi overlay biến mất để khung cặp đôi nhận frame hiệu ứng đầu tiên.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_handleSendInteraction(preset.type, preset.emoji));
+    });
   }
 
   void _openStickerCustomization() {
     Navigator.of(context)
         .push(
-      MaterialPageRoute(
-        builder: (_) => const InteractionStickerEditorScreen(),
-      ),
-    )
+          MaterialPageRoute(
+            builder: (_) => const InteractionStickerEditorScreen(),
+          ),
+        )
         .then((updated) async {
-      if (updated == true && mounted) {
-        await _loadCustomStickers();
-        setState(() {});
-      }
-    });
+          if (updated == true && mounted) {
+            await _loadCustomStickers();
+            setState(() {});
+          }
+        });
   }
 
   void _handleInteractionLongPressCancel() {
@@ -350,150 +362,154 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
               ),
               SafeArea(
                 child: Center(
-                  child: Transform.translate(
-                    offset: const Offset(0, 56),
-                    child: RepaintBoundary(
-                      child: ValueListenableBuilder<String?>(
-                        valueListenable: _interactionDragHoveredNotifier,
-                        builder: (context, hoveredType, _) {
-                          return Container(
-                            constraints: const BoxConstraints(
-                              maxWidth: 404,
-                              minHeight: 224,
-                            ),
-                            margin: const EdgeInsets.symmetric(horizontal: 16),
-                            padding: const EdgeInsets.fromLTRB(
-                              20,
-                              20,
-                              20,
-                              20,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFFBFC).withValues(
-                                alpha: 0.98,
+                  child: RepaintBoundary(
+                    child: ValueListenableBuilder<String?>(
+                      valueListenable: _interactionDragHoveredNotifier,
+                      builder: (context, hoveredType, _) {
+                        return Container(
+                          constraints: const BoxConstraints(maxWidth: 380),
+                          margin: const EdgeInsets.symmetric(horizontal: 18),
+                          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0xFFFFFBFC,
+                            ).withValues(alpha: 0.98),
+                            borderRadius: BorderRadius.circular(28),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFF1F2937,
+                                ).withValues(alpha: 0.10),
+                                blurRadius: 24,
+                                offset: const Offset(0, 12),
                               ),
-                              borderRadius: BorderRadius.circular(30),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF1F2937)
-                                      .withValues(alpha: 0.08),
-                                  blurRadius: 18,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                              border: Border.all(
-                                color: const Color(0xFFF1DDE5),
-                                width: 1.2,
-                              ),
+                            ],
+                            border: Border.all(
+                              color: const Color(0xFFF1DDE5),
+                              width: 1.2,
                             ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    GridView.builder(
-                                      shrinkWrap: true,
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      itemCount:
-                                          _interactionDragMenuOptions.length,
-                                      gridDelegate:
-                                          const SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 4,
-                                        crossAxisSpacing: 8,
-                                        mainAxisSpacing: 12,
-                                        childAspectRatio: 0.92,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFEAF1),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: const Color(0xFFFFC8D9),
                                       ),
-                                      itemBuilder: (context, index) {
-                                        final preset =
-                                            _interactionDragMenuOptions[index];
-                                        final isHovered =
-                                            hoveredType == preset.type;
-                                        return _buildInteractionDragOption(
-                                          preset,
-                                          key: _interactionDragOptionKeys[
-                                              preset.type],
-                                          highlighted: isHovered,
-                                          onTap: () {
-                                            _setManualInteractionPreset(
-                                                preset.type);
-                                            _hideInteractionDragOverlay();
-                                            _handleSendInteraction(
-                                                preset.type, preset.emoji);
-                                          },
-                                        );
-                                      },
                                     ),
-                                    FutureBuilder<bool>(
-                                      future: kDebugMode
-                                          ? Future.value(true)
-                                          : PurchaseService().isVip(),
-                                      initialData: kDebugMode,
-                                      builder: (context, snapshot) {
-                                        if (snapshot.data != true) {
-                                          return const SizedBox.shrink();
-                                        }
-                                        return ValueListenableBuilder<String?>(
-                                          valueListenable:
-                                              _interactionDragHoveredNotifier,
-                                          builder: (context, hoveredVal, _) {
-                                            final isHovered =
-                                                hoveredVal == 'edit_stickers';
-                                            return GestureDetector(
-                                              onTap: () {
-                                                _hideInteractionDragOverlay();
-                                                _openStickerCustomization();
-                                              },
-                                              child: AnimatedScale(
-                                                scale: isHovered ? 1.2 : 1.0,
-                                                duration: const Duration(
-                                                    milliseconds: 200),
-                                                curve: Curves.easeOutBack,
-                                                child: Container(
-                                                  key:
-                                                      _interactionDragOptionKeys[
-                                                          'edit_stickers'],
-                                                  padding:
-                                                      const EdgeInsets.all(6),
-                                                  decoration: BoxDecoration(
-                                                    color:
-                                                        const Color(0xFF4CAF50),
-                                                    shape: BoxShape.circle,
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: const Color(
-                                                                0xFF4CAF50)
-                                                            .withValues(
-                                                                alpha: 0.4),
-                                                        blurRadius: 8,
-                                                        offset:
-                                                            const Offset(0, 2),
-                                                      ),
-                                                    ],
-                                                    border: Border.all(
-                                                        color: Colors.white,
-                                                        width: 1.5),
-                                                  ),
-                                                  child: const Icon(
-                                                      Icons.edit_rounded,
-                                                      color: Colors.white,
-                                                      size: 16),
+                                    child: const Icon(
+                                      Icons.favorite_rounded,
+                                      size: 16,
+                                      color: Color(0xFFE84D80),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 9),
+                                  Expanded(
+                                    child: Text(
+                                      context.tr('Gửi một tín hiệu yêu thương'),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: SLTheme.quicksand(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w900,
+                                        color: SLColors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  FutureBuilder<bool>(
+                                    future: kDebugMode
+                                        ? Future.value(true)
+                                        : PurchaseService().isVip(),
+                                    initialData: kDebugMode,
+                                    builder: (context, snapshot) {
+                                      if (snapshot.data != true) {
+                                        return const SizedBox.shrink();
+                                      }
+                                      return GestureDetector(
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap: () {
+                                          _hideInteractionDragOverlay();
+                                          _openStickerCustomization();
+                                        },
+                                        child: AnimatedScale(
+                                          scale: hoveredType == 'edit_stickers'
+                                              ? 1.12
+                                              : 1.0,
+                                          duration: const Duration(
+                                            milliseconds: 160,
+                                          ),
+                                          curve: Curves.easeOutBack,
+                                          child: Container(
+                                            key:
+                                                _interactionDragOptionKeys['edit_stickers'],
+                                            width: 34,
+                                            height: 34,
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF4CAF50),
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: const Color(
+                                                    0xFF4CAF50,
+                                                  ).withValues(alpha: 0.28),
+                                                  blurRadius: 9,
+                                                  offset: const Offset(0, 3),
                                                 ),
+                                              ],
+                                              border: Border.all(
+                                                color: Colors.white,
+                                                width: 1.5,
                                               ),
-                                            );
-                                          },
-                                        );
-                                      },
+                                            ),
+                                            child: const Icon(
+                                              Icons.edit_rounded,
+                                              color: Colors.white,
+                                              size: 17,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              GridView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: _interactionDragMenuOptions.length,
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 4,
+                                      crossAxisSpacing: 10,
+                                      mainAxisSpacing: 10,
+                                      childAspectRatio: 1,
                                     ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
+                                itemBuilder: (context, index) {
+                                  final preset =
+                                      _interactionDragMenuOptions[index];
+                                  return _buildInteractionDragOption(
+                                    preset,
+                                    key:
+                                        _interactionDragOptionKeys[preset.type],
+                                    highlighted: hoveredType == preset.type,
+                                    onTap: () =>
+                                        _commitInteractionSelection(preset),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -582,63 +598,69 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
   }) {
     return RepaintBoundary(
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        child: SizedBox(
-          key: key,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final tileSize = constraints.biggest.shortestSide;
-              final visualSize = (tileSize * 0.88).clamp(56.0, 72.0);
-              final emojiSize = (visualSize * 0.58).clamp(28.0, 36.0);
-              const padding = 10.0;
+        child: Semantics(
+          button: true,
+          label: preset.label,
+          child: SizedBox(
+            key: key,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final tileSize = constraints.biggest.shortestSide;
+                final visualSize = (tileSize * 0.86).clamp(50.0, 64.0);
+                const padding = 8.0;
+                final contentSize = visualSize - (padding * 2);
+                final emojiSize = (contentSize * 0.72).clamp(25.0, 34.0);
 
-              return Center(
-                child: AnimatedScale(
-                  scale: highlighted ? 1.12 : 1.0,
-                  duration: const Duration(milliseconds: 120),
-                  curve: Curves.easeOut,
-                  child: AnimatedContainer(
+                return Center(
+                  child: AnimatedScale(
+                    scale: highlighted ? 1.12 : 1.0,
                     duration: const Duration(milliseconds: 120),
-                    width: visualSize,
-                    height: visualSize,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: preset.gradient,
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      border: Border.all(
-                        color: highlighted
-                            ? preset.accent.withValues(alpha: 0.78)
-                            : const Color(0xFFF3E6EC),
-                        width: highlighted ? 2.1 : 1.4,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: preset.accent.withValues(
-                            alpha: highlighted ? 0.18 : 0.08,
-                          ),
-                          blurRadius: highlighted ? 16 : 10,
-                          offset: const Offset(0, 8),
+                    curve: Curves.easeOut,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 120),
+                      width: visualSize,
+                      height: visualSize,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: preset.gradient,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: Padding(
-                      padding: const EdgeInsets.all(padding),
-                      child: _buildInteractionVisual(
-                        visual: preset.emoji,
-                        assetPath: preset.assetPath,
-                        size: visualSize,
-                        emojiSize: emojiSize,
-                        preferAsset: true,
+                        border: Border.all(
+                          color: highlighted
+                              ? preset.accent.withValues(alpha: 0.78)
+                              : const Color(0xFFF3E6EC),
+                          width: highlighted ? 2.1 : 1.4,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: preset.accent.withValues(
+                              alpha: highlighted ? 0.18 : 0.08,
+                            ),
+                            blurRadius: highlighted ? 16 : 10,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Padding(
+                        padding: const EdgeInsets.all(padding),
+                        child: _buildInteractionVisual(
+                          visual: preset.emoji,
+                          assetPath: preset.assetPath,
+                          size: contentSize,
+                          emojiSize: emojiSize,
+                          preferAsset: true,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -668,7 +690,8 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           margin: EdgeInsets.only(
             left: 16,
             right: 16,
-            bottom: MediaQuery.sizeOf(context).height -
+            bottom:
+                MediaQuery.sizeOf(context).height -
                 (MediaQuery.paddingOf(context).top + 168),
           ),
           content: Container(
@@ -843,8 +866,9 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
     if (picked != null) {
       final newDateStr = picked.toIso8601String().split('T')[0];
       try {
-        final policy =
-            await _houseSettingsService.getStartDateChangePolicy(_houseId!);
+        final policy = await _houseSettingsService.getStartDateChangePolicy(
+          _houseId!,
+        );
         final cooldownUntil = policy['cooldownUntil'] as int?;
         if (policy['isLocked'] == true) {
           final unlockAt = cooldownUntil == null
@@ -860,13 +884,12 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
         var startCooldown = false;
         if (policy['shouldWarn'] == true) {
           if (!mounted) return;
-          final confirmed = await showDialog<bool>(
+          final confirmed =
+              await showDialog<bool>(
                 context: context,
                 builder: (ctx) => AlertDialog(
                   title: Text(msgConfirmTitle),
-                  content: Text(
-                    msgConfirmBody,
-                  ),
+                  content: Text(msgConfirmBody),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(ctx).pop(false),
@@ -897,15 +920,10 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
           }
         });
 
-        scaffoldMessenger?.showSnackBar(
-          SnackBar(content: Text(msgUpdated)),
-        );
+        scaffoldMessenger?.showSnackBar(SnackBar(content: Text(msgUpdated)));
       } catch (e) {
         if (!mounted) return;
-        final message = _shortErrorMessage(
-          e,
-          msgUpdateFailed,
-        );
+        final message = _shortErrorMessage(e, msgUpdateFailed);
         scaffoldMessenger?.showSnackBar(SnackBar(content: Text(message)));
       }
     }
@@ -926,192 +944,212 @@ extension _MainHomeTabDialogs on _MainHomeTabState {
         : context.tr('home_vdngyyu_f3c8aa');
 
     showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-        title: Text(
-          dialogTitle,
-          textAlign: TextAlign.center,
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w900,
-            color: SLTheme.primary,
-          ),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                ctx.tr('home_trngsquayv_97516b'),
-                textAlign: TextAlign.center,
-                style: SLTheme.quicksand(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black54,
-                  height: 1.35,
+          context: context,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
+            title: Text(
+              dialogTitle,
+              textAlign: TextAlign.center,
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w900,
+                color: SLTheme.primary,
+              ),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    ctx.tr('home_trngsquayv_97516b'),
+                    textAlign: TextAlign.center,
+                    style: SLTheme.quicksand(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black54,
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller,
+                    maxLength: 24,
+                    textAlign: TextAlign.center,
+                    textCapitalization: editTopLabel
+                        ? TextCapitalization.characters
+                        : TextCapitalization.sentences,
+                    style: SLTheme.quicksand(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 17,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: hintText,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: SLTheme.primary),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  ctx.tr('home_hy_1e4050'),
+                  style: SLTheme.quicksand(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                maxLength: 24,
-                textAlign: TextAlign.center,
-                textCapitalization: editTopLabel
-                    ? TextCapitalization.characters
-                    : TextCapitalization.sentences,
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 17,
+              ElevatedButton(
+                onPressed: () {
+                  final newLabel = controller.text.trim();
+                  Navigator.pop(ctx, newLabel);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: SLTheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                decoration: InputDecoration(
-                  hintText: hintText,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: SLTheme.primary),
-                  ),
+                child: Text(
+                  ctx.tr('home_lu_49fac1'),
+                  style: SLTheme.quicksand(fontWeight: FontWeight.w800),
                 ),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              ctx.tr('home_hy_1e4050'),
-              style: SLTheme.quicksand(
-                color: Colors.grey,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final newLabel = controller.text.trim();
-              Navigator.pop(ctx, newLabel);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: SLTheme.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(
-              ctx.tr('home_lu_49fac1'),
-              style: SLTheme.quicksand(fontWeight: FontWeight.w800),
-            ),
-          ),
-        ],
-      ),
-    ).then((newLabel) async {
-      if (newLabel == null || newLabel.isEmpty || !mounted) {
-        return;
-      }
-
-      try {
-        await _houseSettingsService.updateCountdownLabels(
-          houseId: _houseId!,
-          topLabel: editTopLabel ? newLabel : null,
-          bottomLabel: editTopLabel ? null : newLabel,
-        );
-
-        // Optimistic UI update
-        _safeSetState(() {
-          if (_houseSettings != null) {
-            if (editTopLabel) {
-              _houseSettings!['countdownTopLabel'] = newLabel;
-              _houseSettings!['greetingQuote'] = newLabel;
-            } else {
-              _houseSettings!['countdownBottomLabel'] = newLabel;
-              _houseSettings!['dayUnit'] = newLabel;
-            }
+        )
+        .then((newLabel) async {
+          if (newLabel == null || newLabel.isEmpty || !mounted) {
+            return;
           }
-        });
-      } catch (e) {
-        if (!mounted) return;
-        final message = _shortErrorMessage(
-          e,
-          context.tr('home_khnglucnhn_0689c8'),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
-      }
-    }).whenComplete(controller.dispose);
+
+          try {
+            await _houseSettingsService.updateCountdownLabels(
+              houseId: _houseId!,
+              topLabel: editTopLabel ? newLabel : null,
+              bottomLabel: editTopLabel ? null : newLabel,
+            );
+
+            // Optimistic UI update
+            _safeSetState(() {
+              if (_houseSettings != null) {
+                if (editTopLabel) {
+                  _houseSettings!['countdownTopLabel'] = newLabel;
+                  _houseSettings!['greetingQuote'] = newLabel;
+                } else {
+                  _houseSettings!['countdownBottomLabel'] = newLabel;
+                  _houseSettings!['dayUnit'] = newLabel;
+                }
+              }
+            });
+          } catch (e) {
+            if (!mounted) return;
+            final message = _shortErrorMessage(
+              e,
+              context.tr('home_khnglucnhn_0689c8'),
+            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(message)));
+          }
+        })
+        .whenComplete(controller.dispose);
   }
 
-  void _showEditNameDialog(
-      {required bool isUser1, required String currentName}) {
+  void _showEditNameDialog({
+    required bool isUser1,
+    required String currentName,
+  }) {
     if (_houseId == null) return;
     final controller = TextEditingController(text: currentName);
     showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
-        title: Text(
-          ctx.tr('home_ibitdanh_345585'),
-          textAlign: TextAlign.center,
-          style: SLTheme.quicksand(
-            fontWeight: FontWeight.w900,
-            color: SLTheme.primary,
-          ),
-        ),
-        content: TextField(
-          controller: controller,
-          textAlign: TextAlign.center,
-          style: SLTheme.quicksand(fontWeight: FontWeight.w700, fontSize: 18),
-          decoration: InputDecoration(
-            hintText: ctx.tr('home_nhptnmi_1b6bb3'),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: SLTheme.primary),
+          context: context,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: SLRadius.xlAll),
+            title: Text(
+              ctx.tr('home_ibitdanh_345585'),
+              textAlign: TextAlign.center,
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w900,
+                color: SLTheme.primary,
+              ),
             ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(ctx.tr('home_hy_1e4050'),
-                style: SLTheme.quicksand(
-                    color: Colors.grey, fontWeight: FontWeight.w700)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final newName = controller.text.trim();
-              Navigator.pop(ctx, newName);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: SLTheme.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+            content: TextField(
+              controller: controller,
+              textAlign: TextAlign.center,
+              style: SLTheme.quicksand(
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+              ),
+              decoration: InputDecoration(
+                hintText: ctx.tr('home_nhptnmi_1b6bb3'),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: SLTheme.primary),
+                ),
+              ),
             ),
-            child: Text(ctx.tr('home_lu_49fac1'),
-                style: SLTheme.quicksand(fontWeight: FontWeight.w800)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  ctx.tr('home_hy_1e4050'),
+                  style: SLTheme.quicksand(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final newName = controller.text.trim();
+                  Navigator.pop(ctx, newName);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: SLTheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  ctx.tr('home_lu_49fac1'),
+                  style: SLTheme.quicksand(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    ).then((newName) async {
-      if (newName == null || newName.isEmpty || !mounted) return;
-      final field = isUser1 ? 'nameU1' : 'nameU2';
-      final updates = {
-        'houses/$_houseId/settings/$field': newName,
-        'house_profiles/$_houseId/$field': newName,
-        'house_profiles/$_houseId/settings/$field': newName,
-        'houses/$_houseId/updatedAt': ServerValue.timestamp,
-      };
-      await _dbRef.update(updates);
-    }).whenComplete(controller.dispose);
+        )
+        .then((newName) async {
+          if (newName == null || newName.isEmpty || !mounted) return;
+          final field = isUser1 ? 'nameU1' : 'nameU2';
+          final updates = {
+            'houses/$_houseId/settings/$field': newName,
+            'house_profiles/$_houseId/$field': newName,
+            'house_profiles/$_houseId/settings/$field': newName,
+            'houses/$_houseId/updatedAt': ServerValue.timestamp,
+          };
+          await _dbRef.update(updates);
+        })
+        .whenComplete(controller.dispose);
   }
 }

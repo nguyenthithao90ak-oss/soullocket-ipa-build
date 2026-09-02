@@ -19,6 +19,7 @@ import 'package:soullocket_app/views/home/widgets/soul_merge_screen.dart';
 import 'package:soullocket_app/views/utilities/creative_diary_screen.dart';
 import 'package:soullocket_app/views/utilities/cinema_screen.dart';
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'house_service.dart';
 import 'offline_cache_service.dart';
@@ -576,16 +577,16 @@ class NotificationService {
     if (user == null) return;
 
     try {
-      await FirebaseDatabase.instance.ref('notification_queue').push().set({
-        'houseId': houseId,
-        'house_id': houseId,
-        'sender_uid': user.uid,
-        'title': title,
-        'body': body,
-        'data': data ?? {},
-        'timestamp': ServerValue.timestamp,
-        'status': 'pending',
-      });
+      await CloudFunctionsHelper.callSecure<dynamic>(
+        'queuePartnerNotificationSecure',
+        payload: <String, dynamic>{
+          'houseId': houseId,
+          'title': title,
+          'body': body,
+          'data': data ?? const <String, String>{},
+          'audience': 'partner',
+        },
+      );
     } catch (e) {
       debugPrint(
           'Failed to queue partner notification: ${AppErrorMapper.resolve(
@@ -606,16 +607,16 @@ class NotificationService {
     if (user == null) return;
 
     try {
-      await FirebaseDatabase.instance.ref('notification_queue').push().set({
-        'houseId': houseId,
-        'house_id': houseId,
-        'sender_uid': user.uid,
-        'title': title,
-        'body': body,
-        'data': data ?? {},
-        'timestamp': ServerValue.timestamp,
-        'status': 'pending',
-      });
+      await CloudFunctionsHelper.callSecure<dynamic>(
+        'queuePartnerNotificationSecure',
+        payload: <String, dynamic>{
+          'houseId': houseId,
+          'title': title,
+          'body': body,
+          'data': data ?? const <String, String>{},
+          'audience': 'house',
+        },
+      );
     } catch (e) {
       debugPrint('Failed to queue house notification: ${AppErrorMapper.resolve(
         e,

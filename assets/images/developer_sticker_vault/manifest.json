@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "status": "asset-only-not-integrated",
+  "total": 50,
+  "gridPerAtlas": {
+    "columns": 5,
+    "rows": 2
+  },
+  "background": "#FFF7FA",
+  "packs": [
+    {
+      "id": "tools_infra",
+      "atlas": "pack_01_tools_infra.png",
+      "pixelWidth": 1774,
+      "pixelHeight": 887,
+      "stickers": [
+        { "id": "dev_code_heart", "column": 0, "row": 0 },
+        { "id": "dev_bug_magnifier", "column": 1, "row": 0 },
+        { "id": "dev_deploy_rocket", "column": 2, "row": 0 },
+        { "id": "dev_cloud_server", "column": 3, "row": 0 },
+        { "id": "dev_database", "column": 4, "row": 0 },
+        { "id": "dev_terminal", "column": 0, "row": 1 },
+        { "id": "dev_version_control", "column": 1, "row": 1 },
+        { "id": "dev_api_puzzle", "column": 2, "row": 1 },
+        { "id": "dev_security_shield", "column": 3, "row": 1 },
+        { "id": "dev_bunny_server", "column": 4, "row": 1 }
+      ]
+    },
+    {
+      "id": "product_workflow",
+      "atlas": "pack_02_product_workflow.png",
+      "pixelWidth": 1983,
+      "pixelHeight": 793,
+      "stickers": [
+        { "id": "dev_idea", "column": 0, "row": 0 },
+        { "id": "dev_planning", "column": 1, "row": 0 },
+        { "id": "dev_design", "column": 2, "row": 0 },
+        { "id": "dev_review", "column": 3, "row": 0 },
+        { "id": "dev_testing", "column": 4, "row": 0 },
+        { "id": "dev_build", "column": 0, "row": 1 },
+        { "id": "dev_loading", "column": 1, "row": 1 },
+        { "id": "dev_success", "column": 2, "row": 1 },
+        { "id": "dev_warning", "column": 3, "row": 1 },
+        { "id": "dev_maintenance", "column": 4, "row": 1 }
+      ]
+    },
+    {
+      "id": "developer_moods",
+      "atlas": "pack_03_developer_moods.png",
+      "pixelWidth": 1774,
+      "pixelHeight": 887,
+      "stickers": [
+        { "id": "dev_happy_coding", "column": 0, "row": 0 },
+        { "id": "dev_tired", "column": 1, "row": 0 },
+        { "id": "dev_confused", "column": 2, "row": 0 },
+        { "id": "dev_excited", "column": 3, "row": 0 },
+        { "id": "dev_focused", "column": 4, "row": 0 },
+        { "id": "dev_celebrating", "column": 0, "row": 1 },
+        { "id": "dev_debug_detective", "column": 1, "row": 1 },
+        { "id": "dev_sleepy_coder", "column": 2, "row": 1 },
+        { "id": "dev_coffee_rescue", "column": 3, "row": 1 },
+        { "id": "dev_high_five", "column": 4, "row": 1 }
+      ]
+    },
+    {
+      "id": "mobile_features",
+      "atlas": "pack_04_mobile_features.png",
+      "pixelWidth": 1774,
+      "pixelHeight": 887,
+      "stickers": [
+        { "id": "dev_phone_app", "column": 0, "row": 0 },
+        { "id": "dev_responsive", "column": 1, "row": 0 },
+        { "id": "dev_robot", "column": 2, "row": 0 },
+        { "id": "dev_browser", "column": 3, "row": 0 },
+        { "id": "dev_notification", "column": 4, "row": 0 },
+        { "id": "dev_location", "column": 0, "row": 1 },
+        { "id": "dev_chat", "column": 1, "row": 1 },
+        { "id": "dev_secure_payment", "column": 2, "row": 1 },
+        { "id": "dev_analytics", "column": 3, "row": 1 },
+        { "id": "dev_dark_mode", "column": 4, "row": 1 }
+      ]
+    },
+    {
+      "id": "dev_reactions",
+      "atlas": "pack_05_dev_reactions.png",
+      "pixelWidth": 1983,
+      "pixelHeight": 793,
+      "stickers": [
+        { "id": "dev_shipping", "column": 0, "row": 0 },
+        { "id": "dev_fire", "column": 1, "row": 0 },
+        { "id": "dev_magic_fix", "column": 2, "row": 0 },
+        { "id": "dev_hotfix", "column": 3, "row": 0 },
+        { "id": "dev_pixel_heart", "column": 4, "row": 0 },
+        { "id": "dev_building_blocks", "column": 0, "row": 1 },
+        { "id": "dev_keyboard", "column": 1, "row": 1 },
+        { "id": "dev_headphones_code", "column": 2, "row": 1 },
+        { "id": "dev_snack_coffee", "column": 3, "row": 1 },
+        { "id": "dev_deadline_comfort", "column": 4, "row": 1 }
+      ]
+    }
+  ]
+}

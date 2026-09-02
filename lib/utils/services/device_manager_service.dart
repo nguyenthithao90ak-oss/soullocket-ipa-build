@@ -7,7 +7,6 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'consent_service.dart';
 import 'security_service.dart';
 import 'core/cloud_functions_helper.dart';
@@ -509,30 +508,6 @@ class DeviceManagerService {
 
       // Nếu là thiết bị mới thì gửi cảnh báo
       if (isNew && trustedDeviceCount >= 1) {
-        // Ghi notification trigger để gửi FCM cảnh báo thiết bị mới
-        try {
-          await _db
-              .ref(
-                  'notification_queue/${DateTime.now().millisecondsSinceEpoch}')
-              .set({
-            'houseId': houseId,
-            'house_id': houseId,
-            'sender_uid': uid,
-            'uid': uid,
-            'type': 'new_device',
-            'title': '⚠️ Đăng nhập thiết bị mới',
-            'body':
-                'Một thiết bị mới (${deviceInfo['model']}) vừa đăng nhập vào tài khoản của bạn.',
-            'timestamp': ServerValue.timestamp,
-            'status': 'pending',
-          });
-        } catch (e) {
-          debugPrint(
-              'Failed to queue new device notification: ${AppErrorMapper.resolve(
-            e,
-            fallbackMessage: 'Không thể tạo thông báo thiết bị mới.',
-          ).message}');
-        }
         await PushNotificationHelper.systemEvent(
           toHouseId: houseId,
           type: 'new_device',

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +9,8 @@ import '../../../models/diary_post.dart';
 import '../../../utils/app_cache_manager.dart';
 import '../../../utils/services/cloudflare_r2_service.dart';
 import '../../../utils/services/l10n_service.dart';
+import '../../../widgets/r2_sticker_image.dart';
+import '../../../widgets/soullocket_animated_sticker.dart';
 
 class DiaryItem extends StatelessWidget {
   final DiaryPost post;
@@ -38,7 +39,8 @@ class DiaryItem extends StatelessWidget {
     final authorRole = post.authorRole.trim().isNotEmpty
         ? post.authorRole.trim()
         : ((authorId == 'user1' || authorId == 'user2') ? authorId : '');
-    final isMyPost = (currentUid.isNotEmpty && authorId == currentUid) ||
+    final isMyPost =
+        (currentUid.isNotEmpty && authorId == currentUid) ||
         (authorRole.isNotEmpty && authorRole == activeRoleKey);
 
     String houseNameForRole(String role) {
@@ -95,203 +97,296 @@ class DiaryItem extends StatelessWidget {
     }
 
     final displayName = rawName;
-
-    // Phân biệt màu sắc theo vai (Nam: Xanh dương, Nữ: Hồng)
-    final isMale = authorRole == 'user1';
-    final isFemale = authorRole == 'user2';
-    final Color accentColor = isMale
-        ? const Color(0xFF0288D1)
-        : (isFemale ? _diarySoftPink : const Color(0xFF7B1FA2));
-
+    final authorColor = authorRole == 'user1'
+        ? const Color(0xFF349F91)
+        : authorRole == 'user2'
+        ? const Color(0xFF766FD0)
+        : const Color(0xFFE28C6D);
+    final moodColor = _getMoodColor(post.mood);
     final isShortText = post.content.trim().length < 30;
+    final moodSize = isShortText ? 78.0 : 58.0;
 
     return RepaintBoundary(
       child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        child: SLTheme.glassCard(
-          margin: EdgeInsets.zero,
-        radius: 24,
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    displayName,
-                    style: SLTheme.quicksand(
-                      color: accentColor,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  DateFormat('dd/MM/yyyy • HH:mm').format(post.timestamp),
-                  style: SLTheme.quicksand(
-                    color: SLColors.textTertiary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (isMyPost) ...[
-                  SLSpacing.w12,
-                  GestureDetector(
-                    onTap: () => onConfirmDelete(post),
-                    child: Icon(
-                      Icons.delete_rounded,
-                      size: 20,
-                      color: SLColors.textTertiary.withValues(alpha: 0.5),
-                    ),
-                  ),
-                ],
-              ],
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFFFFFDF8),
+              Color.alphaBlend(
+                moodColor.withValues(alpha: 0.09),
+                const Color(0xFFF8FBFA),
+              ),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: Colors.white, width: 1.6),
+          boxShadow: [
+            BoxShadow(
+              color: moodColor.withValues(alpha: 0.14),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
             ),
-            SLSpacing.h16,
-            if (isShortText) ...[
-              Center(
-                child: Text(
-                  post.content,
-                  textAlign: TextAlign.center,
-                  style: SLTheme.quicksand(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 18,
-                    height: 1.4,
-                    color: SLColors.textPrimary,
-                  ),
-                ),
-              ),
-              SLSpacing.h16,
-              Center(
-                child: Image.asset(
-                  _getMoodAsset(post.mood),
-                  width: 84,
-                  height: 84,
-                  gaplessPlayback: true,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Text(
-                      post.mood,
-                      style: TextStyle(fontSize: 36, color: accentColor),
-                    );
-                  },
-                ),
-              ),
-            ] else ...[
-              Text(
-                post.content,
-                style: SLTheme.quicksand(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                  height: 1.6,
-                  color: SLColors.textPrimary,
-                ),
-              ),
-              SLSpacing.h12,
-              Image.asset(
-                _getMoodAsset(post.mood),
-                width: 32,
-                height: 32,
-                gaplessPlayback: true,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Text(
-                    post.mood,
-                    style: TextStyle(fontSize: 20, color: accentColor),
-                  );
-                },
-              ),
-            ],
-            if (post.imageUrl.isNotEmpty) ...[
-              SLSpacing.h16,
-              ClipRRect(
-                borderRadius: SLRadius.lgAll,
-                child: () {
-                  final url = post.imageUrl.toLowerCase();
-                  final isVideo = url.endsWith('.mp4') ||
-                      url.endsWith('.mov') ||
-                      url.endsWith('.webm') ||
-                      url.endsWith('.m4v') ||
-                      url.endsWith('.3gp');
-                  if (isVideo) {
-                    return _DiaryItemVideoWidget(url: post.imageUrl);
-                  }
-                  return CachedNetworkImage(
-                    cacheManager: AppCacheManager.instance,
-                    imageUrl: post.imageUrl,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    filterQuality: FilterQuality.medium,
-                    maxWidthDiskCache: postImageCacheWidth,
-                    memCacheWidth: postImageCacheWidth,
-                    fadeInDuration: Duration.zero,
-                    fadeOutDuration: Duration.zero,
-                    placeholderFadeInDuration: Duration.zero,
-                    placeholder: (context, url) => Container(
-                      height: 120,
-                      color: Colors.white.withValues(alpha: 0.08),
-                      alignment: Alignment.center,
-                      child: const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.0,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Color(0xFFE98FB1)),
-                        ),
-                      ),
-                    ),
-                    errorWidget: (_, __, ___) => Container(
-                      height: 120,
-                      color: Colors.white.withValues(alpha: 0.08),
-                      alignment: Alignment.center,
-                      child: const Icon(Icons.broken_image_rounded,
-                          color: Color(0xFFE98FB1), size: 26),
-                    ),
-                  );
-                }(),
-              ),
-            ],
-            if (post.pinned) ...[
-              SLSpacing.h16,
-              Row(
-                children: [
-                  const Icon(
-                    Icons.push_pin_rounded,
-                    size: 14,
-                    color: SLColors.accent,
-                  ),
-                  SLSpacing.w8,
-                  Text(
-                    L10nService().translate(context.tr('home_ghimtms_3f794c')),
-                    style: SLTheme.quicksand(
-                      color: accentColor,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ],
         ),
-      ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(27),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -28,
+                top: -36,
+                child: Container(
+                  width: 105,
+                  height: 105,
+                  decoration: BoxDecoration(
+                    color: moodColor.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                top: 22,
+                bottom: 22,
+                child: Container(
+                  width: 5,
+                  decoration: BoxDecoration(
+                    color: moodColor,
+                    borderRadius: const BorderRadius.horizontal(
+                      right: Radius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(19, 17, 17, 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 11,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: authorColor.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(13),
+                                border: Border.all(
+                                  color: authorColor.withValues(alpha: 0.16),
+                                ),
+                              ),
+                              child: Text(
+                                displayName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: SLTheme.quicksand(
+                                  color: authorColor,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          DateFormat(
+                            'dd/MM/yyyy • HH:mm',
+                          ).format(post.timestamp),
+                          style: SLTheme.quicksand(
+                            color: const Color(0xFF85899A),
+                            fontSize: 11.3,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (isMyPost) ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => onConfirmDelete(post),
+                            child: Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFF3EF),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.delete_outline_rounded,
+                                size: 17,
+                                color: Color(0xFFC98275),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 13),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(15, 14, 12, 14),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.72),
+                        borderRadius: BorderRadius.circular(21),
+                        border: Border.all(
+                          color: moodColor.withValues(alpha: 0.12),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              post.content,
+                              textAlign: isShortText
+                                  ? TextAlign.center
+                                  : TextAlign.start,
+                              style: SLTheme.quicksand(
+                                fontWeight: isShortText
+                                    ? FontWeight.w900
+                                    : FontWeight.w700,
+                                fontSize: isShortText ? 17.5 : 14.7,
+                                height: isShortText ? 1.4 : 1.55,
+                                color: const Color(0xFF3B4354),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            width: moodSize + 8,
+                            height: moodSize + 8,
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: moodColor.withValues(alpha: 0.11),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(17),
+                              child: R2StickerImage(
+                                _getMoodAsset(post.mood),
+                                width: moodSize,
+                                height: moodSize,
+                                fit: BoxFit.contain,
+                                animateLocalSticker: isShortText,
+                                errorWidget: Text(
+                                  post.mood,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: isShortText ? 34 : 25,
+                                    color: moodColor,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (post.imageUrl.isNotEmpty) ...[
+                      const SizedBox(height: 13),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: () {
+                          final url = post.imageUrl.toLowerCase();
+                          final isVideo =
+                              url.endsWith('.mp4') ||
+                              url.endsWith('.mov') ||
+                              url.endsWith('.webm') ||
+                              url.endsWith('.m4v') ||
+                              url.endsWith('.3gp');
+                          if (isVideo) {
+                            return _DiaryItemVideoWidget(url: post.imageUrl);
+                          }
+                          return CachedNetworkImage(
+                            cacheManager: AppCacheManager.instance,
+                            imageUrl: post.imageUrl,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            filterQuality: FilterQuality.medium,
+                            maxWidthDiskCache: postImageCacheWidth,
+                            memCacheWidth: postImageCacheWidth,
+                            fadeInDuration: Duration.zero,
+                            fadeOutDuration: Duration.zero,
+                            placeholderFadeInDuration: Duration.zero,
+                            placeholder: (context, url) => Container(
+                              height: 120,
+                              color: moodColor.withValues(alpha: 0.06),
+                              alignment: Alignment.center,
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    moodColor,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            errorWidget: (_, _, _) => Container(
+                              height: 120,
+                              color: moodColor.withValues(alpha: 0.06),
+                              alignment: Alignment.center,
+                              child: Icon(
+                                Icons.broken_image_rounded,
+                                color: moodColor.withValues(alpha: 0.55),
+                                size: 26,
+                              ),
+                            ),
+                          );
+                        }(),
+                      ),
+                    ],
+                    if (post.pinned) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: moodColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.push_pin_rounded,
+                              size: 13,
+                              color: moodColor,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              context.tr('home_ghimtms_3f794c'),
+                              style: SLTheme.quicksand(
+                                color: moodColor,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 10.8,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
-
-const Color _diarySoftPink = Color(0xFFE98FB1);
 
 class _DiaryItemVideoWidget extends StatefulWidget {
   final String url;
@@ -318,21 +413,16 @@ class _DiaryItemVideoWidgetState extends State<_DiaryItemVideoWidget> {
       final String rawUrl = widget.url.trim();
       final playUrl = CloudflareR2Service.resolveVideoUrl(rawUrl);
       final uri = Uri.parse(playUrl);
-      
+
       VideoPlayerController controller;
       try {
-        File? cachedFile;
-        final fileInfo = await AppCacheManager.instance.getFileFromCache(playUrl);
-        if (fileInfo != null) {
-          cachedFile = fileInfo.file;
-        } else {
-          cachedFile = await AppCacheManager.instance.getSingleFile(playUrl);
-        }
-        if (cachedFile != null) {
-          controller = VideoPlayerController.file(cachedFile);
-        } else {
-          controller = VideoPlayerController.networkUrl(uri);
-        }
+        final fileInfo = await AppCacheManager.instance.getFileFromCache(
+          playUrl,
+        );
+        final cachedFile =
+            fileInfo?.file ??
+            await AppCacheManager.instance.getSingleFile(playUrl);
+        controller = VideoPlayerController.file(cachedFile);
       } catch (_) {
         controller = VideoPlayerController.networkUrl(uri);
       }
@@ -430,11 +520,65 @@ class _DiaryItemVideoWidgetState extends State<_DiaryItemVideoWidget> {
 
 String _getMoodAsset(String moodEmoji) {
   switch (moodEmoji) {
-    case '😍': return 'assets/images/anhtomau_stickers/sticker_20.gif';
-    case '💖': return 'assets/images/anhtomau_stickers/sticker_9.gif';
-    case '🤩': return 'assets/images/anhtomau_stickers/sticker_3.gif';
-    case '🤒': return 'assets/images/anhtomau_stickers/sticker_8.gif';
-    case '🌧️': return 'assets/images/anhtomau_stickers/sticker_24.gif';
-    default: return 'assets/images/anhtomau_stickers/sticker_9.gif';
+    case '😍':
+      return SoulLocketStickerCatalog.referenceFor('diary_playful');
+    case '💖':
+      return SoulLocketStickerCatalog.referenceFor('diary_healing');
+    case '🤩':
+      return SoulLocketStickerCatalog.referenceFor('diary_proud');
+    case '🤒':
+      return SoulLocketStickerCatalog.referenceFor('diary_healing');
+    case '🌧️':
+      return SoulLocketStickerCatalog.referenceFor('diary_anxious');
+    case '📝':
+      return SoulLocketStickerCatalog.referenceFor('diary_reflective');
+    case '🙈':
+      return SoulLocketStickerCatalog.referenceFor('diary_shy');
+    case '💌':
+      return SoulLocketStickerCatalog.referenceFor('diary_missing');
+    case '⭐':
+      return SoulLocketStickerCatalog.referenceFor('diary_proud');
+    case '🌙':
+      return SoulLocketStickerCatalog.referenceFor('diary_sleepy');
+    case '🥺':
+      return SoulLocketStickerCatalog.referenceFor('diary_anxious');
+    case '😤':
+      return SoulLocketStickerCatalog.referenceFor('diary_grumpy');
+    case '😉':
+      return SoulLocketStickerCatalog.referenceFor('diary_playful');
+    case '❤️‍🩹':
+      return SoulLocketStickerCatalog.referenceFor('diary_healing');
+    default:
+      return SoulLocketStickerCatalog.referenceFor('diary_reflective');
+  }
+}
+
+Color _getMoodColor(String moodEmoji) {
+  switch (moodEmoji) {
+    case '📝':
+      return const Color(0xFF9B806E);
+    case '🙈':
+      return const Color(0xFFE8879D);
+    case '💌':
+    case '💖':
+      return const Color(0xFFE0708D);
+    case '⭐':
+    case '🤩':
+      return const Color(0xFFE7A83F);
+    case '🌙':
+      return const Color(0xFF7674C7);
+    case '🥺':
+    case '🌧️':
+      return const Color(0xFF8A83C8);
+    case '😤':
+      return const Color(0xFFE17E68);
+    case '😉':
+    case '😍':
+      return const Color(0xFF4E9FC4);
+    case '❤️‍🩹':
+    case '🤒':
+      return const Color(0xFF4FAF8F);
+    default:
+      return const Color(0xFF6F86C9);
   }
 }

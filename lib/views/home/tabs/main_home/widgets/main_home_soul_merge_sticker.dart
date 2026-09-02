@@ -116,8 +116,9 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
 
   void _initInteractiveEventsListening() {
     _interactiveEventsSub?.cancel();
-    _interactiveEventsSub =
-        SoulMergeService().watchInteractiveEvents().listen((event) async {
+    _interactiveEventsSub = SoulMergeService().watchInteractiveEvents().listen((
+      event,
+    ) async {
       if (event.isEmpty || _isSingle || !mounted) return;
       final sender = event['sender']?.toString();
       if (sender == _myRole) return; // ignore my own
@@ -140,8 +141,10 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
             });
             // Trì hoãn nhẹ 50ms để widget cập nhật style mới rồi bắn tim
             Future.delayed(const Duration(milliseconds: 50), () {
-              _globalHeartsKey.currentState
-                  ?.spawnLocalExplosion(const Offset(26, 26), count: 6);
+              _globalHeartsKey.currentState?.spawnLocalExplosion(
+                const Offset(26, 26),
+                count: 6,
+              );
             });
           }
         }
@@ -267,19 +270,23 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                       ? Container(
                           width: 212,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 9),
+                            horizontal: 14,
+                            vertical: 9,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.95),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: const Color(0xFFFFC0D3)
-                                  .withValues(alpha: 0.65),
+                              color: const Color(
+                                0xFFFFC0D3,
+                              ).withValues(alpha: 0.65),
                               width: 1.2,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFFFB3CA)
-                                    .withValues(alpha: 0.22),
+                                color: const Color(
+                                  0xFFFFB3CA,
+                                ).withValues(alpha: 0.22),
                                 blurRadius: 16,
                                 spreadRadius: 1,
                                 offset: const Offset(0, 6),
@@ -320,10 +327,14 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                   setState(() {
                     final targetPos = details.globalPosition - _dragOffset;
                     _position = Offset(
-                      targetPos.dx
-                          .clamp(0.0, MediaQuery.sizeOf(context).width - 52),
-                      targetPos.dy
-                          .clamp(0.0, MediaQuery.sizeOf(context).height - 150),
+                      targetPos.dx.clamp(
+                        0.0,
+                        MediaQuery.sizeOf(context).width - 52,
+                      ),
+                      targetPos.dy.clamp(
+                        0.0,
+                        MediaQuery.sizeOf(context).height - 150,
+                      ),
                     );
                   });
                 },
@@ -358,7 +369,7 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                         blurRadius: 14,
                         spreadRadius: 2.5,
                         offset: const Offset(0, 5),
-                      )
+                      ),
                     ],
                   ),
                   child: Padding(
@@ -368,12 +379,13 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                         shape: BoxShape.circle,
                         color: Colors.white.withValues(alpha: 0.15),
                       ),
-                      child: ClipOval(
-                        child: Image.asset(
-                          'assets/images/anhtomau_stickers/sticker_1.gif',
-                          width: 72,
-                          height: 72,
-                          fit: BoxFit.cover,
+                      child: Center(
+                        child: SoulLocketAnimatedSticker(
+                          sticker: SoulLocketStickerCatalog.find(
+                            'heart_locket',
+                          )!,
+                          size: 46,
+                          semanticLabel: context.tr('Mặt dây chuyền tình yêu'),
                         ),
                       ),
                     ),
@@ -392,7 +404,8 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        final isDark = UiPrefs.notifier.value.themeKey.contains('dark') ||
+        final isDark =
+            UiPrefs.notifier.value.themeKey.contains('dark') ||
             UiPrefs.notifier.value.themeKey.contains('night');
         final bgColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
         final textColor = isDark ? Colors.white : const Color(0xFF243041);
@@ -413,8 +426,11 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                   color: Color(0xFFFCE4EC),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.favorite_rounded,
-                    color: Color(0xFFF06292), size: 24),
+                child: const Icon(
+                  Icons.favorite_rounded,
+                  color: Color(0xFFF06292),
+                  size: 24,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -439,9 +455,11 @@ class SoulMergeStickerState extends State<SoulMergeSticker> {
                 onPressed: () {
                   Navigator.pop(context);
                   Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const PairingDashboardScreen()));
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PairingDashboardScreen(),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF15BB5),

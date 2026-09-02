@@ -484,10 +484,11 @@ extension _CountdownModeIndependentScreenStatePart
 
     final serializedSnapshot = _snapshotToSerializedMap(snapshot);
     if (_isSharedSpace(scope)) {
+      final sharedSpace = _sharedSpaceFor(scope);
+      if (sharedSpace == null) return;
       unawaited(_countdownSpaceService
           .updateSpaceSnapshot(
-        selfHouseId: _selfSpaceHouseId,
-        otherHouseId: scope,
+        spaceId: sharedSpace.spaceId,
         snapshot: serializedSnapshot,
       )
           .catchError((Object e) {

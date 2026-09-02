@@ -397,9 +397,26 @@ class PurchaseService {
     for (final purchase in purchases) {
       if (purchase.status == PurchaseStatus.purchased ||
           purchase.status == PurchaseStatus.restored) {
-        final verified = await _verifyAndGrantVip(purchase);
+        var verified = await _verifyAndGrantVip(purchase);
+
+        // Retry once after delay for restored purchases that failed verification
+        // (e.g. transient server error, race condition on server startup)
+        if (!verified && purchase.status == PurchaseStatus.restored) {
+          debugPrint(
+            'Restored purchase verify failed for ${purchase.productID}, '
+            'retrying in 3s...',
+          );
+          await Future<void>.delayed(const Duration(seconds: 3));
+          verified = await _verifyAndGrantVip(purchase);
+        }
+
         if (purchase.pendingCompletePurchase && verified) {
           await _iap.completePurchase(purchase);
+        }
+
+        // Refresh PRO state immediately after successful verification
+        if (verified) {
+          await getVipAccessInfo(forceRefresh: true);
         }
         continue;
       }
@@ -421,6 +438,7 @@ class PurchaseService {
   Future<bool> _verifyAndGrantVip(PurchaseDetails purchase) async {
     final user = _auth.currentUser;
     if (user == null) {
+      debugPrint('[IAP] verify skipped: no authenticated user');
       _statusController.add(VipPurchaseState.error);
       return false;
     }
@@ -431,6 +449,12 @@ class PurchaseService {
       final idToken = await user.getIdToken() ?? '';
 
       if (token.isEmpty || idToken.isEmpty) {
+        debugPrint(
+          '[IAP] verify skipped: '
+          'token=${token.isEmpty ? "EMPTY" : "OK(${token.length}chars)"}, '
+          'idToken=${idToken.isEmpty ? "EMPTY" : "OK"}, '
+          'source=$source, productId=${purchase.productID}',
+        );
         _statusController.add(VipPurchaseState.error);
         return false;
       }
@@ -458,18 +482,38 @@ class PurchaseService {
       );
 
       if (response.statusCode != 200) {
+        // Parse server error code safely for diagnostics
+        String serverError = 'unknown';
+        try {
+          final errorBody = jsonDecode(response.body);
+          if (errorBody is Map) {
+            serverError = (errorBody['error'] ?? 'unknown').toString();
+          }
+        } catch (_) {
+          // response body not JSON
+        }
+
         debugPrint(
-          'Server verification failed: ${response.statusCode} ${response.body}',
+          '[IAP] Server verify FAILED: '
+          'HTTP ${response.statusCode}, '
+          'error=$serverError, '
+          'source=$source, '
+          'productId=${purchase.productID}, '
+          'platform=${defaultTargetPlatform.name}, '
+          'purchaseStatus=${purchase.status.name}',
         );
         await RevenueSecurityTelemetryService.instance.logEvent(
           type: 'purchase_verify_failed',
-          reason: 'server_rejected',
+          reason: serverError,
           severity: response.statusCode == 401 || response.statusCode == 403
               ? 'high'
               : 'medium',
           extra: <String, Object?>{
             'statusCode': response.statusCode,
             'productId': purchase.productID,
+            'source': source,
+            'platform': defaultTargetPlatform.name,
+            'serverError': serverError,
           },
         );
         _statusController.add(VipPurchaseState.error);
@@ -478,19 +522,35 @@ class PurchaseService {
 
       final decoded = jsonDecode(response.body);
       if (decoded is! Map || decoded['ok'] != true) {
-        debugPrint('Server verification returned invalid payload: $decoded');
+        debugPrint(
+          '[IAP] Server verify returned invalid payload: '
+          'source=$source, productId=${purchase.productID}',
+        );
         _statusController.add(VipPurchaseState.error);
         return false;
       }
 
+      debugPrint(
+        '[IAP] Server verify SUCCESS: '
+        'source=$source, productId=${purchase.productID}, '
+        'isVip=${decoded['isVip']}',
+      );
+
+      // Sync entitlements from server immediately after successful verification
+      unawaited(syncVipEntitlements());
       _statusController.add(VipPurchaseState.success);
       return true;
     } catch (e) {
       debugPrint(
-          'Error verifying purchase with server: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể xác minh giao dịch mua với server.',
-      ).message}');
+        '[IAP] verify EXCEPTION: '
+        'source=${purchase.verificationData.source}, '
+        'productId=${purchase.productID}, '
+        'platform=${defaultTargetPlatform.name}, '
+        'error=${AppErrorMapper.resolve(
+          e,
+          fallbackMessage: 'verify_exception',
+        ).message}',
+      );
       _statusController.add(VipPurchaseState.error);
       return false;
     }

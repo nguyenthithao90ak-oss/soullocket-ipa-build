@@ -476,12 +476,111 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   }
 
   Widget _buildWaitingState(String callLabel) {
-    return Center(
-      child: Text(
-        _isPreparing
-            ? 'Đang khởi tạo $callLabel...'
-            : context.tr('relationship_angchktni_a08068'),
-        style: SLTheme.quicksand(color: Colors.white54, fontSize: 16),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0F0C29), Color(0xFF302B63), Color(0xFF24243E)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Avatar với animated ring
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 1500),
+              curve: Curves.easeOut,
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.scale(
+                    scale: 0.5 + value * 0.5,
+                    child: child,
+                  ),
+                );
+              },
+              child: Container(
+                width: 140,
+                height: 140,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: const Color(0xFFFF6B9D).withValues(alpha: 0.5),
+                    width: 3,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF6B9D).withValues(alpha: 0.3),
+                      blurRadius: 30,
+                      spreadRadius: 10,
+                    ),
+                    BoxShadow(
+                      color: const Color(0xFF667EEA).withValues(alpha: 0.2),
+                      blurRadius: 40,
+                      spreadRadius: 15,
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: 67,
+                  backgroundColor: const Color(0xFF1A1A2E),
+                  backgroundImage: widget.targetAvatarUrl != null
+                      ? CachedNetworkImageProvider(widget.targetAvatarUrl!)
+                      : null,
+                  child: widget.targetAvatarUrl == null
+                      ? Text(
+                          widget.targetName.isEmpty
+                              ? '💕'
+                              : widget.targetName[0].toUpperCase(),
+                          style: SLTheme.quicksand(
+                            color: Colors.white,
+                            fontSize: 48,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        )
+                      : null,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              widget.targetName,
+              style: SLTheme.quicksand(
+                color: Colors.white,
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: const Color(0xFFFF6B9D).withValues(alpha: 0.8),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  _isPreparing
+                      ? 'Đang khởi tạo $callLabel...'
+                      : 'Đang chờ kết nối...',
+                  style: SLTheme.quicksand(
+                    color: Colors.white60,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

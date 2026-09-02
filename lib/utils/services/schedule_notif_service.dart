@@ -1,5 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 
+import 'core/cloud_functions_helper.dart';
 import 'schedule_notification_presenter.dart';
 
 class ScheduleNotifService {
@@ -122,26 +123,19 @@ class ScheduleNotifService {
     required String eventDate,
     required String eventTitle,
   }) async {
-    final ref = _db.ref('notifications/$toHouseId/$notifId');
-    final now = DateTime.now().millisecondsSinceEpoch;
-
-    await ref.runTransaction((current) {
-      if (current != null) return Transaction.abort();
-      return Transaction.success({
-        'ts': now,
-        'type': 'message',
-        'from': toHouseId,
-        'fromId': toHouseId,
-        'fromName': sourceLabel,
-        'sourceLabel': sourceLabel,
+    await CloudFunctionsHelper.callSecure<dynamic>(
+      'createScheduleNotificationSecure',
+      payload: <String, dynamic>{
+        'houseId': toHouseId,
+        'notificationId': notifId,
         'title': title,
-        'msg': message,
-        'kind': 'schedule',
+        'message': message,
+        'sourceLabel': sourceLabel,
         'eventKey': eventKey,
         'eventDate': eventDate,
         'eventTitle': eventTitle,
-      });
-    });
+      },
+    );
   }
 
   Future<void> checkAndNotify(String houseId) async {

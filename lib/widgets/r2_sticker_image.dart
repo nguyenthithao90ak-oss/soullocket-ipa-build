@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/services/storage/storage_download_cache_helper.dart';
 import 'package:lottie/lottie.dart';
+import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
 
 class R2StickerImage extends StatelessWidget {
   final String assetPath;
@@ -11,6 +13,7 @@ class R2StickerImage extends StatelessWidget {
   final double? width;
   final double? height;
   final Widget? errorWidget;
+  final bool animateLocalSticker;
 
   const R2StickerImage(
     this.assetPath, {
@@ -19,6 +22,7 @@ class R2StickerImage extends StatelessWidget {
     this.width,
     this.height,
     this.errorWidget,
+    this.animateLocalSticker = false,
   });
 
   // Lưu trữ in-memory cache của các sticker file đã được nạp thành công để tránh nháy khi rebuild
@@ -57,7 +61,7 @@ class R2StickerImage extends StatelessWidget {
     'assets/images/interaction_stickers/custom/numbered/sticker_276.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_291.png',
     'assets/images/interaction_stickers/custom/numbered/sticker_339.png',
-    'assets/images/interaction_stickers/custom/numbered/sticker_343.png'
+    'assets/images/interaction_stickers/custom/numbered/sticker_343.png',
   };
 
   @override
@@ -66,6 +70,24 @@ class R2StickerImage extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context) {
+    final localSticker = SoulLocketStickerCatalog.find(assetPath);
+    if (localSticker != null) {
+      final resolvedWidth = width ?? height ?? 72;
+      final resolvedHeight = height ?? width ?? 72;
+      final stickerSize = math.min(resolvedWidth, resolvedHeight).toDouble();
+      return SizedBox(
+        width: width,
+        height: height,
+        child: Center(
+          child: SoulLocketAnimatedSticker(
+            sticker: localSticker,
+            size: stickerSize,
+            animate: animateLocalSticker,
+          ),
+        ),
+      );
+    }
+
     if (_bundledHomeStickers.contains(assetPath)) {
       return Image.asset(
         assetPath,
@@ -78,12 +100,15 @@ class R2StickerImage extends StatelessWidget {
       );
     }
 
-    if (assetPath.startsWith('assets/images/interaction_stickers/') || assetPath.startsWith('http')) {
-      final r2Url = assetPath.startsWith('http') 
-          ? assetPath 
+    if (assetPath.startsWith('assets/images/interaction_stickers/') ||
+        assetPath.startsWith('http')) {
+      final r2Url = assetPath.startsWith('http')
+          ? assetPath
           : '${AppConfig.r2PublicDomain}/stickers/${assetPath.substring('assets/images/'.length)}';
-      
-      final isLottieUrl = r2Url.toLowerCase().endsWith('.json') || r2Url.toLowerCase().endsWith('.lottie');
+
+      final isLottieUrl =
+          r2Url.toLowerCase().endsWith('.json') ||
+          r2Url.toLowerCase().endsWith('.lottie');
 
       // Nếu file đã được nạp và lưu trong RAM cache, trả về trực tiếp Image.file (hoặc Lottie.file) đồng bộ để không bị nháy
       final cachedFile = _resolvedStickerFiles[r2Url];
@@ -97,12 +122,7 @@ class R2StickerImage extends StatelessWidget {
             height: height,
           );
         }
-        return Image.file(
-          cachedFile,
-          fit: fit,
-          width: width,
-          height: height,
-        );
+        return Image.file(cachedFile, fit: fit, width: width, height: height);
       }
 
       return FutureBuilder<File?>(
@@ -133,12 +153,7 @@ class R2StickerImage extends StatelessWidget {
             // Lưu vào RAM cache để các lần build tiếp theo nạp đồng bộ ngay lập tức
             _resolvedStickerFiles[r2Url] = file;
             if (isLottieUrl) {
-              return Lottie.file(
-                file,
-                fit: fit,
-                width: width,
-                height: height,
-              );
+              return Lottie.file(file, fit: fit, width: width, height: height);
             }
             return Image.file(
               file,

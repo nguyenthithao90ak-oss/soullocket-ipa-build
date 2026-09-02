@@ -290,7 +290,9 @@ extension _HomeScreenShellControls on _HomeScreenState {
           child: AnimatedContainer(
             duration: animationDuration,
             curve: Curves.easeOutCubic,
-            height: 52,
+            // Không khóa cứng chiều cao: metric của font có thể cao hơn 1px
+            // trên Android/Web và làm RenderFlex báo tràn ở mép dưới.
+            constraints: const BoxConstraints(minHeight: 52),
             padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.transparent,

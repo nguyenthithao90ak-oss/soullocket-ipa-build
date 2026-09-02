@@ -1,6 +1,7 @@
 // ignore_for_file: unused_element, unused_field, unused_local_variable, unused_import, dead_code
 import 'package:lottie/lottie.dart';
 import 'package:soullocket_app/widgets/r2_sticker_image.dart';
+import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
 import 'package:soullocket_app/views/utilities/tarot/tarot_screen.dart';
 import 'package:soullocket_app/views/utilities/wheel/wheel_screen.dart';
 import 'package:soullocket_app/views/home/widgets/main_home/map_tilt_card.dart';
@@ -557,9 +558,21 @@ class _MainHomeTabState extends State<MainHomeTab> with WidgetsBindingObserver {
     try {
       final prefs = await SharedPreferences.getInstance();
       for (final preset in _kPartnerInteractionPresets) {
-        final customPath = prefs.getString('custom_sticker_${preset.type}');
-        if (customPath != null && customPath.isNotEmpty) {
+        final prefsKey = 'custom_sticker_${preset.type}';
+        final customPath = prefs.getString(prefsKey)?.trim();
+        final isLegacyGif =
+            customPath?.toLowerCase().startsWith(
+              'assets/images/anhtomau_stickers/',
+            ) ??
+            false;
+        if (customPath != null && customPath.isNotEmpty && !isLegacyGif) {
           preset.assetPath = customPath;
+        } else {
+          final defaultPath = _defaultStickerReferenceForInteractionType(
+            preset.type,
+          );
+          preset.assetPath = defaultPath;
+          if (isLegacyGif) await prefs.setString(prefsKey, defaultPath);
         }
       }
     } catch (_) {}

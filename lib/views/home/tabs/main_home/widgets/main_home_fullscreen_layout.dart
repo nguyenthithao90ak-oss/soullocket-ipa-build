@@ -485,7 +485,7 @@ class _FullscreenLoveLetterhead extends StatelessWidget {
           child: _HomeScrapbookCard(
             accentColor: isSingle ? SLColors.secondary : SLColors.thread,
             color: SLColors.paper.withValues(alpha: 0.95),
-            adornment: _HomeCardAdornment.washiTape,
+            adornment: _HomeCardAdornment.waxSeal,
             radius: 19,
             padding: const EdgeInsets.fromLTRB(17, 12, 15, 12),
             child: Row(

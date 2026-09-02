@@ -6771,5 +6771,18 @@
   "home_tieptuc_inactivity": "Tiếp tục ({seconds}s)",
   "home_memory_remaining_upload": "Đang chờ tải lên {count} kỷ niệm còn lại",
   "home_sending_otp_email": "Đang gửi mã OTP đến {email}...",
-  "auth_recovery_reset_device_hint": "\n\n[Thiết bị quen] Nếu bạn quên cả mã PIN, nhập \"RESET\" để yêu cầu đổi mới (xử lý sau 3 ngày)."
+  "auth_recovery_reset_device_hint": "\n\n[Thiết bị quen] Nếu bạn quên cả mã PIN, nhập \"RESET\" để yêu cầu đổi mới (xử lý sau 3 ngày).",
+  "interaction_sticker_editor_title": "Tùy chỉnh sticker",
+  "interaction_sticker_editor_intro": "Chọn một ô ở bộ của bạn, rồi chạm sticker trong kho để thay thế. Sticker mới sẽ bay qua lại trên màn Home.",
+  "interaction_sticker_active_title": "Bộ sticker của bạn · 8 ô",
+  "interaction_sticker_select_hint": "Chạm ô để chỉnh",
+  "interaction_sticker_library_title": "Kho sticker tùy chỉnh",
+  "interaction_sticker_category_novelty": "Mới lạ",
+  "interaction_sticker_category_hearts": "Trái tim",
+  "interaction_sticker_category_couple": "Cặp đôi",
+  "interaction_sticker_category_all": "Tất cả",
+  "interaction_sticker_slot_playful": "Quậy",
+  "interaction_sticker_reset": "Mặc định",
+  "interaction_sticker_save": "Lưu bộ sticker",
+  "interaction_sticker_save_failed": "Chưa lưu được thay đổi. Bạn thử lại nhé."
 }

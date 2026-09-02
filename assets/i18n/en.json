@@ -6771,5 +6771,18 @@
   "home_tieptuc_inactivity": "Continue ({seconds}s)",
   "home_memory_remaining_upload": "Pending upload for {count} remaining memories",
   "home_sending_otp_email": "Sending OTP code to {email}...",
-  "auth_recovery_reset_device_hint": "\n\n[Familiar Device] If you also forgot your PIN, enter \"RESET\" to request a new one (processed in 3 days)."
+  "auth_recovery_reset_device_hint": "\n\n[Familiar Device] If you also forgot your PIN, enter \"RESET\" to request a new one (processed in 3 days).",
+  "interaction_sticker_editor_title": "Customize stickers",
+  "interaction_sticker_editor_intro": "Choose a slot in your set, then tap a sticker below to replace it. New stickers will fly between you on Home.",
+  "interaction_sticker_active_title": "Your sticker set · 8 slots",
+  "interaction_sticker_select_hint": "Tap a slot to edit",
+  "interaction_sticker_library_title": "Custom sticker library",
+  "interaction_sticker_category_novelty": "Fresh picks",
+  "interaction_sticker_category_hearts": "Hearts",
+  "interaction_sticker_category_couple": "Couple",
+  "interaction_sticker_category_all": "All",
+  "interaction_sticker_slot_playful": "Playful",
+  "interaction_sticker_reset": "Defaults",
+  "interaction_sticker_save": "Save sticker set",
+  "interaction_sticker_save_failed": "Couldn't save your changes. Please try again."
 }

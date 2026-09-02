@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:soullocket_app/utils/app_error_mapper.dart';
+import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 
 /// ============================================================
 ///  WatchTogetherService — Gra (Logic/Data)
@@ -191,24 +192,24 @@ class WatchTogetherService {
     });
 
     try {
-      await _db.ref('notification_queue').push().set({
-        'houseId': normalizedHouseId,
-        'house_id': normalizedHouseId,
-        'sender_uid': uid,
-        'title': '${senderName.trim()} mời bạn vào rạp phim',
-        'body': 'Chấp nhận để xem "$safeTitle" cùng nhau.',
-        'data': {
-          'screen': 'cinema',
-          'type': 'cinema_invite',
+      await CloudFunctionsHelper.callSecure<dynamic>(
+        'queuePartnerNotificationSecure',
+        payload: <String, dynamic>{
           'houseId': normalizedHouseId,
-          'targetHouseId': normalizedHouseId,
-          'inviteId': inviteId,
-          'url': normalizedVideoUrl,
-          'title': safeTitle,
+          'title': '${senderName.trim()} mời bạn vào rạp phim',
+          'body': 'Chấp nhận để xem "$safeTitle" cùng nhau.',
+          'data': <String, dynamic>{
+            'screen': 'cinema',
+            'type': 'cinema_invite',
+            'houseId': normalizedHouseId,
+            'targetHouseId': normalizedHouseId,
+            'inviteId': inviteId,
+            'url': normalizedVideoUrl,
+            'title': safeTitle,
+          },
+          'audience': 'partner',
         },
-        'timestamp': ServerValue.timestamp,
-        'status': 'pending',
-      });
+      );
     } catch (e) {
       debugPrint(
           'Failed to queue cinema invite notification: ${AppErrorMapper.resolve(

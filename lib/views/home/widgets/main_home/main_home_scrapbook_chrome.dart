@@ -56,12 +56,12 @@ class _HomeScrapbookBackdropPainter extends CustomPainter {
       final List<Color> daytimePaper = hour < 6
           ? const [Color(0xFFF3ECFF), Color(0xFFFFF2F7), Color(0xFFF8EEE3)]
           : hour < 11
-              ? const [Color(0xFFFFF8E8), Color(0xFFFFEEF3), Color(0xFFFFEAD8)]
-              : hour < 15
-                  ? const [Color(0xFFFFF4DF), Color(0xFFFFF0EA), Color(0xFFFFE7EF)]
-                  : hour < 19
-                      ? const [Color(0xFFFFEAF0), Color(0xFFF7EDFF), Color(0xFFFFF1E6)]
-                      : const [Color(0xFFF0E9FF), Color(0xFFFFEAF3), Color(0xFFF8EEE3)];
+          ? const [Color(0xFFFFF8E8), Color(0xFFFFEEF3), Color(0xFFFFEAD8)]
+          : hour < 15
+          ? const [Color(0xFFFFF4DF), Color(0xFFFFF0EA), Color(0xFFFFE7EF)]
+          : hour < 19
+          ? const [Color(0xFFFFEAF0), Color(0xFFF7EDFF), Color(0xFFFFF1E6)]
+          : const [Color(0xFFF0E9FF), Color(0xFFFFEAF3), Color(0xFFF8EEE3)];
       canvas.drawRect(
         rect,
         Paint()
@@ -192,6 +192,7 @@ enum _HomeCardAdornment {
   postageStamp,
   photoCorners,
   threadKnot,
+  waxSeal,
 }
 
 class _HomeScrapbookCard extends StatelessWidget {
@@ -401,9 +402,7 @@ class _HomeScrapbookCard extends StatelessWidget {
           Positioned(
             left: 10,
             top: 10,
-            child: IgnorePointer(
-              child: _HomePhotoCorner(color: accentColor),
-            ),
+            child: IgnorePointer(child: _HomePhotoCorner(color: accentColor)),
           ),
           Positioned(
             right: 10,
@@ -424,6 +423,56 @@ class _HomeScrapbookCard extends StatelessWidget {
               child: CustomPaint(
                 size: const Size(48, 29),
                 painter: _HomeThreadKnotPainter(accentColor),
+              ),
+            ),
+          ),
+        if (adornment == _HomeCardAdornment.waxSeal)
+          Positioned(
+            right: 22,
+            top: -13,
+            child: IgnorePointer(
+              child: Transform.rotate(
+                angle: 0.08,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        accentColor,
+                        Color.lerp(accentColor, SLColors.thread, 0.52)!,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    border: Border.all(
+                      color: SLColors.paper.withValues(alpha: 0.72),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: SLColors.ink.withValues(alpha: 0.18),
+                        blurRadius: 9,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Container(
+                    margin: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.48),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.favorite_rounded,
+                      size: 12,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

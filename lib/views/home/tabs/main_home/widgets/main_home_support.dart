@@ -128,20 +128,23 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
         widget.imageUrl != null && widget.imageUrl!.trim().isNotEmpty;
 
     for (int i = 0; i < particleCount; i++) {
-      _particles.add(_ParticleData(
-        delay: i * 0.08 + random.nextDouble() * 0.06,
-        flightDuration: 0.62 + random.nextDouble() * 0.08,
-        peakHeight: 0.9 + random.nextDouble() * 0.5 + i * 0.15,
-        size: 48.0 + random.nextDouble() * 14 + i * 3,
-        baseRotation: (random.nextDouble() - 0.5) * 0.5,
-        willCollide: widget.hasCollision && i == 0,
-        wobblePhase: random.nextDouble() * 2 * pi,
-        wobbleAmplitude: 0.03 + random.nextDouble() * 0.04,
-      ));
+      _particles.add(
+        _ParticleData(
+          delay: i * 0.08 + random.nextDouble() * 0.06,
+          flightDuration: 0.62 + random.nextDouble() * 0.08,
+          peakHeight: 0.9 + random.nextDouble() * 0.5 + i * 0.15,
+          size: 48.0 + random.nextDouble() * 14 + i * 3,
+          baseRotation: (random.nextDouble() - 0.5) * 0.5,
+          willCollide: widget.hasCollision && i == 0,
+          wobblePhase: random.nextDouble() * 2 * pi,
+          wobbleAmplitude: 0.03 + random.nextDouble() * 0.04,
+        ),
+      );
     }
 
-    _expSparkle =
-        const RepaintBoundary(child: Text('✨', style: TextStyle(fontSize: 16)));
+    _expSparkle = const RepaintBoundary(
+      child: Text('✨', style: TextStyle(fontSize: 16)),
+    );
     if (hasAsset) {
       _expAssetOrEmoji = RepaintBoundary(
         child: R2StickerImage(
@@ -153,8 +156,9 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
         ),
       );
     } else {
-      _expAssetOrEmoji =
-          const RepaintBoundary(child: Text('✨', style: TextStyle(fontSize: 16)));
+      _expAssetOrEmoji = const RepaintBoundary(
+        child: Text('✨', style: TextStyle(fontSize: 16)),
+      );
     }
 
     _particleWidgets = List.generate(_particles.length, (i) {
@@ -189,264 +193,307 @@ class _ShootingHeartEffectState extends State<ShootingHeartEffect>
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.sizeOf(context);
-    final halfWidth = screenSize.width / 2;
-    final halfHeight = screenSize.height / 2;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final mediaSize = MediaQuery.sizeOf(context);
+        final effectWidth = constraints.hasBoundedWidth
+            ? constraints.maxWidth
+            : mediaSize.width;
+        final effectHeight = constraints.hasBoundedHeight
+            ? constraints.maxHeight
+            : mediaSize.height;
+        final halfWidth = effectWidth / 2;
+        final verticalTravel = effectHeight * 0.30;
+        final baselineLift = effectHeight * 0.06;
 
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Stack(
-          clipBehavior: Clip.none,
-          children: List.generate(_particles.length, (index) {
-            final p = _particles[index];
-            final particleWidget = _particleWidgets[index];
+        return AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Stack(
+              clipBehavior: Clip.none,
+              children: List.generate(_particles.length, (index) {
+                final p = _particles[index];
+                final particleWidget = _particleWidgets[index];
 
-            double t = (_controller.value - p.delay) / p.flightDuration;
-            if (t < 0) t = 0;
-            if (t > 1) t = 1;
+                double t = (_controller.value - p.delay) / p.flightDuration;
+                if (t < 0) t = 0;
+                if (t > 1) t = 1;
 
-            final startX = widget.shootToRight ? -0.7 : 0.7;
-            final endX = widget.shootToRight ? 0.7 : -0.7;
-            final curveX = Curves.easeInOutCubic.transform(t);
-            final wobbleOffset = sin(t * 3 * pi + p.wobblePhase) * p.wobbleAmplitude;
-            final currentX = startX + (endX - startX) * curveX + wobbleOffset;
+                final startX = widget.shootToRight ? -0.7 : 0.7;
+                final endX = widget.shootToRight ? 0.7 : -0.7;
+                final curveX = Curves.easeInOutCubic.transform(t);
+                final wobbleOffset =
+                    sin(t * 3 * pi + p.wobblePhase) * p.wobbleAmplitude;
+                final currentX =
+                    startX + (endX - startX) * curveX + wobbleOffset;
 
-            final currentY = -p.peakHeight * (1 - 4 * (t - 0.5) * (t - 0.5));
+                final currentY =
+                    -p.peakHeight * (1 - 4 * (t - 0.5) * (t - 0.5));
 
-            double currentScale = 1.0;
-            double currentOpacity = 1.0;
-            bool isCollidingNow = false;
-            bool isLanding = false;
+                double currentScale = 1.0;
+                double currentOpacity = 1.0;
+                bool isCollidingNow = false;
+                bool isLanding = false;
 
-            if (p.willCollide && t >= 0.45 && t <= 0.6) {
-              final collideProgress = ((t - 0.45) / 0.15).clamp(0.0, 1.0);
-              currentScale = 1.0 - collideProgress;
-              currentOpacity = 1.0 - collideProgress;
-              isCollidingNow = true;
-            } else if (p.willCollide && t > 0.6) {
-              currentScale = 0.0;
-              currentOpacity = 0.0;
-            } else if (t < 0.12) {
-              final popT = Curves.elasticOut.transform((t / 0.12).clamp(0.0, 1.0));
-              currentScale = popT;
-            } else if (t > 0.78) {
-              isLanding = true;
-              final landT = ((t - 0.78) / 0.22).clamp(0.0, 1.0);
-              final bounceT = sin(landT * pi * 2.5) * (1.0 - landT) * 0.25;
-              currentScale = (1.0 - landT * 0.7) + bounceT;
-              currentOpacity = (1.0 - landT).clamp(0.0, 1.0);
-            }
+                if (p.willCollide && t >= 0.45 && t <= 0.6) {
+                  final collideProgress = ((t - 0.45) / 0.15).clamp(0.0, 1.0);
+                  currentScale = 1.0 - collideProgress;
+                  currentOpacity = 1.0 - collideProgress;
+                  isCollidingNow = true;
+                } else if (p.willCollide && t > 0.6) {
+                  currentScale = 0.0;
+                  currentOpacity = 0.0;
+                } else if (t < 0.12) {
+                  final popT = Curves.elasticOut.transform(
+                    (t / 0.12).clamp(0.0, 1.0),
+                  );
+                  currentScale = popT;
+                } else if (t > 0.78) {
+                  isLanding = true;
+                  final landT = ((t - 0.78) / 0.22).clamp(0.0, 1.0);
+                  final bounceT = sin(landT * pi * 2.5) * (1.0 - landT) * 0.25;
+                  currentScale = (1.0 - landT * 0.7) + bounceT;
+                  currentOpacity = (1.0 - landT).clamp(0.0, 1.0);
+                }
 
-            final translateX = currentX * halfWidth;
-            final effectiveY = p.willCollide && t >= 0.45
-                ? (currentY * (1 - ((t - 0.45) / 0.15).clamp(0.0, 1.0)))
-                : currentY;
-            final translateY = (effectiveY - 0.25) * halfHeight;
+                final translateX = currentX * halfWidth;
+                final effectiveY = p.willCollide && t >= 0.45
+                    ? (currentY * (1 - ((t - 0.45) / 0.15).clamp(0.0, 1.0)))
+                    : currentY;
+                final translateY = (effectiveY * verticalTravel) - baselineLift;
 
-            final rotationSpeed = t < 0.3 ? 1.5 : (t > 0.7 ? 0.3 : 0.8);
-            final mainWidget = Transform.rotate(
-              angle: p.baseRotation +
-                  (t * pi * 2 * rotationSpeed * (widget.shootToRight ? 1 : -1)),
-              child: Transform.scale(
-                scale: currentScale,
-                child: particleWidget,
-              ),
-            );
+                final rotationSpeed = t < 0.3 ? 1.5 : (t > 0.7 ? 0.3 : 0.8);
+                final mainWidget = Transform.rotate(
+                  angle:
+                      p.baseRotation +
+                      (t *
+                          pi *
+                          2 *
+                          rotationSpeed *
+                          (widget.shootToRight ? 1 : -1)),
+                  child: Transform.scale(
+                    scale: currentScale,
+                    child: particleWidget,
+                  ),
+                );
 
-            final List<Widget> trailAndExplosion = [];
+                final List<Widget> trailAndExplosion = [];
 
-            if (t > 0.05 && t < 0.85 && currentOpacity > 0 && !p.willCollide) {
-              for (int ti = 1; ti <= 3; ti++) {
-                final trailT = (t - ti * 0.04).clamp(0.0, 1.0);
-                final trailCurveX = Curves.easeInOutCubic.transform(trailT);
-                final trailWobble = sin(trailT * 3 * pi + p.wobblePhase) * p.wobbleAmplitude;
-                final trailX = startX + (endX - startX) * trailCurveX + trailWobble;
-                final trailY = -p.peakHeight * (1 - 4 * (trailT - 0.5) * (trailT - 0.5));
-                final trailTx = trailX * halfWidth;
-                final trailTy = (trailY - 0.25) * halfHeight;
-                final trailOpacity = (0.35 - ti * 0.1).clamp(0.0, 0.35);
-                final trailSize = p.size * (0.6 - ti * 0.12);
+                if (t > 0.05 &&
+                    t < 0.85 &&
+                    currentOpacity > 0 &&
+                    !p.willCollide) {
+                  for (int ti = 1; ti <= 3; ti++) {
+                    final trailT = (t - ti * 0.04).clamp(0.0, 1.0);
+                    final trailCurveX = Curves.easeInOutCubic.transform(trailT);
+                    final trailWobble =
+                        sin(trailT * 3 * pi + p.wobblePhase) *
+                        p.wobbleAmplitude;
+                    final trailX =
+                        startX + (endX - startX) * trailCurveX + trailWobble;
+                    final trailY =
+                        -p.peakHeight *
+                        (1 - 4 * (trailT - 0.5) * (trailT - 0.5));
+                    final trailTx = trailX * halfWidth;
+                    final trailTy = (trailY * verticalTravel) - baselineLift;
+                    final trailOpacity = (0.35 - ti * 0.1).clamp(0.0, 0.35);
+                    final trailSize = p.size * (0.6 - ti * 0.12);
 
-                trailAndExplosion.add(
-                  Positioned.fill(
-                    child: Center(
-                      child: Transform.translate(
-                        offset: Offset(trailTx, trailTy),
-                        child: Opacity(
-                          opacity: trailOpacity * currentOpacity,
-                          child: Container(
-                            width: trailSize,
-                            height: trailSize,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: RadialGradient(
-                                colors: [
-                                  const Color(0xFFFF80AB).withValues(alpha: 0.5),
-                                  const Color(0xFFFF80AB).withValues(alpha: 0.0),
-                                ],
+                    trailAndExplosion.add(
+                      Positioned.fill(
+                        child: Center(
+                          child: Transform.translate(
+                            offset: Offset(trailTx, trailTy),
+                            child: Opacity(
+                              opacity: trailOpacity * currentOpacity,
+                              child: Container(
+                                width: trailSize,
+                                height: trailSize,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: RadialGradient(
+                                    colors: [
+                                      const Color(
+                                        0xFFFF80AB,
+                                      ).withValues(alpha: 0.5),
+                                      const Color(
+                                        0xFFFF80AB,
+                                      ).withValues(alpha: 0.0),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              }
-            }
+                    );
+                  }
+                }
 
-            if (isCollidingNow) {
-              final collideProgress = ((t - 0.45) / 0.15).clamp(0.0, 1.0);
-              final ext = collideProgress;
-              final expOpacity = (1.0 - ext).clamp(0.0, 1.0);
+                if (isCollidingNow) {
+                  final collideProgress = ((t - 0.45) / 0.15).clamp(0.0, 1.0);
+                  final ext = collideProgress;
+                  final expOpacity = (1.0 - ext).clamp(0.0, 1.0);
 
-              for (int ri = 0; ri < 2; ri++) {
-                final rippleT = (ext - ri * 0.15).clamp(0.0, 1.0);
-                final rippleSize = rippleT * 120.0;
-                final rippleOpacity = (0.5 * (1.0 - rippleT)).clamp(0.0, 0.5);
-                trailAndExplosion.add(
-                  Positioned.fill(
-                    child: Center(
-                      child: Transform.translate(
-                        offset: Offset(translateX, translateY),
-                        child: Opacity(
-                          opacity: rippleOpacity,
-                          child: Container(
-                            width: rippleSize,
-                            height: rippleSize,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: const Color(0xFFFF4081),
-                                width: 2.0 * (1.0 - rippleT),
+                  for (int ri = 0; ri < 2; ri++) {
+                    final rippleT = (ext - ri * 0.15).clamp(0.0, 1.0);
+                    final rippleSize = rippleT * 120.0;
+                    final rippleOpacity = (0.5 * (1.0 - rippleT)).clamp(
+                      0.0,
+                      0.5,
+                    );
+                    trailAndExplosion.add(
+                      Positioned.fill(
+                        child: Center(
+                          child: Transform.translate(
+                            offset: Offset(translateX, translateY),
+                            child: Opacity(
+                              opacity: rippleOpacity,
+                              child: Container(
+                                width: rippleSize,
+                                height: rippleSize,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: const Color(0xFFFF4081),
+                                    width: 2.0 * (1.0 - rippleT),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              }
+                    );
+                  }
 
-              for (int i = 0; i < 8; i++) {
-                final angle = i * (2 * pi / 8) + (p.baseRotation * 3);
-                final distance = ext * 90.0;
-                final dx = cos(angle) * distance;
-                final dy = sin(angle) * distance;
+                  for (int i = 0; i < 8; i++) {
+                    final angle = i * (2 * pi / 8) + (p.baseRotation * 3);
+                    final distance = ext * 90.0;
+                    final dx = cos(angle) * distance;
+                    final dy = sin(angle) * distance;
 
-                final bool isSparkle = i % 2 == 0;
-                final Widget expChild = isSparkle ? _expSparkle : _expAssetOrEmoji;
-                final expScale = 0.5 + (1.0 - ext) * 0.9;
+                    final bool isSparkle = i % 2 == 0;
+                    final Widget expChild = isSparkle
+                        ? _expSparkle
+                        : _expAssetOrEmoji;
+                    final expScale = 0.5 + (1.0 - ext) * 0.9;
 
-                trailAndExplosion.add(
-                  Positioned.fill(
-                    child: Center(
-                      child: Transform.translate(
-                        offset: Offset(translateX + dx, translateY + dy),
-                        child: Transform.scale(
-                          scale: expScale,
-                          child: Opacity(
-                            opacity: expOpacity,
-                            child: expChild,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }
-            } else if (isLanding && !p.willCollide) {
-              final landT = ((t - 0.78) / 0.22).clamp(0.0, 1.0);
-
-              for (int ri = 0; ri < 2; ri++) {
-                final rippleT = (landT - ri * 0.2).clamp(0.0, 1.0);
-                if (rippleT <= 0) continue;
-                final rippleSize = rippleT * 80.0;
-                final rippleOpacity = (0.4 * (1.0 - rippleT)).clamp(0.0, 0.4);
-                trailAndExplosion.add(
-                  Positioned.fill(
-                    child: Center(
-                      child: Transform.translate(
-                        offset: Offset(translateX, translateY),
-                        child: Opacity(
-                          opacity: rippleOpacity,
-                          child: Container(
-                            width: rippleSize,
-                            height: rippleSize,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: const Color(0xFFFF80AB),
-                                width: 1.5 * (1.0 - rippleT),
+                    trailAndExplosion.add(
+                      Positioned.fill(
+                        child: Center(
+                          child: Transform.translate(
+                            offset: Offset(translateX + dx, translateY + dy),
+                            child: Transform.scale(
+                              scale: expScale,
+                              child: Opacity(
+                                opacity: expOpacity,
+                                child: expChild,
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              }
+                    );
+                  }
+                } else if (isLanding && !p.willCollide) {
+                  final landT = ((t - 0.78) / 0.22).clamp(0.0, 1.0);
 
-              if (landT > 0.2) {
-                final burstT = ((landT - 0.2) / 0.8).clamp(0.0, 1.0);
-                final expOpacity = (1.0 - burstT).clamp(0.0, 1.0);
-                for (int i = 0; i < 6; i++) {
-                  final angle = i * (2 * pi / 6) + (p.baseRotation * 2);
-                  final distance = burstT * 60.0;
-                  final dx = cos(angle) * distance;
-                  final dy = sin(angle) * distance;
-                  final bool isSparkle = i % 2 == 0;
-                  final Widget expChild = isSparkle ? _expSparkle : _expAssetOrEmoji;
-                  final expScale = 0.4 + (1.0 - burstT) * 0.6;
+                  for (int ri = 0; ri < 2; ri++) {
+                    final rippleT = (landT - ri * 0.2).clamp(0.0, 1.0);
+                    if (rippleT <= 0) continue;
+                    final rippleSize = rippleT * 80.0;
+                    final rippleOpacity = (0.4 * (1.0 - rippleT)).clamp(
+                      0.0,
+                      0.4,
+                    );
+                    trailAndExplosion.add(
+                      Positioned.fill(
+                        child: Center(
+                          child: Transform.translate(
+                            offset: Offset(translateX, translateY),
+                            child: Opacity(
+                              opacity: rippleOpacity,
+                              child: Container(
+                                width: rippleSize,
+                                height: rippleSize,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: const Color(0xFFFF80AB),
+                                    width: 1.5 * (1.0 - rippleT),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
 
-                  trailAndExplosion.add(
+                  if (landT > 0.2) {
+                    final burstT = ((landT - 0.2) / 0.8).clamp(0.0, 1.0);
+                    final expOpacity = (1.0 - burstT).clamp(0.0, 1.0);
+                    for (int i = 0; i < 6; i++) {
+                      final angle = i * (2 * pi / 6) + (p.baseRotation * 2);
+                      final distance = burstT * 60.0;
+                      final dx = cos(angle) * distance;
+                      final dy = sin(angle) * distance;
+                      final bool isSparkle = i % 2 == 0;
+                      final Widget expChild = isSparkle
+                          ? _expSparkle
+                          : _expAssetOrEmoji;
+                      final expScale = 0.4 + (1.0 - burstT) * 0.6;
+
+                      trailAndExplosion.add(
+                        Positioned.fill(
+                          child: Center(
+                            child: Transform.translate(
+                              offset: Offset(translateX + dx, translateY + dy),
+                              child: Transform.scale(
+                                scale: expScale,
+                                child: Opacity(
+                                  opacity: expOpacity,
+                                  child: expChild,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                }
+
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    ...trailAndExplosion,
                     Positioned.fill(
                       child: Center(
                         child: Transform.translate(
-                          offset: Offset(translateX + dx, translateY + dy),
-                          child: Transform.scale(
-                            scale: expScale,
-                            child: Opacity(
-                              opacity: expOpacity,
-                              child: expChild,
-                            ),
+                          offset: Offset(translateX, translateY),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            clipBehavior: Clip.none,
+                            children: [
+                              if (currentOpacity > 0 && currentScale > 0)
+                                Opacity(
+                                  opacity: currentOpacity,
+                                  child: mainWidget,
+                                ),
+                            ],
                           ),
                         ),
                       ),
                     ),
-                  );
-                }
-              }
-            }
-
-            return Stack(
-              clipBehavior: Clip.none,
-              children: [
-                ...trailAndExplosion,
-                Positioned.fill(
-                  child: Center(
-                    child: Transform.translate(
-                      offset: Offset(translateX, translateY),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        clipBehavior: Clip.none,
-                        children: [
-                          if (currentOpacity > 0 && currentScale > 0)
-                            Opacity(
-                              opacity: currentOpacity,
-                              child: mainWidget,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              }),
             );
-          }),
+          },
         );
       },
     );
@@ -500,10 +547,13 @@ class _HeartbeatWidgetState extends State<_HeartbeatWidget>
   void initState() {
     super.initState();
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 2500))
-      ..repeat(reverse: true);
-    _animation = Tween<double>(begin: 1.0, end: 1.02)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    )..repeat(reverse: true);
+    _animation = Tween<double>(
+      begin: 1.0,
+      end: 1.02,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -545,9 +595,10 @@ class _FallingEffectState extends State<FallingEffect>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _type = widget.type;
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(seconds: 10))
-          ..repeat();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 10),
+    )..repeat();
     _initItems();
   }
 
@@ -643,8 +694,11 @@ class _FallingEffectState extends State<FallingEffect>
             item.rotation += item.rotationSpeed;
           }
           return CustomPaint(
-            painter:
-                _FallingPainter(_items, type: _type, isDark: widget.isDark),
+            painter: _FallingPainter(
+              _items,
+              type: _type,
+              isDark: widget.isDark,
+            ),
             size: Size.infinite,
           );
         },
@@ -660,11 +714,23 @@ class _HeartClipper extends CustomClipper<Path> {
     final double height = size.height;
     final Path path = Path();
     path.moveTo(0.5 * width, height * 0.35);
-    path.cubicTo(0.2 * width, height * 0.1, -0.25 * width, height * 0.6,
-        0.5 * width, height);
+    path.cubicTo(
+      0.2 * width,
+      height * 0.1,
+      -0.25 * width,
+      height * 0.6,
+      0.5 * width,
+      height,
+    );
     path.moveTo(0.5 * width, height * 0.35);
-    path.cubicTo(0.8 * width, height * 0.1, 1.25 * width, height * 0.6,
-        0.5 * width, height);
+    path.cubicTo(
+      0.8 * width,
+      height * 0.1,
+      1.25 * width,
+      height * 0.6,
+      0.5 * width,
+      height,
+    );
     return path;
   }
 
@@ -679,11 +745,23 @@ class _HeartBorderPainter extends CustomPainter {
     final double height = size.height;
     final Path path = Path();
     path.moveTo(0.5 * width, height * 0.35);
-    path.cubicTo(0.2 * width, height * 0.1, -0.25 * width, height * 0.6,
-        0.5 * width, height);
+    path.cubicTo(
+      0.2 * width,
+      height * 0.1,
+      -0.25 * width,
+      height * 0.6,
+      0.5 * width,
+      height,
+    );
     path.moveTo(0.5 * width, height * 0.35);
-    path.cubicTo(0.8 * width, height * 0.1, 1.25 * width, height * 0.6,
-        0.5 * width, height);
+    path.cubicTo(
+      0.8 * width,
+      height * 0.1,
+      1.25 * width,
+      height * 0.6,
+      0.5 * width,
+      height,
+    );
 
     final Paint paint = Paint()
       ..color = Colors.white
@@ -698,14 +776,14 @@ class _HeartBorderPainter extends CustomPainter {
 
 class _FallingItem {
   double x, y, size, speed, rotation, rotationSpeed, opacity;
-  _FallingItem(
-      {required this.x,
-      required this.y,
-      required this.size,
-      required this.speed,
-      required this.rotationSpeed,
-      required this.opacity})
-      : rotation = 0.0;
+  _FallingItem({
+    required this.x,
+    required this.y,
+    required this.size,
+    required this.speed,
+    required this.rotationSpeed,
+    required this.opacity,
+  }) : rotation = 0.0;
 }
 
 class _FallingPainter extends CustomPainter {
@@ -747,12 +825,18 @@ class _FallingPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = (s * 0.12).clamp(1.0, 3.0);
           canvas.drawLine(
-              Offset(-s * 0.7, -s * 0.2), Offset(s * 0.7, s * 0.2), _paint);
+            Offset(-s * 0.7, -s * 0.2),
+            Offset(s * 0.7, s * 0.2),
+            _paint,
+          );
           _paint
             ..style = PaintingStyle.fill
             ..strokeWidth = 0;
           canvas.drawCircle(
-              Offset(s * 0.75, s * 0.22), (s * 0.12).clamp(1.5, 4.0), _paint);
+            Offset(s * 0.75, s * 0.22),
+            (s * 0.12).clamp(1.5, 4.0),
+            _paint,
+          );
           break;
         case 'bubbles':
           _paint
@@ -875,26 +959,30 @@ class _InteractionSuccessDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final presetAssetPath =
-        _maybePresetForInteractionType(interactionType)?.assetPath;
+    final presetAssetPath = _maybePresetForInteractionType(
+      interactionType,
+    )?.assetPath;
 
-    final (dynamic iconOrEmoji, List<Color> gradient, Color accent) =
-        switch (interactionType) {
+    final (
+      dynamic iconOrEmoji,
+      List<Color> gradient,
+      Color accent,
+    ) = switch (interactionType) {
       'hot' => (
-          Icons.local_fire_department_rounded,
-          const [Color(0xFFFFF2CC), Color(0xFFFFC36B)],
-          const Color(0xFFE87722),
-        ),
+        Icons.local_fire_department_rounded,
+        const [Color(0xFFFFF2CC), Color(0xFFFFC36B)],
+        const Color(0xFFE87722),
+      ),
       'warmth' => (
-          Icons.cloud_rounded,
-          const [Color(0xFFEAF8FF), Color(0xFFC6EEFF)],
-          const Color(0xFF1497C9),
-        ),
+        Icons.cloud_rounded,
+        const [Color(0xFFEAF8FF), Color(0xFFC6EEFF)],
+        const Color(0xFF1497C9),
+      ),
       _ => (
-          _presetForInteractionType(interactionType).emoji,
-          _presetForInteractionType(interactionType).gradient,
-          _presetForInteractionType(interactionType).accent,
-        ),
+        _presetForInteractionType(interactionType).emoji,
+        _presetForInteractionType(interactionType).gradient,
+        _presetForInteractionType(interactionType).accent,
+      ),
     };
 
     return Material(
@@ -908,9 +996,7 @@ class _InteractionSuccessDialog extends StatelessWidget {
               child: FastBackdropFilter(
                 filter: ui.ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
                 fallbackColor: Colors.black.withValues(alpha: 0.34),
-                child: Container(
-                  color: Colors.black.withValues(alpha: 0.3),
-                ),
+                child: Container(color: Colors.black.withValues(alpha: 0.3)),
               ),
             ),
           ),
@@ -981,28 +1067,23 @@ class _InteractionSuccessDialog extends StatelessWidget {
                             ],
                           )
                         : iconOrEmoji is IconData
-                            ? Icon(
-                                iconOrEmoji,
-                                color: Colors.white,
-                                size: 55,
-                              )
-                            : Center(
-                                child: Text(
-                                  iconOrEmoji.toString(),
-                                  style: TextStyle(
-                                    fontSize: 40,
-                                    height: 1,
-                                    shadows: [
-                                      Shadow(
-                                        color:
-                                            Colors.black.withValues(alpha: 0.1),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
+                        ? Icon(iconOrEmoji, color: Colors.white, size: 55)
+                        : Center(
+                            child: Text(
+                              iconOrEmoji.toString(),
+                              style: TextStyle(
+                                fontSize: 40,
+                                height: 1,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withValues(alpha: 0.1),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
                                   ),
-                                ),
+                                ],
                               ),
+                            ),
+                          ),
                   ),
                   SLSpacing.h16,
                   Text(
@@ -1029,13 +1110,13 @@ class _InteractionSuccessDialog extends StatelessWidget {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 13),
+                      horizontal: 16,
+                      vertical: 13,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: accent.withValues(alpha: 0.12),
-                      ),
+                      border: Border.all(color: accent.withValues(alpha: 0.12)),
                     ),
                     child: Text(
                       partnerOnline
@@ -1117,10 +1198,11 @@ class _MissYouAlertPayload {
       title: map['title']?.toString() ?? '',
       message: map['message']?.toString() ?? '',
       body: map['body']?.toString() ?? '',
-      fromName: (map['from'] ??
-              map['fromName'] ??
-              L10nService().translate('home_ngiy_5bab37'))
-          .toString(),
+      fromName:
+          (map['from'] ??
+                  map['fromName'] ??
+                  L10nService().translate('home_ngiy_5bab37'))
+              .toString(),
       fromAvatar: map['fromAvatar']?.toString() ?? '',
       toName: map['toName']?.toString() ?? '',
       sentAtMs: (() {
@@ -1154,9 +1236,10 @@ class __MissYouScreenState extends State<_MissYouScreen>
       vsync: this,
       duration: const Duration(seconds: 1),
     )..repeat(reverse: true);
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.2,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     // Auto close after 5 seconds
     Future.delayed(const Duration(seconds: 5), () {
@@ -1183,118 +1266,111 @@ class __MissYouScreenState extends State<_MissYouScreen>
       lottieUrl,
     ) = switch (widget.payload.type) {
       'hot' => (
-          widget.payload.emoji,
-          <Color>[
-            const Color(0xFFFFA63D).withValues(alpha: 0.92),
-            const Color(0xFFE86C00).withValues(alpha: 0.96),
-          ],
-          const Color(0xFFFFD18A),
-          '${widget.payload.fromName} nhắc bạn uống nước!',
-          context.tr('home_bnkiaangnn_c62597'),
-          null,
-        ),
+        widget.payload.emoji,
+        <Color>[
+          const Color(0xFFFFA63D).withValues(alpha: 0.92),
+          const Color(0xFFE86C00).withValues(alpha: 0.96),
+        ],
+        const Color(0xFFFFD18A),
+        '${widget.payload.fromName} nhắc bạn uống nước!',
+        context.tr('home_bnkiaangnn_c62597'),
+        null,
+      ),
       'warmth' => (
-          widget.payload.emoji,
-          <Color>[
-            const Color(0xFF49C5F6).withValues(alpha: 0.9),
-            const Color(0xFF0E8FC3).withValues(alpha: 0.95),
-          ],
-          const Color(0xFFC8F1FF),
-          '${widget.payload.fromName} nhắc bạn giữ ấm!',
-          context.tr('home_bnkiaangma_0a9e8e'),
-          null,
-        ),
+        widget.payload.emoji,
+        <Color>[
+          const Color(0xFF49C5F6).withValues(alpha: 0.9),
+          const Color(0xFF0E8FC3).withValues(alpha: 0.95),
+        ],
+        const Color(0xFFC8F1FF),
+        '${widget.payload.fromName} nhắc bạn giữ ấm!',
+        context.tr('home_bnkiaangma_0a9e8e'),
+        null,
+      ),
       'kiss' => (
-          widget.payload.emoji,
-          _presetForInteractionType('kiss')
-              .gradient
-              .map((color) => color.withValues(alpha: 0.92))
-              .toList(),
-          Colors.white,
-          '${widget.payload.fromName} gửi bạn một nụ hôn!',
-          context.tr('home_chtmtcitht_1ca200'),
-          'https://assets9.lottiefiles.com/packages/lf20_mjfquvsi.json',
-        ),
+        widget.payload.emoji,
+        _presetForInteractionType(
+          'kiss',
+        ).gradient.map((color) => color.withValues(alpha: 0.92)).toList(),
+        Colors.white,
+        '${widget.payload.fromName} gửi bạn một nụ hôn!',
+        context.tr('home_chtmtcitht_1ca200'),
+        'https://assets9.lottiefiles.com/packages/lf20_mjfquvsi.json',
+      ),
       'hug' => (
-          widget.payload.emoji,
-          _presetForInteractionType('hug')
-              .gradient
-              .map((color) => color.withValues(alpha: 0.92))
-              .toList(),
-          Colors.white,
-          '${widget.payload.fromName} ôm bạn một cái!',
-          context.tr('home_mtcimmmang_ce0013'),
-          'https://assets10.lottiefiles.com/packages/lf20_96py9mpe.json',
-        ),
+        widget.payload.emoji,
+        _presetForInteractionType(
+          'hug',
+        ).gradient.map((color) => color.withValues(alpha: 0.92)).toList(),
+        Colors.white,
+        '${widget.payload.fromName} ôm bạn một cái!',
+        context.tr('home_mtcimmmang_ce0013'),
+        'https://assets10.lottiefiles.com/packages/lf20_96py9mpe.json',
+      ),
       'angry' => (
-          widget.payload.emoji,
-          _presetForInteractionType('angry')
-              .gradient
-              .map((color) => color.withValues(alpha: 0.92))
-              .toList(),
-          Colors.white,
-          '${widget.payload.fromName} đang dỗi kìa!',
-          context.tr('home_dixuthiqua_ed30d2'),
-          null,
-        ),
+        widget.payload.emoji,
+        _presetForInteractionType(
+          'angry',
+        ).gradient.map((color) => color.withValues(alpha: 0.92)).toList(),
+        Colors.white,
+        '${widget.payload.fromName} đang dỗi kìa!',
+        context.tr('home_dixuthiqua_ed30d2'),
+        null,
+      ),
       'furious' => (
-          widget.payload.emoji,
-          _presetForInteractionType('furious')
-              .gradient
-              .map((color) => color.withValues(alpha: 0.94))
-              .toList(),
-          Colors.white,
-          '${widget.payload.fromName} đang tức lắm đó!',
-          context.tr('home_cntcrcvaba_c0f1f0'),
-          null,
-        ),
+        widget.payload.emoji,
+        _presetForInteractionType(
+          'furious',
+        ).gradient.map((color) => color.withValues(alpha: 0.94)).toList(),
+        Colors.white,
+        '${widget.payload.fromName} đang tức lắm đó!',
+        context.tr('home_cntcrcvaba_c0f1f0'),
+        null,
+      ),
       'tease' => (
-          widget.payload.emoji,
-          _presetForInteractionType('tease')
-              .gradient
-              .map((color) => color.withValues(alpha: 0.92))
-              .toList(),
-          Colors.white,
-          '${widget.payload.fromName} vừa trêu bạn đó!',
-          context.tr('home_mtcchcyusi_aef43a'),
-          null,
-        ),
+        widget.payload.emoji,
+        _presetForInteractionType(
+          'tease',
+        ).gradient.map((color) => color.withValues(alpha: 0.92)).toList(),
+        Colors.white,
+        '${widget.payload.fromName} vừa trêu bạn đó!',
+        context.tr('home_mtcchcyusi_aef43a'),
+        null,
+      ),
       'cry' => (
-          widget.payload.emoji,
-          _presetForInteractionType('cry')
-              .gradient
-              .map((color) => color.withValues(alpha: 0.94))
-              .toList(),
-          Colors.white,
-          '${widget.payload.fromName} đang cần bạn dỗ dành!',
-          context.tr('home_hmnayngiyh_a67699'),
-          null,
-        ),
+        widget.payload.emoji,
+        _presetForInteractionType(
+          'cry',
+        ).gradient.map((color) => color.withValues(alpha: 0.94)).toList(),
+        Colors.white,
+        '${widget.payload.fromName} đang cần bạn dỗ dành!',
+        context.tr('home_hmnayngiyh_a67699'),
+        null,
+      ),
       'poop' => (
-          widget.payload.emoji,
-          _presetForInteractionType('poop')
-              .gradient
-              .map((color) => color.withValues(alpha: 0.92))
-              .toList(),
-          Colors.white,
-          '${widget.payload.fromName} ném 💩 vào bạn!',
-          context.tr('home_mtctrusiun_2b24ce'),
-          null,
-        ),
+        widget.payload.emoji,
+        _presetForInteractionType(
+          'poop',
+        ).gradient.map((color) => color.withValues(alpha: 0.92)).toList(),
+        Colors.white,
+        '${widget.payload.fromName} ném 💩 vào bạn!',
+        context.tr('home_mtctrusiun_2b24ce'),
+        null,
+      ),
       _ => (
-          widget.payload.emoji,
-          _presetForInteractionType(widget.payload.type)
-              .gradient
-              .map((color) => color.withValues(alpha: 0.92))
-              .toList(),
-          Colors.white,
-          '${widget.payload.fromName} đang nhớ bạn!',
-          context.tr('home_nhphnhilic_33736a'),
-          'https://assets3.lottiefiles.com/packages/lf20_o7pajr.json',
-        ),
+        widget.payload.emoji,
+        _presetForInteractionType(
+          widget.payload.type,
+        ).gradient.map((color) => color.withValues(alpha: 0.92)).toList(),
+        Colors.white,
+        '${widget.payload.fromName} đang nhớ bạn!',
+        context.tr('home_nhphnhilic_33736a'),
+        'https://assets3.lottiefiles.com/packages/lf20_o7pajr.json',
+      ),
     };
-    final presetAssetPath =
-        _maybePresetForInteractionType(widget.payload.type)?.assetPath;
+    final presetAssetPath = _maybePresetForInteractionType(
+      widget.payload.type,
+    )?.assetPath;
     final backgroundVisual = switch (widget.payload.type) {
       'hot' => '☀️',
       'warmth' => '❄️',
@@ -1322,25 +1398,32 @@ class __MissYouScreenState extends State<_MissYouScreen>
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final shortestSide = constraints.biggest.shortestSide;
-                final artSize =
-                    (shortestSide * 0.56).clamp(140.0, 250.0).toDouble();
-                final emojiSize =
-                    (artSize * 0.42).clamp(64.0, 106.0).toDouble();
-                final reactionVisualSize =
-                    presetAssetPath != null ? artSize : emojiSize;
-                final titleSize =
-                    (shortestSide * 0.062).clamp(22.0, 26.0).toDouble();
+                final artSize = (shortestSide * 0.56)
+                    .clamp(140.0, 250.0)
+                    .toDouble();
+                final emojiSize = (artSize * 0.42)
+                    .clamp(64.0, 106.0)
+                    .toDouble();
+                final reactionVisualSize = presetAssetPath != null
+                    ? artSize
+                    : emojiSize;
+                final titleSize = (shortestSide * 0.062)
+                    .clamp(22.0, 26.0)
+                    .toDouble();
                 final messageSize = constraints.maxWidth < 360 ? 15.0 : 16.0;
-                final contentWidth =
-                    (constraints.maxWidth - 40).clamp(280.0, 460.0).toDouble();
+                final contentWidth = (constraints.maxWidth - 40)
+                    .clamp(280.0, 460.0)
+                    .toDouble();
                 final verticalGap = shortestSide < 380 ? 20.0 : 30.0;
                 final minHeight = constraints.maxHeight > 48
                     ? constraints.maxHeight - 48
                     : 0.0;
 
                 return SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 24,
+                  ),
                   child: ConstrainedBox(
                     constraints: BoxConstraints(minHeight: minHeight),
                     child: Center(
@@ -1385,8 +1468,9 @@ class __MissYouScreenState extends State<_MissYouScreen>
                                     width: artSize,
                                     height: artSize,
                                     fit: BoxFit.contain,
-                                    loadDelay:
-                                        const Duration(milliseconds: 150),
+                                    loadDelay: const Duration(
+                                      milliseconds: 150,
+                                    ),
                                     errorWidget: ScaleTransition(
                                       scale: _scaleAnimation,
                                       child: _buildInteractionVisual(
@@ -1397,8 +1481,9 @@ class __MissYouScreenState extends State<_MissYouScreen>
                                         iconColor: accent,
                                         emojiShadows: [
                                           Shadow(
-                                            color: Colors.black
-                                                .withValues(alpha: 0.14),
+                                            color: Colors.black.withValues(
+                                              alpha: 0.14,
+                                            ),
                                             blurRadius: 16,
                                             offset: const Offset(0, 6),
                                           ),
@@ -1417,8 +1502,9 @@ class __MissYouScreenState extends State<_MissYouScreen>
                                       iconColor: accent,
                                       emojiShadows: [
                                         Shadow(
-                                          color: Colors.black
-                                              .withValues(alpha: 0.14),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.14,
+                                          ),
                                           blurRadius: 16,
                                           offset: const Offset(0, 6),
                                         ),

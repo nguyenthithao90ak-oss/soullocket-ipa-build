@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Query, Transaction;
 import 'package:cloud_firestore/cloud_firestore.dart' as cf;
 import 'package:soullocket_app/models/social_post.dart';
-import 'push_notification_helper.dart';
 import 'local_database_service.dart';
 
 /// SocialService — Quản lý social feed cộng đồng
@@ -372,133 +371,21 @@ class SocialService {
 
   Future<String> _resolveHouseLabel(String houseId) async {
     final normalized = houseId.trim();
-    if (normalized.isEmpty) {
-      return '';
-    }
-
+    if (normalized.isEmpty) return '';
     final candidates = <String>[
       'houses/$normalized/settings/houseName',
       'houses/$normalized/houseName',
       'house_profiles/$normalized/houseName',
       'houses_public/$normalized/houseName',
     ];
-
     for (final path in candidates) {
       try {
         final snap = await _dbRef.child(path).get();
         final value = snap.value?.toString().trim() ?? '';
-        if (value.isNotEmpty) {
-          return value;
-        }
+        if (value.isNotEmpty) return value;
       } catch (_) {}
     }
-
     return normalized;
-  }
-
-  String _compactNotificationMessage(String value, {int maxLength = 160}) {
-    final normalized = value.replaceAll(RegExp(r'\s+'), ' ').trim();
-    if (normalized.isEmpty) {
-      return '';
-    }
-    if (normalized.length <= maxLength) {
-      return normalized;
-    }
-    return '${normalized.substring(0, maxLength - 1)}…';
-  }
-
-  Future<void> _pushCommunityNotification({
-    required String toHouseId,
-    required String fromHouseId,
-    required String type,
-    required String title,
-    required String message,
-    String? postId,
-  }) async {
-    final target = toHouseId.trim();
-    final actor = fromHouseId.trim();
-    if (target.isEmpty || actor.isEmpty || target == actor) {
-      return;
-    }
-
-    final fromName = await _resolveHouseLabel(actor);
-    await PushNotificationHelper.push(
-      toHouseId: target,
-      type: type,
-      from: actor,
-      fromId: actor,
-      fromLabel: fromName,
-      msg: _compactNotificationMessage(message),
-      title: title,
-      postId: postId,
-      extra: const <String, dynamic>{
-        'category': 'social',
-        'section': 'community',
-      },
-    );
-  }
-
-  Future<void> notifyPostLiked({
-    required String postId,
-    required String actorHouseId,
-  }) async {
-    final postData = await _loadPostHybrid(postId);
-    if (postData == null) {
-      return;
-    }
-
-    final targetHouseId = (postData['houseId'] ?? '').toString().trim();
-    await _pushCommunityNotification(
-      toHouseId: targetHouseId,
-      fromHouseId: actorHouseId,
-      type: 'like',
-      title: 'Lượt thích mới',
-      message: 'đã thích bài đăng cộng đồng của bạn.',
-      postId: postId,
-    );
-  }
-
-  Future<void> notifyPostCommented({
-    required String postId,
-    required String actorHouseId,
-    required String commentText,
-  }) async {
-    final postData = await _loadPostHybrid(postId);
-    if (postData == null) {
-      return;
-    }
-
-    final targetHouseId = (postData['houseId'] ?? '').toString().trim();
-    await _pushCommunityNotification(
-      toHouseId: targetHouseId,
-      fromHouseId: actorHouseId,
-      type: 'comment',
-      title: 'Bình luận mới',
-      message: commentText,
-      postId: postId,
-    );
-  }
-
-  Future<void> notifyCommentLiked({
-    required String postId,
-    required String commentId,
-    required String actorHouseId,
-  }) async {
-    final commentData = await _loadCommentHybrid(postId, commentId);
-    if (commentData == null || commentData['isHidden'] == true) {
-      return;
-    }
-
-    final targetHouseId =
-        (commentData['houseId'] ?? commentData['uid'] ?? '').toString().trim();
-    await _pushCommunityNotification(
-      toHouseId: targetHouseId,
-      fromHouseId: actorHouseId,
-      type: 'like',
-      title: 'Lượt thích mới',
-      message: 'đã thích bình luận cộng đồng của bạn.',
-      postId: postId,
-    );
   }
 
   // ── STREAM feed global (mới nhất) bằng onChildAdded ──────────────────
@@ -726,8 +613,6 @@ class SocialService {
         .doc(myHouseId)
         .collection('posts')
         .doc(postId);
-    var addedLike = false;
-
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(docRef);
       if (!snapshot.exists) {
@@ -749,7 +634,6 @@ class SocialService {
           'postId': postId,
           'likedAt': now,
         });
-        addedLike = true;
       }
 
       transaction.update(docRef, {
@@ -758,11 +642,6 @@ class SocialService {
       });
     });
 
-    if (addedLike) {
-      try {
-        await notifyPostLiked(postId: postId, actorHouseId: myHouseId);
-      } catch (_) {}
-    }
   }
 
   // ── CHECK đã like chưa ───────────────────────────────────────────────
@@ -963,23 +842,14 @@ class SocialService {
       'isHidden': hasViolations,
       if (resolvedAvt.isNotEmpty) 'avt': resolvedAvt,
       if (resolvedAvt.isNotEmpty) 'authorAvt': resolvedAvt,
-      if (replyTo != null) 'replyTo': replyTo,
-      if (replyToName != null) 'replyToName': replyToName,
+      'replyTo': ?replyTo,
+      'replyToName': ?replyToName,
       'likes_map': <String, dynamic>{},
     };
 
     // Write to Firestore subcollection
     await docRef.set(payload);
 
-    if (!hasViolations) {
-      try {
-        await notifyPostCommented(
-          postId: postId,
-          actorHouseId: houseId,
-          commentText: trimmedContent,
-        );
-      } catch (_) {}
-    }
   }
 
   // ── TOGGLE LIKE COMMENT ──────────────────────────────────────────────
@@ -994,14 +864,13 @@ class SocialService {
         .collection('comments')
         .doc(commentId);
 
-    bool liked = false;
     try {
       await _firestore.runTransaction((transaction) async {
         final snapshot = await transaction.get(docRef);
         if (snapshot.exists) {
           final data = snapshot.data() ?? {};
           final likesMap = Map<String, dynamic>.from(data['likes_map'] ?? {});
-          liked = likesMap.containsKey(myHouseId);
+          final liked = likesMap.containsKey(myHouseId);
           if (liked) {
             likesMap.remove(myHouseId);
           } else {
@@ -1018,15 +887,6 @@ class SocialService {
       });
     } catch (_) {}
 
-    if (!liked) {
-      try {
-        await notifyCommentLiked(
-          postId: postId,
-          commentId: commentId,
-          actorHouseId: myHouseId,
-        );
-      } catch (_) {}
-    }
   }
 
   // ── REPORT POST ─────────────────────────────────────────────────────

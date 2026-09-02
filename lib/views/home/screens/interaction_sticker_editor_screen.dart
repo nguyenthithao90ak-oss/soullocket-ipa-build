@@ -1,9 +1,14 @@
-import 'dart:math';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
+import 'package:soullocket_app/utils/services/l10n_service.dart';
+import 'package:soullocket_app/widgets/r2_sticker_image.dart';
+import 'package:soullocket_app/widgets/soullocket_animated_sticker.dart';
 
-// sticker bắn
+// Kho sticker dùng cho hiệu ứng bắn qua lại trên màn Home.
 class InteractionStickerEditorScreen extends StatefulWidget {
   const InteractionStickerEditorScreen({super.key});
 
@@ -14,532 +19,767 @@ class InteractionStickerEditorScreen extends StatefulWidget {
 
 class _InteractionStickerEditorScreenState
     extends State<InteractionStickerEditorScreen> {
-  final List<Map<String, dynamic>> _activeSlots = [
-    {
-      'type': 'miss',
-      'label': 'Yêu',
-      'emoji': '💖',
-      'defaultPath': 'assets/images/anhtomau_stickers/sticker_1.gif',
-      'path': '',
-      'gradient': [const Color(0xFFFFD8E6), const Color(0xFFFFF3F7)],
-      'accent': const Color(0xFFD94C86),
-    },
-    {
-      'type': 'angry',
-      'label': 'Thích',
-      'emoji': '😻',
-      'defaultPath': 'assets/images/anhtomau_stickers/sticker_27.gif',
-      'path': '',
-      'gradient': [const Color(0xFFFFE6DC), const Color(0xFFFFF6F2)],
-      'accent': const Color(0xFFE26A3A),
-    },
-    {
-      'type': 'furious',
-      'label': 'Cười',
-      'emoji': '😆',
-      'defaultPath': 'assets/images/anhtomau_stickers/sticker_3.gif',
-      'path': '',
-      'gradient': [const Color(0xFFFFD7DC), const Color(0xFFFFF1F3)],
-      'accent': const Color(0xFFE53935),
-    },
-    {
-      'type': 'kiss',
-      'label': 'Hôn',
-      'emoji': '💋',
-      'defaultPath': 'assets/images/anhtomau_stickers/sticker_12.gif',
-      'path': '',
-      'gradient': [const Color(0xFFFFE1EC), const Color(0xFFFFF7FA)],
-      'accent': const Color(0xFFE14A8B),
-    },
-    {
-      'type': 'tease',
-      'label': 'Trêu',
-      'emoji': '🤡',
-      'defaultPath': 'assets/images/anhtomau_stickers/sticker_13.gif',
-      'path': '',
-      'gradient': [const Color(0xFFE8E1FF), const Color(0xFFF8F5FF)],
-      'accent': const Color(0xFF7B61D9),
-    },
-    {
-      'type': 'hug',
-      'label': 'Ôm',
-      'emoji': '🐨',
-      'defaultPath': 'assets/images/anhtomau_stickers/sticker_6.gif',
-      'path': '',
-      'gradient': [const Color(0xFFDDF3FF), const Color(0xFFF5FBFF)],
-      'accent': const Color(0xFF2D8FE3),
-    },
-    {
-      'type': 'cry',
-      'label': 'Cute',
-      'emoji': '🥰',
-      'defaultPath': 'assets/images/anhtomau_stickers/sticker_7.gif',
-      'path': '',
-      'gradient': [const Color(0xFFDDEBFF), const Color(0xFFF4F8FF)],
-      'accent': const Color(0xFF5B8DEF),
-    },
-    {
-      'type': 'poop',
-      'label': 'Quậy',
-      'emoji': '🤪',
-      'defaultPath': 'assets/images/anhtomau_stickers/sticker_8.gif',
-      'path': '',
-      'gradient': [const Color(0xFFFFE1B9), const Color(0xFFFFF4E6)],
-      'accent': const Color(0xFFB96B2C),
-    },
+  static const _legacyStickerPrefix = 'assets/images/anhtomau_stickers/';
+
+  final List<_EditableStickerSlot> _activeSlots = [
+    _EditableStickerSlot(
+      type: 'miss',
+      labelKey: 'home_nh_dbe2a3',
+      emoji: '💖',
+      defaultReference: SoulLocketStickerCatalog.referenceFor(
+        'novelty_star_love',
+      ),
+      gradient: const [Color(0xFFFFE2EC), Color(0xFFFFF7F9)],
+      accent: const Color(0xFFE84D83),
+    ),
+    _EditableStickerSlot(
+      type: 'angry',
+      labelKey: 'home_gin_6a4c8c',
+      emoji: '😾',
+      defaultReference: SoulLocketStickerCatalog.referenceFor('heart_healing'),
+      gradient: const [Color(0xFFFFE8D9), Color(0xFFFFF7EF)],
+      accent: const Color(0xFFE87548),
+    ),
+    _EditableStickerSlot(
+      type: 'furious',
+      labelKey: 'home_tc_b95b66',
+      emoji: '😡',
+      defaultReference: SoulLocketStickerCatalog.referenceFor(
+        'heart_heartbeat',
+      ),
+      gradient: const [Color(0xFFFFDDE3), Color(0xFFFFF2F4)],
+      accent: const Color(0xFFE54850),
+    ),
+    _EditableStickerSlot(
+      type: 'kiss',
+      labelKey: 'home_hn_fac010',
+      emoji: '💋',
+      defaultReference: SoulLocketStickerCatalog.referenceFor(
+        'novelty_moon_kiss',
+      ),
+      gradient: const [Color(0xFFFFE1F0), Color(0xFFFFF7FB)],
+      accent: const Color(0xFFD94A91),
+    ),
+    _EditableStickerSlot(
+      type: 'tease',
+      labelKey: 'home_tru_d66cdf',
+      emoji: '🤪',
+      defaultReference: SoulLocketStickerCatalog.referenceFor(
+        'novelty_ghost_tease',
+      ),
+      gradient: const [Color(0xFFEAE2FF), Color(0xFFF9F6FF)],
+      accent: const Color(0xFF8064D8),
+    ),
+    _EditableStickerSlot(
+      type: 'hug',
+      labelKey: 'home_m_07a3b7',
+      emoji: '🫂',
+      defaultReference: SoulLocketStickerCatalog.referenceFor(
+        'novelty_cloud_hug',
+      ),
+      gradient: const [Color(0xFFDDF7F2), Color(0xFFF4FFFC)],
+      accent: const Color(0xFF2A9D8F),
+    ),
+    _EditableStickerSlot(
+      type: 'cry',
+      labelKey: 'home_khc_92394f',
+      emoji: '🥺',
+      defaultReference: SoulLocketStickerCatalog.referenceFor(
+        'novelty_raindrop_comfort',
+      ),
+      gradient: const [Color(0xFFDDEEFF), Color(0xFFF4F9FF)],
+      accent: const Color(0xFF4B83D1),
+    ),
+    _EditableStickerSlot(
+      type: 'poop',
+      labelKey: 'interaction_sticker_slot_playful',
+      emoji: '🎮',
+      defaultReference: SoulLocketStickerCatalog.referenceFor(
+        'novelty_game_party',
+      ),
+      gradient: const [Color(0xFFFFE8BD), Color(0xFFFFF8EA)],
+      accent: const Color(0xFFC77931),
+    ),
   ];
 
-  static const List<String> _rawStickerLibrary = [
-    'assets/images/anhtomau_stickers/sticker_1.gif',
-    'assets/images/anhtomau_stickers/sticker_2.gif',
-    'assets/images/anhtomau_stickers/sticker_3.gif',
-    'assets/images/anhtomau_stickers/sticker_6.gif',
-    'assets/images/anhtomau_stickers/sticker_7.gif',
-    'assets/images/anhtomau_stickers/sticker_8.gif',
-    'assets/images/anhtomau_stickers/sticker_9.gif',
-    'assets/images/anhtomau_stickers/sticker_12.gif',
-    'assets/images/anhtomau_stickers/sticker_13.gif',
-    'assets/images/anhtomau_stickers/sticker_14.gif',
-    'assets/images/anhtomau_stickers/sticker_15.gif',
-    'assets/images/anhtomau_stickers/sticker_16.gif',
-    'assets/images/anhtomau_stickers/sticker_17.gif',
-    'assets/images/anhtomau_stickers/sticker_18.gif',
-    'assets/images/anhtomau_stickers/sticker_20.gif',
-    'assets/images/anhtomau_stickers/sticker_21.gif',
-    'assets/images/anhtomau_stickers/sticker_22.gif',
-    'assets/images/anhtomau_stickers/sticker_23.gif',
-    'assets/images/anhtomau_stickers/sticker_24.gif',
-    'assets/images/anhtomau_stickers/sticker_25.gif',
-    'assets/images/anhtomau_stickers/sticker_27.gif',
-    'assets/images/anhtomau_stickers/sticker_28.gif',
-    'assets/images/anhtomau_stickers/sticker_30.gif',
-    'assets/images/anhtomau_stickers/sticker_31.gif',
-    'assets/images/anhtomau_stickers/sticker_32.gif',
-    'assets/images/anhtomau_stickers/sticker_33.gif',
-    'assets/images/anhtomau_stickers/sticker_34.gif',
-    'assets/images/anhtomau_stickers/sticker_35.gif',
+  late final List<_StickerLibraryGroup> _libraryGroups = [
+    _StickerLibraryGroup(
+      id: 'novelty',
+      labelKey: 'interaction_sticker_category_novelty',
+      icon: Icons.auto_awesome_rounded,
+      accent: const Color(0xFF7C65D8),
+      references: _referencesOf(SoulLocketStickerCatalog.noveltyStickers),
+    ),
+    _StickerLibraryGroup(
+      id: 'hearts',
+      labelKey: 'interaction_sticker_category_hearts',
+      icon: Icons.favorite_rounded,
+      accent: const Color(0xFFE84D83),
+      references: _referencesOf(SoulLocketStickerCatalog.heartStickers),
+    ),
+    _StickerLibraryGroup(
+      id: 'couple',
+      labelKey: 'interaction_sticker_category_couple',
+      icon: Icons.diversity_1_rounded,
+      accent: const Color(0xFFE59242),
+      references: _referencesOf(SoulLocketStickerCatalog.motionStickers),
+    ),
+    _StickerLibraryGroup(
+      id: 'all',
+      labelKey: 'interaction_sticker_category_all',
+      icon: Icons.grid_view_rounded,
+      accent: const Color(0xFF2A9D8F),
+      references: _referencesOf([
+        ...SoulLocketStickerCatalog.noveltyStickers,
+        ...SoulLocketStickerCatalog.heartStickers,
+        ...SoulLocketStickerCatalog.motionStickers,
+      ]),
+    ),
   ];
 
-  late final List<String> _stickerPool;
-  int _selectedActiveIndex = 0; // Default select first slot (Nhớ)
+  int _selectedActiveIndex = 0;
+  int _selectedLibraryIndex = 0;
   bool _isSaving = false;
+
+  static List<String> _referencesOf(List<SoulLocketStickerSpec> stickers) {
+    return stickers
+        .map((sticker) => SoulLocketStickerCatalog.referenceFor(sticker.id))
+        .toList(growable: false);
+  }
 
   @override
   void initState() {
     super.initState();
-    // Get 20 random stickers from the pool
-    final random = Random();
-    final tempPool = List<String>.from(_rawStickerLibrary);
-    tempPool.shuffle(random);
-    _stickerPool = tempPool.take(20).toList();
-
     _loadSavedStickers();
   }
 
   Future<void> _loadSavedStickers() async {
     final prefs = await SharedPreferences.getInstance();
+    final resolvedPaths = <String>[];
+    final migratedSlots = <_EditableStickerSlot>[];
+
+    for (final slot in _activeSlots) {
+      final saved = prefs.getString('custom_sticker_${slot.type}')?.trim();
+      final mustMigrate =
+          saved != null &&
+          saved.isNotEmpty &&
+          saved.toLowerCase().startsWith(_legacyStickerPrefix);
+      final resolved = saved == null || saved.isEmpty || mustMigrate
+          ? slot.defaultReference
+          : saved;
+      resolvedPaths.add(resolved);
+      if (mustMigrate) migratedSlots.add(slot);
+    }
+
     if (!mounted) return;
     setState(() {
-      for (var slot in _activeSlots) {
-        final saved = prefs.getString('custom_sticker_${slot['type']}');
-        slot['path'] = saved ?? slot['defaultPath'];
+      for (var index = 0; index < _activeSlots.length; index++) {
+        _activeSlots[index].path = resolvedPaths[index];
       }
     });
+
+    // Ghi lại URI mới để màn Home không nạp lại các GIF lỗi ở lần sau.
+    for (final slot in migratedSlots) {
+      await prefs.setString(
+        'custom_sticker_${slot.type}',
+        slot.defaultReference,
+      );
+    }
   }
 
   Future<void> _saveChanges() async {
     setState(() => _isSaving = true);
     try {
       final prefs = await SharedPreferences.getInstance();
-      for (var slot in _activeSlots) {
-        await prefs.setString('custom_sticker_${slot['type']}', slot['path']);
+      for (final slot in _activeSlots) {
+        await prefs.setString('custom_sticker_${slot.type}', slot.path);
       }
-      if (mounted) {
-        Navigator.pop(context, true);
-      }
+      if (mounted) Navigator.pop(context, true);
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Lưu thay đổi thất bại, vui lòng thử lại.')),
+        SnackBar(content: Text(context.tr('interaction_sticker_save_failed'))),
       );
     } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
   void _resetToDefault(int index) {
     setState(() {
-      _activeSlots[index]['path'] = _activeSlots[index]['defaultPath'];
+      _activeSlots[index].path = _activeSlots[index].defaultReference;
     });
   }
 
-  void _replaceSticker(String newPath) {
+  void _resetAll() {
     setState(() {
-      _activeSlots[_selectedActiveIndex]['path'] = newPath;
+      for (final slot in _activeSlots) {
+        slot.path = slot.defaultReference;
+      }
+    });
+  }
+
+  void _replaceSticker(String newReference) {
+    unawaited(HapticFeedback.selectionClick());
+    setState(() {
+      _activeSlots[_selectedActiveIndex].path = newReference;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFFF0F8FF), // Xanh dương nhạt (Alice Blue)
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF5F1FF), Color(0xFFEAF9F6), Color(0xFFFFF4EF)],
+        ),
+      ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
-          iconTheme: const IconThemeData(color: SLColors.primary),
+          iconTheme: const IconThemeData(color: Color(0xFF6C55C5)),
           title: Text(
-            'Tùy chỉnh Sticker',
+            context.tr('interaction_sticker_editor_title'),
             style: SLTheme.quicksand(
               fontWeight: FontWeight.w900,
               fontSize: 18,
-              color: SLColors.primary,
+              color: const Color(0xFF6C55C5),
             ),
           ),
         ),
         body: SafeArea(
+          top: false,
           child: Column(
             children: [
-              // Instructions Card
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.85),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color(0xFFFFCEE0).withValues(alpha: 0.5),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline_rounded,
-                        color: SLColors.primary, size: 24),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Nhấn chọn 1 ô sticker hoạt động ở trên, sau đó chọn sticker bất kỳ ở dưới kho để thay thế nhé! 💕',
-                        style: SLTheme.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: SLColors.textSecond,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Active Slots Header
-              Padding(
-                padding: const EdgeInsets.only(
-                    left: 20, right: 20, top: 12, bottom: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Sticker Đang Sử Dụng (8 ô)',
-                      style: SLTheme.quicksand(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        color: SLColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      'Nhấn để chọn ô chỉnh sửa',
-                      style: SLTheme.quicksand(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: SLColors.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Active Slots Grid (4x2)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _activeSlots.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 0.88,
-                  ),
-                  itemBuilder: (context, index) {
-                    final slot = _activeSlots[index];
-                    final isSelected = _selectedActiveIndex == index;
-                    final isCustomized = slot['path'] != slot['defaultPath'];
-
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedActiveIndex = index;
-                        });
-                      },
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          // Base container
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: slot['gradient'] as List<Color>,
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color: isSelected
-                                    ? (slot['accent'] as Color)
-                                    : const Color(0xFFF3E6EC),
-                                width: isSelected ? 2.5 : 1.2,
-                              ),
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: (slot['accent'] as Color)
-                                            .withValues(alpha: 0.3),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ]
-                                  : [
-                                      BoxShadow(
-                                        color: Colors.black
-                                            .withValues(alpha: 0.03),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                            ),
-                            alignment: Alignment.center,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const SizedBox(height: 4),
-                                Expanded(
-                                  child: slot['path'].toString().isNotEmpty
-                                      ? Padding(
-                                          padding: const EdgeInsets.all(6.0),
-                                          child: Image.asset(
-                                            slot['path'].toString(),
-                                            fit: BoxFit.contain,
-                                          ),
-                                        )
-                                      : Text(
-                                          slot['emoji'].toString(),
-                                          style: const TextStyle(fontSize: 28),
-                                        ),
-                                ),
-                                Text(
-                                  slot['label'].toString(),
-                                  style: SLTheme.quicksand(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w900,
-                                    color: SLColors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                              ],
-                            ),
-                          ),
-
-                          // Reset (Minus) Badge if customized
-                          if (isCustomized)
-                            Positioned(
-                              top: -4,
-                              right: -4,
-                              child: GestureDetector(
-                                onTap: () => _resetToDefault(index),
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFFEF5350),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.remove,
-                                    size: 11,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Library Section Header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Kho Sticker Gợi Ý (20 ngẫu nhiên)',
-                    style: SLTheme.quicksand(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      color: SLColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // Sticker Pool Grid
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: GridView.builder(
-                    itemCount: _stickerPool.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 5,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
-                      childAspectRatio: 1.0,
-                    ),
-                    itemBuilder: (context, index) {
-                      final path = _stickerPool[index];
-                      return GestureDetector(
-                        onTap: () => _replaceSticker(path),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: const Color(0xFFF3E6EC),
-                              width: 1.0,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.02),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(8),
-                          child: Stack(
-                            children: [
-                              Center(child: Image.asset(path)),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF4CAF50),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.add,
-                                    size: 8,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-              // Action Buttons
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    // Reset All
-                    Expanded(
-                      flex: 2,
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: const BorderSide(color: Color(0xFFFFB6D3)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            for (var slot in _activeSlots) {
-                              slot['path'] = slot['defaultPath'];
-                            }
-                          });
-                        },
-                        child: Text(
-                          'Mặc định',
-                          style: SLTheme.quicksand(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                            color: SLColors.primary,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Save
-                    Expanded(
-                      flex: 3,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: SLColors.primary,
-                          foregroundColor: Colors.white,
-                          elevation: 2,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        ),
-                        onPressed: _isSaving ? null : _saveChanges,
-                        child: _isSaving
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor:
-                                      AlwaysStoppedAnimation(Colors.white),
-                                ),
-                              )
-                            : Text(
-                                'Lưu thay đổi',
-                                style: SLTheme.quicksand(
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _buildIntroCard(),
+              _buildActiveHeader(),
+              _buildActiveSlots(),
+              const SizedBox(height: 14),
+              _buildLibraryHeader(),
+              _buildCategoryPicker(),
+              Expanded(child: _buildStickerLibrary()),
+              _buildActions(),
             ],
           ),
         ),
       ),
     );
   }
+
+  Widget _buildIntroCard() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFFFFF), Color(0xFFF5F0FF)],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFDCD2FF)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x167C65D8),
+            blurRadius: 18,
+            offset: Offset(0, 7),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF8F79EA), Color(0xFFFF7FA5)],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.touch_app_rounded,
+              color: Colors.white,
+              size: 21,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              context.tr('interaction_sticker_editor_intro'),
+              style: SLTheme.quicksand(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF625B70),
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 7),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              context.tr('interaction_sticker_active_title'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: SLTheme.quicksand(
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+                color: SLColors.textPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            context.tr('interaction_sticker_select_hint'),
+            style: SLTheme.quicksand(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF7C65D8),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveSlots() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: _activeSlots.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          crossAxisSpacing: 9,
+          mainAxisSpacing: 9,
+          childAspectRatio: 0.9,
+        ),
+        itemBuilder: (context, index) {
+          final slot = _activeSlots[index];
+          final isSelected = _selectedActiveIndex == index;
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              unawaited(HapticFeedback.selectionClick());
+              setState(() => _selectedActiveIndex = index);
+            },
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: slot.gradient,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(isSelected ? 22 : 18),
+                    border: Border.all(
+                      color: isSelected
+                          ? slot.accent
+                          : Colors.white.withValues(alpha: 0.92),
+                      width: isSelected ? 2.4 : 1.2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: slot.accent.withValues(
+                          alpha: isSelected ? 0.24 : 0.08,
+                        ),
+                        blurRadius: isSelected ? 14 : 7,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(7, 6, 7, 1),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final size = constraints.biggest.shortestSide;
+                              return _buildStickerVisual(
+                                reference: slot.path,
+                                size: size,
+                                fallbackEmoji: slot.emoji,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(4, 0, 4, 7),
+                        child: Text(
+                          context.tr(slot.labelKey),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: SLTheme.quicksand(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w900,
+                            color: isSelected
+                                ? slot.accent
+                                : SLColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (slot.isCustomized)
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _resetToDefault(index),
+                        customBorder: const CircleBorder(),
+                        child: Container(
+                          width: 22,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            color: slot.accent,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: const Icon(
+                            Icons.undo_rounded,
+                            size: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildLibraryHeader() {
+    final selectedGroup = _libraryGroups[_selectedLibraryIndex];
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Row(
+        children: [
+          Text(
+            context.tr('interaction_sticker_library_title'),
+            style: SLTheme.quicksand(
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              color: SLColors.textPrimary,
+            ),
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: selectedGroup.accent.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              '${selectedGroup.references.length}',
+              style: SLTheme.quicksand(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: selectedGroup.accent,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryPicker() {
+    return SizedBox(
+      height: 48,
+      child: ListView.separated(
+        padding: const EdgeInsets.fromLTRB(16, 7, 16, 5),
+        scrollDirection: Axis.horizontal,
+        itemCount: _libraryGroups.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final group = _libraryGroups[index];
+          final selected = index == _selectedLibraryIndex;
+          return ChoiceChip(
+            selected: selected,
+            showCheckmark: false,
+            avatar: Icon(
+              group.icon,
+              size: 16,
+              color: selected ? Colors.white : group.accent,
+            ),
+            label: Text(context.tr(group.labelKey)),
+            labelStyle: SLTheme.quicksand(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w900,
+              color: selected ? Colors.white : const Color(0xFF554F60),
+            ),
+            selectedColor: group.accent,
+            backgroundColor: Colors.white.withValues(alpha: 0.82),
+            side: BorderSide(
+              color: selected
+                  ? group.accent
+                  : group.accent.withValues(alpha: 0.2),
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(999),
+            ),
+            onSelected: (_) {
+              unawaited(HapticFeedback.selectionClick());
+              setState(() => _selectedLibraryIndex = index);
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildStickerLibrary() {
+    final group = _libraryGroups[_selectedLibraryIndex];
+    final selectedReference = _activeSlots[_selectedActiveIndex].path;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 600 ? 7 : 4;
+        return GridView.builder(
+          key: ValueKey(group.id),
+          padding: const EdgeInsets.fromLTRB(16, 5, 16, 10),
+          itemCount: group.references.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: 9,
+            mainAxisSpacing: 9,
+            childAspectRatio: 1,
+          ),
+          itemBuilder: (context, index) {
+            final reference = group.references[index];
+            final isAssigned = reference == selectedReference;
+            final tileColor = switch (index % 4) {
+              0 => const Color(0xFFFFF4F7),
+              1 => const Color(0xFFF2F8FF),
+              2 => const Color(0xFFF4F1FF),
+              _ => const Color(0xFFF1FBF7),
+            };
+            return Semantics(
+              button: true,
+              selected: isAssigned,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _replaceSticker(reference),
+                  borderRadius: BorderRadius.circular(18),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: tileColor,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: isAssigned
+                            ? group.accent
+                            : Colors.white.withValues(alpha: 0.95),
+                        width: isAssigned ? 2 : 1.2,
+                      ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x100F172A),
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: LayoutBuilder(
+                            builder: (context, itemConstraints) {
+                              final size = itemConstraints.biggest.shortestSide;
+                              return _buildStickerVisual(
+                                reference: reference,
+                                size: size,
+                              );
+                            },
+                          ),
+                        ),
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            width: 17,
+                            height: 17,
+                            decoration: BoxDecoration(
+                              color: isAssigned
+                                  ? group.accent
+                                  : Colors.white.withValues(alpha: 0.94),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: group.accent.withValues(alpha: 0.55),
+                              ),
+                            ),
+                            child: Icon(
+                              isAssigned
+                                  ? Icons.check_rounded
+                                  : Icons.add_rounded,
+                              size: 11,
+                              color: isAssigned ? Colors.white : group.accent,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildStickerVisual({
+    required String reference,
+    required double size,
+    String fallbackEmoji = '💗',
+  }) {
+    return Center(
+      child: R2StickerImage(
+        reference,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        animateLocalSticker: true,
+        errorWidget: Center(
+          child: Text(
+            fallbackEmoji,
+            style: TextStyle(fontSize: size * 0.48, height: 1),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActions() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.78),
+        border: const Border(top: BorderSide(color: Color(0x1A7C65D8))),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF6C55C5),
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                side: const BorderSide(color: Color(0xFFB9A9F4)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+              onPressed: _resetAll,
+              icon: const Icon(Icons.restart_alt_rounded, size: 18),
+              label: Text(
+                context.tr('interaction_sticker_reset'),
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 3,
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFE84D83),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+              onPressed: _isSaving ? null : _saveChanges,
+              icon: _isSaving
+                  ? const SizedBox(
+                      width: 17,
+                      height: 17,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.favorite_rounded, size: 18),
+              label: Text(
+                context.tr('interaction_sticker_save'),
+                style: SLTheme.quicksand(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EditableStickerSlot {
+  final String type;
+  final String labelKey;
+  final String emoji;
+  final String defaultReference;
+  final List<Color> gradient;
+  final Color accent;
+  String path;
+
+  _EditableStickerSlot({
+    required this.type,
+    required this.labelKey,
+    required this.emoji,
+    required this.defaultReference,
+    required this.gradient,
+    required this.accent,
+  }) : path = defaultReference;
+
+  bool get isCustomized => path != defaultReference;
+}
+
+class _StickerLibraryGroup {
+  final String id;
+  final String labelKey;
+  final IconData icon;
+  final Color accent;
+  final List<String> references;
+
+  const _StickerLibraryGroup({
+    required this.id,
+    required this.labelKey,
+    required this.icon,
+    required this.accent,
+    required this.references,
+  });
 }

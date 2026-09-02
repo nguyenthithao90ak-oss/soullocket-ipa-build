@@ -974,8 +974,10 @@ extension _MainHomeTabStatusCards on _MainHomeTabState {
                 SizedBox(
                   width: 24,
                   height: 24,
-                  child: Image.asset(
-                    'assets/images/anhtomau_stickers/sticker_24.gif',
+                  child: SoulLocketAnimatedSticker(
+                    sticker: SoulLocketStickerCatalog.find('heart_heartbeat')!,
+                    size: 24,
+                    semanticLabel: context.tr('Trái tim nhịp đập'),
                   ),
                 ),
                 SLSpacing.w8,

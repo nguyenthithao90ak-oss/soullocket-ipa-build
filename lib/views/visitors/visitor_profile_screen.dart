@@ -686,13 +686,6 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
                   break;
                 } else if (req['status'] == 'accepted') {
                   _isFriend = true;
-                  // Tự động đồng bộ kết bạn nếu bên kia đã đồng ý nhưng mình chưa cập nhật
-                  try {
-                    await _db
-                        .ref('friends/$_myHouseId/${widget.targetHouseId}')
-                        .set(true);
-                    await _db.ref('friend_requests/${entry.key}').remove();
-                  } catch (_) {}
                   break;
                 }
               }
@@ -837,8 +830,6 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
     final today = DateTime.now().toLocal();
     final todayKey = '${today.year}-${today.month}-${today.day}';
     final storeKey = 'fire_log_${_myHouseId}_${widget.targetHouseId}';
-    final stateRef = _db.ref(
-        'houses/$_myHouseId/settings/visitorHeartStates/${widget.targetHouseId}');
 
     // Optimistic UI update
     setState(() {
@@ -856,56 +847,33 @@ class _VisitorProfileScreenState extends State<VisitorProfileScreen>
 
     _heartController.forward(from: 0);
     try {
-      if (wasDropped) {
-        if (hadContributed) {
-          await FirebaseFunctions.instance
-              .httpsCallable('dropVisitorHeart')
-              .call(<String, dynamic>{
-            'targetHouseId': widget.targetHouseId,
-            'active': false,
-          });
-        }
-        await stateRef.set({
-          'active': false,
-          'hasContributed': false,
-          'updatedAt': ServerValue.timestamp,
-        });
-        _HeartDropCache.clearDropped(storeKey);
-      } else {
-        await FirebaseFunctions.instance
-            .httpsCallable('dropVisitorHeart')
-            .call(<String, dynamic>{
-          'targetHouseId': widget.targetHouseId,
-          'active': true,
-        });
-        await stateRef.set({
-          'active': true,
-          'hasContributed': true,
-          'updatedAt': ServerValue.timestamp,
-        });
-        if (mounted) {
-          VisitorHeartAnim.drop(context);
-        }
+      final response = await FirebaseFunctions.instance
+          .httpsCallable('dropVisitorHeart')
+          .call(<String, dynamic>{
+        'targetHouseId': widget.targetHouseId,
+        'active': !wasDropped,
+      });
+      final payload = response.data;
+      if (payload is! Map || payload['success'] != true) {
+        throw StateError('Visitor heart update was not accepted.');
+      }
+      final resolvedActive = payload['active'] == true;
+      final resolvedCount = (payload['count'] as num?)?.toInt() ?? previousCount;
+      if (resolvedActive) {
         _HeartDropCache.setDropped(storeKey, todayKey);
-        try {
-          await _db.ref('notifications/${widget.targetHouseId}').push().set({
-            'type': 'fire',
-            'from': _myHouseId,
-            'fromId': _myHouseId,
-            'fromLabel': _myHouseName ?? _myHouseId,
-            'title': 'Thả tim mới',
-            'msg': '${_myHouseName ?? _myHouseId} đã thả ❤️ cho nhà bạn!',
-            'ts': ServerValue.timestamp,
-            'category': 'social',
-            'section': 'community',
-            'context': 'visitor_profile_heart',
-          });
-        } catch (_) {}
+      } else {
+        _HeartDropCache.clearDropped(storeKey);
       }
       if (!mounted) return;
-      // Tránh build lại toàn bộ widget làm UI giật, chỉ cập nhật biến state nhưng ko setState
-      _heartHasContributed = !wasDropped;
-      _isDroppingHeart = false;
+      if (!wasDropped && resolvedActive) {
+        VisitorHeartAnim.drop(context);
+      }
+      setState(() {
+        _heartDroppedToday = resolvedActive;
+        _heartHasContributed = resolvedActive;
+        _heartCount = resolvedCount;
+        _isDroppingHeart = false;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {

@@ -422,8 +422,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
 
     final reqSnap = await _db
         .ref('friend_requests')
-        .orderByChild('from')
-        .equalTo(fromHouseId)
+        .orderByChild('to')
+        .equalTo(_houseId)
         .once();
 
     String? reqId;
@@ -469,8 +469,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen>
 
     final reqSnap = await _db
         .ref('friend_requests')
-        .orderByChild('from')
-        .equalTo(fromHouseId)
+        .orderByChild('to')
+        .equalTo(_houseId)
         .once();
     if (reqSnap.snapshot.exists) {
       final snapshotValue = reqSnap.snapshot.value;

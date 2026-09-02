@@ -24,6 +24,7 @@ import 'package:soullocket_app/utils/services/purchase_service.dart';
 import 'package:soullocket_app/utils/services/giftcode_service.dart';
 import 'package:soullocket_app/utils/sl_notice.dart';
 import 'package:soullocket_app/views/ui_prefs.dart';
+import 'package:soullocket_app/views/relationship/video_call_screen.dart';
 
 part 'soul_merge/exploding_photo_part.dart';
 part 'soul_merge/particle_explosion_part.dart';
@@ -701,6 +702,26 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
     super.dispose();
   }
 
+  /// Bắt đầu cuộc gọi thoại/video với người yêu
+  void _startCoupleCall({required bool isVideo}) {
+    final houseId = _houseId;
+    if (houseId == null || houseId.isEmpty) {
+      SLNotice.showError(context, 'Chưa kết nối ngôi nhà');
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => VideoCallScreen(
+          houseId: houseId,
+          targetHouseId: houseId, // Cùng house
+          targetName: _partnerName,
+          isVideo: isVideo,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final photoMessages = _chatHistory
@@ -715,32 +736,6 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
 
     return Scaffold(
       backgroundColor: const Color(0xFF1A0533),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: const BackButton(color: Colors.white),
-        actions: [
-          IconButton(
-            onPressed: _showHeartStyleSheet,
-            icon: const Icon(
-              Icons.auto_awesome_rounded,
-              color: Colors.white,
-            ),
-            tooltip: 'Chọn kiểu hiệu ứng',
-          ),
-          if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
-            IconButton(
-              onPressed: _toggleOverlaySetting,
-              icon: Icon(
-                _overlayEnabled
-                    ? Icons.chat_bubble_rounded
-                    : Icons.chat_bubble_outline_rounded,
-                color: _overlayEnabled ? const Color(0xFFFF4F93) : Colors.white,
-              ),
-              tooltip: 'Bong bóng nổi ngoài app',
-            ),
-        ],
-      ),
       extendBodyBehindAppBar: true,
       body: Stack(
         fit: StackFit.expand,
@@ -1080,6 +1075,214 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             left: 4,
             right: 4,
             child: _buildChatInputBar(),
+          ),
+
+          // ═══════════════════════════════════════════
+          // HEADER — Z-INDEX CAO NHẤT ĐỂ BẤM ĐƯỢC
+          // ═══════════════════════════════════════════
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ClipRect(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.white.withValues(alpha: 0.45),
+                      Colors.white.withValues(alpha: 0.20),
+                      Colors.white.withValues(alpha: 0.0),
+                    ],
+                    stops: const [0.0, 0.6, 1.0],
+                  ),
+                ),
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    child: Row(
+                      children: [
+                        // ← Nút quay lại
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => Navigator.of(context).pop(),
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: 0.5),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.pink.withValues(alpha: 0.1),
+                                    blurRadius: 8,
+                                  ),
+                                ],
+                              ),
+                              child: Icon(Icons.arrow_back_ios_new_rounded,
+                                  size: 18, color: Colors.pink.shade700),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+
+                        // Avatar Lottie
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFFF6B9D), Color(0xFFC44FE2), Color(0xFF6366F1)],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFFF6B9D).withValues(alpha: 0.4),
+                                blurRadius: 12,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(2.5),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                            ),
+                            child: ClipOval(
+                              child: Lottie.asset(
+                                'assets/images/soul_merge_sticker.json',
+                                width: 35,
+                                height: 35,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+
+                        // Tên
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Soul Merge',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.pink.shade800,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                '💕 $_partnerName',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.pink.shade500,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // ═══ NÚT GỌI THOẠI ═══
+                        _SoulMergeCallButton(
+                          icon: Icons.phone_rounded,
+                          gradientColors: const [Color(0xFF43E97B), Color(0xFF38F9D7)],
+                          glowColor: const Color(0xFF43E97B),
+                          onTap: () => _startCoupleCall(isVideo: false),
+                          tooltip: 'Gọi thoại',
+                        ),
+                        const SizedBox(width: 8),
+
+                        // ═══ NÚT GỌI VIDEO ═══
+                        _SoulMergeCallButton(
+                          icon: Icons.videocam_rounded,
+                          gradientColors: const [Color(0xFF667EEA), Color(0xFFA855F7)],
+                          glowColor: const Color(0xFF667EEA),
+                          onTap: () => _startCoupleCall(isVideo: true),
+                          tooltip: 'Gọi video',
+                        ),
+                        const SizedBox(width: 8),
+
+                        // ═══ NÚT HIỆU ỨNG ═══
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: _showHeartStyleSheet,
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: 0.5),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFFF6B9D).withValues(alpha: 0.2),
+                                    blurRadius: 8,
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(Icons.auto_awesome_rounded,
+                                  size: 18, color: Color(0xFFFF6B9D)),
+                            ),
+                          ),
+                        ),
+
+                        // ═══ BONG BÓNG NỔI (Android only) ═══
+                        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) ...[
+                          const SizedBox(width: 6),
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: _toggleOverlaySetting,
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: (_overlayEnabled
+                                              ? const Color(0xFFFF4F93)
+                                              : Colors.pink)
+                                          .withValues(alpha: 0.2),
+                                      blurRadius: 8,
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  _overlayEnabled
+                                      ? Icons.chat_bubble_rounded
+                                      : Icons.chat_bubble_outline_rounded,
+                                  size: 16,
+                                  color: _overlayEnabled
+                                      ? const Color(0xFFFF4F93)
+                                      : Colors.pink.shade700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -2450,6 +2653,94 @@ class _SoulMergeScreenState extends State<SoulMergeScreen>
             onChanged: onChanged,
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// CUSTOM HEADER WIDGETS
+// ═══════════════════════════════════════════════════════
+
+/// Nút gọi thoại/video với gradient, glow, và animation
+class _SoulMergeCallButton extends StatefulWidget {
+  final IconData icon;
+  final List<Color> gradientColors;
+  final Color glowColor;
+  final VoidCallback onTap;
+  final String tooltip;
+
+  const _SoulMergeCallButton({
+    required this.icon,
+    required this.gradientColors,
+    required this.glowColor,
+    required this.onTap,
+    required this.tooltip,
+  });
+
+  @override
+  State<_SoulMergeCallButton> createState() => _SoulMergeCallButtonState();
+}
+
+class _SoulMergeCallButtonState extends State<_SoulMergeCallButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _glowController;
+  late Animation<double> _glowAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+    _glowAnim = Tween<double>(begin: 0.3, end: 0.7).animate(
+      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _glowController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: widget.tooltip,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedBuilder(
+          animation: _glowAnim,
+          builder: (context, child) {
+            return Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: widget.gradientColors,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.glowColor.withValues(alpha: _glowAnim.value),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                  ),
+                  BoxShadow(
+                    color: widget.glowColor.withValues(alpha: _glowAnim.value * 0.3),
+                    blurRadius: 20,
+                    spreadRadius: 4,
+                  ),
+                ],
+              ),
+              child: Icon(widget.icon, color: Colors.white, size: 20),
+            );
+          },
+        ),
       ),
     );
   }

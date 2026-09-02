@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
 
-import 'push_notification_helper.dart';
 import 'local_database_service.dart';
 
 class CountdownSpaceRequestResult {
@@ -61,39 +61,52 @@ class CountdownSpaceRequest {
   }
 
   Map<String, dynamic> toJson() => {
-        'requestId': requestId,
-        'spaceId': spaceId,
-        'fromHouseId': fromHouseId,
-        'fromHouseName': fromHouseName,
-        'toHouseId': toHouseId,
-        'status': status,
-        'createdAt': createdAt,
-        'snapshot': snapshot,
-      };
+    'requestId': requestId,
+    'spaceId': spaceId,
+    'fromHouseId': fromHouseId,
+    'fromHouseName': fromHouseName,
+    'toHouseId': toHouseId,
+    'status': status,
+    'createdAt': createdAt,
+    'snapshot': snapshot,
+  };
 }
 
 class CountdownSpace {
   final String spaceId;
+  final String houseA;
+  final String houseB;
   final String status;
   final Map<String, dynamic> snapshot;
   final int updatedAt;
 
   const CountdownSpace({
     required this.spaceId,
+    required this.houseA,
+    required this.houseB,
     required this.status,
     required this.snapshot,
     required this.updatedAt,
   });
 
   String otherHouseIdFor(String myHouseId) {
-    final parts = spaceId.split('_');
-    if (parts.length < 2) return '';
-    return parts[0] == myHouseId ? parts[1] : parts[0];
+    final normalized = myHouseId.trim();
+    if (houseA == normalized) return houseB;
+    if (houseB == normalized) return houseA;
+    return '';
+  }
+
+  bool containsHouse(String houseId) {
+    final normalized = houseId.trim();
+    return normalized.isNotEmpty &&
+        (houseA == normalized || houseB == normalized);
   }
 
   factory CountdownSpace.fromMap(String spaceId, Map<String, dynamic> map) {
     return CountdownSpace(
       spaceId: spaceId,
+      houseA: map['houseA']?.toString() ?? '',
+      houseB: map['houseB']?.toString() ?? '',
       status: map['status']?.toString() ?? 'active',
       snapshot: _toMap(map['snapshot']),
       updatedAt: _toInt(map['updatedAt']),
@@ -101,15 +114,19 @@ class CountdownSpace {
   }
 
   Map<String, dynamic> toJson() => {
-        'spaceId': spaceId,
-        'status': status,
-        'snapshot': snapshot,
-        'updatedAt': updatedAt,
-      };
+    'spaceId': spaceId,
+    'houseA': houseA,
+    'houseB': houseB,
+    'status': status,
+    'snapshot': snapshot,
+    'updatedAt': updatedAt,
+  };
 }
 
 class CountdownSpaceDeleteRequestInfo {
   final String spaceId;
+  final String houseA;
+  final String houseB;
   final String requestedBy;
   final int requestedAt;
   final int deleteAt;
@@ -117,6 +134,8 @@ class CountdownSpaceDeleteRequestInfo {
 
   const CountdownSpaceDeleteRequestInfo({
     required this.spaceId,
+    required this.houseA,
+    required this.houseB,
     required this.requestedBy,
     required this.requestedAt,
     required this.deleteAt,
@@ -127,16 +146,24 @@ class CountdownSpaceDeleteRequestInfo {
   bool isRequestedBy(String houseId) => requestedBy == houseId;
 
   String otherHouseIdFor(String myHouseId) {
-    final parts = spaceId.split('_');
-    if (parts.length < 2) return '';
-    return parts[0] == myHouseId ? parts[1] : parts[0];
+    final normalized = myHouseId.trim();
+    if (houseA == normalized) return houseB;
+    if (houseB == normalized) return houseA;
+    return '';
   }
 
   factory CountdownSpaceDeleteRequestInfo.fromMap(
-      String spaceId, Map<String, dynamic> map) {
+    String spaceId,
+    Map<String, dynamic> map,
+  ) {
     return CountdownSpaceDeleteRequestInfo(
       spaceId: spaceId,
-      requestedBy: map['requestedBy']?.toString() ?? '',
+      houseA: map['houseA']?.toString() ?? '',
+      houseB: map['houseB']?.toString() ?? '',
+      requestedBy:
+          map['requestedByHouseId']?.toString() ??
+          map['requestedBy']?.toString() ??
+          '',
       requestedAt: _toInt(map['requestedAt']),
       deleteAt: _toInt(map['deleteAt']),
       status: map['status']?.toString() ?? 'pending',
@@ -144,12 +171,14 @@ class CountdownSpaceDeleteRequestInfo {
   }
 
   Map<String, dynamic> toJson() => {
-        'spaceId': spaceId,
-        'requestedBy': requestedBy,
-        'requestedAt': requestedAt,
-        'deleteAt': deleteAt,
-        'status': status,
-      };
+    'spaceId': spaceId,
+    'houseA': houseA,
+    'houseB': houseB,
+    'requestedBy': requestedBy,
+    'requestedAt': requestedAt,
+    'deleteAt': deleteAt,
+    'status': status,
+  };
 }
 
 class CountdownSpaceService {
@@ -187,8 +216,9 @@ class CountdownSpaceService {
     }
 
     try {
-      final targetPublicSnap =
-          await _db.ref('houses_public/$normalizedToHouseId').get();
+      final targetPublicSnap = await _db
+          .ref('houses_public/$normalizedToHouseId')
+          .get();
       if (!targetPublicSnap.exists) {
         return CountdownSpaceRequestResult(
           success: false,
@@ -197,10 +227,10 @@ class CountdownSpaceService {
         );
       }
 
-      final spaceId = pairKeyFor(normalizedFromHouseId, normalizedToHouseId);
       final existingSpaces = await _loadSpacesForHouse(normalizedFromHouseId);
-      final relatedRequests =
-          await _loadRequestsForHouse(normalizedFromHouseId);
+      final relatedRequests = await _loadRequestsForHouse(
+        normalizedFromHouseId,
+      );
       final occupiedHouseIds = _collectOccupiedHouseIds(
         houseId: normalizedFromHouseId,
         spaces: existingSpaces,
@@ -215,7 +245,8 @@ class CountdownSpaceService {
         );
       }
       for (final existing in existingSpaces) {
-        if (existing.spaceId != spaceId) {
+        if (existing.otherHouseIdFor(normalizedFromHouseId) !=
+            normalizedToHouseId) {
           continue;
         }
         if (existing.status == 'active') {
@@ -226,7 +257,8 @@ class CountdownSpaceService {
         }
       }
       for (final request in relatedRequests) {
-        if (request.spaceId != spaceId) {
+        if (request.otherHouseIdFor(normalizedFromHouseId) !=
+            normalizedToHouseId) {
           continue;
         }
         if (request.status == 'pending') {
@@ -238,43 +270,25 @@ class CountdownSpaceService {
         }
       }
 
-      final requestRef = _db.ref('countdown_space_requests').push();
-      final requestId = requestRef.key;
-      if (requestId == null || requestId.trim().isEmpty) {
+      final response = await CloudFunctionsHelper.callSecure<dynamic>(
+        'requestCountdownSpaceSecure',
+        payload: <String, dynamic>{
+          'fromHouseName': normalizedFromHouseName,
+          'toHouseId': normalizedToHouseId,
+          'snapshot': _sanitizeSnapshot(initialSnapshot),
+        },
+      );
+      final responseData = _toMap(response.data);
+      final requestId = responseData['requestId']?.toString().trim() ?? '';
+      final spaceId = responseData['spaceId']?.toString().trim() ?? '';
+      if (responseData['success'] != true ||
+          requestId.isEmpty ||
+          spaceId.isEmpty) {
         return const CountdownSpaceRequestResult(
           success: false,
           message: 'Không thể tạo yêu cầu ghép nối lúc này.',
         );
       }
-
-      final payload = <String, dynamic>{
-        'requestId': requestId,
-        'spaceId': spaceId,
-        'fromHouseId': normalizedFromHouseId,
-        'fromHouseName': normalizedFromHouseName,
-        'toHouseId': normalizedToHouseId,
-        'status': 'pending',
-        'createdAt': ServerValue.timestamp,
-        'snapshot': _sanitizeSnapshot(initialSnapshot),
-      };
-
-      await requestRef.set(payload);
-      try {
-        await PushNotificationHelper.push(
-          toHouseId: normalizedToHouseId,
-          type: 'countdown_space_request',
-          from: normalizedFromHouseId,
-          fromId: normalizedFromHouseId,
-          fromLabel: normalizedFromHouseName,
-          title: 'Yêu cầu ghép nối không gian đếm',
-          msg: '$normalizedFromHouseName muốn ghép nối không gian đếm với bạn.',
-          extra: <String, dynamic>{
-            'requestId': requestId,
-            'spaceId': spaceId,
-          },
-        );
-      } catch (_) {}
-
       return CountdownSpaceRequestResult(
         success: true,
         message: 'Đã gửi yêu cầu ghép nối đến nhà "$normalizedToHouseId".',
@@ -310,44 +324,22 @@ class CountdownSpaceService {
         );
       }
 
-      final spaceId = finalRequest.spaceId;
-      final parts = spaceId.split('_');
-      if (parts.length < 2) {
-        return const CountdownSpaceRequestResult(
+      final response = await CloudFunctionsHelper.callSecure<dynamic>(
+        'respondCountdownSpaceRequestSecure',
+        payload: <String, dynamic>{
+          'requestId': finalRequest.requestId,
+          'action': 'accept',
+        },
+      );
+      final responseData = _toMap(response.data);
+      if (responseData['success'] != true) {
+        return CountdownSpaceRequestResult(
           success: false,
-          message: 'Không xác định được không gian ghép nối.',
+          message: responseData['message']?.toString().trim().isNotEmpty == true
+              ? responseData['message'].toString().trim()
+              : 'Không thể chấp nhận yêu cầu ghép nối.',
         );
       }
-
-      final updates = <String, dynamic>{};
-      updates['countdown_spaces/$spaceId'] = {
-        'spaceId': spaceId,
-        'houseA': parts[0],
-        'houseB': parts[1],
-        'status': 'active',
-        'updatedAt': ServerValue.timestamp,
-        'snapshot': finalRequest.snapshot,
-      };
-      updates['countdown_space_requests/${finalRequest.requestId}/status'] =
-          'accepted';
-
-      await _db.ref().update(updates);
-
-      try {
-        await PushNotificationHelper.push(
-          toHouseId: finalRequest.fromHouseId,
-          type: 'countdown_space_accepted',
-          from: finalRequest.toHouseId,
-          fromId: finalRequest.toHouseId,
-          fromLabel: myHouseName,
-          title: 'Yêu cầu ghép nối được chấp nhận',
-          msg: '$myHouseName đã chấp nhận ghép nối không gian đếm với bạn.',
-          extra: <String, dynamic>{
-            'spaceId': spaceId,
-          },
-        );
-      } catch (_) {}
-
       return const CountdownSpaceRequestResult(
         success: true,
         message: 'Đã chấp nhận yêu cầu ghép nối.',
@@ -369,9 +361,22 @@ class CountdownSpaceService {
           message: 'Không xác định được yêu cầu ghép nối.',
         );
       }
-      await _db.ref('countdown_space_requests/$normalizedRequestId').update({
-        'status': 'rejected',
-      });
+      final response = await CloudFunctionsHelper.callSecure<dynamic>(
+        'respondCountdownSpaceRequestSecure',
+        payload: <String, dynamic>{
+          'requestId': normalizedRequestId,
+          'action': 'reject',
+        },
+      );
+      final responseData = _toMap(response.data);
+      if (responseData['success'] != true) {
+        return CountdownSpaceRequestResult(
+          success: false,
+          message: responseData['message']?.toString().trim().isNotEmpty == true
+              ? responseData['message'].toString().trim()
+              : 'Không thể từ chối yêu cầu ghép nối.',
+        );
+      }
       return const CountdownSpaceRequestResult(
         success: true,
         message: 'Đã từ chối yêu cầu ghép nối.',
@@ -393,7 +398,19 @@ class CountdownSpaceService {
           message: 'Không xác định được yêu cầu ghép nối.',
         );
       }
-      await _db.ref('countdown_space_requests/$normalizedRequestId').remove();
+      final response = await CloudFunctionsHelper.callSecure<dynamic>(
+        'cancelCountdownSpaceRequestSecure',
+        payload: <String, dynamic>{'requestId': normalizedRequestId},
+      );
+      final responseData = _toMap(response.data);
+      if (responseData['success'] != true) {
+        return CountdownSpaceRequestResult(
+          success: false,
+          message: responseData['message']?.toString().trim().isNotEmpty == true
+              ? responseData['message'].toString().trim()
+              : 'Không thể hủy yêu cầu ghép nối.',
+        );
+      }
       return const CountdownSpaceRequestResult(
         success: true,
         message: 'Đã hủy yêu cầu ghép nối.',
@@ -412,19 +429,22 @@ class CountdownSpaceService {
   }) async {
     final normalizedSpaceId = spaceId.trim();
     if (normalizedSpaceId.isEmpty) return;
-    await _db.ref('countdown_spaces/$normalizedSpaceId').update({
-      'snapshot': _sanitizeSnapshot(snapshot),
-      'updatedAt': ServerValue.timestamp,
-    });
+    await CloudFunctionsHelper.callSecure<dynamic>(
+      'updateCountdownSpaceSecure',
+      payload: <String, dynamic>{
+        'spaceId': normalizedSpaceId,
+        'snapshot': _sanitizeSnapshot(snapshot),
+      },
+    );
   }
 
   Future<void> requestDeleteSpace(String spaceId) async {
     final normalizedSpaceId = spaceId.trim();
     if (normalizedSpaceId.isEmpty) return;
-    await _db.ref('countdown_spaces/$normalizedSpaceId').update({
-      'status': 'deleted',
-      'updatedAt': ServerValue.timestamp,
-    });
+    await CloudFunctionsHelper.callSecure<dynamic>(
+      'requestCountdownSpaceDeleteSecure',
+      payload: <String, dynamic>{'spaceId': normalizedSpaceId},
+    );
   }
 
   Stream<List<CountdownSpaceRequest>> streamIncomingRequests(String houseId) {
@@ -434,18 +454,18 @@ class CountdownSpaceService {
         .equalTo(houseId.trim())
         .onValue
         .map((event) {
-      if (event.snapshot.value == null) return [];
-      final raw = _toMap(event.snapshot.value);
-      final list = <CountdownSpaceRequest>[];
-      raw.forEach((key, value) {
-        final data = _toMap(value);
-        if (data['status'] == 'pending') {
-          list.add(CountdownSpaceRequest.fromMap(data));
-        }
-      });
-      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      return list;
-    });
+          if (event.snapshot.value == null) return [];
+          final raw = _toMap(event.snapshot.value);
+          final list = <CountdownSpaceRequest>[];
+          raw.forEach((key, value) {
+            final data = _toMap(value);
+            if (data['status'] == 'pending') {
+              list.add(CountdownSpaceRequest.fromMap(data));
+            }
+          });
+          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return list;
+        });
   }
 
   Stream<List<CountdownSpaceRequest>> streamOutgoingRequests(String houseId) {
@@ -455,18 +475,18 @@ class CountdownSpaceService {
         .equalTo(houseId.trim())
         .onValue
         .map((event) {
-      if (event.snapshot.value == null) return [];
-      final raw = _toMap(event.snapshot.value);
-      final list = <CountdownSpaceRequest>[];
-      raw.forEach((key, value) {
-        final data = _toMap(value);
-        if (data['status'] == 'pending') {
-          list.add(CountdownSpaceRequest.fromMap(data));
-        }
-      });
-      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      return list;
-    });
+          if (event.snapshot.value == null) return [];
+          final raw = _toMap(event.snapshot.value);
+          final list = <CountdownSpaceRequest>[];
+          raw.forEach((key, value) {
+            final data = _toMap(value);
+            if (data['status'] == 'pending') {
+              list.add(CountdownSpaceRequest.fromMap(data));
+            }
+          });
+          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return list;
+        });
   }
 
   Stream<List<CountdownSpace>> streamActiveSpaces(String houseId) async* {
@@ -479,8 +499,13 @@ class CountdownSpaceService {
         final raw = jsonDecode(cacheData);
         if (raw is List) {
           final list = raw
-              .map((e) => CountdownSpace.fromMap(
-                  e['spaceId']?.toString() ?? '', e as Map<String, dynamic>))
+              .map(
+                (e) => CountdownSpace.fromMap(
+                  e['spaceId']?.toString() ?? '',
+                  e as Map<String, dynamic>,
+                ),
+              )
+              .where((space) => space.containsHouse(hId))
               .toList();
           list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
           yield list;
@@ -488,14 +513,18 @@ class CountdownSpaceService {
       } catch (_) {}
     }
 
-    yield* _db.ref('countdown_spaces').onValue.asyncMap((event) async {
-      if (event.snapshot.value == null) return [];
-      final raw = _toMap(event.snapshot.value);
+    yield* _watchPairedRecords(
+      rootPath: 'countdown_spaces',
+      firstField: 'houseA',
+      secondField: 'houseB',
+      houseId: hId,
+    ).asyncMap((raw) async {
       final list = <CountdownSpace>[];
       raw.forEach((key, value) {
         final data = _toMap(value);
-        if (data['status'] == 'active' && _spaceContainsHouse(key, hId)) {
-          list.add(CountdownSpace.fromMap(key, data));
+        final space = CountdownSpace.fromMap(key, data);
+        if (space.status == 'active' && space.containsHouse(hId)) {
+          list.add(space);
         }
       });
       list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
@@ -512,19 +541,17 @@ class CountdownSpaceService {
     required String fromHouseName,
     required String toHouseId,
     required Map<String, dynamic> initialSnapshot,
-  }) =>
-      requestConnection(
-        fromHouseId: fromHouseId,
-        fromHouseName: fromHouseName,
-        toHouseId: toHouseId,
-        initialSnapshot: initialSnapshot,
-      );
+  }) => requestConnection(
+    fromHouseId: fromHouseId,
+    fromHouseName: fromHouseName,
+    toHouseId: toHouseId,
+    initialSnapshot: initialSnapshot,
+  );
 
   Future<CountdownSpaceRequestResult> declineRequest({
     required String requestId,
     required String currentHouseId,
-  }) =>
-      rejectRequest(requestId);
+  }) => rejectRequest(requestId);
 
   Future<void> updatePendingRequestSnapshot({
     required String requestId,
@@ -533,20 +560,19 @@ class CountdownSpaceService {
   }) async {
     final normalizedRequestId = requestId.trim();
     if (normalizedRequestId.isEmpty) return;
-    await _db.ref('countdown_space_requests/$normalizedRequestId').update({
-      'snapshot': _sanitizeSnapshot(snapshot),
-    });
+    await CloudFunctionsHelper.callSecure<dynamic>(
+      'updateCountdownSpaceRequestSecure',
+      payload: <String, dynamic>{
+        'requestId': normalizedRequestId,
+        'snapshot': _sanitizeSnapshot(snapshot),
+      },
+    );
   }
 
   Future<void> updateSpaceSnapshot({
-    required String selfHouseId,
-    required String otherHouseId,
+    required String spaceId,
     required Map<String, dynamic> snapshot,
   }) async {
-    final normalizedSelfHouseId = selfHouseId.trim();
-    final normalizedOtherHouseId = otherHouseId.trim();
-    if (normalizedSelfHouseId.isEmpty || normalizedOtherHouseId.isEmpty) return;
-    final spaceId = pairKeyFor(normalizedSelfHouseId, normalizedOtherHouseId);
     await updateSnapshot(spaceId: spaceId, snapshot: snapshot);
   }
 
@@ -556,25 +582,19 @@ class CountdownSpaceService {
     required String currentHouseName,
   }) async {
     try {
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final deleteAt = now + (15 * 24 * 60 * 60 * 1000); // 15 days
-      final parts = spaceId.split('_');
-      if (parts.length < 2) {
-        return const CountdownSpaceRequestResult(
+      final response = await CloudFunctionsHelper.callSecure<dynamic>(
+        'requestCountdownSpaceDeleteSecure',
+        payload: <String, dynamic>{'spaceId': spaceId},
+      );
+      final responseData = _toMap(response.data);
+      if (responseData['success'] != true) {
+        return CountdownSpaceRequestResult(
           success: false,
-          message: 'Không xác định được không gian cần xóa.',
+          message: responseData['message']?.toString().trim().isNotEmpty == true
+              ? responseData['message'].toString().trim()
+              : 'Không thể gửi yêu cầu xóa không gian.',
         );
       }
-      await _db.ref('countdown_space_delete_requests/$spaceId').set({
-        'spaceId': spaceId,
-        'houseA': parts[0],
-        'houseB': parts[1],
-        'requestedBy': currentHouseId,
-        'requestedByHouseId': currentHouseId,
-        'requestedAt': now,
-        'deleteAt': deleteAt,
-        'status': 'pending',
-      });
       return const CountdownSpaceRequestResult(
         success: true,
         message: 'Đã gửi yêu cầu xóa không gian.',
@@ -592,10 +612,19 @@ class CountdownSpaceService {
     required String currentHouseId,
   }) async {
     try {
-      final updates = <String, dynamic>{};
-      updates['countdown_spaces/$spaceId/status'] = 'deleted';
-      updates['countdown_space_delete_requests/$spaceId/status'] = 'accepted';
-      await _db.ref().update(updates);
+      final response = await CloudFunctionsHelper.callSecure<dynamic>(
+        'respondCountdownSpaceDeleteSecure',
+        payload: <String, dynamic>{'spaceId': spaceId},
+      );
+      final responseData = _toMap(response.data);
+      if (responseData['success'] != true) {
+        return CountdownSpaceRequestResult(
+          success: false,
+          message: responseData['message']?.toString().trim().isNotEmpty == true
+              ? responseData['message'].toString().trim()
+              : 'Không thể xác nhận xóa không gian.',
+        );
+      }
       return const CountdownSpaceRequestResult(
         success: true,
         message: 'Đã xóa không gian đếm.',
@@ -612,8 +641,9 @@ class CountdownSpaceService {
     required String spaceId,
     required String currentHouseId,
   }) async {
-    final snap =
-        await _db.ref('countdown_space_delete_requests/$spaceId').get();
+    final snap = await _db
+        .ref('countdown_space_delete_requests/$spaceId')
+        .get();
     if (!snap.exists) return;
     final data = _toMap(snap.value);
     if (data['status'] != 'pending') return;
@@ -625,9 +655,12 @@ class CountdownSpaceService {
 
   Stream<List<CountdownSpaceRequest>> watchRequestsForHouse(String houseId) {
     final hId = houseId.trim();
-    return _db.ref('countdown_space_requests').onValue.map((event) {
-      if (event.snapshot.value == null) return [];
-      final raw = _toMap(event.snapshot.value);
+    return _watchPairedRecords(
+      rootPath: 'countdown_space_requests',
+      firstField: 'fromHouseId',
+      secondField: 'toHouseId',
+      houseId: hId,
+    ).map((raw) {
       final list = <CountdownSpaceRequest>[];
       raw.forEach((key, value) {
         final data = _toMap(value);
@@ -644,46 +677,56 @@ class CountdownSpaceService {
       streamActiveSpaces(houseId);
 
   Stream<List<CountdownSpaceDeleteRequestInfo>> watchDeleteRequestsForHouse(
-      String houseId) {
+    String houseId,
+  ) {
     final hId = houseId.trim();
-    return _db.ref('countdown_space_delete_requests').onValue.map((event) {
-      if (event.snapshot.value == null) return [];
-      final raw = _toMap(event.snapshot.value);
+    return _watchPairedRecords(
+      rootPath: 'countdown_space_delete_requests',
+      firstField: 'houseA',
+      secondField: 'houseB',
+      houseId: hId,
+    ).map((raw) {
       final list = <CountdownSpaceDeleteRequestInfo>[];
       raw.forEach((key, value) {
-        if (_spaceContainsHouse(key, hId)) {
-          list.add(CountdownSpaceDeleteRequestInfo.fromMap(key, _toMap(value)));
+        final request = CountdownSpaceDeleteRequestInfo.fromMap(
+          key,
+          _toMap(value),
+        );
+        if (request.status == 'pending' &&
+            request.otherHouseIdFor(hId).isNotEmpty) {
+          list.add(request);
         }
       });
       return list;
     });
   }
 
-  String pairKeyFor(String id1, String id2) {
-    final ids = [id1.trim(), id2.trim()]..sort();
-    return '${ids[0]}_${ids[1]}';
-  }
-
   Future<List<CountdownSpace>> _loadSpacesForHouse(String houseId) async {
     final hId = houseId.trim();
-    final snap = await _db.ref('countdown_spaces').get();
-    if (!snap.exists || snap.value == null) return [];
-    final raw = _toMap(snap.value);
+    final raw = await _loadPairedRecords(
+      rootPath: 'countdown_spaces',
+      firstField: 'houseA',
+      secondField: 'houseB',
+      houseId: hId,
+    );
     final list = <CountdownSpace>[];
     raw.forEach((key, value) {
-      if (_spaceContainsHouse(key, hId)) {
-        list.add(CountdownSpace.fromMap(key, _toMap(value)));
-      }
+      final space = CountdownSpace.fromMap(key, _toMap(value));
+      if (space.containsHouse(hId)) list.add(space);
     });
     return list;
   }
 
   Future<List<CountdownSpaceRequest>> _loadRequestsForHouse(
-      String houseId) async {
+    String houseId,
+  ) async {
     final hId = houseId.trim();
-    final snap = await _db.ref('countdown_space_requests').get();
-    if (!snap.exists || snap.value == null) return [];
-    final raw = _toMap(snap.value);
+    final raw = await _loadPairedRecords(
+      rootPath: 'countdown_space_requests',
+      firstField: 'fromHouseId',
+      secondField: 'toHouseId',
+      houseId: hId,
+    );
     final list = <CountdownSpaceRequest>[];
     raw.forEach((key, value) {
       final data = _toMap(value);
@@ -703,10 +746,8 @@ class CountdownSpaceService {
     final result = <String>{};
     for (final s in spaces) {
       if (s.status == 'active') {
-        final parts = s.spaceId.split('_');
-        for (final p in parts) {
-          if (p != hId) result.add(p);
-        }
+        final otherHouseId = s.otherHouseIdFor(hId);
+        if (otherHouseId.isNotEmpty) result.add(otherHouseId);
       }
     }
     for (final r in requests) {
@@ -718,10 +759,79 @@ class CountdownSpaceService {
     return result;
   }
 
-  bool _spaceContainsHouse(String spaceId, String houseId) {
+  Future<Map<String, dynamic>> _loadPairedRecords({
+    required String rootPath,
+    required String firstField,
+    required String secondField,
+    required String houseId,
+  }) async {
     final hId = houseId.trim();
-    if (hId.isEmpty) return false;
-    return spaceId.split('_').any((part) => part.trim() == hId);
+    if (hId.isEmpty) return {};
+    final snapshots = await Future.wait([
+      _db.ref(rootPath).orderByChild(firstField).equalTo(hId).get(),
+      _db.ref(rootPath).orderByChild(secondField).equalTo(hId).get(),
+    ]);
+    return <String, dynamic>{
+      ..._toMap(snapshots[0].value),
+      ..._toMap(snapshots[1].value),
+    };
+  }
+
+  Stream<Map<String, dynamic>> _watchPairedRecords({
+    required String rootPath,
+    required String firstField,
+    required String secondField,
+    required String houseId,
+  }) {
+    final hId = houseId.trim();
+    late StreamController<Map<String, dynamic>> controller;
+    StreamSubscription<DatabaseEvent>? firstSubscription;
+    StreamSubscription<DatabaseEvent>? secondSubscription;
+    var firstRecords = <String, dynamic>{};
+    var secondRecords = <String, dynamic>{};
+    var firstReady = false;
+    var secondReady = false;
+
+    void emitWhenReady() {
+      if (!firstReady || !secondReady || controller.isClosed) return;
+      controller.add(<String, dynamic>{...firstRecords, ...secondRecords});
+    }
+
+    controller = StreamController<Map<String, dynamic>>(
+      onListen: () {
+        if (hId.isEmpty) {
+          firstReady = true;
+          secondReady = true;
+          emitWhenReady();
+          return;
+        }
+        firstSubscription = _db
+            .ref(rootPath)
+            .orderByChild(firstField)
+            .equalTo(hId)
+            .onValue
+            .listen((event) {
+              firstRecords = _toMap(event.snapshot.value);
+              firstReady = true;
+              emitWhenReady();
+            }, onError: controller.addError);
+        secondSubscription = _db
+            .ref(rootPath)
+            .orderByChild(secondField)
+            .equalTo(hId)
+            .onValue
+            .listen((event) {
+              secondRecords = _toMap(event.snapshot.value);
+              secondReady = true;
+              emitWhenReady();
+            }, onError: controller.addError);
+      },
+      onCancel: () async {
+        await firstSubscription?.cancel();
+        await secondSubscription?.cancel();
+      },
+    );
+    return controller.stream;
   }
 
   Map<String, dynamic> _sanitizeSnapshot(Map<String, dynamic> raw) {

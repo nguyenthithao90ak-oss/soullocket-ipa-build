@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "atlas": "diary_mood_atlas_v1.png",
+  "grid": {
+    "columns": 3,
+    "rows": 3,
+    "pixelWidth": 1254,
+    "pixelHeight": 1254
+  },
+  "background": "#FFF7FA",
+  "stickers": [
+    { "id": "diary_reflective", "emoji": "📝", "column": 0, "row": 0 },
+    { "id": "diary_shy", "emoji": "🙈", "column": 1, "row": 0 },
+    { "id": "diary_missing", "emoji": "💌", "column": 2, "row": 0 },
+    { "id": "diary_proud", "emoji": "⭐", "column": 0, "row": 1 },
+    { "id": "diary_sleepy", "emoji": "🌙", "column": 1, "row": 1 },
+    { "id": "diary_anxious", "emoji": "🥺", "column": 2, "row": 1 },
+    { "id": "diary_grumpy", "emoji": "😤", "column": 0, "row": 2 },
+    { "id": "diary_playful", "emoji": "😉", "column": 1, "row": 2 },
+    { "id": "diary_healing", "emoji": "❤️‍🩹", "column": 2, "row": 2 }
+  ]
+}

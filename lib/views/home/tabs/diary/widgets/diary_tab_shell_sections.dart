@@ -7,10 +7,7 @@ import '../../../../../core/sl_theme.dart';
 class DiaryAccessLockedView extends StatelessWidget {
   final VoidCallback onUnlock;
 
-  const DiaryAccessLockedView({
-    super.key,
-    required this.onUnlock,
-  });
+  const DiaryAccessLockedView({super.key, required this.onUnlock});
 
   @override
   Widget build(BuildContext context) {
@@ -106,30 +103,27 @@ class DiaryTabSectionSwitcher extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Container(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(5),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(30),
+          color: const Color(0xFFF5F1E8).withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            )
+              color: const Color(0xFF5A6680).withValues(alpha: 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 7),
+            ),
           ],
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.8),
-            width: 1,
-          ),
+          border: Border.all(color: const Color(0xFFE7DECF), width: 1.2),
         ),
         child: Row(
           children: [
             Expanded(
               child: _DiarySegmentBtn(
                 label: context.tr('home_knim_262759'),
+                icon: Icons.photo_library_rounded,
                 active: currentTab == 'memory',
-                activeColor: const Color(0xFF5C71D8),
-                activeShadowColor: const Color(0xFF7C8BFF),
+                activeColors: const [Color(0xFFF0B56C), Color(0xFFE88B7B)],
                 onTap: () {
                   if (currentTab != 'memory') onTabChanged('memory');
                 },
@@ -138,9 +132,9 @@ class DiaryTabSectionSwitcher extends StatelessWidget {
             Expanded(
               child: _DiarySegmentBtn(
                 label: context.tr('home_tms_f029b6'),
+                icon: Icons.auto_stories_rounded,
                 active: currentTab == 'diary',
-                activeColor: const Color(0xFFD81B60),
-                activeShadowColor: const Color(0xFFFF6A9F),
+                activeColors: const [Color(0xFF4FAF9E), Color(0xFF7184DD)],
                 onTap: () {
                   if (currentTab != 'diary') onTabChanged('diary');
                 },
@@ -155,16 +149,16 @@ class DiaryTabSectionSwitcher extends StatelessWidget {
 
 class _DiarySegmentBtn extends StatelessWidget {
   final String label;
+  final IconData icon;
   final bool active;
-  final Color activeColor;
-  final Color activeShadowColor;
+  final List<Color> activeColors;
   final VoidCallback onTap;
 
   const _DiarySegmentBtn({
     required this.label,
+    required this.icon,
     required this.active,
-    required this.activeColor,
-    required this.activeShadowColor,
+    required this.activeColors,
     required this.onTap,
   });
 
@@ -176,37 +170,50 @@ class _DiarySegmentBtn extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
           gradient: active
-              ? const LinearGradient(
-                  colors: [Colors.white, Color(0xFFF8FAFC)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+              ? LinearGradient(
+                  colors: activeColors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 )
               : null,
           color: active ? null : Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(17),
           boxShadow: active
               ? [
                   BoxShadow(
-                    color: activeShadowColor.withValues(alpha: 0.12),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    color: activeColors.last.withValues(alpha: 0.25),
+                    blurRadius: 13,
+                    offset: const Offset(0, 5),
                   ),
                 ]
               : null,
         ),
         alignment: Alignment.center,
-        child: Text(
-          label,
-          style: SLTheme.quicksand(
-            fontWeight: active ? FontWeight.w800 : FontWeight.w600,
-            fontSize: 14.0,
-            color: active
-                ? activeColor
-                : const Color(0xFF718096),
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 17,
+              color: active ? Colors.white : const Color(0xFF7A8190),
+            ),
+            const SizedBox(width: 7),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: SLTheme.quicksand(
+                  fontWeight: active ? FontWeight.w900 : FontWeight.w700,
+                  fontSize: 13.5,
+                  color: active ? Colors.white : const Color(0xFF6D7585),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -237,14 +244,16 @@ class DiaryHouseSetupCard extends StatelessWidget {
       border: Border.all(color: borderColor, width: 1.4),
       boxShadow: [
         BoxShadow(
-          color: const Color(0xFFFF73A6)
-              .withValues(alpha: strongShadow ? 0.18 : 0.11),
+          color: const Color(
+            0xFFFF73A6,
+          ).withValues(alpha: strongShadow ? 0.18 : 0.11),
           blurRadius: strongShadow ? 28 : 18,
           offset: const Offset(0, 10),
         ),
         BoxShadow(
-          color: const Color(0xFF6BC6FF)
-              .withValues(alpha: strongShadow ? 0.12 : 0.08),
+          color: const Color(
+            0xFF6BC6FF,
+          ).withValues(alpha: strongShadow ? 0.12 : 0.08),
           blurRadius: strongShadow ? 22 : 16,
           offset: const Offset(0, 6),
         ),
@@ -298,13 +307,8 @@ class DiaryHouseSetupCard extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFD81B60),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 12,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: SLRadius.mdAll,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: SLRadius.mdAll),
             ),
           ),
         ],
@@ -464,10 +468,9 @@ class DiarySelectionBottomBar extends StatelessWidget {
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
-                    L10nService().format(
-                      'diary_selected_photos_count',
-                      {'count': selectedCount},
-                    ),
+                    L10nService().format('diary_selected_photos_count', {
+                      'count': selectedCount,
+                    }),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: SLTheme.quicksand(
@@ -514,10 +517,7 @@ class DiarySelectionBottomBar extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               IconButton(
-                icon: const Icon(
-                  Icons.link_rounded,
-                  color: Color(0xFF5C71D8),
-                ),
+                icon: const Icon(Icons.link_rounded, color: Color(0xFF5C71D8)),
                 tooltip: context.tr('home_tolinkt_af40c0'),
                 iconSize: 22,
                 onPressed: onShare,

@@ -117,7 +117,9 @@ extension _MainHomeTabQuickActions on _MainHomeTabState {
                               ? _buildInteractionVisual(
                                   visual: '\u{1F496}',
                                   assetPath:
-                                      'assets/images/anhtomau_stickers/sticker_20.gif',
+                                      SoulLocketStickerCatalog.referenceFor(
+                                        'motion_missing',
+                                      ),
                                   size: 58,
                                   emojiSize: 50,
                                   preferAsset: true,

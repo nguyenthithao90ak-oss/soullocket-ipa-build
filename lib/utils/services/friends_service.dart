@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:soullocket_app/core/constants/app_config.dart';
 import 'package:soullocket_app/utils/services/core/cloud_functions_helper.dart';
-import 'push_notification_helper.dart';
 import 'chat_service.dart';
 
 /// ============================================================
@@ -331,9 +330,9 @@ class FriendsService {
         normalizedFriendHouseId.isEmpty) {
       return;
     }
-    await PushNotificationHelper.friendWave(
-      toHouseId: normalizedFriendHouseId,
-      fromName: normalizedMyHouseName,
+    await CloudFunctionsHelper.callSecure<dynamic>(
+      'sendFriendWaveSecure',
+      payload: <String, dynamic>{'friendHouseId': normalizedFriendHouseId},
     );
   }
 
