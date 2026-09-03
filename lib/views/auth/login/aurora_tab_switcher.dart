@@ -88,17 +88,11 @@ class _TicketTab extends StatelessWidget {
           height: 45,
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            gradient: active
-                ? const LinearGradient(
-                    colors: [Color(0xFFFFE5EC), Color(0xFFF0E8FF)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
+            color: active ? const Color(0xFFFFEEF3) : Colors.transparent,
             borderRadius: BorderRadius.circular(19),
             border: Border.all(
               color: active
-                  ? const Color(0xFFE99AAF)
+                  ? const Color(0xFFF1A8BC)
                   : Colors.transparent,
               width: 1.1,
             ),

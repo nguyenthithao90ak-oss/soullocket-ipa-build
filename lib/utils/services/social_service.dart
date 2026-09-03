@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Query, Transaction;
 import 'package:cloud_firestore/cloud_firestore.dart' as cf;
 import 'package:soullocket_app/models/social_post.dart';
+import 'push_notification_helper.dart';
 import 'local_database_service.dart';
 
 /// SocialService — Quản lý social feed cộng đồng
@@ -371,56 +372,59 @@ class SocialService {
 
   Future<String> _resolveHouseLabel(String houseId) async {
     final normalized = houseId.trim();
-    if (normalized.isEmpty) return '';
+    if (normalized.isEmpty) {
+      return '';
+    }
+
     final candidates = <String>[
       'houses/$normalized/settings/houseName',
       'houses/$normalized/houseName',
       'house_profiles/$normalized/houseName',
       'houses_public/$normalized/houseName',
     ];
+
     for (final path in candidates) {
       try {
         final snap = await _dbRef.child(path).get();
         final value = snap.value?.toString().trim() ?? '';
-        if (value.isNotEmpty) return value;
+        if (value.isNotEmpty) {
+          return value;
+        }
       } catch (_) {}
     }
+
     return normalized;
   }
 
-  // ── STREAM feed global (mới nhất) bằng onChildAdded ──────────────────
-  Stream<SocialPost> streamNewGlobalFeed({int? afterTs}) {
-    var query = _firestore
-        .collection('social_posts')
-        .where('privacy', isEqualTo: 'public')
-        .orderBy('ts', descending: false);
-    if (afterTs != null) {
-      query = query.startAfter([afterTs]);
-    } else {
-      final now = DateTime.now().millisecondsSinceEpoch;
-      query = query.startAt([now]);
+  String _compactNotificationMessage(String value, {int maxLength = 160}) {
+    final normalized = value.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (normalized.isEmpty) {
+      return '';
     }
-    return query.snapshots().expand((snapshot) {
-      return snapshot.docChanges
-          .where((change) => change.type == DocumentChangeType.added)
-          .map((change) {
-        final doc = change.doc;
-        return SocialPost.fromJson(doc.id, doc.data() ?? {});
-      });
-    });
+    if (normalized.length <= maxLength) {
+      return normalized;
+    }
+    return '${normalized.substring(0, maxLength - 1)}…';
   }
 
-  // ── STREAM cập nhật 1 post (lắng nghe like/comment realtime) ─────────
-  Stream<SocialPost?> streamPostUpdates(String postId) {
-    return _firestore
-        .collection('social_posts')
-        .doc(postId)
-        .snapshots()
-        .map((doc) {
-      if (!doc.exists || doc.data() == null) return null;
-      return SocialPost.fromJson(doc.id, doc.data()!);
-    });
-  }
+  // [ĐÃ XÓA] Các hàm push notification cộng đồng cũ đã gỡ bỏ.
+  Future<void> notifyPostLiked({
+    required String postId,
+    required String actorHouseId,
+  }) async {}
+
+  Future<void> notifyPostCommented({
+    required String postId,
+    required String actorHouseId,
+    required String commentText,
+  }) async {}
+
+  Future<void> notifyCommentLiked({
+    required String postId,
+    required String commentId,
+    required String actorHouseId,
+  }) async {}
+
 
   // ── STREAM feed của 1 nhà ─────────────────────────────────────────────
   Future<List<SocialPost>> fetchHouseFeedPage(
@@ -445,95 +449,6 @@ class SocialService {
         .toList();
   }
 
-  // ── LẤY 1 lần ────────────────────────────────────────────────────────
-  Future<List<SocialPost>> fetchGlobalFeed({int limit = 10}) async {
-    final snap = await _getQueryWithCacheFallback(_firestore
-        .collection('social_posts')
-        .where('privacy', isEqualTo: 'public')
-        .orderBy('ts', descending: true)
-        .limit(limit));
-    return snap.docs
-        .map((doc) => SocialPost.fromJson(doc.id, doc.data()))
-        .toList();
-  }
-
-  Future<List<SocialPost>> fetchGlobalFeedPage({
-    int limit = 20,
-    int? endBeforeTs,
-  }) async {
-    var query = _firestore
-        .collection('social_posts')
-        .where('privacy', isEqualTo: 'public')
-        .orderBy('ts', descending: true)
-        .limit(limit);
-    if (endBeforeTs != null) {
-      query = query.where('ts', isLessThan: endBeforeTs);
-    }
-    final snap = await _getQueryWithCacheFallback(query);
-    return snap.docs
-        .map((doc) => SocialPost.fromJson(doc.id, doc.data()))
-        .toList();
-  }
-
-  // ── ĐĂNG bài mới ─────────────────────────────────────────────────────
-  Future<String> createPost({
-    required String houseId,
-    required String houseName,
-    required String authorRole,
-    required String authorName,
-    required String authorAvt,
-    required String content,
-    String imageUrl = '',
-    String videoUrl = '',
-    String privacy = 'public',
-  }) async {
-    final trimmedContent = content.trim();
-    if (trimmedContent.isEmpty && imageUrl.isEmpty && videoUrl.isEmpty) {
-      throw 'Nội dung bài đăng không được để trống.';
-    }
-
-    final validationError = validateCommunityText(
-      trimmedContent,
-      isComment: false,
-      allowEmpty: imageUrl.isNotEmpty || videoUrl.isNotEmpty,
-    );
-    if (validationError != null) {
-      throw validationError;
-    }
-    final flagged = containsBlockedCommunityTerms(trimmedContent);
-    final resolvedPrivacy = flagged ? 'private' : privacy;
-
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final docRef = _firestore.collection('social_posts').doc();
-    final postId = docRef.id;
-
-    final postData = {
-      'houseId': houseId,
-      'houseName': houseName,
-      'authorRole': authorRole,
-      'authorName': authorName,
-      'authorAvt': authorAvt,
-      'houseAvt': authorAvt,
-      'content': trimmedContent,
-      'imageUrl': imageUrl,
-      'videoUrl': videoUrl,
-      'likes': 0,
-      'commentCount': 0,
-      'shareCount': 0,
-      'hotScore': 0,
-      'ts': now,
-      'privacy': resolvedPrivacy,
-      'visibility': resolvedPrivacy,
-      if (flagged) 'moderationStatus': 'flagged',
-      'isRepost': false,
-      'id': postId,
-    };
-
-    // Ghi nhận vào Firestore
-    await docRef.set(postData);
-
-    return postId;
-  }
 
   // ── XÓA bài ──────────────────────────────────────────────────────────
   Future<void> deletePost({
@@ -613,6 +528,8 @@ class SocialService {
         .doc(myHouseId)
         .collection('posts')
         .doc(postId);
+    var addedLike = false;
+
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(docRef);
       if (!snapshot.exists) {
@@ -634,6 +551,7 @@ class SocialService {
           'postId': postId,
           'likedAt': now,
         });
+        addedLike = true;
       }
 
       transaction.update(docRef, {
@@ -642,6 +560,11 @@ class SocialService {
       });
     });
 
+    if (addedLike) {
+      try {
+        await notifyPostLiked(postId: postId, actorHouseId: myHouseId);
+      } catch (_) {}
+    }
   }
 
   // ── CHECK đã like chưa ───────────────────────────────────────────────
@@ -662,94 +585,6 @@ class SocialService {
                 .containsKey(myHouseId));
   }
 
-  // ── Unified Post Creation (Firebase only) ─────────────────────
-  Future<String> createPostUnified({
-    required String houseId,
-    required String houseName,
-    required String authorRole,
-    required String authorName,
-    required String authorAvt,
-    required String content,
-    String imageUrl = '',
-    String videoUrl = '',
-    String privacy = 'public',
-    String mood = '',
-    String moodEmoji = '',
-    String location = '',
-    String postType = 'mood',
-    bool isAnon = false,
-    bool isLocket = false,
-    bool commentsEnabled = true,
-  }) async {
-    try {
-      final trimmedContent = content.trim();
-      if (trimmedContent.isEmpty &&
-          imageUrl.trim().isEmpty &&
-          videoUrl.trim().isEmpty) {
-        throw 'Nội dung bài đăng không được để trống.';
-      }
-      final validationError = validateCommunityText(
-        trimmedContent,
-        isComment: false,
-        allowEmpty: imageUrl.trim().isNotEmpty || videoUrl.trim().isNotEmpty,
-      );
-      if (validationError != null) {
-        throw validationError;
-      }
-      final flagged = containsBlockedCommunityTerms(trimmedContent);
-      final resolvedPrivacy = flagged ? 'private' : privacy;
-      final normalizedPostType = postType.trim().isEmpty
-          ? (isAnon
-              ? 'confession'
-              : imageUrl.trim().isNotEmpty
-                  ? 'polaroid'
-                  : 'mood')
-          : postType.trim();
-      final normalizedIsAnon =
-          isAnon || normalizedPostType.toLowerCase() == 'confession';
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final docRef = _firestore.collection('social_posts').doc();
-      final postId = docRef.id;
-
-      final postData = {
-        'houseId': houseId,
-        'houseName': houseName,
-        'author_uid': FirebaseAuth.instance.currentUser?.uid ?? '',
-        'authorRole': authorRole,
-        'authorName': authorName,
-        'authorAvt': authorAvt,
-        'houseAvt': authorAvt,
-        'content': trimmedContent,
-        'imageUrl': imageUrl,
-        'videoUrl': videoUrl,
-        'likes': 0,
-        'likes_map': <String, dynamic>{},
-        'commentCount': 0,
-        'shareCount': 0,
-        'hotScore': 0,
-        'ts': now,
-        'privacy': resolvedPrivacy,
-        'visibility': resolvedPrivacy,
-        'mood': mood,
-        'moodEmoji': moodEmoji,
-        'location': location,
-        'postType': normalizedPostType,
-        'isAnon': normalizedIsAnon,
-        'isLocket': isLocket,
-        'commentsEnabled': commentsEnabled,
-        if (flagged) 'moderationStatus': 'flagged',
-        'isRepost': false,
-        'id': postId,
-      };
-
-      // Ghi nhận vào Firestore
-      await docRef.set(postData);
-
-      return postId;
-    } catch (e) {
-      throw 'Không thể đăng bài: $e';
-    }
-  }
 
   // ── DELETE COMMENT ──────────────────────────────────────────────────
   Future<void> deleteComment({
@@ -842,14 +677,23 @@ class SocialService {
       'isHidden': hasViolations,
       if (resolvedAvt.isNotEmpty) 'avt': resolvedAvt,
       if (resolvedAvt.isNotEmpty) 'authorAvt': resolvedAvt,
-      'replyTo': ?replyTo,
-      'replyToName': ?replyToName,
+      if (replyTo != null) 'replyTo': replyTo,
+      if (replyToName != null) 'replyToName': replyToName,
       'likes_map': <String, dynamic>{},
     };
 
     // Write to Firestore subcollection
     await docRef.set(payload);
 
+    if (!hasViolations) {
+      try {
+        await notifyPostCommented(
+          postId: postId,
+          actorHouseId: houseId,
+          commentText: trimmedContent,
+        );
+      } catch (_) {}
+    }
   }
 
   // ── TOGGLE LIKE COMMENT ──────────────────────────────────────────────
@@ -864,13 +708,14 @@ class SocialService {
         .collection('comments')
         .doc(commentId);
 
+    bool liked = false;
     try {
       await _firestore.runTransaction((transaction) async {
         final snapshot = await transaction.get(docRef);
         if (snapshot.exists) {
           final data = snapshot.data() ?? {};
           final likesMap = Map<String, dynamic>.from(data['likes_map'] ?? {});
-          final liked = likesMap.containsKey(myHouseId);
+          liked = likesMap.containsKey(myHouseId);
           if (liked) {
             likesMap.remove(myHouseId);
           } else {
@@ -887,6 +732,15 @@ class SocialService {
       });
     } catch (_) {}
 
+    if (!liked) {
+      try {
+        await notifyCommentLiked(
+          postId: postId,
+          commentId: commentId,
+          actorHouseId: myHouseId,
+        );
+      } catch (_) {}
+    }
   }
 
   // ── REPORT POST ─────────────────────────────────────────────────────
@@ -982,16 +836,6 @@ class SocialService {
     });
   }
 
-  Stream<SocialPost> streamUnifiedFeed({int? afterTs}) {
-    return streamNewGlobalFeed(afterTs: afterTs);
-  }
-
-  Future<List<SocialPost>> fetchUnifiedFeedPage({
-    int limit = 20,
-    int? endBeforeTs,
-  }) {
-    return fetchGlobalFeedPage(limit: limit, endBeforeTs: endBeforeTs);
-  }
 
   // ── FETCH feed đã LIKE (Phân trang) ──────────────────────────────────
   Future<List<SocialPost>> fetchLikedFeedPage(String houseId,
@@ -1084,22 +928,22 @@ class SocialService {
         return houseId != null
             ? fetchLikedFeedPage(houseId,
                 limit: limit, endBeforeTs: endBeforeTs)
-            : fetchGlobalFeedPage(limit: limit, endBeforeTs: endBeforeTs);
+            : const <SocialPost>[];
       case 'repost':
         return houseId != null
             ? fetchRepostFeedPage(houseId,
                 limit: limit, endBeforeTs: endBeforeTs)
-            : fetchGlobalFeedPage(limit: limit, endBeforeTs: endBeforeTs);
+            : const <SocialPost>[];
       case 'private':
         return houseId != null
             ? fetchPrivateFeedPage(houseId,
                 limit: limit, endBeforeTs: endBeforeTs)
-            : fetchGlobalFeedPage(limit: limit, endBeforeTs: endBeforeTs);
+            : const <SocialPost>[];
       case 'locket':
         return houseId != null
             ? fetchLocketFeedPage(houseId,
                 limit: limit, endBeforeTs: endBeforeTs)
-            : fetchGlobalFeedPage(limit: limit, endBeforeTs: endBeforeTs);
+            : const <SocialPost>[];
       case 'hot':
         var query = _firestore
             .collection('social_posts')
@@ -1117,7 +961,7 @@ class SocialService {
         }
         return posts.take(limit).toList();
       default:
-        return fetchGlobalFeedPage(limit: limit, endBeforeTs: endBeforeTs);
+        return const <SocialPost>[];
     }
   }
 

@@ -103,8 +103,9 @@ class StorageService {
 
   bool isSupportedMusicFileName(String fileNameOrPath) {
     final extension = p.extension(fileNameOrPath).toLowerCase();
-    return storageMusicPickerExtensions
-        .contains(extension.replaceFirst('.', ''));
+    return storageMusicPickerExtensions.contains(
+      extension.replaceFirst('.', ''),
+    );
   }
 
   Future<XFile?> pickImage() => _pickerService.pickImage();
@@ -141,8 +142,9 @@ class StorageService {
     );
   }
 
-  Future<void> purgeStaleCache(
-      {Duration staleThreshold = const Duration(days: 3)}) {
+  Future<void> purgeStaleCache({
+    Duration staleThreshold = const Duration(days: 3),
+  }) {
     return _downloadCacheHelper.purgeStaleCache(staleThreshold: staleThreshold);
   }
 
@@ -152,10 +154,7 @@ class StorageService {
     String fileNameOrPath, {
     String fallback = 'application/octet-stream',
   }) {
-    return detectStorageContentType(
-      fileNameOrPath,
-      fallback: fallback,
-    );
+    return detectStorageContentType(fileNameOrPath, fallback: fallback);
   }
 
   void _rejectVideoUpload({
@@ -176,15 +175,15 @@ class StorageService {
     }
 
     try {
-      final prefs = OfflineCacheService.getPrefsSync() ??
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
       await prefs.remove('il_imgbb_api_key');
       _legacyImgBBKeyPurged = true;
     } catch (e) {
-      debugPrint('Legacy ImgBB key purge failed: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể dọn khóa ImgBB cũ.',
-      ).message}');
+      debugPrint(
+        'Legacy ImgBB key purge failed: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể dọn khóa ImgBB cũ.').message}',
+      );
     }
   }
 
@@ -237,68 +236,6 @@ class StorageService {
       storagePath: storagePath,
       currentUid: _auth.currentUser?.uid.trim() ?? '',
     );
-  }
-
-  Future<Map<String, dynamic>> _createSecretVaultUploadSession({
-    required String houseId,
-    required String contentType,
-    required String fileName,
-  }) async {
-    try {
-      return _uploadSessionHelper.createUploadSession(
-        invokeCallable: (name, payload) => _callWithAppCheckRetry(
-          () => _functions.httpsCallable(name).call(payload),
-          allowUnauthenticatedWithoutMarkers: true,
-        ),
-        functionName: 'createSecretVaultUploadSession',
-        payload: <String, dynamic>{
-          'houseId': houseId.trim(),
-          'contentType': contentType.trim(),
-          'fileName': fileName.trim(),
-        },
-        label: 'Secret Vault upload session',
-      );
-    } on FirebaseFunctionsException catch (error) {
-      if (_appCheckHelper.isAppCheckFailure(
-        error,
-        allowUnauthenticatedWithoutMarkers: true,
-      )) {
-        throw Exception(
-          AppErrorMapper.resolve(
-            error,
-            fallbackMessage: 'Không thể tạo phiên tải ảnh kho bí mật.',
-          ).message,
-        );
-      }
-      switch (error.code.trim().toLowerCase()) {
-        case 'unauthenticated':
-          throw Exception('Cần đăng nhập để tải ảnh kho bí mật.');
-        case 'invalid-argument':
-          throw Exception('Thiếu thông tin tải ảnh kho bí mật.');
-        case 'failed-precondition':
-          final message = (error.message ?? '').trim();
-          throw Exception(
-            Platform.isIOS || Platform.isMacOS
-                ? 'Kho ảnh mật chưa sẵn sàng trên thiết bị này.'
-                : message.isNotEmpty
-                    ? message
-                    : 'Secret Vault yêu cầu PRO đang hoạt động.',
-          );
-        case 'permission-denied':
-          throw Exception('Bạn không có quyền tải ảnh vào kho bí mật này.');
-        case 'deadline-exceeded':
-        case 'unavailable':
-          throw Exception(
-            'Không thể kết nối máy chủ tạo phiên tải ảnh kho bí mật.',
-          );
-        default:
-          throw Exception(
-            (error.message ?? '').trim().isNotEmpty
-                ? error.message!.trim()
-                : 'Không thể tạo phiên tải ảnh kho bí mật.',
-          );
-      }
-    }
   }
 
   Future<Map<String, dynamic>> _createChatImageUploadSession({
@@ -418,7 +355,8 @@ class StorageService {
         case 'deadline-exceeded':
         case 'unavailable':
           throw Exception(
-              'Không thể kết nối máy chủ tạo phiên tải ảnh Kỷ niệm.');
+            'Không thể kết nối máy chủ tạo phiên tải ảnh Kỷ niệm.',
+          );
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -561,7 +499,8 @@ class StorageService {
         case 'deadline-exceeded':
         case 'unavailable':
           throw Exception(
-              'Không thể kết nối máy chủ tạo phiên tải ảnh công khai.');
+            'Không thể kết nối máy chủ tạo phiên tải ảnh công khai.',
+          );
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -813,7 +752,8 @@ class StorageService {
         case 'deadline-exceeded':
         case 'unavailable':
           throw Exception(
-              'Không thể kết nối máy chủ để khôi phục ảnh Kỷ niệm.');
+            'Không thể kết nối máy chủ để khôi phục ảnh Kỷ niệm.',
+          );
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -834,9 +774,7 @@ class StorageService {
           allowUnauthenticatedWithoutMarkers: true,
         ),
         functionName: 'cleanupExpiredMemoryImagesTrash',
-        payload: <String, dynamic>{
-          'houseId': houseId.trim(),
-        },
+        payload: <String, dynamic>{'houseId': houseId.trim()},
         invalidResponseMessage: 'Memory trash cleanup response is invalid.',
       );
     } on FirebaseFunctionsException catch (error) {
@@ -850,7 +788,8 @@ class StorageService {
         case 'deadline-exceeded':
         case 'unavailable':
           throw Exception(
-              'Không thể kết nối máy chủ để dọn thùng rác Kỷ niệm.');
+            'Không thể kết nối máy chủ để dọn thùng rác Kỷ niệm.',
+          );
         default:
           throw Exception(
             (error.message ?? '').trim().isNotEmpty
@@ -879,10 +818,9 @@ class StorageService {
           errorText.contains('unavailable')) {
         return;
       }
-      debugPrint('Cleanup expired memory trash failed: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể dọn thùng rác Kỷ niệm hết hạn.',
-      ).message}');
+      debugPrint(
+        'Cleanup expired memory trash failed: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể dọn thùng rác Kỷ niệm hết hạn.').message}',
+      );
     }
   }
 
@@ -1014,7 +952,8 @@ class StorageService {
   }) async {
     final safeStoragePath = _normalizeStorageWritePath(storagePath);
     final originalFileName = file.name.isNotEmpty ? file.name : file.path;
-    final resolvedContentType = contentType ??
+    final resolvedContentType =
+        contentType ??
         detectContentType(
           originalFileName.isNotEmpty ? originalFileName : storagePath,
           fallback: 'application/octet-stream',
@@ -1036,13 +975,12 @@ class StorageService {
   }) {
     final safeStoragePath = _normalizeStorageWritePath(storagePath);
     final originalFileName = file.name.isNotEmpty ? file.name : file.path;
-    final sourceName =
-        originalFileName.isNotEmpty ? originalFileName : storagePath;
-    final resolvedContentType = contentType ??
-        detectContentType(
-          sourceName,
-          fallback: 'application/octet-stream',
-        );
+    final sourceName = originalFileName.isNotEmpty
+        ? originalFileName
+        : storagePath;
+    final resolvedContentType =
+        contentType ??
+        detectContentType(sourceName, fallback: 'application/octet-stream');
     return _rawUploadHelper.uploadMusicFileToPath(
       storagePath: safeStoragePath,
       file: file,
@@ -1067,7 +1005,8 @@ class StorageService {
     String? originalFileName,
   }) {
     final safeStoragePath = _normalizeStorageWritePath(storagePath);
-    final resolvedContentType = contentType ??
+    final resolvedContentType =
+        contentType ??
         detectContentType(
           originalFileName ?? storagePath,
           fallback: 'application/octet-stream',
@@ -1185,11 +1124,11 @@ class StorageService {
       file: file,
       sessionBuilder: (contentType, preferredFileName) =>
           _createPublicImageUploadSession(
-        houseId: houseId,
-        target: target,
-        contentType: contentType,
-        fileName: preferredFileName,
-      ),
+            houseId: houseId,
+            target: target,
+            contentType: contentType,
+            fileName: preferredFileName,
+          ),
       minWidth: minWidth,
       minHeight: minHeight,
       quality: quality,
@@ -1214,12 +1153,12 @@ class StorageService {
       file: file,
       sessionBuilder: (contentType, preferredFileName) =>
           _createChatImageUploadSession(
-        houseId: houseId,
-        scope: isInternal ? 'internal' : 'direct',
-        contentType: contentType,
-        fileName: preferredFileName,
-        targetHouseId: isInternal ? null : targetHouseId,
-      ),
+            houseId: houseId,
+            scope: isInternal ? 'internal' : 'direct',
+            contentType: contentType,
+            fileName: preferredFileName,
+            targetHouseId: isInternal ? null : targetHouseId,
+          ),
       minWidth: minWidth,
       minHeight: minHeight,
       quality: quality,
@@ -1241,10 +1180,10 @@ class StorageService {
       file: file,
       sessionBuilder: (contentType, preferredFileName) =>
           _createMemoryImageUploadSession(
-        houseId: houseId,
-        contentType: contentType,
-        fileName: preferredFileName,
-      ),
+            houseId: houseId,
+            contentType: contentType,
+            fileName: preferredFileName,
+          ),
       minWidth: minWidth,
       minHeight: minHeight,
       quality: quality,
@@ -1266,10 +1205,10 @@ class StorageService {
       file: file,
       sessionBuilder: (contentType, preferredFileName) =>
           _createAlbumImageUploadSession(
-        houseId: houseId,
-        contentType: contentType,
-        fileName: preferredFileName,
-      ),
+            houseId: houseId,
+            contentType: contentType,
+            fileName: preferredFileName,
+          ),
       minWidth: minWidth,
       minHeight: minHeight,
       quality: quality,
@@ -1291,10 +1230,10 @@ class StorageService {
       file: file,
       sessionBuilder: (contentType, preferredFileName) =>
           _createGiftImageUploadSession(
-        houseId: houseId,
-        contentType: contentType,
-        fileName: preferredFileName,
-      ),
+            houseId: houseId,
+            contentType: contentType,
+            fileName: preferredFileName,
+          ),
       minWidth: minWidth,
       minHeight: minHeight,
       quality: quality,
@@ -1316,10 +1255,10 @@ class StorageService {
       file: file,
       sessionBuilder: (contentType, preferredFileName) =>
           _createLoveCardImageUploadSession(
-        houseId: houseId,
-        contentType: contentType,
-        fileName: preferredFileName,
-      ),
+            houseId: houseId,
+            contentType: contentType,
+            fileName: preferredFileName,
+          ),
       minWidth: minWidth,
       minHeight: minHeight,
       quality: quality,
@@ -1350,7 +1289,10 @@ class StorageService {
       final contentType = detectContentType(originalFileName);
       final isImage = contentType.startsWith('image/');
 
-      if (!kIsWeb && file.path.isNotEmpty && isImage && fileExtension != '.gif') {
+      if (!kIsWeb &&
+          file.path.isNotEmpty &&
+          isImage &&
+          fileExtension != '.gif') {
         try {
           if (onProgress != null) onProgress(0.05);
           final tempDir = await getTemporaryDirectory();
@@ -1411,8 +1353,9 @@ class StorageService {
           resolvedContentType: finalContentType,
           rejectVideoUpload: _rejectVideoUpload,
           purgeLegacyCache: _purgeLegacyImgBBKeyCache,
-          onProgress:
-              onProgress != null ? (p) => onProgress(0.4 + (p * 0.6)) : null,
+          onProgress: onProgress != null
+              ? (p) => onProgress(0.4 + (p * 0.6))
+              : null,
         );
 
         final url = await downloadUrl;
@@ -1440,14 +1383,15 @@ class StorageService {
     required Future<Map<String, dynamic>> Function(
       String contentType,
       String preferredFileName,
-    ) sessionBuilder,
+    )
+    sessionBuilder,
     required int minWidth,
     required int minHeight,
     required int quality,
     required String tempPrefix,
     required String errorLabel,
     required StorageUploadResult Function(Map<String, dynamic> session)
-        mapResult,
+    mapResult,
     required String errorMessage,
     ValueChanged<double>? onProgress,
   }) {
@@ -1480,10 +1424,7 @@ class StorageService {
           ? file.name.trim()
           : p.basename(file.path);
       var uploadName = originalName.isEmpty ? 'vault_image.jpg' : originalName;
-      var contentType = detectContentType(
-        uploadName,
-        fallback: 'image/jpeg',
-      );
+      var contentType = detectContentType(uploadName, fallback: 'image/jpeg');
       var bytes = await file.readAsBytes();
 
       final extension = p.extension(uploadName).toLowerCase();
@@ -1603,8 +1544,9 @@ class StorageService {
     final objectSegmentIndex = pathSegments.indexOf('o');
     if (objectSegmentIndex >= 0 &&
         objectSegmentIndex + 1 < pathSegments.length) {
-      final encodedPath =
-          pathSegments.sublist(objectSegmentIndex + 1).join('/');
+      final encodedPath = pathSegments
+          .sublist(objectSegmentIndex + 1)
+          .join('/');
       final normalizedPath = _normalizeStorageRefPath(
         Uri.decodeComponent(encodedPath),
       );

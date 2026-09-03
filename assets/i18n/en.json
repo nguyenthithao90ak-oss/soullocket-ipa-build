@@ -6817,5 +6817,7 @@
   "local_album_filtered_summary": "{summary} • filtered",
   "local_album_video_badge": "VIDEO",
   "local_album_notice": "Photos and videos are stored only on this device and are not synced to the server. If you uninstall the app, all local album data will be lost.",
-  "local_album_notice_acknowledge": "Got it"
+  "local_album_notice_acknowledge": "Got it",
+  "diary_feed_end_single": "— You have reached the end of your journal —",
+  "diary_feed_end_couple": "— You have reached the end of your shared journal —"
 }

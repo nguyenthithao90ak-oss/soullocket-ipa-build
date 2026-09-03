@@ -166,15 +166,29 @@ void onStart(ServiceInstance service) async {
   final houseId = prefs.getString('il_rel_house_id');
   final role = prefs.getString('il_rel_role');
 
+  Timer? periodicCheckTimer;
+  StreamSubscription<ScreenStateEvent>? screenStateSubscription;
+  StreamSubscription<Map<String, dynamic>?>? foregroundSubscription;
+  StreamSubscription<Map<String, dynamic>?>? backgroundSubscription;
+
   if (service is AndroidServiceInstance) {
-    service
+    foregroundSubscription = service
         .on('setAsForeground')
         .listen((_) => service.setAsForegroundService());
-    service
+    backgroundSubscription = service
         .on('setAsBackground')
         .listen((_) => service.setAsBackgroundService());
   }
-  service.on('stopService').listen((_) => service.stopSelf());
+
+  late final StreamSubscription<Map<String, dynamic>?> stopSubscription;
+  stopSubscription = service.on('stopService').listen((_) async {
+    periodicCheckTimer?.cancel();
+    await screenStateSubscription?.cancel();
+    await foregroundSubscription?.cancel();
+    await backgroundSubscription?.cancel();
+    await stopSubscription.cancel();
+    await service.stopSelf();
+  });
 
   if (houseId == null || role == null || houseId.isEmpty || role.isEmpty) {
     return;
@@ -183,7 +197,7 @@ void onStart(ServiceInstance service) async {
   final ref = FirebaseDatabase.instance.ref('houses/$houseId/presence/$role');
 
   // Timer định kỳ kiểm tra trạng thái offline timeout (mỗi 5 phút)
-  Timer.periodic(const Duration(minutes: 5), (_) async {
+  periodicCheckTimer = Timer.periodic(const Duration(minutes: 5), (_) async {
     try {
       final trackingEnabled = (await SharedPreferences.getInstance())
               .getBool('is_sleep_tracking_enabled') ??
@@ -265,8 +279,9 @@ void onStart(ServiceInstance service) async {
   });
 
   // Lắng nghe sự kiện màn hình
-  Screen screen = Screen();
-  screen.screenStateStream.listen((ScreenStateEvent event) async {
+  final screen = Screen();
+  screenStateSubscription =
+      screen.screenStateStream.listen((ScreenStateEvent event) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final isTrackingEnabled =
@@ -329,7 +344,7 @@ void onStart(ServiceInstance service) async {
     } catch (e) {
       debugPrint('[BackgroundTracking] Screen event error: $e');
     }
-  });
+      });
 }
 
 // ─────────────────────────────────────────────

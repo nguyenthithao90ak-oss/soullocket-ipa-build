@@ -3,23 +3,25 @@ part of '../../diary_tab.dart';
 class _DiaryTabShell extends StatelessWidget {
   final _DiaryTabState state;
 
-  const _DiaryTabShell({
-    required this.state,
-  });
+  const _DiaryTabShell({required this.state});
 
   @override
   Widget build(BuildContext context) {
     if (state._isCheckingAuth) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: Colors.transparent,
-        body: SafeArea(child: _DiaryTabLoadingSection()),
+        body: SLTheme.softCanvasBackdrop(
+          baseColor: SLColors.paperCanvas,
+          accentColor: SLColors.thread,
+          secondaryAccent: SLColors.secondary,
+          motif: SLCanvasBackdropMotif.journal,
+          child: const SafeArea(child: _DiaryTabLoadingSection()),
+        ),
       );
     }
 
     if (!state._isAuthenticated) {
-      return DiaryAccessLockedView(
-        onUnlock: state._checkDiaryLockReal,
-      );
+      return DiaryAccessLockedView(onUnlock: state._checkDiaryLockReal);
     }
 
     final header = DiaryHeaderSection(
@@ -38,21 +40,22 @@ class _DiaryTabShell extends StatelessWidget {
       memoriesCacheFuture: state._getMemoriesCacheFuture(),
       initialMemoriesCache: state._getMemoriesCacheSync(),
       onFinishLoadingMore: state._finishLoadingMoreMemoriesIfNeeded,
-      prepareMemoryFeed: ({
-        required Object? liveSource,
-        required Object? cacheSource,
-        required bool useLiveSource,
-        required bool isOffline,
-        required bool waitingForLive,
-      }) {
-        return state._prepareMemoryFeed(
-          liveSource: liveSource,
-          cacheSource: cacheSource,
-          useLiveSource: useLiveSource,
-          isOffline: isOffline,
-          waitingForLive: waitingForLive,
-        );
-      },
+      prepareMemoryFeed:
+          ({
+            required Object? liveSource,
+            required Object? cacheSource,
+            required bool useLiveSource,
+            required bool isOffline,
+            required bool waitingForLive,
+          }) {
+            return state._prepareMemoryFeed(
+              liveSource: liveSource,
+              cacheSource: cacheSource,
+              useLiveSource: useLiveSource,
+              isOffline: isOffline,
+              waitingForLive: waitingForLive,
+            );
+          },
       onRetry: state._fetchDiaryPosts,
       onAddMemory: state._uploadMemoryPhotos,
       hasPendingUploadRetry: state._hasPendingMemoryUploadRetry,
@@ -84,116 +87,132 @@ class _DiaryTabShell extends StatelessWidget {
       },
     );
 
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final contentInset = viewportWidth > 1040
+        ? (viewportWidth - 1040) / 2
+        : 0.0;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          RepaintBoundary(
-            child: Stack(
-              children: [
-                // Memory tab - deferred load to avoid jank on tab switch
-                Positioned.fill(
-                  child: AnimatedOpacity(
-                    key: const ValueKey('memory_tab_opacity'),
-                    opacity: state._currentTab == 'memory' ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                    child: IgnorePointer(
-                      ignoring: state._currentTab != 'memory',
-                      child: state._deferMemoryLoad
-                          ? const _DiaryTabLoadingSection()
-                          : memorySection,
-                    ),
-                  ),
-                ),
-                // Post tab - rebuilds only when needed
-                if (state._currentTab != 'memory')
-                  Positioned.fill(
-                    child: ValueListenableBuilder<List<DiaryPost>>(
-                      valueListenable: state._feedController.postsVN,
-                      builder: (context, posts, child) {
-                        return DiaryList(
-                          header: header,
-                          showDiaryPrivacyNotice: state._showDiaryPrivacyNotice,
-                          buildDiaryPrivacyNotice: () =>
-                              const SizedBox.shrink(),
-                          buildDiaryComposerCard: () =>
-                              _DiaryComposerLauncherSection(
-                            state: state,
-                          ),
-                          isLoading:
-                              state._isLoading && !state._isAnimatingTabSwitch,
-                          houseId: state._houseId,
-                          buildHouseSetupState: ({
-                            required String title,
-                            required String message,
-                          }) =>
-                              DiaryHouseSetupCard(
-                            title: title,
-                            message: message,
-                            onRetry: state._fetchDiaryPosts,
-                          ),
-                          posts: posts,
-                          buildDiaryEmptyState: () =>
-                              const DiaryPostsEmptyStateCard(),
-                          buildPostCard: (post) => DiaryItem(
-                            post: post,
-                            activeRoleKey: state._activeRoleKey,
-                            nameU1: state._nameU1,
-                            nameU2: state._nameU2,
-                            resolvedAuthorName:
-                                state._resolvedPostAuthorName(post),
-                            postImageCacheWidth:
-                                state._postImageCacheWidth(context),
-                            onConfirmDelete: state._confirmDeleteDiaryPost,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          // Selection bar
-          if (state._currentTab == 'memory')
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  14,
-                  0,
-                  14,
-                  (MediaQuery.paddingOf(context).bottom > 0
-                          ? MediaQuery.paddingOf(context).bottom
-                          : 0) +
-                      10,
-                ),
-                child: RepaintBoundary(
-                  child: ValueListenableBuilder<int>(
-                    valueListenable: state._memoryController.selectionTickVN,
-                    builder: (context, _, __) {
-                      if (!state._isSelectionMode ||
-                          state._selectedMemories.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-
-                      return ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 380),
-                        child: DiarySelectionBottomBar(
-                          selectedCount: state._selectedMemories.length,
-                          onExit: state._exitSelectionMode,
-                          onSelectAll: state._selectAllVisibleMemories,
-                          onSave: state._saveSelectedMemories,
-                          onShare: state._shareSelectedMemories,
-                          onDelete: state._deleteSelectedMemories,
+      body: SLTheme.softCanvasBackdrop(
+        baseColor: SLColors.paperCanvas,
+        accentColor: SLColors.thread,
+        secondaryAccent: SLColors.secondary,
+        motif: SLCanvasBackdropMotif.journal,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: contentInset),
+          child: Stack(
+            children: [
+              RepaintBoundary(
+                child: Stack(
+                  children: [
+                    // Memory tab - deferred load to avoid jank on tab switch
+                    Positioned.fill(
+                      child: AnimatedOpacity(
+                        key: const ValueKey('memory_tab_opacity'),
+                        opacity: state._currentTab == 'memory' ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        child: IgnorePointer(
+                          ignoring: state._currentTab != 'memory',
+                          child: state._deferMemoryLoad
+                              ? const _DiaryTabLoadingSection()
+                              : memorySection,
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+                    // Post tab - rebuilds only when needed
+                    if (state._currentTab != 'memory')
+                      Positioned.fill(
+                        child: ValueListenableBuilder<List<DiaryPost>>(
+                          valueListenable: state._feedController.postsVN,
+                          builder: (context, posts, child) {
+                            return DiaryList(
+                              header: header,
+                              showDiaryPrivacyNotice:
+                                  state._showDiaryPrivacyNotice,
+                              buildDiaryPrivacyNotice: () =>
+                                  const SizedBox.shrink(),
+                              buildDiaryComposerCard: () =>
+                                  _DiaryComposerLauncherSection(state: state),
+                              isLoading:
+                                  state._isLoading &&
+                                  !state._isAnimatingTabSwitch,
+                              houseId: state._houseId,
+                              buildHouseSetupState:
+                                  ({
+                                    required String title,
+                                    required String message,
+                                  }) => DiaryHouseSetupCard(
+                                    title: title,
+                                    message: message,
+                                    onRetry: state._fetchDiaryPosts,
+                                  ),
+                              posts: posts,
+                              buildDiaryEmptyState: () =>
+                                  const DiaryPostsEmptyStateCard(),
+                              buildPostCard: (post) => DiaryItem(
+                                post: post,
+                                activeRoleKey: state._activeRoleKey,
+                                nameU1: state._nameU1,
+                                nameU2: state._nameU2,
+                                resolvedAuthorName: state
+                                    ._resolvedPostAuthorName(post),
+                                postImageCacheWidth: state._postImageCacheWidth(
+                                  context,
+                                ),
+                                onConfirmDelete: state._confirmDeleteDiaryPost,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
                 ),
               ),
-            ),
-        ],
+              // Selection bar
+              if (state._currentTab == 'memory')
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      14,
+                      0,
+                      14,
+                      (MediaQuery.paddingOf(context).bottom > 0
+                              ? MediaQuery.paddingOf(context).bottom
+                              : 0) +
+                          10,
+                    ),
+                    child: RepaintBoundary(
+                      child: ValueListenableBuilder<int>(
+                        valueListenable:
+                            state._memoryController.selectionTickVN,
+                        builder: (context, _, _) {
+                          if (!state._isSelectionMode ||
+                              state._selectedMemories.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+
+                          return ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 380),
+                            child: DiarySelectionBottomBar(
+                              selectedCount: state._selectedMemories.length,
+                              onExit: state._exitSelectionMode,
+                              onSelectAll: state._selectAllVisibleMemories,
+                              onSave: state._saveSelectedMemories,
+                              onShare: state._shareSelectedMemories,
+                              onDelete: state._deleteSelectedMemories,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

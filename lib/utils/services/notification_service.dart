@@ -118,7 +118,8 @@ class NotificationService {
       try {
         await _localNotif
             .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin>()
+              AndroidFlutterLocalNotificationsPlugin
+            >()
             ?.createNotificationChannel(_channel);
 
         const AndroidInitializationSettings androidSettings =
@@ -126,17 +127,17 @@ class NotificationService {
 
         const DarwinInitializationSettings iosSettings =
             DarwinInitializationSettings(
-          requestAlertPermission: true,
-          requestBadgePermission: true,
-          requestSoundPermission: true,
-        );
+              requestAlertPermission: true,
+              requestBadgePermission: true,
+              requestSoundPermission: true,
+            );
 
         const WindowsInitializationSettings windowsSettings =
             WindowsInitializationSettings(
-          appName: 'SoulLocket',
-          appUserModelId: 'SoulLocket.App',
-          guid: '8d76c80d-3f20-4f42-9ad0-7f3f148bf17c',
-        );
+              appName: 'SoulLocket',
+              appUserModelId: 'SoulLocket.App',
+              guid: '8d76c80d-3f20-4f42-9ad0-7f3f148bf17c',
+            );
 
         const InitializationSettings initSettings = InitializationSettings(
           android: androidSettings,
@@ -159,10 +160,12 @@ class NotificationService {
           sound: true,
         );
 
-        _tokenRefreshSubscription ??=
-            _fcm.onTokenRefresh.listen(_onTokenRefresh);
-        _foregroundSubscription ??=
-            FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+        _tokenRefreshSubscription ??= _fcm.onTokenRefresh.listen(
+          _onTokenRefresh,
+        );
+        _foregroundSubscription ??= FirebaseMessaging.onMessage.listen(
+          _handleForegroundMessage,
+        );
         _messageOpenedSubscription ??= FirebaseMessaging.onMessageOpenedApp
             .listen(_handleMessageOpenedApp);
 
@@ -178,10 +181,8 @@ class NotificationService {
         await syncDailySleepReminder();
       } catch (error) {
         debugPrint(
-            'NotificationService initialize error: ${AppErrorMapper.resolve(
-          error,
-          fallbackMessage: 'Không thể khởi tạo thông báo lúc này.',
-        ).message}');
+          'NotificationService initialize error: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể khởi tạo thông báo lúc này.').message}',
+        );
       } finally {}
     }();
 
@@ -212,7 +213,8 @@ class NotificationService {
       }
       if (apnsToken == null) {
         debugPrint(
-            '[NotificationService] APNS token not available yet, skipping FCM token save.');
+          '[NotificationService] APNS token not available yet, skipping FCM token save.',
+        );
         return;
       }
     }
@@ -269,16 +271,20 @@ class NotificationService {
     // Đồng bộ iOS Widget cho Soul Merge
     if (type == 'soul_merge' || screen == 'soul_merge') {
       try {
-        final text = message.notification?.body ??
+        final text =
+            message.notification?.body ??
             message.data['text'] ??
             'Có tin nhắn mới 💕';
         final senderName = message.data['senderName']?.toString() ?? 'Người ấy';
         await WidgetService.syncSoulMergeWidgetData(
-            message: text.toString(), senderName: senderName);
+          message: text.toString(),
+          senderName: senderName,
+        );
       } catch (_) {}
     }
 
-    final isInteractionOrMerge = type == 'soul_merge' ||
+    final isInteractionOrMerge =
+        type == 'soul_merge' ||
         screen == 'soul_merge' ||
         type == 'partner_care' ||
         type == 'interaction' ||
@@ -351,7 +357,8 @@ class NotificationService {
     Widget destination;
     switch (screen) {
       case 'chat':
-        final targetHouseId = data['targetHouseId']?.toString() ??
+        final targetHouseId =
+            data['targetHouseId']?.toString() ??
             data['target_house_id']?.toString();
         final targetName = data['target_name']?.toString() ?? 'Người ấy';
         if (myHouseId == null ||
@@ -367,7 +374,8 @@ class NotificationService {
         }
         break;
       case 'watch_together':
-        final targetHouseId = data['targetHouseId']?.toString() ??
+        final targetHouseId =
+            data['targetHouseId']?.toString() ??
             data['target_house_id']?.toString();
         final targetName = data['target_name']?.toString() ?? 'Người ấy';
         if (myHouseId == null ||
@@ -384,15 +392,18 @@ class NotificationService {
         }
         break;
       case 'cinema':
-        final targetHouseId = data['houseId']?.toString() ??
+        final targetHouseId =
+            data['houseId']?.toString() ??
             data['targetHouseId']?.toString() ??
             data['target_house_id']?.toString() ??
             myHouseId;
         if (targetHouseId == null || targetHouseId.isEmpty) {
           destination = const HomeScreen(initialTab: 3);
         } else {
-          final myName =
-              await _resolveCurrentUserCinemaName(houseService, targetHouseId);
+          final myName = await _resolveCurrentUserCinemaName(
+            houseService,
+            targetHouseId,
+          );
           final inviteId =
               data['inviteId']?.toString() ?? data['invite_id']?.toString();
           destination = CinemaScreen(
@@ -400,8 +411,9 @@ class NotificationService {
             myName: myName,
             initialUrl: data['url']?.toString(),
             initialTitle: data['title']?.toString(),
-            autoJoinInviteId:
-                inviteId == null || inviteId.isEmpty ? null : inviteId,
+            autoJoinInviteId: inviteId == null || inviteId.isEmpty
+                ? null
+                : inviteId,
           );
         }
         break;
@@ -432,9 +444,7 @@ class NotificationService {
         break;
     }
 
-    await navigator.push(
-      MaterialPageRoute(builder: (_) => destination),
-    );
+    await navigator.push(MaterialPageRoute(builder: (_) => destination));
   }
 
   Future<String> _resolveCurrentUserCinemaName(
@@ -443,12 +453,13 @@ class NotificationService {
   ) async {
     final fallback =
         FirebaseAuth.instance.currentUser?.displayName?.trim().isNotEmpty ==
-                true
-            ? FirebaseAuth.instance.currentUser!.displayName!.trim()
-            : 'Bạn';
+            true
+        ? FirebaseAuth.instance.currentUser!.displayName!.trim()
+        : 'Bạn';
 
     try {
-      final prefs = OfflineCacheService.getPrefsSync() ??
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
       final role = RoleUtils.normalize(prefs.getString('il_role'));
       final settings = await houseService.getHouseSettings(houseId);
@@ -472,7 +483,8 @@ class NotificationService {
   bool _shouldSkipForegroundMessage(RemoteMessage message) {
     final key = _messageKey(message);
     final now = DateTime.now();
-    final shouldSkip = _lastForegroundMessageKey == key &&
+    final shouldSkip =
+        _lastForegroundMessageKey == key &&
         _lastForegroundShownAt != null &&
         now.difference(_lastForegroundShownAt!) < const Duration(seconds: 5);
     _lastForegroundMessageKey = key;
@@ -483,7 +495,8 @@ class NotificationService {
   bool _shouldSkipOpenedMessage(RemoteMessage message) {
     final key = _messageKey(message);
     final now = DateTime.now();
-    final shouldSkip = _lastOpenedMessageKey == key &&
+    final shouldSkip =
+        _lastOpenedMessageKey == key &&
         _lastOpenedHandledAt != null &&
         now.difference(_lastOpenedHandledAt!) < const Duration(seconds: 5);
     _lastOpenedMessageKey = key;
@@ -547,7 +560,8 @@ class NotificationService {
     final payloadData = <String, dynamic>{if (data != null) ...data};
     final key = dedupeKey ?? '$title|$body|${jsonEncode(payloadData)}';
     final now = DateTime.now();
-    final shouldSkip = _lastForegroundMessageKey == key &&
+    final shouldSkip =
+        _lastForegroundMessageKey == key &&
         _lastForegroundShownAt != null &&
         now.difference(_lastForegroundShownAt!) < const Duration(seconds: 5);
     _lastForegroundMessageKey = key;
@@ -589,10 +603,8 @@ class NotificationService {
       );
     } catch (e) {
       debugPrint(
-          'Failed to queue partner notification: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể xếp hàng thông báo cho đối tác.',
-      ).message}');
+        'Failed to queue partner notification: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể xếp hàng thông báo cho đối tác.').message}',
+      );
     }
   }
 
@@ -618,10 +630,9 @@ class NotificationService {
         },
       );
     } catch (e) {
-      debugPrint('Failed to queue house notification: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể xếp hàng thông báo cho house.',
-      ).message}');
+      debugPrint(
+        'Failed to queue house notification: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể xếp hàng thông báo cho house.').message}',
+      );
     }
   }
 
@@ -677,10 +688,23 @@ class NotificationService {
     );
   }
 
+  /// Hủy nhiều thông báo cục bộ theo ID đã lưu cho cùng một nghiệp vụ.
+  Future<void> cancelLocalNotifications(Iterable<int> ids) async {
+    if (kIsWeb) return;
+
+    await initialize();
+    if (!_isInitialized) return;
+
+    for (final id in ids.toSet()) {
+      await _localNotif.cancel(id: id);
+    }
+  }
+
   Future<void> syncDailySleepReminder() async {
     if (kIsWeb || !_isInitialized) return;
 
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final notificationsEnabled =
         prefs.getBool('il_notifications_enabled') ?? true;
@@ -724,8 +748,9 @@ class NotificationService {
   }
 
   String buildSleepReminderMessage(String displayName) {
-    final safeName =
-        displayName.trim().isNotEmpty ? displayName.trim() : 'người thương';
+    final safeName = displayName.trim().isNotEmpty
+        ? displayName.trim()
+        : 'người thương';
     return 'Ngủ ngoan nha, $safeName ơi. Khép lại một ngày dài, để trái tim đỏ này ôm bạn vào một giấc mơ thật dịu và thật ấm nhé ❤️';
   }
 
@@ -741,10 +766,9 @@ class NotificationService {
       _timeZoneReady = true;
       return true;
     } catch (e) {
-      debugPrint('Notification timezone init failed: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể khởi tạo múi giờ thông báo.',
-      ).message}');
+      debugPrint(
+        'Notification timezone init failed: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể khởi tạo múi giờ thông báo.').message}',
+      );
       return false;
     }
   }
@@ -771,8 +795,9 @@ class NotificationService {
     final cachedUserName = canUseSessionCache
         ? (prefs.getString('il_user_name') ?? '').trim()
         : '';
-    final cachedHouseId =
-        canUseSessionCache ? (prefs.getString('il_house_id') ?? '').trim() : '';
+    final cachedHouseId = canUseSessionCache
+        ? (prefs.getString('il_house_id') ?? '').trim()
+        : '';
     final houseId = cachedHouseId.isNotEmpty
         ? cachedHouseId
         : (await HouseService().getCurrentHouseId())?.trim() ?? '';
@@ -797,7 +822,8 @@ class NotificationService {
   }
 
   Future<void> checkAutoSleepGreetings(String houseId) async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     final notificationsEnabled =
         prefs.getBool('il_notifications_enabled') ?? true;
@@ -807,17 +833,21 @@ class NotificationService {
 
     final nightTimeStr = prefs.getString('il_good_night_time') ?? '22:15';
     final nightParts = nightTimeStr.split(':');
-    final nightHour =
-        nightParts.isNotEmpty ? (int.tryParse(nightParts[0]) ?? 22) : 22;
-    final nightMinute =
-        nightParts.length > 1 ? (int.tryParse(nightParts[1]) ?? 15) : 15;
+    final nightHour = nightParts.isNotEmpty
+        ? (int.tryParse(nightParts[0]) ?? 22)
+        : 22;
+    final nightMinute = nightParts.length > 1
+        ? (int.tryParse(nightParts[1]) ?? 15)
+        : 15;
 
     final morningTimeStr = prefs.getString('il_good_morning_time') ?? '05:55';
     final morningParts = morningTimeStr.split(':');
-    final morningHour =
-        morningParts.isNotEmpty ? (int.tryParse(morningParts[0]) ?? 5) : 5;
-    final morningMinute =
-        morningParts.length > 1 ? (int.tryParse(morningParts[1]) ?? 55) : 55;
+    final morningHour = morningParts.isNotEmpty
+        ? (int.tryParse(morningParts[0]) ?? 5)
+        : 5;
+    final morningMinute = morningParts.length > 1
+        ? (int.tryParse(morningParts[1]) ?? 55)
+        : 55;
 
     await _maybeSendAutoTimedGreeting(
       houseId: houseId,
@@ -854,7 +884,8 @@ class NotificationService {
     required String title,
     required String body,
   }) async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     if (!(prefs.getBool('il_smart_reminder_love_note') ?? true)) return;
 
@@ -891,9 +922,7 @@ class NotificationService {
       if (current != null) {
         return Transaction.abort();
       }
-      return Transaction.success({
-        'createdAt': ServerValue.timestamp,
-      });
+      return Transaction.success({'createdAt': ServerValue.timestamp});
     });
 
     if (!transaction.committed) {
@@ -904,10 +933,7 @@ class NotificationService {
       houseId: houseId,
       title: title,
       body: body,
-      data: {
-        'screen': 'home',
-        'type': 'auto_$kind',
-      },
+      data: {'screen': 'home', 'type': 'auto_$kind'},
     );
   }
 
@@ -919,8 +945,14 @@ class NotificationService {
     final hour = parts.isNotEmpty ? (int.tryParse(parts[0]) ?? 22) : 22;
     final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 15) : 15;
 
-    var scheduled =
-        tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    var scheduled = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
     if (!scheduled.isAfter(now)) {
       scheduled = scheduled.add(const Duration(days: 1));
     }
@@ -929,7 +961,9 @@ class NotificationService {
 
   /// Gửi thông báo nhắc nhở thói quen
   Future<void> sendHabitReminderNotification(
-      String houseId, String habitName) async {
+    String houseId,
+    String habitName,
+  ) async {
     await sendPartnerNotification(
       houseId: houseId,
       title: '✅ Nhắc nhở thói quen',
@@ -972,7 +1006,8 @@ class NotificationService {
 
   /// Gửi thông báo "Ngày này năm xưa"
   Future<void> sendOnThisDayNotification(String houseId, int years) async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     if (!(prefs.getBool('il_smart_reminder_diary') ?? true)) return;
 
@@ -987,7 +1022,9 @@ class NotificationService {
 
   /// Gửi thông báo cập nhật tâm trạng
   Future<void> sendMoodUpdateNotification(
-      String houseId, String moodIcon) async {
+    String houseId,
+    String moodIcon,
+  ) async {
     final user = FirebaseAuth.instance.currentUser;
     final name = user?.displayName ?? 'Người ấy';
 
@@ -1003,7 +1040,8 @@ class NotificationService {
   /// Kiểm tra và hiển thị thông báo hộp thư tương lai đến ngày
   Future<void> checkTimeCapsules(String houseId) async {
     try {
-      final prefs = OfflineCacheService.getPrefsSync() ??
+      final prefs =
+          OfflineCacheService.getPrefsSync() ??
           await SharedPreferences.getInstance();
       if (!(prefs.getBool('il_smart_reminder_capsule') ?? true)) return;
 
@@ -1045,16 +1083,17 @@ class NotificationService {
         }
       }
     } catch (e) {
-      debugPrint('Check time capsule error: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage: 'Không thể kiểm tra hộp thư tương lai lúc này.',
-      ).message}');
+      debugPrint(
+        'Check time capsule error: ${AppErrorMapper.resolve(e, fallbackMessage: 'Không thể kiểm tra hộp thư tương lai lúc này.').message}',
+      );
     }
   }
 
   /// Gửi cảnh báo ngân sách
   Future<void> sendBudgetWarningNotification(
-      String houseId, int percent) async {
+    String houseId,
+    int percent,
+  ) async {
     await sendPartnerNotification(
       houseId: houseId,
       title: '💸 Cảnh báo ngân sách',
@@ -1076,8 +1115,11 @@ class NotificationService {
   }
 
   Future<void> checkAnniversaryReminder(
-      String houseId, DateTime coupleDate) async {
-    final prefs = OfflineCacheService.getPrefsSync() ??
+    String houseId,
+    DateTime coupleDate,
+  ) async {
+    final prefs =
+        OfflineCacheService.getPrefsSync() ??
         await SharedPreferences.getInstance();
     if (!(prefs.getBool('il_notif_anniversary') ?? true)) return;
 
@@ -1087,8 +1129,9 @@ class NotificationService {
       thisYearDate = DateTime(now.year + 1, coupleDate.month, coupleDate.day);
     }
 
-    final diff =
-        thisYearDate.difference(DateTime(now.year, now.month, now.day)).inDays;
+    final diff = thisYearDate
+        .difference(DateTime(now.year, now.month, now.day))
+        .inDays;
 
     if (diff == 3) {
       await sendPartnerNotification(

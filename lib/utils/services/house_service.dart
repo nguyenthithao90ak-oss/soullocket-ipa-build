@@ -34,6 +34,8 @@ class HouseCreationOtpRequiredException implements Exception {
 class HouseService {
   static DateTime? _lastFetchTime;
   static Map<String, dynamic>? _cachedSettings;
+  static String? _lastFirestoreMembershipSyncKey;
+  static DateTime? _lastFirestoreMembershipSyncAt;
   static const String _defaultHouseName = 'Chúng mình';
   static const String _defaultNameU1 = 'Bạn Nam';
   static const String _defaultNameU2 = 'Bạn Nữ';
@@ -57,8 +59,19 @@ class HouseService {
   firebase_auth.User? get currentUser => _auth.currentUser;
   bool get _allowLegacyDirectCreateFallback => false;
 
-  Future<void> _syncHouseIdToFirestore(String uid, String houseId) async {
+  Future<void> _syncHouseIdToFirestore(
+    String uid,
+    String houseId, {
+    bool throwOnError = false,
+  }) async {
     if (houseId.isEmpty || _auth.currentUser?.uid != uid) return;
+    final syncKey = '$uid|$houseId';
+    final lastSyncAt = _lastFirestoreMembershipSyncAt;
+    if (_lastFirestoreMembershipSyncKey == syncKey &&
+        lastSyncAt != null &&
+        DateTime.now().difference(lastSyncAt) < const Duration(minutes: 5)) {
+      return;
+    }
     try {
       await CloudFunctionsHelper.callSecure<dynamic>(
         'syncMyHouseMembership',
@@ -66,9 +79,25 @@ class HouseService {
         timeout: const Duration(seconds: 10),
         fallbackErrorMessage: 'Không thể đồng bộ quyền truy cập nhà.',
       );
+      _lastFirestoreMembershipSyncKey = syncKey;
+      _lastFirestoreMembershipSyncAt = DateTime.now();
     } catch (e) {
       debugPrint('[HouseService] Firestore houseId sync failed: $e');
+      if (throwOnError) rethrow;
     }
+  }
+
+  /// Đảm bảo Firestore đã có membership do server xác minh trước khi
+  /// các tính năng dữ liệu theo nhà (như nhật ký) bắt đầu đọc hoặc ghi.
+  Future<void> ensureFirestoreMembership(String houseId) async {
+    final normalizedHouseId = houseId.trim();
+    final user = _auth.currentUser;
+    if (normalizedHouseId.isEmpty || user == null) return;
+    await _syncHouseIdToFirestore(
+      user.uid,
+      normalizedHouseId,
+      throwOnError: true,
+    );
   }
 
   Future<Map<String, String>> _safeCurrentDeviceSnapshot() async {

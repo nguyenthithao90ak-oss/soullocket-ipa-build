@@ -243,6 +243,7 @@ class DiaryFeedController extends ChangeNotifier {
     final cachedHouseId = _normalizeHouseId(_houseId);
     if (cachedHouseId != null) {
       _applyHouseId(cachedHouseId);
+      await _houseService.ensureFirestoreMembership(cachedHouseId);
       await _fetchHouseSettingsData(cachedHouseId);
       return cachedHouseId;
     }
@@ -252,6 +253,7 @@ class DiaryFeedController extends ChangeNotifier {
     );
     _applyHouseId(resolvedHouseId);
     if (resolvedHouseId != null) {
+      await _houseService.ensureFirestoreMembership(resolvedHouseId);
       await _fetchHouseSettingsData(resolvedHouseId);
     }
     return resolvedHouseId;

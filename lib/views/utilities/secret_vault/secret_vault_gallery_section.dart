@@ -20,8 +20,9 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(18),
-        border:
-            Border.all(color: const Color(0xFFFF5252).withValues(alpha: 0.4)),
+        border: Border.all(
+          color: const Color(0xFFFF5252).withValues(alpha: 0.4),
+        ),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFFF1744).withValues(alpha: 0.15),
@@ -41,8 +42,11 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                   color: const Color(0xFFFF5252).withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.warning_amber_rounded,
-                    color: Color(0xFFFFAB40), size: 18),
+                child: const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Color(0xFFFFAB40),
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -78,7 +82,8 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   border: Border.all(
-                      color: const Color(0xFFFFAB40).withValues(alpha: 0.6)),
+                    color: const Color(0xFFFFAB40).withValues(alpha: 0.6),
+                  ),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
@@ -93,15 +98,20 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                               color: Color(0xFFFFAB40),
                             ),
                           )
-                        : const Icon(Icons.undo_rounded,
-                            size: 18, color: Colors.white),
+                        : const Icon(
+                            Icons.undo_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
                     const SizedBox(width: 8),
                     Text(
                       _isCancelingReset
                           ? context.tr('util_angthuhiyu_c4c6f7')
                           : context.tr('util_thuhiyucur_db8240'),
                       style: SLTheme.quicksand(
-                          fontWeight: FontWeight.w800, color: Colors.white),
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
                     ),
                   ],
                 ),
@@ -134,7 +144,8 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
               ),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                  color: const Color(0xFFCE93D8).withValues(alpha: 0.22)),
+                color: const Color(0xFFCE93D8).withValues(alpha: 0.22),
+              ),
             ),
             child: Column(
               children: [
@@ -150,14 +161,18 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                const Color(0xFFE91E63).withValues(alpha: 0.3),
+                            color: const Color(
+                              0xFFE91E63,
+                            ).withValues(alpha: 0.3),
                             blurRadius: 10,
                           ),
                         ],
                       ),
-                      child: const Icon(Icons.security_rounded,
-                          color: Colors.white, size: 18),
+                      child: const Icon(
+                        Icons.security_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Flexible(
@@ -165,9 +180,10 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                         'Kho lưu trữ riêng tư được mã hóa an toàn. 🔐',
                         textAlign: TextAlign.center,
                         style: SLTheme.quicksand(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13),
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ],
@@ -177,9 +193,10 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                   'Chỉ hai bạn mới có thể xem được nội dung.',
                   textAlign: TextAlign.center,
                   style: SLTheme.quicksand(
-                      color: Colors.white60,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12),
+                    color: Colors.white60,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 _AnimatedPressButton(
@@ -189,14 +206,13 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                   borderRadius: 30,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 15),
+                      horizontal: 32,
+                      vertical: 15,
+                    ),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: (_isLoading || _hasPendingReset)
-                            ? [
-                                Colors.grey.shade700,
-                                Colors.grey.shade600,
-                              ]
+                            ? [Colors.grey.shade700, Colors.grey.shade600]
                             : [
                                 const Color(0xFFAD1457),
                                 const Color(0xFFE91E63),
@@ -210,11 +226,12 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                           ? []
                           : [
                               BoxShadow(
-                                color: const Color(0xFFE91E63)
-                                    .withValues(alpha: 0.45),
+                                color: const Color(
+                                  0xFFE91E63,
+                                ).withValues(alpha: 0.45),
                                 blurRadius: 18,
                                 offset: const Offset(0, 6),
-                              )
+                              ),
                             ],
                     ),
                     child: _isLoading
@@ -222,7 +239,10 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
                         : Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -239,9 +259,10 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                                     ? context.tr('util_thmnhmt_b7dfc6')
                                     : context.tr('util_mkhakhomt_35391f'),
                                 style: SLTheme.quicksand(
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                    fontSize: 14.5),
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  fontSize: 14.5,
+                                ),
                               ),
                             ],
                           ),
@@ -249,8 +270,10 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                 ),
                 const SizedBox(height: 12),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(20),
@@ -271,14 +294,16 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                 if (_hasPendingReset) ...[
                   const SizedBox(height: 12),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFF6D00).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color:
-                              const Color(0xFFFF6D00).withValues(alpha: 0.3)),
+                        color: const Color(0xFFFF6D00).withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Text(
                       context.tr('util_tmkhathmnh_eabdb8'),
@@ -298,12 +323,15 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                     borderRadius: 20,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.15)),
+                          color: Colors.white.withValues(alpha: 0.15),
+                        ),
                       ),
                       child: Text(
                         context.tr('util_nhplimtkhu_eee7a7'),
@@ -352,16 +380,19 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
               'Kho mật đang trống.',
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
-                  color: Colors.white60,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15),
+                color: Colors.white60,
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               'Thêm ảnh đầu tiên để bắt đầu bảo mật!',
               textAlign: TextAlign.center,
               style: SLTheme.quicksand(
-                  color: Colors.white38, fontWeight: FontWeight.w600),
+                color: Colors.white38,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -375,13 +406,16 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
           child: Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF9C27B0).withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: const Color(0xFFCE93D8).withValues(alpha: 0.3)),
+                    color: const Color(0xFFCE93D8).withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Text(
                   _hasMorePhotos
@@ -400,8 +434,10 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                   onTap: _isLoadingMorePhotos ? null : _loadMorePhotos,
                   borderRadius: 20,
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
@@ -411,8 +447,8 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                       ),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color:
-                              const Color(0xFFCE93D8).withValues(alpha: 0.25)),
+                        color: const Color(0xFFCE93D8).withValues(alpha: 0.25),
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -422,18 +458,25 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                                 width: 12,
                                 height: 12,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Color(0xFFCE93D8)))
-                            : const Icon(Icons.history_rounded,
-                                size: 14, color: Color(0xFFCE93D8)),
+                                  strokeWidth: 2,
+                                  color: Color(0xFFCE93D8),
+                                ),
+                              )
+                            : const Icon(
+                                Icons.history_rounded,
+                                size: 14,
+                                color: Color(0xFFCE93D8),
+                              ),
                         const SizedBox(width: 5),
                         Text(
                           _isLoadingMorePhotos
                               ? context.tr('util_angti_d5fe42')
                               : context.tr('util_nhchn_d2d33c'),
                           style: SLTheme.quicksand(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: const Color(0xFFCE93D8)),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                            color: const Color(0xFFCE93D8),
+                          ),
                         ),
                       ],
                     ),
@@ -457,20 +500,18 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
               final isEncrypted = photo['encrypted'] == true;
 
               return _AnimatedPressButton(
-                onTap: () => _showFullImage(photo['url'], caption),
+                onTap: () => _showFullImage(photo, caption),
                 borderRadius: 16,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      CachedNetworkImage(
-                        imageUrl: CloudflareImageHelper.optimizeUrl(photo['url'], width: 600),
+                      _buildVaultImage(
+                        photo,
                         fit: BoxFit.cover,
-                        maxWidthDiskCache: 600,
-                        memCacheWidth: 600,
-                        filterQuality: FilterQuality.medium,
-                        placeholder: (context, url) => Container(
+                        cacheWidth: 600,
+                        loading: Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
@@ -492,10 +533,12 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                             ),
                           ),
                         ),
-                        errorWidget: (context, url, error) => Container(
+                        error: Container(
                           color: const Color(0xFF1A0533),
-                          child: const Icon(Icons.broken_image,
-                              color: Color(0xFF6A1B9A)),
+                          child: const Icon(
+                            Icons.lock_outline_rounded,
+                            color: Color(0xFFCE93D8),
+                          ),
                         ),
                       ),
                       // Bottom gradient overlay
@@ -524,13 +567,12 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                           left: 5,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 2),
+                              horizontal: 5,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF00897B),
-                                  Color(0xFF00ACC1),
-                                ],
+                                colors: [Color(0xFF00897B), Color(0xFF00ACC1)],
                               ),
                               borderRadius: BorderRadius.circular(6),
                             ),
@@ -539,11 +581,14 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                               children: [
                                 Icon(Icons.lock, color: Colors.white, size: 8),
                                 SizedBox(width: 2),
-                                Text('AES',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 7,
-                                        fontWeight: FontWeight.w800)),
+                                Text(
+                                  'AES',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 7,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -560,10 +605,14 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
                               color: Colors.black.withValues(alpha: 0.55),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.2)),
+                                color: Colors.white.withValues(alpha: 0.2),
+                              ),
                             ),
-                            child: const Icon(Icons.close,
-                                color: Colors.white70, size: 13),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white70,
+                              size: 13,
+                            ),
                           ),
                         ),
                       ),
@@ -584,27 +633,40 @@ extension _SecretVaultGallerySectionPart on SecretVaultScreenState {
       builder: (ctx) => AlertDialog(
         backgroundColor: _vaultBg,
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: _vaultBorder, width: 1)),
-        title: Text(context.tr('util_xanhmt_9adda3'),
-            style: SLTheme.quicksand(
-                fontWeight: FontWeight.bold, color: _vaultTextPrimary)),
-        content: Text(context.tr('util_nhnysbxakh_78fc2c'),
-            style: SLTheme.quicksand(color: _vaultTextSecondary)),
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: _vaultBorder, width: 1),
+        ),
+        title: Text(
+          context.tr('util_xanhmt_9adda3'),
+          style: SLTheme.quicksand(
+            fontWeight: FontWeight.bold,
+            color: _vaultTextPrimary,
+          ),
+        ),
+        content: Text(
+          context.tr('util_nhnysbxakh_78fc2c'),
+          style: SLTheme.quicksand(color: _vaultTextSecondary),
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(context.tr('util_hy_1e4050'),
-                  style: SLTheme.quicksand(color: _vaultTextHint))),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              context.tr('util_hy_1e4050'),
+              style: SLTheme.quicksand(color: _vaultTextHint),
+            ),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _deletePhoto(photo);
             },
-            child: Text(context.tr('util_xa_4ed187'),
-                style: SLTheme.quicksand(
-                    color: SLColors.danger,
-                    fontWeight: FontWeight.bold)),
+            child: Text(
+              context.tr('util_xa_4ed187'),
+              style: SLTheme.quicksand(
+                color: SLColors.danger,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -643,9 +705,10 @@ class _AnimatedPressButtonState extends State<_AnimatedPressButton>
       lowerBound: 0.0,
       upperBound: 1.0,
     );
-    _scaleAnim = Tween<double>(begin: 1.0, end: 0.93).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
-    );
+    _scaleAnim = Tween<double>(
+      begin: 1.0,
+      end: 0.93,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
   }
 
   @override
@@ -677,10 +740,8 @@ class _AnimatedPressButtonState extends State<_AnimatedPressButton>
       onTapCancel: _onTapCancel,
       child: AnimatedBuilder(
         animation: _scaleAnim,
-        builder: (context, child) => Transform.scale(
-          scale: _scaleAnim.value,
-          child: child,
-        ),
+        builder: (context, child) =>
+            Transform.scale(scale: _scaleAnim.value, child: child),
         child: widget.child,
       ),
     );

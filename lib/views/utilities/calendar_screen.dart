@@ -8,6 +8,7 @@ import 'package:soullocket_app/utils/services/notification_service.dart';
 import 'package:soullocket_app/utils/services/widget_service.dart';
 import 'package:soullocket_app/core/sl_theme.dart';
 import 'package:soullocket_app/core/fast_backdrop_filter.dart';
+import 'package:soullocket_app/views/utilities/calendar/calendar_notification_ids.dart';
 import 'package:soullocket_app/views/utilities/calendar/dialogs/calendar_quick_add_sheet.dart';
 import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_background_decor.dart';
 import 'package:soullocket_app/views/utilities/calendar/widgets/calendar_event_input_panel.dart';
@@ -20,8 +21,11 @@ class CalendarScreen extends StatefulWidget {
   final String houseId;
   final String myName;
 
-  const CalendarScreen(
-      {super.key, required this.houseId, required this.myName});
+  const CalendarScreen({
+    super.key,
+    required this.houseId,
+    required this.myName,
+  });
 
   @override
   State<CalendarScreen> createState() => _CalendarScreenState();
@@ -38,6 +42,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Map<DateTime, List<dynamic>> _events = {};
   StreamSubscription<DatabaseEvent>? _calendarSubscription;
+  int _calendarQueryGeneration = 0;
   bool _isQuickAddSheetOpen = false;
   bool _isCalendarLoading = true;
   bool _isSavingEvent = false;
@@ -50,26 +55,30 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return 0;
   }
 
-  void _reloadCalendar() {
-    _calendarSubscription?.cancel();
+  Future<void> _reloadCalendar() async {
     if (mounted) {
       setState(() {
         _isCalendarLoading = true;
         _calendarErrorMessage = null;
       });
     }
-    _loadEvents();
+    await _loadEvents();
   }
 
   @override
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
-    _loadEvents();
+    unawaited(_loadEvents());
   }
 
-  void _loadEvents() {
-    _calendarSubscription?.cancel();
+  Future<void> _loadEvents() async {
+    final queryGeneration = ++_calendarQueryGeneration;
+    final previousSubscription = _calendarSubscription;
+    _calendarSubscription = null;
+    await previousSubscription?.cancel();
+    if (!mounted || queryGeneration != _calendarQueryGeneration) return;
+
     // Chỉ query 3 tháng xung quanh tháng đang xem (trước/hiện/sau)
     final focusMonth = DateTime(_focusedDay.year, _focusedDay.month, 1);
     final startMonth = DateTime(focusMonth.year, focusMonth.month - 1, 1);
@@ -86,88 +95,91 @@ class _CalendarScreenState extends State<CalendarScreen> {
         .endAt(endStr)
         .onValue
         .listen(
-      (event) {
-        final snapshotValue = event.snapshot.value;
-        if (snapshotValue == null) {
-          if (mounted) {
-            setState(() {
-              _events = {};
-              _isCalendarLoading = false;
-              _calendarErrorMessage = null;
-            });
-          }
-          return;
-        }
+          (event) {
+            if (!mounted || queryGeneration != _calendarQueryGeneration) return;
+            final snapshotValue = event.snapshot.value;
+            if (snapshotValue == null) {
+              if (mounted) {
+                setState(() {
+                  _events = {};
+                  _isCalendarLoading = false;
+                  _calendarErrorMessage = null;
+                });
+              }
+              return;
+            }
 
-        try {
-          if (snapshotValue is! Map) {
-            if (mounted) {
+            try {
+              if (snapshotValue is! Map) {
+                if (mounted) {
+                  setState(() {
+                    _events = {};
+                    _isCalendarLoading = false;
+                    _calendarErrorMessage =
+                        'Dữ liệu lịch không đúng định dạng mong đợi.';
+                  });
+                }
+                return;
+              }
+
+              final data = Map<dynamic, dynamic>.from(snapshotValue);
+              final Map<DateTime, List<dynamic>> newEvents = {};
+
+              data.forEach((dateKey, dateEvents) {
+                final parts = dateKey.toString().split('-');
+                if (parts.length != 3) {
+                  return;
+                }
+                final year = int.tryParse(parts[0]);
+                final month = int.tryParse(parts[1]);
+                final day = int.tryParse(parts[2]);
+                if (year == null || month == null || day == null) {
+                  return;
+                }
+
+                final date = DateTime.utc(year, month, day);
+                if (dateEvents is! Map) {
+                  newEvents[date] = const [];
+                  return;
+                }
+
+                final eventsMap = Map<dynamic, dynamic>.from(dateEvents);
+                newEvents[date] = eventsMap.entries
+                    .where((e) => e.value is Map)
+                    .map(
+                      (e) => {
+                        'key': e.key,
+                        ...Map<String, dynamic>.from(e.value as Map),
+                      },
+                    )
+                    .toList();
+              });
+
+              if (mounted) {
+                setState(() {
+                  _events = newEvents;
+                  _isCalendarLoading = false;
+                  _calendarErrorMessage = null;
+                });
+              }
+            } catch (e) {
+              if (mounted) {
+                setState(() {
+                  _isCalendarLoading = false;
+                  _calendarErrorMessage = 'Không thể xử lý dữ liệu lịch: $e';
+                });
+              }
+            }
+          },
+          onError: (error) {
+            if (mounted && queryGeneration == _calendarQueryGeneration) {
               setState(() {
-                _events = {};
                 _isCalendarLoading = false;
-                _calendarErrorMessage =
-                    'Dữ liệu lịch không đúng định dạng mong đợi.';
+                _calendarErrorMessage = error.toString();
               });
             }
-            return;
-          }
-
-          final data = Map<dynamic, dynamic>.from(snapshotValue);
-          final Map<DateTime, List<dynamic>> newEvents = {};
-
-          data.forEach((dateKey, dateEvents) {
-            final parts = dateKey.toString().split('-');
-            if (parts.length != 3) {
-              return;
-            }
-            final year = int.tryParse(parts[0]);
-            final month = int.tryParse(parts[1]);
-            final day = int.tryParse(parts[2]);
-            if (year == null || month == null || day == null) {
-              return;
-            }
-
-            final date = DateTime.utc(year, month, day);
-            if (dateEvents is! Map) {
-              newEvents[date] = const [];
-              return;
-            }
-
-            final eventsMap = Map<dynamic, dynamic>.from(dateEvents);
-            newEvents[date] = eventsMap.entries
-                .where((e) => e.value is Map)
-                .map((e) => {
-                      'key': e.key,
-                      ...Map<String, dynamic>.from(e.value as Map),
-                    })
-                .toList();
-          });
-
-          if (mounted) {
-            setState(() {
-              _events = newEvents;
-              _isCalendarLoading = false;
-              _calendarErrorMessage = null;
-            });
-          }
-        } catch (e) {
-          if (mounted) {
-            setState(() {
-              _isCalendarLoading = false;
-              _calendarErrorMessage = 'Không thể xử lý dữ liệu lịch: $e';
-            });
-          }
-        }
-      },
-      onError: (error) {
-        if (mounted) {
-          setState(() {
-            _isCalendarLoading = false;
-            _calendarErrorMessage = error.toString();
-          });
-        }
-      },
-    );
+          },
+        );
   }
 
   String _getDateKey(DateTime d) {
@@ -318,16 +330,39 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
 
     final dateKey = _getDateKey(day);
-    await _dbRef
+    final eventRef = _dbRef
         .child('houses/${widget.houseId}/calendar/$dateKey')
-        .push()
-        .set({
+        .push();
+    final eventId = eventRef.key;
+    if (eventId == null || eventId.isEmpty) {
+      throw StateError('Không thể tạo mã sự kiện lịch.');
+    }
+
+    final notificationIds = CalendarNotificationIds.forEvent(
+      houseId: widget.houseId,
+      dateKey: dateKey,
+      eventId: eventId,
+    );
+    await eventRef.set({
       'title': cleanText,
       'author': widget.myName,
       'ts': DateTime.now().millisecondsSinceEpoch,
+      'notificationIds': {
+        'onEventDay': notificationIds.onEventDay,
+        'dayBefore': notificationIds.dayBefore,
+      },
     });
 
-    _scheduleEventNotifications(day, cleanText);
+    try {
+      await _scheduleEventNotifications(
+        eventDate: day,
+        eventTitle: cleanText,
+        notificationIds: notificationIds,
+      );
+    } catch (error) {
+      // Sự kiện đã lưu thành công; lỗi local notification không được làm mất lịch.
+      debugPrint('[Calendar] Không thể đặt thông báo cho $eventId: $error');
+    }
     return true;
   }
 
@@ -350,17 +385,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
         FocusScope.of(context).unfocus();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Đã thêm kế hoạch cho ${_formatShortDate(selectedDay)}'),
+            content: Text(
+              'Đã thêm kế hoạch cho ${_formatShortDate(selectedDay)}',
+            ),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Không thể lưu kế hoạch: $e'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Không thể lưu kế hoạch: $e')));
       }
     } finally {
       if (mounted) {
@@ -388,9 +423,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       if (added && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Đã thêm kế hoạch cho ${_formatShortDate(day)}',
-            ),
+            content: Text('Đã thêm kế hoạch cho ${_formatShortDate(day)}'),
           ),
         );
       }
@@ -419,16 +452,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
     });
   }
 
-  void _scheduleEventNotifications(DateTime eventDate, String eventTitle) {
+  Future<void> _scheduleEventNotifications({
+    required DateTime eventDate,
+    required String eventTitle,
+    required CalendarNotificationIds notificationIds,
+  }) async {
     final now = DateTime.now();
     // Normalize eventDate to 9:00 AM
-    final scheduleTime =
-        DateTime(eventDate.year, eventDate.month, eventDate.day, 9, 0);
+    final scheduleTime = DateTime(
+      eventDate.year,
+      eventDate.month,
+      eventDate.day,
+      9,
+      0,
+    );
 
     // Nếu ngày sự kiện là hôm nay và chưa qua 9h sáng
     if (scheduleTime.isAfter(now)) {
-      NotificationService().scheduleLocalNotification(
-        id: scheduleTime.millisecondsSinceEpoch ~/ 1000,
+      await NotificationService().scheduleLocalNotification(
+        id: notificationIds.onEventDay,
         title: 'Lịch trình hôm nay 📅',
         body: 'Đừng quên: $eventTitle',
         scheduledDate: scheduleTime,
@@ -438,8 +480,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     // Thông báo trước 1 ngày
     final dayBefore = scheduleTime.subtract(const Duration(days: 1));
     if (dayBefore.isAfter(now)) {
-      NotificationService().scheduleLocalNotification(
-        id: (dayBefore.millisecondsSinceEpoch ~/ 1000) + 1,
+      await NotificationService().scheduleLocalNotification(
+        id: notificationIds.dayBefore,
         title: 'Nhắc nhở ngày mai ⏰',
         body: 'Sắp tới: $eventTitle',
         scheduledDate: dayBefore,
@@ -447,10 +489,49 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
-  void _deleteEvent(String dateKey, String eventId) {
-    _dbRef
-        .child('houses/${widget.houseId}/calendar/$dateKey/$eventId')
-        .remove();
+  Future<void> _deleteEvent(String dateKey, String eventId) async {
+    try {
+      await _dbRef
+          .child('houses/${widget.houseId}/calendar/$dateKey/$eventId')
+          .remove();
+    } catch (error) {
+      debugPrint('[Calendar] Không thể xóa sự kiện $eventId: $error');
+      return;
+    }
+
+    final ids = CalendarNotificationIds.forEvent(
+      houseId: widget.houseId,
+      dateKey: dateKey,
+      eventId: eventId,
+    );
+    final legacyIds = _legacyNotificationIdsForDateKey(dateKey);
+    try {
+      await NotificationService().cancelLocalNotifications(<int>{
+        ...ids.values,
+        ...legacyIds,
+      });
+    } catch (error) {
+      debugPrint('[Calendar] Không thể hủy thông báo cho $eventId: $error');
+    }
+  }
+
+  Set<int> _legacyNotificationIdsForDateKey(String dateKey) {
+    final parts = dateKey.split('-');
+    if (parts.length != 3) return const <int>{};
+
+    final year = int.tryParse(parts[0]);
+    final month = int.tryParse(parts[1]);
+    final day = int.tryParse(parts[2]);
+    if (year == null || month == null || day == null) {
+      return const <int>{};
+    }
+
+    final eventTime = DateTime(year, month, day, 9);
+    final dayBefore = eventTime.subtract(const Duration(days: 1));
+    return <int>{
+      eventTime.millisecondsSinceEpoch ~/ 1000,
+      (dayBefore.millisecondsSinceEpoch ~/ 1000) + 1,
+    };
   }
 
   Future<void> _showUsageGuide() async {
@@ -463,7 +544,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
       builder: (dialogContext) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: 24,
+          ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(28),
             child: FastBackdropFilter(
@@ -485,7 +569,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.5),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.14),
@@ -510,7 +596,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
-                            borderRadius: BorderRadius.circular(compact ? 14 : 16),
+                            borderRadius: BorderRadius.circular(
+                              compact ? 14 : 16,
+                            ),
                           ),
                           child: const Icon(
                             Icons.info_outline_rounded,
@@ -705,10 +793,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFFFF758C),
-            Color(0xFFFF7EB3),
-          ],
+          colors: [Color(0xFFFF758C), Color(0xFFFF7EB3)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -791,10 +876,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       ],
                     ),
                   ),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: Colors.white,
-                  ),
+                  const Icon(Icons.chevron_right_rounded, color: Colors.white),
                 ],
               ),
             ),
@@ -806,7 +888,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   @override
   void dispose() {
-    _calendarSubscription?.cancel();
+    _calendarQueryGeneration++;
+    unawaited(_calendarSubscription?.cancel());
     _eventController.dispose();
     super.dispose();
   }
@@ -831,8 +914,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final horizontalInset = _horizontalInsetForWidth(mediaSize.width);
     final compact = _useCompactLayout(mediaSize);
     final selectedDay = _selectedDay;
-    final eventCount =
-        selectedDay == null ? 0 : _eventsForDay(selectedDay).length;
+    final eventCount = selectedDay == null
+        ? 0
+        : _eventsForDay(selectedDay).length;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -885,7 +969,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           SafeArea(
             child: RefreshIndicator(
               onRefresh: () async {
-                _reloadCalendar();
+                await _reloadCalendar();
                 await Future<void>.delayed(const Duration(milliseconds: 350));
               },
               child: SingleChildScrollView(
@@ -895,9 +979,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 padding: const EdgeInsets.only(bottom: 20),
                 child: Column(
                   children: [
-                    if (_calendarErrorMessage != null && _calendarErrorMessage!.trim().isNotEmpty)
+                    if (_calendarErrorMessage != null &&
+                        _calendarErrorMessage!.trim().isNotEmpty)
                       Padding(
-                        padding: EdgeInsets.fromLTRB(horizontalInset, 10, horizontalInset, 4),
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalInset,
+                          10,
+                          horizontalInset,
+                          4,
+                        ),
                         child: Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(14),
@@ -941,7 +1031,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 ),
                               ),
                               TextButton(
-                                onPressed: _reloadCalendar,
+                                onPressed: () {
+                                  unawaited(_reloadCalendar());
+                                },
                                 child: Text(
                                   'Thử lại',
                                   style: SLTheme.quicksand(
@@ -955,87 +1047,96 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         ),
                       ),
                     CalendarHeaderSection(
-                    horizontalInset: horizontalInset,
-                    compact: compact,
-                    calendarFormat: _calendarFormat,
-                    focusedDay: _focusedDay,
-                    selectedDay: selectedDay,
-                    eventLoader: (day) =>
-                        _events[_normalizeDate(day)] ?? const <dynamic>[],
-                    onDaySelected: _selectDay,
-                    onDayLongPressed: _handleDayLongPressed,
-                    onFormatChanged: (format) {
-                      if (_calendarFormat != format) {
-                        setState(() => _calendarFormat = format);
-                      }
-                    },
-                    onPageChanged: (focusedDay) {
-                      final oldMonth = _focusedDay.month;
-                      final oldYear = _focusedDay.year;
-                      _focusedDay = focusedDay;
-                      // Khi chuyển tháng → reload query cho tháng mới
-                      if (focusedDay.month != oldMonth || focusedDay.year != oldYear) {
-                        _reloadCalendar();
-                      }
-                    },
-                  ),
-                  if (selectedDay != null) ...[
-                    CalendarSelectedDaySummary(
                       horizontalInset: horizontalInset,
                       compact: compact,
-                      accent: _selectedAccent(selectedDay),
-                      leadingIcon: _isPastDate(selectedDay)
-                          ? Icons.history_rounded
-                          : Icons.event_available_rounded,
-                      displayDate: _formatDisplayDate(selectedDay),
-                      description:
-                          _selectedDayDescription(selectedDay, eventCount),
-                      badgeLabel: _selectedDayBadge(selectedDay),
-                      shortDateLabel: _formatShortDate(selectedDay),
-                      eventCount: eventCount,
+                      calendarFormat: _calendarFormat,
+                      focusedDay: _focusedDay,
+                      selectedDay: selectedDay,
+                      eventLoader: (day) =>
+                          _events[_normalizeDate(day)] ?? const <dynamic>[],
+                      onDaySelected: _selectDay,
+                      onDayLongPressed: _handleDayLongPressed,
+                      onFormatChanged: (format) {
+                        if (_calendarFormat != format) {
+                          setState(() => _calendarFormat = format);
+                        }
+                      },
+                      onPageChanged: (focusedDay) {
+                        final oldMonth = _focusedDay.month;
+                        final oldYear = _focusedDay.year;
+                        _focusedDay = focusedDay;
+                        // Khi chuyển tháng → reload query cho tháng mới
+                        if (focusedDay.month != oldMonth ||
+                            focusedDay.year != oldYear) {
+                          unawaited(_reloadCalendar());
+                        }
+                      },
                     ),
-                    if (Platform.isAndroid) ...[
+                    if (selectedDay != null) ...[
+                      CalendarSelectedDaySummary(
+                        horizontalInset: horizontalInset,
+                        compact: compact,
+                        accent: _selectedAccent(selectedDay),
+                        leadingIcon: _isPastDate(selectedDay)
+                            ? Icons.history_rounded
+                            : Icons.event_available_rounded,
+                        displayDate: _formatDisplayDate(selectedDay),
+                        description: _selectedDayDescription(
+                          selectedDay,
+                          eventCount,
+                        ),
+                        badgeLabel: _selectedDayBadge(selectedDay),
+                        shortDateLabel: _formatShortDate(selectedDay),
+                        eventCount: eventCount,
+                      ),
+                      if (Platform.isAndroid) ...[
+                        SizedBox(height: compact ? 12 : 16),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: horizontalInset,
+                          ),
+                          child: _buildPinWidgetTile(compact),
+                        ),
+                      ],
                       SizedBox(height: compact ? 12 : 16),
-                      Padding(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: horizontalInset),
-                        child: _buildPinWidgetTile(compact),
+                      CalendarEventInputPanel(
+                        horizontalInset: horizontalInset,
+                        compact: compact,
+                        accent: _selectedAccent(selectedDay),
+                        eventCount: eventCount,
+                        controller: _eventController,
+                        onAdd: _addEvent,
+                        isSaving: _isSavingEvent,
+                      ),
+                      SizedBox(height: compact ? 12 : 16),
+                      CalendarEventListSection(
+                        items: _eventsForDay(selectedDay),
+                        isLoading: _isCalendarLoading,
+                        errorMessage: _calendarErrorMessage,
+                        onRetry: () {
+                          unawaited(_reloadCalendar());
+                        },
+                        horizontalInset: horizontalInset,
+                        compact: compact,
+                        accent: _selectedAccent(selectedDay),
+                        selectedDateLabel: _formatShortDate(selectedDay),
+                        itemCount: eventCount,
+                        statusLabel: _selectedDayBadge(selectedDay),
+                        formatCreatedTime: _formatCreatedTime,
+                        onDelete: (eventId) {
+                          unawaited(
+                            _deleteEvent(_getDateKey(selectedDay), eventId),
+                          );
+                        },
                       ),
                     ],
-                    SizedBox(height: compact ? 12 : 16),
-                    CalendarEventInputPanel(
-                      horizontalInset: horizontalInset,
-                      compact: compact,
-                      accent: _selectedAccent(selectedDay),
-                      eventCount: eventCount,
-                      controller: _eventController,
-                      onAdd: _addEvent,
-                      isSaving: _isSavingEvent,
-                    ),
-                    SizedBox(height: compact ? 12 : 16),
-                    CalendarEventListSection(
-                      items: _eventsForDay(selectedDay),
-                      isLoading: _isCalendarLoading,
-                      errorMessage: _calendarErrorMessage,
-                      onRetry: _reloadCalendar,
-                      horizontalInset: horizontalInset,
-                      compact: compact,
-                      accent: _selectedAccent(selectedDay),
-                      selectedDateLabel: _formatShortDate(selectedDay),
-                      itemCount: eventCount,
-                      statusLabel: _selectedDayBadge(selectedDay),
-                      formatCreatedTime: _formatCreatedTime,
-                      onDelete: (eventId) =>
-                          _deleteEvent(_getDateKey(selectedDay), eventId),
-                    ),
                   ],
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 }

@@ -279,25 +279,24 @@ class _AuroraPrimaryButtonState extends State<AuroraPrimaryButton> {
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [
-                    Color(0xFFEA6688),
-                    Color(0xFFF1849F),
-                    Color(0xFF9B83D8),
+                    Color(0xFFEE6386),
+                    Color(0xFFE24B70),
                   ],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.58),
+                  color: Colors.white.withValues(alpha: 0.45),
                   width: 1.1,
                 ),
                 boxShadow: isActuallyDisabled
                     ? const []
                     : [
                         BoxShadow(
-                          color: const Color(0xFFE65F83).withValues(alpha: 0.24),
-                          blurRadius: 20,
-                          offset: const Offset(0, 9),
+                          color: const Color(0xFFE8587A).withValues(alpha: 0.32),
+                          blurRadius: 18,
+                          offset: const Offset(0, 7),
                         ),
                       ],
               ),

@@ -1412,24 +1412,23 @@ class _AuroraDialogButtonState extends State<_AuroraDialogButton>
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [
-                  Color(0xFFE56284),
-                  Color(0xFFF0839D),
-                  Color(0xFF9276CC),
+                  Color(0xFFEE6386),
+                  Color(0xFFE24B70),
                 ],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
               borderRadius: BorderRadius.circular(19),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.46),
+                color: Colors.white.withValues(alpha: 0.40),
               ),
               boxShadow: disabled
                   ? const []
                   : [
                       BoxShadow(
-                        color: const Color(0xFFD75A7B).withValues(alpha: 0.22),
+                        color: const Color(0xFFE8587A).withValues(alpha: 0.28),
                         blurRadius: 16,
-                        offset: const Offset(0, 7),
+                        offset: const Offset(0, 6),
                       ),
                     ],
             ),

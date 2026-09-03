@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -29,10 +28,7 @@ import 'package:soullocket_app/views/home/widgets/floating_bubble_widget.dart';
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('Handling background message: ${message.messageId ?? 'unknown'}');
   try {
-    if (Firebase.apps.isEmpty) {
-      await initializeFirebaseBootstrap();
-    }
-    FirebaseDatabase.instance.setPersistenceEnabled(true);
+    await initializeFirebaseBootstrap();
 
     // Hiển thị bong bóng tâm hồn / chat nếu app ở background
     final type = message.data['type']?.toString() ?? '';
@@ -44,14 +40,19 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       // Đồng bộ iOS Widget cho Soul Merge
       if (type == 'soul_merge' || screen == 'soul_merge') {
         try {
-          final text = message.notification?.body ??
+          final text =
+              message.notification?.body ??
               message.data['text'] ??
               'Có tin nhắn mới 💕';
           final senderName =
               message.data['senderName']?.toString() ?? 'Người ấy';
           await WidgetService.syncSoulMergeWidgetData(
-              message: text.toString(), senderName: senderName);
-        } catch (_) {}
+            message: text.toString(),
+            senderName: senderName,
+          );
+        } catch (error) {
+          debugPrint('[FCM] Soul Merge widget sync skipped: $error');
+        }
       }
       try {
         final granted = await FlutterOverlayWindow.isPermissionGranted();
@@ -73,16 +74,17 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       }
     }
   } catch (error, stackTrace) {
-    debugPrint('FCM background bootstrap error: ${AppErrorMapper.resolve(
-      error,
-      fallbackMessage: L10nService().translate('core_err_fcm_bg_init_failed'),
-    ).message}');
-    unawaited(ErrorLoggerService.instance.logError(
-      error,
-      stackTrace,
-      reason: 'fcm_background_bootstrap_error',
-      fatal: false,
-    ));
+    debugPrint(
+      'FCM background bootstrap error: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('core_err_fcm_bg_init_failed')).message}',
+    );
+    unawaited(
+      ErrorLoggerService.instance.logError(
+        error,
+        stackTrace,
+        reason: 'fcm_background_bootstrap_error',
+        fatal: false,
+      ),
+    );
   }
 }
 
@@ -112,14 +114,17 @@ void overlayMain() async {
         role = data['role']?.toString();
         partnerName = data['partnerName']?.toString();
       }
-    } catch (_) {}
+    } catch (error) {
+      debugPrint('[Overlay] Local sync file read skipped: $error');
+    }
 
     if (houseId == null || houseId.isEmpty) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.reload(); // Đảm bảo lấy dữ liệu mới nhất từ isolate chính
       houseId =
           prefs.getString('overlay_house_id') ?? prefs.getString('il_house_id');
-      role = prefs.getString('overlay_role') ??
+      role =
+          prefs.getString('overlay_role') ??
           prefs.getString('il_role') ??
           'user1';
       partnerName = prefs.getString('overlay_partner_name');
@@ -152,7 +157,9 @@ void overlayMain() async {
               .get();
           partnerName = snap.value?.toString();
         }
-      } catch (_) {}
+      } catch (error) {
+        debugPrint('[Overlay] Partner name lookup skipped: $error');
+      }
     }
   } catch (e) {
     debugPrint('[Overlay] prefs read error: $e');
@@ -176,12 +183,14 @@ void overlayMain() async {
 
 Widget buildDefaultErrorWidget(FlutterErrorDetails details) {
   // Log error to Crashlytics in background (non-blocking)
-  unawaited(ErrorLoggerService.instance.logError(
-    details.exception,
-    details.stack,
-    reason: 'ErrorWidget.builder',
-    fatal: false,
-  ));
+  unawaited(
+    ErrorLoggerService.instance.logError(
+      details.exception,
+      details.stack,
+      reason: 'ErrorWidget.builder',
+      fatal: false,
+    ),
+  );
 
   final l10n = L10nService();
 
@@ -238,7 +247,9 @@ Widget buildDefaultErrorWidget(FlutterErrorDetails details) {
                 onPressed: () {
                   try {
                     SystemNavigator.pop();
-                  } catch (_) {}
+                  } catch (error) {
+                    debugPrint('System navigator close skipped: $error');
+                  }
                 },
                 icon: const Icon(Icons.close_rounded, size: 18),
                 label: Text(l10n.translate('core_err_widget_close')),
@@ -296,8 +307,11 @@ class _ErrorDetailsSectionState extends State<_ErrorDetailsSection> {
           children: [
             Row(
               children: [
-                const Icon(Icons.bug_report_rounded,
-                    size: 14, color: SLColors.danger),
+                const Icon(
+                  Icons.bug_report_rounded,
+                  size: 14,
+                  color: SLColors.danger,
+                ),
                 const SizedBox(width: 6),
                 const Expanded(
                   child: Text(
@@ -350,12 +364,14 @@ void handleZoneError(Object error, StackTrace stackTrace) {
     fallbackMessage: L10nService().translate('core_err_uncaught_start'),
   );
   debugPrint('Uncaught zone error: ${mappedError.message}');
-  unawaited(ErrorLoggerService.instance.logError(
-    error,
-    stackTrace,
-    reason: 'uncaught_zone_error',
-    fatal: true,
-  ));
+  unawaited(
+    ErrorLoggerService.instance.logError(
+      error,
+      stackTrace,
+      reason: 'uncaught_zone_error',
+      fatal: true,
+    ),
+  );
   unawaited(
     RevenueSecurityTelemetryService.instance.logSystemEvent(
       type: 'uncaught_zone_error',

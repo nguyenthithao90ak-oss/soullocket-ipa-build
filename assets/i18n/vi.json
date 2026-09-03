@@ -6817,5 +6817,7 @@
   "local_album_filtered_summary": "{summary} • đang lọc",
   "local_album_video_badge": "VIDEO",
   "local_album_notice": "Ảnh và video chỉ lưu trên thiết bị này, không đồng bộ lên máy chủ. Nếu xóa ứng dụng, toàn bộ dữ liệu album cục bộ sẽ mất.",
-  "local_album_notice_acknowledge": "Đã hiểu"
+  "local_album_notice_acknowledge": "Đã hiểu",
+  "diary_feed_end_single": "— Đã tải hết nhật ký của bạn —",
+  "diary_feed_end_couple": "— Đã tải hết nhật ký của hai bạn —"
 }

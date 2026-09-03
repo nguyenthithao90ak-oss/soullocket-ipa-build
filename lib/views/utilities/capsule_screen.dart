@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:async';
+
 import 'package:soullocket_app/widgets/skeleton_container.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -51,6 +53,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
 
   List<Map<String, dynamic>> _capsules = [];
   Timer? _timer;
+  StreamSubscription<List<Map<String, dynamic>>>? _capsulesSubscription;
   bool _didPromptPendingUploadRetry = false;
 
   String get _pendingUploadKey => '$_pendingUploadKeyPrefix${widget.houseId}';
@@ -68,6 +71,7 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    unawaited(_capsulesSubscription?.cancel());
     super.dispose();
   }
 
@@ -129,7 +133,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
   }
 
   void _loadCapsules() {
-    TimeCapsuleService().listenToCapsules(widget.houseId).listen((list) {
+    _capsulesSubscription =
+        TimeCapsuleService().listenToCapsules(widget.houseId).listen((list) {
       if (mounted) {
         setState(() {
           _capsules = list;

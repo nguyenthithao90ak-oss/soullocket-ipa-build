@@ -29,8 +29,9 @@ const _bootstrapChannelName = 'soul_locket/bootstrap';
 Future<void> initializeFirebaseBootstrap() async {
   if (kIsWeb) {
     throwIfFirebaseEnvMissing();
-    await Firebase.initializeApp(options: _firebaseOptionsFromEnv())
-        .timeout(const Duration(seconds: 8));
+    await Firebase.initializeApp(
+      options: _firebaseOptionsFromEnv(),
+    ).timeout(const Duration(seconds: 8));
 
     try {
       FirebaseFirestore.instance.settings = const Settings(
@@ -49,14 +50,16 @@ Future<void> initializeFirebaseBootstrap() async {
   }
 
   try {
-    await FirebaseAppCheck.instance.activate(
-      providerAndroid: kDebugMode
-          ? const AndroidDebugProvider()
-          : const AndroidPlayIntegrityProvider(),
-      providerApple: kDebugMode
-          ? const AppleDebugProvider()
-          : const AppleDeviceCheckProvider(),
-    ).timeout(const Duration(seconds: 2), onTimeout: () => null);
+    await FirebaseAppCheck.instance
+        .activate(
+          providerAndroid: kDebugMode
+              ? const AndroidDebugProvider()
+              : const AndroidPlayIntegrityProvider(),
+          providerApple: kDebugMode
+              ? const AppleDebugProvider()
+              : const AppleDeviceCheckProvider(),
+        )
+        .timeout(const Duration(seconds: 2), onTimeout: () => null);
   } catch (e) {
     debugPrint('Firebase AppCheck init error: $e');
   }
@@ -67,11 +70,9 @@ Future<void> initializeFirebaseBootstrap() async {
       // ⚡ Increased from 5MB → 40MB to significantly improve offline chat/diary caching
       FirebaseDatabase.instance.setPersistenceCacheSizeBytes(41943040);
     } catch (e) {
-      debugPrint('Firebase persistence error: ${AppErrorMapper.resolve(
-        e,
-        fallbackMessage:
-            L10nService().translate('core_err_firebase_cache_failed'),
-      ).message}');
+      debugPrint(
+        'Firebase persistence error: ${AppErrorMapper.resolve(e, fallbackMessage: L10nService().translate('core_err_firebase_cache_failed')).message}',
+      );
     }
 
     try {
@@ -106,11 +107,9 @@ Future<void> _initializeNativeFirebaseBootstrap() async {
     await _initializeDefaultNativeFirebaseApp();
     return;
   } catch (nativeError) {
-    debugPrint('Firebase native init error: ${AppErrorMapper.resolve(
-      nativeError,
-      fallbackMessage:
-          L10nService().translate('core_err_firebase_native_failed'),
-    ).message}');
+    debugPrint(
+      'Firebase native init error: ${AppErrorMapper.resolve(nativeError, fallbackMessage: L10nService().translate('core_err_firebase_native_failed')).message}',
+    );
   }
 
   final fallbackOptions = await _resolveNativeFirebaseFallbackOptions();
@@ -122,8 +121,9 @@ Future<void> _initializeNativeFirebaseBootstrap() async {
     );
   }
 
-  await Firebase.initializeApp(options: fallbackOptions)
-      .timeout(const Duration(seconds: 3));
+  await Firebase.initializeApp(
+    options: fallbackOptions,
+  ).timeout(const Duration(seconds: 3));
 }
 
 Future<void> _initializeDefaultNativeFirebaseApp() async {
@@ -149,10 +149,8 @@ Future<void> _initializeDefaultNativeFirebaseApp() async {
         return;
       }
       debugPrint(
-          'Firebase native init attempt ${index + 1} failed: ${AppErrorMapper.resolve(
-        error,
-        fallbackMessage: 'Không thể khởi tạo Firebase native.',
-      ).message}');
+        'Firebase native init attempt ${index + 1} failed: ${AppErrorMapper.resolve(error, fallbackMessage: 'Không thể khởi tạo Firebase native.').message}',
+      );
       if (index < attemptTimeouts.length - 1) {
         await Future<void>.delayed(const Duration(milliseconds: 350));
       }
@@ -185,8 +183,7 @@ Future<FirebaseOptions?> _loadNativeFirebaseOptions() async {
   }
 
   try {
-    const channel =
-        MethodChannel(_bootstrapChannelName);
+    const channel = MethodChannel(_bootstrapChannelName);
     final rawOptions = await channel.invokeMapMethod<String, dynamic>(
       'getNativeFirebaseOptions',
     );
@@ -222,11 +219,9 @@ Future<FirebaseOptions?> _loadNativeFirebaseOptions() async {
       databaseURL: databaseUrl.isEmpty ? null : databaseUrl,
     );
   } catch (error) {
-    debugPrint('Native Firebase options load error: ${AppErrorMapper.resolve(
-      error,
-      fallbackMessage:
-          L10nService().translate('core_err_firebase_read_config_failed'),
-    ).message}');
+    debugPrint(
+      'Native Firebase options load error: ${AppErrorMapper.resolve(error, fallbackMessage: L10nService().translate('core_err_firebase_read_config_failed')).message}',
+    );
     return null;
   }
 }
@@ -250,10 +245,9 @@ Future<void> _initializeFirebaseAppCheck() async {
       return;
     }
   } catch (e) {
-    debugPrint('Firebase App Check init error: ${AppErrorMapper.resolve(
-      e,
-      fallbackMessage: L10nService().translate('core_err_appcheck_failed'),
-    ).message}');
+    debugPrint(
+      'Firebase App Check init error: ${AppErrorMapper.resolve(e, fallbackMessage: L10nService().translate('core_err_appcheck_failed')).message}',
+    );
   }
 }
 
@@ -290,7 +284,7 @@ List<String> missingFirebaseBootstrapKeys() {
     'FIREBASE_API_KEY': {'your-firebase-api-key'},
     'FIREBASE_AUTH_DOMAIN': {'your-project.firebaseapp.com'},
     'FIREBASE_DATABASE_URL': {
-      'https://your-project-default-rtdb.firebaseio.com'
+      'https://your-project-default-rtdb.firebaseio.com',
     },
     'FIREBASE_PROJECT_ID': {'your-project-id'},
     'FIREBASE_STORAGE_BUCKET': {'your-project.appspot.com'},
